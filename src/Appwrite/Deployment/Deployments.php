@@ -263,6 +263,18 @@ readonly class Deployments
     public function cancel(string $deploymentId): void
     {
         $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
+
+        // A canceled build never completes, so the Jobs worker never moves or
+        // clears its staged source (see payload()). Unlinking follows symlinked
+        // parent directories the build could plant, so clean up only inside
+        // the builds tree.
+        $device = static::device($this->project->getId());
+        $staged = static::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local
+            && (\is_link($staged) || $device->exists($staged))
+            && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
     }
 
     /**

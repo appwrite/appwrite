@@ -505,20 +505,22 @@ class Jobs extends Action
 
         // On the local device a remote-source build leaves its source on the
         // builds volume (see Deployments::payload()). The build's own code can
-        // write that volume too, so only the file the sidecar measured is kept:
-        // a regular file of the recorded sourceSize, reached without any
-        // symlink, whose opened inode is the one checked. Losing it costs the
-        // download, never the build.
+        // write that volume too, so only a regular file within the deployment
+        // size limit is kept, reached without any symlink, whose opened inode
+        // is the one checked. Losing it costs the download, never the build.
         $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
         if ($deviceForBuilds->getType() === DeviceType::Local && (\is_link($staged) || $deviceForBuilds->exists($staged))) {
             $file = false;
             try {
                 $stat = \lstat($staged);
                 $opened = false;
+                $limit = isset($plan['deploymentSize'])
+                    ? (int) $plan['deploymentSize'] * 1000 * 1000
+                    : (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
                 if ($deployment->getAttribute('sourcePath', '') === ''
                     && $stat !== false
                     && ($stat['mode'] & 0o170000) === 0o100000
-                    && $stat['size'] === (int) $deployment->getAttribute('sourceSize', 0)
+                    && $stat['size'] <= $limit
                     && \realpath($staged) === $staged
                     && ($file = \fopen($staged, 'rb')) !== false
                 ) {
