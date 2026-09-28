@@ -17,12 +17,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Audit\\": "src/Audit"
+            "Utopia\\Audit\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests"
+            "Utopia\\Audit\\Tests\\": "tests/"
         }
     },
     "require": {

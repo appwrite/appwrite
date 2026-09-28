@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Audit\Adapter;
+namespace Utopia\Audit\Tests\E2E\Adapter;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter;
 use Utopia\Audit\Audit;
+use Utopia\Audit\Tests\E2E\AuditBase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Tests\Audit\AuditBase;
 
 /**
  * Database Adapter Tests

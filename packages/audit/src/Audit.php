@@ -16,7 +16,9 @@ class Audit
      *
      * @param Adapter $adapter The adapter to use for storing audit logs
      */
-    public function __construct(private readonly Adapter $adapter) {}
+    public function __construct(private readonly Adapter $adapter)
+    {
+    }
 
     /**
      * Get the current adapter.

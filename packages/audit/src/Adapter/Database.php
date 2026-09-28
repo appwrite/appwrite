@@ -19,7 +19,9 @@ use Utopia\Query\Method;
  */
 class Database extends SQL
 {
-    public function __construct(private readonly \Utopia\Database\Database $db) {}
+    public function __construct(private readonly \Utopia\Database\Database $db)
+    {
+    }
 
     /**
      * Get adapter name.
@@ -79,7 +81,7 @@ class Database extends SQL
     public function create(array $log): Log
     {
         $log['time'] ??= DateTime::now();
-        $document = $this->db->getAuthorization()->skip(fn(): \Utopia\Database\Document => $this->db->createDocument($this->getCollectionName(), new Document($log)));
+        $document = $this->db->getAuthorization()->skip(fn (): \Utopia\Database\Document => $this->db->createDocument($this->getCollectionName(), new Document($log)));
 
         return new Log($document->getArrayCopy());
     }
@@ -116,7 +118,7 @@ class Database extends SQL
      */
     public function getById(string $id): ?Log
     {
-        $document = $this->db->getAuthorization()->skip(fn(): \Utopia\Database\Document => $this->db->getDocument($this->getCollectionName(), $id));
+        $document = $this->db->getAuthorization()->skip(fn (): \Utopia\Database\Document => $this->db->getDocument($this->getCollectionName(), $id));
 
         if ($document->isEmpty()) {
             return null;
@@ -183,7 +185,7 @@ class Database extends SQL
             );
         });
 
-        return array_map(fn(\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
+        return array_map(fn (\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
     }
 
     /**
@@ -198,7 +200,7 @@ class Database extends SQL
         ?int $max = null,
     ): int {
         $timeQueries = $this->buildTimeQueries($after, $before);
-        return $this->db->getAuthorization()->skip(fn(): int => $this->db->count(
+        return $this->db->getAuthorization()->skip(fn (): int => $this->db->count(
             collection: $this->getCollectionName(),
             queries: [
                 Query::equal('userId', [$userId]),
@@ -238,7 +240,7 @@ class Database extends SQL
             );
         });
 
-        return array_map(fn(\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
+        return array_map(fn (\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
     }
 
     /**
@@ -253,7 +255,7 @@ class Database extends SQL
         ?int $max = null,
     ): int {
         $timeQueries = $this->buildTimeQueries($after, $before);
-        return $this->db->getAuthorization()->skip(fn(): int => $this->db->count(
+        return $this->db->getAuthorization()->skip(fn (): int => $this->db->count(
             collection: $this->getCollectionName(),
             queries: [
                 Query::equal('resource', [$resource]),
@@ -296,7 +298,7 @@ class Database extends SQL
             );
         });
 
-        return array_map(fn(\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
+        return array_map(fn (\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
     }
 
     /**
@@ -313,7 +315,7 @@ class Database extends SQL
         ?int $max = null,
     ): int {
         $timeQueries = $this->buildTimeQueries($after, $before);
-        return $this->db->getAuthorization()->skip(fn(): int => $this->db->count(
+        return $this->db->getAuthorization()->skip(fn (): int => $this->db->count(
             collection: $this->getCollectionName(),
             queries: [
                 Query::equal('userId', [$userId]),
@@ -357,7 +359,7 @@ class Database extends SQL
             );
         });
 
-        return array_map(fn(\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
+        return array_map(fn (\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
     }
 
     /**
@@ -374,7 +376,7 @@ class Database extends SQL
         ?int $max = null,
     ): int {
         $timeQueries = $this->buildTimeQueries($after, $before);
-        return $this->db->getAuthorization()->skip(fn(): int => $this->db->count(
+        return $this->db->getAuthorization()->skip(fn (): int => $this->db->count(
             collection: $this->getCollectionName(),
             queries: [
                 Query::equal('resource', [$resource]),
@@ -471,12 +473,12 @@ class Database extends SQL
             $dbQueries[] = Query::parseQuery($query->toArray());
         }
 
-        $documents = $this->db->getAuthorization()->skip(fn(): array => $this->db->find(
+        $documents = $this->db->getAuthorization()->skip(fn (): array => $this->db->find(
             collection: $this->getCollectionName(),
             queries: $dbQueries,
         ));
 
-        return array_map(fn(\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
+        return array_map(fn (\Utopia\Database\Document $doc): \Utopia\Audit\Log => new Log($doc->getArrayCopy()), $documents);
     }
 
     /**
@@ -519,7 +521,7 @@ class Database extends SQL
             $dbQueries[] = Query::parseQuery($queryArray);
         }
 
-        return $this->db->getAuthorization()->skip(fn(): int => $this->db->count(
+        return $this->db->getAuthorization()->skip(fn (): int => $this->db->count(
             collection: $this->getCollectionName(),
             queries: $dbQueries,
             max: $max,

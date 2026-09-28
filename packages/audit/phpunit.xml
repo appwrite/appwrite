@@ -6,13 +6,11 @@
          cacheDirectory=".phpunit.cache">
     <testsuites>
         <testsuite name="unit">
-            <file>tests/Audit/QueryTest.php</file>
-            <!-- Pure SQL-shape snapshots; no ClickHouse server required. -->
-            <file>tests/Audit/Adapter/ClickHouseSqlSnapshotTest.php</file>
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
         </testsuite>
         <testsuite name="e2e">
-            <directory>tests/Audit/Adapter</directory>
-            <exclude>tests/Audit/Adapter/ClickHouseSqlSnapshotTest.php</exclude>
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

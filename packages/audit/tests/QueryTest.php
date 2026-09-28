@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Audit;
+namespace Utopia\Audit\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Query;

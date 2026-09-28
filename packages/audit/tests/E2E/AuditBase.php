@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Audit;
+namespace Utopia\Audit\Tests\E2E;
 
 use Utopia\Audit\Audit;
 use Utopia\Database\DateTime;
@@ -303,8 +303,8 @@ trait AuditBase
 
         // Events should be in opposite order
         if (\count($logsDesc) > 1) {
-            $descEvents = array_map(fn($log) => $log->getAttribute('event'), $logsDesc);
-            $ascEvents = array_map(fn($log) => $log->getAttribute('event'), $logsAsc);
+            $descEvents = array_map(fn ($log) => $log->getAttribute('event'), $logsDesc);
+            $ascEvents = array_map(fn ($log) => $log->getAttribute('event'), $logsAsc);
             $this->assertEquals($descEvents, array_reverse($ascEvents));
         }
     }
@@ -819,7 +819,7 @@ trait AuditBase
         }
 
         /** @var array<array{userId: string|null, event: string, resource: string, userAgent: string, ip: string, time: string, data?: array<string, mixed>}> */
-        return array_map(static fn(array $event): array => array_merge($event, $requiredAttributes), $batchEvents);
+        return array_map(static fn (array $event): array => array_merge($event, $requiredAttributes), $batchEvents);
     }
 
     /**

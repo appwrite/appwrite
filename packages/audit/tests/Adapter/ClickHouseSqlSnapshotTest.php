@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Audit\Adapter;
+namespace Utopia\Audit\Tests\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;

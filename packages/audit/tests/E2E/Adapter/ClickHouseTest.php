@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Audit\Adapter;
+namespace Utopia\Audit\Tests\E2E\Adapter;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\ClickHouse;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Query;
-use Utopia\Tests\Audit\AuditBase;
+use Utopia\Audit\Tests\E2E\AuditBase;
 
 /**
  * ClickHouse Adapter Tests
@@ -515,7 +515,7 @@ final class ClickHouseTest extends TestCase
         );
 
         $attributes = $adapter->getAttributes();
-        $attributeIds = array_map(fn(array $attr): mixed => $attr['$id'], $attributes);
+        $attributeIds = array_map(fn (array $attr): mixed => $attr['$id'], $attributes);
 
         // Verify all expected attributes exist
         $expectedAttributes = [
@@ -805,7 +805,7 @@ final class ClickHouseTest extends TestCase
         );
 
         $indexes = $adapter->getIndexes();
-        $indexIds = array_map(fn(array $idx): mixed => $idx['$id'], $indexes);
+        $indexIds = array_map(fn (array $idx): mixed => $idx['$id'], $indexes);
 
         // Verify all ClickHouse-specific indexes exist
         $expectedClickHouseIndexes = [
