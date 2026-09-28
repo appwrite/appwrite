@@ -193,9 +193,26 @@ function createSource(source: AcquisitionSource): void {
       }
 
       const { sdk } = await import('@/lib/appwrite/sdk')
-      // Cloud serves this route with `origin: *`, so it must go out without
-      // cookies. Attribution is by IP/UA fingerprint, so no identity is needed.
-      await sdk.forPublic().console.createSource(payload)
+      const client = sdk.forConsole.client
+      const endpoint = client.config.endpoint.replace(/\/$/, '')
+      const project = client.config.project || 'console'
+      // Cloud marks this route `origin: *` with credentials disabled, so the
+      // POST goes out without cookies; attribution is by IP/UA fingerprint.
+      // This stays a raw fetch because the SDK can't set `keepalive`, which
+      // lets the POST finish when the visitor leaves the landing page.
+      const response = await fetch(`${endpoint}/console/sources`, {
+        method: 'POST',
+        credentials: 'omit',
+        keepalive: true,
+        headers: {
+          'content-type': 'application/json',
+          'X-Appwrite-Project': project,
+        },
+        body: JSON.stringify(payload),
+      })
+      if (!response.ok) {
+        throw new Error(`createSource failed: ${response.status}`)
+      }
       storage?.setItem(STORAGE_KEYS.posted, signature)
     } catch {
       startedSignatures.delete(signature)

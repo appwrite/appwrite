@@ -586,27 +586,21 @@ export const sdk = {
   },
 
   /**
-   * Console services on a client that never sends cookies, for routes Cloud
-   * serves with `origin: *` (`/growth/*`, `/console/sources`). Browsers reject
-   * credentialed requests to those, so any console identity goes in `jwt`.
+   * Growth service on a client that never sends cookies. Cloud serves
+   * `/growth/*` with `origin: *`, where browsers reject credentialed requests,
+   * so the console identity goes in `jwt` instead.
    */
-  forPublic(
-    endpoint: string = clientConsole.config.endpoint,
-    jwt: string | null = null,
-  ) {
-    const publicClient = new Client()
-    publicClient
+  forGrowth(endpoint: string, jwt: string | null): Growth {
+    const growthClient = new Client()
+    growthClient
       .setEndpoint(endpoint)
       .setProject('console')
       .setLocale(getActiveLanguage())
       .setCredentials('omit')
     if (jwt) {
-      publicClient.setJWT(jwt)
+      growthClient.setJWT(jwt)
     }
-    return {
-      console: new Console(publicClient),
-      growth: new Growth(publicClient),
-    }
+    return new Growth(growthClient)
   },
 
   // Project SDK - for managing project-specific resources.

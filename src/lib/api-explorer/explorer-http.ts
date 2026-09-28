@@ -24,5 +24,8 @@ export async function createUserJwtForExplorer(
   userId: string,
 ): Promise<string> {
   const { jwt } = await sdk.forProject(projectId).users.createJWT({ userId })
+  if (!jwt?.trim()) {
+    throw new Error('Failed to create JWT: empty response')
+  }
   return jwt
 }

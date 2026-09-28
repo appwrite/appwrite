@@ -10,8 +10,9 @@
  * instead. Self-hosted servers have no growth route, so self-hosted consoles
  * send anonymously to Appwrite Cloud, where the email param is required.
  *
- * Requests go through `sdk.forPublic`, whose client never sends cookies; the
- * attachment (5 MB at most) goes out in the same multipart request.
+ * Requests go through `sdk.forGrowth`, a Growth service on a client that never
+ * sends cookies; the attachment (5 MB at most) goes out in the same multipart
+ * request.
  */
 
 import { AppwriteException, ConversationType } from '@appwrite.io/console'
@@ -198,7 +199,7 @@ export async function createConversation(
   const attributes = compact<string | number>(params.attributes ?? {})
 
   try {
-    await sdk.forPublic(endpoint, jwt).growth.createConversation({
+    await sdk.forGrowth(endpoint, jwt).createConversation({
       type: params.type,
       ...fields,
       ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
