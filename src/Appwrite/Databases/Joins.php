@@ -43,10 +43,7 @@ final readonly class Joins
 
             $externalId = $query->getAttribute();
             if ($externalId !== '') {
-                // A name already in physical form is still caller-supplied: both entry points
-                // resolve freshly parsed queries exactly once, so nothing legitimately arrives
-                // pre-resolved. Passing it through skipped the enabled and permission checks
-                // below, which let a caller join a disabled collection by its sequence.
+                // A name in physical form is caller-supplied too, so it gets the same checks.
                 $related = $this->collection($externalId, $prefix);
 
                 if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$this->privileged)) {
