@@ -970,6 +970,8 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
