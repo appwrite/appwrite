@@ -56,7 +56,7 @@ final class NatsBrokerTest extends TestCase
     {
         $this->broker->publish($this->queue, ['task' => 'a']);
         $this->broker->publish($this->queue, ['task' => 'b']);
-        $this->assertSame(2, $this->broker->getQueueSize($this->queue));
+        $this->assertSame(2, $this->pendingSettled(2));
 
         $message = $this->broker->receive($this->queue, 2)[0] ?? null;
         $this->assertInstanceOf(Message::class, $message);
@@ -1547,5 +1547,17 @@ final class NatsBrokerTest extends TestCase
 
         $maintenance->close();
         $owner->close();
+    }
+
+    // JetStream updates a consumer's num_pending asynchronously after the publish ack.
+    private function pendingSettled(int $expected): int
+    {
+        $size = $this->broker->getQueueSize($this->queue);
+        for ($i = 0; $i < 50 && $size !== $expected; $i++) {
+            usleep(20_000);
+            $size = $this->broker->getQueueSize($this->queue);
+        }
+
+        return $size;
     }
 }

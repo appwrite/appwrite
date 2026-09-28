@@ -13,6 +13,8 @@
         <testsuite name="e2e">
             <directory>tests/E2E</directory>
             <exclude>tests/E2E/servers</exclude>
+            <exclude>tests/E2E/KedaTest.php</exclude>
+            <file>tests/E2E/KedaTest.php</file>
         </testsuite>
     </testsuites>
     <source>
