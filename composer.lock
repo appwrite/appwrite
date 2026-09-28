@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b2ebd1fcbdaa6cdcffdec999f98859b",
+    "content-hash": "ca7dc18250a147b8f99c6644007025a9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2999,59 +2999,6 @@
                 "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
             },
             "time": "2026-09-09T05:42:37+00:00"
-        },
-        {
-            "name": "utopia-php/usage",
-            "version": "0.16.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/usage.git",
-                "reference": "6340f12a83c67db3503d6847bd1d32d60fa0e40d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/usage/zipball/6340f12a83c67db3503d6847bd1d32d60fa0e40d",
-                "reference": "6340f12a83c67db3503d6847bd1d32d60fa0e40d",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.4",
-                "psr/http-client": "^1.0",
-                "utopia-php/client": "^0.5",
-                "utopia-php/database": "^7.0.0",
-                "utopia-php/query": "0.6.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^9.5",
-                "utopia-php/cache": "^4.0"
-            },
-            "suggest": {
-                "ext-curl": "Required by the default cURL transport for the ClickHouse adapter. Not needed if you inject a non-cURL utopia-php/client into the adapter."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Usage\\": "src/Usage"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "Light and Fast Usage library",
-            "support": {
-                "issues": "https://github.com/utopia-php/usage/issues",
-                "source": "https://github.com/utopia-php/usage/tree/0.16.6"
-            },
-            "time": "2026-09-24T12:26:53+00:00"
         },
         {
             "name": "webmozart/assert",
