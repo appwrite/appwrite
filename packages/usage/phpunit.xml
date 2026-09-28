@@ -1,24 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         colors="true"
          bootstrap="vendor/autoload.php"
-         colors="true">
+         cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Test Suite">
+        <testsuite name="unit">
             <directory>tests</directory>
-            <exclude>tests/Benchmark</exclude>
+            <exclude>tests/E2E</exclude>
         </testsuite>
-        <testsuite name="Benchmark">
-            <directory suffix="Bench.php">tests/Benchmark</directory>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
+            <exclude>tests/E2E/Benchmark</exclude>
+        </testsuite>
+        <testsuite name="bench">
+            <directory suffix="Bench.php">tests/E2E/Benchmark</directory>
         </testsuite>
     </testsuites>
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
-            <directory suffix=".php">src</directory>
+            <directory>src</directory>
         </include>
-    </coverage>
+    </source>
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>
+        <env name="CLICKHOUSE_HOST" value="127.0.0.1"/>
+        <env name="CLICKHOUSE_PORT" value="18223"/>
+        <env name="MARIADB_HOST" value="127.0.0.1"/>
+        <env name="MARIADB_PORT" value="13316"/>
     </php>
 </phpunit>

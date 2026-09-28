@@ -10,8 +10,9 @@
         }
     ],
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml --testsuite \"Test Suite\"",
-        "bench": "phpunit --configuration phpunit.xml --testsuite Benchmark"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "phpunit --testsuite bench"
     },
     "minimum-stability": "stable",
     "require": {
@@ -29,12 +30,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Usage\\": "src/Usage"
+            "Utopia\\Usage\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests"
+            "Utopia\\Usage\\Tests\\": "tests/"
         }
     },
     "config": {
