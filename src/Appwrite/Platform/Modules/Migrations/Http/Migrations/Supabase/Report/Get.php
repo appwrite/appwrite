@@ -71,7 +71,7 @@ class Get extends Action
         Response $response
     ): void {
         try {
-            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
+            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, (string) $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
