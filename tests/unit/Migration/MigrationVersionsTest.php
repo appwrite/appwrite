@@ -10,7 +10,6 @@ use Appwrite\Migration\Version\V25;
 use Appwrite\Migration\Version\V26;
 use Appwrite\Platform\Tasks\Migrate;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -28,19 +27,9 @@ use Utopia\Registry\Registry;
 
 final class MigrationVersionsTest extends TestCase
 {
-    /**
-     * @var array<string, array{encode: callable, decode: callable, signature: string}>
-     */
-    private array $filters;
-
-    protected function setUp(): void
-    {
-        $this->filters = (new ReflectionProperty(Database::class, 'filters'))->getValue();
-    }
-
     protected function tearDown(): void
     {
-        (new ReflectionProperty(Database::class, 'filters'))->setValue(null, $this->filters);
+        require __DIR__ . '/../../../app/init/database/filters.php';
     }
 
     /**
