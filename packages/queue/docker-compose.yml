@@ -1,0 +1,52 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  redis-auth:
+    image: redis:alpine
+    command:
+      - sh
+      - -c
+      - |
+        printf 'requirepass secretpw\nuser worker on >workerpw ~* &* +@all\n' > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
+    ports:
+      - "16380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "secretpw", "--no-auth-warning", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  nats:
+    image: nats:2.11-alpine
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "14225:4222"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  redis-cluster:
+    image: grokzen/redis-cluster:7.0.10
+    environment:
+      IP: "0.0.0.0"
+      INITIAL_PORT: 17000
+      MASTERS: 3
+      SLAVES_PER_MASTER: 0
+    ports:
+      - "17000-17002:17000-17002"
+    healthcheck:
+      test: ["CMD-SHELL", "for p in 17000 17001 17002; do redis-cli -p $$p cluster info | grep -q cluster_state:ok || exit 1; done"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

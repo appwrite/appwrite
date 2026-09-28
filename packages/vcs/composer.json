@@ -1,0 +1,46 @@
+{
+    "name": "utopia-php/vcs",
+    "description": "A simple library to integrate version control systems like GitHub, GitLab etc. to receive webhook events",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "utopia",
+        "vcs"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": [
+            "@php tests/credentials.php",
+            "phpunit --testsuite e2e"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\VCS\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\VCS\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.4",
+        "adhocore/jwt": "^1.1",
+        "utopia-php/cache": "^4.0 || ^5.0"
+    },
+    "require-dev": {
+        "utopia-php/client": "^0.5",
+        "utopia-php/psr7": "^0.2.1",
+        "utopia-php/system": "0.10.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
