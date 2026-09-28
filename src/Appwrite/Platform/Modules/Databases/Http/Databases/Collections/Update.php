@@ -120,7 +120,7 @@ class Update extends Action
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
         if ($purge) {
-            $this->purgeListCache($dbForProject, $collectionId);
+            $this->purgeListCache($dbForProject, $database, $collectionId);
         }
 
         $this->addRowBytesInfo($collection, $dbForProject);

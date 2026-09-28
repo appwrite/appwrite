@@ -48,14 +48,15 @@ final readonly class ListCache
         );
     }
 
-    public static function key(Database $dbForProject, string $collectionId): string
+    public static function key(Database $dbForProject, Document $database, string $collectionId): string
     {
         return \sprintf(
-            '%s-cache:%s:%s:%s:collection:%s',
+            '%s-cache:%s:%s:%s:database:%s:collection:%s',
             $dbForProject->getCacheName(),
             $dbForProject->getAdapter()->getHostname(),
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
+            $database->getSequence(),
             $collectionId,
         );
     }

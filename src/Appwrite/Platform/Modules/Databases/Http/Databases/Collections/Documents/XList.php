@@ -165,7 +165,7 @@ class XList extends Action
             } elseif ((int)$ttl > 0) {
                 $cache = new ListCache(
                     $dbForProject->getCache(),
-                    ListCache::key($dbForProject, $collectionId),
+                    ListCache::key($dbForProject, $database, $collectionId),
                     $collection,
                     $dbForProject->getAuthorization()->getRoles(),
                     $queries,

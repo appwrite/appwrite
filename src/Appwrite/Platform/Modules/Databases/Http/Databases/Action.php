@@ -168,8 +168,8 @@ class Action extends AppwriteAction
      *
      * One DEL on the collection's Redis hash, clearing all variations at once.
      */
-    protected function purgeListCache(Database $dbForProject, string $collectionId): bool
+    protected function purgeListCache(Database $dbForProject, Document $database, string $collectionId): bool
     {
-        return $dbForProject->getCache()->purge(ListCache::key($dbForProject, $collectionId));
+        return $dbForProject->getCache()->purge(ListCache::key($dbForProject, $database, $collectionId));
     }
 }
