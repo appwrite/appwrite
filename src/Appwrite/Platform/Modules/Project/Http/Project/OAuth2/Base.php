@@ -374,6 +374,7 @@ abstract class Base extends Action
             'zoho' => Zoho\Update::class,
             'yandex' => Yandex\Update::class,
             'x' => X\Update::class,
+            'webflow' => Webflow\Update::class,
             'wordpress' => WordPress\Update::class,
             'twitch' => Twitch\Update::class,
             'stripe' => Stripe\Update::class,

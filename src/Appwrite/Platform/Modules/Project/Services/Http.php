@@ -61,6 +61,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
@@ -216,6 +217,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Zoho::getName(), new UpdateOAuth2Zoho());
         $this->addAction(UpdateOAuth2Yandex::getName(), new UpdateOAuth2Yandex());
         $this->addAction(UpdateOAuth2X::getName(), new UpdateOAuth2X());
+        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
         $this->addAction(UpdateOAuth2WordPress::getName(), new UpdateOAuth2WordPress());
         $this->addAction(UpdateOAuth2Twitch::getName(), new UpdateOAuth2Twitch());
         $this->addAction(UpdateOAuth2Stripe::getName(), new UpdateOAuth2Stripe());
