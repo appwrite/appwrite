@@ -61,6 +61,17 @@ Push all buckets:
 appwrite push buckets --all --force
 ```
 
+# Environments {% #environments %}
+
+If your repository keeps a project config file for each environment, set `APPWRITE_CONFIG_FILE` in the CI job to choose which one the CLI reads. Every command in the job then uses that file.
+
+```sh
+export APPWRITE_CONFIG_FILE=appwrite.config.prod.json
+appwrite push all --all --force
+```
+
+If the job also sets `APPWRITE_PROJECT_ID` or `APPWRITE_ENDPOINT`, those values take precedence over the ones in the config file. [Learn more about multiple environments](/docs/tooling/command-line/installation#multiple-environments).
+
 # CI/CD integrations {% #ci-cd-integrations %}
 
 Use providers like Github actions to create continuous integrations and continuous delivery or deployment (CI/CD).

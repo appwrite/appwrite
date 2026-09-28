@@ -218,6 +218,38 @@ appwrite client --self-signed true
 ```
 {% /info %}
 
+# Multiple environments {% #multiple-environments %}
+
+By default, the CLI looks for `appwrite.config.json` in the current directory, then in each parent directory. In CLI version 28.1.0 and later, you can choose a different project config file with the `--config-file` flag or the `APPWRITE_CONFIG_FILE` environment variable. One repository can then keep a separate config for each environment, such as staging and production, each linked to its own Appwrite project.
+
+Create or link a project config for each environment:
+
+```sh
+appwrite init project --config-file appwrite.config.staging.json
+appwrite init project --config-file appwrite.config.prod.json
+```
+
+Pass the same flag to deploy to one environment:
+
+```sh
+appwrite push --config-file appwrite.config.staging.json
+appwrite push --config-file appwrite.config.prod.json
+```
+
+To use one config for a whole shell session or CI job, set `APPWRITE_CONFIG_FILE` instead:
+
+```sh
+export APPWRITE_CONFIG_FILE=appwrite.config.prod.json
+appwrite push
+appwrite types ./src/types
+```
+
+Every command that reads the project config uses the chosen file. This includes `pull`, `push`, `run`, `generate`, and `types`, and commands such as `appwrite users list` that read the project ID and endpoint from it. If you set both, `--config-file` takes precedence over `APPWRITE_CONFIG_FILE`.
+
+{% info title="Environment variables take precedence" %}
+If `APPWRITE_PROJECT_ID` or `APPWRITE_ENDPOINT` is set, the CLI uses it instead of the `projectId` or `endpoint` in the chosen config file. Unset these variables when you switch environments with a config file.
+{% /info %}
+
 ## Next steps {% #next-steps %}
 
 You can use the CLI to create and deploy tables, functions, teams, topics, and buckets. Deployment commands allow you to configure your Appwrite project programmatically and replicate functions and table schemas across Appwrite projects.
