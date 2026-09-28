@@ -812,7 +812,7 @@ class Functions extends Action
         // out) is the execution's result, stored above, and the executor
         // reports it. Only one it could not classify, an unreachable executor,
         // or a failure in this worker is a server error here.
-        if ($error !== null && !($error instanceof ExecutorException && $error->isClassified())) {
+        if ($error !== null && !($error instanceof ExecutorException && $error->getType() !== ExecutorException::GENERAL_UNKNOWN)) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
                 'Function execution failed: ' . $error->getMessage(),
