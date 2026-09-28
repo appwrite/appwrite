@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Platform\Tests;
 
 use Utopia\Platform\Platform;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Platform\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\CLI\Adapters\Generic;
@@ -11,9 +11,13 @@ use Utopia\Platform\Service;
 
 final class CLITest extends TestCase
 {
-    public function setUp(): void {}
+    public function setUp(): void
+    {
+    }
 
-    public function tearDown(): void {}
+    public function tearDown(): void
+    {
+    }
 
     public function testCLISetup(): void
     {

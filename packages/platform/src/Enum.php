@@ -18,5 +18,6 @@ final readonly class Enum
         public ?string $name = null,
         public ?array $map = null,
         public ?array $exclude = null,
-    ) {}
+    ) {
+    }
 }

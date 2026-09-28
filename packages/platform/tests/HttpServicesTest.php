@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Platform\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\DI\Container;
@@ -18,8 +18,16 @@ final class HttpServicesTest extends TestCase
 
     protected ?Http $http;
 
+    protected string $timezone;
+
+    /** @var array<mixed> */
+    protected array $server;
+
     public function setUp(): void
     {
+        $this->timezone = date_default_timezone_get();
+        $this->server = $_SERVER;
+
         Http::reset();
         $platform = new TestPlatform();
         $platform->init('http');
@@ -31,6 +39,9 @@ final class HttpServicesTest extends TestCase
     public function tearDown(): void
     {
         $this->http = null;
+        Http::reset();
+        $_SERVER = $this->server;
+        date_default_timezone_set($this->timezone);
     }
 
     public function testRootAction(): void

@@ -202,7 +202,7 @@ abstract class Platform
         if ($names === [] && $workerName !== null && $workerName !== '') {
             $names = [$workerName];
         }
-        $names = array_map(static fn($name): string => strtolower((string) $name), $names);
+        $names = array_map(static fn ($name): string => strtolower((string) $name), $names);
         $all = $names === [] || \in_array('all', $names, true);
         /** @var array<string, array{queue?: ?string, coroutines?: int, prefetch?: int}> $jobs */
         $jobs = $params['jobs'] ?? [];
@@ -271,7 +271,9 @@ abstract class Platform
     /**
      * Initialize GraphQL Services
      */
-    protected function initGraphQL(): void {}
+    protected function initGraphQL(): void
+    {
+    }
 
     /**
      * Add module

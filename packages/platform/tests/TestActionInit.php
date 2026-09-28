@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Platform\Tests;
 
 use Utopia\Http\Response;
 use Utopia\Platform\Action;

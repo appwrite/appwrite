@@ -13,13 +13,12 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Platform\\": "src/Platform"
+            "Utopia\\Platform\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Platform",
-            "Utopia\\Unit\\": "tests/unit"
+            "Utopia\\Platform\\Tests\\": "tests/"
         }
     },
     "require": {
@@ -32,7 +31,7 @@
         "utopia-php/servers": "^0.4"
     },
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --testsuite unit"
     },
     "config": {
         "allow-plugins": {

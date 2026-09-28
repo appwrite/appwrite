@@ -1,14 +1,14 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Platform\Tests;
 
 use Utopia\Platform\Action;
 
-class TestActionChunked extends Action
+class TestActionRedirect extends Action
 {
     public function __construct()
     {
-        $this->httpPath = '/chunked';
+        $this->httpPath = '/redirect';
         $this->setHttpMethod('GET');
         $this->inject('response');
         $this->callback(function ($response): void {
@@ -18,8 +18,6 @@ class TestActionChunked extends Action
 
     public function action($response): void
     {
-        foreach (['Hello ', 'World!'] as $key => $word) {
-            $response->chunk($word, $key === 1);
-        }
+        $response->redirect('/');
     }
 }

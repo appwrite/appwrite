@@ -1,9 +1,8 @@
 <?php
 
-namespace Utopia\Unit;
+namespace Utopia\Platform\Tests;
 
 use Utopia\Platform\Platform;
-use Utopia\Tests\TestModule;
 
 class Mock extends Platform
 {

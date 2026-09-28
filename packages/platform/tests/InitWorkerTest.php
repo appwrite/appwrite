@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Unit;
+namespace Utopia\Platform\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Platform\Action;
@@ -59,20 +59,20 @@ final class InitWorkerTest extends TestCase
 
     private function platform(): Platform
     {
-        $service = new class extends Service {
+        $service = new class () extends Service {
             public function __construct()
             {
                 $this->type = Service::TYPE_WORKER;
-                $this->addAction('databases', new class extends Action {
+                $this->addAction('databases', new class () extends Action {
                     public function __construct()
                     {
-                        $this->callback(static fn(): null => null);
+                        $this->callback(static fn (): null => null);
                     }
                 });
-                $this->addAction('functions', new class extends Action {
+                $this->addAction('functions', new class () extends Action {
                     public function __construct()
                     {
-                        $this->callback(static fn(): null => null);
+                        $this->callback(static fn (): null => null);
                     }
                 });
             }
@@ -97,18 +97,24 @@ final class FakeConsumer implements Consumer
         throw new \LogicException('Worker initialization must not receive messages');
     }
 
-    public function commit(Queue $queue, Message $message): void {}
+    public function commit(Queue $queue, Message $message): void
+    {
+    }
 
-    public function reject(Queue $queue, Message $message): void {}
+    public function reject(Queue $queue, Message $message): void
+    {
+    }
 
-    public function close(): void {}
+    public function close(): void
+    {
+    }
 }
 
 final class RecordingAdapter extends Adapter
 {
     public function __construct(string $namespace = 'utopia-queue')
     {
-        parent::__construct(static fn(string $q): Consumer => new FakeConsumer(), 1, $namespace);
+        parent::__construct(static fn (string $q): Consumer => new FakeConsumer(), 1, $namespace);
     }
 
     public function start(): self
