@@ -166,6 +166,18 @@ trait TeamsBase
         $this->assertIsInt($response3['body']['total']);
         $this->assertEquals(true, $dateValidator->isValid($response3['body']['$createdAt']));
 
+        // A project-scoped role fills the full `project-<projectId>-<role>` budget of 81 chars
+        $response4 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Aston Villa',
+            'roles' => [\str_repeat('a', 81)],
+        ]);
+
+        $this->assertEquals(201, $response4['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
