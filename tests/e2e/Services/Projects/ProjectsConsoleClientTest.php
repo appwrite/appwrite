@@ -4019,6 +4019,21 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        /**
+         * SDKs send display names, and integrations such as the Terraform provider
+         * identify themselves; both must be recorded in the lowercase form.
+         */
+        foreach (['Go', 'Terraform', 'Python'] as $sdk) {
+            $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'x-appwrite-key' => $keySecret,
+                'x-sdk-name' => $sdk,
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
         /** Check that the API key has been updated */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -4028,9 +4043,11 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertCount(2, $response['body']['sdks']);
+        $this->assertCount(4, $response['body']['sdks']);
         $this->assertContains('python', $response['body']['sdks']);
         $this->assertContains('php', $response['body']['sdks']);
+        $this->assertContains('go', $response['body']['sdks']);
+        $this->assertContains('terraform', $response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
 
