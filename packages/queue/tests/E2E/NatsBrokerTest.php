@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
+use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
@@ -938,6 +939,7 @@ final class NatsBrokerTest extends TestCase
                 return $this->inner->readLine($timeout);
             }
 
+            /** @param array<string, mixed> $options */
             public function upgradeTls(array $options): void
             {
                 $this->inner->upgradeTls($options);
@@ -1659,6 +1661,61 @@ final class NatsBrokerTest extends TestCase
 
         $small->close();
         $large->close();
+    }
+
+    public function testASpareDeliveryIsParkedWhenTheThresholdCannotBeReRead(): void
+    {
+        // Re-reading the consumer before parking is a request, and it can fail. The
+        // delivery in hand may be the server's last, so it is parked on the cached
+        // threshold rather than dropped unacknowledged with the rest of its batch.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $dying = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
+        $dying->publish($queue, ['poison' => true]);
+        $this->assertCount(1, $dying->receive($queue, 2));
+        $this->assertCount(1, $dying->receive($queue, 2));
+        $dying->close();
+
+        $transport = new TcpTransport();
+        $fault = $this->createStub(Transport::class);
+        foreach (['connect', 'read', 'readLine', 'upgradeTls', 'isConnected', 'close'] as $method) {
+            $fault->method($method)->willReturnCallback($transport->$method(...));
+        }
+        $state = new class () {
+            public bool $armed = false;
+        };
+        $failure = new NatsException('consumer info unavailable');
+        $fault->method('write')->willReturnCallback(static function (string $data) use ($transport, $state, $failure): int {
+            if ($state->armed && str_contains($data, 'CONSUMER.INFO')) {
+                $state->armed = false;
+                throw $failure;
+            }
+            return $transport->write($data);
+        });
+        $reported = [];
+        $fresh = new Nats(
+            static fn (): Connection => Connection::connect(new ConnectionOptions(
+                servers: $url,
+                transportFactory: static fn (): Transport => $fault,
+            )),
+            ackWait: 1.0,
+            maxDeliver: 2,
+            onError: static function (\Throwable $error) use (&$reported): void {
+                $reported[] = $error;
+            },
+        );
+        $state->armed = true; // provisioning sends no CONSUMER.INFO, so the re-read is the first
+
+        $this->assertSame([], $fresh->receive($queue, 3), 'an exhausted message must not reach a handler');
+        $this->assertFalse($state->armed, 'the re-read failed');
+        $this->assertSame([$failure], $reported, 'and was reported');
+
+        $js = Connection::connect($url)->jetStream();
+        $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages, 'work stream holds nothing');
+        $this->assertSame(1, $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DEAD')->state->messages, 'the message is on the dead stream');
+
+        $fresh->close();
     }
 
     // JetStream updates a consumer's num_pending asynchronously after the publish ack.

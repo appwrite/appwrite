@@ -746,7 +746,14 @@ class Nats implements Synchronous, Consumer, Bounded
                 // The consumer is shared: a broker with a larger maxDeliver may have
                 // reprovisioned it since this one cached its spare. Parking on a stale
                 // threshold would take attempts the server still allows, so re-read it.
-                $spare = $this->spareDelivery[$key] = $this->spareOf($this->consumers[$key]->info(true)->config);
+                // If the read fails, the cached one stands: this may be the server's last
+                // delivery, and a throw here would leave it, and every message behind it
+                // in the batch, unacknowledged -- stranded, if no advisory is caught.
+                try {
+                    $spare = $this->spareDelivery[$key] = $this->spareOf($this->consumers[$key]->info(true)->config);
+                } catch (\Throwable $error) {
+                    $this->report($error);
+                }
                 if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
                     $this->park($queue, $jsMessage, 'max deliveries exceeded');
 
