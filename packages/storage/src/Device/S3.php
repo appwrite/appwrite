@@ -404,6 +404,10 @@ class S3 extends Device
      */
     public function delete(string $path, bool $recursive = false): bool
     {
+        if ($recursive && $path !== '') {
+            $this->deleteByPrefix($path);
+        }
+
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         $this->call(Method::DELETE, $uri);
@@ -535,12 +539,26 @@ class S3 extends Device
      */
     public function deletePath(string $path): bool
     {
-        $path = $this->getRoot() . '/' . $path;
+        return $this->deleteByPrefix($this->getRoot() . '/' . $path);
+    }
+
+    /**
+     * Delete every object under a directory key.
+     *
+     * The listing prefix ends with a separator so that it cannot reach a
+     * sibling whose name merely starts with the same characters: deleting
+     * `app-1` must not touch `app-12`.
+     *
+     * @throws StorageException
+     */
+    private function deleteByPrefix(string $path): bool
+    {
+        $prefix = rtrim($path, '/') . '/';
 
         $uri = '/';
         $continuationToken = '';
         do {
-            $objects = $this->listObjects($path, continuationToken: $continuationToken);
+            $objects = $this->listObjects($prefix, continuationToken: $continuationToken);
             $token = $objects['NextContinuationToken'] ?? '';
             $continuationToken = \is_string($token) ? $token : '';
 
@@ -566,10 +584,40 @@ class S3 extends Device
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
-            $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+            $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+            $this->assertBulkDeleteSucceeded($response);
         } while ($continuationToken !== '');
 
         return true;
+    }
+
+    /**
+     * A bulk delete reports a per-key failure inside a 200 response, so the
+     * status alone does not say the objects are gone. The request is quiet, so
+     * a well behaved response carries nothing but failures.
+     *
+     * @throws RemoteException
+     */
+    private function assertBulkDeleteSucceeded(S3\Response $response): void
+    {
+        if (! \is_array($response->body)) {
+            return;
+        }
+
+        $errors = $response->body['Error'] ?? [];
+        $entries = \is_array($errors) ? (isset($errors['Key']) ? [$errors] : $errors) : [];
+
+        foreach ($entries as $error) {
+            if (! \is_array($error)) {
+                continue;
+            }
+
+            $key = \is_string($error['Key'] ?? null) ? $error['Key'] : 'unknown key';
+            $code = \is_string($error['Code'] ?? null) ? $error['Code'] : 'unknown error';
+            $message = \is_string($error['Message'] ?? null) ? $error['Message'] : '';
+
+            throw new RemoteException(\trim("S3 could not delete \"{$key}\": {$code} {$message}"));
+        }
     }
 
     /**
