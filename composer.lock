@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "58308bd8e010a2c16fa9b969a17675a7",
+    "content-hash": "d19d9d4d8753e04f77bb4175650b7463",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2875,53 +2875,6 @@
                 "source": "https://github.com/utopia-php/audit/tree/4.0.3"
             },
             "time": "2026-09-10T11:04:06+00:00"
-        },
-        {
-            "name": "utopia-php/cli",
-            "version": "0.24.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/cli.git",
-                "reference": "39d590ffe67b0d63f107ad45533a85163899bc08"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/39d590ffe67b0d63f107ad45533a85163899bc08",
-                "reference": "39d590ffe67b0d63f107ad45533a85163899bc08",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4",
-                "utopia-php/servers": "^0.4"
-            },
-            "require-dev": {
-                "swoole/ide-helper": "4.8.8",
-                "utopia-php/console": "0.0.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\CLI\\": "src/CLI"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple CLI library to manage command line applications",
-            "keywords": [
-                "cli",
-                "command line",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.24.4"
-            },
-            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/config",
