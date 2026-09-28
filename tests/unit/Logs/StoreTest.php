@@ -70,18 +70,37 @@ final class StoreTest extends TestCase
 
     public function testFindsAndCountsWithDeploymentFilter(): void
     {
-        $client = new CapturingClient([
-            $this->jsonResponse([[
-                'id' => 'log1',
+        $client = new FilteringClient([
+            [
+                'id' => 'log-stdout',
                 'resourceType' => 'functions',
                 'resourceId' => 'fn',
                 'resourceInternalId' => '10',
                 'deploymentId' => 'dep',
                 'timestamp' => '2026-08-25 10:00:00.000',
+                'stream' => 'stdout',
+                'message' => 'ok',
+            ],
+            [
+                'id' => 'log-stderr',
+                'resourceType' => 'functions',
+                'resourceId' => 'fn',
+                'resourceInternalId' => '10',
+                'deploymentId' => 'dep',
+                'timestamp' => '2026-08-25 10:00:01.000',
                 'stream' => 'stderr',
                 'message' => 'boom',
-            ]]),
-            $this->jsonResponse([['total' => 1]]),
+            ],
+            [
+                'id' => 'log-other',
+                'resourceType' => 'functions',
+                'resourceId' => 'fn',
+                'resourceInternalId' => '10',
+                'deploymentId' => 'other',
+                'timestamp' => '2026-08-25 10:00:02.000',
+                'stream' => 'stderr',
+                'message' => 'other',
+            ],
         ]);
 
         $store = $this->store($client);
@@ -95,13 +114,34 @@ final class StoreTest extends TestCase
         $total = $store->count('project', $queries, 100);
 
         $this->assertCount(1, $logs);
-        $this->assertSame('log1', $logs[0]->getId());
+        $this->assertSame('log-stderr', $logs[0]->getId());
         $this->assertSame('stderr', $logs[0]->getAttribute('stream'));
+        $this->assertSame('dep', $logs[0]->getAttribute('deploymentId'));
         $this->assertSame(1, $total);
+    }
 
-        $findBody = (string) $client->requests[0]->getBody();
-        $this->assertStringContainsString('deploymentId', $findBody);
-        $this->assertStringContainsString('ORDER BY timestamp DESC', $findBody);
+    public function testDeletesProjectAndResourceRows(): void
+    {
+        $client = new CapturingClient([
+            new Response(200),
+            new Response(200),
+        ]);
+        $store = $this->store($client);
+
+        $store->deleteProject('project');
+        $store->deleteByResource('project', '10', 'functions');
+
+        $projectDelete = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('DELETE FROM', $projectDelete);
+        $this->assertStringContainsString('projectId = {projectId:String}', $projectDelete);
+        $this->assertStringContainsString('name="param_projectId"', $projectDelete);
+        $this->assertStringContainsString('lightweight_deletes_sync=0', $projectDelete);
+
+        $resourceDelete = (string) $client->requests[1]->getBody();
+        $this->assertStringContainsString('resourceInternalId = {resourceInternalId:String}', $resourceDelete);
+        $this->assertStringContainsString('resourceType = {resourceType:String}', $resourceDelete);
+        $this->assertStringContainsString('name="param_resourceInternalId"', $resourceDelete);
+        $this->assertStringContainsString('name="param_resourceType"', $resourceDelete);
     }
 
     public function testGetById(): void
@@ -182,6 +222,115 @@ final class CapturingClient implements ClientInterface
         $this->requests[] = $request;
 
         return \array_shift($this->responses) ?? new Response(200);
+    }
+}
+
+/**
+ * In-memory ClickHouse stand-in that applies equality filters from the
+ * request's SQL placeholders and named bindings.
+ */
+final class FilteringClient implements ClientInterface
+{
+    /** @var list<RequestInterface> */
+    public array $requests = [];
+
+    /** @param list<array<string, mixed>> $rows */
+    public function __construct(private readonly array $rows)
+    {
+    }
+
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->requests[] = $request;
+        $fields = $this->multipartFields((string) $request->getBody());
+        $sql = $fields['query'] ?? '';
+        $params = [];
+        foreach ($fields as $name => $value) {
+            if (\str_starts_with($name, 'param_')) {
+                $params[\substr($name, 6)] = $value;
+            }
+        }
+
+        $matched = $this->match($sql, $params);
+        if (\str_contains($sql, 'least(count()')) {
+            $body = \json_encode(['data' => [['total' => \count($matched)]]], JSON_THROW_ON_ERROR);
+
+            return new Response(200, body: new Stream($body));
+        }
+
+        $body = \json_encode(['data' => \array_values($matched)], JSON_THROW_ON_ERROR);
+
+        return new Response(200, body: new Stream($body));
+    }
+
+    /** @return array<string, string> */
+    private function multipartFields(string $body): array
+    {
+        $fields = [];
+        $parts = \explode("\r\n\r\n", $body);
+        for ($i = 0; $i < \count($parts) - 1; $i++) {
+            $header = $parts[$i];
+            $valuePart = $parts[$i + 1];
+            $namePrefix = 'name="';
+            $namePos = \strpos($header, $namePrefix);
+            if ($namePos === false) {
+                continue;
+            }
+            $nameStart = $namePos + \strlen($namePrefix);
+            $nameEnd = \strpos($header, '"', $nameStart);
+            if ($nameEnd === false) {
+                continue;
+            }
+            $name = \substr($header, $nameStart, $nameEnd - $nameStart);
+            $end = \strpos($valuePart, "\r\n");
+            $fields[$name] = $end === false ? $valuePart : \substr($valuePart, 0, $end);
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return list<array<string, mixed>>
+     */
+    private function match(string $sql, array $params): array
+    {
+        $filters = [];
+        foreach (['deploymentId', 'stream', 'resourceType', 'resourceId', 'resourceInternalId'] as $column) {
+            $needle = $column . ' IN ({';
+            $pos = \strpos($sql, $needle);
+            if ($pos === false) {
+                continue;
+            }
+            $start = $pos + \strlen($needle);
+            $end = \strpos($sql, ':', $start);
+            if ($end === false) {
+                continue;
+            }
+            $key = \substr($sql, $start, $end - $start);
+            if (isset($params[$key])) {
+                $filters[$column] = $params[$key];
+            }
+        }
+
+        $matched = [];
+        foreach ($this->rows as $row) {
+            if (($params['projectId'] ?? '') !== 'project') {
+                continue;
+            }
+            $ok = true;
+            foreach ($filters as $column => $value) {
+                if (($row[$column] ?? null) !== $value) {
+                    $ok = false;
+                    break;
+                }
+            }
+            if ($ok) {
+                $matched[] = $row;
+            }
+        }
+
+        return $matched;
     }
 }
 

@@ -187,6 +187,19 @@ class Store
         $this->insert($rows);
     }
 
+    public function deleteProject(string $projectId): void
+    {
+        $this->deleteWhere($projectId);
+    }
+
+    public function deleteByResource(
+        string $projectId,
+        string $resourceInternalId,
+        string $resourceType,
+    ): void {
+        $this->deleteWhere($projectId, $resourceInternalId, $resourceType);
+    }
+
     public function getById(string $projectId, string $logId): Document
     {
         $params = [
@@ -301,6 +314,29 @@ class Store
     private function insert(array $rows): void
     {
         $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
+    }
+
+    private function deleteWhere(
+        string $projectId,
+        ?string $resourceInternalId = null,
+        ?string $resourceType = null,
+    ): void {
+        $params = ['projectId' => $projectId];
+        $conditions = ['projectId = {projectId:String}'];
+        if ($resourceInternalId !== null) {
+            $params['resourceInternalId'] = $resourceInternalId;
+            $conditions[] = 'resourceInternalId = {resourceInternalId:String}';
+        }
+        if ($resourceType !== null) {
+            $params['resourceType'] = $resourceType;
+            $conditions[] = 'resourceType = {resourceType:String}';
+        }
+
+        $where = \implode(' AND ', $conditions);
+        $this->query(
+            'DELETE FROM ' . $this->table() . " WHERE {$where} SETTINGS lightweight_deletes_sync=0",
+            $params
+        );
     }
 
     /**
