@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Utopia\Database\Hooks;
 
-use Appwrite\Database\Factory as DatabaseFactory;
-use Appwrite\Databases\TransactionState;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList;
-use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hooks\Metadata;
-use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -33,11 +26,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Container;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Schema\ColumnType;
-
-require_once __DIR__ . '/../../../../../src/Appwrite/Platform/Modules/Databases/Constants.php';
 
 /**
  * Documents nested through relationships carry the public ID of their collection. Resolving it must not cost every
@@ -66,14 +56,8 @@ final class RelatedPublicIdTest extends TestCase
      */
     private array $internalIds = [];
 
-    /**
-     * @var array<string, array{encode: callable, decode: callable, signature: string}>
-     */
-    private array $filters;
-
     protected function setUp(): void
     {
-        $this->filters = (new ReflectionProperty(Database::class, 'filters'))->getValue();
         require __DIR__ . '/../../../../../app/init/database/filters.php';
 
         $this->authorization = new Authorization();
@@ -111,11 +95,6 @@ final class RelatedPublicIdTest extends TestCase
         $this->seedCatalog();
         $this->seedTenant();
         $this->catalogReads = [];
-    }
-
-    protected function tearDown(): void
-    {
-        (new ReflectionProperty(Database::class, 'filters'))->setValue(null, $this->filters);
     }
 
     /**
@@ -179,47 +158,14 @@ final class RelatedPublicIdTest extends TestCase
     private function list(array $select): array
     {
         $catalog = $this->catalog();
-        $factory = $this->createStub(DatabaseFactory::class);
-        $factory->method('tenant')->willReturnCallback(fn (): Database => $this->tenant());
-        $request = $this->createStub(Request::class);
-        $request->method('getURI')->willReturn('/v1/databases/' . self::DATABASE_ID . '/collections/albums/documents');
-        $request->method('getHeaderLine')->willReturn('');
+        $tenant = $this->tenant();
+        $tenant->addHook(new Metadata(
+            database: new Document(['$id' => self::DATABASE_ID]),
+            resolvePublicId: Metadata::resolver($tenant, $catalog, [$this->internalIds['albums'] => 'albums']),
+            tenant: $tenant,
+        ));
 
-        $register = require __DIR__ . '/../../../../../app/init/resources/request.php';
-        $container = new Container();
-        $register($container);
-        $container->set('databaseFactory', static fn (): DatabaseFactory => $factory);
-        $container->set('project', static fn (): Document => new Document(['$id' => 'project']));
-        $container->set('request', static fn (): Request => $request);
-        $container->set('dbForProject', static fn (): Database => $catalog);
-        $container->set('usage', static fn (): Context => new Context());
-
-        $documents = [];
-        $response = $this->createStub(Response::class);
-        $response->method('dynamic')->willReturnCallback(
-            static function (Document $list) use (&$documents): void {
-                $documents = \array_values($list->getAttribute('documents'));
-            }
-        );
-
-        (new XList())->action(
-            databaseId: self::DATABASE_ID,
-            collectionId: 'albums',
-            queries: [Query::select($select)->toString(), Query::orderAsc('$id')->toString()],
-            transactionId: null,
-            includeTotal: false,
-            ttl: 0,
-            response: $response,
-            dbForProject: $catalog,
-            user: new User(),
-            getDatabasesDB: $container->get('getDatabasesDB'),
-            usage: $container->get('usage'),
-            transactionState: $this->createStub(TransactionState::class),
-            authorization: $this->authorization,
-            operations: $container->get('operations'),
-        );
-
-        return $documents;
+        return $tenant->find($this->internalIds['albums'], [Query::select($select), Query::orderAsc('$id')]);
     }
 
     /**
