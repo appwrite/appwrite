@@ -1,0 +1,88 @@
+services:
+  mysql:
+    image: mysql:8
+    environment: 
+      - MYSQL_ROOT_PASSWORD=password
+    networks:
+      - abuse
+    ports:
+      - "9307:3306"
+
+  redis:
+    image: redis:6.0-alpine
+    container_name: redis
+    networks:
+      - abuse
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.php-${PHP_VERSION:-8.4}
+    networks:
+      - abuse
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - APPWRITE_ENDPOINT
+      - APPWRITE_PROJECT_ID
+      - APPWRITE_API_KEY
+    volumes:
+      - ./phpunit.xml:/code/phpunit.xml
+      - ./src:/code/src
+      - ./tests:/code/tests
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    networks:
+      - abuse
+    environment:
+      - REDIS_HOSTS=redis-cluster-0:6379
+    ports:
+      - "8081:5540"
+    volumes:
+      - redisinsight:/data
+
+  redis-cluster-0:
+    image: bitnamilegacy/redis-cluster:7.4
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_NODES=redis-cluster-0 redis-cluster-1 redis-cluster-2 redis-cluster-3
+      - REDIS_CLUSTER_CREATOR=yes
+      - REDIS_CLUSTER_REPLICAS=0
+    networks:
+      - abuse
+    depends_on:
+      - redis-cluster-1
+      - redis-cluster-2
+      - redis-cluster-3
+
+  redis-cluster-1:
+    image: bitnamilegacy/redis-cluster:7.4
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_NODES=redis-cluster-0 redis-cluster-1 redis-cluster-2 redis-cluster-3
+    networks:
+      - abuse
+
+  redis-cluster-2:
+    image: bitnamilegacy/redis-cluster:7.4
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_NODES=redis-cluster-0 redis-cluster-1 redis-cluster-2 redis-cluster-3
+    networks:
+      - abuse
+
+  redis-cluster-3:
+    image: bitnamilegacy/redis-cluster:7.4
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_NODES=redis-cluster-0 redis-cluster-1 redis-cluster-2 redis-cluster-3
+    networks:
+      - abuse
+
+networks:
+  abuse:
+volumes:
+  redisinsight:

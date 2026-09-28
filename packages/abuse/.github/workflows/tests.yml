@@ -1,0 +1,34 @@
+name: "Tests"
+
+on: [ pull_request ]
+jobs:
+  lint:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: ['8.4', '8.5']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+
+      - name: Generate .env file
+        run: |
+          echo "APPWRITE_ENDPOINT=${{ secrets.APPWRITE_ENDPOINT }}" > .env
+          echo "APPWRITE_PROJECT_ID=${{ secrets.APPWRITE_PROJECT_ID }}" >> .env
+          echo "APPWRITE_API_KEY=${{ secrets.APPWRITE_API_KEY }}" >> .env
+
+      - name: Build
+        run: |
+          export PHP_VERSION=${{ matrix.php-versions }}
+          docker compose build
+          docker compose up -d
+          sleep 10
+
+      - name: Run Tests
+        run: docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml

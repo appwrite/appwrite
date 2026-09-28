@@ -1,0 +1,21 @@
+name: "Benchmarks"
+
+on: [pull_request]
+jobs:
+  lint:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Build
+      run: |
+        docker compose build
+        docker compose up -d
+        sleep 10
+
+    - name: Run benchmark
+      run: |
+        docker compose exec tests vendor/bin/phpbench run --report=aggregate --progress=plain
