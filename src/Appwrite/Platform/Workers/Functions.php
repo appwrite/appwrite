@@ -808,10 +808,11 @@ class Functions extends Action
             ->from($queueForEvents)
             ->trigger();
 
-        // An executor that answered ran the function, so its error is the
-        // execution's result, stored above. Only an unreachable executor or a
-        // failure in this worker is a server error.
-        if ($error !== null && !($error instanceof ExecutorException && $error->getCode() !== 0)) {
+        // A failure the executor classified (a runtime that crashed or timed
+        // out) is the execution's result, stored above, and the executor
+        // reports it. Only one it could not classify, an unreachable executor,
+        // or a failure in this worker is a server error here.
+        if ($error !== null && !($error instanceof ExecutorException && $error->isClassified())) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
                 'Function execution failed: ' . $error->getMessage(),
