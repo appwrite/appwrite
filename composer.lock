@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18e90bbf0db211df89bafc7209ef8a5a",
+    "content-hash": "2a235f13e30eada73f6a51d4b42d3855",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3138,53 +3138,6 @@
                 "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
             },
             "time": "2026-09-09T05:42:37+00:00"
-        },
-        {
-            "name": "utopia-php/platform",
-            "version": "1.0.0-rc25",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/platform.git",
-                "reference": "dc43dd34951d2b00946056cd5d269427b68dbd3a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/dc43dd34951d2b00946056cd5d269427b68dbd3a",
-                "reference": "dc43dd34951d2b00946056cd5d269427b68dbd3a",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-redis": "*",
-                "php": ">=8.5",
-                "utopia-php/cli": "^0.24",
-                "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "^6.0.0",
-                "utopia-php/servers": "^0.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Platform\\": "src/Platform"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Light and Fast Platform Library",
-            "keywords": [
-                "framework",
-                "php",
-                "platform",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc25"
-            },
-            "time": "2026-09-23T13:10:08+00:00"
         },
         {
             "name": "webmozart/assert",
