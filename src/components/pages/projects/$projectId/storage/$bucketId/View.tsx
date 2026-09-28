@@ -10,6 +10,10 @@ import {
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
+import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
+import { useTerraformResource } from '@/lib/react-query/hooks/terraform'
+import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import { flushSync } from 'react-dom'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -170,6 +174,11 @@ export function View() {
   const { projectId, bucketId } = useParams({
     strict: false,
   })
+  const terraformResource = getTerraformResourcePath('bucket', bucketId ?? '')
+  const isTerraformManaged = !!useTerraformResource(
+    projectId,
+    terraformResource,
+  )
   const navigate = useNavigate()
   const location = useLocation()
   const search = useSearch({ strict: false }) as {
@@ -1408,6 +1417,12 @@ export function View() {
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate">{displayBucket.name}</span>
               <CopyableId id={displayBucket.$id} size="xs" className="shrink-0" />
+              {projectId ? (
+                <TerraformBadge
+                  projectId={projectId}
+                  resource={terraformResource}
+                />
+              ) : null}
             </div>
           ) : (
             t('Bucket')
@@ -1484,34 +1499,44 @@ export function View() {
         fullWidthBorder
         fullWidth
         contentAfterBorder={
-          displayBucket && !displayBucket.enabled ? (
-            <div className="border-b border-border bg-amber-500/5">
-              <div className="w-full px-4 py-3 sm:px-6">
-                <Alert
-                  variant="default"
-                  className="border-amber-500/30 bg-transparent"
-                >
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                    {t('Bucket is disabled')}
-                  </AlertTitle>
-                  <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                    <span className="inline">
-                      {t(
-                        'This bucket is disabled and not accessible to end users through the API. Console actions remain available.',
-                      )}{' '}
-                      <Link
-                        to="/projects/$projectId/storage/$bucketId/settings"
-                        params={{ projectId: projectId!, bucketId: bucketId! }}
-                        className="font-medium underline hover:no-underline inline"
-                      >
-                        {t('Enable it in the Settings tab')}
-                      </Link>{' '}
-                      {t('to make it available to end users.')}
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              </div>
+          isTerraformManaged || (displayBucket && !displayBucket.enabled) ? (
+            <div>
+              {isTerraformManaged ? (
+                <TerraformResourceAlert
+                  projectId={projectId}
+                  resource={terraformResource}
+                />
+              ) : null}
+              {displayBucket && !displayBucket.enabled ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="w-full px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        {t('Bucket is disabled')}
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          {t(
+                            'This bucket is disabled and not accessible to end users through the API. Console actions remain available.',
+                          )}{' '}
+                          <Link
+                            to="/projects/$projectId/storage/$bucketId/settings"
+                            params={{ projectId: projectId!, bucketId: bucketId! }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            {t('Enable it in the Settings tab')}
+                          </Link>{' '}
+                          {t('to make it available to end users.')}
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : undefined
         }

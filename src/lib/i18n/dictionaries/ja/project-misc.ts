@@ -3004,4 +3004,33 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このデータセットではエージェントクローラーの内訳はまだ利用できません',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
+  'No changes were made. This resource is managed by Terraform.':
+    '変更は行われませんでした。このリソースは Terraform で管理されています。',
+  'Managed by Terraform': 'Terraform で管理',
+  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
+    'Appwrite Terraform プロバイダーがこのリソースを作成しました。Terraform の構成で更新してください。',
+  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
+    'このプロジェクトのリソースは Appwrite Terraform プロバイダーによって作成されました。Terraform の構成で更新してください。',
+  'Managed resources': '管理対象のリソース',
+  'Last apply': '最終 apply',
+  'View activity': 'アクティビティを表示',
+  'Changed outside Terraform': 'Terraform 外で変更',
+  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
+    'このリソースは Terraform で管理されていますが、最後の apply の後に変更されました。terraform plan を実行して構成との差分を確認してください。',
+  'Last change:': '最終変更:',
+  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
+    'ここで行った変更は Terraform の構成に含まれません。次回の terraform apply で元に戻される可能性があります。',
+  'Delete a Terraform-managed resource?':
+    'Terraform で管理されているリソースを削除しますか？',
+  'Update a Terraform-managed resource?':
+    'Terraform で管理されているリソースを更新しますか？',
+  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
+    'このリソースは Terraform によって作成されました。Terraform の構成からも削除しない限り、次回の terraform apply で再作成されます。',
+  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
+    'このリソースは Terraform によって作成されました。Terraform の構成も更新しない限り、次回の terraform apply でこの変更が上書きされる可能性があります。',
+  Changes: '変更',
+  "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
+  'Delete anyway': '削除を続行',
+  'Update anyway': '更新を続行',
+  'Via Terraform': 'Terraform 経由',
 }

@@ -4,12 +4,41 @@ import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
 import {
   ResourceSearchPopover,
   type ResourceSearchKind,
 } from '@/components/global/shared/ResourceSearchPopover'
+import {
+  getTerraformResourcePath,
+  type TerraformResourceKind,
+} from '@/lib/terraform/resource'
 
 export type ResourceTitleKind = ResourceSearchKind
+
+const TERRAFORM_TITLE_KINDS = [
+  'function',
+  'site',
+  'bucket',
+  'database',
+  'table',
+  'topic',
+  'provider',
+] as const satisfies readonly ResourceTitleKind[] & TerraformResourceKind[]
+
+function getTitleTerraformResource(
+  kind: ResourceTitleKind,
+  resourceId: string,
+  databaseId?: string | null,
+): string | null {
+  return (TERRAFORM_TITLE_KINDS as readonly string[]).includes(kind)
+    ? getTerraformResourcePath(
+        kind as TerraformResourceKind,
+        resourceId,
+        databaseId,
+      )
+    : null
+}
 
 /** Buckets and tables/collections already have sidebar selectors - no title switcher. */
 export const RESOURCE_TITLE_SWITCHER_DISABLED_KINDS = [
@@ -152,6 +181,11 @@ export function DetailResourceHeaderTitle({
   const handleSelect =
     onResourceSelect ??
     ((newResourceId: string) => switchResource(resourceId, newResourceId))
+  const terraformResource = getTitleTerraformResource(
+    kind,
+    resourceId,
+    databaseId,
+  )
 
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -191,6 +225,9 @@ export function DetailResourceHeaderTitle({
       />
       {showCopyableId && resourceId ? (
         <CopyableId id={resourceId} size="xs" className="shrink-0" />
+      ) : null}
+      {projectId && terraformResource ? (
+        <TerraformBadge projectId={projectId} resource={terraformResource} />
       ) : null}
     </div>
   )

@@ -13,6 +13,7 @@ import { useT } from '@/lib/i18n/translate'
 import { ProjectListName } from './ProjectListName'
 import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
 import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
+import { TerraformBadge } from '@/components/global/shared/TerraformBadge'
 
 type ProjectListCardMainProps = {
   project: ProjectListItem
@@ -58,6 +59,12 @@ export function ProjectListCardMain({
             <PauseCircle className="h-3 w-3" />
             {t('Paused')}
           </Badge>
+        ) : null}
+        {!showLockedBadge && !showBlockedBadge && !showPausedBadge ? (
+          <TerraformBadge
+            projectId={project.$id}
+            className="pointer-events-auto relative z-10"
+          />
         ) : null}
         {failedInvoiceWarning ? (
           <div className="pointer-events-auto flex shrink-0 items-center">
