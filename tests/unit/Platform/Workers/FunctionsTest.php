@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Workers\Functions;
+use Executor\Exception as ExecutorException;
+use Executor\Executor;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Bus\Bus;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Queue\Message;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -163,6 +174,31 @@ final class FunctionsTest extends TestCase
         }
     }
 
+    public function testExecutorErrorResponseIsTheExecutionResult(): void
+    {
+        $executorError = new ExecutorException('The runtime crashed while starting. Check the deployment logs and redeploy.', 500, type: 'runtime_failed');
+
+        $execution = $this->runExecution($executorError, $thrown);
+
+        $this->assertNull($thrown, 'A function that crashed is not a server error of the worker');
+        $this->assertSame('failed', $execution['status']);
+        $this->assertSame(500, $execution['responseStatusCode']);
+        $this->assertStringStartsWith($executorError->getMessage(), $execution['errors']);
+    }
+
+    public function testUnreachableExecutorIsReportedAsServerError(): void
+    {
+        $executorError = new ExecutorException('Connection refused with status code 0', 0);
+
+        $execution = $this->runExecution($executorError, $thrown);
+
+        $this->assertInstanceOf(AppwriteException::class, $thrown);
+        $this->assertSame(AppwriteException::GENERAL_SERVER_ERROR, $thrown->getType());
+        $this->assertTrue($thrown->isPublishable());
+        $this->assertSame($executorError, $thrown->getPrevious());
+        $this->assertSame('failed', $execution['status']);
+    }
+
     /**
      * @return \Iterator<string, array{array<string, string>, string, string}>
      */
@@ -179,6 +215,86 @@ final class FunctionsTest extends TestCase
     {
         yield 'inactive' => [new Document(['$id' => 'schedule-id', 'active' => false])];
         yield 'missing' => [new Document()];
+    }
+
+    /**
+     * Runs an HTTP execution through the worker against an executor that
+     * throws, and returns the execution the worker recorded.
+     *
+     * @return array<string, mixed>
+     */
+    private function runExecution(\Throwable $executorError, ?\Throwable &$thrown): array
+    {
+        $runtime = \array_key_first(Config::getParam('runtimes-v2'));
+        $function = [
+            '$id' => 'function-id',
+            'name' => 'function',
+            'deploymentId' => 'deployment-id',
+            'runtime' => $runtime,
+            'version' => 'v2',
+            'timeout' => 15,
+        ];
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject
+            ->method('getDocument')
+            ->willReturnCallback(fn (string $collection, string $id): Document => match ($collection) {
+                'deployments' => new Document([
+                    '$id' => 'deployment-id',
+                    'resourceId' => 'function-id',
+                    'status' => 'ready',
+                ]),
+                default => new Document(),
+            });
+
+        $executor = $this->createStub(Executor::class);
+        $executor->method('createExecution')->willThrowException($executorError);
+
+        $execution = null;
+        $bus = $this->createStub(Bus::class);
+        $bus
+            ->method('dispatch')
+            ->willReturnCallback(function (object $event) use (&$execution): void {
+                if ($event instanceof ExecutionCompleted) {
+                    $execution = $event->execution;
+                }
+            });
+
+        $message = new Message([
+            'pid' => 'pid',
+            'queue' => 'v1-functions',
+            'timestamp' => \time(),
+            'payload' => [
+                'type' => 'http',
+                'function' => $function,
+                'execution' => ['$id' => 'execution-id'],
+                'platform' => ['apiHostname' => 'localhost'],
+            ],
+        ]);
+
+        $thrown = null;
+        try {
+            $this->worker()->action(
+                new Document(['$id' => 'project-id', 'accessedAt' => DateTime::now()]),
+                $message,
+                $dbForProject,
+                $this->createStub(Database::class),
+                $this->createStub(Webhook::class),
+                $this->createStub(FunctionPublisher::class),
+                $this->createStub(Realtime::class),
+                $this->createStub(Event::class),
+                $bus,
+                $executor,
+                fn (): bool => false,
+                fn (string $key, int $ttl, callable $callback): mixed => $callback(),
+            );
+        } catch (\Throwable $th) {
+            $thrown = $th;
+        }
+
+        $this->assertIsArray($execution, 'The worker must record the execution whatever the executor answered');
+
+        return $execution;
     }
 
     private function worker(): TestFunctions

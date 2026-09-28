@@ -12,6 +12,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
+use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
@@ -682,7 +683,6 @@ class Functions extends Action
 
         /** Execute function */
         $error = null;
-        $errorCode = 0;
 
         try {
             $version = $function->getAttribute('version', 'v2');
@@ -761,8 +761,7 @@ class Functions extends Action
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            $error = $th->getMessage();
-            $errorCode = $th->getCode();
+            $error = $th;
         } finally {
             /** Persist final execution status and record usage */
             Span::add('execution.status', $execution->getAttribute('status', ''));
@@ -809,11 +808,15 @@ class Functions extends Action
             ->from($queueForEvents)
             ->trigger();
 
-        if (!empty($error)) {
+        // An executor that answered ran the function, so its error is the
+        // execution's result, stored above. Only an unreachable executor or a
+        // failure in this worker is a server error.
+        if ($error !== null && !($error instanceof ExecutorException && $error->getCode() !== 0)) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
-                'Function execution failed: ' . $error,
-                $errorCode
+                'Function execution failed: ' . $error->getMessage(),
+                $error->getCode() ?: null,
+                $error,
             );
         }
     }
