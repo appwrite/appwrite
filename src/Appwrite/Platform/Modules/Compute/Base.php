@@ -15,6 +15,7 @@ use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -361,15 +362,25 @@ class Base extends Action
         }
 
         // VCS branch preview
+        $branchDomain = null;
         if (!empty($providerBranch)) {
             try {
-                $domain = (new BranchDomainFilter())->apply([
+                $branchDomain = (new BranchDomainFilter())->apply([
                     'branch' => $providerBranch,
                     'resourceId' => $site->getId(),
                     'projectId' => $project->getId(),
                     'sitesDomain' => $sitesDomain,
                 ]);
-                $ruleId = md5($domain);
+            } catch (\InvalidArgumentException $error) {
+                // Deploy without a branch preview rather than store an unreachable rule
+                Console::warning('Skipping branch preview rule: ' . $error->getMessage());
+            }
+        }
+
+        if ($branchDomain !== null) {
+            $domain = $branchDomain;
+            $ruleId = md5($domain);
+            try {
                 $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -394,9 +405,6 @@ class Base extends Action
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
             } catch (Duplicate $err) {
                 // Ignore, rule already exists; will be updated by builds worker
-            } catch (\InvalidArgumentException) {
-                // The branch name yields no valid hostname, so the deployment goes
-                // ahead without a branch preview rather than storing an unreachable rule
             }
         }
 
@@ -450,9 +458,10 @@ class Base extends Action
                 'projectId' => $project->getId(),
                 'sitesDomain' => $sitesDomain,
             ]);
-        } catch (\InvalidArgumentException) {
-            // The branch name yields no valid hostname. Skip only the preview rule:
-            // manual rules pinned to the branch below still follow the deployment.
+        } catch (\InvalidArgumentException $error) {
+            // Skip only the preview rule: manual rules pinned to the branch
+            // below still follow the deployment.
+            Console::warning('Skipping branch preview rule: ' . $error->getMessage());
             $domain = null;
         }
 
