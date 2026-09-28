@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Abuse;

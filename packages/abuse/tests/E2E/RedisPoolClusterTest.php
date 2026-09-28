@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E;
 
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Abuse\Adapters\TimeLimit\RedisPool as AdapterRedisPool;
@@ -20,14 +20,7 @@ class RedisPoolClusterTest extends Base
             return;
         }
 
-        self::$pool = new Pool(new Stack(), 'abuse-redis-cluster', 2, function (): \RedisCluster {
-            return new \RedisCluster(null, [
-                'redis-cluster-0:6379',
-                'redis-cluster-1:6379',
-                'redis-cluster-2:6379',
-                'redis-cluster-3:6379',
-            ]);
-        }, timeout: 0.0);
+        self::$pool = new Pool(new Stack(), 'abuse-redis-cluster', 2, fn (): \RedisCluster => new \RedisCluster(null, Services::CLUSTER_SEEDS), timeout: 0.0);
     }
 
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
@@ -87,7 +80,6 @@ class RedisPoolClusterTest extends Base
                 do {
                     /** @phpstan-ignore-next-line */
                     $keys = $redis->scan($cursor, $master, 'abuse__*', 100);
-                    /** @phpstan-ignore-next-line */
                     if ($keys === false) {
                         continue;
                     }

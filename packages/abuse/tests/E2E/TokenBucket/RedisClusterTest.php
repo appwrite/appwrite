@@ -1,9 +1,10 @@
 <?php
 
-namespace Utopia\Tests\TokenBucket;
+namespace Utopia\Abuse\Tests\E2E\TokenBucket;
 
 use Utopia\Abuse\Adapters\TokenBucket;
 use Utopia\Abuse\Adapters\TokenBucket\RedisCluster as AdapterRedisCluster;
+use Utopia\Abuse\Tests\E2E\Services;
 
 class RedisClusterTest extends Base
 {
@@ -23,12 +24,7 @@ class RedisClusterTest extends Base
 
     private static function initialiseRedis(): \RedisCluster
     {
-        return new \RedisCluster(null, [
-            'redis-cluster-0:6379',
-            'redis-cluster-1:6379',
-            'redis-cluster-2:6379',
-            'redis-cluster-3:6379',
-        ]);
+        return new \RedisCluster(null, Services::CLUSTER_SEEDS);
     }
 
     public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket

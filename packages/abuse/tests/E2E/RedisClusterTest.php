@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E;
 
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Abuse\Adapters\TimeLimit\RedisCluster as AdapterRedisCluster;
@@ -23,12 +23,7 @@ class RedisClusterTest extends Base
 
     private static function initialiseRedis(): \RedisCluster
     {
-        return new \RedisCluster(null, [
-            'redis-cluster-0:6379',
-            'redis-cluster-1:6379',
-            'redis-cluster-2:6379',
-            'redis-cluster-3:6379'
-        ]);
+        return new \RedisCluster(null, Services::CLUSTER_SEEDS);
     }
 
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit

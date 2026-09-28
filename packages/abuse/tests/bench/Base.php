@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Bench;
+namespace Utopia\Abuse\Tests\Bench;
 
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Iterations;
@@ -22,7 +22,7 @@ abstract class Base
     {
         $ip = '';
         for ($i = 0; $i < 4; $i++) {
-            $sub = \rand(0, 255);
+            $sub = random_int(0, 255);
             $ip .= $sub . '.';
         };
         $ip = \rtrim($ip, '.');

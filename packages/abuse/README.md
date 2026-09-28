@@ -21,7 +21,7 @@ composer require utopia-php/abuse
 **Time Limit Abuse**
 
 The time limit abuse allow each key (action) to be performed [X] times in given time frame.
-This adapter uses a MySQL / MariaDB to store usage attempts. Before using it create the table schema as documented in this repository (./data/schema.sql)
+This adapter uses a MySQL / MariaDB to store usage attempts. Before using it, call `$adapter->setup()` once to create the collection it stores attempts in.
 
 ### Database adapter
 

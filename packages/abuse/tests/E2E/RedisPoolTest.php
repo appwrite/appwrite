@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E;
 
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Abuse\Adapters\TimeLimit\RedisPool as AdapterRedisPool;
@@ -22,7 +22,7 @@ class RedisPoolTest extends Base
 
         self::$pool = new Pool(new Stack(), 'abuse-redis', 2, function (): \Redis {
             $redis = new \Redis();
-            $redis->connect('redis', 6379);
+            $redis->connect(Services::HOST, Services::REDIS_PORT);
 
             return $redis;
         }, timeout: 0.0);

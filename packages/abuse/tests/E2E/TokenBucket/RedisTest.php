@@ -1,9 +1,10 @@
 <?php
 
-namespace Utopia\Tests\SlidingWindow;
+namespace Utopia\Abuse\Tests\E2E\TokenBucket;
 
-use Utopia\Abuse\Adapters\SlidingWindow;
-use Utopia\Abuse\Adapters\SlidingWindow\Redis as AdapterRedis;
+use Utopia\Abuse\Adapters\TokenBucket;
+use Utopia\Abuse\Adapters\TokenBucket\Redis as AdapterRedis;
+use Utopia\Abuse\Tests\E2E\Services;
 
 class RedisTest extends Base
 {
@@ -24,14 +25,14 @@ class RedisTest extends Base
     private static function initialiseRedis(): \Redis
     {
         $redis = new \Redis();
-        $redis->connect('redis', 6379);
+        $redis->connect(Services::HOST, Services::REDIS_PORT);
 
         return $redis;
     }
 
-    public function getAdapter(string $key, int $limit, int $windowSize, int $ttl): SlidingWindow
+    public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket
     {
-        return new AdapterRedis($key, $limit, $windowSize, $ttl, self::$redis);
+        return new AdapterRedis($key, $tokens, $refillRate, self::$redis);
     }
 
     public static function tearDownAfterClass(): void

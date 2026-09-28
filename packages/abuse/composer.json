@@ -13,15 +13,17 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Abuse\\": "src/Abuse"
+            "Utopia\\Abuse\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Abuse"
+            "Utopia\\Abuse\\Tests\\": "tests/"
         }
     },
     "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
         "bench": "vendor/bin/phpbench run --report=aggregate"
     },
     "require": {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E;
 
 use PDO;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -26,9 +26,9 @@ class DatabaseTest extends Base
 
     private static function initialiseDatabase(): Database
     {
-        $dbHost = 'mysql';
+        $dbHost = Services::HOST;
         $dbUser = 'root';
-        $dbPort = '3306';
+        $dbPort = Services::MYSQL_PORT;
         $dbPass = 'password';
 
         $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};charset=utf8mb4", $dbUser, $dbPass, MariaDB::getPdoAttributes());

@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E\SlidingWindow;
 
-use Redis;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as AdapterRedis;
+use Utopia\Abuse\Adapters\SlidingWindow;
+use Utopia\Abuse\Adapters\SlidingWindow\Redis as AdapterRedis;
+use Utopia\Abuse\Tests\E2E\Services;
 
 class RedisTest extends Base
 {
@@ -25,18 +25,16 @@ class RedisTest extends Base
     private static function initialiseRedis(): \Redis
     {
         $redis = new \Redis();
-        $redis->connect('redis', 6379);
+        $redis->connect(Services::HOST, Services::REDIS_PORT);
+
         return $redis;
     }
 
-    public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
+    public function getAdapter(string $key, int $limit, int $windowSize, int $ttl): SlidingWindow
     {
-        return new AdapterRedis($key, $limit, $seconds, self::$redis);
+        return new AdapterRedis($key, $limit, $windowSize, $ttl, self::$redis);
     }
 
-    /**
-     * Clean up Redis connection after all tests
-     */
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {

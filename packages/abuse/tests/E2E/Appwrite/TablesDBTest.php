@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Abuse\Tests\E2E\Appwrite;
 
 use Appwrite\Client;
 use Appwrite\Models\ColumnIndex;
@@ -8,8 +8,9 @@ use Appwrite\Services\TablesDB as TablesDBService;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Abuse\Adapters\TimeLimit\Appwrite\TablesDB;
+use Utopia\Abuse\Tests\E2E\Base;
 
-class AppwriteTablesDBTest extends Base
+class TablesDBTest extends Base
 {
     protected static Client $client;
     protected static string $databaseId;
@@ -20,13 +21,17 @@ class AppwriteTablesDBTest extends Base
             return;
         }
 
+        if ((\getenv('APPWRITE_ENDPOINT') ?: '') === '') {
+            self::markTestSkipped('Set APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID and APPWRITE_API_KEY to a disposable Appwrite project.');
+        }
+
         self::initialiseDatabase();
     }
 
     private static function initialiseDatabase(): void
     {
         self::$databaseId = 'abuse-cicd-' . \uniqid();
-        self::$client = (new Client())
+        self::$client = new Client()
             ->setEndpoint(\getenv('APPWRITE_ENDPOINT') ?: '')
             ->setProject(\getenv('APPWRITE_PROJECT_ID') ?: '')
             ->setKey(\getenv('APPWRITE_API_KEY') ?: '');

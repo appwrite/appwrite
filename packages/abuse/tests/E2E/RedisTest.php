@@ -1,9 +1,10 @@
 <?php
 
-namespace Utopia\Tests\TokenBucket;
+namespace Utopia\Abuse\Tests\E2E;
 
-use Utopia\Abuse\Adapters\TokenBucket;
-use Utopia\Abuse\Adapters\TokenBucket\Redis as AdapterRedis;
+use Redis;
+use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as AdapterRedis;
 
 class RedisTest extends Base
 {
@@ -24,16 +25,18 @@ class RedisTest extends Base
     private static function initialiseRedis(): \Redis
     {
         $redis = new \Redis();
-        $redis->connect('redis', 6379);
-
+        $redis->connect(Services::HOST, Services::REDIS_PORT);
         return $redis;
     }
 
-    public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket
+    public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
-        return new AdapterRedis($key, $tokens, $refillRate, self::$redis);
+        return new AdapterRedis($key, $limit, $seconds, self::$redis);
     }
 
+    /**
+     * Clean up Redis connection after all tests
+     */
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {

@@ -1,10 +1,11 @@
 <?php
 
-namespace Utopia\Tests\Bench;
+namespace Utopia\Abuse\Tests\Bench;
 
 use Redis as Client;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimit;
+use Utopia\Abuse\Tests\E2E\Services;
 
 final class Redis extends Base
 {
@@ -16,7 +17,7 @@ final class Redis extends Base
     public function setUp(): void
     {
         $this->redis = new Client();
-        $this->redis->connect('redis', 6379);
+        $this->redis->connect(Services::HOST, Services::REDIS_PORT);
         $this->adapter = new TimeLimit('login-attempt-from-{{ip}}', 3, 60 * 5, $this->redis);
         $this->abuse = new Abuse($this->adapter);
     }

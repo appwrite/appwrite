@@ -1,10 +1,11 @@
 <?php
 
-namespace Utopia\Tests\Bench;
+namespace Utopia\Abuse\Tests\Bench;
 
 use RedisCluster as Client;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\RedisCluster as RedisClusterAdapter;
+use Utopia\Abuse\Tests\E2E\Services;
 
 final class RedisCluster extends Base
 {
@@ -15,7 +16,7 @@ final class RedisCluster extends Base
      */
     public function setUp(): void
     {
-        $this->redis = new Client(null, ['redis-cluster-0:6379', 'redis-cluster-1:6379', 'redis-cluster-2:6379', 'redis-cluster-3:6379']);
+        $this->redis = new Client(null, Services::CLUSTER_SEEDS);
         $this->adapter = new RedisClusterAdapter('login-attempt-from-{{ip}}', 3, 60 * 5, $this->redis);
         $this->abuse = new Abuse($this->adapter);
     }

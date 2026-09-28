@@ -1,9 +1,10 @@
 <?php
 
-namespace Utopia\Tests\SlidingWindow;
+namespace Utopia\Abuse\Tests\E2E\SlidingWindow;
 
 use Utopia\Abuse\Adapters\SlidingWindow;
 use Utopia\Abuse\Adapters\SlidingWindow\RedisPool as AdapterRedisPool;
+use Utopia\Abuse\Tests\E2E\Services;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 
@@ -22,7 +23,7 @@ class RedisPoolTest extends Base
 
         self::$pool = new Pool(new Stack(), 'abuse-sw-redis', 2, function (): \Redis {
             $redis = new \Redis();
-            $redis->connect('redis', 6379);
+            $redis->connect(Services::HOST, Services::REDIS_PORT);
 
             return $redis;
         }, timeout: 0.0);

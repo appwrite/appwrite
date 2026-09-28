@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b826809d11968b87eb0b03efe5c7cd85",
+    "content-hash": "248d936e25ae5be7031bc4e99191d800",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2777,59 +2777,6 @@
                 "source": "https://github.com/Nevay/spi/tree/v1.0.5"
             },
             "time": "2025-06-29T15:42:06+00:00"
-        },
-        {
-            "name": "utopia-php/abuse",
-            "version": "2.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "821a1884c8067736e1a27d9fc70bdb2cc84d7146"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/821a1884c8067736e1a27d9fc70bdb2cc84d7146",
-                "reference": "821a1884c8067736e1a27d9fc70bdb2cc84d7146",
-                "shasum": ""
-            },
-            "require": {
-                "appwrite/appwrite": "^27.1",
-                "ext-curl": "*",
-                "ext-pdo": "*",
-                "ext-redis": "*",
-                "php": ">=8.4.1",
-                "utopia-php/database": "^7.0.0",
-                "utopia-php/pools": "2.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.*",
-                "phpbench/phpbench": "1.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Abuse\\": "src/Abuse"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple abuse library to manage application usage limits",
-            "keywords": [
-                "Abuse",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/2.0.1"
-            },
-            "time": "2026-08-13T11:44:26+00:00"
         },
         {
             "name": "utopia-php/audit",
