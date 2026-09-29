@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hooks\RelatedUpdates;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -197,11 +198,8 @@ class Delete extends Action
             return;
         }
 
-        // The database fires an update for each related document the delete changed
-        $related = [];
-        $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', function (string $event, Document $document) use (&$related) {
-            $related[] = $document;
-        });
+        $recorder = new RelatedUpdates();
+        $dbForDatabases->addHook($recorder);
 
         try {
             $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
@@ -215,7 +213,7 @@ class Delete extends Action
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
         } finally {
-            $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', null);
+            $related = $recorder->stop();
         }
 
         $usage
@@ -286,7 +284,7 @@ class Delete extends Action
         $relatedCollections = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if (
-                $attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP
+                $attribute->getAttribute('type') !== ColumnType::Relationship->value
                 || !$attribute->getAttribute('twoWay')
             ) {
                 continue;
@@ -303,8 +301,6 @@ class Delete extends Action
             $relatedCollections['database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()] = $relatedCollection;
         }
 
-        $collectionsCache = [];
-
         foreach ($related as $peer) {
             $relatedCollection = $relatedCollections[$peer->getCollection()] ?? null;
             if ($relatedCollection === null) {
@@ -315,18 +311,12 @@ class Delete extends Action
                 fn (Document $attr) => $attr->getAttribute('key'),
                 \array_filter(
                     $relatedCollection->getAttribute('attributes', []),
-                    fn (Document $attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
+                    fn (Document $attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
                 )
             );
 
-            $this->processDocument(
-                database: $database,
-                collection: $relatedCollection,
-                document: $peer,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization
-            );
+            $peer->setAttribute('$databaseId', $database->getId());
+            $peer->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $relatedCollection->getId());
 
             // Clone so the delete event stays intact for the shutdown hook.
             $event = clone $queueForEvents;
