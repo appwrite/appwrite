@@ -24,7 +24,7 @@ class Headers extends Validator
      */
     public function getDescription(): string
     {
-        return 'Invalid headers: Alphanumeric characters or hyphens only, cannot start with "x-appwrite", maximum ' . $this->maxKeys . ' keys, and total size ' . $this->maxSize . '.';
+        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects.';
     }
 
     /**
@@ -52,6 +52,11 @@ class Headers extends Validator
         foreach ($value as $key => $val) {
             // Reject non-string keys
             if (!\is_string($key)) {
+                return false;
+            }
+
+            // Reject array and object values
+            if (!\is_scalar($val) && !\is_null($val)) {
                 return false;
             }
 
