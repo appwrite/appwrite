@@ -526,6 +526,17 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
+            // Every project shares the signing key, and a user ID can be chosen at
+            // signup, so a token is only good for the project that minted it. Tokens
+            // minted before the projectId claim existed are accepted only when bound
+            // to a session, whose ID the server generated and no other project holds.
+            $jwtProjectId = $payload['projectId'] ?? '';
+            $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
+            $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : ! empty($payload['sessionId']);
+            if (! $bound) {
+                throw new Exception(Exception::USER_JWT_INVALID, 'JWT was not issued for this project.');
+            }
+
             $jwtUserId = $payload['userId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
