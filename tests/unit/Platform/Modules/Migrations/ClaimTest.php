@@ -557,21 +557,46 @@ final class ClaimTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{Collection|null}>
+     * @return \Iterator<string, array{\Closure(Claim, Document, MigrationPublisher): Document}>
+     */
+    public static function starts(): \Iterator
+    {
+        yield 'start()' => [
+            static fn (Claim $claims, Document $migration, MigrationPublisher $publisher): Document => $claims->start(
+                project: new Document(['$id' => 'project-1']),
+                migration: $migration,
+                platform: [],
+                publisher: $publisher,
+            ),
+        ];
+        yield 'create() then publish()' => [
+            static fn (Claim $claims, Document $migration, MigrationPublisher $publisher): Document => $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $claims->create($migration),
+                platform: [],
+                publisher: $publisher,
+            ),
+        ];
+    }
+
+    /**
+     * @return \Iterator<string, array{\Closure(Claim, Document, MigrationPublisher): Document, Collection|null}>
      */
     public static function incompleteOwnershipSchemas(): \Iterator
     {
-        yield 'no databases collection' => [null];
-        yield 'no database migration attempt ID' => [new Collection(
-            id: 'databases',
-            attributes: [
-                new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
-            ],
-        )];
+        foreach (self::starts() as $path => [$start]) {
+            yield "{$path}: no databases collection" => [$start, null];
+            yield "{$path}: no database migration attempt ID" => [$start, new Collection(
+                id: 'databases',
+                attributes: [
+                    new Attribute('migrationId', ColumnType::String, size: Database::LENGTH_KEY),
+                ],
+            )];
+        }
     }
 
     #[DataProvider('incompleteOwnershipSchemas')]
-    public function testStartRefusesAnIncompleteOwnershipSchemaBeforeStoringTheMigration(?Collection $databases): void
+    public function testStartRefusesAnIncompleteOwnershipSchemaBeforeStoringTheMigration(\Closure $start, ?Collection $databases): void
     {
         $database = new Database(new Memory(), new Cache(new NoCache()));
         $database
@@ -601,11 +626,10 @@ final class ClaimTest extends TestCase
         $publisher = new MockPublisher();
 
         try {
-            (new Claim($database, $this->locks()))->start(
-                project: new Document(['$id' => 'project-1']),
-                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            $start(
+                new Claim($database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
             );
             $this->fail('Expected incomplete ownership schema to be refused');
         } catch (Exception $error) {
@@ -617,16 +641,16 @@ final class ClaimTest extends TestCase
         $this->assertEmpty($publisher->getEvents('migrations'));
     }
 
-    public function testStartStoresThePendingFirstAttemptBeforePublishingIt(): void
+    #[DataProvider('starts')]
+    public function testStartStoresThePendingFirstAttemptBeforePublishingIt(\Closure $start): void
     {
         $publisher = new MockPublisher();
         $claims = new Claim($this->database, $this->locks());
 
-        $started = $claims->start(
-            project: new Document(['$id' => 'project-1']),
-            migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-            platform: [],
-            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        $started = $start(
+            $claims,
+            new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            new MigrationPublisher($publisher, new Queue('migrations')),
         );
 
         $migrations = $this->database->find('migrations');
@@ -648,16 +672,16 @@ final class ClaimTest extends TestCase
         $this->assertInstanceOf(Delivery::class, $claims->consume('project-1', $message));
     }
 
-    public function testStartLeavesNothingStoredWhenPublishingFails(): void
+    #[DataProvider('starts')]
+    public function testStartLeavesNothingStoredWhenPublishingFails(\Closure $start): void
     {
         $error = null;
 
         try {
-            (new Claim($this->database, $this->locks()))->start(
-                project: new Document(['$id' => 'project-1']),
-                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-                platform: [],
-                publisher: new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
+            $start(
+                new Claim($this->database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($this->unavailablePublisher(), new Queue('migrations')),
             );
         } catch (\RuntimeException $caught) {
             $error = $caught;
@@ -668,7 +692,8 @@ final class ClaimTest extends TestCase
         $this->assertSame([], $this->database->find('migrations'));
     }
 
-    public function testStartPublishesTheMigrationItStoredWithoutCheckingTheSchemaAgain(): void
+    #[DataProvider('starts')]
+    public function testStartPublishesTheMigrationItStoredWithoutCheckingTheSchemaAgain(\Closure $start): void
     {
         $database = $this->database;
         $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
@@ -677,11 +702,10 @@ final class ClaimTest extends TestCase
         };
         $publisher = new MockPublisher();
 
-        $started = (new Claim($database, $this->locks()))->start(
-            project: new Document(['$id' => 'project-1']),
-            migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-            platform: [],
-            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        $started = $start(
+            new Claim($database, $this->locks()),
+            new Document(['$id' => 'migration-1', 'resourceData' => []]),
+            new MigrationPublisher($publisher, new Queue('migrations')),
         );
 
         $events = $publisher->getEvents('migrations') ?? [];
@@ -690,7 +714,8 @@ final class ClaimTest extends TestCase
         $this->assertSame($started->getAttribute('attemptId'), $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
     }
 
-    public function testStartRollbackDoesNotDeleteNewerGeneration(): void
+    #[DataProvider('starts')]
+    public function testStartRollbackDoesNotDeleteNewerGeneration(\Closure $start): void
     {
         $publisher = new class ($this->database, 'migration-1') implements Publisher {
             public function __construct(
@@ -737,11 +762,10 @@ final class ClaimTest extends TestCase
         $error = null;
 
         try {
-            (new Claim($this->database, $this->locks()))->start(
-                project: new Document(['$id' => 'project-1']),
-                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            $start(
+                new Claim($this->database, $this->locks()),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
             );
         } catch (\RuntimeException $caught) {
             $error = $caught;
@@ -755,7 +779,8 @@ final class ClaimTest extends TestCase
         $this->assertSame('init', $stored->getAttribute('stage'));
     }
 
-    public function testStartDoesNotPublishAGenerationAnotherWriterMovedOn(): void
+    #[DataProvider('starts')]
+    public function testStartDoesNotPublishAGenerationAnotherWriterMovedOn(\Closure $start): void
     {
         $database = $this->database;
         $publisher = new MockPublisher();
@@ -769,11 +794,10 @@ final class ClaimTest extends TestCase
         $error = null;
 
         try {
-            $claims->start(
-                project: new Document(['$id' => 'project-1']),
-                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            $start(
+                $claims,
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
             );
         } catch (\LogicException $caught) {
             $error = $caught;
@@ -783,6 +807,158 @@ final class ClaimTest extends TestCase
         $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
         $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
         $this->assertSame('attempt-newer', $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
+    }
+
+    public function testPublishQueuesTheAttemptCreateStoredUnderTheSameIdentity(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $queue = new Queue('migrations');
+
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+
+        $this->assertSame(0, $publisher->getQueueSize($queue), 'create() publishes nothing, so a producer can first write the rows its worker reads');
+        $stored = $this->database->getDocument('migrations', 'migration-1');
+        $this->assertSame('pending', $stored->getAttribute('status'));
+        $this->assertSame('init', $stored->getAttribute('stage'));
+        $this->assertSame($created->getAttribute('attemptId'), $stored->getAttribute('attemptId'));
+
+        $published = $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $created,
+            platform: ['name' => 'test-platform'],
+            publisher: new MigrationPublisher($publisher, $queue),
+        );
+
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $this->assertSame('project-1', $message->project->getId());
+        $this->assertSame(['name' => 'test-platform'], $message->platform);
+        $this->assertSame($published->getAttribute('attemptId'), $message->migration->getAttribute('attemptId'));
+        $this->assertSame($published->getAttribute('attemptId'), $this->database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
+
+        $delivery = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $delivery);
+        $this->assertSame($created->getId(), $delivery->migration->getId());
+        $this->assertSame($created->getSequence(), $delivery->migration->getSequence(), 'rows written against the created migration name the one the worker runs');
+        $this->assertSame('processing', $delivery->migration->getAttribute('status'));
+        $this->assertNotInstanceOf(Delivery::class, $claims->consume('project-1', $message), 'the published attempt is consumed once');
+    }
+
+    public function testPublishRemovesTheStoredAttemptWhenTheQueueDoesNotAcceptIt(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+        $error = null;
+
+        try {
+            $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $created,
+                platform: [],
+                publisher: new MigrationPublisher($this->refusingPublisher(), new Queue('migrations')),
+            );
+        } catch (\RuntimeException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $error, 'a queue that does not accept the message fails the publish');
+        $this->assertSame('Failed to enqueue migration', $error->getMessage());
+        $this->assertSame([], $this->database->find('migrations'));
+    }
+
+    public function testPublishRefusesAMigrationStoredWithoutAnAttempt(): void
+    {
+        $stored = $this->database->createDocument('migrations', new Document([
+            '$id' => 'migration-1',
+            'status' => 'pending',
+            'stage' => 'init',
+            'resourceData' => [],
+        ]));
+        $publisher = new MockPublisher();
+        $error = null;
+
+        try {
+            (new Claim($this->database, $this->locks()))->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $stored,
+                platform: [],
+                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            );
+        } catch (\LogicException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\LogicException::class, $error, 'only an attempt create() stored is published');
+        $this->assertSame('Initial migration generation is no longer publishable', $error->getMessage());
+        $this->assertSame(0, $publisher->getQueueSize(new Queue('migrations')), 'nothing is published');
+        $this->assertSame($stored->getUpdatedAt(), $this->database->getDocument('migrations', 'migration-1')->getUpdatedAt());
+    }
+
+    public function testPublishQueuesAStoredAttemptOnlyOnce(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $migrationPublisher = new MigrationPublisher($publisher, new Queue('migrations'));
+        $created = $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []]));
+        $published = $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $created,
+            platform: [],
+            publisher: $migrationPublisher,
+        );
+        $error = null;
+
+        try {
+            $claims->publish(
+                project: new Document(['$id' => 'project-1']),
+                migration: $created,
+                platform: [],
+                publisher: $migrationPublisher,
+            );
+        } catch (\LogicException $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(\LogicException::class, $error, 'a second publish of the same stored attempt is refused');
+        $this->assertCount(1, $publisher->getEvents('migrations') ?? []);
+        $this->assertSame(
+            $published->getAttribute('attemptId'),
+            $this->database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'),
+            'the refusal keeps the attempt already queued',
+        );
+    }
+
+    public function testRedeliveryOfACreatedAndPublishedMigrationTakesOverItsAbandonedAttempt(): void
+    {
+        $claims = new Claim($this->database, $this->locks());
+        $publisher = new MockPublisher();
+        $claims->publish(
+            project: new Document(['$id' => 'project-1']),
+            migration: $claims->create(new Document(['$id' => 'migration-1', 'resourceData' => []])),
+            platform: [],
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+        );
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events);
+        $message = MigrationMessage::fromArray($events[0]);
+        $running = $claims->consume('project-1', $message);
+        $this->assertInstanceOf(Delivery::class, $running);
+        $abandoned = $this->age('migration-1', 'processing', 'migrating', Claim::LIVENESS_LEASE + 60);
+
+        $takeover = $claims->consume('project-1', $message);
+
+        $this->assertInstanceOf(Delivery::class, $takeover, 'the redelivered message runs the migration again once its attempt has lapsed');
+        $this->assertNotSame($running->migration->getAttribute('attemptId'), $takeover->migration->getAttribute('attemptId'));
+        $this->assertSame('processing', $takeover->migration->getAttribute('status'));
+        $this->assertSame('processing', $takeover->migration->getAttribute('stage'));
+
+        $late = new Document($abandoned->getArrayCopy());
+        $late->setAttribute('status', 'completed');
+        $late->setAttribute('stage', 'finished');
+        $this->assertNotInstanceOf(Document::class, $claims->persist($late), 'the abandoned worker is fenced out');
     }
 
     public function testWorkerPersistenceRefusesSupersededGeneration(): void
@@ -895,18 +1071,18 @@ final class ClaimTest extends TestCase
         $this->assertSame('finished', $stored->getAttribute('stage'));
     }
 
-    public function testStartRefusesDocumentDeletedAfterGenerationRead(): void
+    #[DataProvider('starts')]
+    public function testStartRefusesDocumentDeletedAfterGenerationRead(\Closure $start): void
     {
         $publisher = new MockPublisher();
         $this->deleteAfterRead('migration-1');
         $error = null;
 
         try {
-            (new Claim($this->database))->start(
-                project: new Document(['$id' => 'project-1']),
-                migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
-                platform: [],
-                publisher: new MigrationPublisher($publisher, new Queue('migrations')),
+            $start(
+                new Claim($this->database),
+                new Document(['$id' => 'migration-1', 'resourceData' => []]),
+                new MigrationPublisher($publisher, new Queue('migrations')),
             );
         } catch (Conflict $caught) {
             $error = $caught;
@@ -1886,6 +2062,40 @@ final class ClaimTest extends TestCase
             public function publish(Queue $queue, array $payload): bool
             {
                 throw new \RuntimeException('Queue unavailable');
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                throw new \LogicException('Not used');
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+    }
+
+    private function refusingPublisher(): Publisher
+    {
+        return new class () implements Publisher {
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                return false;
             }
 
             #[\Override]

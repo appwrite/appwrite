@@ -102,8 +102,6 @@ final readonly class Claim
     }
 
     /**
-     * Nothing is stored until the ownership schema is complete, and nothing is published before it is stored.
-     *
      * @param array<string, mixed> $platform
      */
     public function start(
@@ -112,29 +110,38 @@ final readonly class Claim
         array $platform,
         MigrationPublisher $publisher,
     ): Document {
-        $this->assertReady();
-
         return $this->publish(
             project: $project,
-            migration: $this->database->createDocument('migrations', new Document([
-                ...$migration->getArrayCopy(),
-                'attemptId' => ID::unique(),
-                'status' => self::STATUS_PENDING,
-                'stage' => self::STAGE_INIT,
-            ])),
+            migration: $this->create($migration),
             platform: $platform,
             publisher: $publisher,
         );
     }
 
     /**
-     * Publish one exact initial generation. If publishing fails, remove only
-     * the still-pending generation created by this request; a worker or newer
-     * claim that advanced it always wins.
+     * Store the first attempt of a new migration without publishing it, for a
+     * producer that writes the rows its worker reads before calling publish().
+     */
+    public function create(Document $migration): Document
+    {
+        $this->assertReady();
+
+        return $this->database->createDocument('migrations', new Document([
+            ...$migration->getArrayCopy(),
+            'attemptId' => ID::unique(),
+            'status' => self::STATUS_PENDING,
+            'stage' => self::STAGE_INIT,
+        ]));
+    }
+
+    /**
+     * Publish the initial generation create() stored; a generation is published
+     * at most once. If publishing fails, remove only that still-pending
+     * generation; a worker or newer claim that advanced it always wins.
      *
      * @param array<string, mixed> $platform
      */
-    private function publish(
+    public function publish(
         Document $project,
         Document $migration,
         array $platform,
