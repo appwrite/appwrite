@@ -652,13 +652,28 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
         if ($user->isEmpty()) {
             return;
         }
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        if (! $sessionId && ! empty($authJWT)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException) {
+                return;
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
 
         if (! $sessionId) {
             return;
@@ -671,7 +686,7 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken']);
+    }, ['user', 'store', 'proofForToken', 'request']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service

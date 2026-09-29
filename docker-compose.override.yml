@@ -358,6 +358,19 @@ services:
     environment:
       - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
       - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
+  appwrite-browser:
+    networks:
+      - appwrite
+      - fixtures
+  webpage:
+    image: nginx:1.30-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    container_name: appwrite-webpage
+    networks:
+      fixtures:
+        aliases:
+          - screenshot.webapp.com
+    volumes:
+      - ./tests/resources/avatars/webpage:/usr/share/nginx/html:ro
   request-catcher-webhook:
     image: appwrite/requestcatcher:1.1.0
     container_name: appwrite-requestcatcher-webhook
@@ -656,5 +669,6 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+  fixtures:
 volumes:
   appwrite-gitea: null
