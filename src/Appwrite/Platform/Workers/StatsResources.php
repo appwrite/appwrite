@@ -136,7 +136,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->bucketGauges($project, $dbForProject));
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
-        array_push($gauges, ...$this->avatarGauges($project, $dbForProject));
+        array_push($gauges, ...$this->photoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -281,12 +281,12 @@ class StatsResources extends Action
     }
 
     /** @return array<int, array<string, mixed>> */
-    private function avatarGauges(Document $project, Database $dbForProject): array
+    private function photoGauges(Document $project, Database $dbForProject): array
     {
         try {
-            $storage = (int) $dbForProject->sum('avatars', 'sizeActual');
+            $storage = (int) $dbForProject->sum('photos', 'sizeActual');
         } catch (\Throwable $th) {
-            Console::warning("Failed to measure avatars for {$project->getId()}: ".$th->getMessage());
+            Console::warning("Failed to measure photos for {$project->getId()}: ".$th->getMessage());
 
             return [];
         }

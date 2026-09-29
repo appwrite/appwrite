@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Avatar extends Model
+class Photo extends Model
 {
     public function __construct()
     {
@@ -68,11 +68,11 @@ class Avatar extends Model
 
     public function getName(): string
     {
-        return 'Avatar';
+        return 'Photo';
     }
 
     public function getType(): string
     {
-        return Response::MODEL_AVATAR;
+        return Response::MODEL_PHOTO;
     }
 }

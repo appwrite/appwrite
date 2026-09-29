@@ -144,7 +144,7 @@ class Response extends SwooleResponse
     // Storage
     public const MODEL_FILE = 'file';
     public const MODEL_FILE_LIST = 'fileList';
-    public const MODEL_AVATAR = 'avatar';
+    public const MODEL_PHOTO = 'photo';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';

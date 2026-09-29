@@ -442,10 +442,10 @@ return [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('avatarPath'),
+                '$id' => ID::custom('avatar'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384,
+                'size' => Database::LENGTH_KEY,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -3157,10 +3157,10 @@ return [
             ]
         ]
     ],
-    'avatars' => [
+    'photos' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('avatars'),
-        'name' => 'Avatars',
+        '$id' => ID::custom('photos'),
+        'name' => 'Photos',
         'attributes' => [
             [
                 '$id' => ID::custom('userId'),
@@ -3178,17 +3178,6 @@ return [
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('path'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

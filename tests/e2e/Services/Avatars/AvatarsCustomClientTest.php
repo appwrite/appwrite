@@ -493,23 +493,17 @@ final class AvatarsCustomClientTest extends Scope
         /**
          * Test for SUCCESS — chunked upload across the 5 MB chunk boundary
          */
-        $source = realpath(__DIR__ . '/../../../resources/avatar-large.png');
-
-        if (!$source || !\file_exists($source)) {
-            $this->markTestSkipped('tests/resources/avatar-large.png not found; generate it first.');
-        }
-
-        $size = \filesize($source);
+        $payload = \file_get_contents(__DIR__ . '/../../../resources/logo.png') . \str_repeat("\0", 6 * 1024 * 1024);
+        $size = \strlen($payload);
         $chunkSize = 5 * 1024 * 1024;
-        $handle = @fopen($source, 'rb');
-        $mimeType = mime_content_type($source);
+        $mimeType = 'image/png';
         $counter = 0;
         $id = '';
         $final = null;
 
-        while (!feof($handle)) {
-            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@fread($handle, $chunkSize)), $mimeType, 'avatar-large.png');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+        for ($offset = 0; $offset < $size; $offset += $chunkSize) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(\substr($payload, $offset, $chunkSize)), $mimeType, 'large.png');
+            $headers['content-range'] = 'bytes ' . $offset . '-' . (\min($offset + $chunkSize, $size) - 1) . '/' . $size;
 
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
@@ -524,8 +518,6 @@ final class AvatarsCustomClientTest extends Scope
             $counter++;
         }
 
-        @fclose($handle);
-
         $this->assertEquals($final['body']['chunksTotal'], $final['body']['chunksUploaded']);
         $this->assertEquals('image/png', $final['body']['mimeType']);
         $this->assertEquals($size, $final['body']['sizeActual']);
@@ -537,7 +529,7 @@ final class AvatarsCustomClientTest extends Scope
             'content-range' => 'bytes ' . (($counter - 1) * $chunkSize) . '-' . ($size - 1) . '/' . $size,
             'x-appwrite-id' => $id,
         ]), [
-            'file' => new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(''), $mimeType, 'avatar-large.png'),
+            'file' => new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(''), $mimeType, 'large.png'),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

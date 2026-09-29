@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -1105,11 +1106,11 @@ class Deletes extends Action
 
         $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 
-        $this->deleteByGroup('avatars', [
+        $this->deleteByGroup('photos', [
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
-        ], $dbForProject, function (Document $avatar) use ($deviceForFiles) {
-            $deviceForFiles->delete($avatar->getAttribute('path', ''));
+        ], $dbForProject, function (Document $photo) use ($deviceForFiles) {
+            $deviceForFiles->delete(Custom::getPath($deviceForFiles, $photo->getAttribute('userId'), $photo->getId()));
         });
     }
 

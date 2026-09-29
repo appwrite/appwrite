@@ -12,6 +12,11 @@ class Custom extends Photo
         private readonly Device $deviceForFiles,
     ) {}
 
+    public static function getPath(Device $deviceForFiles, string $userId, string $photoId): string
+    {
+        return $deviceForFiles->getPath('photos/' . $userId . '-' . $photoId);
+    }
+
     public function getName(): string
     {
         return 'custom';
@@ -19,14 +24,14 @@ class Custom extends Photo
 
     public function supports(Document $profile): bool
     {
-        return $profile->getAttribute('avatarPath', '') !== '';
+        return $profile->getAttribute('avatar', '') !== '';
     }
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        $path = $profile->getAttribute('avatarPath', '');
+        $path = self::getPath($this->deviceForFiles, $profile->getId(), $profile->getAttribute('avatar'));
 
-        if ($path === '' || ! $this->deviceForFiles->exists($path)) {
+        if (! $this->deviceForFiles->exists($path)) {
             return null;
         }
 

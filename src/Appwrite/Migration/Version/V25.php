@@ -302,19 +302,19 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
-                case 'avatars':
+                case 'photos':
                     // Added in 2.3.0; create the collection so forEachDocument never
                     // hits a missing-collection error on projects that pre-date this release.
                     $this->createCollection($id);
 
                     try {
-                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'avatarPath');
+                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'avatar');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"avatarPath\" in collection users: {$th->getMessage()}");
+                        Console::warning("Failed to create attribute \"avatar\" in collection users: {$th->getMessage()}");
                     }
 
-                    $this->dbForProject->purgeCachedCollection('avatars');
-                    $this->dbForProject->purgeCachedDocument(Database::METADATA, 'avatars');
+                    $this->dbForProject->purgeCachedCollection('photos');
+                    $this->dbForProject->purgeCachedDocument(Database::METADATA, 'photos');
                     $this->dbForProject->purgeCachedCollection('users');
                     break;
 

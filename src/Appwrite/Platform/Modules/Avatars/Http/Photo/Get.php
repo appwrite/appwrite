@@ -127,7 +127,7 @@ class Get extends Action
         if (!$photoUser->isEmpty()) {
             $userEmail = $photoUser->getAttribute('email', '');
             $userName = $photoUser->getAttribute('name', '');
-            $userAvatarPath = $photoUser->getAttribute('avatarPath', '');
+            $userAvatar = $photoUser->getAttribute('avatar', '');
 
             $profile = $profile->setAttribute('$id', $photoUser->getId());
 
@@ -139,8 +139,8 @@ class Get extends Action
                 $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
             }
 
-            if ($userAvatarPath !== '') {
-                $profile = $profile->setAttribute('avatarPath', $userAvatarPath);
+            if ($userAvatar !== '') {
+                $profile = $profile->setAttribute('avatar', $userAvatar);
             }
         }
 
@@ -154,7 +154,7 @@ class Get extends Action
 
         $providers = [];
 
-        if ($profile->getAttribute('avatarPath', '') !== '') {
+        if ($profile->getAttribute('avatar', '') !== '') {
             $providers[] = new Custom($deviceForFiles);
         }
 

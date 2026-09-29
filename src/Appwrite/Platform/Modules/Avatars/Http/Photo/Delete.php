@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
+use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -11,10 +12,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -22,8 +22,6 @@ use Utopia\Storage\Device;
 class Delete extends Action
 {
     use HTTP;
-
-    private const LOCK_TTL = 600;
 
     public static function getName(): string
     {
@@ -64,75 +62,44 @@ class Delete extends Action
             ))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
-            ->inject('locks')
             ->callback($this->action(...));
     }
 
     public function action(
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
-        callable $locks,
     ): void {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $userId = $user->getId();
+        $photoId = $user->getAttribute('avatar', '');
 
-        try {
-            $locks('avatars:photo:'.$project->getId().':'.$userId, self::LOCK_TTL, function () use ($dbForProject, $deviceForFiles, $queueForEvents, $response, $userId): void {
-                $target = $dbForProject->getDocument('users', $userId);
-                $livePath = $target->getAttribute('avatarPath', '');
+        if ($photoId === '') {
+            $queueForEvents->reset();
+            $response->noContent();
 
-                if ($livePath === '') {
-                    $queueForEvents->reset();
-
-                    $response->noContent();
-
-                    return;
-                }
-
-                $live = new Document;
-
-                $avatars = $dbForProject->find('avatars', [
-                    Query::equal('userInternalId', [(string) $target->getSequence()]),
-                    Query::limit(100),
-                ]);
-
-                foreach ($avatars as $candidate) {
-                    if ($candidate->getAttribute('path', '') === $livePath) {
-                        $live = $candidate;
-                        break;
-                    }
-                }
-
-                $dbForProject->updateDocument('users', $userId, new Document([
-                    'avatarPath' => '',
-                ]));
-
-                if (! $live->isEmpty()) {
-                    $dbForProject->deleteDocument('avatars', $live->getId());
-                }
-
-                $queueForEvents->setParam('userId', $userId);
-
-                if (! $deviceForFiles->delete($livePath)) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
-                }
-
-                $response->noContent();
-            }, timeout: 120.0);
-        } catch (LockContention) {
-            $response->addHeader('Retry-After', '5');
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Photo upload is busy. Try again.');
+            return;
         }
+
+        $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'avatar' => '',
+        ]));
+
+        $dbForProject->deleteDocument('photos', $photoId);
+
+        if (! $deviceForFiles->delete(Custom::getPath($deviceForFiles, $user->getId(), $photoId))) {
+            Console::warning('Failed to remove photo file: '.$photoId);
+        }
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->noContent();
     }
 }

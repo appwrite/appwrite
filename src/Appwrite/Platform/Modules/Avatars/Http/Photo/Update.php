@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
+use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -79,7 +80,7 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_AVATAR,
+                        model: Response::MODEL_PHOTO,
                     ),
                 ],
                 requestType: ContentType::MULTIPART,
@@ -176,8 +177,10 @@ class Update extends Action
         }
 
         $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
-        $path = $deviceForFiles->getPath('avatars/'.$user->getId().'-'.$uploadId);
-        $lockKey = 'avatars:photo:'.$project->getId().':'.$user->getId();
+        $userId = $user->getId();
+        $userInternalId = (string) $user->getSequence();
+        $path = Custom::getPath($deviceForFiles, $userId, $uploadId);
+        $lockKey = 'photos:'.$project->getId().':'.$uploadId;
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
 
@@ -198,42 +201,16 @@ class Update extends Action
             return $merged;
         };
 
-        $userId = $user->getId();
-        $userInternalId = (string) $user->getSequence();
-
         try {
             $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($chunk, $chunks, $dbForProject, $deviceForFiles, $deviceForLocal, $fileSize, $fileTmpName, $metadata, $mergeUploadMetadata, $path, $queueForEvents, $response, $uploadId, $userId, $userInternalId): void {
-                $target = $dbForProject->getDocument('users', $userId);
-                $avatar = $dbForProject->getDocument('avatars', $uploadId);
+                $photo = $dbForProject->getDocument('photos', $uploadId);
                 $uploaded = 0;
 
-                if (! $avatar->isEmpty()) {
-                    if ($avatar->getAttribute('userId') !== $userId) {
-                        throw new Exception(Exception::AVATAR_NOT_FOUND);
-                    }
-
-                    $chunks = (int) $avatar->getAttribute('chunksTotal', 1);
-                    $uploaded = (int) $avatar->getAttribute('chunksUploaded', 0);
-                    $metadata = $mergeUploadMetadata($avatar->getAttribute('metadata', []), $metadata);
-
-                    if ($uploaded === $chunks) {
-                        $queueForEvents->reset();
-
-                        $response
-                            ->setStatusCode(Response::STATUS_CODE_OK)
-                            ->dynamic($avatar, Response::MODEL_AVATAR);
-
-                        return;
-                    }
-                }
-
-                if ($avatar->isEmpty()) {
-                    $this->clearStaleAvatars($dbForProject, $deviceForFiles, $target);
-
+                if ($photo->isEmpty()) {
                     $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     try {
-                        $avatar = $dbForProject->createDocument('avatars', new Document([
+                        $photo = $dbForProject->createDocument('photos', new Document([
                             '$id' => $uploadId,
                             '$permissions' => [
                                 Permission::read(Role::any()),
@@ -242,7 +219,6 @@ class Update extends Action
                             ],
                             'userId' => $userId,
                             'userInternalId' => $userInternalId,
-                            'path' => $path,
                             'sizeOriginal' => $fileSize,
                             'sizeActual' => 0,
                             'mimeType' => '',
@@ -253,10 +229,23 @@ class Update extends Action
                     } catch (DuplicateException) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     }
+                } else {
+                    if ($photo->getAttribute('userId') !== $userId) {
+                        throw new Exception(Exception::AVATAR_NOT_FOUND);
+                    }
+
+                    $chunks = (int) $photo->getAttribute('chunksTotal', 1);
+                    $uploaded = (int) $photo->getAttribute('chunksUploaded', 0);
+                    $metadata = $mergeUploadMetadata($photo->getAttribute('metadata', []), $metadata);
+
+                    if ($uploaded === $chunks) {
+                        $queueForEvents->reset();
+                        $response->dynamic($photo, Response::MODEL_PHOTO);
+
+                        return;
+                    }
                 }
 
-                // Restart the lease so the transfer gets the full window,
-                // regardless of how long preparation took.
                 if (! $lock->refresh()) {
                     throw new LockContention('Upload lease lost before transfer: '.$lock->token());
                 }
@@ -270,8 +259,6 @@ class Update extends Action
                     $metadata
                 );
 
-                // Never record completion under a lapsed lease: another request
-                // may already own the file and be finalizing it.
                 if (! $lock->isHeld()) {
                     throw new LockContention('Upload lease lost after transfer: '.$lock->token());
                 }
@@ -283,105 +270,59 @@ class Update extends Action
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded < $chunks) {
-                    $avatar = $dbForProject->updateDocument('avatars', $uploadId, new Document([
+                    $photo = $dbForProject->updateDocument('photos', $uploadId, new Document([
                         'chunksUploaded' => $chunksUploaded,
                         'metadata' => $metadata,
                     ]));
 
                     $queueForEvents->reset();
-
-                    $response
-                        ->setStatusCode(Response::STATUS_CODE_OK)
-                        ->dynamic($avatar, Response::MODEL_AVATAR);
+                    $response->dynamic($photo, Response::MODEL_PHOTO);
 
                     return;
                 }
 
                 $deviceForFiles->finalize($path, $chunks, $metadata);
 
-                $sizeActual = $deviceForFiles->getFileSize($path);
                 $mimeType = $deviceForFiles->getFileMimeType($path);
 
                 if (! str_starts_with($mimeType, 'image/')) {
                     $deviceForFiles->delete($path);
-                    $dbForProject->deleteDocument('avatars', $uploadId);
+                    $dbForProject->deleteDocument('photos', $uploadId);
 
                     throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Uploaded file is not an image');
                 }
 
-                $livePath = $target->getAttribute('avatarPath', '');
-                $live = $livePath === '' ? new Document : $this->findAvatarByPath($dbForProject, $userInternalId, $livePath);
-
-                $avatar = $dbForProject->updateDocument('avatars', $uploadId, new Document([
-                    'sizeActual' => $sizeActual,
+                $photo = $dbForProject->updateDocument('photos', $uploadId, new Document([
+                    'sizeActual' => $deviceForFiles->getFileSize($path),
                     'mimeType' => $mimeType,
                     'chunksUploaded' => $chunksUploaded,
                     'metadata' => $metadata,
                 ]));
 
                 $dbForProject->updateDocument('users', $userId, new Document([
-                    'avatarPath' => $path,
+                    'avatar' => $uploadId,
                 ]));
 
-                $queueForEvents->setParam('userId', $userId);
+                $previous = $dbForProject->find('photos', [
+                    Query::equal('userInternalId', [$userInternalId]),
+                    Query::notEqual('$id', $uploadId),
+                    Query::limit(APP_LIMIT_COUNT),
+                ]);
 
-                if ($livePath !== '' && $livePath !== $path) {
-                    if (! $live->isEmpty()) {
-                        $dbForProject->deleteDocument('avatars', $live->getId());
-                    }
+                foreach ($previous as $old) {
+                    $dbForProject->deleteDocument('photos', $old->getId());
 
-                    if (! $deviceForFiles->delete($livePath)) {
-                        Console::warning('Failed to remove previous photo file: '.$livePath);
+                    if (! $deviceForFiles->delete(Custom::getPath($deviceForFiles, $userId, $old->getId()))) {
+                        Console::warning('Failed to remove previous photo file: '.$old->getId());
                     }
                 }
 
-                $response
-                    ->setStatusCode(Response::STATUS_CODE_OK)
-                    ->dynamic($avatar, Response::MODEL_AVATAR);
+                $queueForEvents->setParam('userId', $userId);
+                $response->dynamic($photo, Response::MODEL_PHOTO);
             }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Photo upload is busy. Try again.');
         }
-    }
-
-    private function clearStaleAvatars(Database $dbForProject, Device $deviceForFiles, Document $target): void
-    {
-        $livePath = $target->getAttribute('avatarPath', '');
-
-        $stale = $dbForProject->find('avatars', [
-            Query::equal('userInternalId', [(string) $target->getSequence()]),
-            Query::limit(100),
-        ]);
-
-        foreach ($stale as $staleAvatar) {
-            $stalePath = $staleAvatar->getAttribute('path', '');
-
-            if ($stalePath === $livePath) {
-                continue;
-            }
-
-            $dbForProject->deleteDocument('avatars', $staleAvatar->getId());
-
-            if ($stalePath !== '') {
-                $deviceForFiles->delete($stalePath);
-            }
-        }
-    }
-
-    private function findAvatarByPath(Database $dbForProject, string $userInternalId, string $livePath): Document
-    {
-        $avatars = $dbForProject->find('avatars', [
-            Query::equal('userInternalId', [$userInternalId]),
-            Query::limit(100),
-        ]);
-
-        foreach ($avatars as $avatar) {
-            if ($avatar->getAttribute('path', '') === $livePath) {
-                return $avatar;
-            }
-        }
-
-        return new Document;
     }
 }
