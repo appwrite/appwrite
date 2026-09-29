@@ -15,8 +15,11 @@ jobs:
     name: session
     runs-on: gcrunner=${{ github.run_id }}-e2e-session/runner=checks
     timeout-minutes: 5
+    outputs:
+      session: ${{ steps.create.outputs.session }}
     steps:
       - name: Create console session
+        id: create
         env:
           VITE_APPWRITE_ENDPOINT: ${{ secrets.VITE_APPWRITE_ENDPOINT }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
@@ -40,14 +43,10 @@ jobs:
             exit 1
           fi
           echo "::add-mask::$cookies"
-          printf '%s' "$cookies" | openssl enc -aes-256-cbc -pbkdf2 -salt \
-            -pass env:E2E_TEST_PASSWORD -out session.enc
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: e2e-session
-          path: session.enc
-          retention-days: 1
+          # Outputs drop masked values, so pass the session encrypted.
+          session=$(printf '%s' "$cookies" | openssl enc -aes-256-cbc -pbkdf2 -salt -a -A \
+            -pass env:E2E_TEST_PASSWORD)
+          echo "session=$session" >> "$GITHUB_OUTPUT"
 
   e2e:
     name: ${{ matrix.project }}
@@ -125,16 +124,12 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install chromium
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: e2e-session
-
       - name: Load console session
         env:
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          SESSION: ${{ needs.session.outputs.session }}
         run: |
-          cookies=$(openssl enc -d -aes-256-cbc -pbkdf2 -pass env:E2E_TEST_PASSWORD -in session.enc)
-          rm session.enc
+          cookies=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
           echo "::add-mask::$cookies"
           echo "E2E_FALLBACK_COOKIES=$cookies" >> "$GITHUB_ENV"
 
