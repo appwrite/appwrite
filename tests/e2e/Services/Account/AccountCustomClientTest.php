@@ -1810,6 +1810,125 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testDeleteAccountSessionsKeepCurrent(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        [$sessionA, $sessionB, $sessionC] = $this->withExtraSessions($data, 2);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ], [
+            'current' => false,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        foreach ([$sessionA, $sessionB] as $deleted) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $deleted['secret'],
+            ]);
+
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }
+
+        $cookieC = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', $cookieC);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $cookieC);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionC['id'], $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+    }
+
+    public function testDeleteAccountSessionsKeepCurrentWithJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        [$sessionA, $sessionB, $sessionC] = $this->withExtraSessions($data, 2);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $jwtHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $response['body']['jwt'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', $jwtHeaders, [
+            'current' => false,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        foreach ([$sessionA, $sessionB] as $deleted) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $deleted['secret'],
+            ]);
+
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }
+
+        // The JWT is backed by session C, so it only keeps working if C survived.
+        $response = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $jwtHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionC['id'], $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+    }
+
+    private function withExtraSessions(array $data, int $count): array
+    {
+        $sessions = [['id' => $data['sessionId'], 'secret' => $data['session']]];
+
+        for ($i = 0; $i < $count; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $data['email'],
+                'password' => $data['password'],
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $sessions[] = [
+                'id' => $response['body']['$id'],
+                'secret' => $response['cookies']['a_session_' . $this->getProject()['$id']],
+            ];
+        }
+
+        return $sessions;
+    }
+
     public function testCreateAccountRecovery(): void
     {
         $data = $this->setupAccountWithVerifiedEmail();
