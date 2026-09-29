@@ -4930,4 +4930,270 @@ trait RelationshipTests
         $database->deleteCollection('authorsOrder');
         $database->deleteCollection('postsOrder');
     }
+
+    /**
+     * deleteDocument() fires an update for every document on the other side of a two-way relationship
+     * whose relationship the delete changed, including the ones it never writes to.
+     */
+    public function testDeleteDocumentRelatedUpdateEvent(): void
+    {
+        /** @var Database $database */
+        $database = $this->getDatabase();
+
+        if (!$database->getAdapter()->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $collectionPermissions = [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ];
+        $documentPermissions = [
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ];
+
+        $database->createCollection('related_parent', permissions: $collectionPermissions, documentSecurity: true);
+        $database->createCollection('related_child', permissions: $collectionPermissions, documentSecurity: true);
+
+        $database->createRelationship(
+            collection: 'related_parent',
+            relatedCollection: 'related_child',
+            type: Database::RELATION_ONE_TO_MANY,
+            twoWay: true,
+            id: 'children',
+            twoWayKey: 'parent',
+            onDelete: Database::RELATION_MUTATE_SET_NULL,
+        );
+
+        foreach (['child1', 'child2'] as $childId) {
+            $database->createDocument('related_child', new Document([
+                '$id' => $childId,
+                '$permissions' => $documentPermissions,
+            ]));
+        }
+
+        $database->createDocument('related_parent', new Document([
+            '$id' => 'parent1',
+            '$permissions' => $documentPermissions,
+            'children' => ['child1', 'child2'],
+        ]));
+
+        // By id to look a peer up, in order so a peer fired twice fails
+        $reported = [];
+        $fired = [];
+        $database->on(Database::EVENT_DOCUMENT_UPDATE, 'related-test', function (string $event, Document $related) use (&$reported, &$fired) {
+            $reported[$related->getId()] = $related;
+            $fired[] = $related->getId();
+        });
+
+        // The Database is shared across the suite, so the listener must not outlive a failure
+        try {
+            // Deleting the parent clears each child's reference, so each is reported once as the delete left it
+            $database->deleteDocument('related_parent', 'parent1');
+
+            $this->assertEqualsCanonicalizing(['child1', 'child2'], $fired);
+            $this->assertEquals('related_child', $reported['child1']->getCollection());
+            $this->assertEquals(
+                $database->getDocument('related_child', 'child1')->getUpdatedAt(),
+                $reported['child1']->getUpdatedAt(),
+            );
+
+            // Deleting a child writes nothing to the parent, whose relationship still changed
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent2',
+                '$permissions' => $documentPermissions,
+                'children' => ['child1'],
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_child', 'child1');
+
+            $this->assertEquals(['parent2'], $fired);
+            $this->assertEquals('related_parent', $reported['parent2']->getCollection());
+
+            // A cascaded document is gone, so it is not reported as changed
+            $database->updateRelationship(
+                collection: 'related_parent',
+                id: 'children',
+                onDelete: Database::RELATION_MUTATE_CASCADE,
+            );
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child3',
+                '$permissions' => $documentPermissions,
+                'parent' => 'parent2',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_parent', 'parent2');
+
+            $this->assertEquals([], $fired);
+            $this->assertTrue($database->getDocument('related_child', 'child3')->isEmpty());
+
+            // Restrict allows deleting a child, and the parent still loses its reference to it
+            $database->updateRelationship(
+                collection: 'related_parent',
+                id: 'children',
+                onDelete: Database::RELATION_MUTATE_RESTRICT,
+            );
+
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent4',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child4',
+                '$permissions' => $documentPermissions,
+                'parent' => 'parent4',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_child', 'child4');
+
+            $this->assertEquals(['parent4'], $fired);
+
+            // A one-way peer exposes no relationship, so it is not reported whether or not the delete wrote to it
+            $database->createCollection('related_oneway', permissions: $collectionPermissions, documentSecurity: true);
+
+            $database->createRelationship(
+                collection: 'related_parent',
+                relatedCollection: 'related_oneway',
+                type: Database::RELATION_ONE_TO_MANY,
+                twoWay: false,
+                id: 'strays',
+                onDelete: Database::RELATION_MUTATE_SET_NULL,
+            );
+
+            $database->createRelationship(
+                collection: 'related_parent',
+                relatedCollection: 'related_oneway',
+                type: Database::RELATION_MANY_TO_ONE,
+                twoWay: false,
+                id: 'stray',
+                twoWayKey: 'strayOf',
+                onDelete: Database::RELATION_MUTATE_SET_NULL,
+            );
+
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent3',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_oneway', new Document([
+                '$id' => 'stray1',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->updateDocument('related_parent', 'parent3', new Document([
+                'strays' => ['stray1'],
+                'stray' => 'stray1',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_parent', 'parent3');
+
+            $this->assertEquals([], $fired);
+            $this->assertFalse($database->getDocument('related_oneway', 'stray1')->isEmpty());
+
+            // Reached through set-null but cascaded away through another relationship, so it is gone, not changed
+            $database->createCollection('related_pair', permissions: $collectionPermissions, documentSecurity: true);
+
+            $database->createRelationship(
+                collection: 'related_parent',
+                relatedCollection: 'related_pair',
+                type: Database::RELATION_MANY_TO_ONE,
+                twoWay: true,
+                id: 'owner',
+                twoWayKey: 'owned',
+                onDelete: Database::RELATION_MUTATE_SET_NULL,
+            );
+
+            $database->createRelationship(
+                collection: 'related_parent',
+                relatedCollection: 'related_pair',
+                type: Database::RELATION_ONE_TO_ONE,
+                twoWay: true,
+                id: 'buddy',
+                twoWayKey: 'buddyOf',
+                onDelete: Database::RELATION_MUTATE_CASCADE,
+            );
+
+            $database->createDocument('related_pair', new Document([
+                '$id' => 'pair1',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent5',
+                '$permissions' => $documentPermissions,
+                'owner' => 'pair1',
+                'buddy' => 'pair1',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_parent', 'parent5');
+
+            $this->assertEquals([], $fired);
+            $this->assertTrue($database->getDocument('related_pair', 'pair1')->isEmpty());
+
+            // Removed further down a cascade chain, so it is gone, not changed, while its sibling survives
+            $database->updateRelationship(
+                collection: 'related_parent',
+                id: 'children',
+                onDelete: Database::RELATION_MUTATE_SET_NULL,
+            );
+
+            $database->createRelationship(
+                collection: 'related_pair',
+                relatedCollection: 'related_child',
+                type: Database::RELATION_ONE_TO_ONE,
+                twoWay: true,
+                id: 'tail',
+                twoWayKey: 'tailOf',
+                onDelete: Database::RELATION_MUTATE_CASCADE,
+            );
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child5',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_child', new Document([
+                '$id' => 'child6',
+                '$permissions' => $documentPermissions,
+            ]));
+
+            $database->createDocument('related_pair', new Document([
+                '$id' => 'pair2',
+                '$permissions' => $documentPermissions,
+                'tail' => 'child5',
+            ]));
+
+            $database->createDocument('related_parent', new Document([
+                '$id' => 'parent6',
+                '$permissions' => $documentPermissions,
+                'children' => ['child5', 'child6'],
+                'buddy' => 'pair2',
+            ]));
+
+            $fired = [];
+            $database->deleteDocument('related_parent', 'parent6');
+
+            $this->assertEquals(['child6'], $fired);
+            $this->assertTrue($database->getDocument('related_child', 'child5')->isEmpty());
+        } finally {
+            $database->on(Database::EVENT_DOCUMENT_UPDATE, 'related-test', null);
+        }
+
+        $database->deleteCollection('related_parent');
+        $database->deleteCollection('related_child');
+        $database->deleteCollection('related_oneway');
+        $database->deleteCollection('related_pair');
+    }
 }

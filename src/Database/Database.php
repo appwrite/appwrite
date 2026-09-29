@@ -7959,6 +7959,8 @@ class Database
     /**
      * Delete Document
      *
+     * Also fires EVENT_DOCUMENT_UPDATE for each document on the other side of a two-way relationship that the delete changed.
+     *
      * @param string $collection
      * @param string $id
      *
@@ -7973,7 +7975,9 @@ class Database
     {
         $collection = $this->silent(fn () => $this->getCollection($collection));
 
-        $deleted = $this->withTransaction(function () use ($collection, $id, &$document) {
+        $related = [];
+
+        $deleted = $this->withTransaction(function () use ($collection, $id, &$document, &$related) {
             $document = $this->authorization->skip(fn () => $this->silent(
                 fn () => $this->getDocument($collection->getId(), $id, forUpdate: true)
             ));
@@ -8005,7 +8009,9 @@ class Database
             }
 
             if ($this->resolveRelationships) {
-                $document = $this->silent(fn () => $this->deleteDocumentRelationships($collection, $document));
+                // A delete made while silenced, like a cascade's, has no one to report to
+                $report = $this->silentListeners !== null;
+                $related = $this->silent(fn () => $this->deleteDocumentRelationships($collection, $document, $report));
             }
 
             $result = $this->adapter->deleteDocument($collection->getId(), $id);
@@ -8019,6 +8025,10 @@ class Database
             // Purge again after commit so readers cannot re-cache the pre-commit version
             $this->purgeCachedDocumentInternal($collection->getId(), $id);
             $this->trigger(self::EVENT_DOCUMENT_DELETE, $document);
+
+            foreach ($related as $relation) {
+                $this->trigger(self::EVENT_DOCUMENT_UPDATE, $relation);
+            }
         }
 
         return $deleted;
@@ -8027,15 +8037,19 @@ class Database
     /**
      * @param Document $collection
      * @param Document $document
-     * @return Document
+     * @param bool $report
+     * @return array<string, Document> The two-way related documents left changed, when $report is set
      * @throws AuthorizationException
      * @throws ConflictException
      * @throws DatabaseException
      * @throws RestrictedException
      * @throws StructureException
      */
-    private function deleteDocumentRelationships(Document $collection, Document $document): Document
+    private function deleteDocumentRelationships(Document $collection, Document $document, bool $report = false): array
     {
+        $related = [];
+        $cascaded = false;
+
         $attributes = $collection->getAttribute('attributes', []);
 
         $relationships = \array_filter($attributes, function ($attribute) {
@@ -8055,14 +8069,33 @@ class Database
             $relationship->setAttribute('collection', $collection->getId());
             $relationship->setAttribute('document', $document->getId());
 
+            // This side holds the key, so deleting it takes the reference with it and nothing writes the other side
+            $holdsKey =
+                ($relationType === Database::RELATION_ONE_TO_MANY && $side === Database::RELATION_SIDE_CHILD) ||
+                ($relationType === Database::RELATION_MANY_TO_ONE && $side === Database::RELATION_SIDE_PARENT);
+
+            // Whether the other side survives this delete without being written to
+            $unwritten = false;
+
             switch ($onDelete) {
                 case Database::RELATION_MUTATE_RESTRICT:
                     $this->deleteRestrict($relatedCollection, $document, $value, $relationType, $twoWay, $twoWayKey, $side);
+                    $unwritten = true;
                     break;
                 case Database::RELATION_MUTATE_SET_NULL:
-                    $this->deleteSetNull($collection, $relatedCollection, $document, $relationType, $twoWay, $twoWayKey, $side);
+                    $updated = $this->deleteSetNull($collection, $relatedCollection, $document, $relationType, $twoWay, $twoWayKey, $side);
+
+                    if ($twoWay) {
+                        foreach ($updated as $relation) {
+                            $related[$relatedCollection->getId() . ':' . $relation->getId()] = $relation;
+                        }
+                    }
+
+                    $unwritten = $holdsKey || $relationType === Database::RELATION_MANY_TO_MANY;
                     break;
                 case Database::RELATION_MUTATE_CASCADE:
+                    $unwritten = $holdsKey || ($relationType === Database::RELATION_MANY_TO_MANY && $side === Database::RELATION_SIDE_CHILD);
+
                     foreach ($this->relationshipDeleteStack as $processedRelationship) {
                         $existingKey = $processedRelationship['key'];
                         $existingCollection = $processedRelationship['collection'];
@@ -8110,9 +8143,56 @@ class Database
                     $this->deleteCascade($collection, $relatedCollection, $document, $key, $value, $relationType, $twoWayKey, $side, $relationship);
                     break;
             }
+
+            foreach (\is_array($value) ? $value : [$value] as $relation) {
+                if (!$relation instanceof Document || $relation->isEmpty()) {
+                    continue;
+                }
+
+                if ($onDelete === Database::RELATION_MUTATE_CASCADE && !$unwritten) {
+                    $cascaded = true;
+                } elseif ($twoWay && $unwritten) {
+                    $related[$relatedCollection->getId() . ':' . $relation->getId()] = $relation;
+                }
+            }
         }
 
-        return $document;
+        if (!$report) {
+            return [];
+        }
+
+        // A document related to itself is deleted, not changed
+        unset($related[$collection->getId() . ':' . $document->getId()]);
+
+        if (!$cascaded || empty($related)) {
+            return $related;
+        }
+
+        // A cascade can remove a related document anywhere down its chain, so keep only the ones still there
+        $idsByCollection = [];
+        foreach ($related as $relation) {
+            $idsByCollection[$relation->getCollection()][] = $relation->getId();
+        }
+
+        $existing = [];
+        foreach ($idsByCollection as $collectionId => $ids) {
+            foreach (\array_chunk($ids, \max(1, $this->maxQueryValues)) as $chunk) {
+                $found = $this->authorization->skip(fn () => $this->find($collectionId, [
+                    Query::equal('$id', $chunk),
+                    Query::select(['$id']),
+                    Query::limit(\count($chunk)),
+                ]));
+
+                foreach ($found as $doc) {
+                    $existing[$collectionId][$doc->getId()] = true;
+                }
+            }
+        }
+
+        return \array_filter(
+            $related,
+            fn (Document $relation) => isset($existing[$relation->getCollection()][$relation->getId()]),
+        );
     }
 
     /**
@@ -8221,15 +8301,17 @@ class Database
      * @param bool $twoWay
      * @param string $twoWayKey
      * @param string $side
-     * @return void
+     * @return array<Document> The documents written
      * @throws AuthorizationException
      * @throws ConflictException
      * @throws DatabaseException
      * @throws RestrictedException
      * @throws StructureException
      */
-    private function deleteSetNull(Document $collection, Document $relatedCollection, Document $document, string $relationType, bool $twoWay, string $twoWayKey, string $side): void
+    private function deleteSetNull(Document $collection, Document $relatedCollection, Document $document, string $relationType, bool $twoWay, string $twoWayKey, string $side): array
     {
+        $updated = [];
+
         switch ($relationType) {
             case Database::RELATION_ONE_TO_ONE:
                 if (!$twoWay && $side === Database::RELATION_SIDE_PARENT) {
@@ -8237,7 +8319,7 @@ class Database
                 }
 
                 // Shouldn't need read or update permission to delete
-                $this->authorization->skip(function () use ($document, $relatedCollection, $twoWayKey) {
+                $result = $this->authorization->skip(function () use ($document, $relatedCollection, $twoWayKey) {
                     $related = $this->findOne($relatedCollection->getId(), [
                         Query::select(['$id']),
                         Query::equal($twoWayKey, [$document->getId()])
@@ -8247,7 +8329,7 @@ class Database
                         return;
                     }
 
-                    $this->skipRelationships(fn () => $this->updateDocument(
+                    return $this->skipRelationships(fn () => $this->updateDocument(
                         $relatedCollection->getId(),
                         $related->getId(),
                         new Document([
@@ -8255,6 +8337,10 @@ class Database
                         ])
                     ));
                 });
+
+                if ($result !== null && !$result->isEmpty()) {
+                    $updated[] = $result;
+                }
                 break;
 
             case Database::RELATION_ONE_TO_MANY:
@@ -8265,8 +8351,8 @@ class Database
                 $relations = $this->findReferencingDocuments($relatedCollection, $document, $twoWayKey);
 
                 foreach ($relations as $relation) {
-                    $this->authorization->skip(function () use ($relatedCollection, $twoWayKey, $relation) {
-                        $this->skipRelationships(fn () => $this->updateDocument(
+                    $result = $this->authorization->skip(function () use ($relatedCollection, $twoWayKey, $relation) {
+                        return $this->skipRelationships(fn () => $this->updateDocument(
                             $relatedCollection->getId(),
                             $relation->getId(),
                             new Document([
@@ -8274,6 +8360,10 @@ class Database
                             ]),
                         ));
                     });
+
+                    if (!$result->isEmpty()) {
+                        $updated[] = $result;
+                    }
                 }
                 break;
 
@@ -8285,8 +8375,8 @@ class Database
                 $relations = $this->findReferencingDocuments($relatedCollection, $document, $twoWayKey);
 
                 foreach ($relations as $relation) {
-                    $this->authorization->skip(function () use ($relatedCollection, $twoWayKey, $relation) {
-                        $this->skipRelationships(fn () => $this->updateDocument(
+                    $result = $this->authorization->skip(function () use ($relatedCollection, $twoWayKey, $relation) {
+                        return $this->skipRelationships(fn () => $this->updateDocument(
                             $relatedCollection->getId(),
                             $relation->getId(),
                             new Document([
@@ -8294,6 +8384,10 @@ class Database
                             ])
                         ));
                     });
+
+                    if (!$result->isEmpty()) {
+                        $updated[] = $result;
+                    }
                 }
                 break;
 
@@ -8314,6 +8408,8 @@ class Database
                 }
                 break;
         }
+
+        return $updated;
     }
 
     /**
@@ -8532,7 +8628,7 @@ class Database
                     }
 
                     if ($this->resolveRelationships) {
-                        $document = $this->silent(fn () => $this->deleteDocumentRelationships(
+                        $this->silent(fn () => $this->deleteDocumentRelationships(
                             $collection,
                             $document
                         ));
