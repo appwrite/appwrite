@@ -2535,7 +2535,10 @@ final class AccountCustomClientTest extends Scope
      * app's success URL. The headers (a session cookie) ride along on every
      * hop, like a browser would send them. Returns the final redirect response.
      */
-    private function followMockOAuth2Flow(string $path, array $headers = []): array
+    private function followMockOAuth2Flow(string $path, array $headers = [], array $params = [
+        'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+        'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+    ]): array
     {
         $projectId = $this->getProject()['$id'];
 
@@ -2543,10 +2546,7 @@ final class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $headers), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ], followRedirects: false);
+        ], $headers), $params, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -3443,9 +3443,52 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
-     * Default OAuth failure relay pages need `project` so native apps can deep-link via
-     * appwrite-callback-{project}://. Without it the UI shows "Missing redirect URL"
-     * instead of the real OAuth error.
+     * The default OAuth success URL redirects straight to appwrite-callback-{project}://,
+     * carrying the session the native SDKs store.
+     */
+    public function testOAuthDefaultSuccessRedirectsToApp(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Omit success and failure so Appwrite uses the default relay URLs
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/' . $provider, params: []);
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
+
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
+
+        // Native SDKs store the handoff as their session cookie
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => ($query['key'] ?? '') . '=' . ($query['secret'] ?? ''),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    /**
+     * The default OAuth failure URL redirects straight to appwrite-callback-{project}://,
+     * carrying `project` and the real OAuth error.
      */
     public function testOAuthDefaultFailureRedirectIncludesProject(): void
     {
@@ -3503,11 +3546,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         $location = $response['headers']['location'];
-        $path = \parse_url($location, PHP_URL_PATH);
-        $query = [];
-        \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
 
-        $this->assertEquals('/auth/oauth2/failure', $path);
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
         $this->assertEquals($projectId, $query['project'] ?? null);
         $this->assertNotEmpty($query['error'] ?? null);
 
