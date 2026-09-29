@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
 use Appwrite\ClamAV\Network;
+use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -370,16 +371,27 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
-                    $scan = $antivirus->scanInStream($path);
+                    try {
+                        $scan = $antivirus->scanInStream($path);
+                    } catch (\RuntimeException $e) {
+                        $scan = ScanResult::failed($e->getMessage());
+                    }
+
+                    if (!$scan->isClean()) {
+                        // A pending record would be left pointing at chunks that are already joined. Keep it
+                        // while the joined file is still on disk, so the removal can be retried by deleting the file.
+                        $removed = $deviceForFiles->delete($path);
+
+                        if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                        }
+                    }
 
                     if ($scan->isInfected()) {
-                        $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }
 
                     if ($scan->hasFailed()) {
-                        // The finalized upload has no completed file record yet.
-                        $deviceForFiles->delete($path);
                         throw new Exception(
                             Exception::GENERAL_SERVER_ERROR,
                             'Unable to scan the uploaded file: ' . $scan->getReply()
