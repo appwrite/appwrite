@@ -986,9 +986,9 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (str_starts_with($path, '/v1/organization/') && ! empty($orgHeader)) {
-                // The header selects the organization for the Organization API only; every
-                // other console route names its own team.
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
                 return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
