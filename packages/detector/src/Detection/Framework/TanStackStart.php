@@ -66,50 +66,72 @@ class TanStackStart extends React
             $stripped = \substr($stripped, 0, $start) . \substr($stripped, $end + 2);
         }
 
-        // Empty every string literal, so text such as `'nitro()'` is never read as a call.
+        // `$code` empties string literals, so `'nitro()'` is never read as a call, and keeps whitespace only between two names.
+        // `$compact` keeps the text of strings but drops quotes, whitespace and quoted braces, so `"enabled": false` still reads as a key.
         $code = '';
+        $compact = '';
         $quote = '';
+        $gap = false;
         for ($i = 0; $i < \strlen($stripped); $i++) {
             $char = $stripped[$i];
-            if ($quote === '') {
-                $code .= $char;
-                $quote = \in_array($char, ['\'', '"', '`'], true) ? $char : '';
-            } elseif ($char === '\\') {
-                $i++;
-            } elseif ($char === $quote || ($char === "\n" && $quote !== '`')) {
-                $code .= $char;
-                $quote = '';
+            if ($quote !== '') {
+                if ($char === '\\') {
+                    $i++;
+                } elseif ($char === $quote || ($char === "\n" && $quote !== '`')) {
+                    $code .= $char;
+                    $quote = '';
+                } elseif (!\in_array($char, ['{', '}'], true) && !\ctype_space($char)) {
+                    $compact .= $char;
+                }
+
+                continue;
+            }
+
+            if (\ctype_space($char)) {
+                $gap = true;
+
+                continue;
+            }
+
+            $last = \substr($code, -1);
+            if ($gap && (\ctype_alnum($last) || \in_array($last, ['_', '$'], true)) && (\ctype_alnum($char) || \in_array($char, ['_', '$'], true))) {
+                $code .= ' ';
+            }
+
+            $gap = false;
+            $code .= $char;
+            if (\in_array($char, ['\'', '"', '`'], true)) {
+                $quote = $char;
+            } else {
+                $compact .= $char;
+            }
+        }
+
+        // What each Nitro import is called as: `nitro`, `serverPlugin` for `{ nitro as serverPlugin }`, `nitroPlugin.nitro` for `* as nitroPlugin`.
+        $calls = [];
+        foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
+            for ($at = \strpos($stripped, $module); $at !== false; $at = \strpos($stripped, $module, $at + 1)) {
+                $import = \substr($stripped, 0, $at);
+                $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', '}', ',', "\t", "\r", "\n"], ' ', \substr($import, (int) \strrpos($import, 'import '))))));
+                $index = \array_search($export, $names, true);
+                $calls[] = match (true) {
+                    ($names[1] ?? '') === '*' && isset($names[3]) => $names[3] . '.' . $export,
+                    $index !== false && ($names[$index + 1] ?? '') === 'as' => $names[$index + 2] ?? '',
+                    $index !== false => $export,
+                    default => '',
+                };
             }
         }
 
         // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
-        foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
-            $import = \strstr($stripped, $module, true);
-            if ($import === false) {
-                continue;
-            }
-
-            // What the config calls: `nitro`, `serverPlugin` for `{ nitro as serverPlugin }`, `nitroPlugin.nitro` for `* as nitroPlugin`.
-            $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', '}', ',', "\t", "\r", "\n"], ' ', \substr($import, (int) \strrpos($import, 'import '))))));
-            $index = \array_search($export, $names, true);
-            $call = match (true) {
-                ($names[1] ?? '') === '*' && isset($names[3]) => $names[3] . '.' . $export,
-                $index !== false && ($names[$index + 1] ?? '') === 'as' => $names[$index + 2] ?? '',
-                $index !== false => $export,
-                default => '',
-            };
-
-            $offset = 0;
-            while ($call !== '' && ($at = \strpos($code, $call . '(', $offset)) !== false) {
+        foreach (\array_filter($calls) as $call) {
+            for ($at = \strpos($code, $call . '('); $at !== false; $at = \strpos($code, $call . '(', $at + 1)) {
                 $before = $at > 0 ? $code[$at - 1] : ' ';
                 if (!\ctype_alnum($before) && !\in_array($before, ['_', '$', '.'], true)) {
                     return 'ssr';
                 }
-                $offset = $at + 1;
             }
         }
-
-        $compact = \str_replace([' ', "\t", "\r", "\n", '"', "'"], '', $stripped);
 
         // Cut at the brace that closes the block, so a `({ path }) =>` filter does not end it early.
         $prerender = (string) \strstr($compact, 'prerender:{');
