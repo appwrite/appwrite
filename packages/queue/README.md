@@ -94,7 +94,9 @@ $broker = new Nats(
 $broker->publish(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123]);
 ```
 
-Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
+Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker.
+
+The server-side consumer is created with `max_deliver` one above `maxDeliver`, so reading it off `/jsz` shows the extra delivery. A message whose every attempt died unacknowledged, with no `reject()`, arrives once more and `receive()` dead-letters it without running a handler. At exactly `maxDeliver`, JetStream would retire it silently. It would stay on the work stream, counted as neither pending nor in flight, and only reach the dead stream if a broker happened to be subscribed when the server announced it. The consumer carries a `utopia_queue_spare_delivery` metadata key saying so. A broker under `Provisioning::Require`, which never writes configuration, reads that key to find the spare delivery, and reports through `onError` if it adopts a consumer provisioned without one. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
 ### Shaping a queue
 
