@@ -20,9 +20,8 @@ final class DiscoveryTest extends TestCase
         try {
             $listing = tempnam(sys_get_temp_dir(), 'abuse-discovery-') ?: throw new RuntimeException('Cannot create discovery listing');
             $log = tempnam(sys_get_temp_dir(), 'abuse-discovery-') ?: throw new RuntimeException('Cannot create discovery log');
-            $phpunit = \realpath($_SERVER['argv'][0] ?? '') ?: throw new RuntimeException('Cannot locate the running PHPUnit');
             $process = proc_open(
-                [PHP_BINARY, $phpunit, '--configuration', $root . '/phpunit.xml', '--list-tests-xml', $listing],
+                [PHP_BINARY, self::phpunit(), '--configuration', $root . '/phpunit.xml', '--list-tests-xml', $listing],
                 [0 => ['pipe', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']],
                 $pipes,
                 $root,
@@ -65,5 +64,14 @@ final class DiscoveryTest extends TestCase
                 }
             }
         }
+    }
+
+    private static function phpunit(): string
+    {
+        $arguments = $_SERVER['argv'] ?? [];
+        $script = \is_array($arguments) ? ($arguments[0] ?? null) : null;
+        $path = \is_string($script) ? \realpath($script) : false;
+
+        return $path === false ? throw new RuntimeException('Cannot locate the running PHPUnit') : $path;
     }
 }

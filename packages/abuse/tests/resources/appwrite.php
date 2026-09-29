@@ -7,7 +7,8 @@ $state = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_
 assert(is_array($state));
 /** @var array{databases: array<string, array<string, bool>>, deletes: list<string>, createFailure: int, setupFailure: int, cleanupFailure: int} $state */
 $method = $_SERVER['REQUEST_METHOD'] ?? '';
-$route = explode('/', trim((string) ($_SERVER['REQUEST_URI'] ?? ''), '/'));
+$uri = $_SERVER['REQUEST_URI'] ?? '';
+$route = explode('/', trim(is_string($uri) ? $uri : '', '/'));
 $body = json_decode((string) file_get_contents('php://input'), true) ?? [];
 /** @var array{databaseId?: string, tableId?: string} $body */
 $database = (string) ($route[2] ?? $body['databaseId'] ?? '');
