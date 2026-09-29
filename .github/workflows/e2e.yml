@@ -45,10 +45,12 @@ jobs:
             runner: gcrunner=${{ github.run_id }}-e2e-console-mocked/runner=e2e
           - project: console
             args: --project=console
+            auth: true
             timeout: 20
             runner: gcrunner=${{ github.run_id }}-e2e-console/runner=e2e
           - project: console-usage
             args: --project=console-usage
+            auth: true
             timeout: 20
             runner: gcrunner=${{ github.run_id }}-e2e-console-usage/runner=e2e
           # Each database suite is one serial chain on a single worker, so they
@@ -56,25 +58,44 @@ jobs:
           # dedicated database open until it finishes, so it stays off spot.
           - project: console-mysql
             args: --project=console-mysql
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-mysql/runner=e2e-long
           - project: console-postgres
             args: --project=console-postgres
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-postgres/runner=e2e-long
           - project: console-tablesdb
             args: --project=console-tablesdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-tablesdb/runner=e2e-long
           - project: console-documentsdb
             args: --project=console-documentsdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-documentsdb/runner=e2e-long
           - project: console-vectorsdb
             args: --project=console-vectorsdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-vectorsdb/runner=e2e-long
     steps:
+      - name: Load console session
+        if: matrix.auth
+        env:
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          SESSION: ${{ needs.session.outputs.session }}
+        run: |
+          if [ -z "$SESSION" ]; then
+            echo '::error::The session job did not create a console session'
+            exit 1
+          fi
+          cookies=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
+          echo "::add-mask::$cookies"
+          echo "E2E_FALLBACK_COOKIES=$cookies" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
 
       - name: Install Bun
@@ -101,16 +122,6 @@ jobs:
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install chromium
-
-      - name: Load console session
-        if: needs.session.outputs.session != ''
-        env:
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-          SESSION: ${{ needs.session.outputs.session }}
-        run: |
-          cookies=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
-          echo "::add-mask::$cookies"
-          echo "E2E_FALLBACK_COOKIES=$cookies" >> "$GITHUB_ENV"
 
       - name: E2E Tests
         env:
