@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StagesBase
@@ -185,6 +186,29 @@ trait StagesBase
         $this->assertSame(ONBOARDING_STATUS_COMPLETED, $again['status']);
         $this->assertSame($at, $again['at']);
         $this->assertSame(ACTOR_TYPE_GUEST, $again['actorType']);
+    }
+
+    public function testSkippedStageUpgradesToCompleted(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $skip = $this->updateStage($projectId, 'teams.create', true);
+        $this->assertSame(200, $skip['headers']['status-code']);
+        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $skip['body']['status']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Onboarding',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $stage = $this->getStage($projectId, 'teams.create');
+        $this->assertNotNull($stage);
+        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
     }
 
     // =========================================================================
