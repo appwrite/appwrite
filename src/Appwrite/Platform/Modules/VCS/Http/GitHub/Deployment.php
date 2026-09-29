@@ -103,6 +103,13 @@ trait Deployment
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
                 }
+
+                // Stale repository rows can outlive a disconnect, so only build for the repository the resource still links to.
+                if ($resource->getAttribute('repositoryId', '') !== $repositoryId) {
+                    Span::add("{$logBase}.build.skipped.reason", 'repository not connected');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
