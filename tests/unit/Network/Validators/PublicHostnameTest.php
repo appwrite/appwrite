@@ -6,7 +6,9 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -154,5 +156,49 @@ final class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp('100.127.255.255'));
         $this->assertTrue(PublicHostname::isPublicIp('100.128.0.0'));
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvesHostnameInsideCoroutine(): void
+    {
+        $validator = new PublicHostname();
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
+        $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvingInsideCoroutineRetainsNoMemoryPerLookup(): void
+    {
+        $validator = new PublicHostname();
+        $lookups = 200;
+        $growth = null;
+
+        $this->inHookedCoroutine(function () use ($validator, $lookups, &$growth): void {
+            $validator->isValid('localhost');
+            \gc_collect_cycles();
+            $before = \memory_get_usage();
+
+            for ($i = 0; $i < $lookups; $i++) {
+                $validator->isValid('localhost');
+            }
+
+            \gc_collect_cycles();
+            $growth = \memory_get_usage() - $before;
+        });
+
+        // The hooked dns_get_record() retained ~140 KiB per lookup.
+        $this->assertLessThan(4 * 1024, $growth / $lookups);
+    }
+
+    private function inHookedCoroutine(callable $callback): void
+    {
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run($callback);
     }
 }

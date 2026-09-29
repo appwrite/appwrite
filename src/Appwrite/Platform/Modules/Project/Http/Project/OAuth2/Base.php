@@ -375,6 +375,7 @@ abstract class Base extends Action
             'yandex' => Yandex\Update::class,
             'x' => X\Update::class,
             'wordpress' => WordPress\Update::class,
+            'webflow' => Webflow\Update::class,
             'twitch' => Twitch\Update::class,
             'stripe' => Stripe\Update::class,
             'spotify' => Spotify\Update::class,
