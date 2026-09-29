@@ -680,7 +680,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         return ['event' => $event, 'commit' => $commit];
     }
 
-    public function testGitHubEventWithInvalidSignature(): void
+    public function testCreateEventWithInvalidSignature(): void
     {
         $payload = [
             'action' => 'deleted',

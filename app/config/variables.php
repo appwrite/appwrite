@@ -1599,7 +1599,7 @@ return [
             ],
             [
                 'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
-                'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section. Required for the GitHub integration; GitHub is disabled and webhook events are rejected while it is empty.',
+                'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,

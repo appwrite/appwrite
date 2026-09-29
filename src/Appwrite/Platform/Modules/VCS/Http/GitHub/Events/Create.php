@@ -75,15 +75,11 @@ class Create extends Action
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = $vcsWebhookSecret('github');
 
-        if (empty($secretKey)) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'GitHub webhook secret is not configured. Please set the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable to the same value as the webhook secret in your GitHub app');
-        }
-
-        $valid = $vcs->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable');
         }
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
