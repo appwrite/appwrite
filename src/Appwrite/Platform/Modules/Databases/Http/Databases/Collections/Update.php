@@ -112,7 +112,17 @@ class Update extends Action
         );
 
         $dbForDatabases = $getDatabasesDB($database);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
+        $internalId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
+        // columnSecurity is not part of this request, so the collection keeps whatever it
+        // already had. updateCollection() stores the value it is given rather than
+        // inferring one, so passing false here would turn the feature off as a side
+        // effect of editing permissions.
+        $columnSecurity = $authorization->skip(
+            fn () => $dbForDatabases->getCollection($internalId)->getAttribute('columnSecurity', false)
+        );
+
+        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $columnSecurity);
 
         $queueForEvents
             ->setContext('database', $database)

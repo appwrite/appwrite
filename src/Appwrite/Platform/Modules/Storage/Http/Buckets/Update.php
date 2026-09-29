@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -74,6 +75,7 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -91,7 +93,8 @@ class Update extends Action
         bool $transformations,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $authorization
     ) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -119,7 +122,15 @@ class Update extends Action
             ->setAttribute('antivirus', $antivirus)
             ->setAttribute('transformations', $transformations));
 
-        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
+        $internalId = 'bucket_' . $bucket->getSequence();
+
+        // Not part of this request, so it keeps the value it already had --
+        // updateCollection() stores what it is given rather than inferring it.
+        $columnSecurity = $authorization->skip(
+            fn () => $dbForProject->getCollection($internalId)->getAttribute('columnSecurity', false)
+        );
+
+        $dbForProject->updateCollection($internalId, $permissions, $fileSecurity, $columnSecurity);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());

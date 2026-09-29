@@ -107,7 +107,15 @@ class Update extends CollectionAction
         );
 
         $dbForDatabases = $getDatabasesDB($database);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $updated->getSequence(), $permissions, $documentSecurity);
+        $internalId = 'database_' . $database->getSequence() . '_collection_' . $updated->getSequence();
+
+        // Not part of this request, so it keeps the value it already had --
+        // updateCollection() stores what it is given rather than inferring it.
+        $columnSecurity = $authorization->skip(
+            fn () => $dbForDatabases->getCollection($internalId)->getAttribute('columnSecurity', false)
+        );
+
+        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $columnSecurity);
 
         $queueForEvents
             ->setContext('database', $database)

@@ -147,7 +147,7 @@
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/config": "1.*",
-        "utopia-php/database": "^7.3.11",
+        "utopia-php/database": "dev-column-level-permissions-immutable-id as 7.3.999",
         "utopia-php/migration": "^2.0.0",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
