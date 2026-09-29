@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/tooltip'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
+  FIREWALL_PROMO_BANNER_ENABLED,
   FIREWALL_PROMO_BANNER_ID,
   getConsoleBannerById,
   isConsoleBannerVisible,
@@ -62,6 +63,7 @@ export function FirewallPromoBanner() {
     !operatorAccount?.impersonatorUserId
 
   const eligible =
+    (FIREWALL_PROMO_BANNER_ENABLED || preview) &&
     isConsoleBannerVisible(FIREWALL_PROMO_BANNER, {
       preview,
       dismissed: dismissedFromPrefs,

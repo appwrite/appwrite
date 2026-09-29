@@ -34,6 +34,9 @@ export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 
+/** Set to `true` to ship the fullscreen Firewall promo (heavy video asset). */
+export const FIREWALL_PROMO_BANNER_ENABLED = false
+
 /** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
 export const START_PROMO_BANNER_END_MS = Date.UTC(
