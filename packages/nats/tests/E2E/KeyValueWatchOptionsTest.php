@@ -82,7 +82,7 @@ final class KeyValueWatchOptionsTest extends TestCase
         $this->assertTrue($initDone, 'onInitDone should fire after historical replay');
         $this->assertSame(4, $countAtInit, 'all four historical entries delivered before init-done');
 
-        $values = array_map(static fn(KeyValueEntry $e): string => $e->value, \array_slice($received, 0, 3));
+        $values = array_map(static fn (KeyValueEntry $e): string => $e->value, \array_slice($received, 0, 3));
         $this->assertSame(['v1', 'v2', 'v3'], $values);
         $this->assertSame(KeyValueOperation::Delete, $received[3]->operation);
 

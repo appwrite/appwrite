@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Transport;
+namespace Utopia\NATS\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\NATS\Tests\Unit\Support\PartialWriteStream;
+use Utopia\NATS\Tests\Support\PartialWriteStream;
 use Utopia\NATS\Transport\TcpTransport;
 
 /**

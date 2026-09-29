@@ -43,7 +43,8 @@ final class ConsumerConfig
         public readonly ?float $idleHeartbeat = null,
         public readonly ?array $metadata = null,
         public readonly ?array $backoff = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

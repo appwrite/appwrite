@@ -70,7 +70,7 @@ final class ObjectStoreTest extends TestCase
         $this->store->put('a.txt', 'aaa');
         $this->store->put('b.txt', 'bbb');
 
-        $names = array_map(fn(\Utopia\NATS\ObjectStore\ObjectMeta $m): string => $m->name, $this->store->list());
+        $names = array_map(fn (\Utopia\NATS\ObjectStore\ObjectMeta $m): string => $m->name, $this->store->list());
         sort($names);
 
         $this->assertSame(['a.txt', 'b.txt'], $names);

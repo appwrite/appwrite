@@ -17,7 +17,8 @@ final class Group
         private readonly Service $service,
         private readonly string $prefix,
         private readonly ?string $queueGroup = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a nested group. Its subject prefix is this group's prefix

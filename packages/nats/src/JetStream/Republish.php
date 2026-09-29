@@ -10,7 +10,8 @@ final class Republish
         public readonly string $source,
         public readonly string $destination,
         public readonly bool $headersOnly = false,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

@@ -350,13 +350,15 @@ $conn = Connection::connect(new ConnectionOptions(
 
 ```bash
 # Unit tests
-./vendor/bin/phpunit --testsuite unit
+composer test
 
-# Integration tests (requires a running nats-server)
-./vendor/bin/phpunit --testsuite integration
+# E2E tests (against the NATS servers in docker-compose.yml)
+docker compose up -d --wait
+composer test:e2e
+docker compose down -v
 
 # With custom NATS URL
-NATS_URL=nats://host:4222 ./vendor/bin/phpunit --testsuite integration
+NATS_URL=nats://host:4222 composer test:e2e
 ```
 
 ## Batched requests

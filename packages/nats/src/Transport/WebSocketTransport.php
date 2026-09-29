@@ -31,7 +31,8 @@ final class WebSocketTransport implements Transport
         private readonly bool $secure = false,
         private readonly array $tlsOptions = [],
         private readonly string $path = '/',
-    ) {}
+    ) {
+    }
 
     public function connect(string $host, int $port, float $timeout): void
     {

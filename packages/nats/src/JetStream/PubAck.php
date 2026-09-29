@@ -11,7 +11,8 @@ final class PubAck
         public readonly int $sequence,
         public readonly ?string $domain = null,
         public readonly bool $duplicate = false,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

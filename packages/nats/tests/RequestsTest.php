@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +15,7 @@ use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Headers;
 use Utopia\NATS\Message;
 use Utopia\NATS\Request;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 
 final class RequestsTest extends TestCase
 {
@@ -29,7 +29,7 @@ final class RequestsTest extends TestCase
     public function testFailedPongFailsEveryPendingRequestAndDisconnects(bool $reconnect): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(allowReconnect: $reconnect, transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(allowReconnect: $reconnect, transportFactory: fn (): FakeTransport => $fake));
         $fake->onWrite = static function (string $wire, FakeTransport $fake): void {
             if (str_starts_with($wire, 'PUB ')) {
                 $fake->pushInbound("PING\r\n");
@@ -60,7 +60,7 @@ final class RequestsTest extends TestCase
                 $this->assertFalse($connection->isConnected());
                 throw $failure;
             },
-            transportFactory: fn(): FakeTransport => $fake,
+            transportFactory: fn (): FakeTransport => $fake,
         ));
         $fake->onWrite = static function (string $wire, FakeTransport $fake): void {
             if (str_starts_with($wire, 'PUB ')) {
@@ -99,7 +99,7 @@ final class RequestsTest extends TestCase
             allowReconnect: $reconnect,
             pingInterval: 0.0,
             maxPingsOut: 1,
-            transportFactory: fn(): FakeTransport => $fake,
+            transportFactory: fn (): FakeTransport => $fake,
         ));
         $fake->answerPings = false;
         $subjects = [];
@@ -150,7 +150,7 @@ final class RequestsTest extends TestCase
             maxReconnectAttempts: 1,
             pingInterval: 0.0,
             maxPingsOut: 1,
-            transportFactory: fn(): FakeTransport => $fake,
+            transportFactory: fn (): FakeTransport => $fake,
         ));
         $fake->answerPings = false;
         $before = substr_count($fake->written, "PING\r\n");
@@ -187,7 +187,7 @@ final class RequestsTest extends TestCase
     public function testPipelinesRequestsAndRetainsOutOfOrderPartialReplies(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $groups = [];
         $fake->onWrite = static function (string $wire, FakeTransport $fake) use (&$groups): void {
             preg_match_all('/PUB work\.(\d+) ([^ ]+) 0\r\n\r\n/', $wire, $matches, PREG_SET_ORDER);
@@ -219,9 +219,9 @@ final class RequestsTest extends TestCase
     public function testSubscriptionCallbackExceptionIsNotATransportFailure(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $failure = new ConnectionException('Application callback failed');
-        $connection->subscribe('events', static fn() => throw $failure);
+        $connection->subscribe('events', static fn () => throw $failure);
         $fake->onWrite = static function (string $wire, FakeTransport $fake): void {
             if (str_starts_with($wire, 'PUB ')) {
                 $fake->pushInbound("MSG events 1 1\r\nx\r\n");
@@ -244,11 +244,11 @@ final class RequestsTest extends TestCase
     public function testSingleAndBatchRequestsShareSubjectValidation(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $before = $fake->written;
         $refused = 0;
         foreach (['', 'bad subject', 'work.*', 'work..x'] as $subject) {
-            foreach ([fn(): \Utopia\NATS\Request => new Request($subject), fn(): \Utopia\NATS\Message => $connection->request($subject)] as $create) {
+            foreach ([fn (): \Utopia\NATS\Request => new Request($subject), fn (): \Utopia\NATS\Message => $connection->request($subject)] as $create) {
                 try {
                     $create();
                     self::fail('Invalid subject must be refused');
@@ -265,7 +265,7 @@ final class RequestsTest extends TestCase
     public function testAmbiguousWriteIsNotReplayedAndDisconnects(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $writes = 0;
         $fake->onWrite = static function (string $wire) use (&$writes): void {
             if (str_starts_with($wire, 'PUB ')) {
@@ -287,7 +287,7 @@ final class RequestsTest extends TestCase
     public function testCallbackFailureAbortsAndLeavesConnectionUsable(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(subPendingMsgsLimit: 1, onSlowConsumer: static fn() => self::fail('Late replies must not accumulate'), transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(subPendingMsgsLimit: 1, onSlowConsumer: static fn () => self::fail('Late replies must not accumulate'), transportFactory: fn (): FakeTransport => $fake));
         $this->respond($fake);
         $seen = [];
         // Even transport-shaped callback errors must not become request failures.
@@ -309,7 +309,7 @@ final class RequestsTest extends TestCase
     public function testHeadersAndNoRespondersRetainIndependentOutcomes(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $observed = '';
         $fake->onWrite = static function (string $wire, FakeTransport $fake) use (&$observed): void {
             if (preg_match('/HPUB work ([^ ]+) (\d+) (\d+)\r\n/', $wire, $match)) {
@@ -351,7 +351,7 @@ final class RequestsTest extends TestCase
     public function testInvalidInputDoesNotWriteOrInvokeCallbacks(array $requests, float $timeout): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $before = $fake->written;
         $called = false;
         try {
@@ -369,21 +369,21 @@ final class RequestsTest extends TestCase
     public function testEmptyInputNeedsNoConnection(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $connection->close();
         $before = $fake->written;
-        $connection->requestBatch([], static fn() => self::fail('Empty batch must not invoke callback'));
+        $connection->requestBatch([], static fn () => self::fail('Empty batch must not invoke callback'));
         $this->assertSame($before, $fake->written);
     }
 
     public function testOversizedLaterRequestDoesNotPublishEarlierRequests(): void
     {
         $fake = new FakeTransport(['max_payload' => 16]);
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         try {
             $connection->requestBatch([
                 new Request(subject: 'work'), new Request(subject: 'work', data: str_repeat('x', 17)),
-            ], static fn() => self::fail('Validation must not invoke callback'));
+            ], static fn () => self::fail('Validation must not invoke callback'));
             self::fail('Payload validation must throw');
         } catch (MaxPayloadException) {
         }
@@ -396,11 +396,11 @@ final class RequestsTest extends TestCase
     public function testCallbackCannotReadConnectionReentrantly(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $this->respond($fake);
         $refused = 0;
         $connection->requestBatch([new Request(subject: 'work')], function () use ($connection, &$refused): void {
-            foreach ([fn(): \Utopia\NATS\Message => $connection->request('work'), $connection->processMessage(...), fn(): array => $connection->requestMany('work'), fn() => $connection->wait(1), $connection->flush(...), $connection->tick(...), $connection->drain(...), fn() => $connection->requestBatch([], static fn() => null)] as $read) {
+            foreach ([fn (): \Utopia\NATS\Message => $connection->request('work'), $connection->processMessage(...), fn (): array => $connection->requestMany('work'), fn () => $connection->wait(1), $connection->flush(...), $connection->tick(...), $connection->drain(...), fn () => $connection->requestBatch([], static fn () => null)] as $read) {
                 try {
                     $read();
                     self::fail('Nested read must be refused');
@@ -417,7 +417,7 @@ final class RequestsTest extends TestCase
     public function testSharedDeadlineStartsAfterWriteAndIncludesCallbacks(): void
     {
         $fake = new FakeTransport();
-        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn(): FakeTransport => $fake));
+        $connection = Connection::connect(new ConnectionOptions(transportFactory: fn (): FakeTransport => $fake));
         $this->respond($fake);
         $respond = $fake->onWrite;
         $fake->onWrite = static function (string $wire, FakeTransport $fake) use ($respond): void {

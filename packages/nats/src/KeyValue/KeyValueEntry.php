@@ -13,5 +13,6 @@ final class KeyValueEntry
         public readonly int $revision,
         public readonly ?string $created = null,
         public readonly KeyValueOperation $operation = KeyValueOperation::Put,
-    ) {}
+    ) {
+    }
 }

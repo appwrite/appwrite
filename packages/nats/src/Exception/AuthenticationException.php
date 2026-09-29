@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Exception;
 
-class AuthenticationException extends NatsException {}
+class AuthenticationException extends NatsException
+{
+}

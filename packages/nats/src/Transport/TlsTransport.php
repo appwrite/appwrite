@@ -14,7 +14,8 @@ final class TlsTransport implements Transport
 
     public function __construct(
         private readonly array $tlsOptions = [],
-    ) {}
+    ) {
+    }
 
     public function connect(string $host, int $port, float $timeout): void
     {

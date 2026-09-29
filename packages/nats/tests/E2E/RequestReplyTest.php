@@ -44,7 +44,7 @@ final class RequestReplyTest extends TestCase
         // Subscribe a silent responder so the server sees interest and does not
         // short-circuit with a "no responders" reply — the request must hang
         // until it times out.
-        $conn->subscribe('test.silent', fn($msg) => null);
+        $conn->subscribe('test.silent', fn ($msg) => null);
 
         $this->expectException(TimeoutException::class);
         $conn->request('test.silent', 'hello', 0.5);

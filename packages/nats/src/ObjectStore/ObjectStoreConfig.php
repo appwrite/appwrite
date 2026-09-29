@@ -21,7 +21,8 @@ final class ObjectStoreConfig
         public readonly ?float $ttl = null,
         public readonly StorageType $storage = StorageType::File,
         public readonly int $replicas = 1,
-    ) {}
+    ) {
+    }
 
     public function toStreamConfig(): StreamConfig
     {

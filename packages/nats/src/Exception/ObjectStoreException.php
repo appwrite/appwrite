@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Exception;
 
-class ObjectStoreException extends NatsException {}
+class ObjectStoreException extends NatsException
+{
+}

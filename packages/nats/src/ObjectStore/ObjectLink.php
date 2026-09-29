@@ -13,7 +13,8 @@ final class ObjectLink
     public function __construct(
         public readonly string $bucket,
         public readonly ?string $name = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, string>

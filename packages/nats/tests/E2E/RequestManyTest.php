@@ -41,7 +41,7 @@ final class RequestManyTest extends TestCase
         $replies = $conn->requestMany($subject, 'ping', ['timeout' => 2.0]);
 
         $this->assertCount(3, $replies);
-        $bodies = array_map(fn(\Utopia\NATS\Message $m): string => $m->data, $replies);
+        $bodies = array_map(fn (\Utopia\NATS\Message $m): string => $m->data, $replies);
         sort($bodies);
         $this->assertSame(['r1', 'r2', 'r3'], $bodies);
 

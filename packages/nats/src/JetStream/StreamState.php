@@ -16,7 +16,8 @@ final class StreamState
         public readonly int $consumerCount,
         public readonly int $numDeleted = 0,
         public readonly int $numSubjects = 0,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

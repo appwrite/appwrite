@@ -178,10 +178,10 @@ final class Connection
             $sid,
             $subject,
             $queue,
-            $callback instanceof \Closure ? fn(Message $message) => $this->notify($callback, $message) : null,
+            $callback instanceof \Closure ? fn (Message $message) => $this->notify($callback, $message) : null,
             $this->options->subPendingMsgsLimit,
             $this->options->subPendingBytesLimit,
-            $slow instanceof \Closure ? fn(Subscription $subscription) => $this->notify($slow, $subscription) : null,
+            $slow instanceof \Closure ? fn (Subscription $subscription) => $this->notify($slow, $subscription) : null,
         );
         $sub->setConnection($this);
 
@@ -963,7 +963,7 @@ final class Connection
 
         $others = array_values(array_filter(
             $this->serverPool,
-            fn(string $url): bool => $url !== $this->currentServer,
+            fn (string $url): bool => $url !== $this->currentServer,
         ));
 
         // Only proactively reconnect when a different server is available;

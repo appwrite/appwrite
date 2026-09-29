@@ -52,14 +52,14 @@ final class ObjectStoreExtraTest extends TestCase
         $this->conn->flush();
 
         $this->store->put('watched.txt', 'hello');
-        $this->pumpUntil(fn(): bool => $events !== []);
+        $this->pumpUntil(fn (): bool => $events !== []);
 
         $this->assertCount(1, $events);
         $this->assertSame('watched.txt', $events[0]->name);
         $this->assertFalse($events[0]->deleted);
 
         $this->store->delete('watched.txt');
-        $this->pumpUntil(fn(): bool => \count($events) >= 2);
+        $this->pumpUntil(fn (): bool => \count($events) >= 2);
 
         $sub->unsubscribe();
 
@@ -79,7 +79,7 @@ final class ObjectStoreExtraTest extends TestCase
         }, includeHistory: true);
 
         $this->conn->flush();
-        $this->pumpUntil(fn(): bool => $events !== []);
+        $this->pumpUntil(fn (): bool => $events !== []);
 
         $sub->unsubscribe();
 

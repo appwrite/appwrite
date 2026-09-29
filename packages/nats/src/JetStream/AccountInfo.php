@@ -20,7 +20,8 @@ final class AccountInfo
         public readonly int $apiErrors,
         public readonly ?string $domain = null,
         public readonly array $raw = [],
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

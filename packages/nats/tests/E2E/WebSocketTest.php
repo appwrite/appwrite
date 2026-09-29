@@ -34,7 +34,7 @@ final class WebSocketTest extends TestCase
     {
         $conn = Connection::connect(new ConnectionOptions(
             servers: $this->url,
-            transportFactory: fn(string $scheme): WebSocketTransport => new WebSocketTransport(secure: $scheme === 'wss'),
+            transportFactory: fn (string $scheme): WebSocketTransport => new WebSocketTransport(secure: $scheme === 'wss'),
         ));
 
         $this->assertTrue($conn->isConnected());
@@ -53,7 +53,7 @@ final class WebSocketTest extends TestCase
     {
         $conn = Connection::connect(new ConnectionOptions(
             servers: $this->url,
-            transportFactory: fn(string $scheme): WebSocketTransport => new WebSocketTransport(secure: $scheme === 'wss'),
+            transportFactory: fn (string $scheme): WebSocketTransport => new WebSocketTransport(secure: $scheme === 'wss'),
         ));
 
         $conn->subscribe('ws.service', function ($msg) use ($conn): void {

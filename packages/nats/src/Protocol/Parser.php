@@ -15,7 +15,8 @@ final class Parser
 
     public function __construct(
         private readonly Transport $transport,
-    ) {}
+    ) {
+    }
 
     /** Whether received bytes remain to be parsed before another transport read. */
     public function hasBufferedData(): bool
@@ -73,12 +74,12 @@ final class Parser
 
         // MSG <subject> <sid> [reply-to] <#bytes>
         if (str_starts_with($line, 'MSG ')) {
-            return $this->readFrame(fn(): array => $this->parseMsg(substr($line, 4), $timeout));
+            return $this->readFrame(fn (): array => $this->parseMsg(substr($line, 4), $timeout));
         }
 
         // HMSG <subject> <sid> [reply-to] <#header-bytes> <#total-bytes>
         if (str_starts_with($line, 'HMSG ')) {
-            return $this->readFrame(fn(): array => $this->parseHmsg(substr($line, 5), $timeout));
+            return $this->readFrame(fn (): array => $this->parseHmsg(substr($line, 5), $timeout));
         }
 
         throw new ProtocolException("Unknown protocol operation: {$line}");

@@ -24,7 +24,7 @@ final class ServiceTest extends TestCase
         $this->echoSubject = "{$this->name}.echo";
 
         $this->service = new Service($this->conn, $this->name, '1.2.3', 'Test service');
-        $this->service->addEndpoint('echo', $this->echoSubject, fn(Message $msg): string => 'echo:' . $msg->data);
+        $this->service->addEndpoint('echo', $this->echoSubject, fn (Message $msg): string => 'echo:' . $msg->data);
         $this->service->addEndpoint('boom', "{$this->name}.boom", function (Message $msg): string {
             throw new \RuntimeException('kaboom');
         });
@@ -63,7 +63,7 @@ final class ServiceTest extends TestCase
         $this->assertSame('io.nats.micro.v1.info_response', $data['type']);
         $this->assertSame('Test service', $data['description']);
 
-        $subjects = array_map(fn(array $e) => $e['subject'], $data['endpoints']);
+        $subjects = array_map(fn (array $e) => $e['subject'], $data['endpoints']);
         $this->assertContains($this->echoSubject, $subjects);
     }
 

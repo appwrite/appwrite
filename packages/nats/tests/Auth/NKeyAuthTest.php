@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Auth;
+namespace Utopia\NATS\Tests\Auth;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Auth\NKeyAuth;

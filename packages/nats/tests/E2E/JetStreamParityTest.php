@@ -193,7 +193,7 @@ final class JetStreamParityTest extends TestCase
             $this->assertSame($name, $c->streamName);
         }
 
-        $names = array_map(static fn(ConsumerInfo $c): string => $c->name, $consumers);
+        $names = array_map(static fn (ConsumerInfo $c): string => $c->name, $consumers);
         sort($names);
         $this->assertSame(["one_{$id}", "two_{$id}"], $names);
     }

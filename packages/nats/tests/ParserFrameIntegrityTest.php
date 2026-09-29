@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Protocol\Parser;
 use Utopia\NATS\Protocol\ServerOp;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 
 /**
  * A frame body that fails halfway through leaves the buffer mid-frame, so the

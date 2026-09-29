@@ -20,7 +20,8 @@ final class StreamSource
         public readonly ?string $filterSubject = null,
         public readonly ?array $subjectTransforms = null,
         public readonly ?ExternalStream $external = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {
@@ -37,7 +38,7 @@ final class StreamSource
         }
         if ($this->subjectTransforms !== null) {
             $data['subject_transforms'] = array_map(
-                static fn(SubjectTransform $t): array => $t->toArray(),
+                static fn (SubjectTransform $t): array => $t->toArray(),
                 $this->subjectTransforms,
             );
         }

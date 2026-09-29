@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
@@ -12,7 +12,7 @@ use Utopia\NATS\Exception\ObjectStoreException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\KeyValue\KeyValue;
 use Utopia\NATS\ObjectStore\ObjectStore;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 
 /**
  * KeyValue and ObjectStore guard their writes with optimistic concurrency, and
@@ -33,7 +33,7 @@ final class WriteFailureSemanticsTest extends TestCase
             servers: 'nats://127.0.0.1:4222',
             allowReconnect: false,
             requestTimeout: 0.02,
-            transportFactory: fn(string $scheme): FakeTransport => $fake,
+            transportFactory: fn (string $scheme): FakeTransport => $fake,
         ));
     }
 

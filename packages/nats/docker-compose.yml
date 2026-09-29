@@ -1,3 +1,5 @@
+name: utopia-nats
+
 services:
   nats:
     image: nats:2.11-alpine

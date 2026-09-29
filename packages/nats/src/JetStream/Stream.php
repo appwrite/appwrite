@@ -9,7 +9,8 @@ final class Stream
     public function __construct(
         private readonly JetStream $js,
         private StreamInfo $info,
-    ) {}
+    ) {
+    }
 
     public function getName(): string
     {

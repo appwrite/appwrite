@@ -10,7 +10,8 @@ final class SequenceInfo
         public readonly int $consumerSeq,
         public readonly int $streamSeq,
         public readonly ?string $lastActive = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

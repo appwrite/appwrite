@@ -21,5 +21,6 @@ final class KeyValueWatchOptions
         public readonly bool $updatesOnly = false,
         public readonly bool $ignoreDeletes = false,
         public readonly bool $metaOnly = false,
-    ) {}
+    ) {
+    }
 }

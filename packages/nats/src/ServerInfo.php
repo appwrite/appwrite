@@ -23,7 +23,8 @@ final class ServerInfo
         public readonly bool $jetstream,
         public readonly ?int $clientId,
         public readonly ?string $clientIp,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -23,7 +23,8 @@ final class KeyValue
         private readonly Connection $conn,
         private readonly JetStream $js,
         private readonly string $bucket,
-    ) {}
+    ) {
+    }
 
     public function get(string $key): KeyValueEntry
     {

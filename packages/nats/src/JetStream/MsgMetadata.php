@@ -15,7 +15,8 @@ final class MsgMetadata
         public readonly string $timestamp,
         public readonly int $numPending,
         public readonly ?string $domain = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Parse from reply subject: $JS.ACK.<stream>.<consumer>.<delivered>.<streamSeq>.<consumerSeq>.<timestamp>.<pending>

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +12,7 @@ use Utopia\NATS\Exception\AuthenticationException;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\TlsTransport;
 use Utopia\NATS\Transport\WebSocketTransport;
@@ -43,7 +43,7 @@ final class ConnectionDeathDetectionTest extends TestCase
     {
         return Connection::connect(new ConnectionOptions(...array_merge([
             'servers' => 'nats://127.0.0.1:4222',
-            'transportFactory' => fn(string $scheme): FakeTransport => $fake,
+            'transportFactory' => fn (string $scheme): FakeTransport => $fake,
             // Keep reconnects instant and free of jitter so the assertions below
             // are about behaviour rather than timing.
             'reconnectWait' => 0.0,
@@ -251,7 +251,7 @@ final class ConnectionDeathDetectionTest extends TestCase
         // Counted off the wire rather than from a callback: a recycled
         // connection re-runs the handshake, so a fresh CONNECT is the effect
         // worth asserting on.
-        $handshakes = fn(): int => substr_count($fake->written, 'CONNECT ');
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
         $this->assertSame(1, $handshakes());
 
         // The handshake needed its PONG; from here the server goes silent.
@@ -304,7 +304,7 @@ final class ConnectionDeathDetectionTest extends TestCase
             'maxPingsOut' => 1,
         ]);
 
-        $handshakes = fn(): int => substr_count($fake->written, 'CONNECT ');
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
         $this->assertSame(1, $handshakes());
 
         // Nothing will answer from here, exactly as on a connection whose
@@ -342,7 +342,7 @@ final class ConnectionDeathDetectionTest extends TestCase
             'maxPingsOut' => 2,
         ]);
 
-        $handshakes = fn(): int => substr_count($fake->written, 'CONNECT ');
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
 
         // checkPings() only writes. Nothing else clears the outstanding count
         // on a connection whose holder never reads -- a pooled publisher -- so
@@ -393,7 +393,7 @@ final class ConnectionDeathDetectionTest extends TestCase
             'maxPingsOut' => 1,
         ]);
 
-        $handshakes = fn(): int => substr_count($fake->written, 'CONNECT ');
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
 
         // Spend the budget from the read side, which is where it is spent in
         // practice: a PING the now-silent server will never answer.

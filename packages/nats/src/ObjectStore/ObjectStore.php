@@ -24,7 +24,8 @@ final class ObjectStore
         private readonly Connection $conn,
         private readonly JetStream $js,
         private readonly string $bucket,
-    ) {}
+    ) {
+    }
 
     /**
      * Create (or update) the backing stream and return a store handle.
@@ -377,7 +378,7 @@ final class ObjectStore
         // Empty JSON objects in the info response (e.g. consumer_limits) decode to
         // empty PHP arrays and would re-encode as [] — which the API rejects as
         // invalid JSON for a struct field. Drop them; the server re-applies defaults.
-        $config = array_filter($config, static fn(mixed $v): bool => $v !== []);
+        $config = array_filter($config, static fn (mixed $v): bool => $v !== []);
         $config['sealed'] = true;
 
         $updateResponse = $this->conn->request(

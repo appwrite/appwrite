@@ -12,7 +12,8 @@ final class ConsumerLimits
     public function __construct(
         public readonly ?float $inactiveThreshold = null,
         public readonly ?int $maxAckPending = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

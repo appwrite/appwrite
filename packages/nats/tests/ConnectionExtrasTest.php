@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
@@ -11,7 +11,7 @@ use Utopia\NATS\Exception\AuthenticationException;
 use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 
 /**
  * Connection-level parity extras: the ADR-7 server-error mapping and the ADR-5
@@ -76,7 +76,7 @@ final class ConnectionExtrasTest extends TestCase
             onLameDuck: function () use (&$fired): void {
                 $fired = true;
             },
-            transportFactory: fn(string $scheme): FakeTransport => $fake,
+            transportFactory: fn (string $scheme): FakeTransport => $fake,
         ));
 
         // Server signals lame-duck mode via an asynchronous INFO. With only one
@@ -100,7 +100,7 @@ final class ConnectionExtrasTest extends TestCase
             onLameDuck: function () use (&$fired): void {
                 $fired = true;
             },
-            transportFactory: fn(string $scheme): FakeTransport => $fake,
+            transportFactory: fn (string $scheme): FakeTransport => $fake,
         ));
 
         $fake->pushInbound('INFO {"server_id":"FAKE","ldm":false}' . "\r\n");

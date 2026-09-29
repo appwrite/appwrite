@@ -23,7 +23,8 @@ final class ConsumerInfo
         public readonly bool $pushBound = false,
         public readonly ?string $cluster = null,
         public readonly ?array $metadata = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

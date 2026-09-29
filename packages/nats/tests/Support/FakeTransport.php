@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Support;
+namespace Utopia\NATS\Tests\Support;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
@@ -34,7 +34,9 @@ final class FakeTransport implements Transport
     private bool $connected = false;
 
     /** @param array<string, mixed> $info Fields merged into the served INFO. */
-    public function __construct(private readonly array $info = []) {}
+    public function __construct(private readonly array $info = [])
+    {
+    }
 
     public function connect(string $host, int $port, float $timeout): void
     {

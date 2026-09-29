@@ -10,7 +10,8 @@ final class ApiError
         public readonly int $code,
         public readonly int $errCode,
         public readonly string $description,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -109,9 +109,9 @@ final class Service
             $this->subscribeEndpoint($endpoint);
         }
 
-        $this->subscribeDiscovery('PING', fn(Message $msg) => $this->reply($msg, $this->pingResponse()));
-        $this->subscribeDiscovery('INFO', fn(Message $msg) => $this->reply($msg, $this->infoResponse()));
-        $this->subscribeDiscovery('STATS', fn(Message $msg) => $this->reply($msg, $this->statsResponse()));
+        $this->subscribeDiscovery('PING', fn (Message $msg) => $this->reply($msg, $this->pingResponse()));
+        $this->subscribeDiscovery('INFO', fn (Message $msg) => $this->reply($msg, $this->infoResponse()));
+        $this->subscribeDiscovery('STATS', fn (Message $msg) => $this->reply($msg, $this->statsResponse()));
 
         return $this;
     }
@@ -224,7 +224,7 @@ final class Service
             'version' => $this->version,
             'description' => $this->description,
             'metadata' => $this->metadataObject(),
-            'endpoints' => array_map(fn(Endpoint $e): array => $e->info(), array_values($this->endpoints)),
+            'endpoints' => array_map(fn (Endpoint $e): array => $e->info(), array_values($this->endpoints)),
         ]);
     }
 
@@ -237,7 +237,7 @@ final class Service
             'version' => $this->version,
             'started' => $this->started,
             'metadata' => $this->metadataObject(),
-            'endpoints' => array_map(fn(Endpoint $e): array => $e->stats(), array_values($this->endpoints)),
+            'endpoints' => array_map(fn (Endpoint $e): array => $e->stats(), array_values($this->endpoints)),
         ]);
     }
 

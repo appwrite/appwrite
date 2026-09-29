@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\JetStream;
+namespace Utopia\NATS\Tests\JetStream;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\JetStream\ConsumerConfig;

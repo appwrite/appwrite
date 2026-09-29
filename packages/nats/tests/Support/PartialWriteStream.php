@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Support;
+namespace Utopia\NATS\Tests\Support;
 
 /**
  * Stream wrapper that accepts at most $chunk bytes per write, forcing short

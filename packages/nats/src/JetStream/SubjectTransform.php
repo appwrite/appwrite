@@ -9,7 +9,8 @@ final class SubjectTransform
     public function __construct(
         public readonly string $source,
         public readonly string $destination,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, string>

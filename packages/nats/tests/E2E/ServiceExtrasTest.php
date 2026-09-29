@@ -41,11 +41,11 @@ final class ServiceExtrasTest extends TestCase
     {
         // Root group carries the unique service name so subjects don't collide.
         $group = $this->service->addGroup($this->name)->addGroup('math');
-        $group->addEndpoint('add', fn(Message $msg): string => 'sum:' . $msg->data);
+        $group->addEndpoint('add', fn (Message $msg): string => 'sum:' . $msg->data);
 
         // Nested group prefixes cumulatively.
         $sub = $group->addGroup('trig');
-        $sub->addEndpoint('sin', fn(Message $msg): string => 'sin:' . $msg->data);
+        $sub->addEndpoint('sin', fn (Message $msg): string => 'sin:' . $msg->data);
 
         $this->service->start();
 
@@ -84,7 +84,7 @@ final class ServiceExtrasTest extends TestCase
         $group = $this->service->addGroup($this->name)->addGroup('v1');
         $group->addEndpoint(
             'status',
-            fn(Message $msg): string => 'ok',
+            fn (Message $msg): string => 'ok',
             null,
             null,
             ['visibility' => 'public'],
@@ -112,13 +112,13 @@ final class ServiceExtrasTest extends TestCase
 
         // Group-level queue group is inherited by its endpoints.
         $group = $this->service->addGroup('jobs', $queue);
-        $group->addEndpoint('run', fn(Message $msg): string => 'done');
+        $group->addEndpoint('run', fn (Message $msg): string => 'done');
 
         // Per-endpoint override on the bare service.
         $this->service->addEndpoint(
             'direct',
             "{$this->name}.direct",
-            fn(Message $msg): string => 'direct',
+            fn (Message $msg): string => 'direct',
             $queue,
         );
         $this->service->start();
@@ -139,8 +139,8 @@ final class ServiceExtrasTest extends TestCase
 
         // Two endpoints on the same subject + queue group behave as two queue
         // members: NATS delivers each request to only one of them.
-        $this->service->addEndpoint('a', $subject, fn(Message $msg): string => 'a', $queue);
-        $this->service->addEndpoint('b', $subject, fn(Message $msg): string => 'b', $queue);
+        $this->service->addEndpoint('a', $subject, fn (Message $msg): string => 'a', $queue);
+        $this->service->addEndpoint('b', $subject, fn (Message $msg): string => 'b', $queue);
         $this->service->start();
 
         $seen = ['a' => 0, 'b' => 0];

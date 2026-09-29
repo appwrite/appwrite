@@ -48,7 +48,8 @@ final class StreamConfig
         public readonly ?ConsumerLimits $consumerLimits = null,
         public readonly bool $allowMsgTtl = false,
         public readonly ?float $subjectDeleteMarkerTtl = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {
@@ -94,7 +95,7 @@ final class StreamConfig
         }
         if ($this->sources !== null) {
             $data['sources'] = array_map(
-                static fn(StreamSource $s): array => $s->toArray(),
+                static fn (StreamSource $s): array => $s->toArray(),
                 $this->sources,
             );
         }

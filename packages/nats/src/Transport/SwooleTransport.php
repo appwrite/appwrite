@@ -29,7 +29,8 @@ final class SwooleTransport implements Transport
     public function __construct(
         private readonly bool $secure = false,
         private readonly array $tlsOptions = [],
-    ) {}
+    ) {
+    }
 
     public function connect(string $host, int $port, float $timeout): void
     {

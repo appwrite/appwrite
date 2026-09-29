@@ -12,7 +12,8 @@ final class Placement
     public function __construct(
         public readonly ?string $cluster = null,
         public readonly ?array $tags = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

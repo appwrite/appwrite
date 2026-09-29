@@ -14,7 +14,8 @@ final class StreamMessage
         public readonly string $data,
         public readonly ?string $time = null,
         public readonly ?Headers $headers = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Parse the `message` object returned by $JS.API.STREAM.MSG.GET.

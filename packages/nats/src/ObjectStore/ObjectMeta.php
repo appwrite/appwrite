@@ -21,7 +21,8 @@ final class ObjectMeta
         public readonly bool $deleted = false,
         public readonly ?array $metadata = null,
         public readonly ?ObjectLink $link = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>
@@ -63,7 +64,7 @@ final class ObjectMeta
     {
         $metadata = null;
         if (isset($data['metadata']) && \is_array($data['metadata'])) {
-            $metadata = array_map(static fn(mixed $v): string => (string) $v, $data['metadata']);
+            $metadata = array_map(static fn (mixed $v): string => (string) $v, $data['metadata']);
         }
 
         $link = null;

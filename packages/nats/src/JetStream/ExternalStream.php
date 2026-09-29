@@ -9,7 +9,8 @@ final class ExternalStream
     public function __construct(
         public readonly string $api,
         public readonly ?string $deliver = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, string>

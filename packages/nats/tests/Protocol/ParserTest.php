@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Protocol;
+namespace Utopia\NATS\Tests\Protocol;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Exception\ProtocolException;
@@ -17,9 +17,13 @@ final class ParserTest extends TestCase
         $transport = new class ($data) implements Transport {
             private int $pos = 0;
 
-            public function __construct(private readonly string $data) {}
+            public function __construct(private readonly string $data)
+            {
+            }
 
-            public function connect(string $host, int $port, float $timeout): void {}
+            public function connect(string $host, int $port, float $timeout): void
+            {
+            }
 
             public function write(string $data): int
             {
@@ -47,12 +51,16 @@ final class ParserTest extends TestCase
                 return $line;
             }
 
-            public function upgradeTls(array $options): void {}
+            public function upgradeTls(array $options): void
+            {
+            }
             public function isConnected(): bool
             {
                 return true;
             }
-            public function close(): void {}
+            public function close(): void
+            {
+            }
         };
 
         return new Parser($transport);

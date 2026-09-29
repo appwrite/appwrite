@@ -49,7 +49,7 @@ final class JetStream
      */
     public function ackBatch(array $messages, \Closure $confirmed, ?float $timeout = null): void
     {
-        $requests = array_map(static fn(JetStreamMessage $message): Request => new Request(
+        $requests = array_map(static fn (JetStreamMessage $message): Request => new Request(
             subject: $message->message->replyTo ?? throw new \RuntimeException('Cannot acknowledge: message has no reply subject'),
         ), $messages);
         $this->conn->requestBatch($requests, static function (int $index, Message|\Throwable $result) use ($confirmed): void {

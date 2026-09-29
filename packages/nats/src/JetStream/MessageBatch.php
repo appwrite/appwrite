@@ -14,7 +14,8 @@ final class MessageBatch implements \IteratorAggregate, \Countable
 
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function addMessage(Message $msg): void
     {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit;
+namespace Utopia\NATS\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
@@ -10,7 +10,7 @@ use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Headers;
-use Utopia\NATS\Tests\Unit\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\FakeTransport;
 
 /**
  * Protocol-level behaviour driven through an in-memory transport: header
@@ -22,7 +22,7 @@ final class ConnectionProtocolTest extends TestCase
     {
         $args = array_merge([
             'servers' => 'nats://127.0.0.1:4222',
-            'transportFactory' => fn(string $scheme): FakeTransport => $fake,
+            'transportFactory' => fn (string $scheme): FakeTransport => $fake,
         ], $extra);
 
         return Connection::connect(new ConnectionOptions(...$args));

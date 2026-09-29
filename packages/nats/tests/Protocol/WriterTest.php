@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\NATS\Tests\Unit\Protocol;
+namespace Utopia\NATS\Tests\Protocol;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Protocol\Writer;

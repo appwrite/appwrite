@@ -22,7 +22,8 @@ final class Consumer
         private readonly string $stream,
         private ConsumerInfo $info,
         private readonly string $apiPrefix = '$JS.API',
-    ) {}
+    ) {
+    }
 
     /**
      * Fetch a batch of messages from the consumer.
