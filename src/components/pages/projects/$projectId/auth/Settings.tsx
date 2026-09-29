@@ -26,10 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
-import {
-  MockPhoneNumbersCard,
-  useAuthSecuritySnapshot,
-} from './Security'
+import { MockPhoneNumbersCard, useAuthSecuritySnapshot } from './Security'
 
 interface AuthSettingsProps {
   projectId: string
@@ -95,8 +92,11 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
   const baseAuthMethods = useMemo(
-    () => authMethodsRecordFromProject(projectData),
-    [projectData],
+    () => ({
+      ...authMethodsRecordFromProject(projectData),
+      [PasskeyAuthMethodId]: security.authPasskey.enabled,
+    }),
+    [projectData, security.authPasskey.enabled],
   )
 
   useEffect(() => {

@@ -1275,6 +1275,10 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
       queryClient.invalidateQueries({
         queryKey: ['project', projectId],
       })
+      // The passkey method's state is read from its policy
+      queryClient.invalidateQueries({
+        queryKey: ['project-auth-security', projectId],
+      })
     },
   })
 }

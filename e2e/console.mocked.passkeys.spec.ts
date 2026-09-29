@@ -123,11 +123,12 @@ const ORGANIZATION = {
 const PROJECT_ID = 'proj0000000000000000001'
 
 const CONFIGURED: PasskeyPolicy = {
+  enabled: false,
   rpId: 'example.com',
   origins: ['https://example.com', 'https://app.example.com'],
 }
 
-const UNCONFIGURED: PasskeyPolicy = { rpId: '', origins: [] }
+const UNCONFIGURED: PasskeyPolicy = { enabled: false, rpId: '', origins: [] }
 
 function project() {
   return {
@@ -138,16 +139,16 @@ function project() {
     teamId: ORGANIZATION.$id,
     region: 'default',
     status: 'active',
-    // The SDK types service and method ids as enums, and `passkey` is not in the
-    // pinned build yet, so the literals need the cast.
+    // The SDK types service ids as enums, so the literals need the cast. Like the
+    // server at the pinned response format, authMethods omits passkey.
     services: ALL_SERVICES.map(($id) => ({
       $id,
       enabled: true,
     })) as Models.Project['services'],
-    authMethods: [
-      ...AUTH_METHODS.map(($id) => ({ $id, enabled: true })),
-      { $id: PASSKEY_ID, enabled: false },
-    ] as Models.Project['authMethods'],
+    authMethods: AUTH_METHODS.map(($id) => ({
+      $id,
+      enabled: true,
+    })) as Models.Project['authMethods'],
   } satisfies Partial<Models.Project>
 }
 
@@ -212,10 +213,7 @@ async function mockAppwriteApi(
 
     if (apiPath === PASSKEY_METHOD_PATH && request.method() === 'PATCH') {
       calls.methodPatches.push(request)
-      const method = projectDocument.authMethods.find(
-        (m) => (m.$id as string) === PASSKEY_ID,
-      )
-      if (method) method.enabled = request.postDataJSON()?.enabled
+      policy = { ...policy, enabled: request.postDataJSON()?.enabled === true }
       return json(200, projectDocument)
     }
 

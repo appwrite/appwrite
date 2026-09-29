@@ -8,11 +8,14 @@ export const PasskeyPolicyId = 'passkey' as const
 export const MAX_PASSKEY_ORIGINS = 10
 
 export type PasskeyPolicy = {
+  /** Mirrors the passkey auth method, which the pinned SDK's response format hides. */
+  enabled: boolean
   rpId: string
   origins: string[]
 }
 
 export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
+  enabled: false,
   rpId: '',
   origins: [],
 }
@@ -20,8 +23,13 @@ export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
 /** Normalises the policy the API returns; the SDK's policy union has no passkey shape. */
 export function parsePasskeyPolicy(value: unknown): PasskeyPolicy {
   if (!value || typeof value !== 'object') return DEFAULT_PASSKEY_POLICY
-  const { rpId, origins } = value as { rpId?: unknown; origins?: unknown }
+  const { enabled, rpId, origins } = value as {
+    enabled?: unknown
+    rpId?: unknown
+    origins?: unknown
+  }
   return {
+    enabled: enabled === true,
     rpId: typeof rpId === 'string' ? rpId : '',
     origins: Array.isArray(origins)
       ? origins.filter((origin): origin is string => typeof origin === 'string')
