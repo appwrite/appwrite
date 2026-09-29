@@ -1826,6 +1826,7 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-fallback-cookies', $response['headers']);
 
         foreach ([$sessionA, $sessionB] as $deleted) {
             $response = $this->client->call(Client::METHOD_GET, '/account', [

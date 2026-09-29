@@ -663,13 +663,18 @@ Http::delete('/v1/account/sessions')
     ->inject('session')
     ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession) {
 
+        // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
+        if (!$current && $callingSession === null) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
         $currentSession = null;
 
         foreach ($sessions as $session) {
             /** @var Document $session */
-            if (!$current && $session->getId() === $callingSession?->getId()) {
+            if (!$current && $session->getId() === $callingSession->getId()) {
                 continue;
             }
 
