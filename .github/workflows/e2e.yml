@@ -8,8 +8,50 @@ on:
       - 'static/**/*'
 
 jobs:
+  # The console keeps 10 sessions per user and deletes the oldest on overflow.
+  # Signing in once here, instead of once per lane, keeps overlapping runs from
+  # evicting each other's sessions mid-suite.
+  session:
+    name: session
+    runs-on: gcrunner=${{ github.run_id }}-e2e-session/runner=checks
+    timeout-minutes: 5
+    steps:
+      - name: Create console session
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.VITE_APPWRITE_ENDPOINT }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+        run: |
+          jq -n --arg email "$E2E_TEST_EMAIL" --arg password "$E2E_TEST_PASSWORD" \
+            '{email: $email, password: $password}' > credentials.json
+          status=$(curl -sS -X POST "${VITE_APPWRITE_ENDPOINT%/}/account/sessions/email" \
+            -H 'Content-Type: application/json' \
+            -H 'X-Appwrite-Project: console' \
+            --data @credentials.json \
+            -D headers.txt -o body.json -w '%{http_code}')
+          rm credentials.json
+          if [ "$status" != 201 ]; then
+            echo "::error::Console sign-in failed ($status): $(jq -r '.message // empty' body.json)"
+            exit 1
+          fi
+          cookies=$(grep -i '^x-fallback-cookies:' headers.txt | cut -d' ' -f2- | tr -d '\r')
+          if [ -z "$cookies" ]; then
+            echo '::error::Console sign-in returned no X-Fallback-Cookies header'
+            exit 1
+          fi
+          echo "::add-mask::$cookies"
+          printf '%s' "$cookies" | openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -pass env:E2E_TEST_PASSWORD -out session.enc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-session
+          path: session.enc
+          retention-days: 1
+
   e2e:
     name: ${{ matrix.project }}
+    needs: session
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -82,6 +124,19 @@ jobs:
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install chromium
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2e-session
+
+      - name: Load console session
+        env:
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+        run: |
+          cookies=$(openssl enc -d -aes-256-cbc -pbkdf2 -pass env:E2E_TEST_PASSWORD -in session.enc)
+          rm session.enc
+          echo "::add-mask::$cookies"
+          echo "E2E_FALLBACK_COOKIES=$cookies" >> "$GITHUB_ENV"
 
       - name: E2E Tests
         env:
