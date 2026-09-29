@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FirewallPromoBanner } from '@/components/global/shared/FirewallPromoBanner'
 import { InitRecapPromoBanner } from '@/components/global/shared/InitRecapPromoBanner'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
@@ -284,6 +285,7 @@ export function PromoBannerProvider({ children }: PromoBannerProviderProps) {
     >
       {children}
       <InitRecapPromoBanner />
+      <FirewallPromoBanner />
       <PromoBannerComponent
         banners={banners}
         onDismiss={removeBanner}
