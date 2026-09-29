@@ -12,6 +12,7 @@ use Psr\Http\Message\StreamInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Exception\NetworkException;
+use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Request;
@@ -393,6 +394,66 @@ final class S3Test extends TestCase
 
         // Initial attempt plus the default three retries.
         $this->assertCount(4, $client->requests);
+    }
+
+    private function internalIncident(): Response
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>';
+
+        return new Response(500, body: new Stream($body))->withHeader('content-type', 'application/xml');
+    }
+
+    /** A B2 "internal incident" on a part or on the completion no longer fails the whole upload. */
+    public function testMultipartUploadSurvivesInternalErrors(): void
+    {
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'))->withHeader('content-type', 'application/xml'),
+            new Response(200)->withHeader('etag', '"etag-1"'),
+            $this->internalIncident(),
+            new Response(200)->withHeader('etag', '"etag-2"'),
+            $this->internalIncident(),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><CompleteMultipartUploadResult><ETag>"etag-final"</ETag></CompleteMultipartUploadResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+        $device = $this->device($client);
+
+        $metadata = [];
+        $device->prepare('/root/archive.tar.gz', 'application/gzip', 2, $metadata);
+        $device->upload(new Stream('first'), '/root/archive.tar.gz', 'application/gzip', 1, 2, $metadata);
+
+        // The last chunk completes the upload.
+        $this->assertSame(2, $device->upload(new Stream('second'), '/root/archive.tar.gz', 'application/gzip', 2, 2, $metadata));
+        $this->assertCount(6, $client->requests);
+        $this->assertSame('second', (string) $client->requests[3]->getBody(), 'the retried part carries its whole body again');
+        $this->assertStringContainsString('<ETag>"etag-2"</ETag><PartNumber>2</PartNumber>', (string) $client->requests[5]->getBody());
+    }
+
+    public function testTimedOutPartIsReplayed(): void
+    {
+        $client = new ScriptedClient([
+            new TimeoutException(new Request('PUT', Uri::parse('https://s3.example.com/root/file.txt')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+            new Response(200)->withHeader('etag', '"abc"'),
+        ]);
+
+        $this->assertSame('abc', $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertCount(2, $client->requests);
+        $this->assertSame('Hello World', (string) $client->requests[1]->getBody());
+    }
+
+    public function testTimedOutMultipartCreationIsNotReplayed(): void
+    {
+        $client = new ScriptedClient([
+            new TimeoutException(new Request('POST', Uri::parse('https://s3.example.com/root/file.txt')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+        ]);
+
+        $metadata = [];
+        try {
+            $this->device($client)->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+            self::fail('Expected the timeout to surface');
+        } catch (TransportException) {
+        }
+
+        $this->assertCount(1, $client->requests, 'a second POST could open a second multipart upload');
+        $this->assertArrayNotHasKey('uploadId', $metadata);
     }
 
     public function testNoSuchKeyBecomesNotFoundException(): void
