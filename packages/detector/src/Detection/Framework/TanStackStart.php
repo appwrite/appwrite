@@ -62,12 +62,12 @@ class TanStackStart extends React
     {
         $stripped = \preg_replace('/(?<!:)\/\/[^\n]*/', '', $configContent) ?? $configContent;
 
-        if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*false\b/', $stripped)) {
+        // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
+        if (\str_contains($stripped, 'nitro/vite') || \str_contains($stripped, 'nitro-v2-vite-plugin')) {
             return 'ssr';
         }
 
-        // A `routes` list or a `filter` narrows prerendering to part of the site, so the server entry is still built.
-        if (\preg_match('/\bprerender[\x27\x22]?\s*:\s*\{([^}]*)/', $stripped, $block) && \preg_match('/\b(?:routes|filter)[\x27\x22]?\s*:/', $block[1])) {
+        if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*(?:false|\{[^}]*\benabled[\x27\x22]?\s*:\s*false)\b/', $stripped)) {
             return 'ssr';
         }
 

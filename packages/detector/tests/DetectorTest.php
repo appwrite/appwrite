@@ -795,14 +795,14 @@ class DetectorTest extends TestCase
         $fw = new TanStackStart();
 
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart()] })'));
-        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/\'] } })] })'));
-        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart(), nitro({ config: { prerender: { routes: [\'/\'], crawlLinks: true } } })] })'));
-        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ "prerender": { "filter": ({ path }) => path.startsWith(\'/docs\') } })] })'));
-        $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { crawlLinks: true } })] })'));
+        $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/\'] } })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart(), nitro({ prerender: { routes: [\'/\'], crawlLinks: true } })] })'));
+        $this->assertSame('ssr', $fw->getAdapter('import { nitroV2Plugin } from \'@tanstack/nitro-v2-vite-plugin\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true, crawlLinks: true } }), nitroV2Plugin()] })'));
+        $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: false, crawlLinks: true } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ "prerender": false })] })'));
         $this->assertSame('ssr', $fw->getAdapter('// prerender: true' . "\n" . 'export default defineConfig({})'));
-        $this->assertSame('ssr', $fw->getAdapter('server: { url: "https://example.com" },' . "\n" . 'prerender: { routes: [\'/\'] }'));
+        $this->assertSame('static', $fw->getAdapter('server: { url: "https://example.com" },' . "\n" . 'prerender: { routes: [\'/\'] }'));
         $this->assertNotEmpty($fw->getConfigFiles());
     }
 
