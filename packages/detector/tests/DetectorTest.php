@@ -801,6 +801,8 @@ class DetectorTest extends TestCase
         $this->assertSame('static', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }) /*, nitro() */] })'));
         $this->assertSame('ssr', $fw->getAdapter('import { nitro as serverPlugin } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), serverPlugin()] })'));
         $this->assertSame('ssr', $fw->getAdapter('import * as nitroPlugin from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), nitroPlugin.nitro()] })'));
+        $this->assertSame('static', $fw->getAdapter('import * as nitroPlugin from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), settings.nitro()] })'));
+        $this->assertSame('static', $fw->getAdapter('import { nitro as n } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), paraglideVitePlugin()] })'));
         $this->assertSame('static', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ define: { note: \'nitro()\' }, plugins: [tanstackStart({ prerender: { enabled: true } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { filter: ({ path }) => path !== \'/\', enabled: false } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })'));

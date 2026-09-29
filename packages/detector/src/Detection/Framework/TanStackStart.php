@@ -81,7 +81,6 @@ class TanStackStart extends React
                 $quote = '';
             }
         }
-        $code = \str_replace([' ', "\t", "\r", "\n"], '', $code);
 
         // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
         foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
@@ -90,17 +89,23 @@ class TanStackStart extends React
                 continue;
             }
 
-            // A namespace import calls the plugin as a member: `nitroPlugin.nitro()`.
-            if (\str_contains($code, '.' . $export . '(')) {
-                return 'ssr';
-            }
+            // What the config calls: `nitro`, `serverPlugin` for `{ nitro as serverPlugin }`, `nitroPlugin.nitro` for `* as nitroPlugin`.
+            $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', '}', ',', "\t", "\r", "\n"], ' ', \substr($import, (int) \strrpos($import, 'import '))))));
+            $index = \array_search($export, $names, true);
+            $call = match (true) {
+                ($names[1] ?? '') === '*' && isset($names[3]) => $names[3] . '.' . $export,
+                $index !== false && ($names[$index + 1] ?? '') === 'as' => $names[$index + 2] ?? '',
+                $index !== false => $export,
+                default => '',
+            };
 
-            $specifiers = (string) \strstr((string) \strrchr($import, '{'), '}', true);
-            foreach (\explode(',', $specifiers) as $specifier) {
-                $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', "\t", "\r", "\n"], ' ', $specifier))));
-                if (($names[0] ?? '') === $export && \str_contains($code, ($names[2] ?? $export) . '(')) {
+            $offset = 0;
+            while ($call !== '' && ($at = \strpos($code, $call . '(', $offset)) !== false) {
+                $before = $at > 0 ? $code[$at - 1] : ' ';
+                if (!\ctype_alnum($before) && !\in_array($before, ['_', '$', '.'], true)) {
                     return 'ssr';
                 }
+                $offset = $at + 1;
             }
         }
 
