@@ -1458,7 +1458,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -4099,7 +4099,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "tooling/command-line/non-interactive",
