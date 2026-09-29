@@ -176,7 +176,22 @@ $container->set('publisherForMigrations', fn (Publisher $publisher) => new Migra
     new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
 ), ['publisher']);
 
+// Kept as publisherForStatsResources because the inherited stats task and
+// Cloud's Schedule path still inject that name. The list is the calculations
+// queue; real-time gauges use publisherForStatsEvents.
 $container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_CALCULATIONS_QUEUE_NAME', Event::STATS_CALCULATIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForStatsEvents', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_EVENTS_QUEUE_NAME', Event::STATS_EVENTS_QUEUE_NAME))
+), ['publisher']);
+
+// Reporting only. Nothing publishes to the pre-split queue any more, but the
+// health endpoint still accepts its name so an operator can read what is left
+// on that list while an install is being cut over.
+$container->set('publisherForStatsLegacy', fn (Publisher $publisher) => new StatsResourcesPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
