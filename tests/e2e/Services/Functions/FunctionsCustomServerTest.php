@@ -2166,6 +2166,87 @@ final class FunctionsCustomServerTest extends Scope
         }
     }
 
+    public function testListExecutionsWithinCreatedAtWindow(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test executions createdAt window',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        try {
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+
+            $sync = $this->createExecution($functionId, ['async' => 'false']);
+            $this->assertEquals(201, $sync['headers']['status-code']);
+            $syncId = $sync['body']['$id'];
+
+            // The API stores the queued version and the worker the finished
+            // one, so the two versions of an async execution can carry
+            // different createdAt values.
+            $async = $this->createExecution($functionId, ['async' => true]);
+            $this->assertEquals(202, $async['headers']['status-code']);
+            $asyncId = $async['body']['$id'];
+            $queuedAt = $async['body']['$createdAt'];
+
+            $this->assertEventually(function () use ($functionId, $asyncId) {
+                $execution = $this->getExecution($functionId, $asyncId);
+                $this->assertEquals(200, $execution['headers']['status-code']);
+                $this->assertEquals('completed', $execution['body']['status']);
+            }, 60000, 500);
+            $finishedAt = $this->getExecution($functionId, $asyncId)['body']['$createdAt'];
+            $syncCreatedAt = $this->getExecution($functionId, $syncId)['body']['$createdAt'];
+
+            $list = fn (array $window) => $this->listExecutions($functionId, [
+                'queries' => [...$window, Query::orderDesc('$createdAt')->toString()],
+            ]);
+            $byId = function (array $response): array {
+                $this->assertEquals(200, $response['headers']['status-code']);
+                return \array_column($response['body']['executions'], null, '$id');
+            };
+
+            /**
+             * Test for SUCCESS
+             */
+            $both = $list([
+                Query::greaterThanEqual('$createdAt', \min($syncCreatedAt, $queuedAt))->toString(),
+                Query::lessThanEqual('$createdAt', \max($syncCreatedAt, $finishedAt))->toString(),
+            ]);
+            $executions = $byId($both);
+            $this->assertEquals(2, $both['body']['total']);
+            $this->assertEquals('completed', $executions[$syncId]['status']);
+            $this->assertEquals('completed', $executions[$asyncId]['status']);
+
+            $syncOnly = $byId($list([Query::between('$createdAt', $syncCreatedAt, $syncCreatedAt)->toString()]));
+            $this->assertEquals('completed', $syncOnly[$syncId]['status']);
+
+            // A window around the queued version alone must answer from the
+            // latest version: the finished execution when its createdAt is
+            // still inside the window, nothing when it has moved out, and
+            // never the stale queued version.
+            $queued = $byId($list([Query::between('$createdAt', $queuedAt, $queuedAt)->toString()]));
+            if ($finishedAt === $queuedAt) {
+                $this->assertEquals('completed', $queued[$asyncId]['status']);
+            } else {
+                $this->assertArrayNotHasKey($asyncId, $queued);
+            }
+
+            $finished = $byId($list([Query::between('$createdAt', $finishedAt, $finishedAt)->toString()]));
+            $this->assertEquals('completed', $finished[$asyncId]['status']);
+
+            $before = $list([Query::lessThan('$createdAt', '2000-01-01T00:00:00.000+00:00')->toString()]);
+            $this->assertEquals(200, $before['headers']['status-code']);
+            $this->assertEquals(0, $before['body']['total']);
+            $this->assertEmpty($before['body']['executions']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testSyncCreateExecution(): void
     {
         $data = $this->setupTestDeployment();
