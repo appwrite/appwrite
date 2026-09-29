@@ -143,4 +143,39 @@ final class UsersCustomServerTest extends Scope
 
         $this->assertSame(401, $account($project['$id'], $withSession)['headers']['status-code']);
     }
+
+    /**
+     * In admin mode the caller holds a console session, so a JWT created there belongs to the
+     * console and authenticates admin-mode requests for any project the console user manages.
+     */
+    public function testAdminModeJWTIsBoundToConsole(): void
+    {
+        $project = $this->getProject();
+        $admin = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge($admin, [
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]));
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($admin, [
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]));
+        $this->assertSame(200, $account['headers']['status-code']);
+        $this->assertSame($this->getRoot()['$id'], $account['body']['$id']);
+
+        // Outside admin mode the same token would resolve the console user's ID in the project's own users.
+        $client = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $this->assertSame(401, $client['headers']['status-code']);
+    }
 }
