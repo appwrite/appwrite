@@ -66,7 +66,7 @@ abstract class SQL extends Adapter
      */
     public function getAttributeDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $attribute): Attribute => Attribute::fromArray($attribute), $this->getAttributes($type));
+        return array_map(Attribute::fromArray(...), $this->getAttributes($type));
     }
 
     /**
@@ -108,7 +108,7 @@ abstract class SQL extends Adapter
      */
     public function getIndexDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $index): Index => Index::fromArray($index), $this->getIndexes($type));
+        return array_map(Index::fromArray(...), $this->getIndexes($type));
     }
 
     /**

@@ -2488,7 +2488,7 @@ class ClickHouse extends SQL
         }
 
         if ($samples !== [] && $expectedStart != $range->intervalEnd) {
-            $last = $samples[array_key_last($samples)];
+            $last = array_last($samples);
             $discontinuities[] = $last->sequence;
         }
 
