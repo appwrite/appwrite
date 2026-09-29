@@ -3400,7 +3400,8 @@ Http::post('/v1/account/jwts')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->inject('project')
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
@@ -3417,6 +3418,7 @@ Http::post('/v1/account/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
                 'jwt' => $jwt->encode([
+                    'projectId' => $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $sessionId,
                 ])
