@@ -133,10 +133,6 @@ class Update extends Action
             throw new Exception(Exception::USER_PASSKEY_INVALID);
         }
 
-        if ($user->getAttribute('status') === false) {
-            throw new Exception(Exception::USER_BLOCKED);
-        }
-
         $passkeyData = $passkey->getAttribute('data', []);
 
         try {
@@ -147,6 +143,11 @@ class Update extends Action
             );
         } catch (WebauthnException $th) {
             throw new Exception(Exception::USER_PASSKEY_INVALID, previous: $th);
+        }
+
+        // Only after verification, so the response never reveals who owns an unproven credential
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
         }
 
         $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $passkey->getId(), new Document([

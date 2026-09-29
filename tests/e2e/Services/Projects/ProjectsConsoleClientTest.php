@@ -1274,6 +1274,7 @@ final class ProjectsConsoleClientTest extends Scope
         foreach ($authsKeys as $authsKey) {
             $this->assertTrue($response['body'][$authsKey], 'Auth method should be enabled: ' . $authsKey);
         }
+        $this->assertFalse($response['body']['authPasskey'], 'Passkeys stay disabled until configured');
 
         $serviceKeys = [
             'serviceStatusForAccount',
