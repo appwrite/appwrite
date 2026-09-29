@@ -3,7 +3,6 @@
 namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Storage\Device;
 
@@ -50,16 +49,6 @@ class Custom extends Photo
     public function delete(Document $photo): bool
     {
         $path = $this->getPath($photo->getAttribute('userId'), $photo->getId());
-
-        if ($photo->getAttribute('chunksUploaded', 0) < $photo->getAttribute('chunksTotal', 1)) {
-            try {
-                $this->deviceForFiles->abort($path, $photo->getAttribute('metadata', [])['uploadId'] ?? '');
-            } catch (\Throwable $th) {
-                Console::warning('Failed to abort photo upload ' . $photo->getId() . ': ' . $th->getMessage());
-            }
-
-            return true;
-        }
 
         return !$this->deviceForFiles->exists($path) || $this->deviceForFiles->delete($path);
     }

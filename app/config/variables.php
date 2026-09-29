@@ -1193,15 +1193,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_AVATAR_SIZE_LIMIT',
-                'description' => 'Maximum size of a user photo upload in bytes. The default value is 20000000 (20MB).',
-                'introduction' => '2.4.0',
-                'default' => '20000000',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
                 'description' => 'Deprecated since 1.7.0, use _APP_COMPUTE_BUILD_SIZE_LIMIT instead. The maximum size of a built deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB).',
                 'introduction' => '1.6.0',

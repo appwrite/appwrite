@@ -12,19 +12,19 @@ class Photo extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Photo upload ID. Pass this back in the x-appwrite-id header to continue a chunked upload.',
+                'description' => 'Photo ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Photo upload creation date in ISO 8601 format.',
+                'description' => 'Photo creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Photo upload update date in ISO 8601 format.',
+                'description' => 'Photo update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -34,15 +34,9 @@ class Photo extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('sizeOriginal', [
+            ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Photo file original size in bytes.',
-                'default' => 0,
-                'example' => 17890,
-            ])
-            ->addRule('sizeActual', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Photo file actual stored size in bytes. Zero until all chunks are uploaded.',
+                'description' => 'Photo file size in bytes.',
                 'default' => 0,
                 'example' => 17890,
             ])
@@ -51,18 +45,6 @@ class Photo extends Model
                 'description' => 'Photo file mime type.',
                 'default' => '',
                 'example' => 'image/png',
-            ])
-            ->addRule('chunksTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of chunks available.',
-                'default' => 0,
-                'example' => 1,
-            ])
-            ->addRule('chunksUploaded', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of chunks uploaded.',
-                'default' => 0,
-                'example' => 1,
             ]);
     }
 

@@ -21,24 +21,17 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Lock\Distributed;
-use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\System\System;
 
 class Update extends Action
 {
     use HTTP;
-
-    private const LOCK_TTL = 120;
 
     private const ALLOWED_EXTENSIONS = [
         FileExt::TYPE_PNG,
@@ -81,7 +74,7 @@ class Update extends Action
                 group: null,
                 name: 'updatePhoto',
                 description: <<<'EOT'
-                Update the profile photo of the currently authenticated user. The uploaded image takes priority over every other photo source, including OAuth2 identity photos, Gravatar, and Libravatar. Updating an already customized photo replaces it. Sending the file in chunks is supported: pass a Content-Range header on each request and reuse the upload ID returned by the first response in the x-appwrite-id header.
+                Update the profile photo of the currently authenticated user. The uploaded image takes priority over every other photo source, including OAuth2 identity photos, Gravatar, and Libravatar. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
                 EOT,
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -93,17 +86,14 @@ class Update extends Action
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
             ))
-            ->param('file', [], new File(), 'Binary image file. Allowed file types are png, jpg, jpeg, gif, and webp.', skipValidation: true)
+            ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, gif, and webp.', skipValidation: true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
             ->inject('deviceForLocal')
-            ->inject('plan')
-            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -112,16 +102,18 @@ class Update extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
         Device $deviceForLocal,
-        array $plan,
-        Group $pools,
     ): void {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        // Photos fit in one chunk, so a chunked upload is refused rather than stored as a partial image
+        if (!empty($request->getHeaderLine('content-range'))) {
+            throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE, 'Photo must be sent in a single request');
         }
 
         $file = $request->getFiles('file');
@@ -138,168 +130,72 @@ class Update extends Action
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        $upload = new Upload();
-        if (!$upload->isValid($fileTmpName)) {
+        if (!(new Upload())->isValid($fileTmpName)) {
             throw new Exception(Exception::STORAGE_INVALID_FILE);
         }
 
-        $fileExt = new FileExt(self::ALLOWED_EXTENSIONS);
-        if (!$fileExt->isValid($fileName)) {
+        if (!(new FileExt(self::ALLOWED_EXTENSIONS))->isValid($fileName)) {
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
         }
 
-        $photoId = ID::unique();
-        $chunk = 1;
-        $chunks = 1;
+        $size = $deviceForLocal->getFileSize($fileTmpName);
 
-        if (!empty($request->getHeaderLine('content-range'))) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $fileSize = $request->getContentRangeSize();
-
-            // Every chunk but the last is exactly one chunk long, and the body is exactly the declared range
-            if (
-                \is_null($start) || \is_null($end) || \is_null($fileSize)
-                || $start > $end || $end >= $fileSize
-                || $start % APP_LIMIT_UPLOAD_CHUNK_SIZE !== 0
-                || ($end !== $fileSize - 1 && $end - $start + 1 !== APP_LIMIT_UPLOAD_CHUNK_SIZE)
-                || $deviceForLocal->getFileSize($fileTmpName) !== $end - $start + 1
-            ) {
-                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
-            }
-
-            $photoId = $request->getHeaderLine('x-appwrite-id', $photoId);
-            if (!(new UID())->isValid($photoId)) {
-                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
-            }
-
-            $chunks = (int) \ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
-            $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
+        if (!(new FileSize(APP_LIMIT_UPLOAD_CHUNK_SIZE))->isValid($size)) {
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'Photo must be at most 5MB');
         }
 
-        $sizeLimit = (int) System::getEnv('_APP_AVATAR_SIZE_LIMIT', '20000000');
-        if (isset($plan['avatarSize'])) {
-            $sizeLimit = $plan['avatarSize'] * 1000 * 1000;
-        }
+        $mimeType = $deviceForLocal->getFileMimeType($fileTmpName);
 
-        if (!(new FileSize($sizeLimit))->isValid($fileSize)) {
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
+        if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, GIF, or WebP image');
         }
 
         $custom = new Custom($deviceForFiles);
-        $userId = $user->getId();
-        $path = $custom->getPath($userId, $photoId);
-        $lockKey = 'photos:' . $project->getId() . ':' . $userId;
+        $photoId = ID::unique();
+        $path = $custom->getPath($user->getId(), $photoId);
 
-        // One lock per user serialises chunks, activation and deletion of their photos
-        $update = function (Distributed $lock) use ($chunk, $chunks, $custom, $dbForProject, $deviceForFiles, $deviceForLocal, $fileSize, $fileTmpName, $path, $photoId, $queueForEvents, $response, $userId, $user): void {
-            $photo = $dbForProject->getDocument('photos', $photoId);
-
-            if ($photo->isEmpty()) {
-                // A missing upload past its first chunk was replaced or deleted meanwhile
-                if ($chunk !== 1) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-                }
-
-                $photo = $dbForProject->createDocument('photos', new Document([
-                    '$id' => $photoId,
-                    '$permissions' => [
-                        Permission::read(Role::user($userId)),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'userId' => $userId,
-                    'userInternalId' => (string) $user->getSequence(),
-                    'sizeOriginal' => $fileSize,
-                    'sizeActual' => 0,
-                    'mimeType' => '',
-                    'chunksTotal' => $chunks,
-                    'chunksUploaded' => 0,
-                    'metadata' => [],
-                ]));
-            } elseif ($photo->getAttribute('userId') !== $userId) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-            } elseif ($photo->getAttribute('sizeOriginal') !== $fileSize) {
-                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
-            }
-
-            // A resent final chunk changes nothing, but repeats the purge in case the first attempt failed after completing
-            if ($photo->getAttribute('chunksUploaded') === $chunks) {
-                $dbForProject->purgeCachedDocument('users', $userId);
-                $queueForEvents->reset();
-                $response->dynamic($photo, Response::MODEL_PHOTO);
-
-                return;
-            }
-
-            $metadata = $photo->getAttribute('metadata', []);
-            $metadata['content_type'] = $deviceForLocal->getFileMimeType($fileTmpName);
-
-            $chunksUploaded = $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $metadata['content_type'], $chunk, $chunks, $metadata);
-
-            if (!$lock->isHeld()) {
-                throw new Contention('Photo lock expired during upload');
-            }
-
-            if ($chunksUploaded < $chunks) {
-                $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
-                    'chunksUploaded' => $chunksUploaded,
-                    'metadata' => $metadata,
-                ]));
-
-                $queueForEvents->reset();
-                $response->dynamic($photo, Response::MODEL_PHOTO);
-
-                return;
-            }
-
-            $mimeType = $deviceForFiles->getFileMimeType($path);
-
-            if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
-                $deviceForFiles->delete($path);
-                $dbForProject->deleteDocument('photos', $photoId);
-
-                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, GIF, or WebP image');
-            }
-
-            // Setting the size makes this the newest completed photo, which is the one served
-            $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
-                'sizeActual' => $deviceForFiles->getFileSize($path),
-                'mimeType' => $mimeType,
-                'chunksUploaded' => $chunksUploaded,
-                'metadata' => $metadata,
-            ]));
-
-            // Drops the replaced photo and any abandoned uploads; a file that fails to delete keeps its document for the next attempt
-            $others = $dbForProject->find('photos', [
-                Query::equal('userInternalId', [(string) $user->getSequence()]),
-                Query::notEqual('$id', $photoId),
-                Query::limit(APP_LIMIT_COUNT),
-            ]);
-
-            foreach ($others as $other) {
-                if ($custom->delete($other)) {
-                    $dbForProject->deleteDocument('photos', $other->getId());
-                } else {
-                    Console::warning('Failed to remove previous photo ' . $other->getId());
-                }
-            }
-
-            $dbForProject->purgeCachedDocument('users', $userId);
-
-            $queueForEvents->setParam('userId', $userId);
-            $response->dynamic($photo, Response::MODEL_PHOTO);
-        };
+        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
         try {
-            $pools->get('lock')->use(function (\Redis $redis) use ($lockKey, $update): void {
-                $lock = new Distributed($redis, $lockKey, self::LOCK_TTL);
-                $lock->withLock(fn () => $update($lock), timeout: 30.0);
-            });
-        } catch (Contention) {
-            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+            $photo = $dbForProject->createDocument('photos', new Document([
+                '$id' => $photoId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => (string) $user->getSequence(),
+                'size' => $size,
+                'mimeType' => $mimeType,
+            ]));
+        } catch (\Throwable $th) {
+            $deviceForFiles->delete($path);
+
+            throw $th;
         }
+
+        // Only older photos go, so concurrent uploads settle on the newest without a lock.
+        // A file that fails to delete keeps its document, and the next upload retries it.
+        $older = $dbForProject->find('photos', [
+            Query::equal('userInternalId', [(string) $user->getSequence()]),
+            Query::lessThan('$createdAt', $photo->getCreatedAt()),
+            Query::limit(APP_LIMIT_COUNT),
+        ]);
+
+        foreach ($older as $old) {
+            if ($custom->delete($old)) {
+                $dbForProject->deleteDocument('photos', $old->getId());
+            } else {
+                Console::warning('Failed to remove previous photo ' . $old->getId());
+            }
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($photo, Response::MODEL_PHOTO);
     }
 }

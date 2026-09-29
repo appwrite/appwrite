@@ -406,8 +406,8 @@ final class AvatarsCustomClientTest extends Scope
         $response = $this->uploadPhoto($headers, $red, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($response['body']['chunksTotal'], $response['body']['chunksUploaded']);
         $this->assertEquals('image/png', $response['body']['mimeType']);
+        $this->assertEquals(\strlen($red), $response['body']['size']);
         $this->assertSamePhoto($red, $this->getPhoto($headers));
 
         /**
@@ -462,56 +462,22 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
 
         /**
-         * Test for FAILURE — declared size over the limit
+         * Test for FAILURE — image over the 5MB limit
          */
-        $chunkSize = 5 * 1024 * 1024;
-        $response = $this->uploadPhoto($headers, \str_repeat("\0", $chunkSize), 'photo.png', [
-            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/99999999',
-        ]);
+        $response = $this->uploadPhoto($headers, $this->createNoiseImage(1400, 1400), 'large.png');
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_INVALID_FILE_SIZE, $response['body']['type']);
 
         /**
-         * Test for FAILURE — body larger than the declared range can't sneak past the size limit
+         * Test for FAILURE — chunked uploads aren't supported
          */
         $response = $this->uploadPhoto($headers, $png, 'photo.png', [
-            'content-range' => 'bytes 0-0/1',
+            'content-range' => 'bytes 0-' . (\strlen($png) - 1) . '/' . \strlen($png),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
-
-        /**
-         * Test for FAILURE — range not aligned to a chunk boundary
-         */
-        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
-            'content-range' => 'bytes 1-' . \strlen($png) . '/' . (\strlen($png) + 1),
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
-
-        /**
-         * Test for FAILURE — malformed range
-         */
-        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
-            'content-range' => 'bytes invalid',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
-
-        /**
-         * Test for FAILURE — a later chunk of an upload that was never started
-         */
-        $response = $this->uploadPhoto($headers, 'tail', 'photo.png', [
-            'content-range' => 'bytes ' . $chunkSize . '-' . ($chunkSize + 3) . '/' . ($chunkSize + 4),
-            'x-appwrite-id' => ID::unique(),
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals(Exception::STORAGE_FILE_NOT_FOUND, $response['body']['type']);
 
         /**
          * Test for SUCCESS — none of the failures became the photo
@@ -519,77 +485,21 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertPhotoInitials($this->getPhoto($headers));
     }
 
-    public function testUpdatePhotoChunked(): void
+    public function testUpdatePhotoLarge(): void
     {
         $headers = $this->createPhotoUser();
-        $chunkSize = 5 * 1024 * 1024;
-
-        // Random pixels don't compress, so this PNG spans two chunks
-        $image = new \Imagick();
-        $image->newImage(1600, 1600, '#808080');
-        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-        $image->setImageDepth(8);
-        $image->setImageFormat('png24');
-        $large = $image->getImageBlob();
-        $size = \strlen($large);
-
-        $this->assertGreaterThan($chunkSize, $size);
 
         /**
-         * Test for SUCCESS — chunks assemble into the served photo
+         * Test for SUCCESS — an image just under the limit is served in full
          */
-        $id = ID::unique();
-        $response = [];
+        $large = $this->createNoiseImage(1200, 1200);
 
-        for ($offset = 0; $offset < $size; $offset += $chunkSize) {
-            $response = $this->uploadPhoto($headers, \substr($large, $offset, $chunkSize), 'large.png', [
-                'content-range' => 'bytes ' . $offset . '-' . (\min($offset + $chunkSize, $size) - 1) . '/' . $size,
-                'x-appwrite-id' => $id,
-            ]);
+        $this->assertLessThan(5 * 1024 * 1024, \strlen($large));
 
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($id, $response['body']['$id']);
-        }
+        $response = $this->uploadPhoto($headers, $large, 'large.png');
 
-        $this->assertEquals($response['body']['chunksTotal'], $response['body']['chunksUploaded']);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertSamePhoto($large, $this->getPhoto($headers));
-
-        /**
-         * Test for SUCCESS — resending the final chunk changes nothing
-         */
-        $lastOffset = $chunkSize * \intdiv($size - 1, $chunkSize);
-        $response = $this->uploadPhoto($headers, \substr($large, $lastOffset), 'large.png', [
-            'content-range' => 'bytes ' . $lastOffset . '-' . ($size - 1) . '/' . $size,
-            'x-appwrite-id' => $id,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($id, $response['body']['$id']);
-        $this->assertSamePhoto($large, $this->getPhoto($headers));
-
-        /**
-         * Test for FAILURE — a newer photo cancels an upload still in progress
-         */
-        $pending = ID::unique();
-        $response = $this->uploadPhoto($headers, \substr($large, 0, $chunkSize), 'large.png', [
-            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $size,
-            'x-appwrite-id' => $pending,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $green = $this->createImage('#00FF00', 'png');
-        $response = $this->uploadPhoto($headers, $green, 'photo.png');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $this->uploadPhoto($headers, \substr($large, $chunkSize), 'large.png', [
-            'content-range' => 'bytes ' . $chunkSize . '-' . ($size - 1) . '/' . $size,
-            'x-appwrite-id' => $pending,
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertSamePhoto($green, $this->getPhoto($headers));
     }
 
     public function testDeletePhoto(): void
@@ -666,6 +576,20 @@ final class AvatarsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
         ];
+    }
+
+    /**
+     * Random pixels don't compress, so the PNG size follows the dimensions.
+     */
+    private function createNoiseImage(int $width, int $height): string
+    {
+        $image = new \Imagick();
+        $image->newImage($width, $height, '#808080');
+        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+        $image->setImageDepth(8);
+        $image->setImageFormat('png24');
+
+        return $image->getImageBlob();
     }
 
     private function createImage(string $color, string $format): string

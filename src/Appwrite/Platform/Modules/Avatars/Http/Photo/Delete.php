@@ -13,20 +13,14 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Lock\Distributed;
-use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 
 class Delete extends Action
 {
     use HTTP;
-
-    private const LOCK_TTL = 120;
 
     public static function getName(): string
     {
@@ -67,64 +61,47 @@ class Delete extends Action
             ))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
-            ->inject('pools')
             ->callback($this->action(...));
     }
 
     public function action(
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
-        Group $pools,
     ): void {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $userId = $user->getId();
-        $lockKey = 'photos:' . $project->getId() . ':' . $userId;
+        $photos = $dbForProject->find('photos', [
+            Query::equal('userInternalId', [(string) $user->getSequence()]),
+            Query::limit(APP_LIMIT_COUNT),
+        ]);
 
-        // Storage goes before each record, so a failure at any step is retried by calling again
-        $delete = function () use ($dbForProject, $deviceForFiles, $user, $userId): bool {
-            $photos = $dbForProject->find('photos', [
-                Query::equal('userInternalId', [(string) $user->getSequence()]),
-                Query::limit(APP_LIMIT_COUNT),
-            ]);
+        $custom = new Custom($deviceForFiles);
 
-            $custom = new Custom($deviceForFiles);
-
-            try {
-                foreach ($photos as $photo) {
-                    if (!$custom->delete($photo)) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
-                    }
-
-                    $dbForProject->deleteDocument('photos', $photo->getId());
-                }
-            } finally {
-                $dbForProject->purgeCachedDocument('users', $userId);
-            }
-
-            return !empty($photos);
-        };
-
+        // Each file goes before its record, so a failure is retried by calling again
         try {
-            $deleted = $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed($redis, $lockKey, self::LOCK_TTL))->withLock($delete, timeout: 30.0));
-        } catch (Contention) {
-            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+            foreach ($photos as $photo) {
+                if (!$custom->delete($photo)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+                }
+
+                $dbForProject->deleteDocument('photos', $photo->getId());
+            }
+        } finally {
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        if ($deleted) {
-            $queueForEvents->setParam('userId', $userId);
-        } else {
+        if (empty($photos)) {
             $queueForEvents->reset();
+        } else {
+            $queueForEvents->setParam('userId', $user->getId());
         }
 
         $response->noContent();
