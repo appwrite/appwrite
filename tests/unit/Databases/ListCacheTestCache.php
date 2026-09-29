@@ -28,7 +28,7 @@ final class ListCacheTestCache extends Cache
     #[\Override]
     public function save(string $key, mixed $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        $this->entries[$key][$hash] = $data;
+        $this->entries[$key][$hash] = self::stored($data);
 
         return true;
     }
@@ -37,7 +37,7 @@ final class ListCacheTestCache extends Cache
     public function saveMany(string $key, array $data, int $ttl = 0): array
     {
         foreach ($data as $field => $value) {
-            $this->entries[$key][$field] = $value;
+            $this->entries[$key][$field] = self::stored($value);
         }
 
         return $data;
@@ -55,5 +55,17 @@ final class ListCacheTestCache extends Cache
         unset($this->entries[$key][$hash]);
 
         return true;
+    }
+
+    /**
+     * @return array<int|string, mixed>|string
+     */
+    private static function stored(mixed $data): array|string
+    {
+        if (\is_string($data) || \is_array($data)) {
+            return $data;
+        }
+
+        throw new \TypeError('The cache adapters store a string or an array, ' . \get_debug_type($data) . ' given');
     }
 }

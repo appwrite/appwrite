@@ -107,7 +107,7 @@ final readonly class ListCache
     public function saveTotal(int $total): void
     {
         try {
-            $this->cache->save($this->key, $total, $this->field(self::TOTAL));
+            $this->cache->save($this->key, (string) $total, $this->field(self::TOTAL));
         } catch (\Throwable) {
         }
     }

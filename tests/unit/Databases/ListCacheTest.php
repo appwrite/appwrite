@@ -170,7 +170,7 @@ final class ListCacheTest extends TestCase
         $this->listCache($queries)->saveTotal(3);
 
         $this->assertNull($before, 'a total is counted until it is cached');
-        $this->assertSame(3, $this->listCache($queries)->total(self::TTL));
+        $this->assertSame(3, $this->listCache($queries)->total(self::TTL), 'the total is stored as the string the cache holds and read back as the count');
         $this->assertCount(1, $this->listCache($queries)->documents(self::TTL, new Operations()) ?? [], 'the total is cached next to the list, not over it');
     }
 
