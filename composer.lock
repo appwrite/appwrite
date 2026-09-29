@@ -2958,12 +2958,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "30f25fd13bff1f379a96f8265cfab347c00b4fdc"
+                "reference": "a1642eaad59c4c5cf97d2cd4f0e76976e17f4448"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/30f25fd13bff1f379a96f8265cfab347c00b4fdc",
-                "reference": "30f25fd13bff1f379a96f8265cfab347c00b4fdc",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1642eaad59c4c5cf97d2cd4f0e76976e17f4448",
+                "reference": "a1642eaad59c4c5cf97d2cd4f0e76976e17f4448",
                 "shasum": ""
             },
             "require": {
@@ -3025,7 +3025,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-09-28T08:28:43+00:00"
+            "time": "2026-09-29T12:43:34+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -3033,12 +3033,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "edf623008504edde1634bf6a5ca79c2abf87dc48"
+                "reference": "43a6c7021ff20665632b1269a5bfc9fea3ec9c06"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/edf623008504edde1634bf6a5ca79c2abf87dc48",
-                "reference": "edf623008504edde1634bf6a5ca79c2abf87dc48",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/43a6c7021ff20665632b1269a5bfc9fea3ec9c06",
+                "reference": "43a6c7021ff20665632b1269a5bfc9fea3ec9c06",
                 "shasum": ""
             },
             "require": {
@@ -3086,7 +3086,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/feat-query-lib"
             },
-            "time": "2026-09-25T12:10:14+00:00"
+            "time": "2026-09-29T12:32:44+00:00"
         },
         {
             "name": "utopia-php/mongo",
