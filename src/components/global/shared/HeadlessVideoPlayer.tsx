@@ -2,7 +2,10 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
 import { cn } from '@/lib/utils'
 
 type HeadlessVideoPlayerProps = {
+  /** HLS (`.m3u8`) or progressive MP4 URL. */
   src: string
+  /** Used when `src` is HLS and MSE / native HLS is unavailable or fails. */
+  fallbackSrc?: string
   /**
    * `cover` fills the parent (may crop). `contain` shows the full frame inside a
    * 16:9 parent.
@@ -18,6 +21,10 @@ type HeadlessVideoPlayerProps = {
   className?: string
 }
 
+function isHlsPlaylist(src: string): boolean {
+  return src.includes('.m3u8')
+}
+
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false)
   useEffect(() => {
@@ -28,6 +35,62 @@ function useMediaQuery(query: string): boolean {
     return () => list.removeEventListener('change', onChange)
   }, [query])
   return matches
+}
+
+function useVideoSource(
+  videoRef: RefObject<HTMLVideoElement | null>,
+  src: string,
+  fallbackSrc: string | undefined,
+  active: boolean,
+) {
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !active) return
+
+    video.removeAttribute('src')
+
+    if (!isHlsPlaylist(src)) {
+      video.src = src
+      return
+    }
+
+    const setMp4Fallback = () => {
+      if (fallbackSrc) video.src = fallbackSrc
+    }
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src
+      return
+    }
+
+    let cancelled = false
+    let hls: import('hls.js').default | null = null
+
+    void import('hls.js').then(({ default: Hls }) => {
+      if (cancelled || !videoRef.current) return
+      if (!Hls.isSupported()) {
+        setMp4Fallback()
+        return
+      }
+      hls = new Hls({
+        maxBufferLength: 30,
+        startLevel: 0,
+      })
+      hls.loadSource(src)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data.fatal) return
+        hls?.destroy()
+        hls = null
+        setMp4Fallback()
+      })
+    })
+
+    return () => {
+      cancelled = true
+      hls?.destroy()
+    }
+  }, [src, fallbackSrc, active, videoRef])
 }
 
 function useAutoplayVideo(
@@ -55,11 +118,13 @@ function useAutoplayVideo(
 }
 
 /**
- * Muted, looping background video with no controls. Respects reduced motion
- * (shows the first frame, paused).
+ * Muted, looping background video with no controls. HLS streams incrementally;
+ * MP4 uses HTTP range requests when encoded with faststart. Respects reduced
+ * motion (first frame only, paused).
  */
 export function HeadlessVideoPlayer({
   src,
+  fallbackSrc,
   fit = 'cover',
   variant = 'primary',
   muted = true,
@@ -69,6 +134,7 @@ export function HeadlessVideoPlayer({
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const shouldPlay = !reducedMotion
 
+  useVideoSource(videoRef, src, fallbackSrc, shouldPlay || reducedMotion)
   useAutoplayVideo(videoRef, src, shouldPlay)
 
   if (variant === 'ambient') {
@@ -82,12 +148,11 @@ export function HeadlessVideoPlayer({
       >
         <video
           ref={videoRef}
-          src={src}
           muted
           loop
           playsInline
           autoPlay={shouldPlay}
-          preload={reducedMotion ? 'metadata' : 'auto'}
+          preload={reducedMotion ? 'metadata' : 'none'}
           disablePictureInPicture
           controls={false}
           controlsList="nodownload noplaybackrate noremoteplayback"
@@ -111,12 +176,11 @@ export function HeadlessVideoPlayer({
     >
       <video
         ref={videoRef}
-        src={src}
         muted={muted}
         loop
         playsInline
         autoPlay={shouldPlay}
-        preload={reducedMotion ? 'metadata' : 'auto'}
+        preload={reducedMotion ? 'metadata' : 'none'}
         disablePictureInPicture
         controls={false}
         controlsList="nodownload noplaybackrate noremoteplayback"

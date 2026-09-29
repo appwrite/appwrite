@@ -29,7 +29,8 @@ import { isConsoleBannerDismissed, type UserPrefs } from '@/lib/user-prefs-keys'
 
 const FIREWALL_PROMO_BANNER = getConsoleBannerById(FIREWALL_PROMO_BANNER_ID)!
 
-const FIREWALL_PROMO_VIDEO_SRC = '/videos/firewall-trailer.mp4'
+const FIREWALL_PROMO_VIDEO_HLS = '/videos/firewall-trailer/index.m3u8'
+const FIREWALL_PROMO_VIDEO_MP4_FALLBACK = '/videos/firewall-trailer.mp4'
 
 /** Let the page settle before taking over the screen. */
 const FIREWALL_PROMO_OPEN_DELAY_MS = 800
@@ -98,7 +99,7 @@ export function FirewallPromoBanner() {
 
   const chromeHeight = useAppChromeHeight(ready)
 
-  if (!eligible) return null
+  if (!eligible || !ready) return null
 
   const dismiss = () => {
     setClosed(true)
@@ -134,9 +135,9 @@ export function FirewallPromoBanner() {
           className="fixed inset-x-0 bottom-0 z-[100] flex w-full flex-col overflow-hidden bg-background text-foreground outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-500"
         >
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden p-6 sm:p-8 lg:p-10">
-            <HeadlessVideoPlayer
-              src={FIREWALL_PROMO_VIDEO_SRC}
-              variant="ambient"
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/20 via-background/40 to-background"
             />
             <div
               className="relative z-[1] min-h-0 w-full flex-1"
@@ -152,7 +153,8 @@ export function FirewallPromoBanner() {
               >
                 <div className="relative size-full overflow-hidden rounded-xl sm:rounded-2xl">
                   <HeadlessVideoPlayer
-                    src={FIREWALL_PROMO_VIDEO_SRC}
+                    src={FIREWALL_PROMO_VIDEO_HLS}
+                    fallbackSrc={FIREWALL_PROMO_VIDEO_MP4_FALLBACK}
                     fit="cover"
                     muted={!soundOn}
                     className="rounded-xl sm:rounded-2xl"

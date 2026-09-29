@@ -34,7 +34,11 @@ export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 
-/** Set to `true` to ship the fullscreen Firewall promo (heavy video asset). */
+/**
+ * Set to `true` to ship the fullscreen Firewall promo (HLS in `public/videos/firewall-trailer/`).
+ * Leave `false` in production until ready: the promo is lazy-loaded and video loads only
+ * after the gate opens (see `FirewallPromoBannerGate` in PromoBanner.tsx).
+ */
 export const FIREWALL_PROMO_BANNER_ENABLED = false
 
 /** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
