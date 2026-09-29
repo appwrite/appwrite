@@ -428,11 +428,22 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertSamePhoto($blue, $this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — JPEG is accepted
+         * Test for SUCCESS — JPEG is served, within its lossy compression
          */
-        $response = $this->uploadPhoto($headers, $this->createImage('#00FF00', 'jpeg'), 'photo.jpg');
+        $green = $this->createImage('#00FF00', 'jpeg');
+        $response = $this->uploadPhoto($headers, $green, 'photo.jpg');
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($green, $this->getPhoto($headers), tolerance: 8);
+
+        /**
+         * Test for SUCCESS — WebP is served
+         */
+        $yellow = $this->createImage('#FFFF00', 'webp');
+        $response = $this->uploadPhoto($headers, $yellow, 'photo.webp');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($yellow, $this->getPhoto($headers));
     }
 
     public function testUpdatePhotoInvalid(): void
@@ -459,15 +470,15 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
 
         /**
-         * Test for FAILURE — WebP isn't supported, by extension or by content
+         * Test for FAILURE — GIF isn't supported, by extension or by content
          */
-        $webp = $this->createImage('#FF0000', 'webp');
-        $response = $this->uploadPhoto($headers, $webp, 'photo.webp');
+        $gif = $this->createImage('#FF0000', 'gif');
+        $response = $this->uploadPhoto($headers, $gif, 'photo.gif');
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
 
-        $response = $this->uploadPhoto($headers, $webp, 'photo.png');
+        $response = $this->uploadPhoto($headers, $gif, 'photo.png');
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
@@ -619,6 +630,10 @@ final class AvatarsCustomClientTest extends Scope
         $image->setImageFormat($format);
         $image->setImageCompressionQuality(100);
 
+        if ($format === 'webp') {
+            $image->setOption('webp:lossless', 'true');
+        }
+
         return $image->getImageBlob();
     }
 
@@ -651,7 +666,10 @@ final class AvatarsCustomClientTest extends Scope
         return $response['body'];
     }
 
-    private function assertSamePhoto(string $expected, string $actual): void
+    /**
+     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
+     */
+    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
     {
         $expectedImage = new \Imagick();
         $expectedImage->readImageBlob($expected);
@@ -667,11 +685,13 @@ final class AvatarsCustomClientTest extends Scope
             $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
             $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
 
-            $this->assertSame(
-                [$expectedColor['r'], $expectedColor['g'], $expectedColor['b']],
-                [$actualColor['r'], $actualColor['g'], $actualColor['b']],
-                "Pixel at {$x},{$y} differs from the uploaded photo."
-            );
+            foreach (['r', 'g', 'b'] as $channel) {
+                $this->assertLessThanOrEqual(
+                    $tolerance,
+                    \abs($expectedColor[$channel] - $actualColor[$channel]),
+                    "Pixel at {$x},{$y} differs from the uploaded photo."
+                );
+            }
         }
     }
 }

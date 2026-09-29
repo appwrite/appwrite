@@ -18,8 +18,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
@@ -29,15 +32,19 @@ class Update extends Action
 {
     use HTTP;
 
+    private const LOCK_TTL = 30;
+
     private const ALLOWED_EXTENSIONS = [
         FileExt::TYPE_PNG,
         FileExt::TYPE_JPG,
         FileExt::TYPE_JPEG,
+        'webp',
     ];
 
     private const ALLOWED_MIME_TYPES = [
         'image/png',
         'image/jpeg',
+        'image/webp',
     ];
 
     public static function getName(): string
@@ -72,20 +79,22 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_USER,
+                        model: Response::MODEL_ACCOUNT,
                     ),
                 ],
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
             ))
-            ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, and jpeg.', skipValidation: true)
+            ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
             ->inject('deviceForLocal')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -94,10 +103,12 @@ class Update extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
         Device $deviceForLocal,
+        Group $pools,
     ): void {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -140,38 +151,54 @@ class Update extends Action
         $mimeType = $deviceForLocal->getFileMimeType($fileTmpName);
 
         if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG or JPEG image');
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, or WebP image');
         }
 
         $userId = $user->getId();
-        $previous = $user->getAttribute('photoId', '');
         $photoId = ID::unique();
         $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
 
         $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
-        try {
+        // One lock per user, so the photo being replaced is always the one whose file is removed
+        $update = function () use ($dbForProject, $deviceForFiles, $userId, $photoId, $size): Document {
+            $previous = $dbForProject->getDocument('users', $userId)->getAttribute('photoId', '');
+
             $user = $dbForProject->updateDocument('users', $userId, new Document([
                 'photoId' => $photoId,
                 'photoSize' => $size,
             ]));
+
+            // The new photo is live now, so a failed cleanup only leaves a file that user deletion removes
+            if ($previous !== '') {
+                try {
+                    $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
+
+                    if ($deviceForFiles->exists($previousPath) && !$deviceForFiles->delete($previousPath)) {
+                        Console::warning('Failed to remove previous photo ' . $previous);
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Failed to remove previous photo ' . $previous . ': ' . $th->getMessage());
+                }
+            }
+
+            return $user;
+        };
+
+        try {
+            $user = $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed($redis, 'photos:' . $project->getId() . ':' . $userId, self::LOCK_TTL))->withLock($update, timeout: 10.0));
+        } catch (Contention) {
+            $deviceForFiles->delete($path);
+
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
         } catch (\Throwable $th) {
             $deviceForFiles->delete($path);
 
             throw $th;
         }
 
-        // A file left behind here, or by a racing request, is removed with the user's photo folder
-        if ($previous !== '') {
-            $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
-
-            if ($deviceForFiles->exists($previousPath) && !$deviceForFiles->delete($previousPath)) {
-                Console::warning('Failed to remove previous photo ' . $previous);
-            }
-        }
-
         $queueForEvents->setParam('userId', $userId);
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     }
 }

@@ -13,13 +13,18 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 
 class Delete extends Action
 {
     use HTTP;
+
+    private const LOCK_TTL = 30;
 
     public static function getName(): string
     {
@@ -60,45 +65,62 @@ class Delete extends Action
             ))
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
     public function action(
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
+        Group $pools,
     ): void {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $photoId = $user->getAttribute('photoId', '');
+        $userId = $user->getId();
 
-        if ($photoId === '') {
+        // Same per-user lock as uploads, and the file goes before the attributes, so a failure is retried by calling again
+        $delete = function () use ($dbForProject, $deviceForFiles, $userId): bool {
+            $photoId = $dbForProject->getDocument('users', $userId)->getAttribute('photoId', '');
+
+            if ($photoId === '') {
+                return false;
+            }
+
+            $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
+
+            if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+            }
+
+            $dbForProject->updateDocument('users', $userId, new Document([
+                'photoId' => '',
+                'photoSize' => 0,
+            ]));
+
+            return true;
+        };
+
+        try {
+            $deleted = $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed($redis, 'photos:' . $project->getId() . ':' . $userId, self::LOCK_TTL))->withLock($delete, timeout: 10.0));
+        } catch (Contention) {
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+        }
+
+        if ($deleted) {
+            $queueForEvents->setParam('userId', $userId);
+        } else {
             $queueForEvents->reset();
-            $response->noContent();
-
-            return;
         }
-
-        // The file goes before the attributes, so a failure at either step is retried by calling again
-        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $user->getId() . '/' . $photoId);
-
-        if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
-        }
-
-        $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'photoId' => '',
-            'photoSize' => 0,
-        ]));
-
-        $queueForEvents->setParam('userId', $user->getId());
 
         $response->noContent();
     }
