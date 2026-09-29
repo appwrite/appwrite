@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -3842,6 +3843,49 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(404, $deployment['headers']['status-code']);
         $this->assertEquals('installation_not_found', $deployment['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $code = $this->packageSite('static');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'true',
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupSite($siteId);
     }

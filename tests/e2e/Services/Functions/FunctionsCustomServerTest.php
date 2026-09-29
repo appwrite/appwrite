@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Appwrite\Tests\Retry;
@@ -682,6 +683,49 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 120000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $code = $this->packageFunction('basic');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupFunction($functionId);
     }
