@@ -93,6 +93,14 @@ final class Client implements Adapter
         return $clone;
     }
 
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        $clone = clone $this;
+        $clone->adapter = $this->adapter->withResolve($host, $port, $addresses);
+
+        return $clone;
+    }
+
     /**
      * @param array<string, string|array<int, string>> $headers
      */

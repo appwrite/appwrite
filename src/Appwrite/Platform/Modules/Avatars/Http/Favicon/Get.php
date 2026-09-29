@@ -208,9 +208,10 @@ class Get extends Action
     }
 
     /**
+     * @return array<string> Addresses the host was verified to resolve to
      * @throws Exception
      */
-    protected static function assertSafeUrl(string $url): void
+    protected static function assertSafeUrl(string $url): array
     {
         $parts = \parse_url($url);
         if (!\is_array($parts)) {
@@ -244,6 +245,8 @@ class Get extends Action
         if (!$validator->isValid($host)) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
         }
+
+        return $validator->getAddresses();
     }
 
     /**
@@ -252,13 +255,25 @@ class Get extends Action
     protected function safeFetch(string $url, string $userAgent, ?ClientInterface $client = null): ResponseInterface
     {
         // Redirects are followed here, one hop at a time, so every target passes assertSafeUrl()
-        $client ??= (new Client(new CurlAdapter()))->withTimeout(15);
         $requestFactory = new RequestFactory();
 
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
-            self::assertSafeUrl($url);
+            $addresses = self::assertSafeUrl($url);
 
-            $response = $client->sendRequest(
+            // Pin each hop to the addresses just verified, so curl cannot
+            // resolve the host again to an internal address (DNS rebinding).
+            // A caller-injected client (tests) is used as-is.
+            $hopClient = $client;
+            if ($hopClient === null) {
+                $hopClient = (new Client(new CurlAdapter()))->withTimeout(15);
+                $host = \parse_url($url, PHP_URL_HOST) ?? '';
+                if ($addresses !== [] && \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false) {
+                    $port = \parse_url($url, PHP_URL_PORT) ?? (\parse_url($url, PHP_URL_SCHEME) === 'https' ? 443 : 80);
+                    $hopClient = $hopClient->withResolve($host, $port, $addresses);
+                }
+            }
+
+            $response = $hopClient->sendRequest(
                 $requestFactory
                     ->createRequest(RequestMethod::GET, $url)
                     ->withHeader(Header::USER_AGENT, $userAgent),

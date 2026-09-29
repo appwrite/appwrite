@@ -740,6 +740,32 @@ abstract class AdapterContract extends TestCase
         $this->assertNotSame($client, $client->withFollowRedirects(false));
     }
 
+    public function testResolveHelperReturnsConfiguredClones(): void
+    {
+        $client = $this->createAdapter();
+
+        $this->assertNotSame($client, $client->withResolve('example.com', 443, ['1.1.1.1']));
+    }
+
+    public function testItConnectsToThePinnedAddressInsteadOfResolvingTheHost(): void
+    {
+        Http::serve(function (int $port): void {
+            // A .invalid host never resolves, so a successful request proves the
+            // connection used the pinned address rather than a DNS lookup.
+            $client = $this->createAdapter()->withResolve('pinned.invalid', $port, ['127.0.0.1']);
+            $request = new Request\Factory()
+                ->createRequest(Method::POST, 'http://pinned.invalid:' . $port . '/echo')
+                ->withHeader(Header::CONTENT_TYPE, ContentType::PLAIN_TEXT)
+                ->withHeader('X-Custom', 'sent')
+                ->withBody(new Stream\Factory()->createStream('hello'));
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(202, $response->getStatusCode());
+            $this->assertSame('POST:/echo:sent:hello', (string) $response->getBody());
+        });
+    }
+
     public function testDefaultTimeoutsAllowReasonablySlowResponses(): void
     {
         Http::serve(function (int $port): void {

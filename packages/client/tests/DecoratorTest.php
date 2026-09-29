@@ -107,6 +107,11 @@ final class SwappableAdapter implements Adapter
         return $this;
     }
 
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        return $this;
+    }
+
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         return new Response($this->status);

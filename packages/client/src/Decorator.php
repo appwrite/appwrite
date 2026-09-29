@@ -61,6 +61,11 @@ abstract class Decorator implements Adapter
         return $this->wrap($this->adapter->withFollowRedirects($enabled, $maxHops));
     }
 
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        return $this->wrap($this->adapter->withResolve($host, $port, $addresses));
+    }
+
     /**
      * @throws ClientExceptionInterface
      */

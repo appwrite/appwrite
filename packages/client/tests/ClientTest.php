@@ -348,6 +348,11 @@ final class RecordingAdapter implements Adapter
         return $clone;
     }
 
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        return clone $this;
+    }
+
     /**
      * @throws ClientExceptionInterface
      */

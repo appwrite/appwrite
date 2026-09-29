@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Image;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -72,8 +73,23 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
+        // Pin the connection to the verified addresses so curl cannot resolve
+        // the host again to an internal address between validation and the
+        // fetch (DNS rebinding). The PublicURL param already rejected non-public
+        // hosts; re-resolving here yields the addresses to pin.
+        $client = new Client(new CurlAdapter());
+        $host = \parse_url($url, PHP_URL_HOST) ?? '';
+        if (\filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false) {
+            $hostname = new PublicHostname();
+            if (!$hostname->isValid($host)) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostname->getDescription());
+            }
+            $port = \parse_url($url, PHP_URL_PORT) ?? (\parse_url($url, PHP_URL_SCHEME) === 'https' ? 443 : 80);
+            $client = $client->withResolve($host, $port, $hostname->getAddresses());
+        }
+
         try {
-            $res = (new Client(new CurlAdapter()))
+            $res = $client
                 ->withTimeout(15)
                 ->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
         } catch (\Throwable) {

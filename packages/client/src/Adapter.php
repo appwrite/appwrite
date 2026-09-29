@@ -39,4 +39,14 @@ interface Adapter extends ClientInterface, StreamingClientInterface
      * A chain longer than $maxHops redirects fails with a ProtocolException.
      */
     public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static;
+
+    /**
+     * Pin a host:port to specific IP addresses, so the connection uses them
+     * instead of resolving the host again at dial time. Validate the host, then
+     * pin it to the address you validated to close the DNS-rebinding window
+     * between the check and the fetch.
+     *
+     * @param array<int, string> $addresses
+     */
+    public function withResolve(string $host, int $port, array $addresses): static;
 }

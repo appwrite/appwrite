@@ -237,6 +237,11 @@ final class QueueAdapter implements Adapter
         return $this;
     }
 
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        return $this;
+    }
+
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         return $this->next(static function (string $chunk): void {

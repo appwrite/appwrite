@@ -72,6 +72,14 @@ class Client implements Adapter
     private int $maxHops = Redirect::MAX_HOPS;
 
     /**
+     * Pinned host:port => verified IP addresses. The first is dialled while the
+     * Host header and TLS hostname stay on the original host.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private array $resolve = [];
+
+    /**
      * Buffered requests reuse one client and streamed requests another: a
      * write callback, once set on a Swoole client, stays with it, and setting
      * it to null does not take it off. A client that has streamed would hand
@@ -183,6 +191,14 @@ class Client implements Adapter
         $clone = clone $this;
         $clone->followRedirects = $enabled;
         $clone->maxHops = $maxHops;
+
+        return $clone;
+    }
+
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        $clone = clone $this;
+        $clone->resolve[strtolower(trim($host, '[]')) . ':' . $port] = array_values($addresses);
 
         return $clone;
     }
@@ -514,7 +530,14 @@ class Client implements Adapter
     {
         $uri = $request->getUri();
         $secure = $uri->getScheme() === 'https';
-        $key = $uri->getHost() . ':' . $this->port($request) . ':' . ($secure ? 's' : 'p');
+        $port = $this->port($request);
+
+        // Dial a pinned IP when one was verified for this host:port, keeping the
+        // Host header and TLS hostname on the original host (DNS-rebinding
+        // protection).
+        $pinned = $this->resolve[strtolower(trim($uri->getHost(), '[]')) . ':' . $port][0] ?? null;
+        $connectHost = $pinned ?? $uri->getHost();
+        $key = $connectHost . ':' . $port . ':' . ($secure ? 's' : 'p');
 
         $connection = $streaming ? $this->streamConnection : $this->connection;
         $connectionKey = $streaming ? $this->streamConnectionKey : $this->connectionKey;
@@ -535,7 +558,7 @@ class Client implements Adapter
         }
 
         try {
-            $client = new SwooleClient($uri->getHost(), $this->port($request), $secure);
+            $client = new SwooleClient($connectHost, $port, $secure);
         } catch (Throwable $throwable) {
             throw new AdapterInitializationException($request, $throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }

@@ -58,6 +58,22 @@ class PublicHostname extends Validator
 
     private string $reason = '';
 
+    /**
+     * @var array<string>
+     */
+    private array $addresses = [];
+
+    /**
+     * Addresses verified by the last successful isValid() call, for pinning the
+     * fetch to what was checked.
+     *
+     * @return array<string>
+     */
+    public function getAddresses(): array
+    {
+        return $this->addresses;
+    }
+
     public function getDescription(): string
     {
         return $this->reason !== ''
@@ -78,6 +94,7 @@ class PublicHostname extends Validator
     public function isValid(mixed $value): bool
     {
         $this->reason = '';
+        $this->addresses = [];
 
         if (!\is_string($value) || $value === '') {
             $this->reason = 'Hostname is empty.';
@@ -92,6 +109,7 @@ class PublicHostname extends Validator
                 $this->reason = "Address {$hostname} is in a private or reserved range.";
                 return false;
             }
+            $this->addresses = [$hostname];
             return true;
         }
 
@@ -108,6 +126,8 @@ class PublicHostname extends Validator
                 return false;
             }
         }
+
+        $this->addresses = $addresses;
 
         return true;
     }

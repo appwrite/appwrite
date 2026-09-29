@@ -48,6 +48,13 @@ class Client implements Adapter
 
     private int $maxHops = Redirect::MAX_HOPS;
 
+    /**
+     * Pinned host:port => "host:port:ip,ip" entries for CURLOPT_RESOLVE.
+     *
+     * @var array<string, string>
+     */
+    private array $resolve = [];
+
     private ?CurlHandle $handle = null;
 
     /**
@@ -150,6 +157,16 @@ class Client implements Adapter
         $clone = clone $this;
         $clone->followRedirects = $enabled;
         $clone->maxHops = $maxHops;
+
+        return $clone;
+    }
+
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        $host = strtolower(trim($host, '[]'));
+
+        $clone = clone $this;
+        $clone->resolve[$host . ':' . $port] = $host . ':' . $port . ':' . implode(',', $addresses);
 
         return $clone;
     }
@@ -359,6 +376,12 @@ class Client implements Adapter
 
         if ($this->followRedirects) {
             $merged[\CURLOPT_MAXREDIRS] = $this->maxHops;
+        }
+
+        // Pin verified hosts to their addresses so curl does not resolve them
+        // again at dial time (DNS-rebinding protection).
+        if ($this->resolve !== []) {
+            $merged[\CURLOPT_RESOLVE] = array_values($this->resolve);
         }
 
         return $merged;
