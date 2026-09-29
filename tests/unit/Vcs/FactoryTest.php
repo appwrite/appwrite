@@ -220,7 +220,7 @@ final class FactoryTest extends TestCase
                 'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
                 'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
                 'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
-                'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
             ],
         ];
     }
