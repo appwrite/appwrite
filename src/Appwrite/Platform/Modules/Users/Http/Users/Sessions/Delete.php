@@ -31,7 +31,7 @@ class Delete extends Action
             ->desc('Delete user session')
             ->groups(['api', 'users'])
             ->label('event', 'users.[userId].sessions.[sessionId].delete')
-            ->label('scope', ['users.write', 'sessions.write'])
+            ->label('scope', 'users.write')
             ->label('audits.event', 'session.delete')
             ->label('audits.resource', 'user/{request.userId}')
             ->label('sdk', new Method(

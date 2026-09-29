@@ -41,7 +41,7 @@ class Create extends Action
             ->desc('Create session')
             ->groups(['api', 'users'])
             ->label('event', 'users.[userId].sessions.[sessionId].create')
-            ->label('scope', ['users.write', 'sessions.write'])
+            ->label('scope', 'users.write')
             ->label('audits.event', 'session.create')
             ->label('audits.resource', 'user/{request.userId}')
             ->label('usage.metric', 'sessions.{scope}.requests.create')

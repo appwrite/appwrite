@@ -132,4 +132,64 @@ final class UsersConsoleClientTest extends Scope
         $this->assertEquals(200, $priority['headers']['status-code']);
         $this->assertEquals($targetId, $priority['body']['$id']);
     }
+
+    public function testCreateUserSessionRequiresServerScope(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // A target user created by an operator
+        $target = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@example.com',
+            'password' => 'password',
+            'name' => 'Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        // A regular account that holds a session but no server scopes
+        $email = ID::unique() . '@example.com';
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Member',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $memberHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        /**
+         * Test for FAILURE: a session alone does not reach the server session API of another user
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $targetId . '/sessions', $memberHeaders);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $targetId . '/sessions', $memberHeaders);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+    }
 }

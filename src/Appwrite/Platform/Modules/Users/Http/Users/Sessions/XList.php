@@ -31,7 +31,7 @@ class XList extends Action
             ->setHttpPath('/v1/users/:userId/sessions')
             ->desc('List user sessions')
             ->groups(['api', 'users'])
-            ->label('scope', ['users.read', 'sessions.read'])
+            ->label('scope', 'users.read')
             ->label('sdk', new Method(
                 namespace: 'users',
                 group: 'sessions',
