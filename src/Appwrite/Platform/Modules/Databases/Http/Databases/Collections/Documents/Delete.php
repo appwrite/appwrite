@@ -195,6 +195,12 @@ class Delete extends Action
             return;
         }
 
+        // The database fires an update for each related document the delete changed
+        $related = [];
+        $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', function (string $event, Document $document) use (&$related) {
+            $related[] = $document;
+        });
+
         try {
             $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
                 $dbForDatabases->deleteDocument(
@@ -206,6 +212,8 @@ class Delete extends Action
             throw new Exception($this->getConflictException());
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
+        } finally {
+            $dbForDatabases->on(Database::EVENT_DOCUMENT_UPDATE, 'relationship-delete', null);
         }
 
         $collectionsCache = [];
@@ -248,9 +256,8 @@ class Delete extends Action
         $this->triggerRelationshipUpdates(
             database: $database,
             collection: $collection,
-            document: $document,
+            related: $related,
             dbForProject: $dbForProject,
-            dbForDatabases: $dbForDatabases,
             queueForEvents: $queueForEvents,
             queueForRealtime: $queueForRealtime,
             response: $response,
@@ -261,23 +268,26 @@ class Delete extends Action
     }
 
     /**
-     * Deleting a document changes two-way relationships on the documents that survive it,
-     * but the database applies those changes without events, so publish an update for each of them.
+     * Publish an update for each related document the delete changed
+     *
+     * @param array<Document> $related
      */
     private function triggerRelationshipUpdates(
         Document $database,
         Document $collection,
-        Document $document,
+        array $related,
         Database $dbForProject,
-        Database $dbForDatabases,
         Event $queueForEvents,
         Realtime $queueForRealtime,
         UtopiaResponse $response,
         Authorization $authorization
     ): void {
-        $processed = [];
-        $collectionsCache = [];
+        if (empty($related)) {
+            return;
+        }
 
+        // Related documents carry the internal collection id, so map it back through the two-way relationships
+        $relatedCollections = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if (
                 $attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP
@@ -286,14 +296,22 @@ class Delete extends Action
                 continue;
             }
 
-            $related = $document->getAttribute($attribute->getAttribute('key'));
-            $relations = \is_array($related) ? $related : [$related];
-            $relatedCollectionId = $attribute->getAttribute('relatedCollection');
             $relatedCollection = $authorization->skip(fn () => $dbForProject->getDocument(
                 'database_' . $database->getSequence(),
-                $relatedCollectionId
+                $attribute->getAttribute('relatedCollection')
             ));
             if ($relatedCollection->isEmpty()) {
+                continue;
+            }
+
+            $relatedCollections['database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()] = $relatedCollection;
+        }
+
+        $collectionsCache = [];
+
+        foreach ($related as $peer) {
+            $relatedCollection = $relatedCollections[$peer->getCollection()] ?? null;
+            if ($relatedCollection === null) {
                 continue;
             }
 
@@ -305,51 +323,29 @@ class Delete extends Action
                 )
             );
 
-            foreach ($relations as $relation) {
-                if (
-                    !$relation instanceof Document
-                    || $relation->isEmpty()
-                    || isset($processed[$relatedCollectionId][$relation->getId()])
-                ) {
-                    continue;
-                }
-                $processed[$relatedCollectionId][$relation->getId()] = true;
+            $this->processDocument(
+                database: $database,
+                collection: $relatedCollection,
+                document: $peer,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+                authorization: $authorization
+            );
 
-                // Relationship keys are stripped from the payload, so don't load them.
-                $peer = $authorization->skip(fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument(
-                    'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                    $relation->getId()
-                )));
+            // Clone so the delete event stays intact for the shutdown hook.
+            $event = clone $queueForEvents;
+            $event->reset()
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+                ->setParam('databaseId', $database->getId())
+                ->setParam('collectionId', $relatedCollection->getId())
+                ->setParam('tableId', $relatedCollection->getId())
+                ->setParam('documentId', $peer->getId())
+                ->setParam('rowId', $peer->getId())
+                ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
+                // Filter through the model directly; output() would replace the audited response payload.
+                ->setPayload($response->getModel($this->getResponseModel())->filter($peer)->getArrayCopy(), sensitive: $sensitive);
 
-                // Cascaded away by this delete.
-                if ($peer->isEmpty()) {
-                    continue;
-                }
-
-                $this->processDocument(
-                    database: $database,
-                    collection: $relatedCollection,
-                    document: $peer,
-                    dbForProject: $dbForProject,
-                    collectionsCache: $collectionsCache,
-                    authorization: $authorization
-                );
-
-                // Clone so the delete event stays intact for the shutdown hook.
-                $event = clone $queueForEvents;
-                $event->reset()
-                    ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-                    ->setParam('databaseId', $database->getId())
-                    ->setParam('collectionId', $relatedCollectionId)
-                    ->setParam('tableId', $relatedCollectionId)
-                    ->setParam('documentId', $peer->getId())
-                    ->setParam('rowId', $peer->getId())
-                    ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
-                    // Filter through the model directly; output() would replace the audited response payload.
-                    ->setPayload($response->getModel($this->getResponseModel())->filter($peer)->getArrayCopy(), sensitive: $sensitive);
-
-                $queueForRealtime->from($event)->trigger();
-            }
+            $queueForRealtime->from($event)->trigger();
         }
     }
 }
