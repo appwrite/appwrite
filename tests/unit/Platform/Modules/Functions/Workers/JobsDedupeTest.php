@@ -52,6 +52,22 @@ final class JobsDedupeTest extends TestCase
         $this->assertSame(["npm install\n"], $this->written);
     }
 
+    public function testCopyThatTimesOutOnTheLockKeepsTheMark(): void
+    {
+        $this->deliver('evt-1', 'npm install');
+
+        try {
+            $this->deliver('evt-1', 'npm install', lockTimesOut: true);
+            $this->fail('the copy that timed out on the lock should have failed');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('lock timeout', $error->getMessage());
+        }
+
+        $this->deliver('evt-1', 'npm install');
+
+        $this->assertSame(["npm install\n"], $this->written);
+    }
+
     public function testRepeatOfAnAppliedEventIsSkipped(): void
     {
         $this->deliver('evt-1', 'npm install');
@@ -60,7 +76,7 @@ final class JobsDedupeTest extends TestCase
         $this->assertSame(["npm install\n"], $this->written);
     }
 
-    private function deliver(string $eventId, string $line): void
+    private function deliver(string $eventId, string $line, bool $lockTimesOut = false): void
     {
         $dbForProject = $this->createStub(Database::class);
         $dbForProject->method('getDocument')->willReturn(new Document([
@@ -114,7 +130,9 @@ final class JobsDedupeTest extends TestCase
             $this->createStub(Device::class),
             $this->createStub(VcsFactory::class),
             $this->cache,
-            fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $callback(),
+            fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $lockTimesOut
+                ? throw new \RuntimeException('lock timeout')
+                : $callback(),
             [],
             [],
             $this->createStub(Bus::class),

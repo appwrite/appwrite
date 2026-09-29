@@ -160,81 +160,89 @@ class Jobs extends Action
         }
 
         $failure = null;
+        $key = $event->id !== '' ? 'jobs-event-' . $event->id : null;
+        $marked = false;
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
-            // Marked processed only once the callback is applied (at the end of
-            // this lock), so a delivery that fails part-way is applied again on
-            // redelivery. The lock keeps a concurrent copy out until then.
-            $key = $event->id !== '' ? 'jobs-event-' . $event->id : null;
-            if ($key !== null && $cache->load($key, self::DEDUPE_TTL) !== false) {
-                return; // already processed
-            }
-
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
-                return;
-            }
-
-            $statusBefore = $deployment->getAttribute('status');
-            $durationBefore = $deployment->getAttribute('buildDuration');
-
-            $callback = CallbackEvent::tryFrom($event->event);
-            $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
-
-            $deployment = match ($callback) {
-                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
-                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
-                CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
-                default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-            };
-
-            // Outcome and runtime arrive independently. Publish when the second
-            // becomes known, once under the per-deployment callback lock.
-            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)
-                && $deployment->getAttribute('buildDuration') !== null
-                && (!\in_array($statusBefore, ['ready', 'failed'], true) || $durationBefore === null)) {
-                $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-                if (!$resource->isEmpty()) {
-                    BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
+        try {
+            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, &$marked, &$failure): void {
+                if ($key !== null) {
+                    if ($cache->load($key, self::DEDUPE_TTL) !== false) {
+                        return; // already processed
+                    }
+                    $cache->save($key, true);
+                    $marked = true;
                 }
-            }
 
-            // Console realtime on every callback (log stream + status).
-            $queueForRealtime
-                ->setSubscribers(['console'])
-                ->setProject($project)
-                ->setEvent(self::event($deployment))
-                ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
-                ->setParam('deploymentId', $deploymentId)
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+                if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+                    return;
+                }
 
-            // On a real terminal outcome (not a concurrently-canceled build),
-            // notify webhooks + event-triggered functions of the deployment
-            // update (mirrors the executor Builds worker). The transition can
-            // land on either the exit (failures) or the complete callback
-            // (success), so key off the status change rather than the event.
-            if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
-                $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
-            }
+                $statusBefore = $deployment->getAttribute('status');
+                $durationBefore = $deployment->getAttribute('buildDuration');
 
-            // Artifacts after a failed build fail for want of output.
-            if ($artifact?->status === 'failed'
-                && $statusBefore !== 'failed'
-                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
-                && self::userMessage($deployment, $artifact) === null) {
-                Span::add('deployment.id', $deploymentId);
-                Span::add('artifact.id', $artifact->artifactId);
-                Span::add('artifact.type', $artifact->artifactType);
-                Span::add('artifact.error.code', $artifact->error?->code->value);
-                $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
-            }
+                $callback = CallbackEvent::tryFrom($event->event);
+                $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
 
-            if ($key !== null) {
-                $cache->save($key, true);
+                $deployment = match ($callback) {
+                    CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
+                    CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
+                    CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                    CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
+                    default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                };
+
+                // Outcome and runtime arrive independently. Publish when the second
+                // becomes known, once under the per-deployment callback lock.
+                if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)
+                    && $deployment->getAttribute('buildDuration') !== null
+                    && (!\in_array($statusBefore, ['ready', 'failed'], true) || $durationBefore === null)) {
+                    $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+                    if (!$resource->isEmpty()) {
+                        BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
+                    }
+                }
+
+                // Console realtime on every callback (log stream + status).
+                $queueForRealtime
+                    ->setSubscribers(['console'])
+                    ->setProject($project)
+                    ->setEvent(self::event($deployment))
+                    ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
+                    ->setParam('deploymentId', $deploymentId)
+                    ->setPayload($deployment->getArrayCopy())
+                    ->trigger();
+
+                // On a real terminal outcome (not a concurrently-canceled build),
+                // notify webhooks + event-triggered functions of the deployment
+                // update (mirrors the executor Builds worker). The transition can
+                // land on either the exit (failures) or the complete callback
+                // (success), so key off the status change rather than the event.
+                if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+                    $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
+                }
+
+                // Artifacts after a failed build fail for want of output.
+                if ($artifact?->status === 'failed'
+                    && $statusBefore !== 'failed'
+                    && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                    && self::userMessage($deployment, $artifact) === null) {
+                    Span::add('deployment.id', $deploymentId);
+                    Span::add('artifact.id', $artifact->artifactId);
+                    Span::add('artifact.type', $artifact->artifactType);
+                    Span::add('artifact.error.code', $artifact->error?->code->value);
+                    $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
+                }
+            }, self::LOCK_TIMEOUT);
+        } catch (\Throwable $error) {
+            // A callback that failed part-way is unmarked so its redelivery is
+            // applied. Only this delivery's own mark: a copy that timed out on
+            // the lock must not clear the mark of the one holding it.
+            if ($marked) {
+                $cache->purge($key);
             }
-        }, self::LOCK_TIMEOUT);
+            throw $error;
+        }
 
         if ($failure !== null) {
             throw $failure;
