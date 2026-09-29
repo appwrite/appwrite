@@ -82,7 +82,7 @@ The more useful view is score against cost per task. As effort goes up, models w
 * On [Terminal-Bench](https://www.tbench.ai/), which measures multi-step professional tasks in a command-line interface, Sonnet 5.5 at medium effort far exceeds Sonnet 5's best score for less than a tenth of the cost.
 * Sonnet 5.5 complements Opus 5.5 best at lower effort settings. At higher settings, it can perform comparably to Opus 5.5 at a similar cost.
 
-If you run Sonnet 5.5 at max effort on every request, you pay Opus-level costs for Sonnet-level judgment. Low and medium effort is where it earns its place.
+At higher effort settings, Sonnet 5.5 can approach Opus 5.5 in both performance and cost. Low and medium effort settings show the clearest cost advantages over Sonnet 5.
 
 # Claude Sonnet 5.5 for coding and agentic development
 
