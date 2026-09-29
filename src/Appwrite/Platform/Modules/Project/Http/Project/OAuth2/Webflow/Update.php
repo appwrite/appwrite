@@ -40,7 +40,7 @@ class Update extends Base
 
     public static function getClientIdExample(): string
     {
-        return '0d6a00000000000000000000000000000000000000000000000000000000f31c';
+        return '8bb20000000000000000000000000000000000000000000000000000000040dd';
     }
 
     public static function getClientSecretName(): string
@@ -50,6 +50,6 @@ class Update extends Base
 
     public static function getClientSecretExample(): string
     {
-        return '7b1e00000000000000000000000000000000000000000000000000000000ac95';
+        return '59bf00000000000000000000000000000000000000000000000000000000fe59';
     }
 }
