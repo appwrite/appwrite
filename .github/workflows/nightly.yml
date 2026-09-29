@@ -22,7 +22,7 @@ permissions:
 jobs:
   nightly:
     name: Build and publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - name: Resolve the build

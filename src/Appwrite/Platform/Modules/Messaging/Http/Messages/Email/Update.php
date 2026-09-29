@@ -17,6 +17,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
@@ -59,17 +60,19 @@ class Update extends Action
                 ]
             ))
             ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
+            ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
             ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
             ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
             ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
-            ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
-            ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
-            ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
-            ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
             ->param('cc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
             ->param('bcc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
-            ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+            ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address to reply to. Pass an empty string to restore the provider or sender default.', true)
+            ->param('replyToName', null, new Nullable(new Text(128, 0)), 'Name of the reply to recipient. Pass an empty string to restore the provider or sender default.', true)
+            ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+            ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
+            ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -79,7 +82,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?string $subject, ?string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?bool $draft, ?bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -227,6 +230,14 @@ class Update extends Action
 
         if (!\is_null($bcc)) {
             $data['bcc'] = $bcc;
+        }
+
+        if (!\is_null($replyToEmail)) {
+            $data['replyToEmail'] = $replyToEmail;
+        }
+
+        if (!\is_null($replyToName)) {
+            $data['replyToName'] = $replyToName;
         }
 
         $message->setAttribute('data', $data);

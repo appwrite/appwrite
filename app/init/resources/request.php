@@ -647,13 +647,28 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
         if ($user->isEmpty()) {
             return;
         }
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        if (! $sessionId && ! empty($authJWT)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException) {
+                return;
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
 
         if (! $sessionId) {
             return;
@@ -666,7 +681,7 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken']);
+    }, ['user', 'store', 'proofForToken', 'request']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
@@ -932,8 +947,17 @@ return function (Container $context): void {
          * - 'admin' => Request from the Console on non-console projects
          */
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        // Request bodies can carry their own 'mode' key
+        if (! \is_string($mode)) {
+            $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+        }
 
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        // GitLab webhook bodies carry a 'project' object, not a project ID
+        if (! \is_string($projectId)) {
+            $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        }
+
         if ($projectId !== '' && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }

@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -310,7 +311,7 @@ class Create extends Action
                         'mimeType' => '',
                         'sizeOriginal' => $fileSize,
                         'sizeActual' => 0,
-                        'algorithm' => '',
+                        'algorithm' => Compression::NONE,
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => 0,
@@ -387,6 +388,12 @@ class Create extends Action
                 }
 
                 $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                $formats = Config::getParam('storage-formats');
+
+                if (\in_array($mimeType, $formats['ambiguous'], true)) {
+                    $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
+                }
+
                 $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
                 $data = '';
                 $iv = '';

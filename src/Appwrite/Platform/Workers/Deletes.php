@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
 
@@ -1234,6 +1236,7 @@ class Deletes extends Action
             TOKEN_TYPE_GENERIC,
             TOKEN_TYPE_EMAIL,
             TOKEN_TYPE_VERIFICATION_OTP,
+            TOKEN_TYPE_RECOVERY_OTP,
         ];
 
         // Current index is on {`type`, `expire`}
@@ -1575,6 +1578,15 @@ class Deletes extends Action
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
 
+        // A build canceled or deleted before it completed never had its staged
+        // source moved (see Deployments::payload()). Unlinking follows
+        // symlinked parent directories the build could plant, so clean up only
+        // inside the builds tree.
+        $staged = Deployments::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
+
         if (empty($buildPath)) {
             Console::info("No build files for deployment " . $deploymentId);
             return;
@@ -1912,15 +1924,17 @@ class Deletes extends Action
             return;
         }
 
-        $dbForProject->deleteDocuments('transactionLogs', [
-            Query::equal('transactionInternalId', $transactionInternalIds),
-        ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
-        });
+        foreach (\array_chunk($transactionInternalIds, \max(1, $dbForProject->getMaxQueryValues())) as $batch) {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', $batch),
+            ], onError: function (Throwable $th) {
+                // Swallow errors to avoid breaking the cleanup process
+            });
+        }
     }
 
     /**
-     * The push ledger (appwritePushLedger) is the append-only record of QoS 1 push
+     * The push ledger (pushLedger) is the append-only record of QoS 1 push
      * messages the MQTT broker keeps so it can replay any a client missed while offline.
      * Replay only ever reaches back one week, so entries older than that are dead weight
      * and are pruned here, mirroring how expired presences are cleaned up.
@@ -1930,13 +1944,13 @@ class Deletes extends Action
         Console::info('Delete expired push ledger messages');
 
         $dbForProject = $getProjectDB($project);
-        if ($dbForProject->getCollection('appwritePushLedger')->isEmpty()) {
+        if ($dbForProject->getCollection('pushLedger')->isEmpty()) {
             return;
         }
 
         $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
 
-        $dbForProject->deleteDocuments('appwritePushLedger', [
+        $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
         ], onError: function (Throwable $th) {
             // Swallow errors (e.g. projects without the push ledger collection).

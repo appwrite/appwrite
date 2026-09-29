@@ -178,6 +178,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // verifyRule() above passed, which is what put the rule in this status.
+                skipDomainValidation: true,
             ));
         }
 

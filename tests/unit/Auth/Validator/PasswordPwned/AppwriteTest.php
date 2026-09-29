@@ -7,13 +7,14 @@ namespace Tests\Unit\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
 use Utopia\DSN\DSN;
-use Utopia\Fetch\Adapter;
-use Utopia\Fetch\Client;
-use Utopia\Fetch\Options\Request as RequestOptions;
-use Utopia\Fetch\Response;
+use Utopia\Psr7\Response;
+use Utopia\Psr7\Stream;
 
 final class AppwriteTest extends TestCase
 {
@@ -35,21 +36,22 @@ final class AppwriteTest extends TestCase
         $this->assertTrue($this->validator($fetch)->isValid(self::PASSWORD));
     }
 
-    public function testThePasswordIsSentAsIsWithTheSharedSecretAsBearerToken(): void
+    public function testTheHashIsSentWithTheSharedSecretAsBearerToken(): void
     {
         $fetch = new DetectionFetch(body: '{"leaked":false}');
 
         $this->validator($fetch)->isValid(self::PASSWORD);
 
         $this->assertCount(1, $fetch->requests);
-        $this->assertSame('POST', $fetch->requests[0]['method']);
+        $this->assertSame('POST', $fetch->requests[0]->getMethod());
 
-        // The service hashes the password itself, so it travels in the clear
-        $this->assertSame(['password' => self::PASSWORD], \json_decode($fetch->requests[0]['body'], true));
+        // The service takes the hash, so the password itself never travels
+        $body = (string) $fetch->requests[0]->getBody();
+        $this->assertSame(['hash' => \strtoupper(\sha1(self::PASSWORD))], \json_decode($body, true));
+        $this->assertStringNotContainsString(self::PASSWORD, $body);
 
-        $headers = \array_change_key_case($fetch->requests[0]['headers'], CASE_LOWER);
-        $this->assertSame('Bearer ' . self::SECRET, $headers['authorization'] ?? null);
-        $this->assertSame('application/json', $headers['content-type'] ?? null);
+        $this->assertSame('Bearer ' . self::SECRET, $fetch->requests[0]->getHeaderLine('Authorization'));
+        $this->assertSame('application/json', $fetch->requests[0]->getHeaderLine('Content-Type'));
     }
 
     public function testTheDsnDescribesWhereAndHowToConnect(): void
@@ -66,9 +68,9 @@ final class AppwriteTest extends TestCase
         foreach ($cases as $dsn => $expected) {
             $fetch = new DetectionFetch(body: '{"leaked":false}');
 
-            (new Appwrite(new DSN($dsn), null, new Client($fetch)))->isValid(self::PASSWORD);
+            (new Appwrite(new DSN($dsn), null, $fetch))->isValid(self::PASSWORD);
 
-            $this->assertSame($expected, $fetch->requests[0]['url'], $dsn);
+            $this->assertSame($expected, (string) $fetch->requests[0]->getUri(), $dsn);
         }
     }
 
@@ -90,9 +92,9 @@ final class AppwriteTest extends TestCase
     public function testServiceErrorsAreReported(): void
     {
         $errors = [
-            401 => '{"type":"general_unauthorized","message":"Missing or invalid Bearer token in the Authorization header.","code":401,"version":"0.2.0"}',
-            400 => '{"type":"general_argument_invalid","message":"Invalid `password` param: Value must be a valid string and at least 1 chars and no longer than 256 chars","code":400,"version":"0.2.0"}',
-            503 => '{"type":"dataset_unavailable","message":"The password dataset could not be read.","code":503,"version":"0.2.0"}',
+            401 => '{"type":"general_unauthorized","message":"Missing or invalid Bearer token in the Authorization header.","code":401,"version":"0.4.0"}',
+            400 => '{"type":"general_argument_invalid","message":"Invalid `hash` param: Value must be a 40-character hexadecimal SHA-1 hash","code":400,"version":"0.4.0"}',
+            503 => '{"type":"dataset_unavailable","message":"The password dataset could not be read.","code":503,"version":"0.4.0"}',
             500 => '',
         ];
 
@@ -130,8 +132,8 @@ final class AppwriteTest extends TestCase
         $fetch = new DetectionFetch(body: '{"leaked":true}');
         $cache = new Cache(new Memory());
 
-        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, new Client($fetch)))->isValid(self::PASSWORD));
-        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, new Client($fetch)))->isValid(self::PASSWORD));
+        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, $fetch))->isValid(self::PASSWORD));
+        $this->assertFalse((new Appwrite(new DSN(self::DSN), $cache, $fetch))->isValid(self::PASSWORD));
 
         $this->assertCount(1, $fetch->requests);
     }
@@ -140,7 +142,7 @@ final class AppwriteTest extends TestCase
     {
         $fetch = new DetectionFetch(body: '{"leaked":true}');
         $cache = new Cache(new Memory());
-        $validator = new Appwrite(new DSN(self::DSN), $cache, new Client($fetch));
+        $validator = new Appwrite(new DSN(self::DSN), $cache, $fetch);
 
         $validator->isValid(self::PASSWORD);
         $validator->isValid('a-completely-different-password');
@@ -153,8 +155,8 @@ final class AppwriteTest extends TestCase
         $fetch = new DetectionFetch(body: '{"leaked":true}');
         $cache = new Cache(new Memory());
 
-        (new Appwrite(new DSN('appwrite://secret@one.test'), $cache, new Client($fetch)))->isValid(self::PASSWORD);
-        (new Appwrite(new DSN('appwrite://secret@two.test'), $cache, new Client($fetch)))->isValid(self::PASSWORD);
+        (new Appwrite(new DSN('appwrite://secret@one.test'), $cache, $fetch))->isValid(self::PASSWORD);
+        (new Appwrite(new DSN('appwrite://secret@two.test'), $cache, $fetch))->isValid(self::PASSWORD);
 
         $this->assertCount(2, $fetch->requests);
     }
@@ -162,7 +164,7 @@ final class AppwriteTest extends TestCase
     public function testFailedLookupIsNotCached(): void
     {
         $fetch = new DetectionFetch(failure: new \RuntimeException('connection refused'));
-        $validator = new Appwrite(new DSN(self::DSN), new Cache(new Memory()), new Client($fetch));
+        $validator = new Appwrite(new DSN(self::DSN), new Cache(new Memory()), $fetch);
 
         foreach ([1, 2] as $attempt) {
             try {
@@ -177,13 +179,13 @@ final class AppwriteTest extends TestCase
 
     private function validator(DetectionFetch $fetch): Appwrite
     {
-        return new Appwrite(new DSN(self::DSN), null, new Client($fetch));
+        return new Appwrite(new DSN(self::DSN), null, $fetch);
     }
 }
 
-final class DetectionFetch implements Adapter
+final class DetectionFetch implements ClientInterface
 {
-    /** @var array<int, array{url: string, method: string, body: mixed, headers: array<string, string>}> */
+    /** @var array<int, RequestInterface> */
     public array $requests = [];
 
     public function __construct(
@@ -193,20 +195,14 @@ final class DetectionFetch implements Adapter
     ) {
     }
 
-    public function send(
-        string $url,
-        string $method,
-        mixed $body,
-        array $headers,
-        RequestOptions $options,
-        ?callable $chunkCallback = null
-    ): Response {
-        $this->requests[] = ['url' => $url, 'method' => $method, 'body' => $body, 'headers' => $headers];
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->requests[] = $request;
 
         if ($this->failure !== null) {
             throw $this->failure;
         }
 
-        return new Response($this->statusCode, $this->body, []);
+        return new Response($this->statusCode, body: new Stream($this->body));
     }
 }

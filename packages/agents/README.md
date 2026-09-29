@@ -20,7 +20,7 @@ composer require utopia-php/agents
 
 ## System Requirements
 
-Utopia Framework requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
+This library requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
 
 ## Features
 
@@ -181,6 +181,31 @@ $openrouter = new OpenRouter(
 - Arbitrary model IDs like `'openai/gpt-5-nano'` or `'anthropic/claude-sonnet-4'` are also accepted directly
 - `httpReferer` and `xTitle` are optional and enable OpenRouter app attribution headers
 - To re-sync constants from the live OpenRouter API, run `php scripts/sync-openrouter-models.php`
+
+### HTTP Client
+
+Every adapter sends its requests through a [`utopia-php/client`](https://github.com/utopia-php/client) instance that it builds once and reuses, so connections stay alive across calls. Inside a Swoole coroutine that default is a pool of keep-alive coroutine clients; elsewhere it is a single keep-alive cURL client. The adapter's timeout (`setTimeout`, milliseconds) applies to the client it builds.
+
+Long-running processes that already own a pooled client can hand it to the adapter's constructor, in which case the adapter uses it as is and leaves its timeouts alone:
+
+```php
+use Utopia\Agents\Adapters\OpenAI;
+use Utopia\Client\Client as HttpClient;
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Pool as HttpClientPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
+use Utopia\Pools\Pool as Connections;
+
+$client = new HttpClientPool(new Connections(
+    new SwoolePoolAdapter(),
+    'agents',
+    16,
+    fn () => new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(30)),
+    timeout: 3.0,
+));
+
+$adapter = new OpenAI('your-api-key', client: $client);
+```
 
 ### Managing Conversations
 

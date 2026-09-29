@@ -2140,6 +2140,27 @@ final class FunctionsCustomServerTest extends Scope
                 ], $this->getHeaders()), []);
                 $this->assertEquals(204, $execution['headers']['status-code']);
             }, 10000, 500);
+
+            /**
+             * Test for FAILURE
+             */
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'X-Test' => ['bad'],
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
+
+            $execution = $this->createExecution($data['functionId'], [
+                'headers' => [
+                    'bad/name' => 'value',
+                ],
+            ]);
+
+            $this->assertEquals(400, $execution['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $execution['body']['type']);
         } finally {
             $this->cleanupFunction($functionId);
         }
@@ -2625,6 +2646,52 @@ final class FunctionsCustomServerTest extends Scope
     }
 
 
+    public function testEventTriggerWithFailingSubscribers(): void
+    {
+        $userId = ID::unique();
+        $functions = [];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        try {
+            // Every subscriber fails, so whichever one the worker reaches first, the rest record
+            // an execution only if the fan-out survived that failure. The one second timeout makes
+            // the executor throw while preparing the runtime; the runtime's own soft timeout would
+            // mark the execution failed without throwing.
+            foreach (['Failing event subscriber A', 'Failing event subscriber B'] as $name) {
+                $functions[] = $this->setupDeployedFunction($name, 'timeout', [
+                    'events' => ['users.' . $userId . '.create'],
+                    'timeout' => 1,
+                ]);
+            }
+
+            $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+                'userId' => $userId,
+                'name' => 'Event subscriber isolation',
+            ]);
+            $this->assertEquals(201, $user['headers']['status-code']);
+
+            foreach ($functions as $functionId) {
+                $this->assertEventually(function () use ($functionId) {
+                    $executions = $this->listExecutions($functionId);
+                    $this->assertEquals(200, $executions['headers']['status-code']);
+                    $this->assertNotEmpty($executions['body']['executions']);
+                    $execution = $executions['body']['executions'][0];
+                    $this->assertEquals('failed', $execution['status']);
+                    $this->assertEquals('event', $execution['trigger']);
+                    $this->assertNotEmpty($execution['errors']);
+                }, 60000, 500);
+            }
+        } finally {
+            foreach ($functions as $functionId) {
+                $this->cleanupFunction($functionId);
+            }
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $headers);
+        }
+    }
+
     public function testEventTrigger()
     {
         $functionId = $this->setupFunction([
@@ -2816,12 +2883,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
 
         // Duration covers the whole request, cold start included, so it tracks
-        // what the caller waited rather than only the warm runtime window
-        $execution = $this->getExecution($functionId, $response['headers']['x-appwrite-execution-id']);
+        // what the caller waited rather than only the warm runtime window. The
+        // execution record is written after the response, so wait for it.
+        $executionId = $response['headers']['x-appwrite-execution-id'];
+        $this->assertEventually(function () use ($functionId, $executionId, $elapsed) {
+            $execution = $this->getExecution($functionId, $executionId);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
-        $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
+            $this->assertEquals(200, $execution['headers']['status-code']);
+            $this->assertLessThanOrEqual($elapsed, $execution['body']['duration']);
+            $this->assertGreaterThan($elapsed / 2, $execution['body']['duration']);
+        }, 30000, 500);
 
         $this->cleanupFunction($functionId);
     }
