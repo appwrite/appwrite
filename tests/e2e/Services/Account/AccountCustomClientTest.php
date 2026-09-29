@@ -3443,9 +3443,8 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
-     * Default OAuth failure relay pages need `project` so native apps can deep-link via
-     * appwrite-callback-{project}://. Without it the UI shows "Missing redirect URL"
-     * instead of the real OAuth error.
+     * The default OAuth failure URL redirects straight to appwrite-callback-{project}://,
+     * carrying `project` and the real OAuth error.
      */
     public function testOAuthDefaultFailureRedirectIncludesProject(): void
     {
@@ -3503,11 +3502,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         $location = $response['headers']['location'];
-        $path = \parse_url($location, PHP_URL_PATH);
-        $query = [];
-        \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
 
-        $this->assertEquals('/auth/oauth2/failure', $path);
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
         $this->assertEquals($projectId, $query['project'] ?? null);
         $this->assertNotEmpty($query['error'] ?? null);
 
