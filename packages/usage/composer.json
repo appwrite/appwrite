@@ -14,12 +14,13 @@
         "test:e2e": "phpunit --testsuite e2e",
         "bench": "phpunit --testsuite bench"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.5",
         "psr/http-client": "^1.0",
         "utopia-php/client": "^0.5",
-        "utopia-php/database": "^7.0.0",
+        "utopia-php/database": "^8.0",
         "utopia-php/query": "0.6.*"
     },
     "require-dev": {

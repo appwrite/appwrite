@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Usage\Adapter\ClickHouse as ClickHouseAdapter;
+use Utopia\Usage\Metric;
 use Utopia\Usage\Tests\E2E\UsageBase;
 use Utopia\Usage\Usage;
 use Utopia\Usage\UsageQuery;
@@ -383,6 +384,146 @@ class ClickHouseTest extends TestCase
         $this->assertEquals(['0' => 10, '1' => 20], $byOrdinal);
     }
 
+    /**
+     * Per-replica event rows for one resource stay distinct series via the
+     * ordinal dimension. Filtering isolates one node; grouping returns a
+     * sum per node. The daily MV is intentionally unsplit — billing still
+     * sums every member.
+     */
+    public function testEventOrdinalSeparatesReplicaSeries(): void
+    {
+        $this->usage->purge('1', [], Usage::TYPE_EVENT);
+
+        $this->assertTrue($this->usage->addBatch([
+            [
+                'tenant' => '1',
+                'metric' => 'event-ordinal-test',
+                'value' => 512,
+                'tags' => ['resourceType' => 'dedicatedDatabases', 'resourceId' => 'db1', 'ordinal' => '0'],
+            ],
+            [
+                'tenant' => '1',
+                'metric' => 'event-ordinal-test',
+                'value' => 128,
+                'tags' => ['resourceType' => 'dedicatedDatabases', 'resourceId' => 'db1', 'ordinal' => '1'],
+            ],
+        ], Usage::TYPE_EVENT));
+
+        $primary = $this->usage->find('1', [
+            Query::equal('metric', ['event-ordinal-test']),
+            Query::equal('ordinal', ['0']),
+        ], Usage::TYPE_EVENT);
+
+        $this->assertCount(1, $primary);
+        $this->assertEquals(512, $primary[0]->getValue());
+        $this->assertEquals('0', $primary[0]->getOrdinal());
+
+        $perNode = $this->usage->find('1', [
+            Query::equal('metric', ['event-ordinal-test']),
+            UsageQuery::groupBy('ordinal'),
+        ], Usage::TYPE_EVENT);
+
+        $this->assertCount(2, $perNode);
+        $byOrdinal = [];
+        foreach ($perNode as $row) {
+            $ordinal = $row->getOrdinal();
+            $this->assertNotNull($ordinal);
+            $byOrdinal[$ordinal] = (int) $row->getValue();
+        }
+        $this->assertEquals(['0' => 512, '1' => 128], $byOrdinal);
+
+        $this->assertSame(640, $this->usage->sum('1', [
+            Query::equal('metric', ['event-ordinal-test']),
+        ]));
+        $this->assertSame(640, $this->usage->sumDaily('1', [
+            Query::equal('metric', ['event-ordinal-test']),
+        ]));
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function metricTypes(): array
+    {
+        return [
+            'events' => [Usage::TYPE_EVENT],
+            'gauges' => [Usage::TYPE_GAUGE],
+        ];
+    }
+
+    /**
+     * @dataProvider metricTypes
+     */
+    public function testOrdinalReadsBackExactly(string $type): void
+    {
+        $this->addReplicaRows($type);
+
+        $ordinals = [];
+        foreach ($this->usage->find('1', [Query::equal('metric', ['replica-ordinals'])], $type) as $row) {
+            $ordinals[(int) $row->getValue()] = $row->getOrdinal();
+        }
+        ksort($ordinals);
+
+        $this->assertSame([1 => '0', 2 => '1', 3 => '10', 4 => null], $ordinals);
+    }
+
+    /**
+     * @dataProvider metricTypes
+     */
+    public function testOrdinalFiltersMatchExactly(string $type): void
+    {
+        $this->addReplicaRows($type);
+
+        $member = $this->usage->find('1', [
+            Query::equal('metric', ['replica-ordinals']),
+            Query::equal('ordinal', ['10']),
+        ], $type);
+
+        $this->assertCount(1, $member);
+        $this->assertSame(3, $member[0]->getValue());
+
+        $unassigned = $this->usage->find('1', [
+            Query::equal('metric', ['replica-ordinals']),
+            Query::isNull('ordinal'),
+        ], $type);
+
+        $this->assertCount(1, $unassigned);
+        $this->assertSame(4, $unassigned[0]->getValue());
+    }
+
+    /**
+     * @dataProvider metricTypes
+     */
+    public function testGroupByOrdinalListsEachMemberInOrder(string $type): void
+    {
+        $this->addReplicaRows($type);
+
+        $members = $this->usage->find('1', [
+            Query::equal('metric', ['replica-ordinals']),
+            UsageQuery::groupBy('ordinal'),
+            Query::orderAsc('ordinal'),
+        ], $type);
+
+        $this->assertSame(
+            [['0', 1], ['1', 2], ['10', 3], [null, 4]],
+            array_map(fn (Metric $member): array => [$member->getOrdinal(), $member->getValue()], $members)
+        );
+    }
+
+    private function addReplicaRows(string $type): void
+    {
+        $this->usage->purge('1', [], $type);
+
+        $resource = ['resourceType' => 'dedicatedDatabases', 'resourceId' => 'db1'];
+
+        $this->assertTrue($this->usage->addBatch([
+            ['tenant' => '1', 'metric' => 'replica-ordinals', 'value' => 1, 'tags' => [...$resource, 'ordinal' => '0']],
+            ['tenant' => '1', 'metric' => 'replica-ordinals', 'value' => 2, 'tags' => [...$resource, 'ordinal' => '1']],
+            ['tenant' => '1', 'metric' => 'replica-ordinals', 'value' => 3, 'tags' => [...$resource, 'ordinal' => 10]],
+            ['tenant' => '1', 'metric' => 'replica-ordinals', 'value' => 4, 'tags' => $resource],
+        ], $type));
+    }
+
     public function testUnknownTagKeyThrows(): void
     {
         $this->expectException(\Exception::class);
@@ -438,41 +579,110 @@ class ClickHouseTest extends TestCase
     }
 
     /**
-     * Round-trip a row that exercises every queryable dimension column to
-     * confirm the events table schema accepts and persists each one.
+     * @return array<string, array{0: array<string, string>}>
      */
-    public function testEventsSchemaPersistsAllNewColumns(): void
+    public static function eventDimensions(): array
+    {
+        return [
+            'request' => [[
+                'path' => '/v1/databases/:databaseId/collections/:collectionId/documents/:documentId',
+                'method' => 'PATCH',
+                'status' => '200',
+                'protocol' => 'https',
+                'hostname' => 'api.example.com',
+                'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'acceptLanguage' => 'fr-CA,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+                'queryKeys' => 'queries,search',
+            ]],
+            'resource' => [[
+                'service' => 'storage',
+                'resourceType' => 'bucket',
+                'resourceId' => 'photos',
+                'resourceInternalId' => '1042',
+                'ordinal' => '2',
+                'teamId' => 'team-alpha',
+                'teamInternalId' => '77',
+            ]],
+            'network' => [[
+                'ip' => '2001:db8::7334',
+                'ipReputation' => 'clean',
+                'isp' => 'Example Fibre',
+                'autonomousSystemNumber' => '64500',
+                'autonomousSystemOrganization' => 'EXAMPLE-FIBRE-AS',
+                'connectionType' => 'Cable/DSL',
+                'connectionUsageType' => 'residential',
+                'connectionOrganization' => 'Example Fibre Ltd',
+            ]],
+            'location' => [[
+                'country' => 'ca',
+                'region' => 'fra',
+                'continentCode' => 'NA',
+                'subdivisions' => 'Quebec',
+                'city' => 'Montréal',
+                'postalCode' => 'H2X 1Y4',
+                'latitude' => '45.5019',
+                'longitude' => '-73.5674',
+                'timeZone' => 'America/Toronto',
+                'weatherCode' => 'CAXX0301',
+            ]],
+            'client' => [[
+                'osCode' => 'IOS',
+                'osName' => 'iOS',
+                'osVersion' => '17.4.1',
+                'clientType' => 'browser',
+                'clientCode' => 'MF',
+                'clientName' => 'Mobile Safari',
+                'clientVersion' => '17.4',
+                'clientEngine' => 'WebKit',
+                'clientEngineVersion' => '605.1.15',
+                'deviceName' => 'smartphone',
+                'deviceBrand' => 'Apple',
+                'deviceModel' => 'iPhone 15 Pro',
+                'sdk' => 'Web',
+                'sdkVersion' => '16.0.2',
+            ]],
+        ];
+    }
+
+    /**
+     * @dataProvider eventDimensions
+     *
+     * @param array<string, string> $dimensions
+     */
+    public function testEventDimensionsRoundTrip(array $dimensions): void
     {
         $this->usage->purge('1', [], Usage::TYPE_EVENT);
 
-        $tags = [
-            'path' => '/v1/x', 'method' => 'GET', 'status' => '200',
-            'service' => 'storage', 'resourceType' => 'bucket',
-            'resourceId' => 'r1', 'resourceInternalId' => '42',
-            'teamId' => 't1', 'teamInternalId' => '7',
-            'country' => 'us', 'region' => 'fra', 'hostname' => 'h.example.com',
-            'osCode' => 'IOS', 'osName' => 'iOS', 'osVersion' => '17.4',
-            'clientType' => 'browser', 'clientCode' => 'CH',
-            'clientName' => 'Chrome', 'clientVersion' => '125',
-            'clientEngine' => 'Blink', 'clientEngineVersion' => '125',
-            'deviceName' => 'desktop', 'deviceBrand' => 'Apple',
-            'deviceModel' => 'MacBook',
-        ];
-
         $this->assertTrue($this->usage->addBatch([
-            ['tenant' => '1', 'metric' => 'schema-roundtrip', 'value' => 1, 'tags' => $tags],
+            ['tenant' => '1', 'metric' => 'dimension-roundtrip', 'value' => 1, 'tags' => $dimensions],
+            ['tenant' => '1', 'metric' => 'dimension-roundtrip', 'value' => 2, 'tags' => []],
         ], Usage::TYPE_EVENT));
 
-        // Filtering on each indexed dimension should be schema-valid.
-        foreach (['service', 'resourceInternalId', 'teamId', 'teamInternalId', 'region', 'hostname', 'osName', 'clientName', 'deviceName'] as $col) {
-            $value = $tags[$col];
-            $expected = $col === 'region' ? strtolower($value) : $value;
-            $rows = $this->usage->find('1', [
-                \Utopia\Query\Query::equal('metric', ['schema-roundtrip']),
-                \Utopia\Query\Query::equal($col, [$expected]),
-            ], Usage::TYPE_EVENT);
-            $this->assertGreaterThanOrEqual(1, count($rows), "Filter on {$col} returned no rows");
+        foreach ($dimensions as $dimension => $value) {
+            $this->assertSame(
+                [[1, $value]],
+                $this->readDimension($dimension, Query::equal($dimension, [$value])),
+                'Filtering on ' . $dimension . ' should return only the event that carries it, with the value as written'
+            );
+            $this->assertSame(
+                [[2, null]],
+                $this->readDimension($dimension, Query::isNull($dimension)),
+                $dimension . ' should be null only on the event that omits it'
+            );
         }
+    }
+
+    /**
+     * @return array<array{0: int|float|null, 1: mixed}>
+     */
+    private function readDimension(string $dimension, Query $filter): array
+    {
+        $events = $this->usage->find('1', [
+            Query::equal('metric', ['dimension-roundtrip']),
+            $filter,
+        ], Usage::TYPE_EVENT);
+
+        return array_map(fn (Metric $event): array => [$event->getValue(), $event->getAttribute($dimension)], $events);
     }
 
     /**

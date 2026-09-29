@@ -1936,7 +1936,7 @@ class ClickHouse extends SQL
             'timeZone', 'weatherCode',
             // sdk identity
             'sdk', 'sdkVersion',
-            // gauge replica ordinal
+            // replica ordinal (events and gauges)
             'ordinal',
         ];
 
