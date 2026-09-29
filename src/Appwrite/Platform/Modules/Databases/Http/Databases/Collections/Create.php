@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,7 +25,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -79,7 +79,7 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('attributeSecurity', false, new Boolean(true), 'Enables scoping a permission to a single attribute. A permission naming an attribute grants access to that attribute alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
@@ -114,6 +114,20 @@ class Create extends Action
          * @var Database $dbForDatabases
          */
         $dbForDatabases = $getDatabasesDB($database);
+
+        // A table's own permissions are kept as a document in the databases collection,
+        // which has no column security of its own -- so a column-scoped grant here has
+        // nowhere to be stored, whatever the table's flag says. Row-level grants are the
+        // ones that can name a column. Said here so the caller is told what is wrong
+        // rather than meeting it as a failure from the write.
+        foreach ($permissions ?? [] as $permission) {
+            if (!Permission::parse($permission)->isForAllColumns()) {
+                throw new Exception(
+                    Exception::GENERAL_ARGUMENT_INVALID,
+                    'Permission "' . $permission . '" is scoped to a column. Column-scoped permissions are set on rows, not on the table itself.'
+                );
+            }
+        }
 
         try {
             $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([

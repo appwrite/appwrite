@@ -102,9 +102,11 @@ final class TablesDBColumnPermissionsTest extends Scope
 
         $this->assertEquals(400, $table['headers']['status-code']);
 
-        // The reason matters as much as the status: the request is refused because the
-        // permission names a column, not because the payload was malformed.
-        $this->assertStringContainsString('Column "salary" does not exist', $table['body']['message']);
+        // The reason matters as much as the status. A table's own permissions live on a
+        // document in the databases collection, which has no column security, so a
+        // column-scoped grant belongs on a row rather than on the table.
+        $this->assertStringContainsString('scoped to a column', $table['body']['message']);
+        $this->assertStringContainsString('on rows, not on the table itself', $table['body']['message']);
     }
 
     public function testCreateRowWithAColumnScopedPermissionIsRejected(): void
@@ -123,7 +125,8 @@ final class TablesDBColumnPermissionsTest extends Scope
         );
 
         $this->assertEquals(400, $row['headers']['status-code']);
-        $this->assertStringContainsString('Column "salary" does not exist', $row['body']['message']);
+        // This table did not opt in, so the column half of the grant has no meaning here.
+        $this->assertStringContainsString('column security is not enabled', $row['body']['message']);
     }
 
     /**
@@ -226,5 +229,34 @@ final class TablesDBColumnPermissionsTest extends Scope
 
         $this->assertEquals(200, $read['headers']['status-code']);
         $this->assertSame([Permission::read(Role::users(), 'salary')], $read['body']['$permissions']);
+    }
+
+    /**
+     * The same refusal on the update path. Create rejects a column-scoped grant on a
+     * table that never opted in, with a 400 explaining why; update has to do the same,
+     * or the caller meets a failure from the write instead of an answer about their
+     * input.
+     */
+    public function testUpdateRowWithAColumnScopedPermissionIsRejected(): void
+    {
+        [$databaseId, $tableId] = $this->table();
+
+        $row = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows',
+            $this->headers(),
+            ['rowId' => ID::unique(), 'data' => ['name' => 'Bob', 'salary' => '100']]
+        );
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $updated = $this->client->call(
+            Client::METHOD_PATCH,
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row['body']['$id'],
+            $this->headers(),
+            ['permissions' => [Permission::read(Role::any(), 'salary')]]
+        );
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
+        $this->assertStringContainsString('column security is not enabled', $updated['body']['message']);
     }
 }

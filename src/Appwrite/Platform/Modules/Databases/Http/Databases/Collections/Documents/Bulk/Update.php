@@ -13,6 +13,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -22,7 +23,6 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -142,7 +142,7 @@ class Update extends Action
         }
 
         if (isset($data['$permissions'])) {
-            $validator = new Permissions();
+            $validator = new RoutePermissions();
             if (!$validator->isValid($data['$permissions'])) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
             }
