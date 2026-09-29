@@ -161,10 +161,11 @@ class Update extends Action
         $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
         // One lock per user, so the photo being replaced is always the one whose file is removed
-        $update = function () use ($dbForProject, $deviceForFiles, $userId, $photoId, $size): Document {
+        $updated = null;
+        $update = function () use ($dbForProject, $deviceForFiles, $userId, $photoId, $size, &$updated): void {
             $previous = $dbForProject->getDocument('users', $userId)->getAttribute('photoId', '');
 
-            $user = $dbForProject->updateDocument('users', $userId, new Document([
+            $updated = $dbForProject->updateDocument('users', $userId, new Document([
                 'photoId' => $photoId,
                 'photoSize' => $size,
             ]));
@@ -181,24 +182,23 @@ class Update extends Action
                     Console::warning('Failed to remove previous photo ' . $previous . ': ' . $th->getMessage());
                 }
             }
-
-            return $user;
         };
 
         try {
-            $user = $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed($redis, 'photos:' . $project->getId() . ':' . $userId, self::LOCK_TTL))->withLock($update, timeout: 10.0));
-        } catch (Contention) {
-            $deviceForFiles->delete($path);
-
-            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+            $pools->get('lock')->use(fn (\Redis $redis) => (new Distributed($redis, 'photos:' . $project->getId() . ':' . $userId, self::LOCK_TTL))->withLock($update, timeout: 10.0));
         } catch (\Throwable $th) {
-            $deviceForFiles->delete($path);
+            // Once the user points at the new photo it is live, so only an earlier failure removes its file
+            if ($updated === null) {
+                $deviceForFiles->delete($path);
 
-            throw $th;
+                throw $th instanceof Contention ? new Exception(Exception::GENERAL_RESOURCE_LOCKED) : $th;
+            }
+
+            Console::warning('Photo lock failed after the photo was updated: ' . $th->getMessage());
         }
 
         $queueForEvents->setParam('userId', $userId);
 
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response->dynamic($updated, Response::MODEL_ACCOUNT);
     }
 }
