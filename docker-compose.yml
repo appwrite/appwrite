@@ -1661,6 +1661,11 @@ services:
     image: appwrite/browser:0.3.4
     networks:
       - browser
+    # Public resolvers only, so the browser cannot resolve internal service
+    # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
