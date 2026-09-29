@@ -30,12 +30,20 @@ final class PasskeysCustomClientTest extends Scope
         $methods = \array_column($response['body']['authMethods'], 'enabled', '$id');
         $this->assertFalse($methods['passkey']);
 
+        // SDKs built for older formats reject unknown auth method IDs
+        $legacy = $this->client->call(Client::METHOD_GET, '/project', \array_merge($this->getServerHeaders($project), [
+            'x-appwrite-response-format' => '2.3.0',
+        ]));
+        $this->assertNotContains('passkey', \array_column($legacy['body']['authMethods'], '$id'));
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
         $this->assertSame(501, $response['headers']['status-code']);
         $this->assertSame('user_auth_method_unsupported', $response['body']['type']);
 
         // Enabled but unconfigured still fails closed
         $this->enablePasskeys($project, true);
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
+        $this->assertTrue($policy['body']['enabled']);
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
         $this->assertSame(501, $response['headers']['status-code']);
     }

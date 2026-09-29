@@ -17,7 +17,6 @@ trait AuthMethodsBase
         'invites'        => 'authInvites',
         'jwt'            => 'authJWT',
         'phone'          => 'authPhone',
-        'passkey'        => 'authPasskey',
     ];
 
     // Success flow

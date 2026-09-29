@@ -15,6 +15,12 @@ class PolicyPasskey extends PolicyBase
         parent::__construct();
 
         $this
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the passkey auth method is enabled. Toggle it with the update auth method endpoint.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('rpId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Relying party ID passkeys are bound to. Empty until configured.',
