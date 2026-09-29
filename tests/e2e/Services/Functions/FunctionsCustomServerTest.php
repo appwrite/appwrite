@@ -2191,17 +2191,23 @@ final class FunctionsCustomServerTest extends Scope
             $async = $this->createExecution($functionId, ['async' => true]);
             $this->assertEquals(202, $async['headers']['status-code']);
             $asyncId = $async['body']['$id'];
-            $queuedAt = $async['body']['$createdAt'];
+            // The 202 response carries $createdAt in the database format
+            // (2026-09-29 12:46:25.848) while reads return ISO 8601, so bring
+            // every timestamp to one format before comparing them as strings.
+            $iso = fn (string $value) => (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d\TH:i:s.vP');
+            $queuedAt = $iso($async['body']['$createdAt']);
 
             // Both executions reach the store through the executions queue,
             // so wait until each is stored in its final state.
             $createdAt = [];
-            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, &$createdAt) {
+            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, $iso, &$createdAt) {
                 foreach ([$syncId, $asyncId] as $executionId) {
                     $execution = $this->getExecution($functionId, $executionId);
                     $this->assertEquals(200, $execution['headers']['status-code']);
                     $this->assertEquals('completed', $execution['body']['status']);
-                    $createdAt[$executionId] = $execution['body']['$createdAt'];
+                    $createdAt[$executionId] = $iso($execution['body']['$createdAt']);
                 }
             }, 60000, 500);
             $syncCreatedAt = $createdAt[$syncId];
@@ -2223,20 +2229,7 @@ final class FunctionsCustomServerTest extends Scope
                 Query::lessThanEqual('$createdAt', \max($syncCreatedAt, $finishedAt))->toString(),
             ]);
             $executions = $byId($both);
-            $describe = fn (array $response) => \json_encode(\array_map(
-                fn (array $execution) => [$execution['$id'], $execution['status'], $execution['$createdAt'], $execution['trigger']],
-                $response['body']['executions'],
-            ));
-            $this->assertEquals(2, $both['body']['total'], \sprintf(
-                'window [%s, %s] (sync %s, queued %s, finished %s) returned %s; all executions: %s',
-                \min($syncCreatedAt, $queuedAt),
-                \max($syncCreatedAt, $finishedAt),
-                $syncCreatedAt,
-                $queuedAt,
-                $finishedAt,
-                $describe($both),
-                $describe($this->listExecutions($functionId)),
-            ));
+            $this->assertEquals(2, $both['body']['total']);
             $this->assertEquals('completed', $executions[$syncId]['status']);
             $this->assertEquals('completed', $executions[$asyncId]['status']);
 
