@@ -51,6 +51,10 @@ $container->set('pools', function ($register) {
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
+if (\is_file(APP_READINESS_MARKER)) {
+    \unlink(APP_READINESS_MARKER);
+}
+
 $swoole = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
