@@ -1,6 +1,7 @@
 export * from './catalog'
 export * from './floating-card-layout'
 export * from './debug-preview'
+export * from './firewall-promo-path'
 export * from './guest-dismissed-banners'
 export * from './init-recap-promo-path'
 export * from './native-oauth-promo-path'

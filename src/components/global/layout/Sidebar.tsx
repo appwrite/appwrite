@@ -19,6 +19,7 @@ import {
   useSidebarCollapsed,
   useProject,
   useOrganizationScopes,
+  useAccountConnectedApps,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -27,6 +28,7 @@ import {
   canSeeProjects,
   canShowProjectSettings,
   canShowGetStartedSection,
+  canShowAgentMcpConnectCta,
 } from '@/lib/console-access-checks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -72,12 +74,15 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
+import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 
 interface NavItem {
   id: string
   label: string
-  icon: LucideIcon | 'imagine'
+  icon: LucideIcon | 'imagine' | 'mcp'
   path: string
   comingSoon?: boolean
 }
@@ -98,6 +103,7 @@ interface SidebarCopy {
   items: {
     overview: string
     apps: string
+    agents: string
     apiKeys: string
     explorer: string
     auth: string
@@ -136,13 +142,19 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
     id: 'overview',
     label: sidebarCopy.items.overview,
     icon: LayoutDashboard,
-    path: `/projects/${projectId}`,
+    path: `/projects/${projectId}/overview`,
   }
 
   const navCategories: NavCategory[] = [
     {
       label: sidebarCopy.sections.connect,
       items: [
+        {
+          id: 'agents',
+          label: sidebarCopy.items.agents,
+          icon: 'mcp',
+          path: `/projects/${projectId}/agents`,
+        },
         {
           id: 'apps',
           label: sidebarCopy.items.apps,
@@ -306,6 +318,7 @@ export function ConsoleSidebar({
 }: ConsoleSidebarProps) {
   const { account } = useAuth()
   const { catalog } = useI18n()
+  const t = useT()
   const sidebarCopy = catalog.app.sidebar
   const accountWithPrefs = account as
     | { prefs?: Record<string, unknown> }
@@ -319,6 +332,7 @@ export function ConsoleSidebar({
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
+  const { showProjectAgents } = useDebugOverrides()
 
   const { overviewItem, settingsItem } = getNavItems(projectId, sidebarCopy)
 
@@ -338,12 +352,27 @@ export function ConsoleSidebar({
           if (item.id === 'firewall')
             return isCloud && canSeeProjectNavItem(access, features, item.id)
           if (item.id === 'analytics')
-            return features.analytics && canSeeProjectNavItem(access, features, item.id)
+            return (
+              features.analytics &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
+          if (item.id === 'agents')
+            return (
+              showProjectAgents && canShowAgentMcpConnectCta(access, features)
+            )
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features, access, sidebarCopy, isCloud])
+  }, [
+    projectId,
+    isDebugModeOpen,
+    features,
+    access,
+    sidebarCopy,
+    isCloud,
+    showProjectAgents,
+  ])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).
@@ -352,6 +381,11 @@ export function ConsoleSidebar({
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
+  const showAgentNav = canShowAgentMcpConnectCta(access, features)
+  const { data: connectedApps } = useAccountConnectedApps({
+    enabled: showAgentNav && !!account,
+  })
+  const agentMcpConnected = hasAccountMcpAgentConnected(connectedApps?.groups)
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
 
@@ -403,6 +437,7 @@ export function ConsoleSidebar({
   const renderNavItem = (item: NavItem, isMobile = false) => {
     const isActive = activeSection === item.id
     const isImagineIcon = item.icon === 'imagine'
+    const isMcpIcon = item.icon === 'mcp'
     const navAnalytics = getSidebarNavAnalyticsAction(item.id)
     const showLabel = !collapsed || isMobile
 
@@ -419,6 +454,29 @@ export function ConsoleSidebar({
               isMobile && 'h-[18px] w-[18px]',
             )}
           />
+        )
+      }
+      if (isMcpIcon) {
+        const statusLabel = agentMcpConnected
+          ? t('Connected')
+          : t('Not connected')
+        return (
+          <span className="relative inline-flex shrink-0">
+            <McpIcon
+              variant="nav"
+              className={cn('h-4 w-4', isMobile && 'h-[18px] w-[18px]')}
+            />
+            <span
+              className={cn(
+                'absolute -end-0.5 -bottom-0.5 h-1.5 w-1.5 rounded-full ring-2 ring-background',
+                agentMcpConnected
+                  ? 'bg-green-500'
+                  : 'bg-red-500',
+              )}
+              aria-hidden
+            />
+            <span className="sr-only">{statusLabel}</span>
+          </span>
         )
       }
       const Icon = item.icon as LucideIcon
@@ -505,7 +563,22 @@ export function ConsoleSidebar({
         <Tooltip key={item.id} delayDuration={0}>
           <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            <p>{item.label}</p>
+            {item.id === 'agents' ? (
+              <p>
+                {item.label}{' '}
+                <span
+                  className={
+                    agentMcpConnected
+                      ? 'text-green-400 dark:text-green-700'
+                      : 'text-red-400 dark:text-red-700'
+                  }
+                >
+                  ({agentMcpConnected ? t('Connected') : t('Not connected')})
+                </span>
+              </p>
+            ) : (
+              <p>{item.label}</p>
+            )}
           </TooltipContent>
         </Tooltip>
       )

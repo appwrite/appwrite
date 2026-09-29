@@ -1,5 +1,4 @@
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -19,19 +18,7 @@ import {
   resolvePreferredOsTabId,
 } from '@/lib/user-os'
 import { cn } from '@/lib/utils'
-
-type TabsContextValue = {
-  activeId: string
-  setActiveId: (id: string) => void
-  registerTab: (id: string, title: string) => void
-  tabs: Array<{ id: string; title: string }>
-}
-
-const TabsContext = createContext<TabsContextValue | null>(null)
-
-export function useTabsContext() {
-  return useContext(TabsContext)
-}
+import { TabsContext } from './tabs-context'
 
 export function Tabs({
   children,

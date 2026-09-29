@@ -17,7 +17,9 @@ export const ANALYTICS_ACTIONS = {
   'sidebar-collapse': 'Sidebar Collapse Clicked',
   'database-admin-nav-collapse': 'Database Admin Nav Collapse Clicked',
   'connect-project': 'Connect Project Clicked',
+  'connect-agent-mcp-cta': 'Connect Agent MCP CTA Clicked',
   'copy-connect-sdk-prompt': 'Connect SDK Prompt Copied',
+  'copy-connect-agent-mcp-prompt': 'Connect Agent MCP Prompt Copied',
   'header-create-menu': 'Header Create Menu Clicked',
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
@@ -140,6 +142,7 @@ export const ANALYTICS_ACTIONS = {
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
   'nav-sidebar-apps': 'Sidebar Apps Clicked',
+  'nav-sidebar-agents': 'Sidebar Agents Clicked',
   'nav-sidebar-api-keys': 'Sidebar API Keys Clicked',
   'nav-sidebar-explorer': 'Sidebar Explorer Clicked',
   'nav-sidebar-auth': 'Sidebar Auth Clicked',
@@ -224,6 +227,12 @@ export const ANALYTICS_ACTIONS = {
     'Native OAuth Promo Banner Open Settings Clicked',
   'native-oauth-promo-banner-learn-more':
     'Native OAuth Promo Banner Learn More Clicked',
+  'firewall-promo-banner-learn-more':
+    'Firewall Promo Banner Learn More Clicked',
+  'firewall-promo-banner-open-firewall':
+    'Firewall Promo Banner Open Firewall Clicked',
+  'firewall-promo-banner-skip': 'Firewall Promo Banner Skip Clicked',
+  'firewall-promo-banner-sound': 'Firewall Promo Banner Sound Toggled',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
@@ -265,6 +274,7 @@ export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS
 const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   overview: 'nav-sidebar-overview',
   apps: 'nav-sidebar-apps',
+  agents: 'nav-sidebar-agents',
   'api-keys': 'nav-sidebar-api-keys',
   explorer: 'nav-sidebar-explorer',
   auth: 'nav-sidebar-auth',

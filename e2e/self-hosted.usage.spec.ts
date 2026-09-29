@@ -110,6 +110,8 @@ test.describe('self-hosted Usage hard navigation', () => {
     await page.goto(`/projects/${projectId}/usage/requests`, {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/?$`))
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${projectId}/overview/?$`),
+    )
   })
 })

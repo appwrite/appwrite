@@ -40,6 +40,8 @@ export interface MCPSectionProps {
   projectName: string
   /** When true, render without the outer card (e.g. inside a modal tab) */
   compact?: boolean
+  /** Render both steps, or only install / try-it. */
+  parts?: 'all' | 'install' | 'try'
 }
 
 type McpToolId =
@@ -187,6 +189,7 @@ export function MCPSection({
   projectId,
   projectName,
   compact = false,
+  parts = 'all',
 }: MCPSectionProps) {
   const t = useT()
   const { isSelfHosted } = useConsoleProfile()
@@ -275,9 +278,11 @@ export function MCPSection({
 
   const installContent = (
     <div className="space-y-2">
-      <h4 className="text-[13px] font-semibold text-foreground">
-        {t('1. Install')}
-      </h4>
+      {parts === 'all' ? (
+        <h4 className="text-[13px] font-semibold text-foreground">
+          {t('1. Install')}
+        </h4>
+      ) : null}
       <ConnectCodeExample
         code={selectedTool.code}
         language={selectedTool.language}
@@ -313,39 +318,58 @@ export function MCPSection({
   )
 
   const tryItContent = (
-    <div className="space-y-4">
-      <h4 className="text-[13px] font-semibold text-foreground">
-        {t('2. Try it')}
+    <div
+      className={
+        parts === 'try' ? 'space-y-4 text-center' : 'space-y-4'
+      }
+    >
+      <h4
+        className={
+          parts === 'try'
+            ? 'text-[15px] font-semibold text-foreground'
+            : 'text-[13px] font-semibold text-foreground'
+        }
+      >
+        {parts === 'try' ? t('Try it') : t('2. Try it')}
       </h4>
-      <p className="text-[13px] text-muted-foreground leading-relaxed">
+      <p
+        className={
+          parts === 'try'
+            ? 'mx-auto max-w-xl text-[13px] leading-relaxed text-muted-foreground'
+            : 'text-[13px] text-muted-foreground leading-relaxed'
+        }
+      >
         {t(
           'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.',
         )}
       </p>
-      <ul className="space-y-2">
+      <ul className={parts === 'try' ? 'space-y-2 text-start' : 'space-y-2'}>
         {MCP_TRY_IT_PROMPT_TEMPLATES.map((template, index) => {
           const prompt = tryItPrompts[index]!
+          const copied = copiedPrompt === prompt
           return (
-            <li
-              key={template}
-              className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
-            >
-              <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-                {t(template).replaceAll('{projectName}', projectName)}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+            <li key={template}>
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2 text-start transition-colors hover:bg-muted/35"
                 onClick={() => handleCopyPrompt(prompt)}
+                aria-label={`${t('Copy')}: ${t(template).replaceAll('{projectName}', projectName)}`}
               >
-                {copiedPrompt === prompt ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {t('Copy')}
-              </Button>
+                <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+                  {t(template).replaceAll('{projectName}', projectName)}
+                </span>
+                <span
+                  className="inline-flex h-7 shrink-0 items-center gap-1 px-3 text-[12px] font-medium text-muted-foreground"
+                  aria-hidden
+                >
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  {t('Copy')}
+                </span>
+              </button>
             </li>
           )
         })}
@@ -353,18 +377,21 @@ export function MCPSection({
     </div>
   )
 
+  const showInstall = parts !== 'try'
+  const showTry = parts !== 'install'
+
   const mainContent = (
     <div className="space-y-6">
-      {installContent}
-      <div className="border-t border-border" />
-      {tryItContent}
+      {showInstall ? installContent : null}
+      {showInstall && showTry ? <div className="border-t border-border" /> : null}
+      {showTry ? tryItContent : null}
     </div>
   )
 
   if (compact) {
     return (
-      <div className="pt-4">
-        {description}
+      <div className={parts === 'all' ? 'pt-4' : undefined}>
+        {showInstall ? description : null}
         {mainContent}
       </div>
     )

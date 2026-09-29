@@ -217,6 +217,7 @@ export const heCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: 'לוח בקרה',
         apps: 'אפליקציות',
+        agents: 'Agents',
         apiKeys: 'מפתחות API',
         explorer: 'אקספלורר',
         auth: 'אימות',

@@ -91,7 +91,7 @@ export function ProjectContextMenu({
 
   const navigateToTab = (
     path:
-      | '/projects/$projectId'
+      | '/projects/$projectId/overview'
       | '/projects/$projectId/auth'
       | '/projects/$projectId/databases'
       | '/projects/$projectId/storage/$bucketId'
@@ -148,7 +148,7 @@ export function ProjectContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem
             onSelect={() => {
-              navigateToTab('/projects/$projectId')
+              navigateToTab('/projects/$projectId/overview')
             }}
           >
             <ContextMenuIcon icon={LayoutDashboard} />

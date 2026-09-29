@@ -445,7 +445,6 @@ export const heSitesDictionary: Record<string, string> = {
 
   // Create wizard: manual upload
   'Only .tar.gz files are supported': 'נתמכים רק קובצי .tar.gz',
-  'File size must be less than 100MB': 'גודל הקובץ חייב להיות קטן מ-100MB',
   'Please fill in all required fields and upload a file':
     'מלאו את כל שדות החובה והעלו קובץ',
   'Please enter a valid domain': 'הזינו דומיין תקין',
@@ -457,7 +456,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Upload a .tar.gz file containing your site source code':
     'העלו קובץ .tar.gz המכיל את קוד המקור של האתר שלכם',
   'Drop your file here or click to browse': 'גררו את הקובץ לכאן או לחצו לעיון',
-  'Only .tar.gz files up to 100MB': 'רק קובצי .tar.gz עד 100MB',
+  'Only .tar.gz files up to': 'רק קובצי .tar.gz עד',
+  'File is too large. Maximum size:': 'הקובץ גדול מדי. הגודל המרבי:',
   'Site name': 'שם האתר',
   'Site ID': 'מזהה אתר',
   'My awesome site': 'האתר המדהים שלי',

@@ -291,6 +291,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'llms-full.txt' ||
     normalized === 'docs/llms.txt' ||
     normalized === 'docs.md' ||
+    normalized === 'setup.md' ||
     normalized === 'blog.md' ||
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||

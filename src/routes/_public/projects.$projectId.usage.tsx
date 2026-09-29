@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/usage')({
       !getActiveProfileFeatures().usageStats
     ) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId: params.projectId },
         replace: true,
       })

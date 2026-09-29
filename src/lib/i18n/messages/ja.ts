@@ -218,6 +218,7 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: '概要',
         apps: 'アプリ',
+        agents: 'Agents',
         apiKeys: 'API キー',
         explorer: 'Explorer',
         auth: '認証',

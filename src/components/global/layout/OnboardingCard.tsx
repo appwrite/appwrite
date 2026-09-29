@@ -91,7 +91,7 @@ export function OnboardingCard({
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
             <p>{onboardingCopy.getStarted}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-xs tabular-nums text-background/85">
               {isPending
                 ? onboardingCopy.loading
                 : `${completedSteps}/${totalSteps} ${onboardingCopy.completed}`}

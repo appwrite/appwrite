@@ -17,6 +17,19 @@ const STORAGE_KEYS = {
   posted: 'utmSourcePosted',
 } as const
 
+/** Query keys Plausible uses for campaign / click-id attribution. */
+export const ATTRIBUTION_QUERY_PARAM_NAMES = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+  'ref',
+  'gclid',
+  'fbclid',
+  'msclkid',
+] as const
+
 export type AcquisitionSource = {
   ref: string | null
   referrer: string | null
@@ -150,6 +163,44 @@ export function getUtmSourceForLink(
   })
 
   return params.toString()
+}
+
+export function pickAttributionSearchParams(
+  params: URLSearchParams,
+): URLSearchParams {
+  const picked = new URLSearchParams()
+  for (const key of ATTRIBUTION_QUERY_PARAM_NAMES) {
+    const value = params.get(key)?.trim()
+    if (value) picked.set(key, value)
+  }
+  return picked
+}
+
+/**
+ * Attribution query string for Plausible pageviews on marketing/docs.
+ * Uses the current URL first, then session-stored UTMs so SPA navigations
+ * keep campaign tags after the address bar drops them.
+ */
+export function getAttributionSearchForPlausible(
+  urlSearch: string,
+  storage: Pick<Storage, 'getItem'> | undefined = getSessionStorage(),
+): string {
+  const merged = pickAttributionSearchParams(new URLSearchParams(urlSearch))
+
+  if (storage) {
+    const storedUtms = new URLSearchParams(getUtmSourceForLink(storage))
+    for (const [key, value] of storedUtms) {
+      if (!merged.has(key)) merged.set(key, value)
+    }
+
+    const referral = storage.getItem(STORAGE_KEYS.utmReferral)
+    if (referral && !looksLikeHttpUrl(referral) && !merged.has('ref')) {
+      merged.set('ref', referral)
+    }
+  }
+
+  const serialized = merged.toString()
+  return serialized ? `?${serialized}` : ''
 }
 
 function getSessionStorage(): Storage | undefined {
