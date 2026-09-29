@@ -3419,8 +3419,7 @@ Http::post('/v1/account/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
                 'jwt' => $jwt->encode([
-                    // In admin mode the session is a console session, whatever project is being managed.
-                    'projectId' => $mode === APP_MODE_ADMIN ? 'console' : $project->getId(),
+                    'projectId' => $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $sessionId,
                 ])
