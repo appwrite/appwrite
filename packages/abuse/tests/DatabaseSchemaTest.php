@@ -4,103 +4,131 @@ declare(strict_types=1);
 
 namespace Utopia\Abuse\Tests;
 
+use Override;
 use PHPUnit\Framework\TestCase;
+use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
-use Utopia\Database\Attribute;
 use Utopia\Database\Database;
-use Utopia\Database\Index;
-use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\Schema\IndexType;
-use Utopia\Query\Schema\Order;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 
 final class DatabaseSchemaTest extends TestCase
 {
-    public function testAttributesDescribeTheAbuseCollection(): void
+    private const int SECONDS = 3600;
+
+    private Database $database;
+
+    #[Override]
+    protected function setUp(): void
     {
-        $this->assertSame(
-            [
-                ['key' => 'key', 'type' => ColumnType::String, 'size' => Database::LENGTH_KEY, 'required' => true, 'default' => null, 'signed' => true, 'array' => false, 'format' => null, 'filters' => []],
-                ['key' => 'time', 'type' => ColumnType::Datetime, 'size' => 0, 'required' => true, 'default' => null, 'signed' => false, 'array' => false, 'format' => null, 'filters' => ['datetime']],
-                ['key' => 'count', 'type' => ColumnType::Integer, 'size' => 11, 'required' => true, 'default' => null, 'signed' => false, 'array' => false, 'format' => null, 'filters' => []],
-            ],
-            \array_map(self::describeAttribute(...), TimeLimit\Database::attributes()),
-        );
+        $this->database = new Database(new Memory(), new Cache(new NoCache()));
+        $this->database->setDatabase('abuse')->setNamespace('schema');
+        $this->database->create();
+
+        $this->adapter('setup', 1)->setup();
     }
 
-    public function testIndexesDescribeTheAbuseCollection(): void
+    public function testCountsHitsPerKeyAcrossRequests(): void
     {
-        $this->assertSame(
-            [
-                ['key' => 'unique1', 'type' => IndexType::Unique, 'attributes' => ['key', 'time'], 'lengths' => [], 'orders' => []],
-                ['key' => 'index2', 'type' => IndexType::Key, 'attributes' => ['time'], 'lengths' => [], 'orders' => []],
-            ],
-            \array_map(self::describeIndex(...), TimeLimit\Database::indexes()),
-        );
+        $this->assertFalse($this->check('login', 2), 'first hit is within the limit');
+        $this->assertFalse($this->check('login', 2), 'second hit is within the limit');
+        $this->assertTrue($this->check('login', 2), 'third hit exceeds the limit');
+        $this->assertTrue($this->check('login', 2), 'the window stays exhausted');
+
+        $this->assertFalse($this->check('signup', 2), 'another key has its own count');
     }
 
-    public function testSetupCreatesTheCollectionTheAccessorsDescribe(): void
+    public function testEarlierWindowDoesNotCountTowardsTheCurrentOne(): void
     {
-        $database = new Database(new Memory(), new Cache(new NoCache()));
-        $database->setDatabase('abuse')->setNamespace('schema');
-        $database->create();
+        $this->assertFalse($this->check('login', 2));
+        $window = $this->window('login');
+        $this->store('login', $window - self::SECONDS, 2);
 
-        new TimeLimit\Database('', 1, 1, $database)->setup();
-
-        $collection = $database->getCollection(TimeLimit\Database::COLLECTION);
-
-        $this->assertSame(
-            \array_map(self::describeAttribute(...), TimeLimit\Database::attributes()),
-            \array_map(self::describeAttribute(...), $collection->attributes),
-        );
-        $this->assertSame(
-            \array_map(self::describeIndex(...), TimeLimit\Database::indexes()),
-            \array_map(self::describeIndex(...), $collection->indexes),
-        );
+        $this->assertFalse($this->check('login', 2), 'the exhausted earlier window is not counted');
+        $this->assertTrue($this->check('login', 2), 'the current window reaches its own limit');
     }
 
-    public function testChangingReturnedDefinitionsLeavesTheSchemaIntact(): void
+    public function testOneRowPerKeyAndWindow(): void
     {
-        $attributes = TimeLimit\Database::attributes();
-        $attributes[0]->size = 1;
-        $indexes = TimeLimit\Database::indexes();
-        $indexes[0]->attributes = ['key'];
+        $this->assertFalse($this->check('login', 5));
+        $window = $this->window('login');
 
-        $this->assertSame(Database::LENGTH_KEY, TimeLimit\Database::attributes()[0]->size);
-        $this->assertSame(['key', 'time'], TimeLimit\Database::indexes()[0]->attributes);
+        $this->store('login', $window - self::SECONDS, 1);
+        $this->store('signup', $window, 1);
+
+        $this->expectException(Duplicate::class);
+        $this->store('login', $window, 1);
+    }
+
+    public function testCleanupRemovesOnlyEarlierWindows(): void
+    {
+        $this->assertFalse($this->check('login', 5));
+        $window = $this->window('login');
+        $this->store('login', $window - self::SECONDS, 3);
+
+        new Abuse($this->adapter('login', 5))->cleanup($window);
+
+        $this->assertSame([$window], $this->windows('login'), 'only the current window is left');
+    }
+
+    public function testSetupAgainKeepsExistingCounts(): void
+    {
+        $this->assertFalse($this->check('login', 1));
+
+        $this->adapter('login', 1)->setup();
+
+        $this->assertTrue($this->check('login', 1), 'the count survives a second setup');
+    }
+
+    private function adapter(string $key, int $limit): TimeLimit\Database
+    {
+        return new TimeLimit\Database($key, $limit, self::SECONDS, $this->database);
+    }
+
+    private function check(string $key, int $limit): bool
+    {
+        return new Abuse($this->adapter($key, $limit))->check();
+    }
+
+    private function window(string $key): int
+    {
+        $windows = $this->windows($key);
+        $this->assertCount(1, $windows, 'one row for the key in the current window');
+
+        return $windows[0];
     }
 
     /**
-     * @return array{key: string, type: ColumnType, size: int, required: bool, default: mixed, signed: bool, array: bool, format: string|null, filters: array<string>}
+     * @return list<int>
      */
-    private static function describeAttribute(Attribute $attribute): array
+    private function windows(string $key): array
     {
-        return [
-            'key' => $attribute->key,
-            'type' => $attribute->type,
-            'size' => $attribute->size,
-            'required' => $attribute->required,
-            'default' => $attribute->default,
-            'signed' => $attribute->signed,
-            'array' => $attribute->array,
-            'format' => $attribute->format,
-            'filters' => $attribute->filters,
-        ];
+        $windows = [];
+        foreach (new Abuse($this->adapter($key, 1))->getLogs() as $log) {
+            $time = $log->getAttribute('time');
+            if ($log->getAttribute('key') === $key && \is_string($time)) {
+                $windows[] = new \DateTime($time)->getTimestamp();
+            }
+        }
+        \sort($windows);
+
+        return $windows;
     }
 
-    /**
-     * @return array{key: string, type: IndexType, attributes: array<string>, lengths: array<int|null>, orders: array<Order|null>}
-     */
-    private static function describeIndex(Index $index): array
+    private function store(string $key, int $timestamp, int $count): void
     {
-        return [
-            'key' => $index->key,
-            'type' => $index->type,
-            'attributes' => $index->attributes,
-            'lengths' => $index->lengths,
-            'orders' => $index->orders,
-        ];
+        $this->database->getAuthorization()->skip(fn (): Document => $this->database->createDocument(
+            TimeLimit\Database::COLLECTION,
+            new Document(['$permissions' => [], 'key' => $key, 'time' => $this->format($timestamp), 'count' => $count]),
+        ));
+    }
+
+    private function format(int $timestamp): string
+    {
+        return DateTime::format(new \DateTime()->setTimestamp($timestamp));
     }
 }
