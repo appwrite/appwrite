@@ -4307,11 +4307,14 @@ final class RealtimeCustomClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(204, $response['headers']['status-code']);
 
-            $this->receiveUntilEvent(
+            $event = $this->receiveUntilEvent(
                 $client,
                 fn (array $message): bool => \in_array($channel . '.update', $message['data']['events'] ?? [], true),
                 timeoutMs: 10000
             );
+
+            $this->assertEquals($ids[$survivor], $event['data']['payload']['$id']);
+            $this->assertArrayNotHasKey($survivor === 'parent' ? $key : $twoWayKey, $event['data']['payload']);
 
             $client->close();
         }
