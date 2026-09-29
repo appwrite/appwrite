@@ -43,6 +43,8 @@ class Update extends Action
         'image/webp',
     ];
 
+    private const MAX_UPDATE_ATTEMPTS = 5;
+
     public static function getName(): string
     {
         return 'updatePhoto';
@@ -154,6 +156,7 @@ class Update extends Action
 
         // A concurrent upload may have replaced the photo since it was read, so the replaced photo is re-read until the update wins
         $current = $user;
+        $attempts = 0;
 
         while (true) {
             $previous = $current->getAttribute('photoId', '');
@@ -173,6 +176,12 @@ class Update extends Action
 
                 break;
             } catch (ConflictException) {
+                if (++$attempts >= self::MAX_UPDATE_ATTEMPTS) {
+                    $deviceForFiles->delete($path);
+
+                    throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, 'Photo was changed by another request, please try again');
+                }
+
                 $current = $dbForProject->getDocument('users', $userId);
             } catch (\Throwable $th) {
                 $deviceForFiles->delete($path);

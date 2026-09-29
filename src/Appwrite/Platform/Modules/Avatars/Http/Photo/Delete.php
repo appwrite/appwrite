@@ -22,6 +22,8 @@ class Delete extends Action
 {
     use HTTP;
 
+    private const MAX_UPDATE_ATTEMPTS = 5;
+
     public static function getName(): string
     {
         return 'deletePhoto';
@@ -96,6 +98,7 @@ class Delete extends Action
 
         // A concurrent upload may have replaced the photo since it was read, so it's only cleared while it's still this one
         $current = $user;
+        $attempts = 0;
 
         while ($current->getAttribute('photoId', '') === $photoId) {
             try {
@@ -109,6 +112,10 @@ class Delete extends Action
 
                 break;
             } catch (ConflictException) {
+                if (++$attempts >= self::MAX_UPDATE_ATTEMPTS) {
+                    throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, 'Photo was changed by another request, please try again');
+                }
+
                 $current = $dbForProject->getDocument('users', $user->getId());
             }
         }
