@@ -491,6 +491,12 @@ class S3 extends Device
             return true;
         }
 
+        try {
+            $previous = $this->unquote($this->getInfo($target)['etag'] ?? '');
+        } catch (NotFoundException) {
+            $previous = null;
+        }
+
         $uploadId = $this->createMultipartUpload($target, $info['content-type'] ?? '');
         try {
             $parts = [];
@@ -518,16 +524,15 @@ class S3 extends Device
             try {
                 $this->completeMultipartUpload($target, $uploadId, $parts);
             } catch (NotFoundException $e) {
-                // A replayed completion finds the upload gone once the first one landed;
-                // only an ETag built from these parts proves the target is this copy.
-                $digests = implode('', array_map(fn (string $etag): string => (string) hex2bin($this->unquote($etag)), $parts));
+                // A replayed completion finds the upload gone once the first one landed,
+                // which shows as a target that changed since the copy began.
                 try {
-                    $landed = $this->unquote($this->getInfo($target)['etag'] ?? '') === md5($digests) . '-' . \count($parts);
+                    $current = $this->getInfo($target);
                 } catch (NotFoundException) {
-                    $landed = false;
+                    throw $e;
                 }
 
-                if ($landed) {
+                if ($this->unquote($current['etag'] ?? '') !== $previous && (int) ($current['content-length'] ?? -1) === $size) {
                     return true;
                 }
 

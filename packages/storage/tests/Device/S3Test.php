@@ -550,6 +550,7 @@ final class S3Test extends TestCase
         $this->assertTrue($s3->copy('/root/a.bin', '/root/b.bin'));
         $this->assertSame([
             's3:info',
+            's3:info',
             's3:createMultipartUpload',
             's3:uploadPartCopy',
             's3:uploadPartCopy',
@@ -561,18 +562,21 @@ final class S3Test extends TestCase
         $this->assertStringContainsString('etag-2', $s3->completedBody);
     }
 
+    private const string LARGE = '6442450944';
+
     /**
      * @param  array<ResponseInterface|ClientExceptionInterface>  $afterCompletion
      */
-    private function largeCopy(array $afterCompletion): ScriptedClient
+    private function largeCopy(ResponseInterface $target, array $afterCompletion): ScriptedClient
     {
         $xml = static fn (string $body): Response => new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
 
         return new ScriptedClient([
-            new Response(200)->withHeader('content-length', (string) (6 * 1024 * 1024 * 1024)),
+            new Response(200)->withHeader('content-length', self::LARGE),
+            $target,
             $xml('<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'),
-            $xml('<CopyPartResult><ETag>"' . md5('part-1') . '"</ETag></CopyPartResult>'),
-            $xml('<CopyPartResult><ETag>"' . md5('part-2') . '"</ETag></CopyPartResult>'),
+            $xml('<CopyPartResult><ETag>"etag-1"</ETag></CopyPartResult>'),
+            $xml('<CopyPartResult><ETag>"etag-2"</ETag></CopyPartResult>'),
             new TimeoutException(new Request('POST', Uri::parse('https://s3.example.com/root/b.bin')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
             new Response(404, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchUpload</Code><Message>The specified upload does not exist.</Message></Error>')),
             ...$afterCompletion,
@@ -602,9 +606,9 @@ final class S3Test extends TestCase
 
     public function testLargeCopySurvivesAReplayedCompletion(): void
     {
-        // S3 names a multipart object after the MD5 of its parts' MD5s and the part count.
-        $landed = '"' . md5(hex2bin(md5('part-1')) . hex2bin(md5('part-2'))) . '-2"';
-        $client = $this->largeCopy([new Response(200)->withHeader('etag', $landed)]);
+        $client = $this->largeCopy(new Response(404), [
+            new Response(200)->withHeader('etag', '"etag-copy-2"')->withHeader('content-length', self::LARGE),
+        ]);
 
         $this->assertTrue($this->bucketDeviceFor($client)->copy('/root/a.bin', '/root/b.bin'));
         $this->assertNotContains('DELETE', $this->methods($client), 'the landed copy is not aborted');
@@ -612,10 +616,8 @@ final class S3Test extends TestCase
 
     public function testLargeCopyOverAnotherObjectIsNotMistakenForItsOwn(): void
     {
-        $client = $this->largeCopy([
-            new Response(200)->withHeader('etag', '"' . md5('an older object') . '"'),
-            new Response(204),
-        ]);
+        $existing = new Response(200)->withHeader('etag', '"etag-older"')->withHeader('content-length', self::LARGE);
+        $client = $this->largeCopy($existing, [$existing, new Response(204)]);
 
         try {
             $this->bucketDeviceFor($client)->copy('/root/a.bin', '/root/b.bin');
@@ -623,7 +625,7 @@ final class S3Test extends TestCase
         } catch (NotFoundException) {
         }
 
-        $this->assertSame('DELETE', $this->methods($client)[7], 'the unfinished upload is aborted');
+        $this->assertContains('DELETE', $this->methods($client), 'the unfinished upload is aborted');
     }
 
     public function testCopyWithoutBucketFallsBackToStreaming(): void
