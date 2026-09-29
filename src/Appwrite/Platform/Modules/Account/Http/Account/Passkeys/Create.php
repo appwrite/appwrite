@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys;
 
 use Appwrite\Auth\Passkey\Ceremony;
+use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -10,7 +11,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -95,25 +95,14 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSKEY_LIMIT_EXCEEDED);
         }
 
-
-        $userHandle = null;
-        $exclude = [];
+        // Reusing the records keeps one user handle per user and skips authenticators already registered
+        $records = [];
         foreach ($passkeys as $passkey) {
-            $data = $passkey->getAttribute('data', []);
-            $userHandle ??= $data['userHandle'] ?? null;
             if ($passkey->getAttribute('verified')) {
-                $exclude[] = $ceremony->decodeRecord($data['record'])->publicKeyCredentialId;
+                $records[] = $passkey->getAttribute('data', [])['record'];
             }
         }
-        // One handle per user, so authenticators replace rather than duplicate a user's passkey
-        $userHandle ??= Base64UrlSafe::encodeUnpadded(\random_bytes(32));
-
-        $options = $ceremony->createRegistration(
-            Base64UrlSafe::decodeNoPadding($userHandle),
-            $userName,
-            $user->getAttribute('name') ?: $userName,
-            $exclude,
-        );
+        $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
         $passkey = $dbForProject->createDocument('authenticators', new Document([
             '$id' => ID::unique(),
@@ -128,7 +117,6 @@ class Create extends Action
             'verified' => false,
             'data' => [
                 'name' => $name,
-                'userHandle' => $userHandle,
             ],
         ]));
 
@@ -138,33 +126,21 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSKEY_LIMIT_EXCEEDED);
         }
 
-        $encoded = $ceremony->encode($options);
-
-        $challenge = $authorization->skip(fn () => $dbForProject->createDocument('challenges', new Document([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
-            'type' => Ceremony::TYPE_REGISTRATION,
-            'expire' => DateTime::addSeconds(new \DateTime(), Ceremony::TIMEOUT),
-            'data' => [
-                'version' => 1,
-                'passkeyId' => $passkey->getId(),
-                'sessionId' => $session->getId(),
-                'relyingParty' => $ceremony->relyingParty->getFingerprint(),
-                'options' => $encoded,
-            ],
-        ])));
+        $stored = (new Challenges($dbForProject, $authorization))->issue(Ceremony::TYPE_REGISTRATION, $ceremony, $challenge, $user, [
+            'passkeyId' => $passkey->getId(),
+            'sessionId' => $session->getId(),
+        ]);
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
-                '$id' => $challenge->getId(),
-                '$createdAt' => $challenge->getCreatedAt(),
+                '$id' => $stored->getId(),
+                '$createdAt' => $stored->getCreatedAt(),
                 'passkeyId' => $passkey->getId(),
-                'expire' => $challenge->getAttribute('expire'),
-                'publicKey' => \json_decode($encoded, true),
+                'expire' => $stored->getAttribute('expire'),
+                'publicKey' => $challenge->options,
             ]), Response::MODEL_PASSKEY_CHALLENGE);
     }
 

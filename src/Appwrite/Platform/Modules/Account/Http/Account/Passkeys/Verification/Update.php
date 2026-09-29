@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification;
 
 use Appwrite\Auth\Passkey\Ceremony;
+use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -10,15 +11,14 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Passkeys\Exception as PasskeyException;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Assoc;
-use Webauthn\Exception\WebauthnException;
 
 class Update extends Action
 {
@@ -83,30 +83,13 @@ class Update extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $challenge = $authorization->skip(fn () => $dbForProject->getDocument('challenges', $challengeId));
-        $data = $challenge->getAttribute('data', []);
-
-        if (
-            $challenge->isEmpty()
-            || $challenge->getAttribute('type') !== Ceremony::TYPE_REGISTRATION
-            || $challenge->getAttribute('userInternalId') !== $user->getSequence()
-            || $challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())
-            || ($data['passkeyId'] ?? '') !== $passkeyId
-            || ($data['sessionId'] ?? '') !== $session->getId()
-        ) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
-
         // Configuration changes invalidate outstanding challenges
-        $ceremony = Ceremony::fromProject($project);
-        if ($ceremony === null || $ceremony->relyingParty->getFingerprint() !== ($data['relyingParty'] ?? '')) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+        $ceremony = Ceremony::fromProject($project) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
 
-        // Consume first: of two concurrent submissions only one wins the delete
-        if (!$authorization->skip(fn () => $dbForProject->deleteDocument('challenges', $challengeId))) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+        $state = (new Challenges($dbForProject, $authorization))->consume($challengeId, Ceremony::TYPE_REGISTRATION, $ceremony, $user, [
+            'passkeyId' => $passkeyId,
+            'sessionId' => $session->getId(),
+        ]);
 
         $passkey = $dbForProject->getDocument('authenticators', $passkeyId);
         if (
@@ -118,22 +101,18 @@ class Update extends Action
             throw new Exception(Exception::USER_PASSKEY_NOT_FOUND);
         }
 
-
         try {
-            $record = $ceremony->verifyRegistration(
-                $ceremony->decodeCredential($credential),
-                $ceremony->decodeRegistration($data['options']),
-            );
-        } catch (WebauthnException $th) {
+            $verified = $ceremony->verifyRegistration($state, $credential);
+        } catch (PasskeyException $th) {
             throw new Exception(Exception::USER_PASSKEY_INVALID, previous: $th);
         }
 
         try {
             $passkey = $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
                 'verified' => true,
-                'identifier' => Ceremony::getIdentifier($record->publicKeyCredentialId),
+                'identifier' => $verified->identifier,
                 'data' => \array_merge($passkey->getAttribute('data', []), [
-                    'record' => $ceremony->encodeRecord($record),
+                    'record' => $verified->record,
                 ]),
             ]));
         } catch (Duplicate) {

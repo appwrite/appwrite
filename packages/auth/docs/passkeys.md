@@ -25,31 +25,27 @@ $ceremony = new Ceremony(new RelyingParty('example.com', 'Example', [$origin]));
 ## Registration
 
 ```php
-$options = $ceremony->createRegistration($userHandle, 'user@example.com', 'User', exclude: $existingCredentialIds);
-$json = $ceremony->encode($options); // send to the browser, store server-side until verified
+$challenge = $ceremony->register('user@example.com', 'User', records: $existingRecords);
+// Send $challenge->options to the browser; persist $challenge->state until the credential comes back.
 
-// Browser: navigator.credentials.create({ publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(json) })
-$record = $ceremony->verifyRegistration(
-    $ceremony->decodeCredential($credentialFromBrowser), // credential.toJSON()
-    $ceremony->decodeRegistration($json),
-);
+// Browser: navigator.credentials.create({ publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(options) })
+$passkey = $ceremony->verifyRegistration($state, $credentialFromBrowser); // credential.toJSON()
 
-$stored = $ceremony->encodeRecord($record);          // array, persist it
-$lookup = Ceremony::getIdentifier($record->publicKeyCredentialId); // indexed lookup key
+// Persist $passkey->record, and index $passkey->identifier to find it at sign-in.
 ```
+
+Passing the user's existing records excludes authenticators that already hold one of them and keeps a single user handle per user.
 
 ## Sign-in
 
 ```php
-$json = $ceremony->encode($ceremony->createAuthentication()); // usernameless: no allowCredentials
+$challenge = $ceremony->authenticate(); // usernameless: the user picks any passkey for this relying party
 
-// Browser: navigator.credentials.get({ publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(json) })
-$credential = $ceremony->decodeCredential($credentialFromBrowser);
-$record = $ceremony->verifyAuthentication(
-    $credential,
-    $ceremony->decodeRecord($storedFor(Ceremony::getIdentifier($credential->rawId))),
-    $ceremony->decodeAuthentication($json),
-);
+// Browser: navigator.credentials.get({ publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(options) })
+$record = $recordFor($ceremony->identify($credentialFromBrowser));
+$passkey = $ceremony->verifyAuthentication($state, $credentialFromBrowser, $record);
+
+// Store $passkey->record back: it carries the updated signature counter and backup state.
 ```
 
-Every failure throws `Webauthn\Exception\WebauthnException`. Challenges are single-use and expire after `Ceremony::TIMEOUT` seconds; storing and consuming them is up to the application.
+Every failure throws `Utopia\Auth\Passkeys\Exception`. The state is opaque and must be used once: expiring it after `Ceremony::TIMEOUT` seconds and consuming it atomically is up to the application.

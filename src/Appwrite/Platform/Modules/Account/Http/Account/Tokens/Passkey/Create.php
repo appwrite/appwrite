@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey;
 
 use Appwrite\Auth\Passkey\Ceremony;
+use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,9 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 
@@ -71,27 +70,18 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
         }
 
-        $encoded = $ceremony->encode($ceremony->createAuthentication());
+        $challenge = $ceremony->authenticate();
 
         // Sign-in challenges belong to no user until the assertion names one
-        $challenge = $authorization->skip(fn () => $dbForProject->createDocument('challenges', new Document([
-            '$id' => ID::unique(),
-            'type' => Ceremony::TYPE_AUTHENTICATION,
-            'expire' => DateTime::addSeconds(new \DateTime(), Ceremony::TIMEOUT),
-            'data' => [
-                'version' => 1,
-                'relyingParty' => $ceremony->relyingParty->getFingerprint(),
-                'options' => $encoded,
-            ],
-        ])));
+        $stored = (new Challenges($dbForProject, $authorization))->issue(Ceremony::TYPE_AUTHENTICATION, $ceremony, $challenge);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
-                '$id' => $challenge->getId(),
-                '$createdAt' => $challenge->getCreatedAt(),
-                'expire' => $challenge->getAttribute('expire'),
-                'publicKey' => \json_decode($encoded, true),
+                '$id' => $stored->getId(),
+                '$createdAt' => $stored->getCreatedAt(),
+                'expire' => $stored->getAttribute('expire'),
+                'publicKey' => $challenge->options,
             ]), Response::MODEL_PASSKEY_CHALLENGE);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Auth\Passkeys;
 
 use Symfony\Component\Serializer\Encoder\JsonEncode;
@@ -14,8 +16,6 @@ use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
-use Webauthn\Exception\AuthenticatorResponseVerificationException;
-use Webauthn\Exception\WebauthnException;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialDescriptor;
@@ -25,8 +25,8 @@ use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 /**
- * WebAuthn registration and authentication ceremonies for one relying party.
- * Discoverable credentials, required user verification and no attestation.
+ * WebAuthn registration and sign-in for one relying party: discoverable credentials, required user
+ * verification and no attestation. Everything crossing this interface is plain arrays and strings.
  */
 class Ceremony
 {
@@ -56,13 +56,20 @@ class Ceremony
     }
 
     /**
-     * @param array<string> $exclude raw credential IDs the authenticator must not register again
+     * Start registering a passkey. Pass the user's existing records so the authenticator skips
+     * credentials it already holds and reuses the same user handle.
+     *
+     * @param array<array<mixed>> $records records of the user's existing passkeys
+     * @throws Exception
      */
-    public function createRegistration(string $userHandle, string $userName, string $displayName, array $exclude): PublicKeyCredentialCreationOptions
+    public function register(string $name, string $displayName, array $records = []): Challenge
     {
-        return PublicKeyCredentialCreationOptions::create(
+        $existing = \array_map($this->decodeRecord(...), $records);
+        $userHandle = ($existing[0] ?? null)->userHandle ?? \random_bytes(32);
+
+        return $this->start(PublicKeyCredentialCreationOptions::create(
             rp: PublicKeyCredentialRpEntity::create($this->relyingParty->name, $this->relyingParty->id),
-            user: PublicKeyCredentialUserEntity::create($userName, $userHandle, $displayName),
+            user: PublicKeyCredentialUserEntity::create($name, $userHandle, $displayName),
             challenge: \random_bytes(32),
             pubKeyCredParams: [
                 PublicKeyCredentialParameters::createPk(self::ALGORITHM_ES256),
@@ -74,163 +81,198 @@ class Ceremony
             ),
             attestation: PublicKeyCredentialCreationOptions::ATTESTATION_CONVEYANCE_PREFERENCE_NONE,
             excludeCredentials: \array_map(
-                fn (string $id): \Webauthn\PublicKeyCredentialDescriptor => PublicKeyCredentialDescriptor::create(PublicKeyCredentialDescriptor::CREDENTIAL_TYPE_PUBLIC_KEY, $id),
-                $exclude,
+                fn (CredentialRecord $record): PublicKeyCredentialDescriptor => $record->getPublicKeyCredentialDescriptor(),
+                $existing,
             ),
             timeout: self::TIMEOUT * 1000,
-        );
+        ));
     }
 
-    public function createAuthentication(): PublicKeyCredentialRequestOptions
+    /**
+     * @param string $state from the challenge returned by register()
+     * @param array<mixed> $credential result of PublicKeyCredential.toJSON() in the browser
+     * @throws Exception
+     */
+    public function verifyRegistration(string $state, array $credential): Credential
     {
-        return PublicKeyCredentialRequestOptions::create(
+        $options = $this->decode($state, PublicKeyCredentialCreationOptions::class);
+        $response = $this->decodeCredential($credential)->response;
+        if (!$response instanceof AuthenticatorAttestationResponse) {
+            throw new Exception('Expected an attestation response.');
+        }
+
+        $this->assertSameOrigin($response);
+
+        return $this->toCredential($this->guard(fn (): CredentialRecord => AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
+            ->check($response, $options, $this->relyingParty->id)));
+    }
+
+    /**
+     * Start a usernameless sign-in: the user picks any of their passkeys for this relying party.
+     */
+    public function authenticate(): Challenge
+    {
+        return $this->start(PublicKeyCredentialRequestOptions::create(
             challenge: \random_bytes(32),
             rpId: $this->relyingParty->id,
             userVerification: PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_REQUIRED,
             timeout: self::TIMEOUT * 1000,
-        );
+        ));
     }
 
     /**
-     * JSON form of ceremony options, as accepted by PublicKeyCredential.parseCreationOptionsFromJSON()
-     * and parseRequestOptionsFromJSON() in the browser.
+     * The identifier of the passkey a sign-in credential claims to be, to look up its stored record.
+     *
+     * @param array<mixed> $credential
+     * @throws Exception
      */
-    public function encode(PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions $options): string
+    public function identify(array $credential): string
     {
-        return $this->serializer->serialize($options, 'json', [
+        return $this->getIdentifier($this->decodeCredential($credential)->rawId);
+    }
+
+    /**
+     * @param string $state from the challenge returned by authenticate()
+     * @param array<mixed> $credential result of PublicKeyCredential.toJSON() in the browser
+     * @param array<mixed> $record stored record of the passkey identify() pointed to
+     * @return Credential with the record updated (counter, backup state) to store back
+     * @throws Exception
+     */
+    public function verifyAuthentication(string $state, array $credential, array $record): Credential
+    {
+        $options = $this->decode($state, PublicKeyCredentialRequestOptions::class);
+        $response = $this->decodeCredential($credential)->response;
+        if (!$response instanceof AuthenticatorAssertionResponse) {
+            throw new Exception('Expected an assertion response.');
+        }
+
+        $this->assertSameOrigin($response);
+
+        $stored = $this->decodeRecord($record);
+        $backupEligible = $stored->backupEligible;
+
+        $verified = $this->guard(fn (): CredentialRecord => AuthenticatorAssertionResponseValidator::create($this->steps->requestCeremony())
+            ->check($stored, $response, $options, $this->relyingParty->id, $stored->userHandle));
+
+        // Eligibility is fixed at creation; a change means a different authenticator is answering
+        if ($backupEligible !== null && $verified->backupEligible !== $backupEligible) {
+            throw new Exception('Backup eligibility changed.');
+        }
+
+        return $this->toCredential($verified);
+    }
+
+    private function start(PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions $options): Challenge
+    {
+        $state = $this->serializer->serialize($options, 'json', [
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
             JsonEncode::OPTIONS => JSON_THROW_ON_ERROR,
         ]);
-    }
 
-    public function decodeRegistration(string $options): PublicKeyCredentialCreationOptions
-    {
-        return $this->serializer->deserialize($options, PublicKeyCredentialCreationOptions::class, 'json');
-    }
-
-    public function decodeAuthentication(string $options): PublicKeyCredentialRequestOptions
-    {
-        return $this->serializer->deserialize($options, PublicKeyCredentialRequestOptions::class, 'json');
+        return new Challenge($this->toArray($state), $state);
     }
 
     /**
-     * @param array<string, mixed> $credential result of PublicKeyCredential.toJSON() in the browser
-     * @throws AuthenticatorResponseVerificationException
+     * @template T of object
+     * @param class-string<T> $type
+     * @return T
+     * @throws Exception
      */
-    public function decodeCredential(array $credential): PublicKeyCredential
+    private function decode(string $json, string $type): object
+    {
+        try {
+            return $this->serializer->deserialize($json, $type, 'json');
+        } catch (\Throwable $throwable) {
+            throw new Exception('Invalid ceremony state.', $throwable->getCode(), previous: $throwable);
+        }
+    }
+
+    /**
+     * @param array<mixed> $credential
+     * @throws Exception
+     */
+    private function decodeCredential(array $credential): PublicKeyCredential
     {
         foreach (['id', 'rawId', 'type'] as $key) {
             if (!\is_string($credential[$key] ?? null)) {
-                throw AuthenticatorResponseVerificationException::create('Invalid credential: missing "' . $key . '".');
+                throw new Exception('Invalid credential: missing "' . $key . '".');
             }
         }
 
         if (!\is_array($credential['response'] ?? null)) {
-            throw AuthenticatorResponseVerificationException::create('Invalid credential: missing "response".');
+            throw new Exception('Invalid credential: missing "response".');
         }
 
         try {
             return $this->serializer->deserialize(\json_encode($credential, JSON_THROW_ON_ERROR), PublicKeyCredential::class, 'json');
         } catch (\Throwable $throwable) {
-            throw AuthenticatorResponseVerificationException::create('Invalid credential: ' . $throwable->getMessage(), $throwable);
+            throw new Exception('Invalid credential: ' . $throwable->getMessage(), $throwable->getCode(), previous: $throwable);
         }
     }
 
     /**
-     * @throws WebauthnException
+     * @param array<mixed> $record
+     * @throws Exception
      */
-    public function verifyRegistration(PublicKeyCredential $credential, PublicKeyCredentialCreationOptions $options): CredentialRecord
+    private function decodeRecord(array $record): CredentialRecord
     {
-        $response = $credential->response;
-        if (!$response instanceof AuthenticatorAttestationResponse) {
-            throw AuthenticatorResponseVerificationException::create('Expected an attestation response.');
+        try {
+            return $this->serializer->deserialize(\json_encode($record, JSON_THROW_ON_ERROR), CredentialRecord::class, 'json');
+        } catch (\Throwable $throwable) {
+            throw new Exception('Invalid credential record.', $throwable->getCode(), previous: $throwable);
         }
+    }
 
-        $this->assertSameOrigin($response);
-
-        return $this->guard(fn (): \Webauthn\CredentialRecord => AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
-            ->check($response, $options, $this->relyingParty->id));
+    private function toCredential(CredentialRecord $record): Credential
+    {
+        return new Credential(
+            $this->getIdentifier($record->publicKeyCredentialId),
+            $this->toArray($this->serializer->serialize($record, 'json')),
+            $record->backupStatus === true,
+        );
     }
 
     /**
-     * @throws WebauthnException
+     * @return array<mixed>
      */
-    public function verifyAuthentication(PublicKeyCredential $credential, CredentialRecord $record, PublicKeyCredentialRequestOptions $options): CredentialRecord
+    private function toArray(string $json): array
     {
-        $response = $credential->response;
-        if (!$response instanceof AuthenticatorAssertionResponse) {
-            throw AuthenticatorResponseVerificationException::create('Expected an assertion response.');
+        $value = \json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+        if (!\is_array($value)) {
+            throw new \UnexpectedValueException('Expected a JSON object.');
         }
 
-        $this->assertSameOrigin($response);
-
-        $backupEligible = $record->backupEligible;
-
-        $record = $this->guard(fn (): \Webauthn\CredentialRecord => AuthenticatorAssertionResponseValidator::create($this->steps->requestCeremony())
-            ->check($record, $response, $options, $this->relyingParty->id, $record->userHandle));
-
-        // Eligibility is fixed at creation; a change means a different authenticator is answering
-        if ($backupEligible !== null && $record->backupEligible !== $backupEligible) {
-            throw AuthenticatorResponseVerificationException::create('Backup eligibility changed.');
-        }
-
-        return $record;
+        return $value;
     }
 
     /**
      * Malformed input can surface as CBOR, COSE or assertion errors; report every failure the same way.
      *
      * @param callable(): CredentialRecord $check
-     * @throws WebauthnException
+     * @throws Exception
      */
     private function guard(callable $check): CredentialRecord
     {
         try {
             return $check();
-        } catch (WebauthnException $th) {
-            throw $th;
-        } catch (\Throwable $th) {
-            throw AuthenticatorResponseVerificationException::create('Invalid credential: ' . $th->getMessage(), $th);
+        } catch (\Throwable $throwable) {
+            throw new Exception('Credential verification failed: ' . $throwable->getMessage(), $throwable->getCode(), previous: $throwable);
         }
     }
 
     /**
      * Embedded (iframe) ceremonies would let another site phish for assertions.
      *
-     * @throws AuthenticatorResponseVerificationException
+     * @throws Exception
      */
     private function assertSameOrigin(AuthenticatorAttestationResponse|AuthenticatorAssertionResponse $response): void
     {
         if ($response->clientDataJSON->crossOrigin || $response->clientDataJSON->topOrigin !== null) {
-            throw AuthenticatorResponseVerificationException::create('Cross-origin ceremonies are not allowed.');
+            throw new Exception('Cross-origin ceremonies are not allowed.');
         }
     }
 
-    /**
-     * @return array<mixed>
-     */
-    public function encodeRecord(CredentialRecord $record): array
-    {
-        $record = \json_decode($this->serializer->serialize($record, 'json'), true, flags: JSON_THROW_ON_ERROR);
-        if (!\is_array($record)) {
-            throw new \UnexpectedValueException('Credential record did not serialize to an object.');
-        }
-
-        return $record;
-    }
-
-    /**
-     * @param array<mixed> $record
-     */
-    public function decodeRecord(array $record): CredentialRecord
-    {
-        return $this->serializer->deserialize(\json_encode($record, JSON_THROW_ON_ERROR), CredentialRecord::class, 'json');
-    }
-
-    /**
-     * Indexed lookup key for a raw credential ID.
-     */
-    public static function getIdentifier(string $credentialId): string
+    private function getIdentifier(string $credentialId): string
     {
         return \hash('sha256', $credentialId);
     }

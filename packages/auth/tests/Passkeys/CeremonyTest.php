@@ -7,9 +7,9 @@ namespace Utopia\Auth\Tests\Passkeys;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Passkeys\Ceremony;
+use Utopia\Auth\Passkeys\Credential;
+use Utopia\Auth\Passkeys\Exception;
 use Utopia\Auth\Passkeys\RelyingParty;
-use Webauthn\CredentialRecord;
-use Webauthn\Exception\WebauthnException;
 
 final class CeremonyTest extends TestCase
 {
@@ -24,8 +24,7 @@ final class CeremonyTest extends TestCase
 
     public function testRegistrationOptions(): void
     {
-        $exclude = \random_bytes(16);
-        $options = $this->decode($this->ceremony->encode($this->ceremony->createRegistration(\random_bytes(32), 'user@example.com', 'User', [$exclude])));
+        $options = $this->ceremony->register('user@example.com', 'User')->options;
 
         $this->assertSame('localhost', Authenticator::string($options, 'rp', 'id'));
         $this->assertSame('user@example.com', Authenticator::string($options, 'user', 'name'));
@@ -33,59 +32,81 @@ final class CeremonyTest extends TestCase
         $this->assertSame('required', Authenticator::string($options, 'authenticatorSelection', 'userVerification'));
         $this->assertSame('none', Authenticator::string($options, 'attestation'));
         $this->assertSame([['type' => 'public-key', 'alg' => -7], ['type' => 'public-key', 'alg' => -257]], $options['pubKeyCredParams']);
-        $this->assertSame([['type' => 'public-key', 'id' => Authenticator::encode($exclude)]], $options['excludeCredentials']);
+        $this->assertSame([], $options['excludeCredentials']);
         $this->assertSame(Ceremony::TIMEOUT * 1000, $options['timeout']);
+    }
+
+    public function testExistingPasskeysAreExcludedAndShareTheUserHandle(): void
+    {
+        $authenticator = new Authenticator();
+        $first = $this->register($authenticator);
+
+        $options = $this->ceremony->register('user@example.com', 'User', [$first->record])->options;
+
+        $this->assertSame([['type' => 'public-key', 'id' => Authenticator::encode($authenticator->credentialId), 'transports' => ['internal']]], $options['excludeCredentials']);
+        $this->assertSame(Authenticator::encode($authenticator->userHandle), Authenticator::string($options, 'user', 'id'));
     }
 
     public function testRegisterAndSignIn(): void
     {
         $authenticator = new Authenticator();
-        $record = $this->register($authenticator);
+        $registered = $this->register($authenticator);
 
-        $this->assertSame($authenticator->credentialId, $record->publicKeyCredentialId);
-        $this->assertTrue($record->backupEligible);
-        $this->assertTrue($record->uvInitialized);
+        $this->assertSame(64, \strlen($registered->identifier));
+        $this->assertTrue($registered->backedUp);
 
-        $record = $this->signIn($authenticator, $record);
-        $this->assertSame(1, $record->counter);
+        $signedIn = $this->signIn($authenticator, $registered);
+        $this->assertSame($registered->identifier, $signedIn->identifier);
+        $this->assertSame(1, $signedIn->record['counter']);
+    }
+
+    public function testIdentifyMatchesTheRegisteredPasskey(): void
+    {
+        $authenticator = new Authenticator();
+        $registered = $this->register($authenticator);
+
+        $challenge = $this->ceremony->authenticate();
+        $this->assertSame($registered->identifier, $this->ceremony->identify($authenticator->authenticate($challenge->options, self::ORIGIN)));
     }
 
     public function testRecordSurvivesStorage(): void
     {
         $authenticator = new Authenticator();
-        $stored = $this->ceremony->encodeRecord($this->register($authenticator));
+        $registered = $this->register($authenticator);
+        $stored = \json_decode(\json_encode($registered->record, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertIsArray($stored);
 
-        $record = $this->signIn($authenticator, $this->ceremony->decodeRecord($this->decode(\json_encode($stored, JSON_THROW_ON_ERROR))));
-        $this->assertSame(1, $record->counter);
+        $this->assertSame(1, $this->signIn($authenticator, new Credential($registered->identifier, $stored, true))->record['counter']);
     }
 
     public function testSyncedPasskeyAllowsNonIncreasingCounter(): void
     {
         $authenticator = new Authenticator(backupEligible: true);
-        $record = $this->signIn($authenticator, $this->register($authenticator));
+        $credential = $this->signIn($authenticator, $this->register($authenticator));
 
         $authenticator->counter = 0;
-        $this->assertSame(1, $this->signIn($authenticator, $record)->counter);
+        $this->assertSame(1, $this->signIn($authenticator, $credential)->record['counter']);
     }
 
     public function testDeviceBoundPasskeyRejectsNonIncreasingCounter(): void
     {
         $authenticator = new Authenticator(backupEligible: false);
-        $record = $this->signIn($authenticator, $this->register($authenticator));
+        $credential = $this->signIn($authenticator, $this->register($authenticator));
+        $this->assertFalse($credential->backedUp);
 
         $authenticator->counter = 0;
-        $this->expectException(WebauthnException::class);
-        $this->signIn($authenticator, $record);
+        $this->expectException(Exception::class);
+        $this->signIn($authenticator, $credential);
     }
 
     public function testBackupEligibilityCannotChange(): void
     {
         $authenticator = new Authenticator(backupEligible: false);
-        $record = $this->register($authenticator);
+        $credential = $this->register($authenticator);
 
         $authenticator->backupEligible = true;
-        $this->expectException(WebauthnException::class);
-        $this->signIn($authenticator, $record);
+        $this->expectException(Exception::class);
+        $this->signIn($authenticator, $credential);
     }
 
     /**
@@ -103,6 +124,7 @@ final class CeremonyTest extends TestCase
                 return $a->register($o, self::ORIGIN);
             }],
             'malformed' => [fn (): array => ['id' => 'abc', 'type' => 'public-key', 'response' => ['clientDataJSON' => 'e30']]],
+            'missing response' => [fn (): array => ['id' => 'abc', 'rawId' => 'abc', 'type' => 'public-key']],
         ];
     }
 
@@ -112,14 +134,20 @@ final class CeremonyTest extends TestCase
     #[DataProvider('invalidRegistrations')]
     public function testRejectsInvalidRegistration(callable $credential): void
     {
-        $options = $this->ceremony->createRegistration(\random_bytes(32), 'user@example.com', 'User', []);
-        $json = $this->ceremony->encode($options);
+        $challenge = $this->ceremony->register('user@example.com', 'User');
 
-        $this->expectException(WebauthnException::class);
-        $this->ceremony->verifyRegistration(
-            $this->ceremony->decodeCredential($credential(new Authenticator(), $this->decode($json))),
-            $this->ceremony->decodeRegistration($json),
-        );
+        $this->expectException(Exception::class);
+        $this->ceremony->verifyRegistration($challenge->state, $credential(new Authenticator(), $challenge->options));
+    }
+
+    public function testRejectsSignInCredentialForRegistration(): void
+    {
+        $authenticator = new Authenticator();
+        $this->register($authenticator);
+        $challenge = $this->ceremony->register('user@example.com', 'User');
+
+        $this->expectException(Exception::class);
+        $this->ceremony->verifyRegistration($challenge->state, $authenticator->authenticate(['rpId' => 'localhost'] + $challenge->options, self::ORIGIN));
     }
 
     /**
@@ -138,33 +166,37 @@ final class CeremonyTest extends TestCase
     public function testRejectsInvalidSignIn(string $origin, ?string $rpId, bool $crossOrigin): void
     {
         $authenticator = new Authenticator();
-        $record = $this->register($authenticator);
+        $registered = $this->register($authenticator);
+        $challenge = $this->ceremony->authenticate();
 
-        $json = $this->ceremony->encode($this->ceremony->createAuthentication());
-        $credential = $authenticator->authenticate($this->decode($json), $origin, $rpId, $crossOrigin);
-
-        $this->expectException(WebauthnException::class);
-        $this->ceremony->verifyAuthentication($this->ceremony->decodeCredential($credential), $record, $this->ceremony->decodeAuthentication($json));
+        $this->expectException(Exception::class);
+        $this->ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, $origin, $rpId, $crossOrigin), $registered->record);
     }
 
     public function testRejectsSignatureFromAnotherKey(): void
     {
         $authenticator = new Authenticator();
-        $record = $this->register($authenticator);
+        $registered = $this->register($authenticator);
 
         $impostor = new Authenticator();
         $impostor->credentialId = $authenticator->credentialId;
         $impostor->userHandle = $authenticator->userHandle;
         $impostor->counter = 10;
 
-        $this->expectException(WebauthnException::class);
-        $this->signIn($impostor, $record);
+        $this->expectException(Exception::class);
+        $this->signIn($impostor, $registered);
     }
 
-    public function testIdentifierIsStableDigest(): void
+    public function testRejectsMalformedState(): void
     {
-        $this->assertSame(\hash('sha256', 'credential'), Ceremony::getIdentifier('credential'));
-        $this->assertSame(64, \strlen(Ceremony::getIdentifier(\random_bytes(16))));
+        $this->expectException(Exception::class);
+        $this->ceremony->verifyAuthentication('not json', [], []);
+    }
+
+    public function testRejectsMalformedCredentialWhenIdentifying(): void
+    {
+        $this->expectException(Exception::class);
+        $this->ceremony->identify(['id' => 'abc']);
     }
 
     public function testFingerprintIgnoresOriginOrder(): void
@@ -177,37 +209,17 @@ final class CeremonyTest extends TestCase
         $this->assertNotSame($a->getFingerprint(), $c->getFingerprint());
     }
 
-    private function register(Authenticator $authenticator): CredentialRecord
+    private function register(Authenticator $authenticator): Credential
     {
-        $json = $this->ceremony->encode($this->ceremony->createRegistration(\random_bytes(32), 'user@example.com', 'User', []));
+        $challenge = $this->ceremony->register('user@example.com', 'User');
 
-        return $this->ceremony->verifyRegistration(
-            $this->ceremony->decodeCredential($authenticator->register($this->decode($json), self::ORIGIN)),
-            $this->ceremony->decodeRegistration($json),
-        );
+        return $this->ceremony->verifyRegistration($challenge->state, $authenticator->register($challenge->options, self::ORIGIN));
     }
 
-    private function signIn(Authenticator $authenticator, CredentialRecord $record): CredentialRecord
+    private function signIn(Authenticator $authenticator, Credential $credential): Credential
     {
-        $json = $this->ceremony->encode($this->ceremony->createAuthentication());
+        $challenge = $this->ceremony->authenticate();
 
-        return $this->ceremony->verifyAuthentication(
-            $this->ceremony->decodeCredential($authenticator->authenticate($this->decode($json), self::ORIGIN)),
-            $record,
-            $this->ceremony->decodeAuthentication($json),
-        );
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    private function decode(string $json): array
-    {
-        $decoded = \json_decode($json, true, flags: JSON_THROW_ON_ERROR);
-        if (!\is_array($decoded)) {
-            throw new \UnexpectedValueException('Expected a JSON object');
-        }
-
-        return $decoded;
+        return $this->ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, self::ORIGIN), $credential->record);
     }
 }
