@@ -127,6 +127,35 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
+        $this->assertStringNotContainsString('source.id IN (SELECT id', $find);
+    }
+
+    public function testCreatedAtWindowNarrowsAggregationToMatchingExecutions(): void
+    {
+        $client = new CapturingClient([
+            $this->jsonResponse([]),
+            $this->jsonResponse([['total' => 0]]),
+        ]);
+        $store = $this->store($client);
+        $queries = [
+            Query::equal('resourceInternalId', ['1608']),
+            Query::equal('resourceType', ['functions']),
+            Query::greaterThanEqual('$createdAt', '2026-09-28T21:00:00.000+00:00'),
+            Query::lessThan('$createdAt', '2026-09-28T22:00:00.000+00:00'),
+            Query::orderDesc('$createdAt'),
+        ];
+
+        $store->find('project', $queries);
+        $store->count('project', $queries, 5000);
+
+        foreach ($client->requests as $request) {
+            $body = (string) $request->getBody();
+            $this->assertStringContainsString('source.id IN (SELECT id FROM `appwrite`.`executions` WHERE projectId = {projectId:String}', $body);
+            // The window only picks candidate executions; versions are not
+            // filtered by it.
+            $this->assertStringNotContainsString('source.createdAt >=', $body);
+            $this->assertStringNotContainsString('source.createdAt <', $body);
+        }
     }
 
     public function testBulkDeleteUsesLatestSnapshots(): void
