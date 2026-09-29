@@ -6,22 +6,28 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
-use Nyholm\Psr7\Response;
 use OpenRuntimes\Orchestrator\Exception\ApiException as OrchestratorApiException;
 use OpenRuntimes\Orchestrator\Exception\ClientException as OrchestratorClientException;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\Client\Exception\NetworkException;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Query\Method;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 
 final class DeploymentsTest extends TestCase
 {
+    private const string COLLECTION = 'deployments';
+    private const string DEPLOYMENT = 'deployment1';
+
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
         Config::setParam('frameworks', [
@@ -187,188 +193,132 @@ final class DeploymentsTest extends TestCase
 
     public function testSubmissionRecoversWhenTransportClosesAfterJobCreation(): void
     {
-        $requests = [];
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(2))
-            ->method('sendRequest')
-            ->willReturnCallback(function (RequestInterface $request) use (&$requests): Response {
-                $requests[] = $request;
-                if ($request->getMethod() === 'POST') {
-                    throw new NetworkException($request, 'Connection closed after the job was accepted.');
-                }
+        $database = $this->database();
+        $service = new JobsService(Submission::LostAfterAccepting);
 
-                return new Response(200, body: \json_encode([
-                    'id' => 'project1-deployment1-build',
-                    'status' => 'accepted',
-                ], JSON_THROW_ON_ERROR));
-            });
-
-        $updates = 0;
-        [$deployments, $resource, $deployment] = $this->fixture(
-            $client,
-            1,
-            function (string $collection, Document $document, array $queries) use (&$updates): int {
-                $updates++;
-                $this->assertSame('deployments', $collection);
-                $this->assertSame('waiting', $document->getAttribute('status'));
-
-                return 1;
-            },
-        );
-
-        $submitted = $deployments->createFromUpload($resource, $deployment, 900);
+        $submitted = $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
 
         $this->assertSame('waiting', $submitted->getAttribute('status'));
-        $this->assertSame(1, $updates);
-        $this->assertSame('POST', $requests[0]->getMethod());
-        $this->assertSame('GET', $requests[1]->getMethod());
-        $this->assertSame('/v1/jobs/project1-deployment1-build', $requests[1]->getUri()->getPath());
+        $this->assertSame('waiting', $this->stored($database)->getAttribute('status'));
+        $this->assertCount(1, $service->jobs, 'The deployment must be left waiting on the job the service accepted.');
     }
 
     public function testSubmissionPreservesCanceledStateWhenRecoveryFindsNoJob(): void
     {
-        $status = 'uploading';
-        $requests = 0;
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(2))
-            ->method('sendRequest')
-            ->willReturnCallback(function (RequestInterface $request) use (&$requests, &$status): Response {
-                $requests++;
-                if ($request->getMethod() === 'POST') {
-                    throw new NetworkException($request, 'Connection closed before the response.');
-                }
-
-                $status = 'canceled';
-
-                return new Response(404, body: '{"error":"Job not found."}');
-            });
-
-        [$deployments, $resource, $deployment] = $this->fixture(
-            $client,
-            2,
-            function (string $collection, Document $document, array $queries) use (&$status): int {
-                $this->assertSame('deployments', $collection);
-
-                if ($document->getAttribute('status') === 'waiting') {
-                    $status = 'waiting';
-
-                    return 1;
-                }
-
-                $this->assertSame('canceled', $status);
-                $this->assertSame('failed', $document->getAttribute('status'));
-                $this->assertTrue($this->hasCancelGuard($queries));
-
-                return 0;
-            },
+        $database = $this->database();
+        $service = new JobsService(
+            Submission::LostBeforeAccepting,
+            fn () => $database->updateDocument(self::COLLECTION, self::DEPLOYMENT, new Document(['status' => 'canceled'])),
         );
 
         try {
-            $deployments->createFromUpload($resource, $deployment, 900);
+            $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
             $this->fail('Expected the lost submission response to remain an error when no job exists.');
         } catch (OrchestratorClientException $error) {
             $this->assertInstanceOf(NetworkException::class, $error->getPrevious());
         }
 
-        $this->assertSame(2, $requests);
-        $this->assertSame('canceled', $status);
+        $this->assertSame('canceled', $this->stored($database)->getAttribute('status'));
+        $this->assertSame([], $service->jobs);
+    }
+
+    public function testSubmissionLeavesDeploymentCanceledBeforeQueueing(): void
+    {
+        $database = $this->database();
+        $stale = $this->stored($database);
+        $database->updateDocument(self::COLLECTION, self::DEPLOYMENT, new Document(['status' => 'canceled']));
+        $service = new JobsService(Submission::LostAfterAccepting);
+
+        $submitted = $this->deployments($service, $database)->createFromUpload($this->resource(), $stale, 900);
+
+        $this->assertSame('canceled', $submitted->getAttribute('status'));
+        $this->assertSame('canceled', $this->stored($database)->getAttribute('status'));
+        $this->assertSame([], $service->jobs);
     }
 
     public function testSubmissionDoesNotRecoverExplicitApiErrors(): void
     {
-        $requests = 0;
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('sendRequest')
-            ->willReturnCallback(function (RequestInterface $request) use (&$requests): Response {
-                $requests++;
-
-                return new Response(401, body: '{"error":"Invalid jobs secret."}');
-            });
-
-        $status = 'uploading';
-        [$deployments, $resource, $deployment] = $this->fixture(
-            $client,
-            2,
-            function (string $collection, Document $document, array $queries) use (&$status): int {
-                $status = $document->getAttribute('status');
-
-                return 1;
-            },
-        );
+        $database = $this->database();
+        $service = new JobsService(Submission::FailedAfterAccepting);
 
         try {
-            $deployments->createFromUpload($resource, $deployment, 900);
-            $this->fail('Expected an explicit jobs API error.');
+            $this->deployments($service, $database)->createFromUpload($this->resource(), $this->stored($database), 900);
+            $this->fail('Expected an explicit jobs API error, even though the service holds the job.');
         } catch (OrchestratorApiException $error) {
-            $this->assertSame(401, $error->statusCode);
+            $this->assertSame(500, $error->statusCode);
         }
 
-        $this->assertSame(1, $requests);
-        $this->assertSame('failed', $status);
+        $this->assertSame('failed', $this->stored($database)->getAttribute('status'));
     }
 
-    /**
-     * @param callable(string, Document, array<Query>): int $update
-     * @return array{Deployments, Document, Document}
-     */
-    private function fixture(ClientInterface $client, int $updates, callable $update): array
+    private function deployments(JobsService $service, Database $database): Deployments
     {
         \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
 
-        $runtime = \array_key_first(Config::getParam('runtimes-v2'));
-        $project = new Document([
-            '$id' => 'project1',
-            'region' => 'default',
-        ]);
-        $resource = new Document([
-            '$id' => 'function1',
-            '$collection' => 'functions',
-            'runtime' => $runtime,
-        ]);
-        $deployment = new Document([
-            '$id' => 'deployment1',
-            '$sequence' => 1,
-            'buildCommands' => 'npm install',
-        ]);
-        $waiting = new Document([
-            '$id' => 'deployment1',
-            '$sequence' => 1,
-            'status' => 'waiting',
-        ]);
-
-        $database = $this->createMock(Database::class);
-        $database->expects($this->once())
-            ->method('updateDocument')
-            ->willReturn($deployment);
-        $database->expects($this->exactly($updates))
-            ->method('updateDocuments')
-            ->willReturnCallback($update);
-        $database->expects($this->once())
-            ->method('getDocument')
-            ->willReturn($waiting);
-
-        return [
-            new Deployments(new Jobs($client), $database, $project, ['apiHostname' => 'localhost']),
-            $resource,
-            $deployment,
-        ];
+        return new Deployments(
+            new Jobs($service),
+            $database,
+            new Document(['$id' => 'project1', 'region' => 'default']),
+            ['apiHostname' => 'localhost'],
+        );
     }
 
-    /** @param array<Query> $queries */
-    private function hasCancelGuard(array $queries): bool
+    private function resource(): Document
     {
-        foreach ($queries as $query) {
-            if (
-                $query->getMethod() === Method::NotEqual
-                && $query->getAttribute() === 'status'
-                && $query->getValues() === ['canceled']
-            ) {
-                return true;
-            }
-        }
+        return new Document([
+            '$id' => 'function1',
+            '$collection' => 'functions',
+            'runtime' => \array_key_first(Config::getParam('runtimes-v2')),
+        ]);
+    }
 
-        return false;
+    private function stored(Database $database): Document
+    {
+        return $database->getDocument(self::COLLECTION, self::DEPLOYMENT);
+    }
+
+    private function database(): Database
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+
+        $database = (new Database(new Memory(), new Cache(new None())))
+            ->setDatabase('appwrite')
+            ->setNamespace('deployments')
+            ->setAuthorization($authorization);
+
+        $authorization->skip(function () use ($database): void {
+            $database->create();
+            $database->createCollection(new Collection(
+                id: self::COLLECTION,
+                attributes: [
+                    Attribute::string(key: 'resourceId'),
+                    Attribute::string(key: 'resourceInternalId'),
+                    Attribute::string(key: 'resourceType'),
+                    Attribute::string(key: 'buildCommands', size: 1024),
+                    Attribute::string(key: 'status'),
+                    Attribute::string(key: 'buildPath', size: 1024),
+                    Attribute::string(key: 'buildLogs', size: 1024),
+                    Attribute::datetime(key: 'buildEndedAt', filters: ['datetime']),
+                    Attribute::boolean(key: 'activate', default: false),
+                ],
+                permissions: [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                ],
+                documentSecurity: false,
+            ));
+            $database->createDocument(self::COLLECTION, new Document([
+                '$id' => self::DEPLOYMENT,
+                'resourceId' => 'function1',
+                'resourceType' => 'functions',
+                'buildCommands' => 'npm install',
+                'status' => 'uploading',
+            ]));
+        });
+
+        return $database;
     }
 }
 
