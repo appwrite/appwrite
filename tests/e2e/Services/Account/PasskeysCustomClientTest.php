@@ -321,6 +321,30 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertCount(1, \array_filter($statuses, fn (int $status) => $status === 200), \json_encode($statuses));
     }
 
+    public function testConcurrentTokenExchangeCreatesOneSession(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        $authenticator = $this->registerPasskey($project, $session);
+
+        $token = $this->signIn($project, $authenticator);
+        $this->assertSame(201, $token['headers']['status-code']);
+
+        $statuses = $this->parallel(\array_fill(0, 5, [
+            'method' => 'POST',
+            'path' => '/account/sessions/token',
+            'headers' => $this->getGuestHeaders($project),
+            'body' => ['userId' => $token['body']['userId'], 'secret' => $token['body']['secret']],
+        ]));
+
+        $this->assertCount(1, \array_filter($statuses, fn (int $status) => $status === 201), \json_encode($statuses));
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/sessions', $this->getServerHeaders($project));
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertCount(1, \array_filter($sessions['body']['sessions'], fn (array $session) => $session['provider'] === 'passkey'));
+    }
+
     public function testSignInFailures(): void
     {
         $project = $this->getProject(true);

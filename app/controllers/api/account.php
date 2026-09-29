@@ -219,6 +219,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('mfaUpdatedAt', DateTime::now());
     }
 
+    // Claim the token before issuing anything: of concurrent exchanges, only the one that deletes it gets a session
+    if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
     $authorization->addRole(Role::user($user->getId())->toString());
 
     $session = $dbForProject->createDocument('sessions', $session
@@ -228,7 +233,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
