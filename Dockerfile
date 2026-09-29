@@ -5,6 +5,9 @@ FROM --platform=$BUILDPLATFORM oven/bun:1.4 AS base
 WORKDIR /app
 COPY package.json package.json
 COPY bun.lock bun.lock
+# Bun applies patches/ (patchedDependencies) at install time, so it must be
+# present before both installs below.
+COPY patches patches
 
 FROM base AS build
 
