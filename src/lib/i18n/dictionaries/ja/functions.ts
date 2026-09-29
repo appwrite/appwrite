@@ -321,6 +321,10 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'this function': 'この関数',
   'Timeout updated successfully': 'タイムアウトを更新しました',
+  'Enterprise runtime options': 'Enterprise ランタイムオプション',
+  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
+    'Enterprise プランには、コールドスタートを最小化する Always-on 関数に加え、より高負荷なワークロード向けの CPU とメモリ構成が含まれます。',
+  'Contact us to learn more.': '詳しくはお問い合わせください。',
   'to unlock additional specifications.': 'して、追加の仕様を利用できます。',
   'Total size': '合計サイズ',
   'Total Size': '合計サイズ',

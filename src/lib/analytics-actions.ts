@@ -238,6 +238,8 @@ export const ANALYTICS_ACTIONS = {
   'create-bucket': 'Create Bucket Clicked',
   'upload-file': 'Upload File Clicked',
   'create-function': 'Create Function Clicked',
+  'functions-always-on-contact-sales':
+    'Functions Always On Contact Sales Clicked',
   'create-execution': 'Create Execution Clicked',
   'create-site': 'Create Site Clicked',
   'create-deployment': 'Create Deployment Clicked',
