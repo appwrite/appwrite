@@ -3443,6 +3443,58 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * The default OAuth success URL redirects straight to appwrite-callback-{project}://,
+     * carrying the session the native SDKs store.
+     */
+    public function testOAuthDefaultSuccessRedirectsToApp(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Omit success so Appwrite uses the default relay URL (/auth/oauth2/success)
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // Provider consent, Appwrite callback, Appwrite redirect
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
+
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
+        $this->assertEquals($projectId, $query['project'] ?? null);
+        $this->assertEquals('a_session_' . $projectId, $query['key'] ?? null);
+        $this->assertNotEmpty($query['secret'] ?? null);
+    }
+
+    /**
      * The default OAuth failure URL redirects straight to appwrite-callback-{project}://,
      * carrying `project` and the real OAuth error.
      */
