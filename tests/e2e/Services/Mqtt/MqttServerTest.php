@@ -416,7 +416,7 @@ final class MqttServerTest extends Scope
      * @param  array<string, string>  $server
      * @param  array<string, mixed>  $data
      */
-    private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = [], array $extra = []): void
+    private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = [], array $extra = []): string
     {
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, \array_merge([
             'messageId' => ID::unique(),
@@ -432,6 +432,8 @@ final class MqttServerTest extends Scope
             $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $server);
             $this->assertContains($message['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
         }, 30000, 500);
+
+        return $messageId;
     }
 
     /**
@@ -501,7 +503,7 @@ final class MqttServerTest extends Scope
         $subscriber->subscribe([$topicName]);
 
         try {
-            $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
+            $messageId = $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
             $received = $subscriber->consume(limit: 1, timeout: 20.0);
         } finally {
             $subscriber->disconnect();
@@ -516,6 +518,7 @@ final class MqttServerTest extends Scope
         $this->assertEquals('Match update', $payload['notification']['title']);
         $this->assertEquals('India needs 12 off 6', $payload['notification']['body']);
         $this->assertEquals(['matchId' => '42'], $payload['data']);
+        $this->assertSame($messageId, $payload['messageId']);
     }
 
     public function testCampaignCarriesChannelIdToSubscriber(): void
