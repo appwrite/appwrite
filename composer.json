@@ -26,6 +26,7 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
+            "Utopia\\Abuse\\": "packages/abuse/src",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Audit\\": "packages/audit/src",
             "Utopia\\Auth\\": "packages/auth/src",
@@ -78,6 +79,7 @@
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions",
+            "Utopia\\Abuse\\Tests\\": "packages/abuse/tests",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Audit\\Tests\\": "packages/audit/tests",
             "Utopia\\Auth\\Tests\\": "packages/auth/tests",
@@ -144,7 +146,6 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "2.0.*",
         "utopia-php/config": "1.*",
         "utopia-php/database": "^7.3.11",
         "utopia-php/migration": "^2.0.0",
@@ -164,7 +165,8 @@
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
-        "psr/container": "^2.0"
+        "psr/container": "^2.0",
+        "appwrite/appwrite": "^27.1"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -193,6 +195,7 @@
         }
     },
     "replace": {
+        "utopia-php/abuse": "*",
         "utopia-php/agents": "*",
         "utopia-php/audit": "*",
         "utopia-php/auth": "*",
