@@ -15,6 +15,7 @@ use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\Exception\AuthenticatorResponseVerificationException;
+use Webauthn\Exception\WebauthnException;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialDescriptor;
@@ -30,6 +31,10 @@ use Webauthn\PublicKeyCredentialUserEntity;
 class Ceremony
 {
     public const int TIMEOUT = 300;
+
+    public const string TYPE = 'passkey';
+    public const string TYPE_REGISTRATION = 'passkeyRegistration';
+    public const string TYPE_AUTHENTICATION = 'passkeyAuthentication';
 
     private const int ALGORITHM_ES256 = -7;
     private const int ALGORITHM_RS256 = -257;
@@ -122,7 +127,7 @@ class Ceremony
     }
 
     /**
-     * @throws AuthenticatorResponseVerificationException
+     * @throws WebauthnException
      */
     public function verifyRegistration(PublicKeyCredential $credential, PublicKeyCredentialCreationOptions $options): CredentialRecord
     {
@@ -132,12 +137,12 @@ class Ceremony
         }
         $this->assertSameOrigin($response);
 
-        return AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
-            ->check($response, $options, $this->relyingParty->id);
+        return $this->guard(fn () => AuthenticatorAttestationResponseValidator::create($this->steps->creationCeremony())
+            ->check($response, $options, $this->relyingParty->id));
     }
 
     /**
-     * @throws AuthenticatorResponseVerificationException
+     * @throws WebauthnException
      */
     public function verifyAuthentication(PublicKeyCredential $credential, CredentialRecord $record, PublicKeyCredentialRequestOptions $options): CredentialRecord
     {
@@ -149,8 +154,8 @@ class Ceremony
 
         $backupEligible = $record->backupEligible;
 
-        $record = AuthenticatorAssertionResponseValidator::create($this->steps->requestCeremony())
-            ->check($record, $response, $options, $this->relyingParty->id, $record->userHandle);
+        $record = $this->guard(fn () => AuthenticatorAssertionResponseValidator::create($this->steps->requestCeremony())
+            ->check($record, $response, $options, $this->relyingParty->id, $record->userHandle));
 
         // Eligibility is fixed at creation; a change means a different authenticator is answering
         if ($backupEligible !== null && $record->backupEligible !== $backupEligible) {
@@ -158,6 +163,23 @@ class Ceremony
         }
 
         return $record;
+    }
+
+    /**
+     * Malformed input can surface as CBOR, COSE or assertion errors; report every failure the same way.
+     *
+     * @param callable(): CredentialRecord $check
+     * @throws WebauthnException
+     */
+    private function guard(callable $check): CredentialRecord
+    {
+        try {
+            return $check();
+        } catch (WebauthnException $th) {
+            throw $th;
+        } catch (\Throwable $th) {
+            throw AuthenticatorResponseVerificationException::create('Invalid credential: ' . $th->getMessage(), $th);
+        }
     }
 
     /**
@@ -177,7 +199,7 @@ class Ceremony
      */
     public function encodeRecord(CredentialRecord $record): array
     {
-        return $this->serializer->normalize($record, 'json');
+        return \json_decode($this->serializer->serialize($record, 'json'), true, flags: JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -185,7 +207,7 @@ class Ceremony
      */
     public function decodeRecord(array $record): CredentialRecord
     {
-        return $this->serializer->denormalize($record, CredentialRecord::class, 'json');
+        return $this->serializer->deserialize(\json_encode($record, JSON_THROW_ON_ERROR), CredentialRecord::class, 'json');
     }
 
     /**

@@ -12,7 +12,13 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as C
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
+use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Create as CreatePasskey;
+use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Delete as DeletePasskey;
+use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
+use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -31,6 +37,12 @@ class Http extends Service
             ->addAction(GetRecoveryCodes::getName(), new GetRecoveryCodes())
             ->addAction(CreateChallenge::getName(), new CreateChallenge())
             ->addAction(UpdateChallenge::getName(), new UpdateChallenge())
-            ->addAction(CreateIdTokenSession::getName(), new CreateIdTokenSession());
+            ->addAction(CreateIdTokenSession::getName(), new CreateIdTokenSession())
+            ->addAction(CreatePasskey::getName(), new CreatePasskey())
+            ->addAction(UpdatePasskeyVerification::getName(), new UpdatePasskeyVerification())
+            ->addAction(ListPasskeys::getName(), new ListPasskeys())
+            ->addAction(DeletePasskey::getName(), new DeletePasskey())
+            ->addAction(CreatePasskeyToken::getName(), new CreatePasskeyToken())
+            ->addAction(UpdatePasskeyToken::getName(), new UpdatePasskeyToken());
     }
 }
