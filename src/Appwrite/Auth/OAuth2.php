@@ -3,6 +3,7 @@
 namespace Appwrite\Auth;
 
 use Appwrite\Auth\OAuth2\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 
 abstract class OAuth2
 {
@@ -204,6 +205,15 @@ abstract class OAuth2
      */
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
+        // The endpoint can be operator-supplied (OIDC discovery, self-hosted
+        // providers), so block any host that resolves to a private or reserved
+        // address to prevent SSRF into the internal network.
+        $host = \parse_url($url, PHP_URL_HOST) ?? '';
+        $hostname = new PublicHostname();
+        if (!$hostname->isValid($host)) {
+            throw new Exception($hostname->getDescription(), 400);
+        }
+
         $ch = \curl_init($url);
 
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);

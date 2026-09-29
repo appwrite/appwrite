@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Messaging\Adapter;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
@@ -93,6 +94,18 @@ class Webhook extends Adapter
      */
     protected function dispatch(string $method, string $url, array $headers, string $body, int $timeout): array
     {
+        // Block any target that resolves to a private or reserved address to
+        // prevent SSRF into the internal network.
+        $host = \parse_url($url, PHP_URL_HOST) ?? '';
+        $hostname = new PublicHostname();
+        if (!$hostname->isValid($host)) {
+            return [
+                'statusCode' => 0,
+                'response' => null,
+                'error' => $hostname->getDescription(),
+            ];
+        }
+
         $client = (new Client(new CurlAdapter()))
             ->withTimeout($timeout)
             ->withConnectTimeout(\min(10, $timeout))

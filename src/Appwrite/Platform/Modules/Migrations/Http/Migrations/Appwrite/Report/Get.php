@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -64,6 +65,13 @@ class Get extends Action
         Response $response,
         callable $getDatabasesDB
     ): void {
+        // Block a source endpoint that resolves to a private or reserved
+        // address to prevent SSRF into the internal network.
+        $hostname = new PublicHostname();
+        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);

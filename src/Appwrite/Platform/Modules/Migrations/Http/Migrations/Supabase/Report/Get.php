@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -70,6 +71,13 @@ class Get extends Action
         int $port,
         Response $response
     ): void {
+        // Block a source endpoint that resolves to a private or reserved
+        // address to prevent SSRF into the internal network.
+        $hostname = new PublicHostname();
+        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         try {
             $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
             $report = $supabase->report($resources);
