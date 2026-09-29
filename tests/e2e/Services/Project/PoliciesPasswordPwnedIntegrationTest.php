@@ -39,61 +39,111 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('password-pwned', $response['body']['$id']);
 
-        // Breached passwords are rejected out of the box
+        // Breached passwords are looked up out of the box
         $this->assertTrue($response['body']['enabled']);
 
-        // Sign-in checks stay opt-in
+        // Blocking stays opt-in
         $this->assertFalse($response['body']['sessions']);
         $this->assertFalse($response['body']['users']);
 
-        // A breached password is blocked without touching the policy
+        // A breached password is recorded, not rejected, without touching the policy
+        $email = 'pwned_default_' . \uniqid() . '@localhost.test';
+
         $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => ID::unique(),
-            'email' => 'pwned_default_' . \uniqid() . '@localhost.test',
+            'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Default Policy User',
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('password_pwned', $response['body']['type']);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        // Signing in with it is allowed too
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+        ], [
+            'email' => $email,
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
     }
 
     public function testCreateUserWithPolicyDisabled(): void
     {
-        $this->updatePolicy(['enabled' => false]);
+        // Disabled turns the integration off, so the blocking options have nothing to act on
+        $this->updatePolicy(['enabled' => false, 'sessions' => true, 'users' => true]);
 
         /**
          * Test for SUCCESS
          */
+        $email = 'pwned_off_' . \uniqid() . '@localhost.test';
+
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => ID::unique(),
-            'email' => 'pwned_off_' . \uniqid() . '@localhost.test',
+            'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned Off User',
         ]);
 
         $this->assertSame(201, $user['headers']['status-code']);
         $this->assertNotEmpty($user['body']['$id']);
+        $this->assertNull($user['body']['passwordPwned']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['body']['$id'] . '/password', $this->serverHeaders(), [
             'password' => self::PWNED_PASSWORD,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['passwordPwned']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+            'email' => $email,
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        // Nothing was looked up, so nothing was recorded
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['passwordPwned']);
+
+        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
     public function testCreateUserWithPolicyEnabled(): void
     {
-        $this->updatePolicy(['enabled' => true]);
-
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
+        // Enabled alone records the outcome, and the sessions option does not touch sign-up
+        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => false]);
+
         $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => ID::unique(),
             'email' => 'pwned_on_' . \uniqid() . '@localhost.test',
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned On User',
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->updatePolicy(['sessions' => false, 'users' => true]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => ID::unique(),
+            'email' => 'pwned_blocked_' . \uniqid() . '@localhost.test',
+            'password' => self::PWNED_PASSWORD,
+            'name' => 'Pwned Blocked User',
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -111,6 +161,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // Importing an already hashed password never exposes the plaintext, so the policy cannot apply
         $response = $this->client->call(Client::METHOD_POST, '/users/sha', $this->serverHeaders(), [
@@ -123,13 +174,14 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNull($response['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
     public function testUpdateUserPasswordWithPolicyEnabled(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => false]);
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => ID::unique(),
@@ -139,11 +191,25 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $user['headers']['status-code']);
+        $this->assertFalse($user['body']['passwordPwned']);
         $userId = $user['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // Without the users option a breached password is recorded and kept
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $this->serverHeaders(), [
+            'password' => self::PWNED_PASSWORD,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         /**
          * Test for FAILURE
          */
+        $this->updatePolicy(['users' => true]);
+
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $this->serverHeaders(), [
             'password' => self::PWNED_PASSWORD,
         ]);
@@ -159,6 +225,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         // Clearing the password is not a password to check
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $this->serverHeaders(), [
@@ -166,17 +233,33 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNull($response['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testCreateAccountWithPolicyEnabled(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => false]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
+            'userId' => ID::unique(),
+            'email' => 'pwned_account_recorded_' . \uniqid() . '@localhost.test',
+            'password' => self::PWNED_PASSWORD,
+            'name' => 'Pwned Account',
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
 
         /**
          * Test for FAILURE
          */
+        $this->updatePolicy(['users' => true]);
+
         $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
             'userId' => ID::unique(),
             'email' => 'pwned_account_' . \uniqid() . '@localhost.test',
@@ -199,13 +282,14 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testUpdateAccountPasswordWithPolicyEnabled(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => false]);
 
         $email = 'pwned_session_' . \uniqid() . '@localhost.test';
         $password = $this->cleanPassword();
@@ -231,11 +315,25 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
+        // Without the users option a breached password is recorded and kept
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $headers, [
             'password' => self::PWNED_PASSWORD,
             'oldPassword' => $password,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->updatePolicy(['users' => true]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $headers, [
+            'password' => self::PWNED_PASSWORD,
+            'oldPassword' => self::PWNED_PASSWORD,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -246,17 +344,18 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $headers, [
             'password' => $this->cleanPassword(),
-            'oldPassword' => $password,
+            'oldPassword' => self::PWNED_PASSWORD,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testUpdateAccountRecoveryWithPolicyEnabled(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => true]);
 
         $email = 'pwned_recovery_' . \uniqid() . '@localhost.test';
 
@@ -297,15 +396,23 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for SUCCESS
          */
+        // Without the users option the same reset goes through and is recorded
+        $this->updatePolicy(['users' => false]);
+
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $this->clientHeaders(), [
             'userId' => $userId,
             'secret' => $secret,
-            'password' => $this->cleanPassword(),
+            'password' => self::PWNED_PASSWORD,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $this->updatePolicy(['enabled' => false]);
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testSignInBlockedUntilReset(): void
@@ -322,11 +429,13 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(201, $user['headers']['status-code']);
+        $this->assertNull($user['body']['passwordPwned']);
 
         /**
          * Test for SUCCESS
          */
-        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => false]);
+        // Enabled records the breach on sign-in; the users option is about sign-up and never refuses a sign-in
+        $this->updatePolicy(['enabled' => true, 'sessions' => false, 'users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -335,10 +444,15 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['passwordPwned']);
+
         /**
          * Test for FAILURE
          */
-        $this->updatePolicy(['users' => true]);
+        $this->updatePolicy(['sessions' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -367,6 +481,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
@@ -378,16 +493,17 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
     }
 
-    public function testSessionChecksAreOptional(): void
+    public function testCreateSessionWithCleanPassword(): void
     {
         $this->updatePolicy(['enabled' => false]);
 
         $email = 'pwned_sessions_' . \uniqid() . '@localhost.test';
+        $password = $this->cleanPassword();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => ID::unique(),
             'email' => $email,
-            'password' => self::PWNED_PASSWORD,
+            'password' => $password,
             'name' => 'Sessions User',
         ]);
 
@@ -397,28 +513,12 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // Sign-in checks are off by default, so a forced reset has nothing to act on
-        $this->updatePolicy(['enabled' => true, 'sessions' => false, 'users' => true]);
+        // The sessions option only refuses breached passwords; a clean sign-in goes through and is recorded as clean
+        $this->updatePolicy(['enabled' => true, 'sessions' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $email,
-            'password' => self::PWNED_PASSWORD,
-        ]);
-
-        $this->assertSame(201, $response['headers']['status-code']);
-
-        // Nothing was looked up, so nothing was recorded
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertNull($response['body']['passwordPwned']);
-
-        // Checking sessions without forcing a reset records the breach and still allows the sign-in
-        $this->updatePolicy(['sessions' => true, 'users' => false]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
-            'email' => $email,
-            'password' => self::PWNED_PASSWORD,
+            'password' => $password,
         ]);
 
         $this->assertSame(201, $response['headers']['status-code']);
@@ -426,27 +526,14 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertTrue($response['body']['passwordPwned']);
+        $this->assertFalse($response['body']['passwordPwned']);
 
-        /**
-         * Test for FAILURE
-         */
-        $this->updatePolicy(['users' => true]);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
-            'email' => $email,
-            'password' => self::PWNED_PASSWORD,
-        ]);
-
-        $this->assertSame(412, $response['headers']['status-code']);
-        $this->assertSame('user_password_reset_required', $response['body']['type']);
-
-        $this->updatePolicy(['enabled' => false, 'sessions' => false, 'users' => false]);
+        $this->updatePolicy(['enabled' => false, 'sessions' => false]);
     }
 
     public function testUpdateAnonymousAccountEmail(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => true]);
 
         $headers = $this->anonymousHeaders();
         $email = 'pwned_anonymous_' . \uniqid() . '@localhost.test';
@@ -526,12 +613,12 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame('password_recently_used', $response['body']['type']);
 
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $this->serverHeaders(), ['total' => 0]);
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testUpdateAnonymousAccountPhone(): void
     {
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => true]);
 
         $headers = $this->anonymousHeaders();
         $phone = '+15' . \random_int(100000000, 999999999);
@@ -606,7 +693,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame('password_recently_used', $response['body']['type']);
 
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $this->serverHeaders(), ['total' => 0]);
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testUpdateAccountEmailWithExistingPassword(): void
@@ -637,7 +724,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         ]);
 
         // Policies tightened after the password was set only apply to new passwords
-        $this->updatePolicy(['enabled' => true]);
+        $this->updatePolicy(['enabled' => true, 'users' => true]);
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->serverHeaders(), ['min' => 20]);
 
         /**
@@ -662,7 +749,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame('user_invalid_credentials', $response['body']['type']);
 
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $this->serverHeaders(), ['min' => 8]);
-        $this->updatePolicy(['enabled' => false]);
+        $this->updatePolicy(['enabled' => false, 'users' => false]);
     }
 
     public function testPasswordPwnedFlag(): void
@@ -683,8 +770,8 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertArrayHasKey('passwordPwned', $userA['body']);
         $this->assertNull($userA['body']['passwordPwned']);
 
-        // Policy on, with sign-in checks: a clean password is recorded as clean
-        $this->updatePolicy(['enabled' => true, 'sessions' => true]);
+        // Policy on: a clean password is recorded as clean
+        $this->updatePolicy(['enabled' => true]);
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => ID::unique(),
@@ -713,7 +800,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(201, $userC['headers']['status-code']);
         $this->assertNull($userC['body']['passwordPwned']);
 
-        // Signing in records a breached password, on the users and the account API
+        // Signing in records a breached password without refusing it, on the users and the account API
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $emailA,
             'password' => self::PWNED_PASSWORD,
@@ -938,7 +1025,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         /**
          * Test for FAILURE
          */
-        // A forced reset still records the breach before blocking the sign-in
+        // A refused sign-in still records the breach first
         $this->updatePolicy(['enabled' => false]);
 
         $emailD = 'pwned_flag_d_' . \uniqid() . '@localhost.test';
@@ -953,7 +1040,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->assertSame(201, $userD['headers']['status-code']);
         $this->assertNull($userD['body']['passwordPwned']);
 
-        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => true]);
+        $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => false]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
             'email' => $emailD,

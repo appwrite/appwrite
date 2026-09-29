@@ -32,6 +32,7 @@ use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
@@ -241,7 +242,7 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
@@ -258,8 +259,22 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                // A user- or target-addressed Appwrite push is delivered on the reserved per-user
+                // topic users/<userId>, so a user's targets collapse to one implicit topic. Topic
+                // campaigns (and every other provider) keep sending to the resolved identifiers.
+                $recipients = \array_keys($identifiers);
+                if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === 'appwrite') {
+                    $userTopics = [];
+                    foreach ($identifiers as $userId) {
+                        if (!empty($userId)) {
+                            $userTopics['users/' . $userId] = null;
+                        }
+                    }
+                    $recipients = \array_keys($userTopics);
+                }
+
                 $batches = \array_chunk(
-                    \array_keys($identifiers),
+                    $recipients,
                     $adapter->getMaxMessagesPerRequest()
                 );
 
@@ -363,7 +378,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
-     * @return \Generator<array<string, array<string, null>>>
+     * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
      * @throws \Exception
      */
     private function streamRecipients(
@@ -421,25 +436,42 @@ class Messaging extends Action
                         fn () => $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->find('targets', [
                                 Query::equal('$sequence', $targetInternalIds),
-                                Query::select(['providerId', 'identifier']),
+                                Query::select(['providerId', 'identifier', 'userId', 'expired']),
                                 Query::limit(\count($targetInternalIds)),
                             ])
                         )
                     );
 
-                    yield $this->groupTargetsByProvider($targets, $default);
+                    // Topic campaign: deliver on the topic's own channel, not a per-user topic.
+                    yield [$this->groupTargetsByProvider($targets, $default), false];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
 
         if (\count($userIds) > 0) {
+            // Only address users that actually exist, so a bogus id can't create a phantom users/
+            // topic or be counted as delivered.
+            $existingUserIds = \array_map(
+                fn (Document $user) => $user->getId(),
+                $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->find('users', [
+                        Query::equal('$id', \array_values(\array_unique($userIds))),
+                        Query::select(['$id']),
+                        Query::limit(\count($userIds)),
+                    ])
+                )
+            );
+
+            // Resolve each user's registered device targets first, so FCM/APNS (and any explicit
+            // Appwrite target) still receive — the reserved topic is additive, not a replacement.
+            $reachedViaTarget = [];
             $cursor = null;
 
             do {
                 $queries = [
-                    Query::equal('userId', $userIds),
+                    Query::equal('userId', $existingUserIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -448,7 +480,7 @@ class Messaging extends Action
                     $queries[] = Query::cursorAfter($cursor);
                 }
 
-                $targets = $dbForProject->find('targets', $queries);
+                $targets = $existingUserIds === [] ? [] : $dbForProject->find('targets', $queries);
                 $count = \count($targets);
 
                 if ($count === 0) {
@@ -457,8 +489,35 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                foreach ($targets as $target) {
+                    // groupTargetsByProvider drops expired targets, so an expired-only user is not
+                    // actually reached and must still get the direct MQTT fallback below.
+                    if (!$target->getAttribute('expired')) {
+                        $reachedViaTarget[$target->getAttribute('userId')] = true;
+                    }
+                }
+
+                // User-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+
+            // Appwrite push needs no device target: reach existing users with no registered target on
+            // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
+            if ($default->getAttribute('provider') === 'appwrite') {
+                $targetless = \array_values(\array_filter(
+                    $existingUserIds,
+                    fn (string $userId) => !isset($reachedViaTarget[$userId]),
+                ));
+
+                foreach (\array_chunk($targetless, MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+                    $identifiers = [];
+                    foreach ($chunk as $userId) {
+                        $identifiers[$userId] = $userId;
+                    }
+
+                    yield [[$default->getId() => $identifiers], true];
+                }
+            }
         }
 
         if (\count($targetIds) > 0) {
@@ -468,7 +527,7 @@ class Messaging extends Action
                 $queries = [
                     Query::equal('$id', $targetIds),
                     Query::equal('providerType', [$providerType]),
-                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::select(['$sequence', 'providerId', 'identifier', 'userId', 'expired']),
                     Query::orderAsc('$sequence'),
                     Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
                 ];
@@ -486,33 +545,45 @@ class Messaging extends Action
 
                 $cursor = $targets[$count - 1];
 
-                yield $this->groupTargetsByProvider($targets, $default);
+                // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
+                yield [$this->groupTargetsByProvider($targets, $default), true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
     }
 
     /**
-     * Group a page of target documents by provider id, deduplicating identifiers within the page.
+     * Group a page of target documents by provider id, deduplicating identifiers within the page and
+     * dropping targets already known to be unreachable. Each identifier maps to its target's user id,
+     * which the Appwrite push provider uses to deliver on the reserved per-user topic (see the send
+     * loop); other providers only read the keys.
      *
      * @param array<Document> $targets
-     * @return array<string, array<string, null>>
+     * @return array<string, array<string, string>>
      */
     private function groupTargetsByProvider(array $targets, Document $default): array
     {
         /**
-         * @var array<string, array<string, null>> $identifiers
+         * @var array<string, array<string, string>> $identifiers
          */
         $identifiers = [];
 
         foreach ($targets as $target) {
+            // sendBatch() flags a target when a provider reports its token as dead, but the row only goes
+            // away on the next maintenance sweep. Rows predating the attribute read null, so anything
+            // but a positive flag counts as reachable.
+            if ($target->getAttribute('expired')) {
+                continue;
+            }
+
             $providerId = $target->getAttribute('providerId') ?: $default->getId();
 
             if (!\array_key_exists($providerId, $identifiers)) {
                 $identifiers[$providerId] = [];
             }
 
-            // Null values keep identifiers unique without a second lookup structure.
-            $identifiers[$providerId][$target->getAttribute('identifier')] = null;
+            // identifier => userId: the key dedupes recipients; the value lets the Appwrite push
+            // provider collapse a user's targets to one users/<userId> topic.
+            $identifiers[$providerId][$target->getAttribute('identifier')] = $target->getAttribute('userId');
         }
 
         return $identifiers;
@@ -642,11 +713,33 @@ class Messaging extends Action
         for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
             $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
 
-            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
-            // batch never re-sends to recipients that already succeeded on an earlier attempt.
-            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
-
             $retry = [];
+
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt. A recipient no
+            // provider can deliver to is recorded as terminal and dropped, so it never costs the rest their send.
+            $data = null;
+            while ($pending !== []) {
+                try {
+                    $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $attachments);
+                    break;
+                } catch (InvalidArgumentException $e) {
+                    $recipient = $e->getValue();
+
+                    if ($recipient === null || !\in_array($recipient, $pending, true)) {
+                        $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                        $pending = [];
+                        break;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$e->getMessage()}");
+                    $pending = \array_values(\array_diff($pending, [$recipient]));
+                }
+            }
+
+            if ($data === null) {
+                break;
+            }
 
             // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
             // otherwise it records one representative terminal error. The previous behaviour of resetting
@@ -656,7 +749,7 @@ class Messaging extends Action
             try {
                 $response = $adapter->send($data);
             } catch (\Throwable $e) {
-                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                if ($hasRetriesLeft && !$e instanceof InvalidArgumentException && $this->isRetryableError($e->getMessage())) {
                     $retry = $pending;
                 } else {
                     $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
@@ -1084,6 +1177,7 @@ class Messaging extends Action
         $contentAvailable = $message['data']['contentAvailable'] ?? null;
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
+        $channelId = $message['data']['channelId'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1111,7 +1205,8 @@ class Messaging extends Action
             $badge,
             $contentAvailable,
             $critical,
-            $priority
+            $priority,
+            $channelId
         );
     }
 

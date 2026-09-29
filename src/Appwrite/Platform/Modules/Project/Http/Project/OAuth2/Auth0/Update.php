@@ -64,6 +64,11 @@ class Update extends Base
         return 'zXz0000-00000000000000000000000000000-00000000000000000000PJafnF';
     }
 
+    public static function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent'];
+    }
+
     public static function getParameters(): array
     {
         return \array_merge(parent::getParameters(), [
@@ -106,6 +111,7 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Auth0 instance. For example: example.us.auth0.com', optional: true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -127,18 +133,20 @@ class Update extends Base
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
             static::getClientSecretParamName() => '',
             'endpoint' => $decoded['auth0Domain'] ?? '',
+            'prompt' => $decoded['prompt'] ?? [],
         ]);
     }
 
     /**
      * Custom callback used instead of the parent's `action()` because Auth0
-     * takes an additional optional `endpoint` parameter. The method is named
+     * takes additional optional `endpoint` and `prompt` parameters. The method is named
      * differently to avoid an LSP-incompatible override of Base::action().
      */
     public function handle(
         ?string $clientId,
         ?string $clientSecret,
         ?string $endpoint,
+        ?array $prompt,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -149,12 +157,14 @@ class Update extends Base
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
 
+        $this->validatePrompt($prompt);
+
         // The secret is stored as JSON `{"clientSecret": "...", "auth0Domain": "..."}`
         // to match the shape Auth0's OAuth2 adapter expects (getAuth0Domain()).
         // Merge new values with existing storage so that submitting only one of
         // `clientSecret`/`endpoint` leaves the other untouched.
         $encodedSecret = null;
-        if (!\is_null($clientSecret) || !\is_null($endpoint)) {
+        if (!\is_null($clientSecret) || !\is_null($endpoint) || !\is_null($prompt)) {
             $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
             $existing = [];
             if (!empty($storedRaw)) {
@@ -163,6 +173,7 @@ class Update extends Base
             $encodedSecret = \json_encode([
                 'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
                 'auth0Domain' => $endpoint ?? ($existing['auth0Domain'] ?? ''),
+                'prompt' => $prompt ?? ($existing['prompt'] ?? []),
             ]);
         }
 

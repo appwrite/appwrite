@@ -1,0 +1,58 @@
+{
+    "name": "utopia-php/cache",
+    "description": "A simple cache library to manage application cache storing, loading and purging",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "cache"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Team Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Cache\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Cache\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.4",
+        "ext-json": "*",
+        "utopia-php/circuit-breaker": "^0.4",
+        "utopia-php/pools": "^2.0",
+        "utopia-php/telemetry": "^0.4"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^6.0"
+    },
+    "suggest": {
+        "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
+        "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
+        "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0).",
+        "ext-igbinary": "Required for the Igbinary codec."
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "bash tests/bench/run.sh"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}

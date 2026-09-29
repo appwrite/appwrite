@@ -17,19 +17,19 @@ class PolicyPasswordPwned extends PolicyBase
         $this
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether password pwned policy is enabled.',
+                'description' => 'Whether passwords are checked against known data breaches and the result recorded on the user.',
                 'default' => true,
                 'example' => true,
             ])
             ->addRule('sessions', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether passwords are checked when a session is created.',
+                'description' => 'Whether a sign-in with a breached password is refused until the password is reset.',
                 'default' => false,
                 'example' => false,
             ])
             ->addRule('users', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether users signing in with a breached password are blocked until they reset it. Only applies when sessions are checked.',
+                'description' => 'Whether a breached password is rejected when a user signs up or sets a new password.',
                 'default' => false,
                 'example' => false,
             ]);

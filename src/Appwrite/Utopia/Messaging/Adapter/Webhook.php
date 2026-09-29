@@ -3,11 +3,15 @@
 namespace Appwrite\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
-use Utopia\Fetch\Client as FetchClient;
-use Utopia\Fetch\Exception as FetchException;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Response;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class Webhook extends Adapter
 {
@@ -89,23 +93,23 @@ class Webhook extends Adapter
      */
     protected function dispatch(string $method, string $url, array $headers, string $body, int $timeout): array
     {
-        $client = new FetchClient();
-        $client
-            ->setTimeout($timeout * 1000)
-            ->setConnectTimeout(\min(10, $timeout) * 1000)
-            ->setAllowRedirects(false)
-            ->setUserAgent('Appwrite Webhook');
-
-        foreach ($headers as $header) {
-            $parts = \explode(':', $header, 2);
-            if (\count($parts) === 2) {
-                $client->addHeader(\trim($parts[0]), \trim($parts[1]));
-            }
-        }
+        $client = (new Client(new CurlAdapter()))
+            ->withTimeout($timeout)
+            ->withConnectTimeout(\min(10, $timeout))
+            ->withHeaders([Header::USER_AGENT => 'Appwrite Webhook']);
 
         try {
-            $response = $client->fetch($url, $method, $body);
-        } catch (FetchException $exception) {
+            $request = (new RequestFactory())->body($method, $url, $body, ContentType::JSON);
+            foreach ($headers as $header) {
+                $parts = \explode(':', $header, 2);
+                if (\count($parts) === 2) {
+                    $request = $request->withHeader(\trim($parts[0]), \trim($parts[1]));
+                }
+            }
+
+            $response = $client->sendRequest($request);
+        } catch (ClientExceptionInterface|\InvalidArgumentException $exception) {
+            // A malformed URL or header fails this delivery alone, like a transport error
             return [
                 'statusCode' => 0,
                 'response' => null,
@@ -113,11 +117,9 @@ class Webhook extends Adapter
             ];
         }
 
-        $output = $response->getBody();
-
         return [
             'statusCode' => $response->getStatusCode(),
-            'response' => \is_string($output) ? $output : null,
+            'response' => (string) $response->getBody(),
             'error' => null,
         ];
     }

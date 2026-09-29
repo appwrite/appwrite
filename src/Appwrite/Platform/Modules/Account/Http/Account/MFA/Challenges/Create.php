@@ -53,6 +53,7 @@ class Create extends Action
             ->desc('Create MFA challenge')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')

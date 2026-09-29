@@ -41,4 +41,11 @@ class MockPublisher implements Publisher
     {
         return count($this->events[$queue->name] ?? []);
     }
+
+    public function getFailedCount(Queue $queue): int
+    {
+        // Nothing recorded here ever fails: this double only collects what was
+        // published, so the count of work that did not get through is zero.
+        return 0;
+    }
 }

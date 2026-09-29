@@ -1534,7 +1534,7 @@ trait MigrationsBase
 
         sleep(1);
 
-        // SDK-reachable: PATCH /columns/:key/relationship accepts onDelete.
+        // Legacy alias of PATCH /columns/relationship/:key, kept for shipped SDKs.
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
             'onDelete' => Database::RELATION_MUTATE_RESTRICT,
         ]);
