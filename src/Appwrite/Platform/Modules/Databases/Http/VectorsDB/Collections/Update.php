@@ -66,6 +66,7 @@ class Update extends CollectionAction
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimensions.', true, example: '4')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('attributeSecurity', false, new Boolean(true), 'Enables scoping a permission to a single attribute. A permission naming an attribute grants access to that attribute alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Nullable(new Boolean()), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -75,7 +76,7 @@ class Update extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, ?bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, bool $attributeSecurity, ?bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
@@ -102,6 +103,7 @@ class Update extends CollectionAction
                 ->setAttribute('dimension', $dimensions ?? $collection->getAttribute('dimension'))
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
+                ->setAttribute('columnSecurity', $attributeSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', \implode(' ', [$collectionId, $name ?? $collection->getAttribute('name')]))
         );
@@ -109,13 +111,7 @@ class Update extends CollectionAction
         $dbForDatabases = $getDatabasesDB($database);
         $internalId = 'database_' . $database->getSequence() . '_collection_' . $updated->getSequence();
 
-        // Not part of this request, so it keeps the value it already had --
-        // updateCollection() stores what it is given rather than inferring it.
-        $columnSecurity = $authorization->skip(
-            fn () => $dbForDatabases->getCollection($internalId)->getAttribute('columnSecurity', false)
-        );
-
-        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $columnSecurity);
+        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $attributeSecurity);
 
         $queueForEvents
             ->setContext('database', $database)
