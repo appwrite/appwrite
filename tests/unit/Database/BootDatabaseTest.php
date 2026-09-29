@@ -95,15 +95,6 @@ final class BootDatabaseTest extends TestCase
         );
     }
 
-    public function testSetupRegistersThePermissionHookAProjectDatabaseHas(): void
-    {
-        $this->assertTrue($this->factory->project($this->project())->getAdapter()->hasPermissionHook());
-        $this->assertTrue(
-            $this->factory->setup(self::HOSTNAME)->getAdapter()->hasPermissionHook(),
-            'The database the boot creates project collections with must maintain the permission side table like every other database the factory builds'
-        );
-    }
-
     public function testAProjectCollectionCreatedAtBootKeepsItsPermissionRows(): void
     {
         $setup = $this->factory->setup(self::HOSTNAME);

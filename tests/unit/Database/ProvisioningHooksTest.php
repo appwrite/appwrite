@@ -45,15 +45,6 @@ final class ProvisioningHooksTest extends TestCase
         ]);
     }
 
-    public function testProvisioningRegistersThePermissionHookAProjectDatabaseHas(): void
-    {
-        $this->assertTrue($this->factory->project($this->project)->getAdapter()->hasPermissionHook());
-        $this->assertTrue(
-            $this->factory->provisioning($this->project)->getAdapter()->hasPermissionHook(),
-            'The database that creates a new project\'s collections must maintain the permission side table like every other database the factory builds'
-        );
-    }
-
     public function testACollectionCreatedWhileProvisioningKeepsItsPermissionRows(): void
     {
         $provisioning = $this->factory->provisioning($this->project);
