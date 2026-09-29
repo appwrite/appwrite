@@ -1,0 +1,41 @@
+{
+    "name": "utopia-php/nats",
+    "description": "Modern PHP client for NATS messaging system",
+    "type": "library",
+    "license": "Apache-2.0",
+    "keywords": [
+        "nats",
+        "messaging",
+        "pubsub",
+        "jetstream",
+        "queue"
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*"
+    },
+    "suggest": {
+        "ext-sodium": "Required for NKey and JWT credential authentication",
+        "ext-swoole": "Required for the coroutine-native SwooleTransport"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\NATS\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\NATS\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

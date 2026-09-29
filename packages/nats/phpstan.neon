@@ -1,0 +1,5 @@
+includes:
+    - ../../phpstan.neon
+
+parameters:
+    treatPhpDocTypesAsCertain: false
