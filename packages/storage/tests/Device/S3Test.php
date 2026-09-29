@@ -419,6 +419,7 @@ final class S3Test extends TestCase
         $device->prepare('/root/archive.tar.gz', 'application/gzip', 2, $metadata);
         $device->upload(new Stream('first'), '/root/archive.tar.gz', 'application/gzip', 1, 2, $metadata);
 
+        // The last chunk completes the upload.
         $this->assertSame(2, $device->upload(new Stream('second'), '/root/archive.tar.gz', 'application/gzip', 2, 2, $metadata));
         $this->assertCount(6, $client->requests);
         $this->assertSame('second', (string) $client->requests[3]->getBody());
@@ -558,6 +559,33 @@ final class S3Test extends TestCase
         $ranges = array_column($s3->amzHeadersByOperation['s3:uploadPartCopy'], 'x-amz-copy-source-range');
         $this->assertSame(['bytes=0-5368709119', 'bytes=5368709120-6442450943'], $ranges);
         $this->assertStringContainsString('etag-2', $s3->completedBody);
+    }
+
+    public function testLargeCopySurvivesAReplayedCompletion(): void
+    {
+        $size = (string) (6 * 1024 * 1024 * 1024);
+        $xml = static fn (string $body): Response => new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('content-length', $size),
+            $xml('<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'),
+            $xml('<CopyPartResult><ETag>"etag-1"</ETag></CopyPartResult>'),
+            $xml('<CopyPartResult><ETag>"etag-2"</ETag></CopyPartResult>'),
+            new TimeoutException(new Request('POST', Uri::parse('https://s3.example.com/root/b.bin')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+            new Response(404, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchUpload</Code><Message>The specified upload does not exist.</Message></Error>')),
+            new Response(200)->withHeader('content-length', $size),
+        ]);
+        $device = new S3(
+            root: '/root',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            client: new Retry($client, new RetryStrategy(delay: 0.0)),
+            bucket: 'my-bucket',
+        );
+
+        $this->assertTrue($device->copy('/root/a.bin', '/root/b.bin'));
+        $this->assertNotContains('DELETE', array_map(static fn (RequestInterface $request): string => $request->getMethod(), $client->requests), 'the landed copy is not aborted');
     }
 
     public function testCopyWithoutBucketFallsBackToStreaming(): void

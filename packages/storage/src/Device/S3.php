@@ -514,7 +514,17 @@ class S3 extends Device
                 }
                 $parts[$part] = $etag;
             }
-            $this->completeMultipartUpload($target, $uploadId, $parts);
+
+            try {
+                $this->completeMultipartUpload($target, $uploadId, $parts);
+            } catch (NotFoundException $e) {
+                // A replayed completion finds the upload gone once the first one landed.
+                if ($this->exists($target)) {
+                    return true;
+                }
+
+                throw $e;
+            }
         } catch (\Throwable $e) {
             // Best effort — unclaimed multipart parts are billed until aborted.
             try {
