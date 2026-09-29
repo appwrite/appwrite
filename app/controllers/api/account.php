@@ -3401,7 +3401,8 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project) {
+    ->inject('mode')
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
@@ -3418,7 +3419,8 @@ Http::post('/v1/account/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
                 'jwt' => $jwt->encode([
-                    'projectId' => $project->getId(),
+                    // In admin mode the session is a console session, whatever project is being managed.
+                    'projectId' => $mode === APP_MODE_ADMIN ? 'console' : $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $sessionId,
                 ])
