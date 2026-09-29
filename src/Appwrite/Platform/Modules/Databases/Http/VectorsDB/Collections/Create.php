@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -21,7 +22,6 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -71,8 +71,9 @@ class Create extends CollectionAction
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimension.', example: '4')
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('attributeSecurity', false, new Boolean(true), 'Enables scoping a permission to a single attribute. A permission naming an attribute grants access to that attribute alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -82,7 +83,7 @@ class Create extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $attributeSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -109,6 +110,7 @@ class Create extends CollectionAction
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions,
                 'documentSecurity' => $documentSecurity,
+                'columnSecurity' => $attributeSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
                 'dimension' => $dimension,
@@ -161,6 +163,7 @@ class Create extends CollectionAction
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
+                columnSecurity: $attributeSecurity,
                 attributes:$attributes,
                 indexes:$indexes
             );

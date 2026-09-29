@@ -7,9 +7,9 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -58,8 +58,9 @@ class Update extends CollectionUpdate
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('name', null, new Text(128), 'Table name. Max length: 128 chars.', true)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('rowSecurity', false, new Boolean(true), 'Enables configuring permissions for individual rows. A user needs one of row or table-level permissions to access a row. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('columnSecurity', false, new Boolean(true), 'Enables scoping a permission to a single column. A permission naming a column grants access to that column alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is table enabled? When set to \'disabled\', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.', true)
             ->param('purge', false, new Boolean(true), 'When true, purge all cached list responses for this table as part of the update. Use this to force readers to see fresh data immediately instead of waiting for the cache TTL to expire.', true)
             ->inject('response')

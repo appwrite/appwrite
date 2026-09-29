@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,7 +25,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
@@ -86,7 +86,7 @@ class Update extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
@@ -129,6 +129,9 @@ class Update extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+
+        $this->assertPermissionsFitCollection($collection, [new Document(['$permissions' => $permissions ?? []])]);
+
         // Read permission should not be required for update
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
