@@ -518,8 +518,16 @@ class S3 extends Device
             try {
                 $this->completeMultipartUpload($target, $uploadId, $parts);
             } catch (NotFoundException $e) {
-                // A replayed completion finds the upload gone once the first one landed.
-                if ($this->exists($target)) {
+                // A replayed completion finds the upload gone once the first one landed;
+                // only an ETag built from these parts proves the target is this copy.
+                $digests = implode('', array_map(fn (string $etag): string => (string) hex2bin($this->unquote($etag)), $parts));
+                try {
+                    $landed = $this->unquote($this->getInfo($target)['etag'] ?? '') === md5($digests) . '-' . \count($parts);
+                } catch (NotFoundException) {
+                    $landed = false;
+                }
+
+                if ($landed) {
                     return true;
                 }
 

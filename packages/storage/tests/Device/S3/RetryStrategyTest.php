@@ -89,6 +89,17 @@ final class RetryStrategyTest extends TestCase
         $this->assertNotNull($strategy->delay($create, 1, $this->response(503), null), 'throttled, so never applied');
     }
 
+    public function testMaybeAppliedBatchDeleteIsNotRetried(): void
+    {
+        // A replay could delete an object written under a listed key since the first attempt.
+        $strategy = new RetryStrategy();
+        $delete = $this->request('POST', 'delete=');
+
+        $this->assertNull($strategy->delay($delete, 1, $this->internalError(), null));
+        $this->assertNull($strategy->delay($delete, 1, null, new TimeoutException($delete, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
+        $this->assertNotNull($strategy->delay($delete, 1, $this->response(503), null), 'throttled, so never applied');
+    }
+
     public function testMaybeAppliedConditionalWriteIsNotRetried(): void
     {
         $strategy = new RetryStrategy();

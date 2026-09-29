@@ -22,8 +22,8 @@ use Utopia\Psr7\Method;
  *
  * A rejected request (throttled, or never sent) is always retried. One that may
  * have been applied (internal error, dropped or timed-out connection) is only
- * retried when replaying it is harmless: not a CreateMultipartUpload, which
- * would open a second upload, and not a conditional write, whose condition the
+ * retried when replaying it is harmless: not a POST other than
+ * CompleteMultipartUpload, and not a conditional write, whose condition the
  * first attempt may already have changed. The XML error code wins over the HTTP
  * status. Waits use exponential backoff with full jitter, or a numeric
  * Retry-After.
@@ -134,9 +134,14 @@ final readonly class RetryStrategy implements Strategy
             return ! $request->hasHeader(Header::IF_MATCH) && ! $request->hasHeader(Header::IF_NONE_MATCH);
         }
 
+        if ($request->getMethod() !== Method::POST) {
+            return true;
+        }
+
+        // Of the POSTs, only CompleteMultipartUpload is safe: a landed completion leaves the object in place.
         parse_str($request->getUri()->getQuery(), $query);
 
-        return $request->getMethod() !== Method::POST || !\array_key_exists('uploads', $query);
+        return \array_key_exists('uploadId', $query);
     }
 
     private function retryAfter(?ResponseInterface $response): ?float
