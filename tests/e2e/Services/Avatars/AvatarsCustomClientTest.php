@@ -456,7 +456,9 @@ final class AvatarsCustomClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
             'content-type' => 'multipart/form-data',
-        ]), []);
+        ]), [
+            'file' => '',
+        ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
