@@ -5452,7 +5452,53 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($data['id'], $account['body']['$id']);
     }
 
-    public function testMFARecencyCheckFailsUnderJWT(): void
+    protected function createJWTHeaders(string $session): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $response['body']['jwt'],
+        ];
+    }
+
+    protected function createSessionCookie(string $email, string $password): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'id' => $response['body']['$id'],
+            'secret' => $response['cookies']['a_session_' . $projectId],
+            'headers' => [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+            ],
+        ];
+    }
+
+    public function testMFARecencyCheckUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
         $projectId = $this->getProject()['$id'];
@@ -5467,32 +5513,16 @@ final class AccountCustomClientTest extends Scope
         $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
         $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
 
-        // Cookie auth: correctly blocked, no recent MFA challenge on this session.
         $cookieAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $headers);
         $this->assertEquals(401, $cookieAttempt['headers']['status-code']);
         $this->assertEquals('user_challenge_required', $cookieAttempt['body']['type']);
 
-        // Same session, converted to a JWT (still no challenge completed).
-        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', $headers);
-        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
-        $jwtHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-jwt' => $jwtResponse['body']['jwt'],
-        ];
-
-        // EXPECTED: identical 401 user_challenge_required — nothing about
-        // the underlying session state changed, only the auth transport.
-        // ACTUAL (bug): the 'session' resource resolves to null under JWT, and
-        // the mfaProtected middleware requires a non-null Document, so the
-        // request errors out instead of evaluating recency.
-        $jwtAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $jwtHeaders);
+        $jwtAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $this->createJWTHeaders($data['session']));
         $this->assertEquals(401, $jwtAttempt['headers']['status-code']);
         $this->assertEquals('user_challenge_required', $jwtAttempt['body']['type']);
     }
 
-    public function testMFAFactorCountBypassedUnderJWT(): void
+    public function testMFAFactorCountUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
         $projectId = $this->getProject()['$id'];
@@ -5504,32 +5534,11 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
         ];
 
-        // Second password-only session, created while MFA is still off.
-        $sessionB = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => $data['email'],
-            'password' => $data['password'],
-        ]);
-        $this->assertEquals(201, $sessionB['headers']['status-code']);
-        $this->assertEquals(['password'], $sessionB['body']['factors']);
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
 
-        $sessionBHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionB['cookies']['a_session_' . $projectId],
-        ];
+        // Issued before MFA is enabled, since session B could not create a JWT afterwards
+        $jwtHeaders = $this->createJWTHeaders($sessionB['secret']);
 
-        // The JWT must be issued now: /account/jwts runs the same factor-count
-        // check, so it would be refused once session B is under-verified.
-        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', $sessionBHeaders);
-        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
-
-        // Enable MFA from session A. Only the calling session gains the totp
-        // factor; session B stays at ['password'], below the new 2-factor minimum.
         $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
         $this->assertEquals(200, $authenticator['headers']['status-code']);
 
@@ -5542,124 +5551,93 @@ final class AccountCustomClientTest extends Scope
         $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, ['mfa' => true]);
         $this->assertEquals(200, $mfa['headers']['status-code']);
 
-        // Cookie auth on session B: correctly blocked, only 1 of 2 required factors present.
-        $cookieAttempt = $this->client->call(Client::METHOD_GET, '/account', $sessionBHeaders);
+        $cookieAttempt = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
         $this->assertEquals(401, $cookieAttempt['headers']['status-code']);
         $this->assertEquals('user_more_factors_required', $cookieAttempt['body']['type']);
 
-        $jwtHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-jwt' => $jwtResponse['body']['jwt'],
-        ];
-
-        // EXPECTED: identical 401 user_more_factors_required.
-        // ACTUAL (bug): shared/api.php guards this check with `if ($session && ...)`
-        // — under JWT, $session is null, so the check is silently skipped
-        // and the request succeeds despite the missing second factor.
         $jwtAttempt = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
         $this->assertEquals(401, $jwtAttempt['headers']['status-code']);
         $this->assertEquals('user_more_factors_required', $jwtAttempt['body']['type']);
     }
 
-    public function testDeleteSessionCurrentWrongUnderJWT(): void
+    public function testGetSessionCurrentUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
-        $projectId = $this->getProject()['$id'];
 
-        $sessionAId = $data['sessionId'];
-        $sessionA = $data['session'];
-
-        $sessionBResponse = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => $data['email'],
-            'password' => $data['password'],
-        ]);
-        $this->assertEquals(201, $sessionBResponse['headers']['status-code']);
-        $sessionB = $sessionBResponse['cookies']['a_session_' . $projectId];
-
-        // Get a JWT backed by session A specifically.
-        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionA,
-        ]);
-        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
-        $jwtHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-jwt' => $jwtResponse['body']['jwt'],
-        ];
-
-        // EXPECTED: 'current' resolves to session A (the JWT-backing
-        // session) and deletes it — 204, matching what a cookie-authenticated
-        // caller gets from the same "current" keyword.
-        // ACTUAL (bug): sessionVerify() can't resolve under JWT, so the
-        // lookup loop never matches any session, and this throws
-        // 404 user_session_not_found instead of deleting session A.
-        $delete = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $jwtHeaders);
-        $this->assertEquals(204, $delete['headers']['status-code']);
-
-        // Session A should now be gone...
-        $checkA = $this->client->call(Client::METHOD_GET, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionA,
-        ]);
-        $this->assertEquals(401, $checkA['headers']['status-code']);
-
-        // ...and session B should be untouched.
-        $checkB = $this->client->call(Client::METHOD_GET, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionB,
-        ]);
-        $this->assertEquals(200, $checkB['headers']['status-code']);
-
-        // Clean up.
-        $this->client->call(Client::METHOD_DELETE, '/account/sessions', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $sessionB,
-        ]);
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['sessionId'], $response['body']['$id']);
     }
 
-    public function testGetSessionCurrentWrongUnderJWT(): void
+    public function testUpdateSessionCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['sessionId'], $response['body']['$id']);
+    }
+
+    public function testDeleteSessionCurrentUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
         $projectId = $this->getProject()['$id'];
 
-        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $checkA = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
         ]);
-        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
-        $jwtHeaders = [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-jwt' => $jwtResponse['body']['jwt'],
-        ];
+        $this->assertEquals(401, $checkA['headers']['status-code']);
 
-        // EXPECTED: 'current' resolves to the JWT-backing session and
-        // returns it — 200, matching cookie-auth behavior for the same
-        // "current" keyword.
-        // ACTUAL (bug): sessionVerify() can't resolve under JWT, so this
-        // throws 404 user_session_not_found instead of returning the session.
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $jwtHeaders);
+        $checkB = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
+        $this->assertEquals(200, $checkB['headers']['status-code']);
+    }
+
+    public function testListSessionsCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $this->createJWTHeaders($data['session']));
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($data['sessionId'], $response['body']['$id']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        $current = [];
+        foreach ($response['body']['sessions'] as $session) {
+            $current[$session['$id']] = $session['current'];
+        }
+
+        $this->assertTrue($current[$data['sessionId']]);
+        $this->assertFalse($current[$sessionB['id']]);
+    }
+
+    public function testUpdatePasswordInvalidatesOtherSessionsUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $this->updateProjectinvalidateSessionsProperty(true);
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+        $jwtHeaders = $this->createJWTHeaders($data['session']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $jwtHeaders, [
+            'password' => 'new-password',
+            'oldPassword' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $checkB = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
+        $this->assertEquals(401, $checkB['headers']['status-code']);
+
+        $checkJWT = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $checkJWT['headers']['status-code']);
     }
 
     public function testRefreshEmailPasswordSession(): void
