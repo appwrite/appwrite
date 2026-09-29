@@ -135,6 +135,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "excerpt": "Appwrite looks up the client IP of every request to find out where it came from. On every plan, the lookup returns the country, continent, EU membership, and currency. **Premium Geo DB** is a project add-on that switches the lookup to a more detailed database. It adds the city, region, postal code, coordinates, and time zone of the IP, and details of the network behind it: ISP, autonomous system, and connection type. Once the add-on is active, the extra attributes…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Premium Geo DB"
+    ]
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
@@ -1937,7 +1948,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/native-sign-in",
     "title": "Native sign-in",
     "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
-    "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
+    "excerpt": "Native sign-in creates an Appwrite session from an ID token that Apple or Google issues to your app on the device. An ID token is a signed record of who the user is, defined by the OpenID Connect standard. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -5712,7 +5723,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in Claude Code. - Go to the **Installed** tab. - Select the…",
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes the hosted Appwrite MCP server, agent skills for the CLI and all major SDKs, and commands for deploying sites and functions. To install the plugin, run the following command in your terminal: If Claude Code cannot find the plugin, add the Appwrite marketplace and install it from there: Run in Claude Code to load the plugin…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",
@@ -6357,7 +6368,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-line/non-interactive",
     "title": "Non-interactive",
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
-    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
+    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : The command stores the endpoint and API key in the CLI's global configuration, and writes the project ID to your project config file, by default. In this mode, the CLI can only interact with one project…",
     "breadcrumbs": [
       "Tooling",
       "Guides",

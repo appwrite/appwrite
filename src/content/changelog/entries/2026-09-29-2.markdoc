@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "Match requests by city, ISP, and connection type with Premium Geo DB"
+date: 2026-09-29
+cover: /images/blog/announcing-premium-geo-db/cover.avif
+tags: firewall, security, console, api
+---
+
+[Premium Geo DB](/docs/advanced/billing/premium-geo-db) is now available as a project add-on on Appwrite Cloud. It adds city, state, postal code, coordinates, time zone, ISP, AS number, and connection type to the IP lookup Appwrite runs on every request, on top of the country data every plan already gets.
+
+With the add-on, Firewall gets 13 more condition attributes and two presets that deny API traffic from hosting and datacenter networks. The project **Usage** page breaks requests down by city and network, and `locale.get()` returns the same fields to your client apps.
+
+Enable it under **Settings** > **Overview** on any project in a Pro or Scale organization. It costs $10 per project per month, prorated for the first billing cycle.
+
+{% arrow_link href="/blog/post/announcing-premium-geo-db" %}
+Read the announcement
+{% /arrow_link %}

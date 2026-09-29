@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-premium-geo-db",
+    "href": "/blog/post/announcing-premium-geo-db",
+    "title": "Announcing Premium Geo DB: city, ISP, and connection data",
+    "description": "Premium Geo DB adds city, time zone, ISP, ASN, and connection type to IP geolocation on Appwrite Cloud, for Firewall rules, usage, and the Locale API.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-premium-geo-db/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "discord-bot-appwrite-functions",
     "href": "/blog/post/discord-bot-appwrite-functions",
     "title": "Build a Discord bot for your Appwrite projects with Appwrite Functions",

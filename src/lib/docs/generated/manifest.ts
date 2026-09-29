@@ -87,6 +87,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 9
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
@@ -4099,7 +4106,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "tooling/command-line/non-interactive",
