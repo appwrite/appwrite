@@ -20,10 +20,13 @@ use Utopia\Psr7\Method;
  * Retry strategy for transient S3 failures, for use with the
  * `utopia-php/client` Retry decorator.
  *
- * The XML error code wins over the HTTP status; unparseable 429/5xx responses
- * fall back to the status. Transport failures are retried only when replaying
- * cannot apply the request twice. Waits use exponential backoff with full
- * jitter, or a numeric Retry-After.
+ * A rejected request (throttled, or never sent) is always retried. One that may
+ * have been applied (internal error, dropped or timed-out connection) is only
+ * retried when replaying it is harmless: not a CreateMultipartUpload, which
+ * would open a second upload, and not a conditional write, whose condition the
+ * first attempt may already have changed. The XML error code wins over the HTTP
+ * status. Waits use exponential backoff with full jitter, or a numeric
+ * Retry-After.
  * @see \Utopia\Storage\Tests\Device\S3\RetryStrategyTest
  */
 final readonly class RetryStrategy implements Strategy
@@ -31,12 +34,26 @@ final readonly class RetryStrategy implements Strategy
     /**
      * @var array<int, string>
      */
-    private const array TRANSIENT_ERROR_CODES = ['SlowDown', 'ServiceUnavailable', 'Throttling', 'RequestThrottled', 'InternalError'];
+    private const array REJECTED_ERROR_CODES = ['SlowDown', 'ServiceUnavailable', 'Throttling', 'RequestThrottled'];
+
+    /**
+     * @var array<int, string>
+     */
+    private const array UNKNOWN_ERROR_CODES = ['InternalError'];
 
     /**
      * @var array<int, int>
      */
-    private const array TRANSIENT_STATUS_CODES = [429, 500, 502, 503, 504];
+    private const array REJECTED_STATUS_CODES = [429, 503];
+
+    /**
+     * @var array<int, int>
+     */
+    private const array UNKNOWN_STATUS_CODES = [500, 502, 504];
+
+    private const string REJECTED = 'rejected';
+
+    private const string UNKNOWN = 'unknown';
 
     private Closure $randomizer;
 
@@ -61,53 +78,65 @@ final readonly class RetryStrategy implements Strategy
             return null;
         }
 
-        $transient = $response instanceof ResponseInterface
-            ? $this->isTransient($response)
-            : $this->isReplayable($request, $error);
+        $outcome = $response instanceof ResponseInterface
+            ? $this->classifyResponse($response)
+            : $this->classifyError($error);
 
-        if (! $transient) {
+        if ($outcome === null || ($outcome === self::UNKNOWN && ! $this->isReplayable($request))) {
             return null;
         }
 
         return $this->retryAfter($response) ?? ($this->randomizer)() * min($this->maxDelay, $this->delay * 2 ** ($attempt - 1));
     }
 
-    private function isTransient(ResponseInterface $response): bool
+    private function classifyResponse(ResponseInterface $response): ?string
     {
         $body = (string) $response->getBody();
 
         $trimmed = ltrim($body);
         if (str_starts_with($trimmed, '<?xml') || str_starts_with($trimmed, '<Error')) {
             $xml = @simplexml_load_string($body, \SimpleXMLElement::class, LIBXML_NONET | LIBXML_NOCDATA);
-            if ($xml !== false) {
-                $code = (string) ($xml->Code ?? '');
-                if (\in_array($code, self::TRANSIENT_ERROR_CODES, true)) {
-                    return true;
-                }
-                // Successfully parsed XML with a non-transient error code — do not retry.
-                if ($code !== '') {
-                    return false;
-                }
+            $code = $xml === false ? '' : (string) ($xml->Code ?? '');
+            if ($code !== '') {
+                return match (true) {
+                    \in_array($code, self::REJECTED_ERROR_CODES, true) => self::REJECTED,
+                    \in_array($code, self::UNKNOWN_ERROR_CODES, true) => self::UNKNOWN,
+                    default => null,
+                };
             }
         }
 
-        // Fall back to HTTP status code for responses that cannot be parsed as XML.
-        return \in_array($response->getStatusCode(), self::TRANSIENT_STATUS_CODES, true);
+        return match (true) {
+            \in_array($response->getStatusCode(), self::REJECTED_STATUS_CODES, true) => self::REJECTED,
+            \in_array($response->getStatusCode(), self::UNKNOWN_STATUS_CODES, true) => self::UNKNOWN,
+            default => null,
+        };
     }
 
-    private function isReplayable(RequestInterface $request, ?ClientExceptionInterface $error): bool
+    private function classifyError(?ClientExceptionInterface $error): ?string
     {
-        // Nothing was sent.
-        if ($error instanceof DnsException || ($error instanceof ConnectionException && $error->getCode() === \CURLE_COULDNT_CONNECT)) {
-            return true;
+        // Nothing was sent: cURL and Swoole report a refused connection differently.
+        $refused = [\CURLE_COULDNT_CONNECT, \defined('SOCKET_ECONNREFUSED') ? \SOCKET_ECONNREFUSED : 111];
+        if ($error instanceof DnsException || ($error instanceof ConnectionException && \in_array($error->getCode(), $refused, true))) {
+            return self::REJECTED;
         }
 
         if ($error instanceof TlsException) {
-            return false;
+            return null;
         }
 
-        // A replayed POST may open a second multipart upload.
-        return ($error instanceof ConnectionException || $error instanceof TimeoutException) && $request->getMethod() !== Method::POST;
+        return $error instanceof ConnectionException || $error instanceof TimeoutException ? self::UNKNOWN : null;
+    }
+
+    private function isReplayable(RequestInterface $request): bool
+    {
+        if ($request->getMethod() === Method::PUT) {
+            return ! $request->hasHeader(Header::IF_MATCH) && ! $request->hasHeader(Header::IF_NONE_MATCH);
+        }
+
+        parse_str($request->getUri()->getQuery(), $query);
+
+        return $request->getMethod() !== Method::POST || !\array_key_exists('uploads', $query);
     }
 
     private function retryAfter(?ResponseInterface $response): ?float

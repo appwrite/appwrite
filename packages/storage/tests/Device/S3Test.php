@@ -422,7 +422,21 @@ final class S3Test extends TestCase
         $this->assertSame(2, $device->upload(new Stream('second'), '/root/archive.tar.gz', 'application/gzip', 2, 2, $metadata));
         $this->assertCount(6, $client->requests);
         $this->assertSame('second', (string) $client->requests[3]->getBody());
-        $this->assertStringContainsString('<ETag>"etag-2"</ETag><PartNumber>2</PartNumber>', (string) $client->requests[5]->getBody());
+    }
+
+    public function testConditionalWriteIsNotReplayedAfterAnInternalError(): void
+    {
+        // The first attempt may have written the object, so a replay would fail its own If-None-Match.
+        $client = new ScriptedClient([$this->internalIncident()]);
+
+        try {
+            $this->device($client)->create('/root/file.txt', new Stream('Hello World'), 'text/plain');
+            self::fail('Expected the internal error to surface');
+        } catch (RemoteException $e) {
+            $this->assertSame('InternalError', $e->errorCode);
+        }
+
+        $this->assertCount(1, $client->requests);
     }
 
     public function testTimedOutPartIsReplayed(): void

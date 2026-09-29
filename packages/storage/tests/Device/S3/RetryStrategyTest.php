@@ -17,9 +17,14 @@ use Utopia\Storage\Device\S3\RetryStrategy;
 
 final class RetryStrategyTest extends TestCase
 {
-    private function request(string $method = 'PUT'): Request
+    private function request(string $method = 'PUT', string $query = ''): Request
     {
-        return new Request($method, Uri::parse('https://s3.example.com/root/file.txt'));
+        return new Request($method, Uri::parse('https://s3.example.com/root/file.txt' . ($query === '' ? '' : '?' . $query)));
+    }
+
+    private function internalError(): Response
+    {
+        return $this->response(500, '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>');
     }
 
     private function response(int $status, string $body = ''): Response
@@ -68,9 +73,36 @@ final class RetryStrategyTest extends TestCase
 
     public function testInternalErrorIsRetried(): void
     {
-        $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>';
+        $strategy = new RetryStrategy();
 
-        $this->assertNotNull(new RetryStrategy()->delay($this->request('POST'), 1, $this->response(500, $body), null));
+        $this->assertNotNull($strategy->delay($this->request('PUT', 'partNumber=2&uploadId=upload-1'), 1, $this->internalError(), null));
+        $this->assertNotNull($strategy->delay($this->request('POST', 'uploadId=upload-1'), 1, $this->internalError(), null), 'completion');
+    }
+
+    public function testMaybeAppliedMultipartCreationIsNotRetried(): void
+    {
+        $strategy = new RetryStrategy();
+        $create = $this->request('POST', 'uploads=');
+
+        $this->assertNull($strategy->delay($create, 1, $this->internalError(), null));
+        $this->assertNull($strategy->delay($create, 1, null, new TimeoutException($create, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
+        $this->assertNotNull($strategy->delay($create, 1, $this->response(503), null), 'throttled, so never applied');
+    }
+
+    public function testMaybeAppliedConditionalWriteIsNotRetried(): void
+    {
+        $strategy = new RetryStrategy();
+
+        foreach (['If-None-Match' => '*', 'If-Match' => '"etag"'] as $header => $value) {
+            $write = $this->request('PUT')->withHeader($header, $value);
+
+            $this->assertNull($strategy->delay($write, 1, $this->internalError(), null), $header);
+            $this->assertNull($strategy->delay($write, 1, null, new ConnectionException($write, 'Connection reset by peer', \CURLE_RECV_ERROR)), $header);
+            $this->assertNotNull($strategy->delay($write, 1, $this->response(503), null), $header . ' throttled, so never applied');
+        }
+
+        $read = $this->request('GET')->withHeader('If-Match', '"etag"');
+        $this->assertNotNull($strategy->delay($read, 1, $this->internalError(), null), 'a conditional read is harmless to repeat');
     }
 
     /** XML error code takes precedence over HTTP status — 503 with non-transient XML must not be retried. */
@@ -100,13 +132,14 @@ final class RetryStrategyTest extends TestCase
         $this->assertNull($strategy->delay($this->request(), 3, $response, null));
     }
 
-    public function testFailuresBeforeSendingAreRetriedForEveryMethod(): void
+    public function testFailuresBeforeSendingAreRetriedForEveryRequest(): void
     {
         $strategy = new RetryStrategy();
-        $post = $this->request('POST');
+        $create = $this->request('POST', 'uploads=');
 
-        $this->assertNotNull($strategy->delay($post, 1, null, new ConnectionException($post, 'Could not connect to server', \CURLE_COULDNT_CONNECT)));
-        $this->assertNotNull($strategy->delay($post, 1, null, new DnsException($post, 'Could not resolve host', \CURLE_COULDNT_RESOLVE_HOST)));
+        $this->assertNotNull($strategy->delay($create, 1, null, new ConnectionException($create, 'Could not connect to server', \CURLE_COULDNT_CONNECT)), 'cURL');
+        $this->assertNotNull($strategy->delay($create, 1, null, new ConnectionException($create, 'Connection refused', \defined('SOCKET_ECONNREFUSED') ? \SOCKET_ECONNREFUSED : 111)), 'Swoole');
+        $this->assertNotNull($strategy->delay($create, 1, null, new DnsException($create, 'Could not resolve host', \CURLE_COULDNT_RESOLVE_HOST)));
     }
 
     public function testDroppedOrTimedOutPutIsRetried(): void
@@ -118,13 +151,12 @@ final class RetryStrategyTest extends TestCase
         $this->assertNotNull($strategy->delay($put, 1, null, new TimeoutException($put, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
     }
 
-    public function testDroppedOrTimedOutPostIsNotRetried(): void
+    public function testTimedOutCompletionIsRetried(): void
     {
-        $strategy = new RetryStrategy();
-        $post = $this->request('POST');
+        // A completion that did land leaves the object in place, which finalize() accepts.
+        $complete = $this->request('POST', 'uploadId=upload-1');
 
-        $this->assertNull($strategy->delay($post, 1, null, new ConnectionException($post, 'Connection reset by peer', \CURLE_RECV_ERROR)));
-        $this->assertNull($strategy->delay($post, 1, null, new TimeoutException($post, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
+        $this->assertNotNull(new RetryStrategy()->delay($complete, 1, null, new TimeoutException($complete, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
     }
 
     public function testTlsFailureIsNotRetried(): void
