@@ -82,19 +82,11 @@ jobs:
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-vectorsdb/runner=e2e-long
     steps:
-      - name: Load console session
-        if: matrix.auth
-        env:
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-          SESSION: ${{ needs.session.outputs.session }}
+      - name: Check console session
+        if: matrix.auth && needs.session.outputs.session == ''
         run: |
-          if [ -z "$SESSION" ]; then
-            echo '::error::The session job did not create a console session'
-            exit 1
-          fi
-          cookies=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
-          echo "::add-mask::$cookies"
-          echo "E2E_FALLBACK_COOKIES=$cookies" >> "$GITHUB_ENV"
+          echo '::error::The session job did not create a console session'
+          exit 1
 
       - uses: actions/checkout@v4
 
@@ -136,4 +128,11 @@ jobs:
           E2E_TEST_SESSION_SECRET: ${{ secrets.E2E_TEST_SESSION_SECRET }}
           E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
           E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
-        run: bun run e2e -- ${{ matrix.args }}
+          SESSION: ${{ matrix.auth && needs.session.outputs.session || '' }}
+        run: |
+          if [ -n "$SESSION" ]; then
+            E2E_FALLBACK_COOKIES=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
+            echo "::add-mask::$E2E_FALLBACK_COOKIES"
+            export E2E_FALLBACK_COOKIES
+          fi
+          bun run e2e -- ${{ matrix.args }}
