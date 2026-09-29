@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Users;
 
+use Ahc\Jwt\JWT;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 final class UsersCustomServerTest extends Scope
 {
@@ -76,5 +78,69 @@ final class UsersCustomServerTest extends Scope
         $console = $account('console', $jwts[$this->getRoot()['$id']]);
         $this->assertSame(401, $console['headers']['status-code']);
         $this->assertArrayNotHasKey('email', $console['body']);
+    }
+
+    /**
+     * JWTs minted before the projectId claim existed are still in flight at deploy. They are
+     * accepted only when they name a session, and only while that session lives in the project.
+     */
+    public function testLegacyJWTWithoutProjectClaimIsBoundBySession(): void
+    {
+        $project = $this->getProject();
+        $otherProject = $this->getProject(true);
+        $userId = ID::unique();
+
+        foreach ([$project, $otherProject] as $p) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $p['$id'],
+                'x-appwrite-key' => $p['apiKey'],
+            ], [
+                'userId' => $userId,
+                'email' => 'legacy-' . ID::unique() . '@appwrite.io',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+        }
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $sessionId = $session['body']['$id'];
+
+        // The payload shape every minter produced before this change.
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $withSession = $encoder->encode(['userId' => $userId, 'sessionId' => $sessionId]);
+        $withoutSession = $encoder->encode(['userId' => $userId, 'sessionId' => '']);
+
+        $account = fn (string $projectId, string $jwt) => $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $jwt,
+        ]);
+
+        $own = $account($project['$id'], $withSession);
+        $this->assertSame(200, $own['headers']['status-code']);
+        $this->assertSame($userId, $own['body']['$id']);
+
+        // The other project's user has the same ID but not the session.
+        $this->assertSame(401, $account($otherProject['$id'], $withSession)['headers']['status-code']);
+
+        // Without a session nothing ties it to a project.
+        $this->assertSame(401, $account($project['$id'], $withoutSession)['headers']['status-code']);
+        $this->assertSame(401, $account($otherProject['$id'], $withoutSession)['headers']['status-code']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions/' . $sessionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $this->assertSame(401, $account($project['$id'], $withSession)['headers']['status-code']);
     }
 }
