@@ -397,6 +397,10 @@ test.describe('passkeys (mocked API)', () => {
       rpId: 'app.example.com',
       origins: ['https://app.example.com'],
     })
+    // A refusal leaves the edits on screen to fix rather than resetting them.
+    await expect(rpIdInput(page)).toHaveValue('app.example.com')
+    await expect(originInput(page, 1)).toHaveValue('https://app.example.com')
+    await expect(updateButton(page)).toBeEnabled()
   })
 
   test('the passkey method stays off until the policy is configured', async ({

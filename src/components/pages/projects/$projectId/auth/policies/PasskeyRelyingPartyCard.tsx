@@ -42,11 +42,15 @@ export function PasskeyRelyingPartyCard({
   const [origins, setOrigins] = useState(originRows(currentPolicy.origins))
   const mutation = useUpdatePasskeyPolicy(projectId)
   const isSubmitting = useRef(false)
+  const syncedPolicy = useRef(currentPolicy)
 
   useEffect(() => {
-    // While a submit is in flight the values on screen win; once it settles the
-    // server wins, since it normalises origins.
+    // Adopt the stored policy only when it changes, so a refused save keeps the
+    // edits on screen while a successful one picks up the server's normalised
+    // origins once the refetch lands.
     if (mutation.isPending || isSubmitting.current) return
+    if (syncedPolicy.current === currentPolicy) return
+    syncedPolicy.current = currentPolicy
     setRpId(currentPolicy.rpId)
     setOrigins(originRows(currentPolicy.origins))
   }, [currentPolicy, mutation.isPending])
