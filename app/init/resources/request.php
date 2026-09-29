@@ -1012,7 +1012,9 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (! empty($orgHeader)) {
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
                 return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
