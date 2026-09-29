@@ -162,6 +162,7 @@ class StatsUsage extends Action
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
             METRIC_DATABASES_STORAGE,
+            METRIC_AVATARS_STORAGE,
         ], true);
     }
 

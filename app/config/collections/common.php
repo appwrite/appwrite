@@ -441,6 +441,28 @@ return [
                 'default' => false,
                 'array' => false,
             ],
+            [
+                '$id' => ID::custom('photoId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('photoSize'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 8,
+                'signed' => true,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
