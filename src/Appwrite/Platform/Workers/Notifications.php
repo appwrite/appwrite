@@ -18,6 +18,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -326,26 +327,32 @@ class Notifications extends Action
             ];
         }
 
-        $emailMessage = new EmailMessage(
-            to: [['email' => $address, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-
-        $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
-
         try {
+            $emailMessage = new EmailMessage(
+                to: [['email' => $address, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
+            );
+
+            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+
             if ($adapter instanceof EmailAdapter) {
                 $send($adapter);
             } else {
                 $register->get('smtp')->use($send);
             }
+        } catch (InvalidArgumentException $error) {
+            // The address or name can never be delivered, so a retry cannot help.
+            Span::add('email.skipped', $error->getType());
+            Span::add('email.error', $error->getMessage());
+
+            return null;
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }

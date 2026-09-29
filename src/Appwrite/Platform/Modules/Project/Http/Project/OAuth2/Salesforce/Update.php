@@ -62,4 +62,9 @@ class Update extends Base
     {
         return '3w000000000000e2';
     }
+
+    public static function getPromptValues(): array
+    {
+        return ['login', 'consent'];
+    }
 }

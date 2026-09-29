@@ -6,16 +6,25 @@ const serviceLabels = ['Account', 'TablesDB', 'Storage', 'Functions'];
 module.exports = async ({ github, context, core }) => {
     const body = buildComment(core);
     fs.writeFileSync('benchmark-comment.txt', body);
+    await core.summary.addRaw(body).write();
 
     const pullRequest = context.payload.pull_request;
     if (!pullRequest || pullRequest.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
         return;
     }
 
+    try {
+        await upsertComment(github, context, pullRequest.number, body);
+    } catch (error) {
+        core.warning(`Could not post benchmark comment: ${error.message}`);
+    }
+};
+
+async function upsertComment(github, context, issueNumber, body) {
     const comments = await github.paginate(github.rest.issues.listComments, {
         owner: context.repo.owner,
         repo: context.repo.repo,
-        issue_number: pullRequest.number,
+        issue_number: issueNumber,
         per_page: 100,
     });
 
@@ -38,10 +47,10 @@ module.exports = async ({ github, context, core }) => {
     await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        issue_number: pullRequest.number,
+        issue_number: issueNumber,
         body,
     });
-};
+}
 
 function buildComment(core) {
     const before = readSummary('benchmark-before-summary.json', core);

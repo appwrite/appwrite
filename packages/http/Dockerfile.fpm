@@ -1,0 +1,42 @@
+FROM php:8.5-fpm-alpine AS final
+LABEL maintainer="team@appwrite.io"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PHP_FPM_POOL_CONF=/usr/local/etc/php-fpm.d/www.conf
+
+RUN \
+  apk add --no-cache --virtual .deps \
+  supervisor nginx bash
+
+
+# Nginx Configuration (with self-signed ssl certificates)
+COPY ./tests/docker/nginx.conf /etc/nginx/nginx.conf
+
+# PHP Configuration
+RUN mkdir -p /var/run/php
+COPY ./tests/docker/www.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Script
+COPY ./tests/docker/start /usr/local/bin/start
+
+# Composer binary (for running scripts inside the container)
+COPY --from=composer:2.7 /usr/bin/composer /usr/local/bin/composer
+
+# Add PHP Source Code
+COPY ./src /usr/share/nginx/html/src
+COPY ./tests /usr/share/nginx/html/tests
+COPY ./phpunit.xml /usr/share/nginx/html/phpunit.xml
+COPY ./composer.json ./phpstan.neon /usr/share/nginx/html/
+COPY ./vendor /usr/share/nginx/html/vendor
+
+# Supervisord Conf
+COPY ./tests/docker/supervisord.conf /etc/supervisord.conf
+
+# Executables
+RUN chmod +x /usr/local/bin/start
+
+EXPOSE 80
+
+WORKDIR /usr/share/nginx/html
+
+CMD ["/bin/bash", "/usr/local/bin/start"]

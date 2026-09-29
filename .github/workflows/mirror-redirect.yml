@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   redirect:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Redirect pull request to appwrite/appwrite
         if: github.event_name == 'pull_request_target'

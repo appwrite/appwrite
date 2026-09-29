@@ -100,6 +100,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid refresh token');
             }
 
+            $responseJson['access_token'] = $canonicalEmail ? $client_id : 'refreshed-123456';
             $response->json($responseJson);
         } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid grant type');
@@ -126,6 +127,22 @@ Http::get('/v1/mock/tests/general/oauth2/photo')
             ->file(\base64_decode($photo));
     });
 
+Http::get('/v1/mock/tests/general/oauth2/photo-refreshed')
+    ->desc('OAuth2 Refreshed User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #FF0000 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAPUlEQVR42u3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACEG12AAAH7Qv1cAAAAAElFTkSuQmCC';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
@@ -142,6 +159,14 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'email' => 'useroauth@localhost.test',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } elseif ($token === 'refreshed-123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo-refreshed',
             ];
         } elseif (\str_starts_with($token, 'canonical-')) {
             $id = \substr($token, \strlen('canonical-'));

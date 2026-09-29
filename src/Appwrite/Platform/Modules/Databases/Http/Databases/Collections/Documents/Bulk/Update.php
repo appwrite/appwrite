@@ -62,6 +62,15 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-documents.md',
+                requestExamples: [
+                    'updateSelected' => [
+                        'summary' => 'Update explicitly selected documents',
+                        'value' => [
+                            'data' => ['username' => 'walter.obrien'],
+                            'queries' => ['{"method":"equal","attribute":"$id","values":["<DOCUMENT_ID>"]}'],
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

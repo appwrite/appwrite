@@ -25,6 +25,16 @@ class OAuth2Oidc extends OAuth2Base
         return 'Ah68ed000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003qpcHV';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent', 'select_account'];
+    }
+
+    public function getPromptDescription(): string
+    {
+        return 'OpenID Connect prompt values controlling the authentication and consent screens.';
+    }
+
     public function __construct()
     {
         parent::__construct();
@@ -53,14 +63,6 @@ class OAuth2Oidc extends OAuth2Base
                 'description' => 'OpenID Connect user info endpoint URL.',
                 'default' => '',
                 'example' => 'https://myoauth.com/oauth2/userinfo',
-            ])
-            ->addRule('prompt', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'OpenID Connect prompt values controlling the authentication and consent screens.',
-                'default' => [],
-                'example' => ['consent'],
-                'array' => true,
-                'enum' => ['none', 'login', 'consent', 'select_account'],
             ])
             ->addRule('maxAge', [
                 'type' => self::TYPE_INTEGER,
