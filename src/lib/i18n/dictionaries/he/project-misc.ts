@@ -1425,12 +1425,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deployment docs': 'דוקומנטציית פריסות',
   Back: 'חזרה',
   'Only .tar.gz files are allowed.': 'מותרים רק קובצי ‎.tar.gz.',
-  'File size exceeds': 'גודל הקובץ חורג מ',
   'Deployment created successfully': 'הפריסה נוצרה בהצלחה',
   'Please select a .tar.gz file.': 'בחרו קובץ ‎.tar.gz.',
   'Create manual deployment': 'יצירת פריסה ידנית',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
+  'Upload a .tar.gz archive of your code.':
+    'העלו ארכיון ‎.tar.gz של הקוד שלכם.',
   'Drop a .tar.gz file here or click to browse':
     'גררו קובץ ‎.tar.gz לכאן או לחצו לעיון',
   'Uploading…': 'מעלה…',

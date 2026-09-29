@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Upload, Loader2, FileArchive } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
@@ -23,11 +23,15 @@ import {
   DEPLOYMENT_ARCHIVE_ACCEPT,
   isDeploymentArchive,
 } from '@/lib/deployment-archive'
+import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
 
-/** Default max upload size (10MB). Can be overridden by plan/env. */
-export const DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES = 10 * 1024 * 1024
+/** The server's own fallback when _APP_COMPUTE_SIZE_LIMIT is unset. */
+export const DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES = 30_000_000
 
 export interface CreateManualDeploymentModalProps {
   open: boolean
@@ -36,7 +40,7 @@ export interface CreateManualDeploymentModalProps {
   projectId: string
   resourceId: string
   onSuccess?: () => void
-  /** Max file size in bytes; default 10MB */
+  /** Max file size in bytes; defaults to the limit the server enforces for the project */
   maxFileSizeBytes?: number
 }
 
@@ -47,9 +51,24 @@ export function CreateManualDeploymentModal({
   projectId,
   resourceId,
   onSuccess,
-  maxFileSizeBytes = DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES,
+  maxFileSizeBytes: maxFileSizeBytesProp,
 }: CreateManualDeploymentModalProps) {
   const t = useT()
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { computeSizeLimit } = useConsoleVariables(project?.region)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const planSize = plan?.deploymentSize
+  // As on the server, a Cloud plan's deploymentSize replaces _APP_COMPUTE_SIZE_LIMIT
+  // and 0 means no limit. MAX_SAFE_INTEGER is the stand-in plan from a failed
+  // request, so the limit is unknown.
+  const serverSizeLimit = !getActiveProfileFeatures().billing
+    ? (computeSizeLimit ?? DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES)
+    : planSize !== undefined && planSize < Number.MAX_SAFE_INTEGER
+      ? planSize * 1_000_000
+      : undefined
+  const maxFileSizeBytes = maxFileSizeBytesProp ?? serverSizeLimit
+  // Floor, so the shown limit never exceeds what is enforced
+  const maxMb = Math.floor((maxFileSizeBytes ?? 0) / 1_000_000)
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -76,9 +95,8 @@ export function CreateManualDeploymentModal({
     if (!isDeploymentArchive(f)) {
       return t('Only .tar.gz files are allowed.')
     }
-    if (f.size > maxFileSizeBytes) {
-      const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(0)
-      return `${t('File size exceeds')} ${mb}MB.`
+    if (maxFileSizeBytes && f.size > maxFileSizeBytes) {
+      return `${t('File is too large. Maximum size:')} ${maxMb}MB`
     }
     return null
   }
@@ -196,17 +214,22 @@ export function CreateManualDeploymentModal({
     mutation.mutate()
   }
 
-  const maxMb = (maxFileSizeBytes / (1024 * 1024)).toFixed(0)
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Create manual deployment')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Upload a .tar.gz archive of your code. Maximum file size is')}{' '}
-            {maxMb}
-            MB.
+            {maxFileSizeBytes ? (
+              <>
+                {t(
+                  'Upload a .tar.gz archive of your code. Maximum file size is',
+                )}{' '}
+                {maxMb}MB.
+              </>
+            ) : (
+              t('Upload a .tar.gz archive of your code.')
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

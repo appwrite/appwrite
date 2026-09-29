@@ -930,12 +930,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Activate deployment after build': 'ビルド後にデプロイを有効化',
   'Deployment docs': 'デプロイドキュメント',
   'Only .tar.gz files are allowed.': '.tar.gz ファイルのみ許可されています。',
-  'File size exceeds': 'ファイルサイズが超過',
   'Deployment created successfully': 'デプロイを作成しました',
   'Please select a .tar.gz file.': '.tar.gz ファイルを選択してください。',
   'Create manual deployment': '手動デプロイの作成',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'コードの .tar.gz アーカイブをアップロードしてください。最大ファイルサイズ:',
+  'Upload a .tar.gz archive of your code.':
+    'コードの .tar.gz アーカイブをアップロードしてください。',
   'Drop a .tar.gz file here or click to browse':
     '.tar.gz ファイルをここにドロップするか、クリックして参照',
   'Uploading…': 'アップロード中…',
