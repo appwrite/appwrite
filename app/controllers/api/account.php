@@ -1627,15 +1627,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
-        // The default relays live on the console host; the same path on any other allowed host is a customer page
+        // The default relays live on the console host; the same path on any other allowed host is a customer page.
+        // Native apps skip the relay: its JavaScript redirect into the app is late or dropped on slow in-app browsers.
         $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        $nativeCallback = ['scheme' => 'appwrite-callback-' . $project->getId()];
 
         $failure = [];
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
@@ -1644,10 +1646,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'type' => $exception->getType(),
                     'code' => !\is_null($code) ? $code : $exception->getCode(),
                 ]);
-                // Mirror success path: default OAuth failure relay needs project to deep-link
-                // back into the native app via appwrite-callback-{project}://
                 if ($failure['host'] === $consoleHostname && $failure['path'] === $oauthDefaultFailure) {
                     $query['project'] = $project->getId();
+                    $failure = $nativeCallback;
                 }
                 $failure['query'] = URLParser::unparseQuery($query);
                 $response->redirect(URLParser::unparse($failure), 301);
@@ -2234,6 +2235,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $query['domain'] = $cookieDomain;
                 $query['key'] = $store->getKey();
                 $query['secret'] = $encoded;
+                $state['success'] = $nativeCallback;
             }
 
             $response
