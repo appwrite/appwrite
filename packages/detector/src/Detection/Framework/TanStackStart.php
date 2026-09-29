@@ -66,12 +66,35 @@ class TanStackStart extends React
             $stripped = \substr($stripped, 0, $start) . \substr($stripped, $end + 2);
         }
 
-        $compact = \str_replace([' ', "\t", "\r", "\n", '"', "'"], '', $stripped);
+        // Empty every string literal, so text such as `'nitro()'` is never read as a call.
+        $code = '';
+        $quote = '';
+        for ($i = 0; $i < \strlen($stripped); $i++) {
+            $char = $stripped[$i];
+            if ($quote === '') {
+                $code .= $char;
+                $quote = \in_array($char, ['\'', '"', '`'], true) ? $char : '';
+            } elseif ($char === '\\') {
+                $i++;
+            } elseif ($char === $quote || ($char === "\n" && $quote !== '`')) {
+                $code .= $char;
+                $quote = '';
+            }
+        }
+        $code = \str_replace([' ', "\t", "\r", "\n"], '', $code);
 
         // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
-        if (\str_contains($compact, 'nitro(') || \str_contains($compact, 'nitroV2Plugin(')) {
-            return 'ssr';
+        foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
+            $specifiers = (string) \strstr((string) \strrchr((string) \strstr($stripped, $module, true), '{'), '}', true);
+            foreach (\explode(',', $specifiers) as $specifier) {
+                $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', "\t", "\r", "\n"], ' ', $specifier))));
+                if (($names[0] ?? '') === $export && \str_contains($code, ($names[2] ?? $export) . '(')) {
+                    return 'ssr';
+                }
+            }
         }
+
+        $compact = \str_replace([' ', "\t", "\r", "\n", '"', "'"], '', $stripped);
 
         // Cut at the brace that closes the block, so a `({ path }) =>` filter does not end it early.
         $prerender = (string) \strstr($compact, 'prerender:{');
