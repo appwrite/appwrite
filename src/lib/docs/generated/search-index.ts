@@ -454,6 +454,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "excerpt": "Appwrite 2.3 and later can check user passwords against known data breaches with the breached passwords policy. On a self-hosted instance, the policy needs a breach service, which you set with the environment variable. The default value, , reports every password as safe. Until you change it, the policy has no effect even when it's turned on in the Console: nothing is rejected or blocked, and every checked password is recorded as not breached. Environment variables Set in the file…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Breached passwords"
+    ]
+  },
+  {
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
