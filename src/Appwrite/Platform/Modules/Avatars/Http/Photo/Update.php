@@ -157,14 +157,18 @@ class Update extends Action
                 'photoSize' => $size,
             ]));
         } catch (\Throwable $th) {
-            $custom->delete($userId, $photoId);
+            $deviceForFiles->delete($custom->getPath($userId, $photoId));
 
             throw $th;
         }
 
         // A file left behind here, or by a racing request, is removed with the user's photo folder
-        if ($previous !== '' && !$custom->delete($userId, $previous)) {
-            Console::warning('Failed to remove previous photo ' . $previous);
+        if ($previous !== '') {
+            $path = $custom->getPath($userId, $previous);
+
+            if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
+                Console::warning('Failed to remove previous photo ' . $previous);
+            }
         }
 
         $queueForEvents->setParam('userId', $userId);

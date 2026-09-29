@@ -88,7 +88,9 @@ class Delete extends Action
         }
 
         // The file goes before the attributes, so a failure at either step is retried by calling again
-        if (!(new Custom($deviceForFiles))->delete($user->getId(), $photoId)) {
+        $path = (new Custom($deviceForFiles))->getPath($user->getId(), $photoId);
+
+        if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
         }
 

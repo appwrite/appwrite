@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -1104,8 +1103,9 @@ class Deletes extends Action
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
-        // Delete photos
-        (new Custom(getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())))->deleteAll($userId);
+        // Delete photos, including files a racing upload or delete left behind.
+        // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
+        getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())->deletePath('_photos/' . $userId . '/');
     }
 
     /**
