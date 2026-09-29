@@ -162,12 +162,12 @@ class Jobs extends Action
         $failure = null;
 
         $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
-            if ($event->id !== '') {
-                $key = 'jobs-event-' . $event->id;
-                if ($cache->load($key, self::DEDUPE_TTL) !== false) {
-                    return; // already processed
-                }
-                $cache->save($key, true);
+            // Marked processed only once the callback is applied (at the end of
+            // this lock), so a delivery that fails part-way is applied again on
+            // redelivery. The lock keeps a concurrent copy out until then.
+            $key = $event->id !== '' ? 'jobs-event-' . $event->id : null;
+            if ($key !== null && $cache->load($key, self::DEDUPE_TTL) !== false) {
+                return; // already processed
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -229,6 +229,10 @@ class Jobs extends Action
                 Span::add('artifact.type', $artifact->artifactType);
                 Span::add('artifact.error.code', $artifact->error?->code->value);
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
+            }
+
+            if ($key !== null) {
+                $cache->save($key, true);
             }
         }, self::LOCK_TIMEOUT);
 
