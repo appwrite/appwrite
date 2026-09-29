@@ -85,7 +85,17 @@ class TanStackStart extends React
 
         // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
         foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
-            $specifiers = (string) \strstr((string) \strrchr((string) \strstr($stripped, $module, true), '{'), '}', true);
+            $import = \strstr($stripped, $module, true);
+            if ($import === false) {
+                continue;
+            }
+
+            // A namespace import calls the plugin as a member: `nitroPlugin.nitro()`.
+            if (\str_contains($code, '.' . $export . '(')) {
+                return 'ssr';
+            }
+
+            $specifiers = (string) \strstr((string) \strrchr($import, '{'), '}', true);
             foreach (\explode(',', $specifiers) as $specifier) {
                 $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', "\t", "\r", "\n"], ' ', $specifier))));
                 if (($names[0] ?? '') === $export && \str_contains($code, ($names[2] ?? $export) . '(')) {
