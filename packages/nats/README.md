@@ -7,7 +7,7 @@ A modern PHP client for [NATS](https://nats.io) messaging system with JetStream 
 
 ## Requirements
 
-- PHP 8.1+
+- PHP 8.3+
 - `ext-json`
 - `ext-sodium` (optional, for NKey/JWT authentication)
 
