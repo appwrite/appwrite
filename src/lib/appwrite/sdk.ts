@@ -55,7 +55,6 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
-import { guardTerraformChanges } from '@/lib/terraform/guard'
 import { toResourceUrl } from '@/lib/appwrite/admin-resource-url'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
@@ -576,10 +575,7 @@ const sdkForProjectRaw = {
 }
 
 const sdkForProject = wrapServiceObject(
-  guardTerraformChanges(sdkForProjectRaw, clientProject) as Record<
-    string,
-    unknown
-  >,
+  sdkForProjectRaw as Record<string, unknown>,
   'forProject',
 ) as typeof sdkForProjectRaw
 
