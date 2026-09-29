@@ -106,7 +106,7 @@ final class DatabaseSchemaTest extends TestCase
     private function windows(string $key): array
     {
         $windows = [];
-        foreach (new Abuse($this->adapter($key, 1))->getLogs() as $log) {
+        foreach ($this->adapter($key, 1)->getLogs() as $log) {
             $time = $log->getAttribute('time');
             if ($log->getAttribute('key') === $key && \is_string($time)) {
                 $windows[] = new \DateTime($time)->getTimestamp();
