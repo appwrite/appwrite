@@ -2982,6 +2982,58 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    /**
+     * A function domain resolves to the console, and clients send their own project's
+     * user JWT there for the function to read. That JWT authenticates nobody at the
+     * console, but it must not stop the request from reaching the function.
+     */
+    public function testFunctionsDomainServesRequestCarryingAnotherProjectsJwt(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Domain with foreign JWT',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['any'],
+        ]);
+        $domain = $this->setupFunctionDomain($functionId);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('cookies'),
+            'activate' => true,
+        ]);
+
+        $otherProject = $this->getProject(true);
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'foreign-jwt-' . ID::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testFunctionsDomain()
     {
         $functionId = $this->setupFunction([
