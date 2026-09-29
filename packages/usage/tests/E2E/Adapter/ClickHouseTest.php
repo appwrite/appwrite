@@ -656,6 +656,63 @@ class ClickHouseTest extends TestCase
         $this->assertEquals($specialVal, $results[0]->getHostname());
     }
 
+    public function testFiltersMatchValuesWithEscapeSequences(): void
+    {
+        $paths = [
+            'backslashes' => 'C:\temp\new',
+            'NULL marker' => '\N',
+            'hex escape' => '\x41',
+            'trailing backslash' => 'trailing\\',
+            'newline' => "line\nbreak",
+            'tab' => "col\tumn",
+            'quotes' => "it's \"quoted\"",
+            'unicode' => 'café ✓ 日本',
+        ];
+
+        $this->assertTrue($this->usage->addBatch(array_map(
+            fn (string $path): array => ['tenant' => '1', 'metric' => 'escape-sequences', 'value' => 1, 'tags' => ['path' => $path]],
+            array_values($paths),
+        ), Usage::TYPE_EVENT));
+
+        foreach ($paths as $label => $path) {
+            $results = $this->usage->find('1', [
+                Query::equal('metric', ['escape-sequences']),
+                Query::equal('path', [$path]),
+            ], Usage::TYPE_EVENT);
+
+            $this->assertCount(1, $results, "equal() must match the {$label} path");
+            $this->assertSame($path, $results[0]->getPath());
+        }
+
+        $this->assertCount(\count($paths), $this->usage->find('1', [
+            Query::equal('metric', ['escape-sequences']),
+            Query::equal('path', array_values($paths)),
+        ], Usage::TYPE_EVENT));
+
+        $sorted = array_values($paths);
+        sort($sorted, SORT_STRING);
+
+        $paginated = [];
+        $cursor = [];
+        while (\count($paginated) <= \count($paths)) {
+            $page = $this->usage->find('1', [
+                Query::equal('metric', ['escape-sequences']),
+                Query::orderAsc('path'),
+                Query::limit(1),
+                ...$cursor,
+            ], Usage::TYPE_EVENT);
+
+            if ($page === []) {
+                break;
+            }
+
+            $paginated[] = $page[0]->getPath();
+            $cursor = [Query::cursorAfter($page[0])];
+        }
+
+        $this->assertSame($sorted, $paginated, 'cursorAfter must step through every path in order');
+    }
+
     /**
      * Comprehensive test for find() with various query types
      */
