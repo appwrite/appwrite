@@ -600,22 +600,21 @@ Http::get('/v1/account/sessions')
     ->inject('response')
     ->inject('targetUser')
     ->inject('locale')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
 
         $sessions = $targetUser->getAttribute('sessions', []);
         // While impersonating, the request runs on the impersonator's session, so none of
         // the target's sessions is marked current.
-        $current = $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $currentId = $current?->getId();
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
-            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('current', $currentId === $session->getId());
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
             $sessions[$key] = $session;
@@ -734,16 +733,15 @@ Http::get('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('targetUser')
     ->inject('locale')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
         $sessions = $targetUser->getAttribute('sessions', []);
         // While impersonating, the request runs on the impersonator's session, so 'current'
         // resolves against none of the target's sessions and this throws. That matches the
         // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $targetUser->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -752,7 +750,7 @@ Http::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
+                    ->setAttribute('current', $session->getId() === $current?->getId())
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', $session->getAttribute('secret', ''))
                 ;
@@ -801,11 +799,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('session')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -820,13 +819,13 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             unset($sessions[$key]);
 
-            $session->setAttribute('current', false);
+            $session->setAttribute('current', $session->getId() === $current?->getId());
+
+            if ($session->getAttribute('current')) {
+                $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+            }
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
-                $session
-                    ->setAttribute('current', true)
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
-
                 if (!$domainVerification) {
                     $response->addHeader('X-Fallback-Cookies', \json_encode([]));
                 }
@@ -885,12 +884,11 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current) {
 
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
@@ -3510,11 +3508,10 @@ Http::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->inject('store')
     ->inject('proofForPassword')
-    ->inject('proofForToken')
     ->inject('pwnedPasswords')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, PasswordPwned $pwnedPasswords) {
+    ->inject('session')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3564,13 +3561,11 @@ Http::patch('/v1/account/password')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
-
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate && !empty($current)) {
+        if ($invalidate && $current !== null) {
             foreach ($sessions as $session) {
                 /** @var Document $session */
-                if ($session->getId() !== $current) {
+                if ($session->getId() !== $current->getId()) {
                     $dbForProject->deleteDocument('sessions', $session->getId());
                 }
             }
@@ -5265,10 +5260,9 @@ Http::post('/v1/account/targets/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('store')
-    ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('session')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization, ?Document $current) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -5284,8 +5278,7 @@ Http::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $session = $dbForProject->getDocument('sessions', $current?->getId() ?? '');
         $name = "{$device['deviceBrand']} {$device['deviceModel']}";
 
         // A session is one device install holding one push token per provider. Re-registering a rotated
