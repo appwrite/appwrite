@@ -2,6 +2,7 @@
 
 namespace Utopia\Usage\Tests\E2E\Adapter;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
@@ -451,9 +452,7 @@ class ClickHouseTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider metricTypes
-     */
+    #[DataProvider('metricTypes')]
     public function testOrdinalReadsBackExactly(string $type): void
     {
         $this->addReplicaRows($type);
@@ -467,9 +466,7 @@ class ClickHouseTest extends TestCase
         $this->assertSame([1 => '0', 2 => '1', 3 => '10', 4 => null], $ordinals);
     }
 
-    /**
-     * @dataProvider metricTypes
-     */
+    #[DataProvider('metricTypes')]
     public function testOrdinalFiltersMatchExactly(string $type): void
     {
         $this->addReplicaRows($type);
@@ -491,9 +488,7 @@ class ClickHouseTest extends TestCase
         $this->assertSame(4, $unassigned[0]->getValue());
     }
 
-    /**
-     * @dataProvider metricTypes
-     */
+    #[DataProvider('metricTypes')]
     public function testGroupByOrdinalListsEachMemberInOrder(string $type): void
     {
         $this->addReplicaRows($type);
@@ -645,10 +640,9 @@ class ClickHouseTest extends TestCase
     }
 
     /**
-     * @dataProvider eventDimensions
-     *
      * @param array<string, string> $dimensions
      */
+    #[DataProvider('eventDimensions')]
     public function testEventDimensionsRoundTrip(array $dimensions): void
     {
         $this->usage->purge('1', [], Usage::TYPE_EVENT);
