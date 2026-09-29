@@ -238,6 +238,10 @@ class Appwrite extends PushAdapter
     {
         $envelope = [];
 
+        if ($this->messageId !== '') {
+            $envelope['messageId'] = $this->messageId;
+        }
+
         if ($message->getTitle() !== null) {
             $envelope['notification']['title'] = $message->getTitle();
         }
