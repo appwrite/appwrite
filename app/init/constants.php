@@ -58,6 +58,7 @@ const APP_USERS_SUBQUERIES = [
     'subQueryChallenges',
     'subQueryMemberships',
     'subQueryTargets',
+    'subQueryPhotos',
     'subQueryAccountKeys',
     'subQueryPaymentMethods',
 ];

@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action as UtopiaAction;
@@ -90,29 +91,28 @@ class Delete extends Action
         $userId = $user->getId();
         $lockKey = 'photos:' . $project->getId() . ':' . $userId;
 
-        // Storage goes first and the user pointer last, so a failure at any step is retried by calling again
-        $delete = function () use ($dbForProject, $deviceForFiles, $userId): bool {
-            $photoId = $dbForProject->getDocument('users', $userId)->getAttribute('avatar', '');
+        // Storage goes before each record, so a failure at any step is retried by calling again
+        $delete = function () use ($dbForProject, $deviceForFiles, $user, $userId): bool {
+            $photos = $dbForProject->find('photos', [
+                Query::equal('userInternalId', [(string) $user->getSequence()]),
+                Query::limit(APP_LIMIT_COUNT),
+            ]);
 
-            if ($photoId === '') {
-                return false;
-            }
+            $custom = new Custom($deviceForFiles);
 
-            $photo = $dbForProject->getDocument('photos', $photoId);
+            try {
+                foreach ($photos as $photo) {
+                    if (!$custom->delete($photo)) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+                    }
 
-            if (!$photo->isEmpty()) {
-                if (!(new Custom($deviceForFiles))->delete($photo)) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+                    $dbForProject->deleteDocument('photos', $photo->getId());
                 }
-
-                $dbForProject->deleteDocument('photos', $photoId);
+            } finally {
+                $dbForProject->purgeCachedDocument('users', $userId);
             }
 
-            $dbForProject->updateDocument('users', $userId, new Document([
-                'avatar' => '',
-            ]));
-
-            return true;
+            return !empty($photos);
         };
 
         try {

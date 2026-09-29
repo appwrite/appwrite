@@ -411,6 +411,14 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertSamePhoto($red, $this->getPhoto($headers));
 
         /**
+         * Test for SUCCESS — the account doesn't expose photo records
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertArrayNotHasKey('photos', $account['body']);
+
+        /**
          * Test for SUCCESS — a replacement is served right away
          */
         $blue = $this->createImage('#0000FF', 'webp');

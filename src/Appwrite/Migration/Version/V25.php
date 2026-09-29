@@ -308,9 +308,9 @@ class V25 extends Migration
                     $this->createCollection($id);
 
                     try {
-                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'avatar');
+                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'photos');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"avatar\" in collection users: {$th->getMessage()}");
+                        Console::warning("Failed to create attribute \"photos\" in collection users: {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection('photos');

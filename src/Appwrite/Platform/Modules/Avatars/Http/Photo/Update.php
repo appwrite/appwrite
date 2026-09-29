@@ -225,55 +225,51 @@ class Update extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            if ($photo->getAttribute('chunksUploaded') < $chunks) {
-                $metadata = $photo->getAttribute('metadata', []);
-                $metadata['content_type'] = $deviceForLocal->getFileMimeType($fileTmpName);
-
-                $chunksUploaded = $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $metadata['content_type'], $chunk, $chunks, $metadata);
-
-                if (!$lock->isHeld()) {
-                    throw new Contention('Photo lock expired during upload');
-                }
-
-                if ($chunksUploaded < $chunks) {
-                    $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
-                        'chunksUploaded' => $chunksUploaded,
-                        'metadata' => $metadata,
-                    ]));
-
-                    $queueForEvents->reset();
-                    $response->dynamic($photo, Response::MODEL_PHOTO);
-
-                    return;
-                }
-
-                $mimeType = $deviceForFiles->getFileMimeType($path);
-
-                if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
-                    $deviceForFiles->delete($path);
-                    $dbForProject->deleteDocument('photos', $photoId);
-
-                    throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, GIF, or WebP image');
-                }
-
-                $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
-                    'sizeActual' => $deviceForFiles->getFileSize($path),
-                    'mimeType' => $mimeType,
-                    'chunksUploaded' => $chunksUploaded,
-                    'metadata' => $metadata,
-                ]));
-            }
-
-            // A resent final chunk finds its photo active already
-            if ($dbForProject->getDocument('users', $userId)->getAttribute('avatar', '') === $photoId) {
+            // A resent final chunk changes nothing, but repeats the purge in case the first attempt failed after completing
+            if ($photo->getAttribute('chunksUploaded') === $chunks) {
+                $dbForProject->purgeCachedDocument('users', $userId);
                 $queueForEvents->reset();
                 $response->dynamic($photo, Response::MODEL_PHOTO);
 
                 return;
             }
 
-            $dbForProject->updateDocument('users', $userId, new Document([
-                'avatar' => $photoId,
+            $metadata = $photo->getAttribute('metadata', []);
+            $metadata['content_type'] = $deviceForLocal->getFileMimeType($fileTmpName);
+
+            $chunksUploaded = $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $metadata['content_type'], $chunk, $chunks, $metadata);
+
+            if (!$lock->isHeld()) {
+                throw new Contention('Photo lock expired during upload');
+            }
+
+            if ($chunksUploaded < $chunks) {
+                $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
+                    'chunksUploaded' => $chunksUploaded,
+                    'metadata' => $metadata,
+                ]));
+
+                $queueForEvents->reset();
+                $response->dynamic($photo, Response::MODEL_PHOTO);
+
+                return;
+            }
+
+            $mimeType = $deviceForFiles->getFileMimeType($path);
+
+            if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
+                $deviceForFiles->delete($path);
+                $dbForProject->deleteDocument('photos', $photoId);
+
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, GIF, or WebP image');
+            }
+
+            // Setting the size makes this the newest completed photo, which is the one served
+            $photo = $dbForProject->updateDocument('photos', $photoId, new Document([
+                'sizeActual' => $deviceForFiles->getFileSize($path),
+                'mimeType' => $mimeType,
+                'chunksUploaded' => $chunksUploaded,
+                'metadata' => $metadata,
             ]));
 
             // Drops the replaced photo and any abandoned uploads; a file that fails to delete keeps its document for the next attempt
@@ -290,6 +286,8 @@ class Update extends Action
                     Console::warning('Failed to remove previous photo ' . $other->getId());
                 }
             }
+
+            $dbForProject->purgeCachedDocument('users', $userId);
 
             $queueForEvents->setParam('userId', $userId);
             $response->dynamic($photo, Response::MODEL_PHOTO);

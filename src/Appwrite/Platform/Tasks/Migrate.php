@@ -76,6 +76,7 @@ class Migrate extends Action
             'subQueryKeys',
             'subQueryMemberships',
             'subQueryOrganizationKeys',
+            'subQueryPhotos',
             'subQueryPlatforms',
             'subQueryProjectVariables',
             'subQuerySessions',

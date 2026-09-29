@@ -21,12 +21,12 @@ class Custom extends Photo
 
     public function supports(Document $profile): bool
     {
-        return $profile->getAttribute('avatar', '') !== '';
+        return $profile->getAttribute('photoId', '') !== '';
     }
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        $path = $this->getPath($profile->getId(), $profile->getAttribute('avatar'));
+        $path = $this->getPath($profile->getId(), $profile->getAttribute('photoId'));
 
         if (!$this->deviceForFiles->exists($path)) {
             return null;
