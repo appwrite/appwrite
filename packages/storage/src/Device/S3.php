@@ -580,7 +580,8 @@ class S3 extends Device
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
             foreach ($keys as $key) {
-                $body .= "<Object><Key>{$key}</Key></Object>";
+                // A key may hold `&` or `<`, which would make the request malformed.
+                $body .= '<Object><Key>' . \htmlspecialchars($key, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Key></Object>';
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
@@ -600,11 +601,20 @@ class S3 extends Device
      */
     private function assertBulkDeleteSucceeded(S3\Response $response): void
     {
-        if (! \is_array($response->body)) {
-            return;
+        $body = $response->body;
+
+        if (\is_string($body)) {
+            // A service that answers `application/xml; charset=UTF-8` without an
+            // XML declaration is left undecoded, so a failure would read as
+            // success. Only an empty body is silence, which quiet mode means.
+            if (\trim($body) === '') {
+                return;
+            }
+
+            $body = $this->decodeXml($body);
         }
 
-        $errors = $response->body['Error'] ?? [];
+        $errors = $body['Error'] ?? [];
         $entries = \is_array($errors) ? (isset($errors['Key']) ? [$errors] : $errors) : [];
 
         foreach ($entries as $error) {
