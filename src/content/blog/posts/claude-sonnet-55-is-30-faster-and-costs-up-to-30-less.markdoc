@@ -35,7 +35,7 @@ For teams running agents at volume, that matters more than any single benchmark.
 
 # What is Claude Sonnet 5.5?
 
-**Claude Sonnet 5.5 is Anthropic's new mid-tier model and the successor to** [Claude Sonnet 5](/blog/post/claude-sonnet-5-is-anthropics-most-agentic-sonnet-yet)**.** It is a faster, lower-cost complement to [Claude Opus 5.5](/blog/post/claude-opus-55-reaches-fable-level-performance). Opus 5.5 is built for complex work that needs careful judgment. Sonnet 5.5 is strongest at well-scoped everyday tasks, fixing bugs, and creating polished documents, slides, and spreadsheets.
+Claude Sonnet 5.5 is the second model in Anthropic's Claude 5.5 family and the successor to [Claude Sonnet 5](/blog/post/claude-sonnet-5-is-anthropics-most-agentic-sonnet-yet). It is a faster, lower-cost complement to [Claude Opus 5.5](/blog/post/claude-opus-55-reaches-fable-level-performance). Opus 5.5 is built for complex work that needs careful judgment. Sonnet 5.5 is strongest at well-scoped everyday tasks, fixing bugs, and creating polished documents, slides, and spreadsheets.
 
 Claude Haiku 5.5, built for high-volume and cost-sensitive applications, joins the Claude 5.5 family in the coming weeks. That gives the lineup a clear shape:
 
