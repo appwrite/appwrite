@@ -2223,7 +2223,20 @@ final class FunctionsCustomServerTest extends Scope
                 Query::lessThanEqual('$createdAt', \max($syncCreatedAt, $finishedAt))->toString(),
             ]);
             $executions = $byId($both);
-            $this->assertEquals(2, $both['body']['total']);
+            $describe = fn (array $response) => \json_encode(\array_map(
+                fn (array $execution) => [$execution['$id'], $execution['status'], $execution['$createdAt'], $execution['trigger']],
+                $response['body']['executions'],
+            ));
+            $this->assertEquals(2, $both['body']['total'], \sprintf(
+                'window [%s, %s] (sync %s, queued %s, finished %s) returned %s; all executions: %s',
+                \min($syncCreatedAt, $queuedAt),
+                \max($syncCreatedAt, $finishedAt),
+                $syncCreatedAt,
+                $queuedAt,
+                $finishedAt,
+                $describe($both),
+                $describe($this->listExecutions($functionId)),
+            ));
             $this->assertEquals('completed', $executions[$syncId]['status']);
             $this->assertEquals('completed', $executions[$asyncId]['status']);
 
