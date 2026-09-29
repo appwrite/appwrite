@@ -416,7 +416,7 @@ final class AvatarsCustomClientTest extends Scope
         $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
 
         $this->assertEquals(200, $account['headers']['status-code']);
-        $this->assertArrayNotHasKey('photos', $account['body']);
+        $this->assertArrayNotHasKey('photo', $account['body']);
 
         /**
          * Test for SUCCESS — a replacement is served right away

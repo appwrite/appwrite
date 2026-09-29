@@ -442,7 +442,7 @@ return [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('photos'),
+                '$id' => ID::custom('photo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -450,7 +450,7 @@ return [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryPhotos'],
+                'filters' => ['subQueryPhoto'],
             ],
         ],
         'indexes' => [

@@ -351,18 +351,17 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryPhotos',
+    'subQueryPhoto',
     function (mixed $value) {
         return;
     },
     function (mixed $value, Document $document, Database $database) {
         // Only completed uploads have a size; the newest one is the live photo
         return $database->getAuthorization()->skip(fn () => $database
-            ->find('photos', [
+            ->findOne('photos', [
                 Query::equal('userInternalId', [$document->getSequence()]),
                 Query::greaterThan('sizeActual', 0),
                 Query::orderDesc('$updatedAt'),
-                Query::limit(1),
             ]));
     }
 );
