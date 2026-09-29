@@ -91,12 +91,12 @@ final class HeadersTest extends TestCase
         $headers = [
             'X-Header' => 123,
         ];
-        $this->assertFalse($this->object->isValid($headers));
+        $this->assertTrue($this->object->isValid($headers));
 
         $headers = [
             'X-Header' => true,
         ];
-        $this->assertFalse($this->object->isValid($headers));
+        $this->assertTrue($this->object->isValid($headers));
 
         $headers = [
             'bad/name' => 'value',
