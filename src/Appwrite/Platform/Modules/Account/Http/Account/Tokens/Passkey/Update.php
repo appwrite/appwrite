@@ -114,10 +114,25 @@ class Update extends Action
             throw new Exception(Exception::USER_PASSKEY_INVALID);
         }
 
-        $passkeyData = $passkey->getAttribute('data', []);
-
+        // Verify against the stored record under a row lock, so concurrent sign-ins with one credential
+        // see each other's counters instead of all accepting the same one
         try {
-            $verified = $ceremony->verifyAuthentication($state, $credential, $passkeyData['record']);
+            $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $ceremony, $state, $credential, $passkey) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('authenticators', $passkey->getId(), forUpdate: true));
+                if ($current->isEmpty() || !$current->getAttribute('verified')) {
+                    throw new Exception(Exception::USER_PASSKEY_INVALID);
+                }
+
+                $data = $current->getAttribute('data', []);
+                $verified = $ceremony->verifyAuthentication($state, $credential, $data['record']);
+
+                $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $current->getId(), new Document([
+                    'data' => \array_merge($data, [
+                        'record' => $verified->record,
+                        'accessedAt' => DateTime::formatTz(DateTime::now()),
+                    ]),
+                ])));
+            });
         } catch (PasskeyException $th) {
             throw new Exception(Exception::USER_PASSKEY_INVALID, previous: $th);
         }
@@ -126,13 +141,6 @@ class Update extends Action
         if ($user->getAttribute('status') === false) {
             throw new Exception(Exception::USER_BLOCKED);
         }
-
-        $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $passkey->getId(), new Document([
-            'data' => \array_merge($passkeyData, [
-                'record' => $verified->record,
-                'accessedAt' => DateTime::formatTz(DateTime::now()),
-            ]),
-        ])));
 
         $secret = $proofForToken->generate();
         $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', new Document([

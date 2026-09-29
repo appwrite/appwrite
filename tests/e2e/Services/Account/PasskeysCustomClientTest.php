@@ -434,6 +434,37 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(401, $this->signIn($project, $authenticator)['headers']['status-code']);
     }
 
+    public function testConcurrentSignInsCannotReuseDeviceBoundCounter(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [, $session] = $this->createUserWithSession($project);
+        $authenticator = $this->registerPasskey($project, $session, new Authenticator(backupEligible: false));
+
+        // Different challenges, same credential, every assertion claiming counter 1
+        $requests = [];
+        for ($i = 0; $i < 5; $i++) {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
+            $authenticator->counter = 0;
+            $requests[] = [
+                'method' => 'PUT',
+                'path' => '/account/tokens/passkey',
+                'headers' => $this->getGuestHeaders($project),
+                'body' => [
+                    'challengeId' => $challenge['body']['$id'],
+                    'credential' => $authenticator->authenticate($challenge['body']['publicKey'], self::ORIGIN),
+                ],
+            ];
+        }
+
+        $statuses = $this->parallel($requests);
+        $this->assertCount(1, \array_filter($statuses, fn (int $status) => $status === 201), \json_encode($statuses));
+
+        // The stored counter did not regress: counter 1 is still rejected sequentially
+        $authenticator->counter = 0;
+        $this->assertSame(401, $this->signIn($project, $authenticator)['headers']['status-code']);
+    }
+
     public function testSyncedPasskeyCounter(): void
     {
         $project = $this->getProject(true);
