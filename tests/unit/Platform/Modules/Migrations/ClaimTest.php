@@ -43,19 +43,21 @@ final class StandaloneClaimMemory extends Memory
 
 final class InterleavingClaimDatabase extends Database
 {
+    public ?\Closure $afterMigrationCreate = null;
+
     public ?\Closure $afterMigrationRead = null;
 
-    /**
-     * @var list<string>
-     */
-    public array $purged = [];
-
     #[\Override]
-    public function purgeCachedCollection(string $collectionId): bool
+    public function createDocument(string $collection, Document $document): Document
     {
-        $this->purged[] = $collectionId;
+        $created = parent::createDocument($collection, $document);
+        if ($collection === 'migrations' && $this->afterMigrationCreate !== null) {
+            $callback = $this->afterMigrationCreate;
+            $this->afterMigrationCreate = null;
+            $callback();
+        }
 
-        return parent::purgeCachedCollection($collectionId);
+        return $created;
     }
 
     #[\Override]
@@ -666,22 +668,26 @@ final class ClaimTest extends TestCase
         $this->assertSame([], $this->database->find('migrations'));
     }
 
-    public function testStartChecksTheOwnershipSchemaOnce(): void
+    public function testStartPublishesTheMigrationItStoredWithoutCheckingTheSchemaAgain(): void
     {
         $database = $this->database;
         $this->assertInstanceOf(InterleavingClaimDatabase::class, $database);
-        $database->purged = [];
+        $database->afterMigrationCreate = static function () use ($database): void {
+            $database->deleteAttribute('databases', 'migrationAttemptId');
+        };
+        $publisher = new MockPublisher();
 
-        (new Claim($database, $this->locks()))->start(
+        $started = (new Claim($database, $this->locks()))->start(
             project: new Document(['$id' => 'project-1']),
             migration: new Document(['$id' => 'migration-1', 'resourceData' => []]),
             platform: [],
-            publisher: new MigrationPublisher(new MockPublisher(), new Queue('migrations')),
+            publisher: new MigrationPublisher($publisher, new Queue('migrations')),
         );
 
-        $purged = $database->purged;
-        \sort($purged);
-        $this->assertSame(['databases', 'migrations'], $purged, 'a readiness check purges and re-reads both ownership collections, and one start needs one check');
+        $events = $publisher->getEvents('migrations') ?? [];
+        $this->assertCount(1, $events, 'a stored migration is published: the claim of its delivery checks the schema again, so a second check here would only strand it');
+        $this->assertSame($started->getAttribute('attemptId'), MigrationMessage::fromArray($events[0])->migration->getAttribute('attemptId'));
+        $this->assertSame($started->getAttribute('attemptId'), $database->getDocument('migrations', 'migration-1')->getAttribute('attemptId'));
     }
 
     public function testStartRollbackDoesNotDeleteNewerGeneration(): void
