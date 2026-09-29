@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -93,10 +94,24 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'photoId' => '',
-            'photoSize' => 0,
-        ]));
+        // A concurrent upload may have replaced the photo since it was read, so it's only cleared while it's still this one
+        $current = $user;
+
+        while ($current->getAttribute('photoId', '') === $photoId) {
+            try {
+                $dbForProject->withRequestTimestamp(
+                    new \DateTime($current->getUpdatedAt()),
+                    fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'photoId' => '',
+                        'photoSize' => 0,
+                    ]))
+                );
+
+                break;
+            } catch (ConflictException) {
+                $current = $dbForProject->getDocument('users', $user->getId());
+            }
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 

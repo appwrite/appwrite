@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action as UtopiaAction;
@@ -151,20 +152,36 @@ class Update extends Action
 
         $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
-        $previous = $user->getAttribute('photoId', '');
+        // A concurrent upload may have replaced the photo since it was read, so the replaced photo is re-read until the update wins
+        $current = $user;
 
-        try {
-            $user = $dbForProject->updateDocument('users', $userId, new Document([
-                'photoId' => $photoId,
-                'photoSize' => $size,
-            ]));
-        } catch (\Throwable $th) {
-            $deviceForFiles->delete($path);
+        while (true) {
+            $previous = $current->getAttribute('photoId', '');
 
-            throw $th;
+            try {
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
+
+                $user = $dbForProject->withRequestTimestamp(
+                    new \DateTime($current->getUpdatedAt()),
+                    fn () => $dbForProject->updateDocument('users', $userId, new Document([
+                        'photoId' => $photoId,
+                        'photoSize' => $size,
+                    ]))
+                );
+
+                break;
+            } catch (ConflictException) {
+                $current = $dbForProject->getDocument('users', $userId);
+            } catch (\Throwable $th) {
+                $deviceForFiles->delete($path);
+
+                throw $th;
+            }
         }
 
-        // The new photo is live, so a file left behind here or by a racing request only waits for user deletion to remove the user's photo folder
+        // The new photo is live, so a file left behind here only waits for user deletion to remove the user's photo folder
         if ($previous !== '') {
             try {
                 $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
