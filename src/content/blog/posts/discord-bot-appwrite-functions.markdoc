@@ -97,13 +97,14 @@ Select **Create table** and name it `connections`. Set the table ID to `connecti
 
 ![The Create column panel with the key accessToken, the type Text, and at-rest encryption enabled](/images/blog/discord-bot-appwrite-functions/console-encrypted-column.avif)
 
-Add three columns with **Create column**. Mark all three as required. For both token columns, select **Enable** under **At-rest encryption**:
+Add four columns with **Create column**. Mark the first three as required. For both token columns, select **Enable** under **At-rest encryption**. Give `refreshLock` a minimum of `0`, a maximum of `1`, and a default of `1`:
 
 | Column | Type | Encrypted | Purpose |
 | --- | --- | --- | --- |
 | `accessToken` | text | yes | The access token for the user's Appwrite account |
 | `refreshToken` | text | yes | The token that gets a new access token when the old one expires |
 | `expiresAt` | datetime | no | When the access token expires |
+| `refreshLock` | integer, 0 or 1 | no | `1` while no execution is refreshing this user's tokens |
 
 The row ID is the Discord user ID, so the `stackbot-agent` function reads the tokens of a user with one `getRow` call. Appwrite stores encrypted values encrypted and decrypts them when the function reads the row. Appwrite cannot query encrypted columns, and Stackbot never queries by token.
 
@@ -334,7 +335,7 @@ export async function waitForApproval(deviceAuthorization) {
 
 ## Store the tokens and refresh them
 
-The `connectionsTable` function in `src/connections.js` wraps the three table operations that the commands need. The `save` operation uses `upsertRow`, so a second `/stackbot connect` replaces the old tokens:
+The `connectionsTable` function in `src/connections.js` wraps the table operations that the commands need. The `save` operation uses `upsertRow`, so a second `/stackbot connect` replaces the old tokens. It also sets `refreshLock` to `1`, which frees the lock that the next section uses:
 
 ```javascript
 async save(discordUserId, tokens) {
@@ -345,12 +346,36 @@ async save(discordUserId, tokens) {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+      refreshLock: 1,
     },
   });
 },
 ```
 
-Access tokens last eight hours. The `getAccessToken` function returns the stored access token while it is valid and refreshes it when it expires. Each refresh also replaces the refresh token, so two commands that refresh at the same time race, and only one succeeds. The loser calls `recoverFromRejectedRefresh`:
+Access tokens last eight hours. The `getAccessToken` function returns the stored access token while it is valid and refreshes it when it expires. Each refresh token works only once. If Appwrite sees the same refresh token twice, it treats the second use as theft and revokes the whole grant, so the user has to connect again. Two commands that run at the same time must not both refresh.
+
+The `refreshLock` column makes sure only one execution refreshes. The `lockRefresh` operation decrements it with a minimum of `0`, which Appwrite applies atomically on the server. The first execution takes the value from `1` to `0` and gets the lock. For every other execution the value would go below the minimum, so Appwrite rejects the update with a `400` error:
+
+```javascript
+async lockRefresh(discordUserId) {
+  try {
+    await tablesDB.decrementRowColumn({
+      ...table,
+      rowId: discordUserId,
+      column: 'refreshLock',
+      value: 1,
+      min: 0,
+    });
+    return true;
+  } catch (err) {
+    if (err.code === 404) throw new NotConnectedError();
+    if (err.code === 400) return false;
+    throw err;
+  }
+},
+```
+
+The execution that holds the lock reads the row again, because another execution can finish a refresh between the first read and the lock. If the token is still expired, it refreshes and saves the new tokens, and the save frees the lock. If Appwrite rejects the refresh token, no other execution used it, so the user revoked access, and the function deletes the row. For any other error, the `finally` block frees the lock with `incrementRowColumn`:
 
 ```javascript
 export async function getAccessToken(connections, discordUserId) {
@@ -358,32 +383,47 @@ export async function getAccessToken(connections, discordUserId) {
   if (!connection) throw new NotConnectedError();
   if (isFresh(connection)) return connection.accessToken;
 
+  if (!(await connections.lockRefresh(discordUserId))) {
+    return waitForRefresh(connections, discordUserId);
+  }
+
+  let locked = true;
   try {
-    const tokens = await refreshTokens(connection.refreshToken);
+    const latest = await connections.get(discordUserId);
+    if (!latest) throw new NotConnectedError();
+    if (isFresh(latest)) return latest.accessToken;
+
+    const tokens = await refreshTokens(latest.refreshToken);
     await connections.save(discordUserId, tokens);
+    locked = false;
     return tokens.access_token;
   } catch (err) {
     if (oauthErrorCode(err) !== 'invalid_grant') throw err;
-    return recoverFromRejectedRefresh(connections, discordUserId, connection.refreshToken);
+    await connections.remove(discordUserId);
+    locked = false;
+    throw new NotConnectedError();
+  } finally {
+    if (locked) await connections.unlockRefresh(discordUserId);
   }
 }
 ```
 
-If the stored refresh token changed, another execution won the race, and the function uses its new access token. If the refresh token stays the same, the user revoked access, so the function deletes the row:
+An execution that does not get the lock never sends the refresh token. It reads the row once a second until the new tokens appear:
 
 ```javascript
-async function recoverFromRejectedRefresh(connections, discordUserId, rejectedRefreshToken) {
-  for (let attempt = 0; attempt < 3; attempt++) {
+async function waitForRefresh(connections, discordUserId) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const latest = await connections.get(discordUserId);
     if (!latest) throw new NotConnectedError();
-    if (latest.refreshToken !== rejectedRefreshToken) return latest.accessToken;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (isFresh(latest)) return latest.accessToken;
   }
 
-  await connections.remove(discordUserId);
   throw new NotConnectedError();
 }
 ```
+
+If the tokens do not appear within ten seconds, the execution that held the lock stopped before it saved them. The function then asks the user to run `/stackbot connect` again, which saves new tokens and frees the lock.
 
 ## Give the model read-only tools
 
