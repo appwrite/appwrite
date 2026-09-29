@@ -37,10 +37,10 @@ class StatsUsage extends Action
 
     public function action(Message $message, Document $project, Connection $usageConnection): void
     {
-        if (! $usageConnection->isEnabled()) {
+        if (!$usageConnection->isEnabled()) {
             return;
         }
-        if (! $usageConnection->isReady()) {
+        if (!$usageConnection->isReady()) {
             throw new \RuntimeException('Usage schema is not ready');
         }
 
@@ -56,7 +56,6 @@ class StatsUsage extends Action
         $tenant = (string) $project->getSequence();
         if ($tenant === '') {
             Console::warning('Skipping usage event write: project has no sequence');
-
             return;
         }
 
@@ -93,7 +92,7 @@ class StatsUsage extends Action
                     'region' => $metric['region'] ?? '',
                     'path' => $metric['path'] ?? '',
                     'method' => $metric['method'] ?? '',
-                    'status' => ! empty($metric['status']) ? (string) $metric['status'] : '',
+                    'status' => !empty($metric['status']) ? (string) $metric['status'] : '',
                     'service' => $metric['service'] ?? $this->inferServiceFromMetric($key),
                     'resourceType' => $resourceType === '' ? 'project' : $resourceType,
                     'resourceId' => $resourceId !== '' ? $resourceId : ($projectScoped ? $projectId : ''),
@@ -124,13 +123,13 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && ! $accumulator->flush()) {
+            if ($accumulator->count() > 0 && !$accumulator->flush()) {
                 Console::error('Usage event flush returned false');
             }
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
             // not retried because the adapter has no durable deduplication key.
-            Console::error('Failed to write usage events: '.$th->getMessage());
+            Console::error('Failed to write usage events: ' . $th->getMessage());
         }
     }
 
@@ -180,7 +179,6 @@ class StatsUsage extends Action
             }
 
             $detector = new Detector($userAgent);
-
             return array_filter(
                 array_merge($detector->getOS(), $detector->getClient(), $detector->getDevice()),
                 static fn (mixed $value): bool => $value !== null && $value !== '',
@@ -210,12 +208,12 @@ class StatsUsage extends Action
     private function timestamp(array $payload, Message $message): \DateTime
     {
         try {
-            if (! empty($payload['timestamp']) && is_scalar($payload['timestamp'])) {
+            if (!empty($payload['timestamp']) && is_scalar($payload['timestamp'])) {
                 return new \DateTime((string) $payload['timestamp']);
             }
         } catch (\Throwable) {
         }
 
-        return new \DateTime('@'.$message->getTimestamp());
+        return new \DateTime('@' . $message->getTimestamp());
     }
 }

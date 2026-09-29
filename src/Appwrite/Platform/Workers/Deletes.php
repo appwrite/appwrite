@@ -1110,7 +1110,7 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
         ], $dbForProject, function (Document $photo) use ($deviceForFiles) {
-            $deviceForFiles->delete(Custom::getPath($deviceForFiles, $photo->getAttribute('userId'), $photo->getId()));
+            (new Custom($deviceForFiles))->delete($photo);
         });
     }
 

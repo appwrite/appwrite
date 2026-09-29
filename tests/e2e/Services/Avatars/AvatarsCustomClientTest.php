@@ -397,182 +397,333 @@ final class AvatarsCustomClientTest extends Scope
 
     public function testUpdatePhoto(): void
     {
-        $headers = \array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        $headers = $this->createPhotoUser();
 
         /**
-         * Test for SUCCESS — single-shot upload
+         * Test for SUCCESS — the uploaded photo wins the provider chain
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-        ]);
+        $red = $this->createImage('#FF0000', 'png');
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['chunksTotal']);
-        $this->assertEquals(1, $response['body']['chunksUploaded']);
+        $this->assertEquals($response['body']['chunksTotal'], $response['body']['chunksUploaded']);
         $this->assertEquals('image/png', $response['body']['mimeType']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
-        $this->assertGreaterThan(0, $response['body']['sizeActual']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — custom photo wins the provider chain
+         * Test for SUCCESS — a replacement is served right away
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
-
-        /**
-         * Test for SUCCESS — replacing the photo keeps serving
-         */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
-        ]);
+        $blue = $this->createImage('#0000FF', 'webp');
+        $response = $this->uploadPhoto($headers, $blue, 'photo.webp');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/webp', $response['body']['mimeType']);
-        $this->assertEquals(1, $response['body']['chunksUploaded']);
+        $this->assertSamePhoto($blue, $this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoInvalid(): void
+    {
+        $headers = $this->createPhotoUser();
+        $png = $this->createImage('#FF0000', 'png');
 
         /**
          * Test for FAILURE — no file
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, []);
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ]), []);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        if (\is_array($response['body'])) {
-            $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
-        }
+        $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
 
         /**
          * Test for FAILURE — unsupported extension
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
-            'file' => new \CURLFile('data://text/plain;base64,' . \base64_encode('not an image'), 'text/plain', 'notes.txt'),
-        ]);
+        $response = $this->uploadPhoto($headers, 'not an image', 'notes.txt');
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
 
         /**
-         * Test for FAILURE — size over the limit
+         * Test for FAILURE — an SVG renamed to .png is rejected by its content
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
-            'content-range' => 'bytes 0-99/99999999',
-        ]), [
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#FF0000"/></svg>';
+        $response = $this->uploadPhoto($headers, $svg, 'photo.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — declared size over the limit
+         */
+        $chunkSize = 5 * 1024 * 1024;
+        $response = $this->uploadPhoto($headers, \str_repeat("\0", $chunkSize), 'photo.png', [
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/99999999',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_INVALID_FILE_SIZE, $response['body']['type']);
 
         /**
-         * Test for FAILURE — invalid content range
+         * Test for FAILURE — body larger than the declared range can't sneak past the size limit
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
-            'content-range' => 'bytes invalid',
-        ]), [
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
+            'content-range' => 'bytes 0-0/1',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — range not aligned to a chunk boundary
+         */
+        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
+            'content-range' => 'bytes 1-' . \strlen($png) . '/' . (\strlen($png) + 1),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — malformed range
+         */
+        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
+            'content-range' => 'bytes invalid',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — a later chunk of an upload that was never started
+         */
+        $response = $this->uploadPhoto($headers, 'tail', 'photo.png', [
+            'content-range' => 'bytes ' . $chunkSize . '-' . ($chunkSize + 3) . '/' . ($chunkSize + 4),
+            'x-appwrite-id' => ID::unique(),
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_NOT_FOUND, $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — none of the failures became the photo
+         */
+        $this->assertPhotoInitials($this->getPhoto($headers));
     }
 
     public function testUpdatePhotoChunked(): void
     {
-        $headers = \array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        $headers = $this->createPhotoUser();
+        $chunkSize = 5 * 1024 * 1024;
+
+        // Random pixels don't compress, so this PNG spans two chunks
+        $image = new \Imagick();
+        $image->newImage(1600, 1600, '#808080');
+        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+        $image->setImageDepth(8);
+        $image->setImageFormat('png24');
+        $large = $image->getImageBlob();
+        $size = \strlen($large);
+
+        $this->assertGreaterThan($chunkSize, $size);
 
         /**
-         * Test for SUCCESS — chunked upload across the 5 MB chunk boundary
+         * Test for SUCCESS — chunks assemble into the served photo
          */
-        $payload = \file_get_contents(__DIR__ . '/../../../resources/logo.png') . \str_repeat("\0", 6 * 1024 * 1024);
-        $size = \strlen($payload);
-        $chunkSize = 5 * 1024 * 1024;
-        $mimeType = 'image/png';
-        $counter = 0;
-        $id = '';
-        $final = null;
+        $id = ID::unique();
+        $response = [];
 
         for ($offset = 0; $offset < $size; $offset += $chunkSize) {
-            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(\substr($payload, $offset, $chunkSize)), $mimeType, 'large.png');
-            $headers['content-range'] = 'bytes ' . $offset . '-' . (\min($offset + $chunkSize, $size) - 1) . '/' . $size;
-
-            if (!empty($id)) {
-                $headers['x-appwrite-id'] = $id;
-            }
-
-            $final = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
-                'file' => $curlFile,
+            $response = $this->uploadPhoto($headers, \substr($large, $offset, $chunkSize), 'large.png', [
+                'content-range' => 'bytes ' . $offset . '-' . (\min($offset + $chunkSize, $size) - 1) . '/' . $size,
+                'x-appwrite-id' => $id,
             ]);
 
-            $this->assertEquals(200, $final['headers']['status-code']);
-            $id = $final['body']['$id'];
-            $counter++;
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($id, $response['body']['$id']);
         }
 
-        $this->assertEquals($final['body']['chunksTotal'], $final['body']['chunksUploaded']);
-        $this->assertEquals('image/png', $final['body']['mimeType']);
-        $this->assertEquals($size, $final['body']['sizeActual']);
+        $this->assertEquals($response['body']['chunksTotal'], $response['body']['chunksUploaded']);
+        $this->assertSamePhoto($large, $this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — repeated final chunk is an idempotent no-op
+         * Test for SUCCESS — resending the final chunk changes nothing
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
-            'content-range' => 'bytes ' . (($counter - 1) * $chunkSize) . '-' . ($size - 1) . '/' . $size,
+        $lastOffset = $chunkSize * \intdiv($size - 1, $chunkSize);
+        $response = $this->uploadPhoto($headers, \substr($large, $lastOffset), 'large.png', [
+            'content-range' => 'bytes ' . $lastOffset . '-' . ($size - 1) . '/' . $size,
             'x-appwrite-id' => $id,
-        ]), [
-            'file' => new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(''), $mimeType, 'large.png'),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($id, $response['body']['$id']);
-        $this->assertEquals($final['body']['sizeActual'], $response['body']['sizeActual']);
+        $this->assertSamePhoto($large, $this->getPhoto($headers));
+
+        /**
+         * Test for FAILURE — a newer photo cancels an upload still in progress
+         */
+        $pending = ID::unique();
+        $response = $this->uploadPhoto($headers, \substr($large, 0, $chunkSize), 'large.png', [
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $size,
+            'x-appwrite-id' => $pending,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $green = $this->createImage('#00FF00', 'png');
+        $response = $this->uploadPhoto($headers, $green, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->uploadPhoto($headers, \substr($large, $chunkSize), 'large.png', [
+            'content-range' => 'bytes ' . $chunkSize . '-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => $pending,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertSamePhoto($green, $this->getPhoto($headers));
     }
 
     public function testDeletePhoto(): void
     {
-        $headers = \array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        $headers = $this->createPhotoUser();
+        $red = $this->createImage('#FF0000', 'png');
 
-        $upload = $this->client->call(Client::METHOD_PUT, '/avatars/photo', $headers, [
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-        ]);
-
-        $this->assertEquals(200, $upload['headers']['status-code']);
-
-        /**
-         * Test for SUCCESS — delete reverts to the default chain
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — deleting again stays idempotent
+         * Test for SUCCESS — deleting falls back to the default chain
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting again is a no-op
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — a photo can be set again after deletion
+         */
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+    }
+
+    /**
+     * A user of its own, so a photo never leaks into tests that expect the default chain.
+     *
+     * @return array<string, string>
+     */
+    private function createPhotoUser(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = \uniqid('photo-', true) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'User Name',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
+    private function createImage(string $color, string $format): string
+    {
+        $image = new \Imagick();
+        $image->newImage(64, 64, $color);
+        $image->setImageFormat($format);
+        $image->setImageCompressionQuality(100);
+
+        if ($format === 'webp') {
+            $image->setOption('webp:lossless', 'true');
+        }
+
+        return $image->getImageBlob();
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $extra
+     * @return array<string, mixed>
+     */
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ], $extra), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getPhoto(array $headers): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body'];
+    }
+
+    private function assertSamePhoto(string $expected, string $actual): void
+    {
+        $expectedImage = new \Imagick();
+        $expectedImage->readImageBlob($expected);
+        $actualImage = new \Imagick();
+        $actualImage->readImageBlob($actual);
+
+        $width = $expectedImage->getImageWidth();
+        $height = $expectedImage->getImageHeight();
+
+        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
+
+        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
+            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
+            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
+
+            $this->assertSame(
+                [$expectedColor['r'], $expectedColor['g'], $expectedColor['b']],
+                [$actualColor['r'], $actualColor['g'], $actualColor['b']],
+                "Pixel at {$x},{$y} differs from the uploaded photo."
+            );
+        }
     }
 }
