@@ -182,6 +182,7 @@ export function ConsoleLayout({
       {hasHeaderSection && (
         <div
           ref={headerSectionRef}
+          data-app-chrome
           className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background"
         >
           {showNativeAppBar && <NativeAppBar />}
