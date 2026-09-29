@@ -198,6 +198,9 @@ jobs:
   matrix:
     name: Tests / Matrix
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
@@ -246,14 +249,7 @@ jobs:
             const pr = context.payload.pull_request;
 
             // Every library whose queries run on the matrix databases; usage writes to ClickHouse instead.
-            const databasePackages = [
-              'utopia-php/abuse',
-              'utopia-php/audit',
-              'utopia-php/database',
-              'utopia-php/migration',
-              'utopia-php/mongo',
-              'utopia-php/query',
-            ];
+            const databaseLibraries = ['abuse', 'audit', 'database', 'migration', 'mongo', 'query'];
 
             const databasePackagesChanged = async () => {
               const getContent = (ref) => github.rest.repos.getContent({
@@ -266,7 +262,7 @@ jobs:
               // A branch constraint locks the branch name as the version on every update,
               // so only the source commit tells two builds of the same branch apart.
               const getReferences = (lock) => new Map((lock.packages ?? [])
-                .filter((entry) => databasePackages.includes(entry.name))
+                .filter((entry) => databaseLibraries.includes(entry.name.replace('utopia-php/', '')))
                 .map((entry) => [entry.name, entry.source?.reference ?? entry.version]));
 
               const [{ data: base }, { data: head }] = await Promise.all([
@@ -278,7 +274,19 @@ jobs:
               const baseReferences = getReferences(decode(base.content));
               const headReferences = getReferences(decode(head.content));
 
-              return databasePackages.some((name) => baseReferences.get(name) !== headReferences.get(name));
+              if (databaseLibraries.some((name) => baseReferences.get(`utopia-php/${name}`) !== headReferences.get(`utopia-php/${name}`))) {
+                return true;
+              }
+
+              // An absorbed library leaves the lock and moves with its packages/ directory.
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              return files.some(({ filename }) => databaseLibraries.some((name) => filename.startsWith(`packages/${name}/`)));
             };
 
             const fullMatrix = context.eventName === 'workflow_dispatch'
