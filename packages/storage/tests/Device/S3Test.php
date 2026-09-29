@@ -205,6 +205,11 @@ final class ScriptedClient implements Adapter
     {
         return $this;
     }
+
+    public function withResolve(string $host, int $port, array $addresses): static
+    {
+        return $this;
+    }
 }
 
 final class S3Test extends TestCase
