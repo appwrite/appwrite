@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { ProjectAuthMethodId } from '@appwrite.io/console'
 import {
@@ -7,9 +8,21 @@ import {
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
+import {
+  PasskeyAuthMethodId,
+  isPasskeyPolicyConfigured,
+} from '@/lib/passkey-policy'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Mail, Key, Smartphone, UserPlus, Lock } from 'lucide-react'
+import {
+  Fingerprint,
+  Loader2,
+  Mail,
+  Key,
+  Smartphone,
+  UserPlus,
+  Lock,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -58,6 +71,11 @@ const AUTH_METHODS = [
     label: 'JWT',
     icon: Lock,
   },
+  {
+    key: PasskeyAuthMethodId,
+    label: 'Passkey',
+    icon: Fingerprint,
+  },
 ] as const
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
@@ -66,6 +84,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const { data: projectData } = useQuery(projectQueryOptions(projectId))
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
+  const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -162,6 +181,12 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
+              // Passkeys fail closed without a relying party, so enabling waits on
+              // the policy; turning an enabled method off always stays possible.
+              const needsPasskeySetup =
+                method.key === PasskeyAuthMethodId &&
+                !passkeyConfigured &&
+                !enabled
 
               return (
                 <div
@@ -192,10 +217,23 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                         onCheckedChange={(checked) =>
                           handleAuthMethodToggle(method.key, checked)
                         }
-                        disabled={isUpdating}
+                        disabled={isUpdating || needsPasskeySetup}
                       />
                     </div>
                   </div>
+                  {needsPasskeySetup && (
+                    <p className="mt-2 text-[12px] text-muted-foreground">
+                      {t('Set a relying party ID and origins in')}{' '}
+                      <Link
+                        to="/projects/$projectId/auth/policies/passkeys"
+                        params={{ projectId }}
+                        className="link-neutral"
+                      >
+                        {t('passkey policies')}
+                      </Link>{' '}
+                      {t('to enable.')}
+                    </p>
+                  )}
                 </div>
               )
             })}
