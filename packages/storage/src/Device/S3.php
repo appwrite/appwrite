@@ -491,12 +491,6 @@ class S3 extends Device
             return true;
         }
 
-        try {
-            $previous = $this->unquote($this->getInfo($target)['etag'] ?? '');
-        } catch (NotFoundException) {
-            $previous = null;
-        }
-
         $uploadId = $this->createMultipartUpload($target, $info['content-type'] ?? '');
         try {
             $parts = [];
@@ -520,24 +514,7 @@ class S3 extends Device
                 }
                 $parts[$part] = $etag;
             }
-
-            try {
-                $this->completeMultipartUpload($target, $uploadId, $parts);
-            } catch (NotFoundException $e) {
-                // A replayed completion finds the upload gone once the first one landed,
-                // which shows as a target that changed since the copy began.
-                try {
-                    $current = $this->getInfo($target);
-                } catch (NotFoundException) {
-                    throw $e;
-                }
-
-                if ($this->unquote($current['etag'] ?? '') !== $previous && (int) ($current['content-length'] ?? -1) === $size) {
-                    return true;
-                }
-
-                throw $e;
-            }
+            $this->completeMultipartUpload($target, $uploadId, $parts);
         } catch (\Throwable $e) {
             // Best effort — unclaimed multipart parts are billed until aborted.
             try {
