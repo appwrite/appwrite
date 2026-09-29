@@ -250,6 +250,12 @@ export function buildAppwriteLlmsTxt(
         'One remote server at https://mcp.appwrite.io. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite.',
       links: [
         {
+          title: 'Agent setup',
+          url: `${origin}/setup.md`,
+          description:
+            'Instructions a coding agent should fetch to install Appwrite MCP.',
+        },
+        {
           title: 'For coding agents',
           url: `${origin}${FOR_AGENTS_PATH}`,
           description:

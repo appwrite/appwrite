@@ -25,5 +25,7 @@ describe('isPreLaunchHeavyContentPath', () => {
     expect(isPreLaunchAllowedPath('/init')).toBe(true)
     expect(isPreLaunchAllowedPath('/init/ticket-123')).toBe(true)
     expect(isPreLaunchAllowedPath('/sign-in')).toBe(true)
+    expect(isPreLaunchAllowedPath('/setup.md')).toBe(true)
+    expect(isPreLaunchHeavyContentPath('/setup.md')).toBe(false)
   })
 })

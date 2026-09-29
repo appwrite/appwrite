@@ -24,6 +24,7 @@ import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]m
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
@@ -176,6 +177,7 @@ import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
+import { Route as PublicProjectsProjectIdAgentsRouteImport } from './routes/_public/projects.$projectId.agents'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
@@ -187,6 +189,7 @@ import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -516,6 +519,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupDotmdRoute = SetupDotmdRouteImport.update({
+  id: '/setup.md',
+  path: '/setup.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -1333,6 +1341,12 @@ const PublicProjectsProjectIdAdvisorRoute =
     path: '/advisor',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdAgentsRoute =
+  PublicProjectsProjectIdAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdAnalyticsRoute =
   PublicProjectsProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
@@ -1397,6 +1411,12 @@ const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
     path: '/onboarding',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeRoute =
@@ -3196,6 +3216,7 @@ export interface FileRoutesByFullPath {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3343,6 +3364,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -3354,6 +3376,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3629,6 +3652,7 @@ export interface FileRoutesByTo {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3766,12 +3790,14 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -4020,6 +4046,7 @@ export interface FileRoutesById {
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -4168,6 +4195,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/_public/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -4179,6 +4207,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4458,6 +4487,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4605,6 +4635,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -4616,6 +4647,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4891,6 +4923,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -5028,12 +5061,14 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5281,6 +5316,7 @@ export interface FileRouteTypes {
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
@@ -5429,6 +5465,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
+    | '/_public/projects/$projectId/agents'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -5440,6 +5477,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -5721,6 +5759,7 @@ export interface RootRouteChildren {
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
@@ -5853,6 +5892,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup.md': {
+      id: '/setup.md'
+      path: '/setup.md'
+      fullPath: '/setup.md'
+      preLoaderRoute: typeof SetupDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -6919,6 +6965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/agents': {
+      id: '/_public/projects/$projectId/agents'
+      path: '/agents'
+      fullPath: '/projects/$projectId/agents'
+      preLoaderRoute: typeof PublicProjectsProjectIdAgentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/analytics': {
       id: '/_public/projects/$projectId/analytics'
       path: '/analytics'
@@ -6994,6 +7047,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/projects/$projectId/onboarding'
       preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/realtime': {
@@ -10462,6 +10522,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
+  PublicProjectsProjectIdAgentsRoute: typeof PublicProjectsProjectIdAgentsRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -10473,6 +10534,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -10488,6 +10550,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
     PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
+    PublicProjectsProjectIdAgentsRoute: PublicProjectsProjectIdAgentsRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -10507,6 +10570,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -10693,6 +10757,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,

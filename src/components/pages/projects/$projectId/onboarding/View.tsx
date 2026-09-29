@@ -375,7 +375,7 @@ function OnboardingProgressPanel({
 
       <div className="px-4 py-4 sm:px-5 sm:py-4 bg-muted/30 flex flex-col gap-2">
         <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
-          <Link to="/projects/$projectId" params={{ projectId }}>
+          <Link to="/projects/$projectId/overview" params={{ projectId }}>
             {t('Go to dashboard')}
           </Link>
         </Button>

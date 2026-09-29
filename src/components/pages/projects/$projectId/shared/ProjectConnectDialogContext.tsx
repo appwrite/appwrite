@@ -16,6 +16,7 @@ import {
 
 type ProjectConnectDialogContextValue = {
   openConnect: (tab?: ConnectProjectTab) => void
+  isOpen: boolean
 }
 
 const ProjectConnectDialogContext =
@@ -56,8 +57,9 @@ export function ProjectConnectDialogProvider({
   const value = useMemo(
     () => ({
       openConnect,
+      isOpen: open,
     }),
-    [openConnect],
+    [openConnect, open],
   )
 
   return (

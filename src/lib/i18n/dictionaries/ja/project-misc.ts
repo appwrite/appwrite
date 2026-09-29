@@ -986,6 +986,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': '試すに進む',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'コーディングエージェントを開き、次のプロンプトのいずれかを試して Appwrite MCP が動作していることを確認してください。',
+  'Explore Appwrite': 'Appwrite を探索',
+  'Open a product in this project and keep building with your agent.':
+    'このプロジェクトのプロダクトを開き、エージェントと一緒に構築を続けましょう。',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'Appwrite MCP でプロジェクト {projectName} のデータベースを一覧表示して',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -998,8 +1001,44 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'Appwrite MCP をインストール',
   'Build with an agent': 'エージェントで構築',
   'Connect your coding agent': 'コーディングエージェントを接続',
+  'Connect Appwrite with your agents': 'Appwrite をエージェントに接続',
+  'Choose your agent': 'エージェントを選択',
+  'List databases, buckets, and users from your editor.':
+    'エディターからデータベース、バケット、ユーザーを一覧表示できます。',
+  'Run approved actions without leaving your agent.':
+    'エージェントを離れることなく、承認済みの操作を実行できます。',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'OAuth で一度承認するだけです。プロンプトに API キーは不要です。',
+  'Authorize Appwrite MCP': 'Appwrite MCP を許可',
+  'Install in your editor': 'エディターにインストール',
+  'Ask your agent to list project resources':
+    'エージェントにプロジェクトのリソース一覧を依頼',
+  'Show details': '詳細を表示',
+  'Hide details': '詳細を非表示',
+  'Next: install MCP in your editor': '次へ: エディターに MCP をインストール',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'Cursor、Claude Code、Codex、または VS Code に Appwrite MCP をインストールすると、エージェントがこのプロジェクトを管理できます。',
+  'What you get': 'できること',
+  'Why connect': '接続する理由',
+  'Without MCP': 'MCP なし',
+  'With MCP': 'MCP あり',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'エージェントは Appwrite を説明できますが、このプロジェクトを変更することはできません。',
+  'The agent can list resources and run approved actions in this project.':
+    'エージェントはこのプロジェクトのリソースを一覧表示し、承認済みの操作を実行できます。',
+  'Recommended next step': '推奨される次のステップ',
+  'To do': '未完了',
+  'Coding agent': 'コーディングエージェント',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'エディターを選び、Appwrite MCP をインストールしてから OAuth で承認します。',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP は承認済みです。まだならエディター側のインストールを完了してください。',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'このプロンプトをコーディングエージェントに貼り付けてください。公開セットアップページに従って、このプロジェクト向けに Appwrite MCP をインストールします。',
+  'Or install Appwrite MCP manually': 'または Appwrite MCP を手動インストール',
+  'Skip for this project': 'このプロジェクトではスキップ',
+  'Preferences are unavailable.': '設定を保存できません。',
+  'Failed to update preferences': '設定の更新に失敗しました',
   'Install MCP': 'MCP をインストール',
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
