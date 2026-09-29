@@ -271,14 +271,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Firewall
   Firewall: 'חומת אש',
-  'Open Firewall': 'פתיחת Firewall',
-  'Turn off sound': 'כיבוי שמע',
-  'Turn on sound': 'הפעלת שמע',
-  'Skip to console': 'דילוג לקונסול',
-  'Project rules that run before traffic reaches your API, Functions, or Sites.':
-    'כללי פרויקט שרצים לפני שהתעבורה מגיעה ל-API, לפונקציות או לאתרים שלכם.',
-  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
-    'חסמו, הגבילו קצב, הפנו או אתגרו בקשות לפני שהן מגיעות ל-API, לפונקציות או לאתרים שלכם.',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',

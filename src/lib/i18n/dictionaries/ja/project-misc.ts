@@ -2603,14 +2603,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ツアーはこれで完了です。さあ、作り始めましょう。',
   by: 'による',
   Firewall: 'Firewall',
-  'Open Firewall': 'Firewall を開く',
-  'Turn off sound': '音声をオフ',
-  'Turn on sound': '音声をオン',
-  'Skip to console': 'コンソールへスキップ',
-  'Project rules that run before traffic reaches your API, Functions, or Sites.':
-    'API、Functions、Sites へのトラフィックに到達する前に適用されるプロジェクトルール。',
-  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
-    'API、Functions、サイトに届く前に、リクエストを拒否、レート制限、リダイレクト、またはチャレンジできます。',
   Rules: 'ルール',
   Analytics: 'アナリティクス',
   Logs: 'ログ',

@@ -5,7 +5,7 @@ import type {
 } from '@/lib/console-banners/floating-card-layout'
 
 export type ConsoleBannerScope = 'project' | 'console'
-export type ConsoleBannerPlacement = 'header' | 'bottom-left' | 'fullscreen'
+export type ConsoleBannerPlacement = 'header' | 'bottom-left'
 
 export type ConsoleBannerDefinition = {
   id: string
@@ -32,15 +32,6 @@ export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
 export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
-export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
-
-/**
- * Set to `true` to ship the fullscreen Firewall promo to all signed-in cloud users
- * (HLS in `public/videos/firewall-trailer/`). While `false`, console operators
- * (`impersonator` or active impersonation session) still get early access; see
- * `firewall-promo-eligibility.ts` and `FirewallPromoBannerGate` in PromoBanner.tsx.
- */
-export const FIREWALL_PROMO_BANNER_ENABLED = false
 
 /** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
@@ -105,21 +96,7 @@ export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
   999,
 )
 
-/**
- * Firewall fullscreen takeover: seven days from launch (inclusive, UTC).
- */
-export const FIREWALL_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 29, 0, 0, 0, 0)
-export const FIREWALL_PROMO_BANNER_END_MS = Date.UTC(
-  2026,
-  9,
-  5,
-  23,
-  59,
-  59,
-  999,
-)
-
-/** Registered console promo banners (header strips, floating cards, takeovers). */
+/** Registered console promo banners (header strips and floating cards). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   {
     id: INIT_RECAP_PROMO_BANNER_ID,
@@ -170,16 +147,6 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     endMs: NATIVE_OAUTH_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'native-oauth-promo-banner-open-settings',
-  },
-  {
-    id: FIREWALL_PROMO_BANNER_ID,
-    title: 'Appwrite Firewall',
-    scope: 'console',
-    placement: 'fullscreen',
-    startMs: FIREWALL_PROMO_BANNER_START_MS,
-    endMs: FIREWALL_PROMO_BANNER_END_MS,
-    cloudOnly: true,
-    event: 'firewall-promo-banner-learn-more',
   },
 ] as const
 
