@@ -38,7 +38,7 @@ import {
   hasAccountMcpAgentConnected,
 } from '@/lib/mcp-adoption'
 import {
-  useAccountConnectedApps,
+  useAccountConsents,
   useDismissProjectAgentsLanding,
   useOrganizationScopes,
   useProject,
@@ -140,7 +140,7 @@ export function View() {
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { data: connectedApps } = useAccountConnectedApps({
+  const { data: consents } = useAccountConsents({
     enabled: isAuthenticated,
   })
   const projectConnect = useProjectConnectDialog()
@@ -152,7 +152,7 @@ export function View() {
     isAuthenticated &&
     canShowAgentMcpConnectCta(access, features)
 
-  const connected = hasAccountMcpAgentConnected(connectedApps?.groups)
+  const connected = hasAccountMcpAgentConnected(consents)
   const projectName = project?.name ?? projectId ?? ''
   const connectPrompt = useMemo(
     () =>

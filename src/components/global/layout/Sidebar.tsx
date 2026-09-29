@@ -19,7 +19,7 @@ import {
   useSidebarCollapsed,
   useProject,
   useOrganizationScopes,
-  useAccountConnectedApps,
+  useAccountConsents,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -378,10 +378,10 @@ export function ConsoleSidebar({
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
-  const { data: connectedApps } = useAccountConnectedApps({
+  const { data: consents } = useAccountConsents({
     enabled: showAgentNav && !!account,
   })
-  const agentMcpConnected = hasAccountMcpAgentConnected(connectedApps?.groups)
+  const agentMcpConnected = hasAccountMcpAgentConnected(consents)
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
 

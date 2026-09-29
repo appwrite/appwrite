@@ -2,22 +2,29 @@
  * Client-side helpers for Appwrite MCP try-it prompts in Connect flows.
  */
 
-import type { AccountConnectedAppGroup } from '@/lib/react-query/hooks/account-applications'
+import type { Models } from '@appwrite.io/console'
+import { APPWRITE_AGENT_OAUTH_CLIENT_ID } from '@/lib/assistant/mcp-appwrite'
 import { AGENT_SETUP_PATH, AGENT_SETUP_URL } from '@/lib/seo/agent-setup'
-
-/** First-party console Agent OAuth client. Not a coding-agent MCP install. */
-export const FIRST_PARTY_APPWRITE_AGENT_CLIENT_ID = 'appwrite-agent'
 
 /**
  * True when the account has authorized an MCP client other than the console
  * Agent (Cursor, Claude Code, VS Code, CIMD clients, unknown DCR apps, etc.).
+ *
+ * Decided from the consents alone so always-mounted UI never resolves client
+ * metadata (apps.get per consent, a cross-origin document fetch per CIMD
+ * client). The console Agent connects through the seeded public client, so
+ * its consent carries that fixed app ID; URL-form clients and every other
+ * registered app are third-party. A console Agent that fell back to Dynamic
+ * Client Registration (instances without the seeded client) is
+ * indistinguishable here and counts as connected.
  */
 export function hasAccountMcpAgentConnected(
-  groups: AccountConnectedAppGroup[] | undefined,
+  consents: Models.Oauth2Consent[] | null | undefined,
 ): boolean {
-  if (!groups?.length) return false
-  return groups.some(
-    (group) => group.knownClient?.id !== FIRST_PARTY_APPWRITE_AGENT_CLIENT_ID,
+  if (!consents?.length) return false
+  return consents.some(
+    (consent) =>
+      !!consent.cimdUrl || consent.appId !== APPWRITE_AGENT_OAUTH_CLIENT_ID,
   )
 }
 
