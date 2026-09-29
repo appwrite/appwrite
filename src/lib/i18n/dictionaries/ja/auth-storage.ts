@@ -1291,4 +1291,41 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Password not checked against known data breaches':
     'パスワードは既知のデータ漏洩と照合されていません',
   'breached password': '漏洩したパスワード',
+
+  // Passkey relying party policy and auth method
+  'Passkey': 'パスキー',
+  'Passkeys': 'パスキー',
+  'Relying party': 'Relying Party',
+  'Passkeys are bound to the domain of your app. Users can only sign in with a passkey once a relying party ID and at least one origin are set, and the Passkey auth method is enabled.':
+    'パスキーはアプリのドメインに紐付けられます。Relying Party ID と 1 つ以上のオリジンが設定され、パスキー認証方法が有効になっている場合にのみ、ユーザーはパスキーでサインインできます。',
+  'Relying party ID': 'Relying Party ID',
+  'The domain of the app where users sign in, not your Appwrite endpoint. Use localhost for local development.':
+    'ユーザーがサインインするアプリのドメインです（Appwrite エンドポイントではありません）。ローカル開発では localhost を使用してください。',
+  'Allowed origins': '許可されたオリジン',
+  'The exact origins your app is served from, on the relying party ID or one of its subdomains.':
+    'アプリが配信される正確なオリジンです。Relying Party ID またはそのサブドメイン上である必要があります。',
+  'Origin': 'オリジン',
+  'Add origin': 'オリジンを追加',
+  'Remove origin': 'オリジンを削除',
+  'Enter a domain without a scheme or path, like example.com.':
+    'example.com のように、スキームやパスを含まないドメインを入力してください。',
+  'The relying party ID must be lowercase.': 'Relying Party ID は小文字である必要があります。',
+  'The relying party ID cannot include a port.':
+    'Relying Party ID にポートを含めることはできません。',
+  'Enter a domain like example.com, or localhost.':
+    'example.com のようなドメイン、または localhost を入力してください。',
+  'Enter a full origin, like https://example.com.':
+    'https://example.com のような完全なオリジンを入力してください。',
+  'Origins must use https://, or http:// on localhost.':
+    'オリジンは https:// を使用する必要があります（localhost では http:// も可）。',
+  'Origins cannot include credentials.': 'オリジンに認証情報を含めることはできません。',
+  'Origins cannot include a path, query or fragment.':
+    'オリジンにパス、クエリ、フラグメントを含めることはできません。',
+  'Origins must be on the relying party ID or one of its subdomains.':
+    'オリジンは Relying Party ID またはそのサブドメイン上にある必要があります。',
+  'Updated passkey settings.': 'パスキー設定を更新しました。',
+  'Failed to update passkey settings': 'パスキー設定の更新に失敗しました',
+  'Set a relying party ID and origins in': '有効にするには、',
+  'passkey policies': 'パスキーポリシー',
+  'to enable.': 'で Relying Party ID とオリジンを設定してください。',
 }
