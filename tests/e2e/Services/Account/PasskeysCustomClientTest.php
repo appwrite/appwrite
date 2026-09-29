@@ -293,7 +293,7 @@ final class PasskeysCustomClientTest extends Scope
             'body' => ['challengeId' => $challenge['body']['$id'], 'credential' => $credential],
         ]));
 
-        $this->assertSame(1, \count(\array_filter($statuses, fn (int $status) => $status === 200)), \json_encode($statuses));
+        $this->assertCount(1, \array_filter($statuses, fn (int $status) => $status === 200), \json_encode($statuses));
     }
 
     public function testSignInFailures(): void
