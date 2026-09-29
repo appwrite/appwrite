@@ -153,7 +153,7 @@ class Update extends Action
         $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $passkey->getId(), new Document([
             'data' => \array_merge($passkeyData, [
                 'record' => $ceremony->encodeRecord($record),
-                'accessedAt' => DateTime::now(),
+                'accessedAt' => DateTime::formatTz(DateTime::now()),
             ]),
         ])));
 

@@ -174,7 +174,9 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame($user['$id'], $account['body']['$id']);
 
         $list = $this->client->call(Client::METHOD_GET, '/account/passkeys', $this->getSessionHeaders($project, $cookie));
-        $this->assertNotEmpty($list['body']['passkeys'][0]['accessedAt']);
+        $accessedAt = $list['body']['passkeys'][0]['accessedAt'];
+        $this->assertStringEndsWith('+00:00', $accessedAt);
+        $this->assertGreaterThanOrEqual(new \DateTime($list['body']['passkeys'][0]['$createdAt']), new \DateTime($accessedAt));
 
         /**
          * Test for FAILURE
