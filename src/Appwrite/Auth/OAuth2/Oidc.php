@@ -82,7 +82,7 @@ class Oidc extends OAuth2
     {
         if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
-            $this->tokens = \json_decode($this->request(
+            $this->tokens = $this->parseTokens($this->request(
                 'POST',
                 $this->getTokenEndpoint(),
                 $headers,
@@ -94,7 +94,7 @@ class Oidc extends OAuth2
                     'scope' => \implode(' ', $this->getScopes()),
                     'grant_type' => 'authorization_code'
                 ])
-            ), true);
+            ));
         }
         return $this->tokens;
     }
@@ -108,7 +108,7 @@ class Oidc extends OAuth2
     public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
-        $this->tokens = \json_decode($this->request(
+        $this->tokens = $this->parseTokens($this->request(
             'POST',
             $this->getTokenEndpoint(),
             $headers,
@@ -118,13 +118,87 @@ class Oidc extends OAuth2
                 'client_secret' => $this->getClientSecret(),
                 'grant_type' => 'refresh_token'
             ])
-        ), true);
+        ));
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
         return $this->tokens;
+    }
+
+    /**
+     * Parse a token-endpoint body. An empty body (for example when an OP answers
+     * errors with an HTTP redirect instead of a JSON error object) must not be
+     * treated as a successful empty token set.
+     *
+     * @return array<string, mixed>
+     */
+    private function parseTokens(string $response): array
+    {
+        if ($response === '') {
+            throw new Exception(\json_encode([
+                'error' => 'token_response_empty',
+                'error_description' => 'OIDC token endpoint returned an empty body.',
+            ]), 400);
+        }
+
+        $tokens = \json_decode($response, true);
+
+        if (!\is_array($tokens)) {
+            $tokens = [];
+            \parse_str($response, $tokens);
+        }
+
+        if (isset($tokens['error'])) {
+            throw new Exception(\json_encode(
+                $tokens,
+                JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR,
+            ), 400);
+        }
+
+        // Authorization-code responses normally include access_token; some OPs
+        // (and hybrid-adjacent setups) may still assert identity via id_token alone.
+        if (empty($tokens['access_token']) && empty($tokens['id_token'])) {
+            throw new Exception(\json_encode([
+                'error' => 'access_token_missing',
+                'error_description' => 'OIDC token endpoint did not return an access token or ID token.',
+            ]), 400);
+        }
+
+        return $tokens;
+    }
+
+    /**
+     * Decode the ID token payload without verifying the signature. The token was
+     * just received over TLS from the admin-configured token endpoint (same trust
+     * model as Apple/Zoho adapters). Signature verification for the native ID
+     * token route lives in Appwrite\Auth\OIDC\IdTokenVerifier.
+     *
+     * @return array<string, mixed>
+     */
+    private function getIdTokenClaims(): array
+    {
+        $idToken = $this->tokens['id_token'] ?? '';
+        if (!\is_string($idToken) || $idToken === '') {
+            return [];
+        }
+
+        $parts = \explode('.', $idToken);
+        if (\count($parts) < 2) {
+            return [];
+        }
+
+        $payload = $parts[1];
+        $padding = (4 - (\strlen($payload) % 4)) % 4;
+        $json = \base64_decode(\strtr($payload, '-_', '+/') . \str_repeat('=', $padding), true);
+        if ($json === false) {
+            return [];
+        }
+
+        $claims = \json_decode($json, true);
+
+        return \is_array($claims) ? $claims : [];
     }
 
     /**
@@ -162,6 +236,10 @@ class Oidc extends OAuth2
     /**
      * Check if the User email is verified
      *
+     * Honours the standard `email_verified` claim from the ID token or userinfo.
+     * Some OPs send a boolean; others send the string "true"/"false". A missing
+     * claim means unverified — same rule as the native ID-token session path.
+     *
      * @param string $accessToken
      *
      * @return bool
@@ -170,7 +248,7 @@ class Oidc extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['email_verified'] ?? false;
+        return \filter_var($user['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -196,11 +274,40 @@ class Oidc extends OAuth2
     */
     protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
-            $user = $this->request('GET', $this->getUserinfoEndpoint(), $headers);
-            $this->user = \json_decode($user, true);
+        if (!empty($this->user)) {
+            return $this->user;
         }
+
+        // Start from ID token claims so identity still works when userinfo is
+        // unavailable; userinfo overrides overlapping keys when present (OIDC Core).
+        $claims = $this->getIdTokenClaims();
+
+        if ($accessToken !== '') {
+            $endpoint = $this->getUserinfoEndpoint();
+            if ($endpoint !== '') {
+                try {
+                    $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+                    $user = $this->request('GET', $endpoint, $headers);
+                    $decoded = \json_decode($user, true);
+                    if (\is_array($decoded)) {
+                        $claims = \array_merge($claims, $decoded);
+                    }
+                } catch (Exception $exception) {
+                    if (empty($claims)) {
+                        throw $exception;
+                    }
+                }
+            }
+        }
+
+        if (empty($claims)) {
+            throw new Exception(\json_encode([
+                'error' => 'userinfo_missing',
+                'error_description' => 'OIDC provider did not return user claims from the ID token or userinfo endpoint.',
+            ]), 400);
+        }
+
+        $this->user = $claims;
 
         return $this->user;
     }

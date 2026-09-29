@@ -210,6 +210,9 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
+        // Provider token/userinfo calls must not follow redirects; error redirects
+        // with an empty body would otherwise look like a successful empty response.
+        \curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
         if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
