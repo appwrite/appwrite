@@ -57,7 +57,7 @@ The check uses k-anonymity. Appwrite hashes the password with SHA-1 and sends on
 
 ## How the check works {% #breached-passwords-how-it-works %}
 
-Breached password detection is turned on by default for every project and only records a result. Whenever a user signs up, signs in with email and password, changes their password, or completes a password recovery, Appwrite checks the password and stores the outcome on the user as `passwordPwned`:
+On Appwrite Cloud, breached password detection is turned on by default for every project and only records a result. Self-hosted instances need a breach service configured first, as described in [Configure breached password detection](#configure-breached-passwords). Whenever a user signs up, signs in with email and password, changes their password, or completes a password recovery, Appwrite checks the password and stores the outcome on the user as `passwordPwned`:
 
 | Value   | Meaning                                                                                                          |
 | ------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -75,6 +75,10 @@ On top of recording, you can turn on two enforcement options:
 If the breach service can't be reached, Appwrite does not treat the password as safe. The request fails with the `general_pwned_passwords_unavailable` error and can be retried.
 
 ## Configure breached password detection {% #configure-breached-passwords %}
+
+{% info title="Self-hosted instances" %}
+On self-hosted Appwrite 2.3 and later, set the [`_APP_PWNED_PASSWORDS_DSN`](/docs/advanced/self-hosting/configuration/environment-variables#general) environment variable before you rely on this policy. The default, `none://localhost`, reports every password as safe, so nothing is rejected or blocked and every checked password is recorded as not breached. Set it to `hibp://localhost` to check passwords against Have I Been Pwned. The `localhost` host is a placeholder that Appwrite ignores for the `hibp` scheme.
+{% /info %}
 
 1. Open your project in the Appwrite Console.
 2. Navigate to **Auth** in the sidebar.
@@ -98,10 +102,6 @@ The enforcement options only apply while the check is turned on. The users table
 {% only_light %}
 ![Users table in the Appwrite Console with breached password results](/images/docs/auth/breached-passwords/users-table.avif)
 {% /only_light %}
-
-{% info title="Self-hosted instances" %}
-On self-hosted Appwrite 2.3 and later, the [`_APP_PWNED_PASSWORDS_DSN`](/docs/advanced/self-hosting/configuration/environment-variables#general) environment variable chooses the breach service. The default, `none://localhost`, reports every password as safe, so set it to `hibp://localhost` to check passwords against Have I Been Pwned.
-{% /info %}
 
 ## Handle breached password errors {% #handle-breached-password-errors %}
 

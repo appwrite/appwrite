@@ -2255,7 +2255,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "excerpt": "Appwrite provides many security features to keep both your Appwrite project and your user's information secure.",
     "breadcrumbs": [
       "Auth",
