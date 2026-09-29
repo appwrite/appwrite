@@ -224,7 +224,7 @@ class Local extends Device
 
         // Chunks that were already joined into the file leave no directory behind.
         if (! file_exists($tmp)) {
-            return true;
+            return ! file_exists($path);
         }
 
         $files = $this->scanDirectory($tmp);

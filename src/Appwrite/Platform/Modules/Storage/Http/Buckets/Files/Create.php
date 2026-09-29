@@ -378,12 +378,12 @@ class Create extends Action
                     }
 
                     if (!$scan->isClean()) {
-                        // The finalized upload has no completed file record yet, and a pending
-                        // one would be left pointing at chunks that are already joined.
-                        $deviceForFiles->delete($path);
+                        // A pending record would be left pointing at chunks that are already joined. Keep it
+                        // while the joined file is still on disk, so the removal can be retried by deleting the file.
+                        $removed = $deviceForFiles->delete($path);
 
-                        if (!$file->isEmpty()) {
-                            $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                        if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
                         }
                     }
 
