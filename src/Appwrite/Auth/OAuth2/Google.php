@@ -77,7 +77,7 @@ class Google extends OAuth2
                     'scope' => null,
                     'grant_type' => 'authorization_code'
                 ])
-            ), true);
+            ), true) ?? [];
         }
 
         return $this->tokens;
@@ -98,7 +98,7 @@ class Google extends OAuth2
                 'client_secret' => $this->getClientSecret(),
                 'grant_type' => 'refresh_token'
             ])
-        ), true);
+        ), true) ?? [];
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
@@ -184,7 +184,7 @@ class Google extends OAuth2
     {
         if (empty($this->user)) {
             $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . \urlencode($accessToken));
-            $this->user = \json_decode($user, true);
+            $this->user = \json_decode($user, true) ?? [];
         }
 
         return $this->user;
