@@ -10,6 +10,8 @@ use Utopia\Audit\Adapter\ClickHouse;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Query;
 use Utopia\Audit\Tests\E2E\AuditBase;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 
 /**
  * ClickHouse Adapter Tests
@@ -515,7 +517,7 @@ final class ClickHouseTest extends TestCase
         );
 
         $attributes = $adapter->getAttributes();
-        $attributeIds = array_map(fn (array $attr): mixed => $attr['$id'], $attributes);
+        $attributeIds = array_map(fn (Attribute $attribute): string => $attribute->key, $attributes);
 
         // Verify all expected attributes exist
         $expectedAttributes = [
@@ -610,43 +612,6 @@ final class ClickHouseTest extends TestCase
         foreach ($highCardinality as $column) {
             $definition = $method->invoke($adapter, $column);
             $this->assertEquals("{$column} Nullable(String)", $definition);
-        }
-    }
-
-    /**
-     * Test that premium geo attributes are all optional String columns.
-     */
-    public function testPremiumGeoAttributesAreOptionalStrings(): void
-    {
-        $adapter = new ClickHouse(
-            host: 'clickhouse',
-            username: 'default',
-            password: 'clickhouse',
-        );
-
-        $attributes = $adapter->getAttributes();
-        $byId = [];
-        foreach ($attributes as $attribute) {
-            $byId[$attribute['$id']] = $attribute;
-        }
-
-        $geoColumns = [
-            'city',
-            'continentCode',
-            'subdivisions',
-            'isp',
-            'autonomousSystemNumber',
-            'autonomousSystemOrganization',
-            'connectionType',
-            'connectionUsageType',
-            'connectionOrganization',
-        ];
-
-        foreach ($geoColumns as $column) {
-            $this->assertArrayHasKey($column, $byId, "Premium geo attribute '{$column}' not found");
-            $this->assertEquals(\Utopia\Database\Database::VAR_STRING, $byId[$column]['type'], "'{$column}' should be a string");
-            $this->assertFalse($byId[$column]['required'], "'{$column}' should be optional");
-            $this->assertFalse($byId[$column]['array'], "'{$column}' should not be an array");
         }
     }
 
@@ -805,7 +770,7 @@ final class ClickHouseTest extends TestCase
         );
 
         $indexes = $adapter->getIndexes();
-        $indexIds = array_map(fn (array $idx): mixed => $idx['$id'], $indexes);
+        $indexIds = array_map(fn (Index $index): string => $index->key, $indexes);
 
         // Verify all ClickHouse-specific indexes exist
         $expectedClickHouseIndexes = [

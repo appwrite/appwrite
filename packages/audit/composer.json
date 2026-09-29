@@ -10,7 +10,8 @@
         "audit"
     ],
     "license": "MIT",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "scripts": {
         "test": "phpunit --testsuite unit",
         "test:e2e": "phpunit --testsuite e2e"
@@ -30,10 +31,14 @@
         "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0",
         "utopia-php/client": "^0.5",
-        "utopia-php/database": "^7.0.0",
+        "utopia-php/database": "^8.0",
         "utopia-php/psr7": "^0.2.1",
         "utopia-php/query": "0.6.*",
         "utopia-php/validators": "^1.0"
+    },
+    "require-dev": {
+        "ext-pdo_mysql": "*",
+        "ext-swoole": "*"
     },
     "config": {
         "allow-plugins": {

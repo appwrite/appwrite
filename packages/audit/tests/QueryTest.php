@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\Audit\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Query;
+use Utopia\Query\Method;
 
 final class QueryTest extends TestCase
 {
@@ -223,5 +225,24 @@ final class QueryTest extends TestCase
         $this->assertSame(Query::TYPE_BETWEEN, $parsed->getMethod()->value);
         $this->assertSame('time', $parsed->getAttribute());
         $this->assertSame(['2023-01-01', '2024-12-31'], $parsed->getValues());
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function constants(): iterable
+    {
+        foreach (new \ReflectionClass(Query::class)->getConstants() as $name => $value) {
+            if (str_starts_with($name, 'TYPE_')) {
+                yield $name => [$value];
+            }
+        }
+    }
+
+    #[DataProvider('constants')]
+    public function testConstantMatchesMethod(mixed $value): void
+    {
+        $this->assertIsString($value);
+        $this->assertSame($value, Method::tryFrom($value)?->value, 'Not a ' . Method::class . ' value');
     }
 }

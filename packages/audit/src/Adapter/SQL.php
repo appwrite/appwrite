@@ -3,8 +3,8 @@
 namespace Utopia\Audit\Adapter;
 
 use Utopia\Audit\Adapter;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 
 /**
  * Base SQL Adapter for Audit
@@ -14,7 +14,7 @@ use Utopia\Database\Document;
  */
 abstract class SQL extends Adapter
 {
-    public const COLLECTION = 'audit';
+    public const string COLLECTION = 'audit';
 
     /**
      * Get the collection/table name for audit logs.
@@ -27,164 +27,75 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for audit logs.
      *
-     * Each attribute is an array with the following string keys:
-     * - $id: string (attribute identifier)
-     * - type: string
-     * - size: int
-     * - required: bool
-     * - signed: bool
-     * - array: bool
-     * - filters: array<string>
-     *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, Attribute>
      */
     public function getAttributes(): array
     {
         return [
-            [
-                '$id' => 'userId',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'event',
-                'type' => Database::VAR_STRING,
-                'size' => 255,
-                'required' => true,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resource',
-                'type' => Database::VAR_STRING,
-                'size' => 255,
-                'required' => false,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'userAgent',
-                'type' => Database::VAR_STRING,
-                'size' => 65534,
-                'required' => true,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'ip',
-                'type' => Database::VAR_STRING,
-                'size' => 45,
-                'required' => true,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'time',
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => 'data',
-                'type' => Database::VAR_STRING,
-                'size' => 16777216,
-                'required' => false,
-                'signed' => true,
-                'array' => false,
-                'filters' => ['json'],
-            ],
+            Attribute::string(key: 'userId'),
+            Attribute::string(key: 'event', required: true),
+            Attribute::string(key: 'resource'),
+            Attribute::string(key: 'userAgent', size: 65534, required: true),
+            Attribute::string(key: 'ip', size: 45, required: true),
+            Attribute::datetime(key: 'time', filters: ['datetime']),
+            Attribute::string(key: 'data', size: 16777216, filters: ['json']),
         ];
     }
 
     /**
-     * Get attribute documents for audit logs.
+     * Get attribute value objects for createCollection.
      *
-     * @return array<Document>
+     * @return array<Attribute>
      */
     public function getAttributeDocuments(): array
     {
-        return array_map(static fn (array $attribute): \Utopia\Database\Document => new Document($attribute), $this->getAttributes());
+        return $this->getAttributes();
     }
 
     /**
      * Get index definitions for audit logs.
      *
-     * Each index is an array with the following string keys:
-     * - $id: string (index identifier)
-     * - type: string
-     * - attributes: array<string>
-     *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, Index>
      */
     public function getIndexes(): array
     {
         return [
-            [
-                '$id' => 'idx_event',
-                'type' => 'key',
-                'attributes' => ['event'],
-            ],
-            [
-                '$id' => 'idx_userId_event',
-                'type' => 'key',
-                'attributes' => ['userId', 'event'],
-            ],
-            [
-                '$id' => 'idx_resource_event',
-                'type' => 'key',
-                'attributes' => ['resource', 'event'],
-            ],
-            [
-                '$id' => 'idx_time_desc',
-                'type' => 'key',
-                'attributes' => ['time'],
-            ],
+            Index::key(key: 'idx_event', attributes: ['event']),
+            Index::key(key: 'idx_userId_event', attributes: ['userId', 'event']),
+            Index::key(key: 'idx_resource_event', attributes: ['resource', 'event']),
+            Index::key(key: 'idx_time_desc', attributes: ['time']),
         ];
     }
 
     /**
-     * Get index documents for audit logs.
+     * Get index value objects for createCollection.
      *
-     * @return array<Document>
+     * @return array<Index>
      */
     public function getIndexDocuments(): array
     {
-        return array_map(static fn (array $index): \Utopia\Database\Document => new Document($index), $this->getIndexes());
+        return $this->getIndexes();
     }
 
     /**
-     * Get a single attribute by ID.
-     *
-     * @return array<string, mixed>|null
+     * Get a single attribute by key.
      */
-    protected function getAttribute(string $id)
+    protected function getAttribute(string $id): ?Attribute
     {
         foreach ($this->getAttributes() as $attribute) {
-            if ($attribute['$id'] === $id) {
+            if ($attribute->key === $id) {
                 return $attribute;
             }
         }
 
-        return;
+        return null;
     }
 
     /**
      * Get SQL column definition for a given attribute ID.
      * This method is database-specific and must be implemented by each concrete adapter.
      *
-     * @param string $id Attribute identifier
+     * @param  string  $id  Attribute identifier
      * @return string Database-specific column definition
      */
     abstract protected function getColumnDefinition(string $id): string;
@@ -199,9 +110,7 @@ abstract class SQL extends Adapter
     {
         $definitions = [];
         foreach ($this->getAttributes() as $attribute) {
-            /** @var string $id */
-            $id = $attribute['$id'];
-            $definitions[] = $this->getColumnDefinition($id);
+            $definitions[] = $this->getColumnDefinition($attribute->key);
         }
 
         return $definitions;
