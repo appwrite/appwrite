@@ -81,6 +81,7 @@ class Create extends Action
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('attributeSecurity', false, new Boolean(true), 'Enables scoping a permission to a single attribute. A permission naming an attribute grants access to that attribute alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
@@ -92,7 +93,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $attributeSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -121,6 +122,7 @@ class Create extends Action
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions,
                 'documentSecurity' => $documentSecurity,
+                'columnSecurity' => $attributeSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
                 'search' => \implode(' ', [$collectionId, $name]),
@@ -223,7 +225,8 @@ class Create extends Action
                 attributes: $collectionAttributes,
                 indexes: $collectionIndexes,
                 permissions: $permissions,
-                documentSecurity: $documentSecurity
+                documentSecurity: $documentSecurity,
+                columnSecurity: $attributeSecurity
             );
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());

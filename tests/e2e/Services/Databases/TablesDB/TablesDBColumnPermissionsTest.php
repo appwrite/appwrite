@@ -158,4 +158,73 @@ final class TablesDBColumnPermissionsTest extends Scope
             Permission::update(Role::users()),
         ], $stored);
     }
+
+    /**
+     * With columnSecurity on, a column-scoped permission is accepted and stored.
+     *
+     * The rejections above are what the API does when a table has not opted in. This is
+     * the other half: the flag round-trips through create and the response model, and a
+     * grant naming a column is no longer refused.
+     */
+    public function testColumnSecurityEnablesColumnScopedPermissions(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $this->headers(), [
+            'databaseId' => ID::unique(),
+            'name' => 'Column Permissions',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $this->headers(), [
+            'tableId' => ID::unique(),
+            'name' => 'Employees',
+            'rowSecurity' => true,
+            'columnSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertTrue($table['body']['columnSecurity'], 'the flag round-trips through the response model');
+        $tableId = $table['body']['$id'];
+
+        foreach (['name', 'salary'] as $key) {
+            $column = $this->client->call(
+                Client::METHOD_POST,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string',
+                $this->headers(),
+                ['key' => $key, 'size' => 64, 'required' => false]
+            );
+            $this->assertEquals(202, $column['headers']['status-code']);
+        }
+
+        \sleep(2);
+
+        $row = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows',
+            $this->headers(),
+            [
+                'rowId' => ID::unique(),
+                'data' => ['name' => 'Bob', 'salary' => '100'],
+                'permissions' => [Permission::read(Role::users(), 'salary')],
+            ]
+        );
+
+        $this->assertEquals(201, $row['headers']['status-code'], 'a column-scoped grant is accepted once the table opts in');
+        $this->assertSame([Permission::read(Role::users(), 'salary')], $row['body']['$permissions']);
+
+        // And it survives a read back in the caller's vocabulary -- storage keeps an
+        // identity, callers only ever see the column key.
+        $read = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $row['body']['$id'],
+            $this->headers()
+        );
+
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertSame([Permission::read(Role::users(), 'salary')], $read['body']['$permissions']);
+    }
 }

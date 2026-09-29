@@ -68,6 +68,7 @@ class Update extends Action
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('attributeSecurity', false, new Boolean(true), 'Enables scoping a permission to a single attribute. A permission naming an attribute grants access to that attribute alone. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('purge', false, new Boolean(true), 'When true, purge all cached list responses for this collection as part of the update. Use this to force readers to see fresh data immediately instead of waiting for the cache TTL to expire.', true)
             ->inject('response')
@@ -78,7 +79,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $enabled, bool $purge, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $attributeSecurity, bool $enabled, bool $purge, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
@@ -107,6 +108,7 @@ class Update extends Action
             $collection
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
+                ->setAttribute('columnSecurity', $attributeSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', \implode(' ', [$collectionId, $searchName]))
         );
@@ -114,15 +116,7 @@ class Update extends Action
         $dbForDatabases = $getDatabasesDB($database);
         $internalId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
-        // columnSecurity is not part of this request, so the collection keeps whatever it
-        // already had. updateCollection() stores the value it is given rather than
-        // inferring one, so passing false here would turn the feature off as a side
-        // effect of editing permissions.
-        $columnSecurity = $authorization->skip(
-            fn () => $dbForDatabases->getCollection($internalId)->getAttribute('columnSecurity', false)
-        );
-
-        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $columnSecurity);
+        $dbForDatabases->updateCollection($internalId, $permissions, $documentSecurity, $attributeSecurity);
 
         $queueForEvents
             ->setContext('database', $database)

@@ -63,6 +63,20 @@ return [
                 'array' => false,
             ],
             [
+                // Optional with a false default, unlike documentSecurity beside it:
+                // collections created before column permissions existed have no value
+                // stored, and the feature is off for them.
+                '$id' => ID::custom('columnSecurity'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('attributes'),
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,
