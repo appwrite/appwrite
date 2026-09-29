@@ -8,7 +8,7 @@ tags: auth, security
 
 Appwrite Auth now checks passwords against the Have I Been Pwned breach corpus with [breached password detection](/docs/products/auth/security#breached-passwords). Every password a user signs up, signs in, or resets with is checked, and the result is stored on the user as `passwordPwned`. Only the first five characters of the password's SHA-1 hash leave Appwrite.
 
-On Appwrite Cloud, checking and recording are on by default. From **Auth** > **Policies** > **Passwords** in the Console, you can also reject breached passwords at sign-up and password changes, and block sign-in with a breached password until the user resets it. Self-hosted instances on Appwrite 2.3 and later turn it on with the `_APP_PWNED_PASSWORDS_DSN` environment variable.
+On Appwrite Cloud, checking and recording are on by default. From **Auth** > **Policies** > **Passwords** in the Console, you can also reject breached passwords at sign-up and password changes, and block sign-in with a breached password until the user resets it. Self-hosted instances on Appwrite 2.3 and later turn it on with the [`_APP_PWNED_PASSWORDS_DSN`](/docs/advanced/self-hosting/configuration/breached-passwords) environment variable.
 
 {% arrow_link href="/blog/post/announcing-breached-password-detection" %}
 Read the announcement
