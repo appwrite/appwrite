@@ -2193,13 +2193,19 @@ final class FunctionsCustomServerTest extends Scope
             $asyncId = $async['body']['$id'];
             $queuedAt = $async['body']['$createdAt'];
 
-            $this->assertEventually(function () use ($functionId, $asyncId) {
-                $execution = $this->getExecution($functionId, $asyncId);
-                $this->assertEquals(200, $execution['headers']['status-code']);
-                $this->assertEquals('completed', $execution['body']['status']);
+            // Both executions reach the store through the executions queue,
+            // so wait until each is stored in its final state.
+            $createdAt = [];
+            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, &$createdAt) {
+                foreach ([$syncId, $asyncId] as $executionId) {
+                    $execution = $this->getExecution($functionId, $executionId);
+                    $this->assertEquals(200, $execution['headers']['status-code']);
+                    $this->assertEquals('completed', $execution['body']['status']);
+                    $createdAt[$executionId] = $execution['body']['$createdAt'];
+                }
             }, 60000, 500);
-            $finishedAt = $this->getExecution($functionId, $asyncId)['body']['$createdAt'];
-            $syncCreatedAt = $this->getExecution($functionId, $syncId)['body']['$createdAt'];
+            $syncCreatedAt = $createdAt[$syncId];
+            $finishedAt = $createdAt[$asyncId];
 
             $list = fn (array $window) => $this->listExecutions($functionId, [
                 'queries' => [...$window, Query::orderDesc('$createdAt')->toString()],
