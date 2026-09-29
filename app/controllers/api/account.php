@@ -597,11 +597,12 @@ Http::get('/v1/account/sessions')
         ],
         contentType: ContentType::JSON,
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('targetUser')
     ->inject('locale')
     ->inject('session')
-    ->action(function (Response $response, User $targetUser, Locale $locale, ?Document $current) {
+    ->action(function (bool $includeTotal, Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
 
         $sessions = $targetUser->getAttribute('sessions', []);
@@ -622,7 +623,7 @@ Http::get('/v1/account/sessions')
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total' => count($sessions),
+            'total' => $includeTotal ? count($sessions) : 0,
         ]), Response::MODEL_SESSION_LIST);
     });
 

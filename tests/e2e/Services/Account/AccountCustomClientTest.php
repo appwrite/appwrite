@@ -1039,6 +1039,27 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testListAccountSessionsTotal(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, ['total' => true]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, ['total' => false]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+    }
+
     // TODO Add tests for OAuth2 session creation
 
     public function testUpdateAccountName(): void
