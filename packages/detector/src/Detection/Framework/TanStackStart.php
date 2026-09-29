@@ -73,7 +73,8 @@ class TanStackStart extends React
             return 'ssr';
         }
 
-        if (\str_contains($compact, 'prerender:{enabled:false')) {
+        $prerender = (string) \strstr((string) \strstr($compact, 'prerender:{'), '}', true);
+        if (\str_contains($prerender, 'enabled:false')) {
             return 'ssr';
         }
 
