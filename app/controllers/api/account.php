@@ -648,6 +648,7 @@ Http::delete('/v1/account/sessions')
         contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
+    ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -659,7 +660,13 @@ Http::delete('/v1/account/sessions')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('session')
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession) {
+
+        // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
+        if (!$current && $callingSession === null) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -667,9 +674,14 @@ Http::delete('/v1/account/sessions')
 
         foreach ($sessions as $session) {
             /** @var Document $session */
+            if (!$current && $session->getId() === $callingSession->getId()) {
+                continue;
+            }
+
             $dbForProject->deleteDocument('sessions', $session->getId());
 
-            if (!$domainVerification) {
+            // Clears the caller's fallback cookie, so only when its own session goes too.
+            if (!$domainVerification && $current) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
             }
 
