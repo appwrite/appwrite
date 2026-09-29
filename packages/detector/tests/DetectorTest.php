@@ -798,6 +798,7 @@ class DetectorTest extends TestCase
         $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/\'] } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart(), nitro({ prerender: { routes: [\'/\'], crawlLinks: true } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('import { nitroV2Plugin } from \'@tanstack/nitro-v2-vite-plugin\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true, crawlLinks: true } }), nitroV2Plugin()] })'));
+        $this->assertSame('static', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }) /*, nitro() */] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: false, crawlLinks: true } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ "prerender": false })] })'));

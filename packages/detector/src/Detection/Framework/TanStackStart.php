@@ -62,12 +62,22 @@ class TanStackStart extends React
     {
         $stripped = \preg_replace('/(?<!:)\/\/[^\n]*/', '', $configContent) ?? $configContent;
 
+        while (($start = \strpos($stripped, '/*')) !== false && ($end = \strpos($stripped, '*/', $start + 2)) !== false) {
+            $stripped = \substr($stripped, 0, $start) . \substr($stripped, $end + 2);
+        }
+
+        $compact = \str_replace([' ', "\t", "\r", "\n", '"', "'"], '', $stripped);
+
         // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
-        if (\str_contains($stripped, 'nitro/vite') || \str_contains($stripped, 'nitro-v2-vite-plugin')) {
+        if (\str_contains($compact, 'nitro(') || \str_contains($compact, 'nitroV2Plugin(')) {
             return 'ssr';
         }
 
-        if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*(?:false|\{[^}]*\benabled[\x27\x22]?\s*:\s*false)\b/', $stripped)) {
+        if (\str_contains($compact, 'prerender:{enabled:false')) {
+            return 'ssr';
+        }
+
+        if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*false\b/', $stripped)) {
             return 'ssr';
         }
 
