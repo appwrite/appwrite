@@ -5640,6 +5640,25 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $checkJWT['headers']['status-code']);
     }
 
+    public function testCreatePushTargetReplacesRotatedTokenUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $jwtHeaders = $this->createJWTHeaders($data['session']);
+
+        $first = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
+            'targetId' => ID::unique(),
+            'identifier' => 'jwt-identifier-before-rotation-' . $data['id'],
+        ]);
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        $second = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
+            'targetId' => ID::unique(),
+            'identifier' => 'jwt-identifier-after-rotation-' . $data['id'],
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $this->assertEquals($first['body']['$id'], $second['body']['$id']);
+    }
+
     public function testRefreshEmailPasswordSession(): void
     {
         $email = uniqid() . 'user@localhost.test';
