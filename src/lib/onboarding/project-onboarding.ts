@@ -177,8 +177,9 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     cta: 'Add API key',
     ctaDone: 'Manage keys',
     to: '/projects/$projectId/api-keys',
-    debug: 'Done when `project.createKey` is completed or skipped.',
-    sdkKeys: ['project.createKey'],
+    debug:
+      'Done when `project.createKey` or `organization.createProjectKey` is completed or skipped.',
+    sdkKeys: ['project.createKey', 'organization.createProjectKey'],
   },
   {
     id: 'cli',

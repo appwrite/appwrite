@@ -8,8 +8,27 @@ on:
       - 'static/**/*'
 
 jobs:
+  session:
+    name: session
+    runs-on: gcrunner=${{ github.run_id }}-e2e-session/runner=checks
+    timeout-minutes: 5
+    outputs:
+      session: ${{ steps.create.outputs.session }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create console session
+        id: create
+        env:
+          VITE_APPWRITE_ENDPOINT: ${{ secrets.VITE_APPWRITE_ENDPOINT }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+        run: bash .github/scripts/create-session.sh
+
   e2e:
     name: ${{ matrix.project }}
+    needs: session
+    if: ${{ !cancelled() }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -26,10 +45,12 @@ jobs:
             runner: gcrunner=${{ github.run_id }}-e2e-console-mocked/runner=e2e
           - project: console
             args: --project=console
+            auth: true
             timeout: 20
             runner: gcrunner=${{ github.run_id }}-e2e-console/runner=e2e
           - project: console-usage
             args: --project=console-usage
+            auth: true
             timeout: 20
             runner: gcrunner=${{ github.run_id }}-e2e-console-usage/runner=e2e
           # Each database suite is one serial chain on a single worker, so they
@@ -37,25 +58,36 @@ jobs:
           # dedicated database open until it finishes, so it stays off spot.
           - project: console-mysql
             args: --project=console-mysql
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-mysql/runner=e2e-long
           - project: console-postgres
             args: --project=console-postgres
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-postgres/runner=e2e-long
           - project: console-tablesdb
             args: --project=console-tablesdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-tablesdb/runner=e2e-long
           - project: console-documentsdb
             args: --project=console-documentsdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-documentsdb/runner=e2e-long
           - project: console-vectorsdb
             args: --project=console-vectorsdb
+            auth: true
             timeout: 40
             runner: gcrunner=${{ github.run_id }}-e2e-console-vectorsdb/runner=e2e-long
     steps:
+      - name: Check console session
+        if: matrix.auth && needs.session.outputs.session == ''
+        run: |
+          echo '::error::The session job did not create a console session'
+          exit 1
+
       - uses: actions/checkout@v4
 
       - name: Install Bun
@@ -96,4 +128,11 @@ jobs:
           E2E_TEST_SESSION_SECRET: ${{ secrets.E2E_TEST_SESSION_SECRET }}
           E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
           E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
-        run: bun run e2e -- ${{ matrix.args }}
+          SESSION: ${{ matrix.auth && needs.session.outputs.session || '' }}
+        run: |
+          if [ -n "$SESSION" ]; then
+            E2E_FALLBACK_COOKIES=$(printf '%s\n' "$SESSION" | openssl enc -d -aes-256-cbc -pbkdf2 -a -A -pass env:E2E_TEST_PASSWORD)
+            echo "::add-mask::$E2E_FALLBACK_COOKIES"
+            export E2E_FALLBACK_COOKIES
+          fi
+          bun run e2e -- ${{ matrix.args }}

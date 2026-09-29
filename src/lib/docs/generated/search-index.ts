@@ -5712,7 +5712,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in Claude Code. - Go to the **Installed** tab. - Select the…",
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes the hosted Appwrite MCP server, agent skills for the CLI and all major SDKs, and commands for deploying sites and functions. To install the plugin, run the following command in your terminal: If Claude Code cannot find the plugin, add the Appwrite marketplace and install it from there: Run in Claude Code to load the plugin…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",

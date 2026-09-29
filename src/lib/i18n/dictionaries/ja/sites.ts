@@ -239,15 +239,14 @@ export const jaSitesDictionary: Record<string, string> = {
   'Upload your website manually': 'Web サイトを手動でアップロード',
   // Create wizard: manual upload
   'Only .tar.gz files are supported': '.tar.gz ファイルのみサポートしています',
-  'File size must be less than 100MB':
-    'ファイルサイズは 100MB 未満である必要があります',
   'Please enter a valid domain': '有効なドメインを入力してください',
   'Failed to create site': 'サイトの作成に失敗しました',
   'Other options': 'その他のオプション',
   'Import from Git': 'Git からインポート',
   'Browse templates': 'テンプレートを閲覧',
   'Upload file': 'ファイルのアップロード',
-  'Only .tar.gz files up to 100MB': '.tar.gz ファイルのみ、最大 100MB',
+  'Only .tar.gz files up to': '.tar.gz ファイルのみ、最大',
+  'File is too large. Maximum size:': 'ファイルが大きすぎます。最大サイズ:',
   'Site name': 'サイト名',
   'Site ID': 'サイト ID',
   'My awesome site': 'すばらしいサイト',

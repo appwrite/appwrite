@@ -17,6 +17,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "discord-bot-appwrite-functions",
+    "href": "/blog/post/discord-bot-appwrite-functions",
+    "title": "Build a Discord bot for your Appwrite projects with Appwrite Functions",
+    "description": "Build a Discord bot that tells you why a deployment failed, how many users signed up, and what your functions are doing, without leaving Discord.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 11,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/discord-bot-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-google-one-tap-to-your-web-app",
     "href": "/blog/post/add-google-one-tap-to-your-web-app",
     "title": "Add Google One Tap sign-in to your web app with Appwrite",

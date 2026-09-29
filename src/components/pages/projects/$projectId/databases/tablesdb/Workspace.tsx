@@ -1,5 +1,8 @@
 // Database product workspace (see ../Workspace.tsx router).
 import { cn } from '@/lib/utils'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
+import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
+import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
   SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -79,7 +82,6 @@ import {
   DatabaseMonitorHeaderActions,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
-import type { DateRange } from 'react-day-picker'
 import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
@@ -117,7 +119,6 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -155,7 +156,6 @@ import { TableRowsEditSessionProvider } from './_components/TableRowsEditSession
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
@@ -1496,6 +1496,16 @@ export function Workspace({
                   className="shrink-0"
                 />
               ) : null}
+              {selectedTable ? (
+                <TerraformIndicator
+                  projectId={projectId}
+                  resource={getTerraformResourcePath(
+                    'table',
+                    selectedTable.$id,
+                    databaseId,
+                  )}
+                />
+              ) : null}
             </div>
           )
         }
@@ -1778,6 +1788,19 @@ export function Workspace({
         }
         contentAfterBorder={
           <>
+            {/* Rows are data; only structure and configuration tabs are Terraform's. */}
+            {isDatabaseLevelView ||
+            activeTab === 'rows' ||
+            activeTab === 'documents' ? null : (
+              <TerraformResourceAlert
+                projectId={projectId}
+                resource={getTerraformResourcePath(
+                  'table',
+                  tableId ?? '',
+                  databaseId,
+                )}
+              />
+            )}
             {databaseTab === 'monitor' ? (
               <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                 <DatabaseMonitorMobileNav

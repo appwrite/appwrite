@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import {
   Plus,
   Plug2,
@@ -105,6 +106,7 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ConnectAgentCta } from '@/components/global/shared/ConnectAgentCta'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
@@ -192,6 +194,8 @@ export interface OverviewInitialData {
   apiKeysRaw?: { keys?: unknown[] } | null
   /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
   platforms?: ProjectPlatform[]
+  /** Prefetched MCP coding-agent connection; hides the connect CTA without a flash */
+  mcpAgentConnected?: boolean
 }
 
 interface ViewProps {
@@ -1020,6 +1024,7 @@ export function View({ projectId, initialData }: ViewProps) {
               >
                 {currentProject?.name || ''}
               </h1>
+              <TerraformIndicator projectId={projectId} />
             </div>
 
             {/* Right: Project ID and Region/Endpoint labels */}
@@ -1081,6 +1086,11 @@ export function View({ projectId, initialData }: ViewProps) {
 
       {/* Content area */}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <ConnectAgentCta
+          projectId={projectId}
+          className="mb-6"
+          initialConnected={initialData?.mcpAgentConnected}
+        />
         {/* Charts card - usage stats (cloud only) */}
         {visibleOverviewChartTabs.length > 0 && (
           <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">

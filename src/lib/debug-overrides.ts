@@ -23,10 +23,12 @@ const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showActivityChart: 'debug:showActivityChart',
+  showProjectEnvironments: 'debug:showProjectEnvironments',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
+  showProjectAgents: 'debug:showProjectAgents',
   showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
@@ -78,6 +80,8 @@ export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
+  /** When true, the project sidebar shows the mock environment switcher. Default false. */
+  showProjectEnvironments: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean
   /** Mock Appwrite Cloud status alert state for design review in debug mode. */
@@ -89,6 +93,11 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
+  /**
+   * When true, exposes the project Agents page and lands new projects on it
+   * from the project root. When false, the root always opens Overview. Default false.
+   */
+  showProjectAgents: boolean
   /**
    * When true, show the DEV construction bar at the top of the header stack.
    * Default true, or VITE_CONSTRUCTION when set.
@@ -244,6 +253,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showActivityChart,
       false,
     ),
+    showProjectEnvironments: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showProjectEnvironments,
+      false,
+    ),
     showSuccessTeamCard: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
       false,
@@ -256,6 +269,10 @@ export function loadDebugOverrides(): DebugOverrides {
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
+      false,
+    ),
+    showProjectAgents: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showProjectAgents,
       false,
     ),
     showConstruction: readBooleanFromStorage(
@@ -376,9 +393,11 @@ export function resetDebugOverrides() {
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'preLaunch',
   'showActivityChart',
+  'showProjectEnvironments',
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'showProjectAgents',
   'showConstruction',
   'unlockOnboardingLocks',
   'previewOnboardingComplete',
@@ -395,9 +414,11 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
 > = {
   preLaunch: getPreLaunchDefault(),
   showActivityChart: false,
+  showProjectEnvironments: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
+  showProjectAgents: false,
   showConstruction: getShowConstructionDefault(),
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
@@ -470,10 +491,12 @@ export function getDefaultDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: false,
     showActivityChart: false,
+    showProjectEnvironments: false,
     showSuccessTeamCard: false,
     mockCloudStatusAlert: 'live',
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: false,
+    showProjectAgents: false,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
     mockInitTicketType: null,

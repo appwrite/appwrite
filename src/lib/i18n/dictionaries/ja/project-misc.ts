@@ -930,12 +930,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Activate deployment after build': 'ビルド後にデプロイを有効化',
   'Deployment docs': 'デプロイドキュメント',
   'Only .tar.gz files are allowed.': '.tar.gz ファイルのみ許可されています。',
-  'File size exceeds': 'ファイルサイズが超過',
   'Deployment created successfully': 'デプロイを作成しました',
   'Please select a .tar.gz file.': '.tar.gz ファイルを選択してください。',
   'Create manual deployment': '手動デプロイの作成',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'コードの .tar.gz アーカイブをアップロードしてください。最大ファイルサイズ:',
+  'Upload a .tar.gz archive of your code.':
+    'コードの .tar.gz アーカイブをアップロードしてください。',
   'Drop a .tar.gz file here or click to browse':
     '.tar.gz ファイルをここにドロップするか、クリックして参照',
   'Uploading…': 'アップロード中…',
@@ -986,6 +987,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': '試すに進む',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'コーディングエージェントを開き、次のプロンプトのいずれかを試して Appwrite MCP が動作していることを確認してください。',
+  'Explore Appwrite': 'Appwrite を探索',
+  'Open a product in this project and keep building with your agent.':
+    'このプロジェクトのプロダクトを開き、エージェントと一緒に構築を続けましょう。',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'Appwrite MCP でプロジェクト {projectName} のデータベースを一覧表示して',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -998,8 +1002,44 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'Appwrite MCP をインストール',
   'Build with an agent': 'エージェントで構築',
   'Connect your coding agent': 'コーディングエージェントを接続',
+  'Connect Appwrite with your agents': 'Appwrite をエージェントに接続',
+  'Choose your agent': 'エージェントを選択',
+  'List databases, buckets, and users from your editor.':
+    'エディターからデータベース、バケット、ユーザーを一覧表示できます。',
+  'Run approved actions without leaving your agent.':
+    'エージェントを離れることなく、承認済みの操作を実行できます。',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'OAuth で一度承認するだけです。プロンプトに API キーは不要です。',
+  'Authorize Appwrite MCP': 'Appwrite MCP を許可',
+  'Install in your editor': 'エディターにインストール',
+  'Ask your agent to list project resources':
+    'エージェントにプロジェクトのリソース一覧を依頼',
+  'Show details': '詳細を表示',
+  'Hide details': '詳細を非表示',
+  'Next: install MCP in your editor': '次へ: エディターに MCP をインストール',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'Cursor、Claude Code、Codex、または VS Code に Appwrite MCP をインストールすると、エージェントがこのプロジェクトを管理できます。',
+  'What you get': 'できること',
+  'Why connect': '接続する理由',
+  'Without MCP': 'MCP なし',
+  'With MCP': 'MCP あり',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'エージェントは Appwrite を説明できますが、このプロジェクトを変更することはできません。',
+  'The agent can list resources and run approved actions in this project.':
+    'エージェントはこのプロジェクトのリソースを一覧表示し、承認済みの操作を実行できます。',
+  'Recommended next step': '推奨される次のステップ',
+  'To do': '未完了',
+  'Coding agent': 'コーディングエージェント',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'エディターを選び、Appwrite MCP をインストールしてから OAuth で承認します。',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP は承認済みです。まだならエディター側のインストールを完了してください。',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'このプロンプトをコーディングエージェントに貼り付けてください。公開セットアップページに従って、このプロジェクト向けに Appwrite MCP をインストールします。',
+  'Or install Appwrite MCP manually': 'または Appwrite MCP を手動インストール',
+  'Skip for this project': 'このプロジェクトではスキップ',
+  'Preferences are unavailable.': '設定を保存できません。',
+  'Failed to update preferences': '設定の更新に失敗しました',
   'Install MCP': 'MCP をインストール',
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
@@ -3004,4 +3044,41 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このデータセットではエージェントクローラーの内訳はまだ利用できません',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
+  'No changes were made. This resource is managed by Terraform.':
+    '変更は行われませんでした。このリソースは Terraform で管理されています。',
+  'Managed by Terraform': 'Terraform で管理',
+  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
+    'Appwrite Terraform プロバイダーがこのリソースを作成しました。Terraform の構成で更新してください。',
+  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
+    'このプロジェクトのリソースは Appwrite Terraform プロバイダーによって作成されました。Terraform の構成で更新してください。',
+  'Managed resources': '管理対象のリソース',
+  'Last apply': '最終 apply',
+  'View activity': 'アクティビティを表示',
+  'Changed outside Terraform': 'Terraform 外で変更',
+  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
+    'このリソースは Terraform で管理されていますが、最後の apply の後に変更されました。terraform plan を実行して構成との差分を確認してください。',
+  'Last change:': '最終変更:',
+  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
+    'ここで行った変更は Terraform の構成に含まれません。次回の terraform apply で元に戻される可能性があります。',
+  'Delete a Terraform-managed resource?':
+    'Terraform で管理されているリソースを削除しますか？',
+  'Update a Terraform-managed resource?':
+    'Terraform で管理されているリソースを更新しますか？',
+  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
+    'このリソースは Terraform によって作成されました。Terraform の構成からも削除しない限り、次回の terraform apply で再作成されます。',
+  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
+    'このリソースは Terraform によって作成されました。Terraform の構成も更新しない限り、次回の terraform apply でこの変更が上書きされる可能性があります。',
+  "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
+  'Delete anyway': '削除を続行',
+  'Update anyway': '更新を続行',
+  'Via Terraform': 'Terraform 経由',
+
+  // Project environment switcher
+  Environments: '環境',
+  Staging: 'ステージング',
+  Development: '開発',
+  'Switch environment': '環境を切り替え',
+  'Environment switched': '環境を切り替えました',
+  'Create environment': '環境を作成',
+  'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
 }

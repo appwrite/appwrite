@@ -130,6 +130,70 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * Project IDs where the user dismissed the Agents landing so project root
+ * goes to Overview. Value: JSON string of project ID strings.
+ */
+export const USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS =
+  'console.agents.dismissedProjectIds'
+
+const MAX_AGENTS_DISMISSED_PROJECT_IDS = 200
+
+function parseProjectIdList(raw: unknown): string[] {
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed) as unknown
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (id): id is string => typeof id === 'string' && id.length > 0,
+        )
+      }
+    } catch {
+      return trimmed
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    }
+    return []
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string' && id.length > 0)
+  }
+  return []
+}
+
+export function parseAgentsDismissedProjectIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  return parseProjectIdList(
+    prefs?.[USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS],
+  ).slice(0, MAX_AGENTS_DISMISSED_PROJECT_IDS)
+}
+
+export function isProjectAgentsLandingDismissed(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): boolean {
+  if (!projectId) return false
+  return parseAgentsDismissedProjectIds(prefs).includes(projectId)
+}
+
+export function mergeAgentsDismissedProjectIdsPrefs(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): UserPrefs {
+  const current = parseAgentsDismissedProjectIds(prefs)
+  const next = current.includes(projectId)
+    ? current
+    : [...current, projectId].slice(0, MAX_AGENTS_DISMISSED_PROJECT_IDS)
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS]: JSON.stringify(next),
+  }
+}
+
+/**
  * Appwrite `Assoc` prefs validator (`new Assoc()`): max JSON body size in bytes.
  * Oversized payloads fail with the same message as a non-object prefs value:
  * "Invalid `prefs` param: Value must be a valid object."
