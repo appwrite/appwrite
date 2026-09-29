@@ -38,7 +38,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/account/passkeys')
             ->desc('Create passkey')
-            ->groups(['api', 'account', 'auth'])
+            ->groups(['api', 'account', 'auth', 'recentSession'])
             ->label('auth.type', 'passkey')
             ->label('scope', 'account')
             ->label('sdk', new Method(
@@ -46,7 +46,7 @@ class Create extends Action
                 group: 'passkeys',
                 name: 'createPasskey',
                 description: <<<EOT
-                Start registering a passkey for the currently logged in user. Pass the returned `publicKey` options to `navigator.credentials.create()`, then complete the registration with [Update passkey verification](/docs/references/cloud/client-web/account#updatePasskeyVerification). The passkey stays pending until verified, and the challenge expires after 5 minutes.
+                Start registering a passkey for the currently logged in user. The account needs a verified email or phone number, and the session must have signed in or completed an MFA challenge within the last 10 minutes. Pass the returned `publicKey` options to `navigator.credentials.create()`, then complete the registration with [Update passkey verification](/docs/references/cloud/client-web/account#updatePasskeyVerification). The passkey stays pending until verified, and the challenge expires after 5 minutes.
                 EOT,
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -84,7 +84,9 @@ class Create extends Action
         }
 
         // A passkey must never be the only way into an account
-        $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: '';
+        $email = $user->getAttribute('emailVerification') ? $user->getAttribute('email', '') : '';
+        $phone = $user->getAttribute('phoneVerification') ? $user->getAttribute('phone', '') : '';
+        $userName = $email ?: $phone;
         if ($userName === '') {
             throw new Exception(Exception::USER_PASSKEY_UNAVAILABLE);
         }

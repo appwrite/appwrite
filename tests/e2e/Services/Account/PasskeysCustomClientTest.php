@@ -166,7 +166,8 @@ final class PasskeysCustomClientTest extends Scope
         ]);
         $this->assertSame(201, $newSession['headers']['status-code']);
         $this->assertSame('passkey', $newSession['body']['provider']);
-        $this->assertSame(['passkey'], $newSession['body']['factors']);
+        $this->assertSame(['passkey', 'userVerification'], $newSession['body']['factors']);
+        $this->assertNotEmpty($newSession['body']['mfaUpdatedAt']);
         $cookie = $newSession['cookies']['a_session_' . $project['$id']];
 
         $account = $this->client->call(Client::METHOD_GET, '/account', $this->getSessionHeaders($project, $cookie));
@@ -178,6 +179,17 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertStringEndsWith('+00:00', $accessedAt);
         $this->assertGreaterThanOrEqual(new \DateTime($list['body']['passkeys'][0]['$createdAt']), new \DateTime($accessedAt));
 
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/account/passkeys/' . $passkey['body']['$id'], $this->getSessionHeaders($project, $cookie), [
+            'name' => 'Work laptop',
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame('Work laptop', $renamed['body']['name']);
+
+        $admin = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
+        $this->assertSame(200, $admin['headers']['status-code']);
+        $this->assertSame(1, $admin['body']['total']);
+        $this->assertSame('Work laptop', $admin['body']['passkeys'][0]['name']);
+
         /**
          * Test for FAILURE
          */
@@ -188,8 +200,12 @@ final class PasskeysCustomClientTest extends Scope
         ]);
         $this->assertSame(401, $replay['headers']['status-code']);
 
-        // Other users cannot delete the passkey
+        // Other users cannot rename or delete the passkey
         [, $otherSession] = $this->createUserWithSession($project);
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/passkeys/' . $passkey['body']['$id'], $this->getSessionHeaders($project, $otherSession), [
+            'name' => 'Stolen',
+        ]);
+        $this->assertSame(404, $response['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_DELETE, '/account/passkeys/' . $passkey['body']['$id'], $this->getSessionHeaders($project, $otherSession));
         $this->assertSame(404, $response['headers']['status-code']);
         $this->assertSame('user_passkey_not_found', $response['body']['type']);
@@ -488,21 +504,28 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame('user_passkey_unavailable', $response['body']['type']);
     }
 
-    public function testMfaStillRequired(): void
+    public function testPasskeySatisfiesMfa(): void
     {
         $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
 
-        $this->client->call(Client::METHOD_PATCH, '/users/' . $user['$id'] . '/verification', $this->getServerHeaders($project), [
-            'emailVerification' => true,
-        ]);
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['$id'] . '/mfa', $this->getServerHeaders($project), [
             'mfa' => true,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
+        // Password alone is one factor and needs a challenge
+        $password = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->getGuestHeaders($project), [
+            'email' => $user['email'],
+            'password' => 'password',
+        ]);
+        $account = $this->client->call(Client::METHOD_GET, '/account', $this->getSessionHeaders($project, $password['cookies']['a_session_' . $project['$id']]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        // A user-verified passkey is possession plus biometric or PIN
         $token = $this->signIn($project, $authenticator);
         $newSession = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $this->getGuestHeaders($project), [
             'userId' => $token['body']['userId'],
@@ -511,14 +534,55 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(201, $newSession['headers']['status-code']);
         $cookie = $newSession['cookies']['a_session_' . $project['$id']];
 
-        // A passkey is one factor; it neither verifies nor bypasses the second
         $account = $this->client->call(Client::METHOD_GET, '/account', $this->getSessionHeaders($project, $cookie));
-        $this->assertSame(401, $account['headers']['status-code']);
-        $this->assertSame('user_more_factors_required', $account['body']['type']);
+        $this->assertSame(200, $account['headers']['status-code']);
 
-        $factors = $this->client->call(Client::METHOD_GET, '/account/mfa/factors', $this->getSessionHeaders($project, $cookie));
-        $this->assertSame(200, $factors['headers']['status-code']);
-        $this->assertTrue($factors['body']['email']);
+        // Fresh enough for MFA-protected account changes
+        $codes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $this->getSessionHeaders($project, $cookie));
+        $this->assertSame(201, $codes['headers']['status-code']);
+    }
+
+    public function testUnverifiedUsersCannotRegister(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [, $session] = $this->createUserWithSession($project, verified: false);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('user_passkey_unavailable', $response['body']['type']);
+    }
+
+    public function testAdminDeletePasskey(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        [$other] = $this->createUserWithSession($project);
+        $authenticator = $this->registerPasskey($project, $session);
+
+        $passkeys = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
+        $passkeyId = $passkeys['body']['passkeys'][0]['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getGuestHeaders($project));
+        $this->assertSame(401, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $other['$id'] . '/passkeys/' . $passkeyId, $this->getServerHeaders($project));
+        $this->assertSame(404, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, '/users/unknown/passkeys', $this->getServerHeaders($project));
+        $this->assertSame(404, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'] . '/passkeys/' . $passkeyId, $this->getServerHeaders($project));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $passkeys = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
+        $this->assertSame(0, $passkeys['body']['total']);
+        $this->assertSame(401, $this->signIn($project, $authenticator)['headers']['status-code']);
     }
 
     public function testDeletedUserCannotSignIn(): void
@@ -601,7 +665,7 @@ final class PasskeysCustomClientTest extends Scope
     /**
      * @return array{array<string, mixed>, string}
      */
-    private function createUserWithSession(array $project): array
+    private function createUserWithSession(array $project, bool $verified = true): array
     {
         $email = \uniqid('passkey.', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
 
@@ -612,6 +676,13 @@ final class PasskeysCustomClientTest extends Scope
             'name' => 'Passkey User',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
+
+        if ($verified) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['body']['$id'] . '/verification', $this->getServerHeaders($project), [
+                'emailVerification' => true,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+        }
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->getGuestHeaders($project), [
             'email' => $email,

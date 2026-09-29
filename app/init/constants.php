@@ -243,6 +243,7 @@ const ONBOARDING_STATUS_SKIPPED = 'skipped';
 const MFA_RECENT_DURATION = 1800; // 30 mins
 const PASSKEY_TOKEN_DURATION = 60;
 const APP_LIMIT_USER_PASSKEYS = 10;
+const SESSION_RECENT_DURATION = 600; // 10 mins
 
 
 // Database name

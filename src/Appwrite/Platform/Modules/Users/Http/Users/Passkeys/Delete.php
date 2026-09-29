@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys;
+namespace Appwrite\Platform\Modules\Users\Http\Users\Passkeys;
 
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Extend\Exception;
@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -21,27 +20,29 @@ class Delete extends Action
 
     public static function getName(): string
     {
-        return 'deletePasskey';
+        return 'deleteUserPasskey';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/account/passkeys/:passkeyId')
-            ->desc('Delete passkey')
-            ->groups(['api', 'account', 'recentSession'])
-            ->label('scope', 'account')
+            ->setHttpPath('/v1/users/:userId/passkeys/:passkeyId')
+            ->desc('Delete user passkey')
+            ->groups(['api', 'users'])
+            ->label('scope', 'users.write')
             ->label('audits.event', 'passkey.delete')
-            ->label('audits.resource', 'user/{user.$id}')
+            ->label('audits.resource', 'user/{request.userId}')
+            ->label('audits.userId', '{request.userId}')
+            ->label('usage.metric', 'users.{scope}.requests.update')
             ->label('sdk', new Method(
-                namespace: 'account',
+                namespace: 'users',
                 group: 'passkeys',
                 name: 'deletePasskey',
                 description: <<<EOT
-                Delete a passkey from the currently logged in user. The passkey can no longer be used to sign in, although it may remain stored on the user's device. The session must have signed in or completed an MFA challenge within the last 10 minutes.
+                Delete a passkey from a user, for example when a device is lost. The passkey can no longer be used to sign in.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -50,19 +51,25 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
             ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('user')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $userId,
         string $passkeyId,
         Response $response,
-        Document $user,
         Database $dbForProject,
     ): void {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
         $passkey = $dbForProject->getDocument('authenticators', $passkeyId);
 
         if (

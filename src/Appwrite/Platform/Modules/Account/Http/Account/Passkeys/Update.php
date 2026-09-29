@@ -14,43 +14,45 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
-class Delete extends Action
+class Update extends Action
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'deletePasskey';
+        return 'updatePasskey';
     }
 
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/account/passkeys/:passkeyId')
-            ->desc('Delete passkey')
-            ->groups(['api', 'account', 'recentSession'])
+            ->desc('Update passkey')
+            ->groups(['api', 'account'])
             ->label('scope', 'account')
-            ->label('audits.event', 'passkey.delete')
+            ->label('audits.event', 'passkey.update')
             ->label('audits.resource', 'user/{user.$id}')
             ->label('sdk', new Method(
                 namespace: 'account',
                 group: 'passkeys',
-                name: 'deletePasskey',
+                name: 'updatePasskey',
                 description: <<<EOT
-                Delete a passkey from the currently logged in user. The passkey can no longer be used to sign in, although it may remain stored on the user's device. The session must have signed in or completed an MFA challenge within the last 10 minutes.
+                Rename a passkey of the currently logged in user.
                 EOT,
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_NOCONTENT,
-                        model: Response::MODEL_NONE,
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_PASSKEY,
                     )
                 ],
-                contentType: ContentType::NONE
+                contentType: ContentType::JSON
             ))
             ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
+            ->param('name', '', new Text(128), 'Passkey name. Max length: 128 chars.')
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
@@ -59,6 +61,7 @@ class Delete extends Action
 
     public function action(
         string $passkeyId,
+        string $name,
         Response $response,
         Document $user,
         Database $dbForProject,
@@ -69,13 +72,17 @@ class Delete extends Action
             $passkey->isEmpty()
             || $passkey->getAttribute('type') !== Ceremony::TYPE
             || $passkey->getAttribute('userInternalId') !== $user->getSequence()
+            || !$passkey->getAttribute('verified')
         ) {
             throw new Exception(Exception::USER_PASSKEY_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('authenticators', $passkeyId);
+        $passkey = $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
+            'data' => \array_merge($passkey->getAttribute('data', []), ['name' => $name]),
+        ]));
+
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $response->noContent();
+        $response->dynamic($passkey, Response::MODEL_PASSKEY);
     }
 }

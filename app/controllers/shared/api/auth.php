@@ -32,6 +32,24 @@ Http::init()
     });
 
 Http::init()
+    ->groups(['recentSession'])
+    ->inject('session')
+    ->action(function (Document $session) {
+        if ($session->isEmpty()) {
+            return; // Scope checks reject guests
+        }
+
+        // Signed in, or completed an MFA challenge, within the window
+        $recent = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -SESSION_RECENT_DURATION));
+        $signedInAt = DateTime::formatTz($session->getCreatedAt());
+        $verifiedAt = DateTime::formatTz($session->getAttribute('mfaUpdatedAt'));
+
+        if ($signedInAt < $recent && ($verifiedAt === null || $verifiedAt < $recent)) {
+            throw new Exception(Exception::USER_REAUTHENTICATION_REQUIRED);
+        }
+    });
+
+Http::init()
     ->groups(['auth'])
     ->inject('route')
     ->inject('request')

@@ -317,6 +317,11 @@ return [
         'description' => 'Authenticator could not be found on the current user.',
         'code' => 404,
     ],
+    Exception::USER_REAUTHENTICATION_REQUIRED => [
+        'name' => Exception::USER_REAUTHENTICATION_REQUIRED,
+        'description' => 'This action requires a recent sign-in. Sign in again or complete an MFA challenge, then retry.',
+        'code' => 401,
+    ],
     Exception::USER_PASSKEY_NOT_FOUND => [
         'name' => Exception::USER_PASSKEY_NOT_FOUND,
         'description' => 'Passkey with the requested ID could not be found on the current user.',
@@ -339,7 +344,7 @@ return [
     ],
     Exception::USER_PASSKEY_UNAVAILABLE => [
         'name' => Exception::USER_PASSKEY_UNAVAILABLE,
-        'description' => 'Passkeys require an account with an email address or phone number to fall back on.',
+        'description' => 'Passkeys require a verified email address or phone number on the account to fall back on.',
         'code' => 400,
     ],
     Exception::USER_RECOVERY_CODES_NOT_FOUND => [

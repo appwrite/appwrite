@@ -212,6 +212,13 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
     }
 
+    // A user-verified passkey proves possession and a biometric or PIN, so it counts as both factors
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PASSKEY) {
+        $session
+            ->setAttribute('factors', [Type::PASSKEY, Type::USER_VERIFICATION])
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+    }
+
     $authorization->addRole(Role::user($user->getId())->toString());
 
     $session = $dbForProject->createDocument('sessions', $session
