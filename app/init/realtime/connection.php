@@ -239,15 +239,15 @@ return function (Container $container): void {
             // signup, so a token is only good for the project that minted it. Tokens
             // minted before the projectId claim existed are accepted only when bound
             // to a session, whose ID the server generated and no other project holds.
+            // An unbound token authenticates nobody rather than failing the request:
+            // a function domain resolves to the console, and clients send their
+            // project's JWT there for the function to read.
             $jwtProjectId = $payload['projectId'] ?? '';
             $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
             $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : !empty($payload['sessionId']);
-            if (!$bound) {
-                throw new Exception(Exception::USER_JWT_INVALID, 'JWT was not issued for this project.');
-            }
 
             $jwtUserId = $payload['userId'] ?? '';
-            if (!empty($jwtUserId)) {
+            if ($bound && !empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
