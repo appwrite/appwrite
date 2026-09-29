@@ -42,4 +42,18 @@ final class ListCacheTestCache extends Cache
 
         return $data;
     }
+
+    #[\Override]
+    public function purge(string $key, string $hash = ''): bool
+    {
+        if ($hash === '') {
+            unset($this->entries[$key]);
+
+            return true;
+        }
+
+        unset($this->entries[$key][$hash]);
+
+        return true;
+    }
 }

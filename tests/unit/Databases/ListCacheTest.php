@@ -203,41 +203,57 @@ final class ListCacheTest extends TestCase
         $this->assertNull($other->total(self::TTL), 'another variation does not read the total cached for this one');
     }
 
-    public function testTheKeyAndFieldsKeepTheirFormat(): void
+    /**
+     * @return iterable<string, array{Database, Document, string}>
+     */
+    public static function otherCollections(): iterable
     {
-        $project = (new Database(new Memory(), new Cache(new None())))
-            ->setCacheName('project')
-            ->setNamespace('_1')
-            ->setTenant(7);
-        $project->getAdapter()->setHostname('db1');
-        $collection = self::collection([new Document(['$id' => 'name', 'key' => 'name', 'type' => 'string', 'size' => 100])]);
-        $key = ListCache::key($project, new Document(['$id' => 'library', '$sequence' => '3']), 'albums');
-        $cache = new ListCache($this->cache, $key, $collection, ['any'], [Query::limit(2)]);
-
-        $cache->saveDocuments([new Document(['$id' => 'album1'])], new Operations());
-        $cache->saveTotal(1);
-
-        $this->assertSame('project-cache:db1:_1:7:database:3:collection:albums', $key, "a collection's lists are cached in one hash per project, database and collection, which the purge deletes");
-        $this->assertSame([
-            '7f26239cc080b84d8de167ea674bff49:f6b3719697da5b47b8d2c8dfd9a5c6b3:aeb4d9b8240ec54f89388c785c81c04f:documents',
-            '7f26239cc080b84d8de167ea674bff49:f6b3719697da5b47b8d2c8dfd9a5c6b3:aeb4d9b8240ec54f89388c785c81c04f:operations',
-            '7f26239cc080b84d8de167ea674bff49:f6b3719697da5b47b8d2c8dfd9a5c6b3:aeb4d9b8240ec54f89388c785c81c04f:total',
-        ], \array_keys($this->cache->entries[$key] ?? []), 'each variation of the list is a field of that hash');
+        yield 'the same collection ID in another database' => [self::project(), new Document(['$id' => 'books', '$sequence' => '2']), 'albums'];
+        yield 'another collection of the database' => [self::project(), self::music(), 'tracks'];
+        yield 'the same collection of another tenant' => [self::project(tenant: 8), self::music(), 'albums'];
+        yield 'the same collection in another namespace' => [self::project(namespace: '_2'), self::music(), 'albums'];
+        yield 'the same collection on another database host' => [self::project(hostname: 'db2'), self::music(), 'albums'];
     }
 
-    public function testSameIdCollectionsOfTwoDatabasesHaveTheirOwnKeys(): void
+    #[DataProvider('otherCollections')]
+    public function testAListIsReadOnlyForTheCollectionItWasCachedFor(Database $project, Document $database, string $collectionId): void
     {
-        $project = (new Database(new Memory(), new Cache(new None())))->setNamespace('_1');
-        $music = ListCache::key($project, new Document(['$id' => 'music', '$sequence' => '1']), 'albums');
-        $books = ListCache::key($project, new Document(['$id' => 'books', '$sequence' => '2']), 'albums');
-        $cached = new ListCache($this->cache, $music, self::collection(), [Role::any()->toString()], [Query::limit(2)]);
+        $cached = new ListCache($this->cache, ListCache::key(self::project(), self::music(), 'albums'), self::collection(), [Role::any()->toString()], [Query::limit(2)]);
         $cached->saveDocuments([new Document(['$id' => 'album1'])], new Operations());
         $cached->saveTotal(1);
-        $other = new ListCache($this->cache, $books, self::collection(), [Role::any()->toString()], [Query::limit(2)]);
+        $same = new ListCache($this->cache, ListCache::key(self::project(), self::music(), 'albums'), self::collection(), [Role::any()->toString()], [Query::limit(2)]);
+        $other = new ListCache($this->cache, ListCache::key($project, $database, $collectionId), self::collection(), [Role::any()->toString()], [Query::limit(2)]);
 
-        $this->assertNotSame($music, $books, 'a collection with the same ID and schema in another database gets its own key');
-        $this->assertNull($other->documents(self::TTL, new Operations()), 'a list cached for one database is not read for the other');
-        $this->assertNull($other->total(self::TTL), 'a total cached for one database is not read for the other');
+        $this->assertNotNull($same->documents(self::TTL, new Operations()), 'the same collection reads the cached list');
+        $this->assertSame(1, $same->total(self::TTL));
+        $this->assertNull($other->documents(self::TTL, new Operations()), 'a list cached for one collection is not read for another');
+        $this->assertNull($other->total(self::TTL), 'a total cached for one collection is not read for another');
+    }
+
+    public function testPurgingTheKeyDropsEveryListAndTotalOfTheCollection(): void
+    {
+        $key = ListCache::key(self::project(), self::music(), 'albums');
+        $variations = [
+            new ListCache($this->cache, $key, self::collection(), [Role::any()->toString()], [Query::limit(2)]),
+            new ListCache($this->cache, $key, self::collection(), [Role::users()->toString()], [Query::limit(3)]),
+        ];
+        foreach ($variations as $variation) {
+            $variation->saveDocuments([new Document(['$id' => 'album1'])], new Operations());
+            $variation->saveTotal(1);
+        }
+        $tracks = new ListCache($this->cache, ListCache::key(self::project(), self::music(), 'tracks'), self::collection(), [Role::any()->toString()], [Query::limit(2)]);
+        $tracks->saveDocuments([new Document(['$id' => 'track1'])], new Operations());
+        $served = static fn (ListCache $variation): array => [
+            $variation->documents(self::TTL, new Operations()) !== null,
+            $variation->total(self::TTL),
+        ];
+        $before = \array_map($served, $variations);
+
+        $this->cache->purge($key);
+
+        $this->assertSame([[true, 1], [true, 1]], $before, 'each variation is served before the purge');
+        $this->assertSame([[false, null], [false, null]], \array_map($served, $variations), 'purging the key drops every list and total cached for the collection');
+        $this->assertNotNull($tracks->documents(self::TTL, new Operations()), 'another collection keeps its lists');
     }
 
     /**
@@ -274,6 +290,18 @@ final class ListCacheTest extends TestCase
     private static function collection(array $attributes = []): Document
     {
         return new Document(['$id' => 'albums', 'attributes' => $attributes, 'indexes' => []]);
+    }
+
+    private static function project(string $hostname = 'db1', string $namespace = '_1', int $tenant = 7): Database
+    {
+        return (new Database((new Memory())->setHostname($hostname), new Cache(new None())))
+            ->setNamespace($namespace)
+            ->setTenant($tenant);
+    }
+
+    private static function music(): Document
+    {
+        return new Document(['$id' => 'music', '$sequence' => '1']);
     }
 
     private function tenant(?Operations $operations = null): Database
