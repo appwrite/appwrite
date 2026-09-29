@@ -117,7 +117,7 @@ class Update extends Action
             ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
             ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
             ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
-            ->param('channelId', null, new Nullable(new Text(256)), 'ID of the notification channel to deliver the notification on. The app must have already created a channel with this ID, otherwise the channel from the app manifest is used. Available only for Android platforms.', true)
+            ->param('channelId', null, new Nullable(new Text(256, 0)), 'ID of the notification channel to deliver the notification on. The app must have already created a channel with this ID, otherwise the channel from the app manifest is used. Pass an empty string to clear it. Available only for Android platforms.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -284,7 +284,9 @@ class Update extends Action
             $pushData['priority'] = $priority;
         }
 
-        if (!\is_null($channelId)) {
+        if ($channelId === '') {
+            unset($pushData['channelId']);
+        } elseif (!\is_null($channelId)) {
             $pushData['channelId'] = $channelId;
         }
 
