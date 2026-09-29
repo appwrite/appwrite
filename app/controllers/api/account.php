@@ -819,13 +819,13 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             unset($sessions[$key]);
 
-            $session->setAttribute('current', false);
+            $session->setAttribute('current', $session->getId() === $current?->getId());
+
+            if ($session->getAttribute('current')) {
+                $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+            }
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
-                $session
-                    ->setAttribute('current', true)
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
-
                 if (!$domainVerification) {
                     $response->addHeader('X-Fallback-Cookies', \json_encode([]));
                 }
