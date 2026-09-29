@@ -62,7 +62,7 @@ class Create extends Action
             ))
             ->param('teamId', '', new CustomId(), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-            ->param('roles', ['owner'], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 81 characters long.', true) // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
+            ->param('roles', ['owner'], new ArrayList(new Key(maxLength: APP_LIMIT_ROLE_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each ' . APP_LIMIT_ROLE_LENGTH . ' characters long.', true)
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
