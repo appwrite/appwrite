@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Copy,
   ExternalLink,
@@ -39,6 +40,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { OAuth2AppLabelBadges } from '@/components/global/shared/OAuth2AppLabelBadges'
 import {
   MenuItemContent,
   MenuItemIcon,
@@ -118,6 +120,8 @@ interface OAuth2ServerAppsViewProps {
 
 export function View({ projectId }: OAuth2ServerAppsViewProps) {
   const t = useT()
+  const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { appId?: string }
   const { project } = useProject(projectId)
   const { apps, isLoading, isFetching } = useProjectOAuth2Apps(
     projectId,
@@ -128,6 +132,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedApp, setSelectedApp] = useState<Models.App | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Models.App | null>(null)
+  const consumedDeepLinkRef = useRef<string | null>(null)
 
   const sortedApps = useMemo(
     () =>
@@ -137,6 +142,42 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
       ),
     [apps],
   )
+
+  // `?appId=` (from "Copy link" / "Open in new tab") opens that app's drawer.
+  useEffect(() => {
+    const targetId = search.appId
+    if (!targetId || isLoading || consumedDeepLinkRef.current === targetId) {
+      return
+    }
+    consumedDeepLinkRef.current = targetId
+
+    const listed = apps.find((app) => app.$id === targetId)
+    if (listed) {
+      setSelectedApp(listed)
+      setDrawerOpen(true)
+      return
+    }
+
+    // Not in the first page of the list; resolve it directly.
+    void fetchProjectOAuth2App(projectId, targetId, project?.region)
+      .then((app) => {
+        setSelectedApp(app)
+        setDrawerOpen(true)
+      })
+      .catch((error) => {
+        toast.error(getErrorMessage(error, t('OAuth2 app not found')))
+      })
+  }, [search.appId, isLoading, apps, projectId, project?.region, t])
+
+  const clearDeepLink = () => {
+    if (!search.appId) return
+    void navigate({
+      to: '/projects/$projectId/auth/oauth2-server/apps',
+      params: { projectId },
+      search: {},
+      replace: true,
+    })
+  }
 
   const openCreate = () => {
     openDialogAfterOverlayCloses(() => {
@@ -316,6 +357,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                           >
                             {app.enabled ? t('Enabled') : t('Disabled')}
                           </Badge>
+                          <OAuth2AppLabelBadges labels={app.labels} />
                         </div>
                       </div>
                     </TableCell>
@@ -443,7 +485,10 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
 
       <ProjectOAuth2AppDrawer
         open={drawerOpen}
-        onOpenChange={setDrawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open)
+          if (!open) clearDeepLink()
+        }}
         projectId={projectId}
         region={project?.region}
         app={selectedApp}

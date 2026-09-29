@@ -16,6 +16,8 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
 
 export const PROJECT_OAUTH2_APPS_LIMIT = 100
+export const PROJECT_OAUTH2_APP_INSTALLATIONS_LIMIT = 100
+export const PROJECT_OAUTH2_APP_KEYS_LIMIT = 100
 
 export type CreateProjectOAuth2AppInput = {
   name: string
@@ -57,6 +59,12 @@ export type UpdateProjectOAuth2AppInput = {
   postLogoutRedirectUris?: string[]
   type?: string
   deviceFlow?: boolean
+  /**
+   * The update endpoint replaces the whole document: leaving these out resets
+   * them to empty, so callers must always pass the current values.
+   */
+  installationScopes?: string[]
+  installationRedirectUrl?: string
 }
 
 function sanitizeAppId(value: string): string {
@@ -112,6 +120,52 @@ export async function fetchProjectOAuth2AppSecrets(
   return response.secrets ?? []
 }
 
+/**
+ * Scopes an app may request when installed on a team: the project's
+ * `oAuth2ServerInstallationScopes`, decorated with catalog metadata where
+ * Appwrite knows the value.
+ */
+export async function fetchProjectOAuth2InstallationScopes(
+  projectId: string,
+  region?: string,
+) {
+  const response = await sdk
+    .forProject(projectId, region)
+    .apps.listInstallationScopes()
+  return response.scopes ?? []
+}
+
+export async function fetchProjectOAuth2AppInstallations(
+  projectId: string,
+  appId: string,
+  region?: string,
+) {
+  const response = await sdk
+    .forProject(projectId, region)
+    .apps.listInstallations({
+      appId,
+      queries: [Query.limit(PROJECT_OAUTH2_APP_INSTALLATIONS_LIMIT)],
+      total: true,
+    })
+  return {
+    installations: response.installations ?? [],
+    total: response.total ?? 0,
+  }
+}
+
+export async function fetchProjectOAuth2AppKeys(
+  projectId: string,
+  appId: string,
+  region?: string,
+) {
+  const response = await sdk.forProject(projectId, region).apps.listKeys({
+    appId,
+    queries: [Query.limit(PROJECT_OAUTH2_APP_KEYS_LIMIT)],
+    total: true,
+  })
+  return response.keys ?? []
+}
+
 export function projectOAuth2AppsQueryOptions(
   projectId: string | null | undefined,
   region?: string,
@@ -155,6 +209,67 @@ export function projectOAuth2AppSecretsQueryOptions(
   return queryOptions({
     queryKey: ['oauth2-app', 'project', projectId, appId, 'secrets', region],
     queryFn: () => fetchProjectOAuth2AppSecrets(projectId!, appId!, region),
+    enabled: !!projectId && !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function projectOAuth2InstallationScopesQueryOptions(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return queryOptions({
+    queryKey: ['oauth2-installation-scopes', 'project', projectId, region],
+    queryFn: () => fetchProjectOAuth2InstallationScopes(projectId!, region),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function projectOAuth2AppInstallationsQueryOptions(
+  projectId: string | null | undefined,
+  appId: string | null | undefined,
+  region?: string,
+) {
+  return queryOptions({
+    queryKey: [
+      'oauth2-app',
+      'project',
+      projectId,
+      appId,
+      'installations',
+      region,
+    ],
+    queryFn: () =>
+      fetchProjectOAuth2AppInstallations(projectId!, appId!, region),
+    enabled: !!projectId && !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function projectOAuth2AppKeysQueryOptions(
+  projectId: string | null | undefined,
+  appId: string | null | undefined,
+  region?: string,
+) {
+  return queryOptions({
+    queryKey: ['oauth2-app', 'project', projectId, appId, 'keys', region],
+    queryFn: () => fetchProjectOAuth2AppKeys(projectId!, appId!, region),
     enabled: !!projectId && !!appId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -219,10 +334,61 @@ export function useProjectOAuth2AppSecrets(
   }
 }
 
-export function useCreateProjectOAuth2App(
-  projectId: string,
+export function useProjectOAuth2InstallationScopes(
+  projectId: string | null | undefined,
   region?: string,
 ) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    projectOAuth2InstallationScopesQueryOptions(projectId, region),
+  )
+
+  return {
+    scopes: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useProjectOAuth2AppInstallations(
+  projectId: string | null | undefined,
+  appId: string | null | undefined,
+  region?: string,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    projectOAuth2AppInstallationsQueryOptions(projectId, appId, region),
+  )
+
+  return {
+    installations: data?.installations ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useProjectOAuth2AppKeys(
+  projectId: string | null | undefined,
+  appId: string | null | undefined,
+  region?: string,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    projectOAuth2AppKeysQueryOptions(projectId, appId, region),
+  )
+
+  return {
+    keys: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useCreateProjectOAuth2App(projectId: string, region?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -274,10 +440,7 @@ export function useCreateProjectOAuth2App(
   })
 }
 
-export function useUpdateProjectOAuth2App(
-  projectId: string,
-  region?: string,
-) {
+export function useUpdateProjectOAuth2App(projectId: string, region?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -301,6 +464,8 @@ export function useUpdateProjectOAuth2App(
         postLogoutRedirectUris: input.postLogoutRedirectUris,
         type: input.type,
         deviceFlow: input.deviceFlow,
+        installationScopes: input.installationScopes,
+        installationRedirectUrl: input.installationRedirectUrl,
       })
     },
     onSuccess: async (app, variables) => {
@@ -318,10 +483,7 @@ export function useUpdateProjectOAuth2App(
   })
 }
 
-export function useDeleteProjectOAuth2App(
-  projectId: string,
-  region?: string,
-) {
+export function useDeleteProjectOAuth2App(projectId: string, region?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -359,13 +521,7 @@ export function useCreateProjectOAuth2AppSecret(
     },
     onSuccess: async (_data, appId) => {
       await queryClient.refetchQueries({
-        queryKey: [
-          'oauth2-app',
-          'project',
-          projectId,
-          appId,
-          'secrets',
-        ],
+        queryKey: ['oauth2-app', 'project', projectId, appId, 'secrets'],
       })
       await queryClient.refetchQueries({
         queryKey: ['oauth2-apps', 'project', projectId],
@@ -394,13 +550,69 @@ export function useDeleteProjectOAuth2AppSecret(
     },
     onSuccess: async (_data, { appId }) => {
       await queryClient.refetchQueries({
-        queryKey: [
-          'oauth2-app',
-          'project',
-          projectId,
-          appId,
-          'secrets',
-        ],
+        queryKey: ['oauth2-app', 'project', projectId, appId, 'secrets'],
+      })
+    },
+  })
+}
+
+export function useDeleteProjectOAuth2AppInstallation(
+  projectId: string,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      appId,
+      installationId,
+    }: {
+      appId: string
+      installationId: string
+    }) => {
+      await sdk
+        .forProject(projectId, region)
+        .apps.deleteInstallation({ appId, installationId })
+    },
+    onSuccess: async (_data, { appId }) => {
+      await queryClient.refetchQueries({
+        queryKey: ['oauth2-app', 'project', projectId, appId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useCreateProjectOAuth2AppKey(
+  projectId: string,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (appId: string) => {
+      return sdk.forProject(projectId, region).apps.createKey({ appId })
+    },
+    onSuccess: async (_data, appId) => {
+      await queryClient.refetchQueries({
+        queryKey: ['oauth2-app', 'project', projectId, appId, 'keys'],
+      })
+    },
+  })
+}
+
+export function useDeleteProjectOAuth2AppKey(
+  projectId: string,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ appId, keyId }: { appId: string; keyId: string }) => {
+      await sdk.forProject(projectId, region).apps.deleteKey({ appId, keyId })
+    },
+    onSuccess: async (_data, { appId }) => {
+      await queryClient.refetchQueries({
+        queryKey: ['oauth2-app', 'project', projectId, appId, 'keys'],
       })
     },
   })

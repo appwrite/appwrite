@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -6,23 +6,41 @@ import { Check, ChevronDown, Copy, Info } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   OAUTH2_SERVER_TIME_UNIT_OPTIONS,
+  isOAuth2DurationWithin,
   oauth2DurationFromSeconds,
-  oauth2DurationToSeconds,
+  oauth2DurationInputToSeconds,
+  type OAuth2ServerDurationInput,
   type OAuth2ServerTimeUnit,
 } from '@/lib/oauth2-server/duration'
 import {
+  OAUTH2_SERVER_DEVICE_CODE_MAX_EXPIRY,
+  OAUTH2_SERVER_DEVICE_CODE_MIN_EXPIRY,
+  OAUTH2_SERVER_MAX_TOKEN_EXPIRY,
+  OAUTH2_SERVER_MIN_TOKEN_EXPIRY,
+  OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS,
+  OAUTH2_SERVER_USER_CODE_MAX_LENGTH,
+  OAUTH2_SERVER_USER_CODE_MIN_LENGTH,
+  isOAuth2ListWithinLimits,
+  normalizeOAuth2UserCodeFormat,
+  type OAuth2ServerUserCodeFormat,
+} from '@/lib/oauth2-server/constants'
+import {
   getOAuth2ServerDiscoveryUrl,
   getOAuth2ServerEndpointUrl,
+  getOAuth2ServerMetadataUrl,
   OAUTH2_SERVER_COMMON_ENDPOINTS,
 } from '@/lib/oauth2-server/discovery'
 import {
   mergeOAuth2Scopes,
-  oauth2ScopesEqual,
   optionalOAuth2Scopes,
   REQUIRED_OAUTH2_SCOPES,
 } from '@/lib/oauth2-server/scopes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { projectQueryOptions, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  projectQueryOptions,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowProjectOAuth2Server } from '@/lib/console-access-checks'
 import { Button } from '@/components/ui/button'
@@ -31,6 +49,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { InputTags } from '@/components/ui/input-tags'
+import { OAuth2ScopePicker } from '@/components/global/shared/OAuth2ScopePicker'
 import {
   Select,
   SelectContent,
@@ -51,18 +70,81 @@ import {
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 
-const MAX_SCOPES = 100
-const MAX_SCOPE_LENGTH = 128
-
 type OAuth2ServerFormState = {
   enabled: boolean
   authorizationUrl: string
   scopes: string[]
-  accessTokenDuration: number | null
-  refreshTokenDuration: number | null
-  publicAccessTokenDuration: number | null
-  publicRefreshTokenDuration: number | null
+  defaultScopes: string[]
+  authorizationDetailsTypes: string[]
+  accessToken: OAuth2ServerDurationInput
+  refreshToken: OAuth2ServerDurationInput
+  publicAccessToken: OAuth2ServerDurationInput
+  publicRefreshToken: OAuth2ServerDurationInput
   confidentialPkce: boolean
+  verificationUrl: string
+  userCodeLength: number | null
+  userCodeFormat: OAuth2ServerUserCodeFormat
+  deviceCode: OAuth2ServerDurationInput
+  installationScopes: string[]
+  installationAccessToken: OAuth2ServerDurationInput
+}
+
+type DurationFieldKey =
+  | 'accessToken'
+  | 'refreshToken'
+  | 'publicAccessToken'
+  | 'publicRefreshToken'
+  | 'deviceCode'
+  | 'installationAccessToken'
+
+type OAuth2ServerSection =
+  | 'status'
+  | 'integration'
+  | 'tokens'
+  | 'device'
+  | 'installations'
+
+/** Which form fields each card owns; a card's Update only writes these. */
+const SECTION_FIELDS: Record<
+  OAuth2ServerSection,
+  ReadonlyArray<keyof OAuth2ServerFormState>
+> = {
+  status: ['enabled'],
+  integration: [
+    'authorizationUrl',
+    'scopes',
+    'defaultScopes',
+    'authorizationDetailsTypes',
+  ],
+  tokens: [
+    'accessToken',
+    'refreshToken',
+    'publicAccessToken',
+    'publicRefreshToken',
+    'confidentialPkce',
+  ],
+  device: ['verificationUrl', 'userCodeLength', 'userCodeFormat', 'deviceCode'],
+  installations: ['installationScopes', 'installationAccessToken'],
+}
+
+/** Mirrors the `updateOAuth2Server` object parameter. */
+type OAuth2ServerUpdatePayload = {
+  enabled: boolean
+  authorizationUrl: string
+  scopes: string[]
+  authorizationDetailsTypes: string[]
+  accessTokenDuration?: number
+  refreshTokenDuration?: number
+  publicAccessTokenDuration?: number
+  publicRefreshTokenDuration?: number
+  installationAccessTokenDuration?: number
+  confidentialPkce: boolean
+  verificationUrl: string
+  userCodeLength?: number
+  userCodeFormat: string
+  deviceCodeDuration?: number
+  defaultScopes: string[]
+  installationScopes: string[]
 }
 
 function formStateFromProject(project: Models.Project): OAuth2ServerFormState {
@@ -70,52 +152,114 @@ function formStateFromProject(project: Models.Project): OAuth2ServerFormState {
     enabled: project.oAuth2ServerEnabled ?? false,
     authorizationUrl: project.oAuth2ServerAuthorizationUrl ?? '',
     scopes: mergeOAuth2Scopes(project.oAuth2ServerScopes ?? []),
-    accessTokenDuration: project.oAuth2ServerAccessTokenDuration ?? null,
-    refreshTokenDuration: project.oAuth2ServerRefreshTokenDuration ?? null,
-    publicAccessTokenDuration:
+    defaultScopes: project.oAuth2ServerDefaultScopes ?? [],
+    authorizationDetailsTypes:
+      project.oAuth2ServerAuthorizationDetailsTypes ?? [],
+    accessToken: oauth2DurationFromSeconds(
+      project.oAuth2ServerAccessTokenDuration ?? null,
+      'hours',
+    ),
+    refreshToken: oauth2DurationFromSeconds(
+      project.oAuth2ServerRefreshTokenDuration ?? null,
+      'days',
+    ),
+    publicAccessToken: oauth2DurationFromSeconds(
       project.oAuth2ServerPublicAccessTokenDuration ?? null,
-    publicRefreshTokenDuration:
+      'hours',
+    ),
+    publicRefreshToken: oauth2DurationFromSeconds(
       project.oAuth2ServerPublicRefreshTokenDuration ?? null,
+      'days',
+    ),
     confidentialPkce: project.oAuth2ServerConfidentialPkce ?? false,
+    verificationUrl: project.oAuth2ServerVerificationUrl ?? '',
+    userCodeLength: project.oAuth2ServerUserCodeLength ?? null,
+    userCodeFormat: normalizeOAuth2UserCodeFormat(
+      project.oAuth2ServerUserCodeFormat,
+    ),
+    deviceCode: oauth2DurationFromSeconds(
+      project.oAuth2ServerDeviceCodeDuration ?? null,
+      'minutes',
+    ),
+    installationScopes: project.oAuth2ServerInstallationScopes ?? [],
+    installationAccessToken: oauth2DurationFromSeconds(
+      project.oAuth2ServerInstallationAccessTokenDuration ?? null,
+      'hours',
+    ),
   }
 }
 
-function validateScopes(scopes: string[]): string | null {
-  if (scopes.length > MAX_SCOPES) {
-    return `Maximum of ${MAX_SCOPES} scopes allowed.`
+function pickSection(
+  state: OAuth2ServerFormState,
+  section: OAuth2ServerSection,
+): Partial<OAuth2ServerFormState> {
+  const picked: Record<string, unknown> = {}
+  for (const field of SECTION_FIELDS[section]) {
+    picked[field] = state[field]
   }
-  const invalid = scopes.find((scope) => scope.length > MAX_SCOPE_LENGTH)
-  if (invalid) {
-    return `Scope "${invalid}" exceeds ${MAX_SCOPE_LENGTH} characters.`
-  }
-  return null
+  return picked as Partial<OAuth2ServerFormState>
 }
 
-function tokensStateEqual(
-  a: Pick<
-    OAuth2ServerFormState,
-    | 'accessTokenDuration'
-    | 'refreshTokenDuration'
-    | 'publicAccessTokenDuration'
-    | 'publicRefreshTokenDuration'
-    | 'confidentialPkce'
-  >,
-  b: Pick<
-    OAuth2ServerFormState,
-    | 'accessTokenDuration'
-    | 'refreshTokenDuration'
-    | 'publicAccessTokenDuration'
-    | 'publicRefreshTokenDuration'
-    | 'confidentialPkce'
-  >,
-) {
-  return (
-    a.accessTokenDuration === b.accessTokenDuration &&
-    a.refreshTokenDuration === b.refreshTokenDuration &&
-    a.publicAccessTokenDuration === b.publicAccessTokenDuration &&
-    a.publicRefreshTokenDuration === b.publicRefreshTokenDuration &&
-    a.confidentialPkce === b.confidentialPkce
-  )
+function isDurationInput(value: unknown): value is OAuth2ServerDurationInput {
+  return typeof value === 'object' && value !== null && 'unit' in value
+}
+
+/** Comparable snapshot of a card's fields: durations as seconds, strings trimmed. */
+function sectionSnapshot(
+  state: OAuth2ServerFormState,
+  section: OAuth2ServerSection,
+): string {
+  const values = SECTION_FIELDS[section].map((field) => {
+    const value = state[field]
+    if (field === 'scopes') return mergeOAuth2Scopes(value as string[])
+    if (isDurationInput(value)) return oauth2DurationInputToSeconds(value)
+    if (typeof value === 'string') return value.trim()
+    return value
+  })
+  return JSON.stringify(values)
+}
+
+/**
+ * The API replaces the whole configuration on every call and resets any
+ * omitted parameter to its default, so every field is always sent: the
+ * saved card's values come from the form, everything else from the server.
+ */
+function buildUpdatePayload(
+  server: OAuth2ServerFormState,
+  form: OAuth2ServerFormState,
+  section: OAuth2ServerSection,
+): OAuth2ServerUpdatePayload {
+  const merged: OAuth2ServerFormState = {
+    ...server,
+    ...pickSection(form, section),
+    // The authorization URL is required by the API whenever the server is
+    // saved, so the form value wins for every card (see the status hint).
+    authorizationUrl: form.authorizationUrl,
+  }
+  const scopes = mergeOAuth2Scopes(merged.scopes)
+  const seconds = (input: OAuth2ServerDurationInput) =>
+    oauth2DurationInputToSeconds(input) ?? undefined
+
+  return {
+    enabled: merged.enabled,
+    authorizationUrl: merged.authorizationUrl.trim(),
+    scopes,
+    defaultScopes: merged.defaultScopes.filter((scope) =>
+      scopes.includes(scope),
+    ),
+    authorizationDetailsTypes: merged.authorizationDetailsTypes,
+    accessTokenDuration: seconds(merged.accessToken),
+    refreshTokenDuration: seconds(merged.refreshToken),
+    publicAccessTokenDuration: seconds(merged.publicAccessToken),
+    publicRefreshTokenDuration: seconds(merged.publicRefreshToken),
+    installationAccessTokenDuration: seconds(merged.installationAccessToken),
+    confidentialPkce: merged.confidentialPkce,
+    verificationUrl: merged.verificationUrl.trim(),
+    userCodeLength: merged.userCodeLength ?? undefined,
+    userCodeFormat: merged.userCodeFormat,
+    deviceCodeDuration: seconds(merged.deviceCode),
+    installationScopes: merged.installationScopes,
+  }
 }
 
 function SectionUpdateButton({
@@ -177,9 +321,13 @@ function SettingsSection({
       <div className="px-6 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {title}
+            </h3>
             {description ? (
-              <p className="mt-2 text-[13px] text-muted-foreground">{description}</p>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                {description}
+              </p>
             ) : null}
           </div>
           {headerExtra}
@@ -288,9 +436,11 @@ function DurationField({
 function CopyableUrl({
   value,
   label,
+  labelExtra,
 }: {
   value: string
   label?: string
+  labelExtra?: ReactNode
 }) {
   const t = useT()
   const [copied, setCopied] = useState(false)
@@ -304,9 +454,12 @@ function CopyableUrl({
   return (
     <div className="space-y-1.5">
       {label ? (
-        <Label className="text-[12px] font-medium text-muted-foreground">
-          {label}
-        </Label>
+        <div className="flex flex-wrap items-center gap-2">
+          <Label className="text-[12px] font-medium text-muted-foreground">
+            {label}
+          </Label>
+          {labelExtra}
+        </div>
       ) : null}
       <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
         <code className="min-w-0 flex-1 break-all font-mono text-[12px] leading-5 text-foreground">
@@ -339,9 +492,11 @@ function CopyableUrl({
 function DiscoveryEndpoints({
   projectId,
   region,
+  deviceFlowEnabled,
 }: {
   projectId: string
   region?: string
+  deviceFlowEnabled: boolean
 }) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -365,13 +520,24 @@ function DiscoveryEndpoints({
         <div className="space-y-3">
           <p className="text-[12px] text-muted-foreground">
             {t(
-              'Common endpoints from the discovery document. Most OAuth libraries only need the discovery URL.',
+              'Endpoints from the discovery document. Most OAuth libraries only need the discovery URL.',
             )}
           </p>
+          <CopyableUrl
+            label={t('OAuth authorization server metadata URL')}
+            value={getOAuth2ServerMetadataUrl(projectId, region)}
+          />
           {OAUTH2_SERVER_COMMON_ENDPOINTS.map((endpoint) => (
             <CopyableUrl
               key={endpoint.id}
               label={t(endpoint.label)}
+              labelExtra={
+                endpoint.requiresDeviceFlow && !deviceFlowEnabled ? (
+                  <Badge variant="inactive" className="text-[10px] shrink-0">
+                    {t('Requires device flow')}
+                  </Badge>
+                ) : null
+              }
               value={getOAuth2ServerEndpointUrl(
                 projectId,
                 endpoint.path,
@@ -447,8 +613,6 @@ function ClientTokenSettingsColumn({
   )
 }
 
-type OAuth2ServerSection = 'status' | 'integration' | 'tokens'
-
 interface OAuth2ServerViewProps {
   projectId: string
 }
@@ -462,160 +626,67 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   const canEdit = canShowProjectOAuth2Server(access, features)
   const [pendingSection, setPendingSection] =
     useState<OAuth2ServerSection | null>(null)
+  const savedSectionRef = useRef<OAuth2ServerSection | null>(null)
 
   const serverState = useMemo(
     () => (projectData ? formStateFromProject(projectData) : null),
     [projectData],
   )
-
-  const [enabled, setEnabled] = useState(false)
-  const [authorizationUrl, setAuthorizationUrl] = useState('')
-  const [scopes, setScopes] = useState<string[]>([])
-  const [confidentialPkce, setConfidentialPkce] = useState(false)
-  const [accessTokenValue, setAccessTokenValue] = useState<number | null>(null)
-  const [accessTokenUnit, setAccessTokenUnit] =
-    useState<OAuth2ServerTimeUnit>('hours')
-  const [refreshTokenValue, setRefreshTokenValue] = useState<number | null>(null)
-  const [refreshTokenUnit, setRefreshTokenUnit] =
-    useState<OAuth2ServerTimeUnit>('days')
-  const [publicAccessTokenValue, setPublicAccessTokenValue] = useState<
-    number | null
-  >(null)
-  const [publicAccessTokenUnit, setPublicAccessTokenUnit] =
-    useState<OAuth2ServerTimeUnit>('hours')
-  const [publicRefreshTokenValue, setPublicRefreshTokenValue] = useState<
-    number | null
-  >(null)
-  const [publicRefreshTokenUnit, setPublicRefreshTokenUnit] =
-    useState<OAuth2ServerTimeUnit>('days')
+  // Lazy init so the first paint already shows the loader-prefetched project.
+  const [form, setForm] = useState<OAuth2ServerFormState | null>(
+    () => serverState,
+  )
+  const syncedStateRef = useRef(serverState)
 
   useEffect(() => {
-    if (!serverState) return
-    setEnabled(serverState.enabled)
-    setAuthorizationUrl(serverState.authorizationUrl)
-    setScopes(mergeOAuth2Scopes(serverState.scopes))
-    setConfidentialPkce(serverState.confidentialPkce)
-
-    const accessToken = oauth2DurationFromSeconds(
-      serverState.accessTokenDuration,
-      'hours',
-    )
-    setAccessTokenValue(accessToken.value)
-    setAccessTokenUnit(accessToken.unit)
-
-    const refreshToken = oauth2DurationFromSeconds(
-      serverState.refreshTokenDuration,
-      'days',
-    )
-    setRefreshTokenValue(refreshToken.value)
-    setRefreshTokenUnit(refreshToken.unit)
-
-    const publicAccessToken = oauth2DurationFromSeconds(
-      serverState.publicAccessTokenDuration,
-      'hours',
-    )
-    setPublicAccessTokenValue(publicAccessToken.value)
-    setPublicAccessTokenUnit(publicAccessToken.unit)
-
-    const publicRefreshToken = oauth2DurationFromSeconds(
-      serverState.publicRefreshTokenDuration,
-      'days',
-    )
-    setPublicRefreshTokenValue(publicRefreshToken.value)
-    setPublicRefreshTokenUnit(publicRefreshToken.unit)
+    if (!serverState || syncedStateRef.current === serverState) return
+    syncedStateRef.current = serverState
+    const savedSection = savedSectionRef.current
+    savedSectionRef.current = null
+    setForm((previous) => {
+      // After a card is saved only its fields are synced from the server, so
+      // unsaved edits in the other cards survive the project refetch.
+      if (previous && savedSection) {
+        return { ...previous, ...pickSection(serverState, savedSection) }
+      }
+      return serverState
+    })
   }, [serverState])
-
-  const currentFormState = useMemo<OAuth2ServerFormState>(
-    () => ({
-      enabled,
-      authorizationUrl,
-      scopes: mergeOAuth2Scopes(scopes),
-      confidentialPkce,
-      accessTokenDuration: oauth2DurationToSeconds(
-        accessTokenValue,
-        accessTokenUnit,
-      ),
-      refreshTokenDuration: oauth2DurationToSeconds(
-        refreshTokenValue,
-        refreshTokenUnit,
-      ),
-      publicAccessTokenDuration: oauth2DurationToSeconds(
-        publicAccessTokenValue,
-        publicAccessTokenUnit,
-      ),
-      publicRefreshTokenDuration: oauth2DurationToSeconds(
-        publicRefreshTokenValue,
-        publicRefreshTokenUnit,
-      ),
-    }),
-    [
-      enabled,
-      authorizationUrl,
-      scopes,
-      confidentialPkce,
-      accessTokenValue,
-      accessTokenUnit,
-      refreshTokenValue,
-      refreshTokenUnit,
-      publicAccessTokenValue,
-      publicAccessTokenUnit,
-      publicRefreshTokenValue,
-      publicRefreshTokenUnit,
-    ],
-  )
 
   const discoveryUrl = useMemo(
     () => getOAuth2ServerDiscoveryUrl(projectId, project?.region),
     [projectId, project?.region],
   )
 
-  const isStatusUnchanged = serverState ? enabled === serverState.enabled : true
-  const optionalScopes = useMemo(() => optionalOAuth2Scopes(scopes), [scopes])
-
-  const isIntegrationUnchanged = serverState
-    ? authorizationUrl === serverState.authorizationUrl &&
-      oauth2ScopesEqual(scopes, serverState.scopes)
-    : true
-  const isTokensUnchanged = serverState
-    ? tokensStateEqual(currentFormState, serverState)
-    : true
-
-  const requiresAuthorizationUrl = enabled && !authorizationUrl.trim()
-
   const updateMutation = useMutation({
-    mutationFn: async () => {
-      if (requiresAuthorizationUrl) {
-        throw new Error(
-          t('Authorization URL is required when the server is enabled.'),
-        )
-      }
-      const scopeError = validateScopes(mergeOAuth2Scopes(scopes))
-      if (scopeError) throw new Error(scopeError)
-
-      return sdk
+    mutationFn: async ({
+      section,
+      payload,
+    }: {
+      section: OAuth2ServerSection
+      payload: OAuth2ServerUpdatePayload
+    }) => {
+      const response = await sdk
         .forProject(projectId, project?.region)
-        .project.updateOAuth2Server({
-          enabled,
-          authorizationUrl: authorizationUrl.trim(),
-          scopes: mergeOAuth2Scopes(scopes),
-          accessTokenDuration: currentFormState.accessTokenDuration ?? undefined,
-          refreshTokenDuration:
-            currentFormState.refreshTokenDuration ?? undefined,
-          publicAccessTokenDuration:
-            currentFormState.publicAccessTokenDuration ?? undefined,
-          publicRefreshTokenDuration:
-            currentFormState.publicRefreshTokenDuration ?? undefined,
-          confidentialPkce,
-        })
+        .project.updateOAuth2Server(payload)
+      return { section, response }
     },
-    onSuccess: (response) => {
-      queryClient.setQueryData(projectQueryOptions(projectId).queryKey, response)
+    onSuccess: ({ section, response }) => {
+      savedSectionRef.current = section
+      queryClient.setQueryData(
+        projectQueryOptions(projectId).queryKey,
+        response,
+      )
       const message =
-        pendingSection === 'status'
+        section === 'status'
           ? t('Server status has been updated.')
-          : pendingSection === 'integration'
+          : section === 'integration'
             ? t('Integration settings have been updated.')
-            : t('Token lifetimes have been updated.')
+            : section === 'tokens'
+              ? t('Token lifetimes have been updated.')
+              : section === 'device'
+                ? t('Device flow settings have been updated.')
+                : t('App installation settings have been updated.')
       toast.success(message)
       setPendingSection(null)
     },
@@ -627,16 +698,127 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     },
   })
 
-  const handleUpdate = (section: OAuth2ServerSection) => {
+  if (!form || !serverState) {
+    return null
+  }
+
+  const patch = (changes: Partial<OAuth2ServerFormState>) =>
+    setForm((previous) => (previous ? { ...previous, ...changes } : previous))
+
+  const durationProps = (field: DurationFieldKey) => ({
+    value: form[field].value,
+    unit: form[field].unit,
+    onValueChange: (value: number | null) =>
+      patch({
+        [field]: { ...form[field], value },
+      } as Partial<OAuth2ServerFormState>),
+    onUnitChange: (unit: OAuth2ServerTimeUnit) =>
+      patch({
+        [field]: { ...form[field], unit },
+      } as Partial<OAuth2ServerFormState>),
+  })
+
+  const isDirty = (section: OAuth2ServerSection) =>
+    sectionSnapshot(form, section) !== sectionSnapshot(serverState, section)
+
+  const mergedScopes = mergeOAuth2Scopes(form.scopes)
+  const optionalScopes = optionalOAuth2Scopes(form.scopes)
+  const requiresAuthorizationUrl = form.enabled && !form.authorizationUrl.trim()
+  const deviceFlowEnabled = serverState.verificationUrl.trim() !== ''
+  const selectedUserCodeFormat =
+    OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS.find(
+      (option) => option.value === form.userCodeFormat,
+    ) ?? OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS[0]
+
+  const tokenWithinLimits = (input: OAuth2ServerDurationInput) =>
+    isOAuth2DurationWithin(
+      oauth2DurationInputToSeconds(input),
+      OAUTH2_SERVER_MIN_TOKEN_EXPIRY,
+      OAUTH2_SERVER_MAX_TOKEN_EXPIRY,
+    )
+
+  /** Validation mirrors the API so users get the message before the request. */
+  const validateSection = (section: OAuth2ServerSection): string | null => {
     if (requiresAuthorizationUrl) {
-      toast.error(
-        t('Authorization URL is required when the server is enabled.'),
-      )
-      document.getElementById('oauth2-authorization-url')?.focus()
+      return t('Authorization URL is required when the server is enabled.')
+    }
+    switch (section) {
+      case 'integration': {
+        if (!isOAuth2ListWithinLimits(mergedScopes)) {
+          return t(
+            'Up to 100 scopes are allowed, each 128 characters or fewer.',
+          )
+        }
+        if (!isOAuth2ListWithinLimits(form.authorizationDetailsTypes)) {
+          return t(
+            'Up to 100 authorization details types are allowed, each 128 characters or fewer.',
+          )
+        }
+        return null
+      }
+      case 'tokens': {
+        const withinLimits = [
+          form.accessToken,
+          form.refreshToken,
+          form.publicAccessToken,
+          form.publicRefreshToken,
+        ].every(tokenWithinLimits)
+        return withinLimits
+          ? null
+          : t('Token lifetimes must be between 1 minute and 1 year.')
+      }
+      case 'device': {
+        if (
+          form.userCodeLength != null &&
+          (!Number.isInteger(form.userCodeLength) ||
+            form.userCodeLength < OAUTH2_SERVER_USER_CODE_MIN_LENGTH ||
+            form.userCodeLength > OAUTH2_SERVER_USER_CODE_MAX_LENGTH)
+        ) {
+          return t('User code length must be between 6 and 12 characters.')
+        }
+        if (
+          !isOAuth2DurationWithin(
+            oauth2DurationInputToSeconds(form.deviceCode),
+            OAUTH2_SERVER_DEVICE_CODE_MIN_EXPIRY,
+            OAUTH2_SERVER_DEVICE_CODE_MAX_EXPIRY,
+          )
+        ) {
+          return t('Device code lifetime must be between 1 and 30 minutes.')
+        }
+        return null
+      }
+      case 'installations': {
+        if (!isOAuth2ListWithinLimits(form.installationScopes)) {
+          return t(
+            'Up to 100 installation scopes are allowed, each 128 characters or fewer.',
+          )
+        }
+        if (!tokenWithinLimits(form.installationAccessToken)) {
+          return t(
+            'Installation token lifetime must be between 1 minute and 1 year.',
+          )
+        }
+        return null
+      }
+      default:
+        return null
+    }
+  }
+
+  const handleUpdate = (section: OAuth2ServerSection) => {
+    const error = validateSection(section)
+    if (error) {
+      toast.error(error)
+      if (requiresAuthorizationUrl) {
+        document.getElementById('oauth2-authorization-url')?.focus()
+      }
       return
     }
     setPendingSection(section)
-    updateMutation.mutate()
+    updateMutation.mutate({
+      section,
+      payload: buildUpdatePayload(serverState, form, section),
+    })
   }
 
   const noEditPermissionTooltip = !canEdit
@@ -646,9 +828,16 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     ? t('Authorization URL is required when the server is enabled.')
     : undefined
 
-  if (!projectData) {
-    return null
-  }
+  const sectionFooter = (section: OAuth2ServerSection) => (
+    <SectionUpdateButton
+      pending={updateMutation.isPending && pendingSection === section}
+      disabled={!canEdit || !isDirty(section) || requiresAuthorizationUrl}
+      disabledTooltip={
+        noEditPermissionTooltip ?? missingAuthorizationUrlTooltip
+      }
+      onClick={() => handleUpdate(section)}
+    />
+  )
 
   return (
     <div className="space-y-6">
@@ -659,16 +848,16 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         )}
         headerExtra={
           <Badge
-            variant={serverState?.enabled ? 'success' : 'secondary'}
+            variant={serverState.enabled ? 'success' : 'inactive'}
             className="shrink-0 text-[10px] uppercase tracking-wide"
           >
-            {serverState?.enabled ? t('Active') : t('Inactive')}
+            {serverState.enabled ? t('Active') : t('Inactive')}
           </Badge>
         }
         footer={
           <SectionUpdateButton
             pending={updateMutation.isPending && pendingSection === 'status'}
-            disabled={!canEdit || isStatusUnchanged}
+            disabled={!canEdit || !isDirty('status')}
             disabledTooltip={noEditPermissionTooltip}
             onClick={() => handleUpdate('status')}
           />
@@ -680,9 +869,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
           </Label>
           <Switch
             id="oauth2-server-enabled"
-            checked={enabled}
+            checked={form.enabled}
             disabled={!canEdit}
-            onCheckedChange={setEnabled}
+            onCheckedChange={(enabled) => patch({ enabled })}
           />
         </div>
         {requiresAuthorizationUrl ? (
@@ -692,27 +881,14 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         ) : null}
       </SettingsSection>
 
-      {enabled ? (
+      {form.enabled ? (
         <>
           <SettingsSection
             title={t('Integration')}
             description={t(
               'Point your consent screen at the authorization URL and choose which scopes clients can request.',
             )}
-            footer={
-              <SectionUpdateButton
-                pending={
-                  updateMutation.isPending && pendingSection === 'integration'
-                }
-                disabled={
-                  !canEdit || isIntegrationUnchanged || requiresAuthorizationUrl
-                }
-                disabledTooltip={
-                  noEditPermissionTooltip ?? missingAuthorizationUrlTooltip
-                }
-                onClick={() => handleUpdate('integration')}
-              />
-            }
+            footer={sectionFooter('integration')}
           >
             <div className="space-y-2">
               <FieldHint
@@ -723,10 +899,12 @@ export function View({ projectId }: OAuth2ServerViewProps) {
               />
               <Input
                 id="oauth2-authorization-url"
-                value={authorizationUrl}
+                value={form.authorizationUrl}
                 disabled={!canEdit}
                 placeholder="https://example.com/consent"
-                onChange={(event) => setAuthorizationUrl(event.target.value)}
+                onChange={(event) =>
+                  patch({ authorizationUrl: event.target.value })
+                }
                 className="h-9 font-mono text-[13px]"
               />
             </div>
@@ -734,7 +912,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             <div className="space-y-2">
               <FieldHint
                 label={t('Scopes')}
-                hint={`${t('openid, profile, email, and phone are always included. Add up to')} ${MAX_SCOPES} ${t('scopes total, each up to')} ${MAX_SCOPE_LENGTH} ${t('characters.')}`}
+                hint={t(
+                  'openid, profile, email, and phone are always included. Add up to 100 scopes in total, each up to 128 characters.',
+                )}
               />
               <InputTags
                 id="oauth2-scopes"
@@ -743,7 +923,43 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 disabled={!canEdit}
                 splitOnComma
                 placeholder={t('Add custom scopes')}
-                onChange={(next) => setScopes(mergeOAuth2Scopes(next))}
+                onChange={(next) => patch({ scopes: mergeOAuth2Scopes(next) })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FieldHint
+                label={t('Default scopes')}
+                hint={t(
+                  'Granted when an authorization request omits the scope parameter. Leave empty to require clients to request scopes explicitly.',
+                )}
+              />
+              <OAuth2ScopePicker
+                idPrefix="oauth2-default-scope"
+                className="max-h-72 overflow-y-auto"
+                options={mergedScopes.map((value) => ({ value }))}
+                value={form.defaultScopes}
+                onChange={(defaultScopes) => patch({ defaultScopes })}
+                disabled={!canEdit}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FieldHint
+                label={t('Authorization details types')}
+                hint={t(
+                  'Types accepted in RFC 9396 authorization_details requests. Leave empty to reject rich authorization requests.',
+                )}
+              />
+              <InputTags
+                id="oauth2-authorization-details-types"
+                value={form.authorizationDetailsTypes}
+                disabled={!canEdit}
+                splitOnComma
+                placeholder={t('Add a type and press Enter')}
+                onChange={(authorizationDetailsTypes) =>
+                  patch({ authorizationDetailsTypes })
+                }
               />
             </div>
           </SettingsSection>
@@ -754,13 +970,11 @@ export function View({ projectId }: OAuth2ServerViewProps) {
               'Share this URL with integrators. OAuth libraries fetch it once to learn authorize, token, and JWKS endpoints.',
             )}
           >
-            <CopyableUrl
-              label={t('OIDC discovery URL')}
-              value={discoveryUrl}
-            />
+            <CopyableUrl label={t('OIDC discovery URL')} value={discoveryUrl} />
             <DiscoveryEndpoints
               projectId={projectId}
               region={project?.region}
+              deviceFlowEnabled={deviceFlowEnabled}
             />
           </SettingsSection>
 
@@ -769,123 +983,249 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             description={t(
               'Confidential clients use a client secret on a backend. Public clients (SPAs, mobile) use PKCE only.',
             )}
-            footer={
-              <SectionUpdateButton
-                pending={updateMutation.isPending && pendingSection === 'tokens'}
-                disabled={!canEdit || isTokensUnchanged}
-                disabledTooltip={noEditPermissionTooltip}
-                onClick={() => handleUpdate('tokens')}
-              />
-            }
+            footer={sectionFooter('tokens')}
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0">
               <div className="lg:pe-8">
-              <ClientTokenSettingsColumn
-                title={t('Confidential clients')}
-                description={
-                  <>
-                    {t('Server-side apps that store a')}{' '}
-                    <code className="rounded bg-muted px-1 font-mono text-[11px]">
-                      client_secret
-                    </code>{' '}
-                    {t('privately.')}
-                  </>
-                }
-              >
-                <DurationField
-                  id="oauth2-access-token-duration"
-                  label={t('Access token TTL')}
-                  hint={t('Default: 8 hours when empty.')}
-                  value={accessTokenValue}
-                  unit={accessTokenUnit}
-                  placeholder="8"
-                  disabled={!canEdit}
-                  onValueChange={setAccessTokenValue}
-                  onUnitChange={setAccessTokenUnit}
-                />
-                <DurationField
-                  id="oauth2-refresh-token-duration"
-                  label={t('Refresh token TTL')}
-                  hint={t('Default: 365 days when empty.')}
-                  value={refreshTokenValue}
-                  unit={refreshTokenUnit}
-                  placeholder="365"
-                  disabled={!canEdit}
-                  onValueChange={setRefreshTokenValue}
-                  onUnitChange={setRefreshTokenUnit}
-                />
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
-                  <div>
-                    <Label
-                      htmlFor="oauth2-confidential-pkce"
-                      className="text-[13px] font-medium"
-                    >
-                      {t('Require PKCE')}
-                    </Label>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      {t('Extra protection if an auth code is intercepted.')}
-                    </p>
-                  </div>
-                  <Switch
-                    id="oauth2-confidential-pkce"
-                    checked={confidentialPkce}
+                <ClientTokenSettingsColumn
+                  title={t('Confidential clients')}
+                  description={
+                    <>
+                      {t('Server-side apps that store a')}{' '}
+                      <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                        client_secret
+                      </code>{' '}
+                      {t('privately.')}
+                    </>
+                  }
+                >
+                  <DurationField
+                    id="oauth2-access-token-duration"
+                    label={t('Access token TTL')}
+                    hint={t('Default: 8 hours when empty.')}
+                    placeholder="8"
                     disabled={!canEdit}
-                    onCheckedChange={setConfidentialPkce}
+                    {...durationProps('accessToken')}
                   />
-                </div>
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                    {t('Example use cases')}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <ExampleList items={CONFIDENTIAL_EXAMPLES} />
-                  </CollapsibleContent>
-                </Collapsible>
-              </ClientTokenSettingsColumn>
+                  <DurationField
+                    id="oauth2-refresh-token-duration"
+                    label={t('Refresh token TTL')}
+                    hint={t('Default: 365 days when empty.')}
+                    placeholder="365"
+                    disabled={!canEdit}
+                    {...durationProps('refreshToken')}
+                  />
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
+                    <div>
+                      <Label
+                        htmlFor="oauth2-confidential-pkce"
+                        className="text-[13px] font-medium"
+                      >
+                        {t('Require PKCE')}
+                      </Label>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
+                        {t('Extra protection if an auth code is intercepted.')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="oauth2-confidential-pkce"
+                      checked={form.confidentialPkce}
+                      disabled={!canEdit}
+                      onCheckedChange={(confidentialPkce) =>
+                        patch({ confidentialPkce })
+                      }
+                    />
+                  </div>
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      {t('Example use cases')}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <ExampleList items={CONFIDENTIAL_EXAMPLES} />
+                    </CollapsibleContent>
+                  </Collapsible>
+                </ClientTokenSettingsColumn>
               </div>
 
               <div className="border-t border-border pt-6 lg:border-s lg:border-t-0 lg:ps-8 lg:pt-0">
                 <ClientTokenSettingsColumn
-                title={t('Public clients')}
-                description={t(
-                  'Browser and mobile clients. PKCE is always required; no client secret is issued.',
-                )}
-              >
-                <DurationField
-                  id="oauth2-public-access-token-duration"
-                  label={t('Access token TTL')}
-                  hint={t('Default: 1 hour when empty.')}
-                  value={publicAccessTokenValue}
-                  unit={publicAccessTokenUnit}
-                  placeholder="1"
-                  disabled={!canEdit}
-                  onValueChange={setPublicAccessTokenValue}
-                  onUnitChange={setPublicAccessTokenUnit}
-                />
-                <DurationField
-                  id="oauth2-public-refresh-token-duration"
-                  label={t('Refresh token TTL')}
-                  hint={t('Default: 30 days when empty.')}
-                  value={publicRefreshTokenValue}
-                  unit={publicRefreshTokenUnit}
-                  placeholder="30"
-                  disabled={!canEdit}
-                  onValueChange={setPublicRefreshTokenValue}
-                  onUnitChange={setPublicRefreshTokenUnit}
-                />
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                    {t('Example use cases')}
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <ExampleList items={PUBLIC_EXAMPLES} />
-                  </CollapsibleContent>
-                </Collapsible>
+                  title={t('Public clients')}
+                  description={t(
+                    'Browser and mobile clients. PKCE is always required; no client secret is issued.',
+                  )}
+                >
+                  <DurationField
+                    id="oauth2-public-access-token-duration"
+                    label={t('Access token TTL')}
+                    hint={t('Default: 1 hour when empty.')}
+                    placeholder="1"
+                    disabled={!canEdit}
+                    {...durationProps('publicAccessToken')}
+                  />
+                  <DurationField
+                    id="oauth2-public-refresh-token-duration"
+                    label={t('Refresh token TTL')}
+                    hint={t('Default: 30 days when empty.')}
+                    placeholder="30"
+                    disabled={!canEdit}
+                    {...durationProps('publicRefreshToken')}
+                  />
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      {t('Example use cases')}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <ExampleList items={PUBLIC_EXAMPLES} />
+                    </CollapsibleContent>
+                  </Collapsible>
                 </ClientTokenSettingsColumn>
               </div>
             </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title={t('Device flow')}
+            description={t(
+              'Lets TVs, CLIs, and other input-constrained clients sign in with a short code. Each app must also have Device flow enabled.',
+            )}
+            headerExtra={
+              <Badge
+                variant={deviceFlowEnabled ? 'success' : 'inactive'}
+                className="shrink-0 text-[10px] uppercase tracking-wide"
+              >
+                {deviceFlowEnabled ? t('Enabled') : t('Disabled')}
+              </Badge>
+            }
+            footer={sectionFooter('device')}
+          >
+            <div className="space-y-2">
+              <FieldHint
+                label={t('Verification URL')}
+                hint={t(
+                  'Page in your app where users enter the code shown on the device. Leave empty to keep the device authorization grant off.',
+                )}
+              />
+              <Input
+                id="oauth2-verification-url"
+                value={form.verificationUrl}
+                disabled={!canEdit}
+                placeholder="https://example.com/device"
+                onChange={(event) =>
+                  patch({ verificationUrl: event.target.value })
+                }
+                className="h-9 font-mono text-[13px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="oauth2-user-code-format"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  {t('User code format')}
+                </Label>
+                <Select
+                  value={form.userCodeFormat}
+                  onValueChange={(next) =>
+                    patch({
+                      userCodeFormat: normalizeOAuth2UserCodeFormat(next),
+                    })
+                  }
+                  disabled={!canEdit}
+                >
+                  <SelectTrigger
+                    id="oauth2-user-code-format"
+                    className="h-9 text-[13px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OAUTH2_SERVER_USER_CODE_FORMAT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {t(option.label)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[12px] text-muted-foreground">
+                  {t(selectedUserCodeFormat.hint)}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="oauth2-user-code-length"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  {t('User code length')}
+                </Label>
+                <Input
+                  id="oauth2-user-code-length"
+                  type="number"
+                  min={OAUTH2_SERVER_USER_CODE_MIN_LENGTH}
+                  max={OAUTH2_SERVER_USER_CODE_MAX_LENGTH}
+                  value={form.userCodeLength ?? ''}
+                  placeholder="8"
+                  disabled={!canEdit}
+                  onChange={(event) => {
+                    const next = event.target.value.trim()
+                    patch({ userCodeLength: next === '' ? null : Number(next) })
+                  }}
+                  className="h-9 font-mono text-[13px] tabular-nums"
+                />
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    '6 to 12 characters, excluding the separator. Default: 8 when empty.',
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <DurationField
+              id="oauth2-device-code-duration"
+              label={t('Device code lifetime')}
+              hint={t('1 to 30 minutes. Default: 10 minutes when empty.')}
+              placeholder="10"
+              disabled={!canEdit}
+              {...durationProps('deviceCode')}
+            />
+          </SettingsSection>
+
+          <SettingsSection
+            title={t('App installations')}
+            description={t(
+              'Apps can be installed on teams in this project to act on their behalf. Choose which scopes an installed app may request and how long installation access tokens live.',
+            )}
+            footer={sectionFooter('installations')}
+          >
+            <div className="space-y-2">
+              <FieldHint
+                label={t('Installation scopes')}
+                hint={t(
+                  'Scopes an app may request when it is installed on a team. Leave empty to disallow installations.',
+                )}
+              />
+              <InputTags
+                id="oauth2-installation-scopes"
+                value={form.installationScopes}
+                disabled={!canEdit}
+                splitOnComma
+                placeholder={t('Add installation scope and press Enter')}
+                onChange={(installationScopes) => patch({ installationScopes })}
+              />
+            </div>
+
+            <DurationField
+              id="oauth2-installation-access-token-duration"
+              label={t('Installation access token TTL')}
+              hint={t('Default: 1 hour when empty.')}
+              placeholder="1"
+              disabled={!canEdit}
+              {...durationProps('installationAccessToken')}
+            />
           </SettingsSection>
         </>
       ) : null}

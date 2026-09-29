@@ -277,6 +277,12 @@ export type UpdateOrganizationAppInput = {
   postLogoutRedirectUris?: string[]
   type?: string
   deviceFlow?: boolean
+  /**
+   * The update endpoint replaces the whole document: leaving these out resets
+   * them to empty, so callers must always pass the current values.
+   */
+  installationScopes?: string[]
+  installationRedirectUrl?: string
 }
 
 // ============================================================================
@@ -670,6 +676,8 @@ export function useUpdateOrganizationApp(
         postLogoutRedirectUris: input.postLogoutRedirectUris,
         type: input.type,
         deviceFlow: input.deviceFlow,
+        installationScopes: input.installationScopes,
+        installationRedirectUrl: input.installationRedirectUrl,
       })
     },
     onSuccess: async (app) => {
@@ -735,6 +743,184 @@ export function useDeleteOrganizationApp(
       queryClient.removeQueries({ queryKey: ['app', appId] })
       await queryClient.refetchQueries({
         queryKey: ['apps', 'organization', organizationId],
+      })
+    },
+  })
+}
+
+// ============================================================================
+// INSTALLATION SCOPES, INSTALLATIONS, AND APP KEYS
+// ============================================================================
+
+export const ORGANIZATION_APP_INSTALLATIONS_LIMIT = 100
+export const ORGANIZATION_APP_KEYS_LIMIT = 100
+
+/**
+ * Scopes an app may request when installed on an organization: the Console
+ * project's installation scopes, with catalog metadata (category, description).
+ */
+export async function fetchConsoleInstallationScopes() {
+  const response = await sdk.forConsole.apps.listInstallationScopes()
+  return response.scopes ?? []
+}
+
+export async function fetchOrganizationAppInstallations(appId: string) {
+  if (!appId) throw new Error('App ID is required')
+  const response = await sdk.forConsole.apps.listInstallations({
+    appId,
+    queries: [Query.limit(ORGANIZATION_APP_INSTALLATIONS_LIMIT)],
+    total: true,
+  })
+  return {
+    installations: response.installations ?? [],
+    total: response.total ?? 0,
+  }
+}
+
+export async function fetchOrganizationAppKeys(appId: string) {
+  if (!appId) throw new Error('App ID is required')
+  const response = await sdk.forConsole.apps.listKeys({
+    appId,
+    queries: [Query.limit(ORGANIZATION_APP_KEYS_LIMIT)],
+    total: true,
+  })
+  return response.keys ?? []
+}
+
+export function consoleInstallationScopesQueryOptions() {
+  return queryOptions({
+    queryKey: ['apps', 'installation-scopes', 'console'],
+    queryFn: fetchConsoleInstallationScopes,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+export function organizationAppInstallationsQueryOptions(
+  appId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['app', appId, 'installations'],
+    queryFn: () => fetchOrganizationAppInstallations(appId!),
+    enabled: !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function organizationAppKeysQueryOptions(
+  appId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['app', appId, 'keys'],
+    queryFn: () => fetchOrganizationAppKeys(appId!),
+    enabled: !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useConsoleInstallationScopes() {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    consoleInstallationScopesQueryOptions(),
+  )
+
+  return {
+    scopes: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useOrganizationAppInstallations(
+  appId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    organizationAppInstallationsQueryOptions(appId),
+  )
+
+  return {
+    installations: data?.installations ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useOrganizationAppKeys(appId: string | null | undefined) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    organizationAppKeysQueryOptions(appId),
+  )
+
+  return {
+    keys: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useDeleteOrganizationAppInstallation(
+  appId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      if (!appId) throw new Error('App ID is required')
+      await sdk.forConsole.apps.deleteInstallation({ appId, installationId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useCreateOrganizationAppKey(appId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!appId) throw new Error('App ID is required')
+      return await sdk.forConsole.apps.createKey({ appId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'keys'],
+      })
+    },
+  })
+}
+
+export function useDeleteOrganizationAppKey(appId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (keyId: string) => {
+      if (!appId) throw new Error('App ID is required')
+      await sdk.forConsole.apps.deleteKey({ appId, keyId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'keys'],
       })
     },
   })
