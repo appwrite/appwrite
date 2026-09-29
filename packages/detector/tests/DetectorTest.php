@@ -806,6 +806,9 @@ class DetectorTest extends TestCase
         $this->assertSame('ssr', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), nitro ()] })'));
         $this->assertSame('ssr', $fw->getAdapter('import { nitro as unused } from \'nitro/vite\'' . "\n" . 'import { nitro as serverPlugin } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } }), serverPlugin()] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'}\'], enabled: false } })] })'));
+        $this->assertSame('static', $fw->getAdapter('import { nitro } from \'./local-plugin\'' . "\n" . 'export default defineConfig({ define: { source: \'nitro/vite\' }, plugins: [tanstackStart({ prerender: { enabled: true } }), nitro()] })'));
+        $this->assertSame('static', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { routes: [\'/docs/enabled:false\'] } })] })'));
+        $this->assertSame('static', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'const hooks = { nitro () {} }' . "\n" . 'export default defineConfig({ plugins: [tanstackStart({ prerender: { enabled: true } })] })'));
         $this->assertSame('static', $fw->getAdapter('import { nitro } from \'nitro/vite\'' . "\n" . 'export default defineConfig({ define: { note: \'nitro()\' }, plugins: [tanstackStart({ prerender: { enabled: true } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: { filter: ({ path }) => path !== \'/\', enabled: false } })] })'));
         $this->assertSame('ssr', $fw->getAdapter('export default defineConfig({ plugins: [tanstackStart({ prerender: false })] })'));

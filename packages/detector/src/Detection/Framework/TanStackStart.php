@@ -67,10 +67,11 @@ class TanStackStart extends React
         }
 
         // `$code` empties string literals, so `'nitro()'` is never read as a call, and keeps whitespace only between two names.
-        // `$compact` keeps the text of strings but drops quotes, whitespace and quoted braces, so `"enabled": false` still reads as a key.
+        // `$compact` drops whitespace and quotes, and keeps a string's text only when it is a key, so `"enabled": false` still reads as one.
         $code = '';
         $compact = '';
         $quote = '';
+        $text = '';
         $gap = false;
         for ($i = 0; $i < \strlen($stripped); $i++) {
             $char = $stripped[$i];
@@ -80,8 +81,11 @@ class TanStackStart extends React
                 } elseif ($char === $quote || ($char === "\n" && $quote !== '`')) {
                     $code .= $char;
                     $quote = '';
-                } elseif (!\in_array($char, ['{', '}'], true) && !\ctype_space($char)) {
-                    $compact .= $char;
+                    if (\str_starts_with(\ltrim(\substr($stripped, $i + 1)), ':')) {
+                        $compact .= $text;
+                    }
+                } else {
+                    $text .= $char;
                 }
 
                 continue;
@@ -102,6 +106,7 @@ class TanStackStart extends React
             $code .= $char;
             if (\in_array($char, ['\'', '"', '`'], true)) {
                 $quote = $char;
+                $text = '';
             } else {
                 $compact .= $char;
             }
@@ -112,6 +117,10 @@ class TanStackStart extends React
         foreach (['nitro/vite' => 'nitro', '@tanstack/nitro-v2-vite-plugin' => 'nitroV2Plugin'] as $module => $export) {
             for ($at = \strpos($stripped, $module); $at !== false; $at = \strpos($stripped, $module, $at + 1)) {
                 $import = \substr($stripped, 0, $at);
+                if (!\in_array(\substr($import, -1), ['\'', '"'], true) || !\str_ends_with(\rtrim(\substr($import, 0, -1)), 'from')) {
+                    continue;
+                }
+
                 $names = \array_values(\array_filter(\explode(' ', \str_replace(['{', '}', ',', "\t", "\r", "\n"], ' ', \substr($import, (int) \strrpos($import, 'import '))))));
                 $index = \array_search($export, $names, true);
                 $calls[] = match (true) {
@@ -127,7 +136,24 @@ class TanStackStart extends React
         foreach (\array_filter($calls) as $call) {
             for ($at = \strpos($code, $call . '('); $at !== false; $at = \strpos($code, $call . '(', $at + 1)) {
                 $before = $at > 0 ? $code[$at - 1] : ' ';
-                if (!\ctype_alnum($before) && !\in_array($before, ['_', '$', '.'], true)) {
+                if (\ctype_alnum($before) || \in_array($before, ['_', '$', '.'], true)) {
+                    continue;
+                }
+
+                // `nitro(...) {` declares a function of that name rather than calling the plugin.
+                for ($end = $at + \strlen($call), $depth = 0; $end < \strlen($code); $end++) {
+                    $depth += match ($code[$end]) {
+                        '(' => 1,
+                        ')' => -1,
+                        default => 0,
+                    };
+
+                    if ($depth === 0) {
+                        break;
+                    }
+                }
+
+                if (($code[$end + 1] ?? '') !== '{') {
                     return 'ssr';
                 }
             }
