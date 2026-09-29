@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
 use Appwrite\ClamAV\Network;
+use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -370,16 +371,27 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
-                    $scan = $antivirus->scanInStream($path);
+                    try {
+                        $scan = $antivirus->scanInStream($path);
+                    } catch (\RuntimeException $e) {
+                        $scan = ScanResult::failed($e->getMessage());
+                    }
+
+                    if (!$scan->isClean()) {
+                        // The finalized upload has no completed file record yet, and a pending
+                        // one would be left pointing at chunks that are already joined.
+                        $deviceForFiles->delete($path);
+
+                        if (!$file->isEmpty()) {
+                            $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                        }
+                    }
 
                     if ($scan->isInfected()) {
-                        $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }
 
                     if ($scan->hasFailed()) {
-                        // The finalized upload has no completed file record yet.
-                        $deviceForFiles->delete($path);
                         throw new Exception(
                             Exception::GENERAL_SERVER_ERROR,
                             'Unable to scan the uploaded file: ' . $scan->getReply()
