@@ -71,7 +71,6 @@ async function signIn(page: Page, email: string, password: string) {
   )
 }
 
-/** Load the app with an existing session in the SDK's `cookieFallback` slot. */
 async function reuseSession(page: Page, fallbackCookies: string) {
   await page.context().addInitScript((value) => {
     window.localStorage.setItem('cookieFallback', value)
@@ -106,9 +105,6 @@ test('authenticate once and persist storage state', async ({
 
   fs.mkdirSync(authDir, { recursive: true })
 
-  // The console keeps 10 sessions per user and deletes the oldest on overflow,
-  // so a login per lane evicts the sessions of overlapping runs mid-suite. CI
-  // signs in once per workflow run and every lane reuses that session.
   const fallbackCookies = env.E2E_FALLBACK_COOKIES
   if (env.CI && !fallbackCookies) {
     throw new Error(
@@ -117,7 +113,7 @@ test('authenticate once and persist storage state', async ({
   }
 
   // Prefer email/password when available so storage state is captured against
-  // this run's origin (localhost:4173). Session secret is a fast-path only
+  // this run's origin (localhost:4173). Session secret is a CI fast-path only
   // when credentials are not provided.
   const email = env.E2E_TEST_EMAIL
   const password = env.E2E_TEST_PASSWORD
@@ -136,7 +132,7 @@ test('authenticate once and persist storage state', async ({
     return
   }
 
-  // Always start from a fresh session so local credential changes take effect.
+  // Always sign in fresh so local credential changes take effect.
   if (fs.existsSync(authPath)) {
     fs.unlinkSync(authPath)
   }

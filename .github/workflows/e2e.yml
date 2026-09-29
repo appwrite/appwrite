@@ -8,9 +8,6 @@ on:
       - 'static/**/*'
 
 jobs:
-  # The console keeps 10 sessions per user and deletes the oldest on overflow.
-  # Signing in once here, instead of once per lane, keeps overlapping runs from
-  # evicting each other's sessions mid-suite.
   session:
     name: session
     runs-on: gcrunner=${{ github.run_id }}-e2e-session/runner=checks
@@ -18,35 +15,15 @@ jobs:
     outputs:
       session: ${{ steps.create.outputs.session }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Create console session
         id: create
         env:
           VITE_APPWRITE_ENDPOINT: ${{ secrets.VITE_APPWRITE_ENDPOINT }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-        run: |
-          jq -n --arg email "$E2E_TEST_EMAIL" --arg password "$E2E_TEST_PASSWORD" \
-            '{email: $email, password: $password}' > credentials.json
-          status=$(curl -sS -X POST "${VITE_APPWRITE_ENDPOINT%/}/account/sessions/email" \
-            -H 'Content-Type: application/json' \
-            -H 'X-Appwrite-Project: console' \
-            --data @credentials.json \
-            -D headers.txt -o body.json -w '%{http_code}')
-          rm credentials.json
-          if [ "$status" != 201 ]; then
-            echo "::error::Console sign-in failed ($status): $(jq -r '.message // empty' body.json)"
-            exit 1
-          fi
-          cookies=$(grep -i '^x-fallback-cookies:' headers.txt | cut -d' ' -f2- | tr -d '\r')
-          if [ -z "$cookies" ]; then
-            echo '::error::Console sign-in returned no X-Fallback-Cookies header'
-            exit 1
-          fi
-          echo "::add-mask::$cookies"
-          # Outputs drop masked values, so pass the session encrypted.
-          session=$(printf '%s' "$cookies" | openssl enc -aes-256-cbc -pbkdf2 -salt -a -A \
-            -pass env:E2E_TEST_PASSWORD)
-          echo "session=$session" >> "$GITHUB_OUTPUT"
+        run: bash .github/scripts/create-session.sh
 
   e2e:
     name: ${{ matrix.project }}

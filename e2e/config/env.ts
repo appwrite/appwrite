@@ -7,10 +7,6 @@ const envSchema = z
       .string()
       .min(1, 'VITE_APPWRITE_ENDPOINT is required'),
     E2E_TEST_SESSION_SECRET: z.string().min(1).optional(),
-    /**
-     * `X-Fallback-Cookies` JSON of a session CI creates once per workflow run,
-     * so lanes share it instead of each signing in.
-     */
     E2E_FALLBACK_COOKIES: z.string().min(1).optional(),
     E2E_TEST_EMAIL: z.string().email().optional(),
     E2E_TEST_PASSWORD: z.string().min(1).optional(),
