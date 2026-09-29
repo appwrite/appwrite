@@ -370,37 +370,7 @@ const ifUnchanged = async (row, write) => {
 };
 ```
 
-The `claimRefresh`, `saveRefreshed`, `releaseRefresh`, and `removeIfUnchanged` operations use this helper. `claimRefresh` sets `refreshStartedAt` to the current time. When several executions read the same expired row, only one claim succeeds, because the first claim changes the row. The claim is a lease that lasts 30 seconds.
-
-A lease is only safe if the refresh cannot outlive it. The Appwrite SDK cannot cancel a request, so `refreshTokens` in `src/sign-in-with-appwrite.js` sends the refresh with `fetch` and aborts it after 10 seconds. An aborted refresh never saves tokens, so it has one of two results:
-
-- Appwrite did not process the request. The old refresh token still works, and the next execution can use it.
-- Appwrite processed the request. The new tokens were lost with the aborted response, so the grant cannot be used again, whatever the next execution does. That execution gets `invalid_grant` and asks the user to connect again.
-
-When a claim is older than 30 seconds, its refresh is over either way, and the next execution can claim the refresh again:
-
-```javascript
-export async function refreshTokens(refreshToken, { timeoutMs }) {
-  const response = await fetch(`${process.env.APPWRITE_CONSOLE_ENDPOINT}/oauth2/console/token`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-appwrite-project': 'console' },
-    body: JSON.stringify({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      client_id: process.env.APPWRITE_CLIENT_ID,
-      client_secret: process.env.APPWRITE_CLIENT_SECRET,
-    }),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  const body = await response.text();
-  if (!response.ok) {
-    throw new AppwriteException('Token refresh failed', response.status, '', body);
-  }
-  return JSON.parse(body);
-}
-```
-
-The `getAccessToken` function claims the refresh, refreshes, and saves the new tokens:
+The `claimRefresh`, `saveRefreshed`, `releaseRefresh`, and `removeIfUnchanged` operations use this helper. `claimRefresh` sets `refreshStartedAt` to the current time. When several executions read the same expired row, only one claim succeeds, because the first claim changes the row. The claim is a lease. If it is older than 30 seconds, the execution that made it stopped, and the next execution claims the refresh again:
 
 ```javascript
 export async function getAccessToken(connections, discordUserId) {
@@ -419,12 +389,10 @@ export async function getAccessToken(connections, discordUserId) {
 
     let tokens;
     try {
-      tokens = await refreshTokens(connection.refreshToken, { timeoutMs: REFRESH_TIMEOUT_MS });
+      tokens = await refreshTokens(connection.refreshToken);
     } catch (err) {
       if (oauthErrorCode(err) !== 'invalid_grant') {
-        if (err instanceof AppwriteException && err.code < 500) {
-          await connections.releaseRefresh(claimed);
-        }
+        await connections.releaseRefresh(claimed);
         throw err;
       }
       if (await connections.removeIfUnchanged(claimed)) throw new NotConnectedError();
@@ -438,11 +406,10 @@ export async function getAccessToken(connections, discordUserId) {
 }
 ```
 
-The loop handles four cases:
+The loop handles three cases:
 
 - An execution that finds a claim younger than 30 seconds waits one second and reads the row again, until the new tokens appear or the lease runs out.
 - If Appwrite rejects the refresh token, no other execution used it, so the user revoked access, and the function deletes the row.
-- If Appwrite answers with another `4xx` error, it did not use the refresh token, so the function releases the claim. After a timeout or a network error, the claim stays until the lease runs out.
 - The save and the delete apply only to the row that the execution claimed. If the user ran `/stackbot connect` during the refresh, the row changed, so the write fails. The loop then reads the new row and returns its access token.
 
 ## Give the model read-only tools
