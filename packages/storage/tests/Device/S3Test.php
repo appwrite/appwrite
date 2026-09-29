@@ -403,7 +403,6 @@ final class S3Test extends TestCase
         return new Response(500, body: new Stream($body))->withHeader('content-type', 'application/xml');
     }
 
-    /** A B2 "internal incident" on a part or on the completion no longer fails the whole upload. */
     public function testMultipartUploadSurvivesInternalErrors(): void
     {
         $client = new ScriptedClient([
@@ -420,10 +419,9 @@ final class S3Test extends TestCase
         $device->prepare('/root/archive.tar.gz', 'application/gzip', 2, $metadata);
         $device->upload(new Stream('first'), '/root/archive.tar.gz', 'application/gzip', 1, 2, $metadata);
 
-        // The last chunk completes the upload.
         $this->assertSame(2, $device->upload(new Stream('second'), '/root/archive.tar.gz', 'application/gzip', 2, 2, $metadata));
         $this->assertCount(6, $client->requests);
-        $this->assertSame('second', (string) $client->requests[3]->getBody(), 'the retried part carries its whole body again');
+        $this->assertSame('second', (string) $client->requests[3]->getBody());
         $this->assertStringContainsString('<ETag>"etag-2"</ETag><PartNumber>2</PartNumber>', (string) $client->requests[5]->getBody());
     }
 
@@ -452,7 +450,7 @@ final class S3Test extends TestCase
         } catch (TransportException) {
         }
 
-        $this->assertCount(1, $client->requests, 'a second POST could open a second multipart upload');
+        $this->assertCount(1, $client->requests);
         $this->assertArrayNotHasKey('uploadId', $metadata);
     }
 

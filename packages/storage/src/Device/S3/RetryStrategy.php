@@ -20,21 +20,10 @@ use Utopia\Psr7\Method;
  * Retry strategy for transient S3 failures, for use with the
  * `utopia-php/client` Retry decorator.
  *
- * A response is retried when the service reports it is throttled or failed
- * internally (SlowDown, InternalError, ...). The XML body is parsed first so a
- * specific error code wins over the HTTP status: a 5xx carrying a parseable but
- * non-transient code is not retried, while unparseable 429/5xx responses fall
- * back to status-code detection.
- *
- * A transport failure is retried when the request never reached the service
- * (unresolvable host, refused connection), or when it dropped or timed out and
- * replaying it cannot apply it twice. S3 writes with PUT to a fixed key or part
- * number, so a replayed PUT overwrites itself; a replayed POST may create a
- * second multipart upload, so it is not. TLS, proxy and protocol failures point
- * at configuration rather than a passing fault and are not retried.
- *
- * Waits use exponential backoff with full jitter so a fleet throttled at the
- * same moment does not retry in lockstep. A numeric Retry-After is honoured.
+ * The XML error code wins over the HTTP status; unparseable 429/5xx responses
+ * fall back to the status. Transport failures are retried only when replaying
+ * cannot apply the request twice. Waits use exponential backoff with full
+ * jitter, or a numeric Retry-After.
  * @see \Utopia\Storage\Tests\Device\S3\RetryStrategyTest
  */
 final readonly class RetryStrategy implements Strategy
@@ -54,7 +43,7 @@ final readonly class RetryStrategy implements Strategy
     /**
      * @param  int  $retries  Retries after the initial attempt
      * @param  float  $delay  Base delay in seconds; the wait before retry N is drawn uniformly from [0, min(maxDelay, delay * 2^(N-1)))
-     * @param  float  $maxDelay  Ceiling for the backoff window and for Retry-After, in seconds
+     * @param  float  $maxDelay  Ceiling for the backoff window in seconds
      * @param  (Closure(): float)|null  $randomizer  Returns a value in [0, 1) for jitter
      */
     public function __construct(
@@ -108,17 +97,16 @@ final readonly class RetryStrategy implements Strategy
 
     private function isReplayable(RequestInterface $request, ?ClientExceptionInterface $error): bool
     {
-        // Nothing was sent: the host did not resolve or refused the connection.
+        // Nothing was sent.
         if ($error instanceof DnsException || ($error instanceof ConnectionException && $error->getCode() === \CURLE_COULDNT_CONNECT)) {
             return true;
         }
 
-        // A TLS failure is a ConnectionException too, but points at configuration.
         if ($error instanceof TlsException) {
             return false;
         }
 
-        // The request may have been applied before the connection dropped or timed out.
+        // A replayed POST may open a second multipart upload.
         return ($error instanceof ConnectionException || $error instanceof TimeoutException) && $request->getMethod() !== Method::POST;
     }
 

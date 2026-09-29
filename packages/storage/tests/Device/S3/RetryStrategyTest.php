@@ -66,7 +66,6 @@ final class RetryStrategyTest extends TestCase
         $this->assertNull($strategy->delay($this->request(), 1, $this->response(501), null));
     }
 
-    /** Backblaze B2 answers a failed part or completion with InternalError and the message "internal incident". */
     public function testInternalErrorIsRetried(): void
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>';
@@ -101,7 +100,6 @@ final class RetryStrategyTest extends TestCase
         $this->assertNull($strategy->delay($this->request(), 3, $response, null));
     }
 
-    /** Nothing reached the service, so even a POST cannot have been applied. */
     public function testFailuresBeforeSendingAreRetriedForEveryMethod(): void
     {
         $strategy = new RetryStrategy();
@@ -111,7 +109,6 @@ final class RetryStrategyTest extends TestCase
         $this->assertNotNull($strategy->delay($post, 1, null, new DnsException($post, 'Could not resolve host', \CURLE_COULDNT_RESOLVE_HOST)));
     }
 
-    /** A PUT to the same key or part number overwrites itself, so replaying one that may have landed is harmless. */
     public function testDroppedOrTimedOutPutIsRetried(): void
     {
         $strategy = new RetryStrategy();
@@ -121,7 +118,6 @@ final class RetryStrategyTest extends TestCase
         $this->assertNotNull($strategy->delay($put, 1, null, new TimeoutException($put, 'Operation timed out', \CURLE_OPERATION_TIMEDOUT)));
     }
 
-    /** A POST that may have landed could open a second multipart upload, so it is not replayed. */
     public function testDroppedOrTimedOutPostIsNotRetried(): void
     {
         $strategy = new RetryStrategy();
