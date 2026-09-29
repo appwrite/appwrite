@@ -14,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -253,16 +254,21 @@ class Delete extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->output($document, $this->getResponseModel()), sensitive: $relationships);
 
-        $this->triggerRelationshipUpdates(
-            database: $database,
-            collection: $collection,
-            related: $related,
-            dbForProject: $dbForProject,
-            queueForEvents: $queueForEvents,
-            queueForRealtime: $queueForRealtime,
-            response: $response,
-            authorization: $authorization
-        );
+        // The delete already happened, so failing to notify related documents must not fail it
+        try {
+            $this->triggerRelationshipUpdates(
+                database: $database,
+                collection: $collection,
+                related: $related,
+                dbForProject: $dbForProject,
+                queueForEvents: $queueForEvents,
+                queueForRealtime: $queueForRealtime,
+                response: $response,
+                authorization: $authorization
+            );
+        } catch (\Throwable $e) {
+            Console::warning('Failed to publish relationship updates: ' . $e->getMessage());
+        }
 
         $response->noContent();
     }
