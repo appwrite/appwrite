@@ -334,7 +334,7 @@ final class ClaimTest extends TestCase
 
         $retry = $claims->reclaim($project->getId(), $terminal->getId());
 
-        $this->assertSame(['migration:project-1:migration-1'], $locks->keys);
+        $this->assertCount(1, $locks->keys, 'reclaim() must take exactly one lock');
         $stored = $this->database->getDocument('migrations', $terminal->getId());
         $this->assertSame('pending', $stored->getAttribute('status'));
         $this->assertSame('finished', $stored->getAttribute('stage'));
@@ -359,6 +359,9 @@ final class ClaimTest extends TestCase
 
         $delivery = $claims->consume($project->getId(), MigrationMessage::fromArray($message->toArray()));
 
+        $this->assertCount(2, $locks->keys);
+        [$reclaimed, $consumed] = $locks->keys;
+        $this->assertSame($consumed, $reclaimed, 'reclaim() must serialize on the lock consume() takes for the same migration');
         $this->assertInstanceOf(Delivery::class, $delivery);
         $this->assertSame($retry->migration->getAttribute('attemptId'), $delivery->migration->getAttribute('attemptId'));
         $this->assertSame('processing', $delivery->migration->getAttribute('status'));
