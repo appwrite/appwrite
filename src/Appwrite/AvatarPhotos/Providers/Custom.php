@@ -25,20 +25,12 @@ class Custom extends Photo
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        $path = $this->getPath($profile->getId(), $profile->getAttribute('photoId'));
+        $path = $this->deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $profile->getId() . '/' . $profile->getAttribute('photoId'));
 
         if (!$this->deviceForFiles->exists($path)) {
             return null;
         }
 
         return (string) $this->deviceForFiles->read($path);
-    }
-
-    /**
-     * Bucket IDs can't start with an underscore, so this folder never collides with a bucket's.
-     */
-    public function getPath(string $userId, string $photoId): string
-    {
-        return $this->deviceForFiles->getPath('_photos/' . $userId . '/' . $photoId);
     }
 }

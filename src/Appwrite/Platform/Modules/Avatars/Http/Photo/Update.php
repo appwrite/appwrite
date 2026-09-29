@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
-use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -144,12 +143,12 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG or JPEG image');
         }
 
-        $custom = new Custom($deviceForFiles);
         $userId = $user->getId();
         $previous = $user->getAttribute('photoId', '');
         $photoId = ID::unique();
+        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
 
-        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $custom->getPath($userId, $photoId), $mimeType);
+        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
         try {
             $user = $dbForProject->updateDocument('users', $userId, new Document([
@@ -157,16 +156,16 @@ class Update extends Action
                 'photoSize' => $size,
             ]));
         } catch (\Throwable $th) {
-            $deviceForFiles->delete($custom->getPath($userId, $photoId));
+            $deviceForFiles->delete($path);
 
             throw $th;
         }
 
         // A file left behind here, or by a racing request, is removed with the user's photo folder
         if ($previous !== '') {
-            $path = $custom->getPath($userId, $previous);
+            $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
 
-            if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
+            if ($deviceForFiles->exists($previousPath) && !$deviceForFiles->delete($previousPath)) {
                 Console::warning('Failed to remove previous photo ' . $previous);
             }
         }

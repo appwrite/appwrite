@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
-use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -88,7 +87,7 @@ class Delete extends Action
         }
 
         // The file goes before the attributes, so a failure at either step is retried by calling again
-        $path = (new Custom($deviceForFiles))->getPath($user->getId(), $photoId);
+        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $user->getId() . '/' . $photoId);
 
         if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
