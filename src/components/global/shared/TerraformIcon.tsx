@@ -17,9 +17,8 @@ type TerraformIconProps = {
   /**
    * `brand` loads the SVG asset with muted img styling.
    * `nav` renders inline for side nav (filled mark toned down to match Lucide strokes).
-   * `mark` renders inline in the current text color (badges, alerts).
    */
-  variant?: 'brand' | 'nav' | 'mark'
+  variant?: 'brand' | 'nav'
 }
 
 /** Terraform mark from `public/icons/terraform.svg`. */
@@ -27,19 +26,6 @@ export function TerraformIcon({
   className,
   variant = 'brand',
 }: TerraformIconProps) {
-  if (variant === 'mark') {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-        className={cn('h-4 w-4 shrink-0', className)}
-        aria-hidden
-      >
-        {TERRAFORM_MARK}
-      </svg>
-    )
-  }
-
   if (variant === 'nav') {
     return (
       <svg
