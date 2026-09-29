@@ -1,0 +1,2047 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Auth/NKeyAuth.php
+
+		-
+			message: '#^Parameter \#1 \$seed of function sodium_crypto_sign_seed_keypair expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Auth/NKeyAuth.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Connection\:\:buildConnectPayload\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Connection\:\:handleMessage\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\NATS\\Connection\:\:handleMessage\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\ServerInfo\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \#1 \$raw of static method Utopia\\NATS\\Headers\:\:fromWire\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \#1 \$url of method Utopia\\NATS\\Connection\:\:normalizeUrl\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \$data of class Utopia\\NATS\\Message constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \$replyTo of class Utopia\\NATS\\Message constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \$sid of class Utopia\\NATS\\Message constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Parameter \$subject of class Utopia\\NATS\\Message constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Connection.php
+
+		-
+			message: '#^Property Utopia\\NATS\\Connection\:\:\$subscriptions \(array\<string, Utopia\\NATS\\Subscription\>\) does not accept array\<int\|string, Utopia\\NATS\\Subscription\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Property Utopia\\NATS\\Connection\:\:\$transport \(Utopia\\NATS\\Transport\\Transport\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Connection.php
+
+		-
+			message: '#^Class Utopia\\NATS\\Headers implements generic interface IteratorAggregate but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Headers.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Headers\:\:getIterator\(\) return type with generic class ArrayIterator does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Headers.php
+
+		-
+			message: '#^Cannot access offset ''errors'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Cannot access offset ''total'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\AccountInfo\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$apiErrors of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$apiTotal of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$consumers of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$domain of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$limits of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$memory of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$raw of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$storage of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Parameter \$streams of class Utopia\\NATS\\JetStream\\AccountInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/AccountInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ApiError\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ApiError.php
+
+		-
+			message: '#^Parameter \$code of class Utopia\\NATS\\JetStream\\ApiError constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ApiError.php
+
+		-
+			message: '#^Parameter \$description of class Utopia\\NATS\\JetStream\\ApiError constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ApiError.php
+
+		-
+			message: '#^Parameter \$errCode of class Utopia\\NATS\\JetStream\\ApiError constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ApiError.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ConsumerInfo\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Consumer.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\JetStream\:\:checkError\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Consumer.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ConsumerConfig\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ConsumerConfig\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(int\)\: float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#1 \$nanos of static method Utopia\\NATS\\JetStream\\StreamConfig\:\:nanosToSeconds\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\AckPolicy\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\DeliverPolicy\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\ReplayPolicy\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$backoff of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects list\<float\>\|null, array\<float\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$deliverGroup of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$deliverSubject of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$description of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$durableName of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$filterSubject of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$filterSubjects of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects list\<string\>\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$flowControl of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$maxAckPending of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$maxBatch of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$maxBytes of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$maxDeliver of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$maxWaiting of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$memStorage of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$metadata of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects array\<string, string\>\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$name of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$numReplicas of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$optStartSeq of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Parameter \$optStartTime of class Utopia\\NATS\\JetStream\\ConsumerConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerConfig.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ConsumerInfo\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ConsumerConfig\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\SequenceInfo\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$created of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$name of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$numAckPending of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$numPending of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$numRedelivered of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$numWaiting of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$pushBound of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Parameter \$streamName of class Utopia\\NATS\\JetStream\\ConsumerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ConsumerLimits\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ConsumerLimits.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ConsumerLimits\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ConsumerLimits.php
+
+		-
+			message: '#^Parameter \#1 \$nanos of static method Utopia\\NATS\\JetStream\\StreamConfig\:\:nanosToSeconds\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerLimits.php
+
+		-
+			message: '#^Parameter \$maxAckPending of class Utopia\\NATS\\JetStream\\ConsumerLimits constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ConsumerLimits.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\ExternalStream\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/ExternalStream.php
+
+		-
+			message: '#^Parameter \$api of class Utopia\\NATS\\JetStream\\ExternalStream constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ExternalStream.php
+
+		-
+			message: '#^Parameter \$deliver of class Utopia\\NATS\\JetStream\\ExternalStream constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/ExternalStream.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:apiRequest\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:apiRequest\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:checkError\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:getConsumerNames\(\) should return list\<string\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:getStreamNames\(\) should return list\<string\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\JetStream\:\:listStreams\(\) should return list\<Utopia\\NATS\\JetStream\\StreamInfo\> but returns array\<Utopia\\NATS\\JetStream\\StreamInfo\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: Utopia\\NATS\\JetStream\\StreamInfo given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ApiError\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ConsumerInfo\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\JetStream\:\:checkError\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\PubAck\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\StreamMessage\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/JetStream.php
+
+		-
+			message: '#^Class Utopia\\NATS\\JetStream\\MessageBatch implements generic interface IteratorAggregate but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/JetStream/MessageBatch.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\MessageBatch\:\:getIterator\(\) return type with generic class ArrayIterator does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/JetStream/MessageBatch.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\Placement\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/Placement.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\Placement\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/Placement.php
+
+		-
+			message: '#^Parameter \$cluster of class Utopia\\NATS\\JetStream\\Placement constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Placement.php
+
+		-
+			message: '#^Parameter \$tags of class Utopia\\NATS\\JetStream\\Placement constructor expects list\<string\>\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Placement.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\PubAck\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/PubAck.php
+
+		-
+			message: '#^Parameter \$domain of class Utopia\\NATS\\JetStream\\PubAck constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/PubAck.php
+
+		-
+			message: '#^Parameter \$duplicate of class Utopia\\NATS\\JetStream\\PubAck constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/PubAck.php
+
+		-
+			message: '#^Parameter \$sequence of class Utopia\\NATS\\JetStream\\PubAck constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/PubAck.php
+
+		-
+			message: '#^Parameter \$stream of class Utopia\\NATS\\JetStream\\PubAck constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/PubAck.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\Republish\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/Republish.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\Republish\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/Republish.php
+
+		-
+			message: '#^Parameter \$destination of class Utopia\\NATS\\JetStream\\Republish constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Republish.php
+
+		-
+			message: '#^Parameter \$headersOnly of class Utopia\\NATS\\JetStream\\Republish constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Republish.php
+
+		-
+			message: '#^Parameter \$source of class Utopia\\NATS\\JetStream\\Republish constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/Republish.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\SequenceInfo\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/SequenceInfo.php
+
+		-
+			message: '#^Parameter \$consumerSeq of class Utopia\\NATS\\JetStream\\SequenceInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/SequenceInfo.php
+
+		-
+			message: '#^Parameter \$lastActive of class Utopia\\NATS\\JetStream\\SequenceInfo constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/SequenceInfo.php
+
+		-
+			message: '#^Parameter \$streamSeq of class Utopia\\NATS\\JetStream\\SequenceInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/SequenceInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamConfig\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamConfig\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: Utopia\\NATS\\JetStream\\StreamSource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ConsumerLimits\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\Placement\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\Republish\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\StreamSource\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\SubjectTransform\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$nanos of static method Utopia\\NATS\\JetStream\\StreamConfig\:\:nanosToSeconds\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\DiscardPolicy\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\RetentionPolicy\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Utopia\\NATS\\JetStream\\StorageType\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$allowDirect of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$allowMsgTtl of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$allowRollup of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$compression of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$denyDelete of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$denyPurge of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$description of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$firstSeq of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$maxBytes of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$maxConsumers of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$maxMsgSize of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$maxMsgs of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$maxMsgsPerSubject of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$metadata of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects array\<string, string\>\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$mirrorDirect of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$name of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$noAck of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$replicas of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$sealed of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$sources of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects list\<Utopia\\NATS\\JetStream\\StreamSource\>\|null, array\<Utopia\\NATS\\JetStream\\StreamSource\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Parameter \$subjects of class Utopia\\NATS\\JetStream\\StreamConfig constructor expects list\<string\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamConfig.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamInfo\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamInfo.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\StreamConfig\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamInfo.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\StreamState\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamInfo.php
+
+		-
+			message: '#^Parameter \$created of class Utopia\\NATS\\JetStream\\StreamInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamMessage\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamMessage.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/JetStream/StreamMessage.php
+
+		-
+			message: '#^Parameter \$sequence of class Utopia\\NATS\\JetStream\\StreamMessage constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamMessage.php
+
+		-
+			message: '#^Parameter \$subject of class Utopia\\NATS\\JetStream\\StreamMessage constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamMessage.php
+
+		-
+			message: '#^Parameter \$time of class Utopia\\NATS\\JetStream\\StreamMessage constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamMessage.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamSource\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamSource\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: Utopia\\NATS\\JetStream\\SubjectTransform given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\ExternalStream\:\:fromArray\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \$filterSubject of class Utopia\\NATS\\JetStream\\StreamSource constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \$name of class Utopia\\NATS\\JetStream\\StreamSource constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \$optStartSeq of class Utopia\\NATS\\JetStream\\StreamSource constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \$optStartTime of class Utopia\\NATS\\JetStream\\StreamSource constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Parameter \$subjectTransforms of class Utopia\\NATS\\JetStream\\StreamSource constructor expects list\<Utopia\\NATS\\JetStream\\SubjectTransform\>\|null, array\<Utopia\\NATS\\JetStream\\SubjectTransform\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamSource.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\StreamState\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$bytes of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$consumerCount of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$firstSeq of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$firstTs of class Utopia\\NATS\\JetStream\\StreamState constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$lastSeq of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$lastTs of class Utopia\\NATS\\JetStream\\StreamState constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$messages of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$numDeleted of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Parameter \$numSubjects of class Utopia\\NATS\\JetStream\\StreamState constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/StreamState.php
+
+		-
+			message: '#^Method Utopia\\NATS\\JetStream\\SubjectTransform\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/JetStream/SubjectTransform.php
+
+		-
+			message: '#^Parameter \$destination of class Utopia\\NATS\\JetStream\\SubjectTransform constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/SubjectTransform.php
+
+		-
+			message: '#^Parameter \$source of class Utopia\\NATS\\JetStream\\SubjectTransform constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/JetStream/SubjectTransform.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot access offset ''num_pending'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot access offset ''state'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot access offset ''subjects'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot call method ack\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\JetStream\:\:checkError\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Parameter \#2 \$msg of method Utopia\\NATS\\KeyValue\\KeyValue\:\:entryFromDelivered\(\) expects Utopia\\NATS\\JetStream\\JetStreamMessage, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Parameter \$created of class Utopia\\NATS\\KeyValue\\KeyValueEntry constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/KeyValue/KeyValue.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/ObjectStore/ObjectLink.php
+
+		-
+			message: '#^Cannot access offset ''link'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectMeta.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: src/ObjectStore/ObjectMeta.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 7
+			path: src/ObjectStore/ObjectMeta.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\ObjectStore\\ObjectLink\:\:fromArray\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ObjectStore/ObjectMeta.php
+
+		-
+			message: '#^Parameter \$metadata of class Utopia\\NATS\\ObjectStore\\ObjectMeta constructor expects array\<string, string\>\|null, array\<string\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ObjectStore/ObjectMeta.php
+
+		-
+			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot access offset ''config'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot access offset ''data'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot access offset ''error'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot access offset ''message'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot access offset ''seq'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot call method ack\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\JetStream\\JetStream\:\:checkError\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\NATS\\ObjectStore\\ObjectMeta\:\:fromArray\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/ObjectStore/ObjectStore.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Protocol\\Writer\:\:connect\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Protocol/Writer.php
+
+		-
+			message: '#^Method Utopia\\NATS\\ServerInfo\:\:__construct\(\) has parameter \$connectUrls with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Method Utopia\\NATS\\ServerInfo\:\:fromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$authRequired of class Utopia\\NATS\\ServerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$clientId of class Utopia\\NATS\\ServerInfo constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$clientIp of class Utopia\\NATS\\ServerInfo constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$connectUrls of class Utopia\\NATS\\ServerInfo constructor expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$headersSupported of class Utopia\\NATS\\ServerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$host of class Utopia\\NATS\\ServerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$jetstream of class Utopia\\NATS\\ServerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$maxPayload of class Utopia\\NATS\\ServerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$nonce of class Utopia\\NATS\\ServerInfo constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$port of class Utopia\\NATS\\ServerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$proto of class Utopia\\NATS\\ServerInfo constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$serverId of class Utopia\\NATS\\ServerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$serverName of class Utopia\\NATS\\ServerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$tlsAvailable of class Utopia\\NATS\\ServerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$tlsRequired of class Utopia\\NATS\\ServerInfo constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Parameter \$version of class Utopia\\NATS\\ServerInfo constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerInfo.php
+
+		-
+			message: '#^Cannot access property \$data on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Subscription.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Subscription.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Subscription\:\:nextMessage\(\) should return Utopia\\NATS\\Message\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Subscription.php
+
+		-
+			message: '#^Property Utopia\\NATS\\Subscription\:\:\$pendingMessages with generic class SplQueue does not specify its types\: TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Subscription.php
+
+		-
+			message: '#^Binary operation "\+\=" between float\|int and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\SwooleTransport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Parameter \#1 \$options of method Utopia\\NATS\\Transport\\SwooleTransport\:\:buildTlsSettings\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Part \$client\-\>errCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Part \$client\-\>errMsg \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: src/Transport/SwooleTransport.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Transport/TcpTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\TcpTransport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/TcpTransport.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/TcpTransport.php
+
+		-
+			message: '#^Parameter \#3 \$optionname of function stream_context_set_option expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/TcpTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\TlsTransport\:\:__construct\(\) has parameter \$tlsOptions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/TlsTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\TlsTransport\:\:buildSslOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/TlsTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\TlsTransport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/TlsTransport.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/TlsTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\Transport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/Transport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\WebSocketTransport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Transport/WebSocketTransport.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/WebSocketTransport.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Transport/WebSocketTransport.php
+
+		-
+			message: '#^Parameter \#1 \$input of method Utopia\\NATS\\Tests\\Auth\\NKeyAuthTest\:\:base32Decode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Auth/NKeyAuthTest.php
+
+		-
+			message: '#^Parameter \#1 \$signature of function sodium_crypto_sign_verify_detached expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Auth/NKeyAuthTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:isConnected\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:read\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:write\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Generator expects key type int\<0, max\>, int given\.$#'
+			identifier: generator.keyType
+			count: 26
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Parameter \#1 \$servers of class Utopia\\NATS\\ConnectionOptions constructor expects list\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConnectionDeathDetectionTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\ConnectionProtocolTest\:\:connect\(\) has parameter \$extra with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ConnectionProtocolTest.php
+
+		-
+			message: '#^Parameter \#1 \$servers of class Utopia\\NATS\\ConnectionOptions constructor expects list\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConnectionProtocolTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\ConnectionTlsAndAuthTest\:\:connect\(\) has parameter \$extra with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ConnectionTlsAndAuthTest.php
+
+		-
+			message: '#^Parameter \#1 \$servers of class Utopia\\NATS\\ConnectionOptions constructor expects list\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConnectionTlsAndAuthTest.php
+
+		-
+			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, numeric\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/ConsumerFetchLifecycleTest.php
+
+		-
+			message: '#^Parameter \#1 \$servers of class Utopia\\NATS\\ConnectionOptions constructor expects list\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ConsumerFetchLifecycleTest.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/ConsumerPullRequestTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/ConsumerPullRequestTest.php
+
+		-
+			message: '#^Cannot call method ack\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/ConsumerNoWaitTest.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/ConsumerNoWaitTest.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: tests/E2E/ObjectStoreExtraTest.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: tests/E2E/ObjectStoreTest.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: tests/E2E/OrderedConsumerTest.php
+
+		-
+			message: '#^Cannot access property \$data on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/PubSubTest.php
+
+		-
+			message: '#^Cannot access property \$headers on mixed\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/E2E/PubSubTest.php
+
+		-
+			message: '#^Cannot access property \$subject on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/PubSubTest.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/E2E/PubSubTest.php
+
+		-
+			message: '#^Cannot access property \$replyTo on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/RequestManyTest.php
+
+		-
+			message: '#^Parameter \#1 \$subject of method Utopia\\NATS\\Connection\:\:publish\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RequestManyTest.php
+
+		-
+			message: '#^Binary operation "\." between ''echo\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/RequestReplyTest.php
+
+		-
+			message: '#^Cannot access property \$data on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/RequestReplyTest.php
+
+		-
+			message: '#^Cannot access property \$replyTo on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/E2E/RequestReplyTest.php
+
+		-
+			message: '#^Parameter \#1 \$subject of method Utopia\\NATS\\Connection\:\:publish\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RequestReplyTest.php
+
+		-
+			message: '#^Access to an undefined property Throwable\|Utopia\\NATS\\Message\:\:\$data\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/E2E/RequestsTest.php
+
+		-
+			message: '#^Cannot call method get\(\) on Utopia\\NATS\\Headers\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/E2E/RequestsTest.php
+
+		-
+			message: '#^Parameter \#1 \$subject of method Utopia\\NATS\\Connection\:\:publish\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RequestsTest.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 3
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''endpoints'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''env'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''metadata'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''num_errors'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''num_requests'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''owner'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''queue_group'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''subject'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Cannot access offset ''visibility'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: tests/E2E/ServiceExtrasTest.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''endpoints'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''num_errors'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''num_requests'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''processing_time'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Cannot access offset ''version'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: tests/E2E/ServiceTest.php
+
+		-
+			message: '#^Binary operation "\." between ''pong\:'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/E2E/WebSocketTest.php
+
+		-
+			message: '#^Cannot access property \$data on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/WebSocketTest.php
+
+		-
+			message: '#^Cannot access property \$replyTo on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/E2E/WebSocketTest.php
+
+		-
+			message: '#^Parameter \#1 \$subject of method Utopia\\NATS\\Connection\:\:publish\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/WebSocketTest.php
+
+		-
+			message: '#^Cannot access offset ''payload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/ParserFrameIntegrityTest.php
+
+		-
+			message: '#^Cannot access offset ''subject'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/ParserFrameIntegrityTest.php
+
+		-
+			message: '#^Cannot access offset ''headers'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''payload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''replyTo'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''server_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''sid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''subject'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Cannot access offset ''version'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/Protocol/ParserTest\.php\:17\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Protocol/ParserTest.php
+
+		-
+			message: '#^Access to an undefined property Throwable\|Utopia\\NATS\\Message\:\:\$data\.$#'
+			identifier: property.notFound
+			count: 4
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Cannot call method isConnected\(\) on Utopia\\NATS\\Connection\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\RequestsTest\:\:bufferedReplies\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\RequestsTest\:\:invalid\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\RequestsTest\:\:keepalive\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\RequestsTest\:\:reconnect\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\RequestsTest\:\:testInvalidInputDoesNotWriteOrInvokeCallbacks\(\) has parameter \$requests with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Offset int\<0, max\>\|null might not exist on list\<Throwable\|Utopia\\NATS\\Message\>\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Parameter \#1 \$requests of method Utopia\\NATS\\Connection\:\:requestBatch\(\) expects list\<Utopia\\NATS\\Request\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Possibly invalid array key type int\<0, max\>\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Trying to invoke Closure\|null but it might not be a callable\.$#'
+			identifier: callable.nonCallable
+			count: 1
+			path: tests/RequestsTest.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\Support\\FakeTransport\:\:connectPayload\(\) should return array\<string, mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Support/FakeTransport.php
+
+		-
+			message: '#^Method Utopia\\NATS\\Tests\\Support\\FakeTransport\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Support/FakeTransport.php
+
+		-
+			message: '#^Property Utopia\\NATS\\Tests\\Support\\FakeTransport\:\:\$tlsUpgrades \(list\<array\<string, mixed\>\>\) does not accept non\-empty\-list\<array\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/Support/FakeTransport.php
