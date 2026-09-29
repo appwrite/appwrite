@@ -6,6 +6,9 @@ namespace Utopia\Abuse\Tests\E2E\Appwrite;
 
 use Appwrite\AppwriteException;
 use Override;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Throwable;
@@ -13,11 +16,10 @@ use Throwable;
 /**
  * The owned HTTP endpoint exercises the real SDK and fixture lifecycle, not the Appwrite backend.
  *
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
- *
  * @phpstan-type State array{databases: array<string, array<string, bool>>, deletes: list<string>, createFailure: int, setupFailure: int, cleanupFailure: int}
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 final class TablesDBFixtureTest extends TestCase
 {
     private string $state = '';
@@ -134,7 +136,7 @@ final class TablesDBFixtureTest extends TestCase
         $this->assertCount(1, $this->read()['deletes']);
     }
 
-    /** @dataProvider createFailures */
+    #[DataProvider('createFailures')]
     public function testFailedCreateDoesNotClaimOwnership(int $status): void
     {
         $state = $this->read();

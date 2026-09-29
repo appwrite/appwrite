@@ -35,9 +35,9 @@ final class DiscoveryTest extends TestCase
             $document = new DOMDocument();
             $this->assertTrue($document->load($listing));
             $cases = [];
-            foreach ($document->getElementsByTagName('testCaseClass') as $class) {
+            foreach ($document->getElementsByTagName('testClass') as $class) {
                 $methods = [];
-                foreach ($class->getElementsByTagName('testCaseMethod') as $method) {
+                foreach ($class->getElementsByTagName('testMethod') as $method) {
                     $methods[] = $method->getAttribute('name');
                 }
                 sort($methods);
