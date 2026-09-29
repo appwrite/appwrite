@@ -670,7 +670,9 @@ class ClickHouse extends SQL
     }
 
     /**
-     * Format a parameter value for safe transmission to ClickHouse.
+     * Encode a parameter value the way ClickHouse parses `param_*` values:
+     * scalars in the TabSeparated escaped format, arrays as literals whose
+     * string elements are quoted and escaped.
      *
      * @param mixed $value
      * @return string
@@ -690,19 +692,39 @@ class ClickHouse extends SQL
         }
 
         if (is_array($value)) {
-            $encoded = json_encode($value);
-            return is_string($encoded) ? $encoded : '';
+            $elements = array_map(
+                fn (mixed $element): string => is_string($element)
+                    ? "'" . $this->escapeParamValue($element) . "'"
+                    : $this->formatParamValue($element),
+                $value,
+            );
+
+            return '[' . implode(',', $elements) . ']';
         }
 
         if (is_string($value)) {
-            return $value;
+            return $this->escapeParamValue($value);
         }
 
         if (is_object($value) && method_exists($value, '__toString')) {
-            return (string) $value;
+            return $this->escapeParamValue((string) $value);
         }
 
         return '';
+    }
+
+    private function escapeParamValue(string $value): string
+    {
+        return strtr($value, [
+            '\\' => '\\\\',
+            "'" => "\\'",
+            "\x08" => '\b',
+            "\f" => '\f',
+            "\r" => '\r',
+            "\n" => '\n',
+            "\t" => '\t',
+            "\0" => '\0',
+        ]);
     }
 
     /**
@@ -2368,9 +2390,7 @@ class ClickHouse extends SQL
             'metric' => $range->metric,
             'firstSequence' => $range->firstSequence,
             'lastSequence' => $range->lastSequence,
-            'entries' => $watermark->getEntries() === []
-                ? '[]'
-                : "['" . implode("','", $watermark->getEntries()) . "']",
+            'entries' => $watermark->getEntries(),
             'queryLimit' => $limit + 1,
         ]));
 
@@ -4854,16 +4874,16 @@ class ClickHouse extends SQL
     /**
      * Format a value for the given ClickHouse parameter type.
      *
-     * Routes DateTime-typed columns through formatDateTime() and everything
-     * else through formatParamValue(). Centralising this dispatch keeps
-     * parseQueries and buildCursorWhere consistent across libraries.
+     * Routes DateTime-typed columns through formatDateTime() and returns
+     * everything else unchanged: query() encodes every parameter, so encoding
+     * here as well would escape the value twice.
      *
      * @param string $chType ClickHouse parameter type as returned by getParamType()
      * @param mixed $value
-     * @return string
+     * @return mixed
      * @throws Exception
      */
-    private function formatTypedValue(string $chType, mixed $value): string
+    private function formatTypedValue(string $chType, mixed $value): mixed
     {
         if ($chType === "DateTime64(3, 'UTC')") {
             if ($value === null) {
@@ -4873,7 +4893,7 @@ class ClickHouse extends SQL
             return $this->formatDateTime($value);
         }
 
-        return $this->formatParamValue($value);
+        return $value;
     }
 
     /**
