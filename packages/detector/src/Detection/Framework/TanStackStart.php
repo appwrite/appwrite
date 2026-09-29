@@ -73,7 +73,21 @@ class TanStackStart extends React
             return 'ssr';
         }
 
-        $prerender = (string) \strstr((string) \strstr($compact, 'prerender:{'), '}', true);
+        // Cut at the brace that closes the block, so a `({ path }) =>` filter does not end it early.
+        $prerender = (string) \strstr($compact, 'prerender:{');
+        for ($i = 10, $depth = 0; $i < \strlen($prerender); $i++) {
+            $depth += match ($prerender[$i]) {
+                '{' => 1,
+                '}' => -1,
+                default => 0,
+            };
+
+            if ($depth === 0) {
+                $prerender = \substr($prerender, 0, $i);
+                break;
+            }
+        }
+
         if (\str_contains($prerender, 'enabled:false')) {
             return 'ssr';
         }
