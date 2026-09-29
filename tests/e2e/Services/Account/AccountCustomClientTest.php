@@ -5543,6 +5543,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $authenticator['headers']['status-code']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
             'otp' => $totp->now(),
         ]);
@@ -5657,6 +5660,13 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $second['headers']['status-code']);
         $this->assertEquals($first['body']['$id'], $second['body']['$id']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        $identifiers = \array_column($account['body']['targets'], 'identifier');
+        $this->assertContains('jwt-identifier-after-rotation-' . $data['id'], $identifiers);
+        $this->assertNotContains('jwt-identifier-before-rotation-' . $data['id'], $identifiers);
     }
 
     public function testRefreshEmailPasswordSession(): void
