@@ -2,6 +2,7 @@
 
 namespace Appwrite\Auth\Passkey\Validator;
 
+use Utopia\Auth\Passkeys\Origin;
 use Utopia\Domains\Domain;
 use Utopia\Validator;
 
@@ -10,8 +11,6 @@ use Utopia\Validator;
  */
 class Host extends Validator
 {
-    public const string LOCALHOST = 'localhost';
-
     public function getDescription(): string
     {
         return 'Value must be a lowercase domain name such as "example.com" or "localhost". IP addresses and public suffixes are not allowed.';
@@ -33,7 +32,7 @@ class Host extends Validator
             return false;
         }
 
-        if ($value === self::LOCALHOST) {
+        if ($value === Origin::LOCALHOST) {
             return true;
         }
 

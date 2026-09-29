@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey;
 
 use Appwrite\Auth\Passkey\Ceremony;
-use Appwrite\Auth\Passkey\RelyingParty;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -100,8 +99,8 @@ class Update extends Action
         }
 
         // Configuration changes invalidate outstanding challenges
-        $relyingParty = RelyingParty::fromProject($project);
-        if ($relyingParty === null || $relyingParty->getFingerprint() !== ($data['relyingParty'] ?? '')) {
+        $ceremony = Ceremony::fromProject($project);
+        if ($ceremony === null || $ceremony->relyingParty->getFingerprint() !== ($data['relyingParty'] ?? '')) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -110,7 +109,6 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $ceremony = new Ceremony($relyingParty);
 
         try {
             $publicKeyCredential = $ceremony->decodeCredential($credential);

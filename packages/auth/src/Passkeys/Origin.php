@@ -1,42 +1,27 @@
 <?php
 
-namespace Appwrite\Auth\Passkey\Validator;
-
-use Utopia\Validator;
+namespace Utopia\Auth\Passkeys;
 
 /**
  * Web origin allowed to run ceremonies for a relying party: HTTPS on the RP ID or one of its subdomains,
  * with no path, query, fragment or credentials. HTTP is only allowed for `localhost`.
  */
-class Origin extends Validator
+class Origin
 {
+    public const string LOCALHOST = 'localhost';
+
     private const array DEFAULT_PORTS = [
         'https' => 443,
         'http' => 80,
     ];
 
-    public function __construct(private string $rpId)
+    public function __construct(private readonly string $rpId)
     {
     }
 
     public function getDescription(): string
     {
         return 'Origin must be an HTTPS URL without a path, such as "https://' . $this->rpId . '", on "' . $this->rpId . '" or one of its subdomains. HTTP is only allowed when the relying party ID is "localhost".';
-    }
-
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
-    }
-
-    public function isValid($value): bool
-    {
-        return \is_string($value) && $this->normalize($value) !== null;
     }
 
     /**
@@ -64,7 +49,7 @@ class Origin extends Validator
         }
 
         $secure = $scheme === 'https';
-        $local = $scheme === 'http' && $host === Host::LOCALHOST && $this->rpId === Host::LOCALHOST;
+        $local = $scheme === 'http' && $host === self::LOCALHOST && $this->rpId === self::LOCALHOST;
         if (!$secure && !$local) {
             return null;
         }

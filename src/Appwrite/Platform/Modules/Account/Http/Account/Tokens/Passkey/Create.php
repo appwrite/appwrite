@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey;
 
 use Appwrite\Auth\Passkey\Ceremony;
-use Appwrite\Auth\Passkey\RelyingParty;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -67,12 +66,11 @@ class Create extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $relyingParty = RelyingParty::fromProject($project);
-        if ($relyingParty === null) {
+        $ceremony = Ceremony::fromProject($project);
+        if ($ceremony === null) {
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
         }
 
-        $ceremony = new Ceremony($relyingParty);
         $encoded = $ceremony->encode($ceremony->createAuthentication());
 
         // Sign-in challenges belong to no user until the assertion names one
@@ -82,7 +80,7 @@ class Create extends Action
             'expire' => DateTime::addSeconds(new \DateTime(), Ceremony::TIMEOUT),
             'data' => [
                 'version' => 1,
-                'relyingParty' => $relyingParty->getFingerprint(),
+                'relyingParty' => $ceremony->relyingParty->getFingerprint(),
                 'options' => $encoded,
             ],
         ])));

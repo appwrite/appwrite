@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\Passkey;
 
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Validator\Host;
-use Appwrite\Auth\Passkey\Validator\Origin;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -12,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Passkeys\Origin;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;

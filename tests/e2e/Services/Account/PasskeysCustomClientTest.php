@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Auth\Tests\Passkeys\Authenticator;
 use Utopia\Database\Helpers\ID;
 
 final class PasskeysCustomClientTest extends Scope

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys;
 
 use Appwrite\Auth\Passkey\Ceremony;
-use Appwrite\Auth\Passkey\RelyingParty;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -78,8 +77,8 @@ class Create extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $relyingParty = RelyingParty::fromProject($project);
-        if ($relyingParty === null) {
+        $ceremony = Ceremony::fromProject($project);
+        if ($ceremony === null) {
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
         }
 
@@ -96,7 +95,6 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSKEY_LIMIT_EXCEEDED);
         }
 
-        $ceremony = new Ceremony($relyingParty);
 
         $userHandle = null;
         $exclude = [];
@@ -152,7 +150,7 @@ class Create extends Action
                 'version' => 1,
                 'passkeyId' => $passkey->getId(),
                 'sessionId' => $session->getId(),
-                'relyingParty' => $relyingParty->getFingerprint(),
+                'relyingParty' => $ceremony->relyingParty->getFingerprint(),
                 'options' => $encoded,
             ],
         ])));

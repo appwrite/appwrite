@@ -1,6 +1,8 @@
 <?php
 
-namespace Appwrite\Auth\Passkey;
+declare(strict_types=1);
+
+namespace Utopia\Auth\Passkeys;
 
 use Webauthn\Counter\CounterChecker;
 use Webauthn\CredentialRecord;
