@@ -691,6 +691,17 @@ return [
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
             ],
+            [
+                '$id' => ID::custom('identifier'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -699,7 +710,14 @@ return [
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_identifier'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['identifier'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
@@ -771,6 +789,16 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
+            ], [
+                '$id' => ID::custom('data'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
             ]
         ],
         'indexes' => [

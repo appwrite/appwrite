@@ -317,6 +317,31 @@ return [
         'description' => 'Authenticator could not be found on the current user.',
         'code' => 404,
     ],
+    Exception::USER_PASSKEY_NOT_FOUND => [
+        'name' => Exception::USER_PASSKEY_NOT_FOUND,
+        'description' => 'Passkey with the requested ID could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_PASSKEY_ALREADY_EXISTS => [
+        'name' => Exception::USER_PASSKEY_ALREADY_EXISTS,
+        'description' => 'This passkey is already registered in the project.',
+        'code' => 409,
+    ],
+    Exception::USER_PASSKEY_LIMIT_EXCEEDED => [
+        'name' => Exception::USER_PASSKEY_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of passkeys for this user has been reached. Delete an existing passkey to add a new one.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSKEY_INVALID => [
+        'name' => Exception::USER_PASSKEY_INVALID,
+        'description' => 'The passkey credential could not be verified. Please restart the ceremony and try again.',
+        'code' => 401,
+    ],
+    Exception::USER_PASSKEY_UNAVAILABLE => [
+        'name' => Exception::USER_PASSKEY_UNAVAILABLE,
+        'description' => 'Passkeys require an account with an email address or phone number to fall back on.',
+        'code' => 400,
+    ],
     Exception::USER_RECOVERY_CODES_NOT_FOUND => [
         'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
         'description' => 'Recovery codes could not be found on the current user.',

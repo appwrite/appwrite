@@ -131,6 +131,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_EMAIL => Type::EMAIL,
         TOKEN_TYPE_PHONE => Type::PHONE,
         TOKEN_TYPE_GENERIC => 'token',
+        TOKEN_TYPE_PASSKEY => Type::PASSKEY,
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
@@ -138,6 +139,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
+        TOKEN_TYPE_PASSKEY => SESSION_PROVIDER_PASSKEY,
         default => SESSION_PROVIDER_TOKEN,
     };
 
