@@ -1104,14 +1104,8 @@ class Deletes extends Action
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
-        $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-
-        $this->deleteByGroup('photos', [
-            Query::equal('userInternalId', [$userInternalId]),
-            Query::orderAsc()
-        ], $dbForProject, function (Document $photo) use ($deviceForFiles) {
-            (new Custom($deviceForFiles))->delete($photo);
-        });
+        // Delete photos
+        (new Custom(getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())))->deleteAll($userId);
     }
 
     /**

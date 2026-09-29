@@ -351,21 +351,6 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryPhoto',
-    function (mixed $value) {
-        return;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        // An upload briefly leaves an older photo behind; the newest one is live
-        return $database->getAuthorization()->skip(fn () => $database
-            ->findOne('photos', [
-                Query::equal('userInternalId', [$document->getSequence()]),
-                Query::orderDesc('$createdAt'),
-            ]));
-    }
-);
-
-Database::addFilter(
     'subQueryTopicTargets',
     function (mixed $value) {
         return;

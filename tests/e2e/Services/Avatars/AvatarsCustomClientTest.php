@@ -406,8 +406,7 @@ final class AvatarsCustomClientTest extends Scope
         $response = $this->uploadPhoto($headers, $red, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['body']['mimeType']);
-        $this->assertEquals(\strlen($red), $response['body']['size']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertSamePhoto($red, $this->getPhoto($headers));
 
         /**
@@ -416,17 +415,24 @@ final class AvatarsCustomClientTest extends Scope
         $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
 
         $this->assertEquals(200, $account['headers']['status-code']);
-        $this->assertArrayNotHasKey('photo', $account['body']);
+        $this->assertArrayNotHasKey('photoId', $account['body']);
+        $this->assertArrayNotHasKey('photoSize', $account['body']);
 
         /**
          * Test for SUCCESS — a replacement is served right away
          */
-        $blue = $this->createImage('#0000FF', 'webp');
-        $response = $this->uploadPhoto($headers, $blue, 'photo.webp');
+        $blue = $this->createImage('#0000FF', 'png');
+        $response = $this->uploadPhoto($headers, $blue, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/webp', $response['body']['mimeType']);
         $this->assertSamePhoto($blue, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — JPEG is accepted
+         */
+        $response = $this->uploadPhoto($headers, $this->createImage('#00FF00', 'jpeg'), 'photo.jpg');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testUpdatePhotoInvalid(): void
@@ -448,6 +454,20 @@ final class AvatarsCustomClientTest extends Scope
          * Test for FAILURE — unsupported extension
          */
         $response = $this->uploadPhoto($headers, 'not an image', 'notes.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — WebP isn't supported, by extension or by content
+         */
+        $webp = $this->createImage('#FF0000', 'webp');
+        $response = $this->uploadPhoto($headers, $webp, 'photo.webp');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        $response = $this->uploadPhoto($headers, $webp, 'photo.png');
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
@@ -598,10 +618,6 @@ final class AvatarsCustomClientTest extends Scope
         $image->newImage(64, 64, $color);
         $image->setImageFormat($format);
         $image->setImageCompressionQuality(100);
-
-        if ($format === 'webp') {
-            $image->setOption('webp:lossless', 'true');
-        }
 
         return $image->getImageBlob();
     }

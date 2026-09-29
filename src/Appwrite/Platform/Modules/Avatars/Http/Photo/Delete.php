@@ -13,7 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
+use Utopia\Database\Document;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -78,31 +78,26 @@ class Delete extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $photos = $dbForProject->find('photos', [
-            Query::equal('userInternalId', [(string) $user->getSequence()]),
-            Query::limit(APP_LIMIT_COUNT),
-        ]);
+        $photoId = $user->getAttribute('photoId', '');
 
-        $custom = new Custom($deviceForFiles);
-
-        // Each file goes before its record, so a failure is retried by calling again
-        try {
-            foreach ($photos as $photo) {
-                if (!$custom->delete($photo)) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
-                }
-
-                $dbForProject->deleteDocument('photos', $photo->getId());
-            }
-        } finally {
-            $dbForProject->purgeCachedDocument('users', $user->getId());
-        }
-
-        if (empty($photos)) {
+        if ($photoId === '') {
             $queueForEvents->reset();
-        } else {
-            $queueForEvents->setParam('userId', $user->getId());
+            $response->noContent();
+
+            return;
         }
+
+        // The file goes before the attributes, so a failure at either step is retried by calling again
+        if (!(new Custom($deviceForFiles))->delete($user->getId(), $photoId)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+        }
+
+        $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'photoId' => '',
+            'photoSize' => 0,
+        ]));
+
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->noContent();
     }

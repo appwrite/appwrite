@@ -18,9 +18,6 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -37,15 +34,11 @@ class Update extends Action
         FileExt::TYPE_PNG,
         FileExt::TYPE_JPG,
         FileExt::TYPE_JPEG,
-        FileExt::TYPE_GIF,
-        'webp',
     ];
 
     private const ALLOWED_MIME_TYPES = [
         'image/png',
         'image/jpeg',
-        'image/gif',
-        'image/webp',
     ];
 
     public static function getName(): string
@@ -80,13 +73,13 @@ class Update extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PHOTO,
+                        model: Response::MODEL_USER,
                     ),
                 ],
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
             ))
-            ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, gif, and webp.', skipValidation: true)
+            ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, and jpeg.', skipValidation: true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -148,54 +141,34 @@ class Update extends Action
         $mimeType = $deviceForLocal->getFileMimeType($fileTmpName);
 
         if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, GIF, or WebP image');
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG or JPEG image');
         }
 
         $custom = new Custom($deviceForFiles);
+        $userId = $user->getId();
+        $previous = $user->getAttribute('photoId', '');
         $photoId = ID::unique();
-        $path = $custom->getPath($user->getId(), $photoId);
 
-        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
+        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $custom->getPath($userId, $photoId), $mimeType);
 
         try {
-            $photo = $dbForProject->createDocument('photos', new Document([
-                '$id' => $photoId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => (string) $user->getSequence(),
-                'size' => $size,
-                'mimeType' => $mimeType,
+            $user = $dbForProject->updateDocument('users', $userId, new Document([
+                'photoId' => $photoId,
+                'photoSize' => $size,
             ]));
         } catch (\Throwable $th) {
-            $deviceForFiles->delete($path);
+            $custom->delete($userId, $photoId);
 
             throw $th;
         }
 
-        // Only older photos go, so concurrent uploads settle on the newest without a lock.
-        // A file that fails to delete keeps its document, and the next upload retries it.
-        $older = $dbForProject->find('photos', [
-            Query::equal('userInternalId', [(string) $user->getSequence()]),
-            Query::lessThan('$createdAt', $photo->getCreatedAt()),
-            Query::limit(APP_LIMIT_COUNT),
-        ]);
-
-        foreach ($older as $old) {
-            if ($custom->delete($old)) {
-                $dbForProject->deleteDocument('photos', $old->getId());
-            } else {
-                Console::warning('Failed to remove previous photo ' . $old->getId());
-            }
+        // A file left behind here, or by a racing request, is removed with the user's photo folder
+        if ($previous !== '' && !$custom->delete($userId, $previous)) {
+            Console::warning('Failed to remove previous photo ' . $previous);
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $queueForEvents->setParam('userId', $userId);
 
-        $queueForEvents->setParam('userId', $user->getId());
-
-        $response->dynamic($photo, Response::MODEL_PHOTO);
+        $response->dynamic($user, Response::MODEL_USER);
     }
 }

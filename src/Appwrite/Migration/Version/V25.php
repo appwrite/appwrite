@@ -281,6 +281,15 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
+                    // Added in 2.3.0 for custom user photos
+                    foreach (['photoId', 'photoSize'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
@@ -300,22 +309,6 @@ class V25 extends Migration
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
                     $this->createCollection($id);
-                    break;
-
-                case 'photos':
-                    // Added in 2.3.0; create the collection so forEachDocument never
-                    // hits a missing-collection error on projects that pre-date this release.
-                    $this->createCollection($id);
-
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, 'users', 'photo');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"photo\" in collection users: {$th->getMessage()}");
-                    }
-
-                    $this->dbForProject->purgeCachedCollection('photos');
-                    $this->dbForProject->purgeCachedDocument(Database::METADATA, 'photos');
-                    $this->dbForProject->purgeCachedCollection('users');
                     break;
 
                 case 'topics':

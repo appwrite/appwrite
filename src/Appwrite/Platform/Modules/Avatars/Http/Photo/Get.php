@@ -127,7 +127,7 @@ class Get extends Action
         if (!$photoUser->isEmpty()) {
             $userEmail = $photoUser->getAttribute('email', '');
             $userName = $photoUser->getAttribute('name', '');
-            $userPhoto = $photoUser->getAttribute('photo');
+            $userPhotoId = $photoUser->getAttribute('photoId', '');
 
             $profile = $profile->setAttribute('$id', $photoUser->getId());
 
@@ -139,8 +139,8 @@ class Get extends Action
                 $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
             }
 
-            if ($userPhoto instanceof Document && !$userPhoto->isEmpty()) {
-                $profile = $profile->setAttribute('photoId', $userPhoto->getId());
+            if ($userPhotoId !== '') {
+                $profile = $profile->setAttribute('photoId', $userPhotoId);
             }
         }
 
