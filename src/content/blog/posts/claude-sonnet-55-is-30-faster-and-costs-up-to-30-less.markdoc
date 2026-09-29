@@ -70,7 +70,7 @@ Claude Sonnet 5.5 improves on Sonnet 5 across every domain Anthropic reported, i
 | Computer use (OSWorld 2.1, partial)               | 80.1%                      | 57.0%    | 81.8%    | Not reported |
 | Visual chart recognition (Chartography, no tools) | 61.6%                      | 15.6%    | 64.4%    | 53.6%        |
 
-*Source: Anthropic's* [Claude Sonnet 5.5 announcement](https://www.anthropic.com/claude-sonnet-5-5)*. The full methodology is in the Sonnet 5.5 System Card. Sonnet 5.5 scores lower on FrontierCode at max effort than at xhigh because it more often ran Claude Code's code-review skill, which occasionally led to timeouts or out-of-scope edits that the benchmark penalizes.*
+*Source: Anthropic's [Claude Sonnet 5.5 announcement](https://www.anthropic.com/claude-sonnet-5-5). The full methodology is in the Sonnet 5.5 System Card. GPT-6 Sol results were not publicly reported for Terminal-Bench 4.0 or CursorBench 4.0. Sonnet 5.5 scores lower on FrontierCode at max effort than at xhigh because it more often ran Claude Code's code-review skill, which occasionally led to timeouts or out-of-scope edits that the benchmark penalizes.*
 
 Anthropic is clear that benchmark scores capture only one facet of a model. In its own testing and that of external testers, **Opus 5.5 remains clearly stronger at complex, open-ended work that requires sustained judgment.** Read the table as "Sonnet 5.5 closes most of the gap on scoped tasks," not "Sonnet 5.5 replaces Opus 5.5."
 
