@@ -3,6 +3,7 @@ set -euo pipefail
 
 headers=$(mktemp)
 body=$(mktemp)
+trap 'rm -f "$headers" "$body"' EXIT
 
 status=$(
   jq -n --arg email "$E2E_TEST_EMAIL" --arg password "$E2E_TEST_PASSWORD" \

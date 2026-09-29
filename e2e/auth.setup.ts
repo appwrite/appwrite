@@ -78,8 +78,9 @@ async function reuseSession(page: Page, fallbackCookies: string) {
 
   const accountPromise = page.waitForResponse(
     (response) =>
-      new URL(response.url()).pathname.endsWith('/account') &&
-      response.request().method() === 'GET',
+      response.request().resourceType() === 'fetch' &&
+      response.request().method() === 'GET' &&
+      new URL(response.url()).pathname.endsWith('/account'),
     { timeout: 30_000 },
   )
 

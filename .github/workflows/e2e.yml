@@ -28,6 +28,7 @@ jobs:
   e2e:
     name: ${{ matrix.project }}
     needs: session
+    if: ${{ !cancelled() }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
@@ -102,6 +103,7 @@ jobs:
         run: bunx playwright install chromium
 
       - name: Load console session
+        if: needs.session.outputs.session != ''
         env:
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           SESSION: ${{ needs.session.outputs.session }}
