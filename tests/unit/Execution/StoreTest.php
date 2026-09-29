@@ -127,6 +127,46 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
+        $this->assertStringNotContainsString('source.id IN (SELECT id', $find);
+    }
+
+    public function testCreatedAtWindowNarrowsAggregationToMatchingExecutions(): void
+    {
+        $client = new CapturingClient([
+            $this->jsonResponse([]),
+            $this->jsonResponse([['total' => 0]]),
+        ]);
+        $store = $this->store($client);
+        $queries = [
+            Query::equal('resourceInternalId', ['1608']),
+            Query::equal('resourceType', ['functions']),
+            Query::greaterThanEqual('$createdAt', '2026-09-28T21:00:00.000+00:00'),
+            Query::lessThan('$createdAt', '2026-09-28T22:00:00.000+00:00'),
+            Query::orderDesc('$createdAt'),
+        ];
+
+        $store->find('project', $queries);
+        $store->count('project', $queries, 5000);
+
+        foreach ($client->requests as $request) {
+            $body = (string) $request->getBody();
+            $this->assertMatchesRegularExpression(
+                '/WHERE source\.projectId = \{projectId:String\}'
+                . ' AND source\.resourceInternalId IN \(\{p\d+:String\}\)'
+                . ' AND source\.resourceType IN \(\{p\d+:String\}\)'
+                . ' AND source\.id IN \(SELECT id FROM `appwrite`\.`executions`'
+                . ' WHERE projectId = \{projectId:String\}'
+                . ' AND resourceInternalId IN \(\{p\d+:String\}\)'
+                . ' AND resourceType IN \(\{p\d+:String\}\)'
+                . ' AND createdAt >= \{p\d+:String\} AND createdAt < \{p\d+:String\}\)'
+                . ' GROUP BY source\.projectId, source\.id/',
+                $body,
+            );
+            // The window only picks candidate executions; versions are not
+            // filtered by it, and the latest snapshot is still checked.
+            $this->assertDoesNotMatchRegularExpression('/source\.createdAt [<>]/', $body);
+            $this->assertMatchesRegularExpression('/\) WHERE .*createdAt >= \{p\d+:String\}/', $body);
+        }
     }
 
     public function testBulkDeleteUsesLatestSnapshots(): void
