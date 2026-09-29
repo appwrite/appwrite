@@ -35,9 +35,10 @@ export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 
 /**
- * Set to `true` to ship the fullscreen Firewall promo (HLS in `public/videos/firewall-trailer/`).
- * Leave `false` in production until ready: the promo is lazy-loaded and video loads only
- * after the gate opens (see `FirewallPromoBannerGate` in PromoBanner.tsx).
+ * Set to `true` to ship the fullscreen Firewall promo to all signed-in cloud users
+ * (HLS in `public/videos/firewall-trailer/`). While `false`, console operators
+ * (`impersonator` or active impersonation session) still get early access; see
+ * `firewall-promo-eligibility.ts` and `FirewallPromoBannerGate` in PromoBanner.tsx.
  */
 export const FIREWALL_PROMO_BANNER_ENABLED = false
 
@@ -105,13 +106,13 @@ export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
 )
 
 /**
- * Firewall fullscreen takeover: two weeks from launch (inclusive, UTC).
+ * Firewall fullscreen takeover: seven days from launch (inclusive, UTC).
  */
-export const FIREWALL_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 28, 0, 0, 0, 0)
+export const FIREWALL_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 29, 0, 0, 0, 0)
 export const FIREWALL_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   9,
-  11,
+  5,
   23,
   59,
   59,
