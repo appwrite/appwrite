@@ -20,6 +20,8 @@ final class DatabaseSchemaTest extends TestCase
 {
     private const int SECONDS = 3600;
 
+    private const int WINDOW = 1_767_225_600;
+
     private Database $database;
 
     #[Override]
@@ -45,8 +47,7 @@ final class DatabaseSchemaTest extends TestCase
     public function testEarlierWindowDoesNotCountTowardsTheCurrentOne(): void
     {
         $this->assertFalse($this->check('login', 2));
-        $window = $this->window('login');
-        $this->store('login', $window - self::SECONDS, 2);
+        $this->store('login', self::WINDOW - self::SECONDS, 2);
 
         $this->assertFalse($this->check('login', 2), 'the exhausted earlier window is not counted');
         $this->assertTrue($this->check('login', 2), 'the current window reaches its own limit');
@@ -55,24 +56,23 @@ final class DatabaseSchemaTest extends TestCase
     public function testOneRowPerKeyAndWindow(): void
     {
         $this->assertFalse($this->check('login', 5));
-        $window = $this->window('login');
+        $this->assertSame([self::WINDOW], $this->windows('login'), 'the hit is stored in its window');
 
-        $this->store('login', $window - self::SECONDS, 1);
-        $this->store('signup', $window, 1);
+        $this->store('login', self::WINDOW - self::SECONDS, 1);
+        $this->store('signup', self::WINDOW, 1);
 
         $this->expectException(Duplicate::class);
-        $this->store('login', $window, 1);
+        $this->store('login', self::WINDOW, 1);
     }
 
     public function testCleanupRemovesOnlyEarlierWindows(): void
     {
         $this->assertFalse($this->check('login', 5));
-        $window = $this->window('login');
-        $this->store('login', $window - self::SECONDS, 3);
+        $this->store('login', self::WINDOW - self::SECONDS, 3);
 
-        new Abuse($this->adapter('login', 5))->cleanup($window);
+        new Abuse($this->adapter('login', 5))->cleanup(self::WINDOW);
 
-        $this->assertSame([$window], $this->windows('login'), 'only the current window is left');
+        $this->assertSame([self::WINDOW], $this->windows('login'), 'only the current window is left');
     }
 
     public function testSetupAgainKeepsExistingCounts(): void
@@ -86,20 +86,18 @@ final class DatabaseSchemaTest extends TestCase
 
     private function adapter(string $key, int $limit): TimeLimit\Database
     {
-        return new TimeLimit\Database($key, $limit, self::SECONDS, $this->database);
+        return new class ($key, $limit, self::SECONDS, $this->database, self::WINDOW) extends TimeLimit\Database {
+            public function __construct(string $key, int $limit, int $seconds, Database $db, int $window)
+            {
+                parent::__construct($key, $limit, $seconds, $db);
+                $this->timestamp = $window;
+            }
+        };
     }
 
     private function check(string $key, int $limit): bool
     {
         return new Abuse($this->adapter($key, $limit))->check();
-    }
-
-    private function window(string $key): int
-    {
-        $windows = $this->windows($key);
-        $this->assertCount(1, $windows, 'one row for the key in the current window');
-
-        return $windows[0];
     }
 
     /**
