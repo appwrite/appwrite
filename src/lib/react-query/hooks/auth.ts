@@ -46,6 +46,7 @@ import {
   isValidRelativeRedirect,
   resolvePostAuthRedirect,
 } from '@/lib/post-auth-navigation'
+import { PasskeyPolicyId, type PasskeyPolicy } from '@/lib/passkey-policy'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -604,18 +605,20 @@ export async function ensureConsoleAccountQueryData(
 // ============================================================================
 
 /**
- * Hook to update project users limit
- *
- * @param projectId - The project ID
+ * Returns a promise that settles once the refetches it triggered have landed, so a
+ * caller that awaits it stays pending until the cache reflects the write. Callers that
+ * ignore the return keep the previous fire-and-forget behaviour.
  */
 function invalidateProjectAuthQueries(
   queryClient: ReturnType<typeof useQueryClient>,
   projectId: string | null | undefined,
-) {
-  queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-  queryClient.invalidateQueries({
-    queryKey: ['project-auth-security', projectId],
-  })
+): Promise<void> {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
+    queryClient.invalidateQueries({
+      queryKey: ['project-auth-security', projectId],
+    }),
+  ]).then(() => undefined)
 }
 
 /**
@@ -894,6 +897,49 @@ export function useUpdateSessionAlerts(projectId: string | null | undefined) {
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
     },
+  })
+}
+
+/**
+ * Updates the passkey relying party policy. Send only the fields that changed.
+ *
+ * The pinned @appwrite.io/console build has no updatePasskeyPolicy, so this calls the
+ * endpoint through the generic client. Replace the body with the generated method once
+ * the SDK is regenerated.
+ *
+ * The 'content-type' header key must stay lowercase: the SDK switches on that exact key to
+ * decide to JSON-encode the body, and a capitalised key silently sends no body at all.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasskeyPolicy(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: Partial<PasskeyPolicy>) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      const projectSdk = sdk.forProject(projectId)
+      const url = new URL(
+        `${projectSdk.client.config.endpoint}/project/policies/${PasskeyPolicyId}`,
+      )
+
+      return (await projectSdk.client.call(
+        'patch',
+        url,
+        {
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        policy,
+      )) as Models.Project
+    },
+    // Awaited so the mutation stays pending until the refetch lands: the card keeps
+    // Update disabled across the whole write, not just the PATCH.
+    onSuccess: () =>
+      invalidateProjectAuthQueries(queryClient, projectId).catch(() => {}),
   })
 }
 

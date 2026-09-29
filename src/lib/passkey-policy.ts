@@ -1,0 +1,92 @@
+/** Auth method ID for passkeys (not yet on ProjectAuthMethodId in the pinned SDK build). */
+export const PasskeyAuthMethodId = 'passkey' as const
+
+/** Policy ID for the passkey relying party (not yet on ProjectPolicyId in the pinned SDK build). */
+export const PasskeyPolicyId = 'passkey' as const
+
+/** The server rejects more origins than this. */
+export const MAX_PASSKEY_ORIGINS = 10
+
+export type PasskeyPolicy = {
+  rpId: string
+  origins: string[]
+}
+
+export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
+  rpId: '',
+  origins: [],
+}
+
+/** Normalises the policy the API returns; the SDK's policy union has no passkey shape. */
+export function parsePasskeyPolicy(value: unknown): PasskeyPolicy {
+  if (!value || typeof value !== 'object') return DEFAULT_PASSKEY_POLICY
+  const { rpId, origins } = value as { rpId?: unknown; origins?: unknown }
+  return {
+    rpId: typeof rpId === 'string' ? rpId : '',
+    origins: Array.isArray(origins)
+      ? origins.filter((origin): origin is string => typeof origin === 'string')
+      : [],
+  }
+}
+
+/** Passkeys fail closed: sign-in needs a relying party and at least one origin. */
+export function isPasskeyPolicyConfigured(policy: PasskeyPolicy): boolean {
+  return policy.rpId !== '' && policy.origins.length > 0
+}
+
+/** Matches the server's normalisation closely enough to compare for changes. */
+export function normalizePasskeyOrigin(origin: string): string {
+  const trimmed = origin.trim()
+  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed
+}
+
+/**
+ * Light client-side checks for obvious mistakes. The server is authoritative
+ * (public suffixes, port normalisation), so anything subtle is left to it.
+ */
+export function passkeyRpIdError(rpId: string): string | null {
+  if (rpId === '' || rpId === 'localhost') return null
+  if (rpId.includes('://') || rpId.includes('/')) {
+    return 'Enter a domain without a scheme or path, like example.com.'
+  }
+  if (rpId !== rpId.toLowerCase()) {
+    return 'The relying party ID must be lowercase.'
+  }
+  if (rpId.includes(':')) {
+    return 'The relying party ID cannot include a port.'
+  }
+  if (!rpId.includes('.') || rpId.startsWith('.') || rpId.endsWith('.')) {
+    return 'Enter a domain like example.com, or localhost.'
+  }
+  return null
+}
+
+export function passkeyOriginError(
+  origin: string,
+  rpId: string,
+): string | null {
+  let url: URL
+  try {
+    url = new URL(origin)
+  } catch {
+    return 'Enter a full origin, like https://example.com.'
+  }
+  const isLocalhost = url.hostname === 'localhost'
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLocalhost)) {
+    return 'Origins must use https://, or http:// on localhost.'
+  }
+  if (url.username || url.password) {
+    return 'Origins cannot include credentials.'
+  }
+  if (url.pathname !== '/' || url.search || url.hash) {
+    return 'Origins cannot include a path, query or fragment.'
+  }
+  if (
+    rpId !== '' &&
+    url.hostname !== rpId &&
+    !url.hostname.endsWith(`.${rpId}`)
+  ) {
+    return 'Origins must be on the relying party ID or one of its subdomains.'
+  }
+  return null
+}

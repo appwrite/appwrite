@@ -13,6 +13,13 @@ import {
   DEFAULT_PASSWORD_STRENGTH_POLICY,
   type PasswordStrengthPolicy,
 } from '@/lib/password-strength'
+import {
+  DEFAULT_PASSKEY_POLICY,
+  PasskeyAuthMethodId,
+  PasskeyPolicyId,
+  parsePasskeyPolicy,
+  type PasskeyPolicy,
+} from '@/lib/passkey-policy'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
 
@@ -49,6 +56,7 @@ export type ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: boolean
   authDenyDisposableEmail: boolean
   authDenyCorporateEmail: boolean
+  authPasskey: PasskeyPolicy
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
     userName: boolean
@@ -81,6 +89,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: false,
   authDenyDisposableEmail: false,
   authDenyCorporateEmail: false,
+  authPasskey: DEFAULT_PASSKEY_POLICY,
   authMockNumbers: [],
   membershipsPrivacy: {
     userName: true,
@@ -94,7 +103,10 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
 
 function policyById(
   policies: ProjectPolicy[] | undefined,
-  id: ProjectPolicyId | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
+  id:
+    | ProjectPolicyId
+    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId]
+    | typeof PasskeyPolicyId,
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
@@ -184,6 +196,7 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyCorporateEmail,
   )
+  const passkey = policyById(policies, PasskeyPolicyId)
 
   return {
     authLimit: parsePolicyCountLimit(userLimit, 0),
@@ -223,6 +236,7 @@ export function parseProjectAuthSecurity(
     authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
+    authPasskey: parsePasskeyPolicy(passkey),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,
       otp: n.otp,
@@ -346,10 +360,12 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
   }
 }
 
+export type AuthMethodId = ProjectAuthMethodId | typeof PasskeyAuthMethodId
+
 export function authMethodsRecordFromProject(
   project: Models.Project | null | undefined,
-): Record<ProjectAuthMethodId, boolean> {
-  const defaults: Record<ProjectAuthMethodId, boolean> = {
+): Record<AuthMethodId, boolean> {
+  const defaults: Record<AuthMethodId, boolean> = {
     [ProjectAuthMethodId.Emailpassword]: false,
     [ProjectAuthMethodId.Phone]: false,
     [ProjectAuthMethodId.Magicurl]: false,
@@ -357,6 +373,7 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Anonymous]: false,
     [ProjectAuthMethodId.Invites]: false,
     [ProjectAuthMethodId.Jwt]: false,
+    [PasskeyAuthMethodId]: false,
   }
   if (!project?.authMethods?.length) {
     return defaults
