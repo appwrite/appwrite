@@ -325,13 +325,13 @@ function requireScope(session, scope) {
 }
 ```
 
-For database access, the function uses the dynamic key Appwrite injects into every execution, filtered to the token's `userId`. The full data layer is in the repository.
+For database access, the function uses the ephemeral key Appwrite injects into every execution, filtered to the token's `userId`. The full data layer is in the repository.
 
 # Deploy to Appwrite Functions
 
 ![The deployed MCP function in the Appwrite Console](/images/blog/turn-your-app-into-an-mcp-server/function-overview.avif)
 
-The function and the web app are described in `appwrite.config.json` at the repository root. The `scopes` array is what the dynamic key inside the function can do, which for this server is reading and writing rows and nothing else:
+The function and the web app are described in `appwrite.config.json` at the repository root. The `scopes` array is what the ephemeral key inside the function can do, which for this server is reading and writing rows and nothing else:
 
 ```json
 {

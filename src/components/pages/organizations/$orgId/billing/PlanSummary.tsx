@@ -12,6 +12,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { BillingStorageUsageProgress } from './_components/BillingStorageUsageProgress'
+import { getBillingStorageBreakdownFromResources } from '@/lib/billing/billing-storage-breakdown'
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +42,7 @@ import {
 } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import type { Models } from '@appwrite.io/console'
 import {
   buildDedicatedDbBillingSpecLookup,
@@ -318,6 +321,15 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return additionalCount * additionalProjectPrice
   }, [plan, aggregation, projectsResource])
 
+  // `amount` is already net of these, so they are rendered but never subtracted again.
+  const discountCharges = useMemo(
+    () =>
+      (aggregation?.resources ?? []).filter(
+        (resource) => resource.resourceId === 'billingDiscount',
+      ),
+    [aggregation?.resources],
+  )
+
   // Toggle addons (BAA, Premium Geo DB, …) from aggregation resources
   const billingAddonCharges = useMemo(
     () => getBillingAddonChargesFromResources(aggregation?.resources),
@@ -484,7 +496,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         // Always show the resource if it exists in aggregation or if plan has a limit
         // This matches the old UI which shows all resources
         if (shouldShow) {
-          resources.push({
+          const item: BillingProjectResourceItem = {
             resourceId,
             name,
             usage,
@@ -494,7 +506,16 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             showLimit: requiresUpgrade ? false : showLimit,
             requiresUpgrade,
             category,
-          })
+          }
+          if (resourceId === 'storage') {
+            const storageBreakdown = getBillingStorageBreakdownFromResources(
+              projectResources,
+            )
+            if (storageBreakdown.length > 0) {
+              item.storageBreakdown = storageBreakdown
+            }
+          }
+          resources.push(item)
           projectTotal += cost
         }
       })
@@ -543,7 +564,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Always show the full base resource list; disabled plan resources (-1) render
   // an Upgrade link instead of usage. Bump listVersion when the list shape changes
   // so Fast Refresh does not keep a stale memoized result.
-  const organizationUsageListVersion = 2
+  const organizationUsageListVersion = 3
   const organizationUsageCategories = useMemo(() => {
     if (usagePerProject) return []
     return buildOrganizationUsageCategoriesFromAggregation(
@@ -629,9 +650,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </p>
             )}
           </div>
-          <div className="text-end shrink-0 flex items-end">
-            <p className="text-[11px] text-muted-foreground italic">
-              {t('Estimate, subject to change based on usage')}
+          <div className="text-end shrink-0 max-w-[240px] sm:max-w-xs">
+            <p className="text-[12px] leading-snug text-muted-foreground">
+              {t(
+                'Usage-based estimate; updates may take up to 4 hours.',
+              )}
             </p>
           </div>
         </div>
@@ -660,13 +683,30 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       <div className="border-t border-border">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex w-full items-center justify-between px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
+          className="flex w-full items-center justify-between gap-3 px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
         >
-          <span>{t('View charges breakdown')}</span>
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-start">
+            <span>{t('View charges breakdown')}</span>
+            {aggregation?.$updatedAt ? (
+              <>
+                <span className="text-border hidden sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span className="text-[11px]">
+                  {t('Last updated')}:{' '}
+                  <DateTooltip
+                    date={aggregation.$updatedAt}
+                    live
+                    className="text-muted-foreground"
+                  />
+                </span>
+              </>
+            ) : null}
+          </span>
           {expanded ? (
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4 shrink-0" />
           ) : (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 shrink-0" />
           )}
         </button>
 
@@ -750,6 +790,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </div>
             ) : null}
 
+            {/* Operator-supplied text, so not run through t(). */}
+            {discountCharges.map((discount, index) => (
+              <div
+                key={`${discount.name}-${index}`}
+                className="flex items-center justify-between text-[13px]"
+              >
+                <span className="text-muted-foreground">{discount.name}</span>
+                <span className="font-medium text-foreground text-green-600 dark:text-green-400">
+                  {formatCurrency(discount.amount)}
+                </span>
+              </div>
+            ))}
+
             {/* Credits Applied */}
             {creditsApplied > 0 && (
               <div className="flex items-center justify-between text-[13px]">
@@ -784,7 +837,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
             {/* Project Breakdown Section */}
             {projectBreakdowns.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3 border-t border-border pt-6 mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t('Project breakdown')}
                 </div>
@@ -1127,7 +1180,17 @@ function BillingProjectResourceRow({
         </span>
 
         <div className="w-[120px] shrink-0">
-          {usagePercentage !== null ? (
+          {resource.resourceId === 'storage' &&
+          resource.storageBreakdown &&
+          resource.storageBreakdown.length > 0 &&
+          usagePercentage !== null ? (
+            <BillingStorageUsageProgress
+              totalUsageBytes={usage}
+              usagePercentage={usagePercentage}
+              segments={resource.storageBreakdown}
+              highlightWhenHigh
+            />
+          ) : usagePercentage !== null ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

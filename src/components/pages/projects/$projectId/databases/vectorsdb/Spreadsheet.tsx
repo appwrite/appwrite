@@ -5886,6 +5886,10 @@ export function TableSettings({
         }),
         replace: true,
       })
+      // Drop its cached details, or reopening its URL renders the deleted table.
+      queryClient.removeQueries({
+        queryKey: ['table', 'project', projectId, databaseId, tableId],
+      })
     },
     onError: (error: Error) => {
       setDeleteError(error.message || t('Failed to delete table'))

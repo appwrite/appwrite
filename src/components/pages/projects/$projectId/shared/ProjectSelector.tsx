@@ -21,6 +21,7 @@ import {
   useProjectsForTeamInfinite,
   useConsoleTeam,
   fetchActiveProjects,
+  activeProjectsTotalQueryOptions,
   projectsForTeamInfiniteQueryKey,
   organizationProjectScopeQueryOptions,
   pinnedProjectsQueryOptions,
@@ -388,7 +389,6 @@ export function ProjectSelector({
   // Fetch projects for selected team with infinite scroll (exclude pinned only when not searching)
   const {
     projects: paginatedProjects,
-    total: infiniteTotal,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -399,6 +399,10 @@ export function ProjectSelector({
     projectSearch,
     listExcludePinnedIds,
     switcherProjectScope,
+  )
+
+  const { data: teamProjectsTotalData } = useQuery(
+    activeProjectsTotalQueryOptions(resolvedTeam?.$id ?? null, switcherProjectScope),
   )
 
   const queryClient = useQueryClient()
@@ -435,6 +439,10 @@ export function ProjectSelector({
 
         try {
           await Promise.all([
+            queryClient.prefetchQuery({
+              ...activeProjectsTotalQueryOptions(teamId, prefetchScope ?? null),
+              staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
+            }),
             queryClient.prefetchQuery({
               ...pinnedOptions,
               staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
@@ -562,13 +570,13 @@ export function ProjectSelector({
   const orgDisplayName = currentProjectTeam?.name || resolvedTeam?.name || ''
 
   const lastFullProjectsCountRef = useRef(0)
-  if (!projectSearchActive && resolvedTeam?.$id) {
-    lastFullProjectsCountRef.current = pinnedIds.length + (infiniteTotal ?? 0)
+  if (!projectSearchActive && teamProjectsTotalData?.total != null) {
+    lastFullProjectsCountRef.current = teamProjectsTotalData.total
   }
-  // Plan limit uses full org count; while searching, `infiniteTotal` is search-scoped
+  // Plan limit uses full org count from the API; while searching, keep the last unfiltered total.
   const projectsCount = projectSearchActive
     ? lastFullProjectsCountRef.current
-    : pinnedIds.length + (infiniteTotal ?? 0)
+    : (teamProjectsTotalData?.total ?? 0)
 
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []

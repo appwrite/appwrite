@@ -16,6 +16,14 @@ function hasTag(tags: string[], value: string): boolean {
   return tags.some((tag) => normalizeTag(tag) === needle)
 }
 
+/** Appwrite-curated marketplace catalog entries (Explore / Catalog). */
+export function isOfficialMarketplaceApp(
+  app: Models.App | null | undefined,
+): boolean {
+  if (!app) return false
+  return hasTag(app.labels ?? [], 'official')
+}
+
 function resolveCategory(tags: string[]): MarketplaceAppCategory {
   for (const tag of tags) {
     const normalized = normalizeTag(tag)

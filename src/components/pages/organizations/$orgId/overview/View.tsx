@@ -46,6 +46,7 @@ import {
   organizationScopesQueryOptions,
   organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
   projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
@@ -80,7 +81,12 @@ import {
   reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { resolveAndPrefetchDefaultOrganization, prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import {
+  prefetchOrganizationOverviewData,
+  resolveAndPrefetchDefaultOrganization,
+  resolveFallbackOrganizationIdFromList,
+} from '@/lib/organization-overview-prefetch'
+import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -937,6 +943,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     isFetching: organizationDetailFetching,
     isFetched: organizationDetailFetched,
     isError: organizationDetailError,
+    isPlaceholderData: organizationDetailIsPlaceholder,
   } = useQuery({
     ...organizationQueryOptions(orgId),
     placeholderData: keepPreviousData,
@@ -1021,7 +1028,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const waitingForOrganizationDetail =
     !!orgId &&
     !detailMatchesCurrentOrg &&
-    (organizationDetailLoading ||
+    (organizationDetailIsPlaceholder ||
+      organizationDetailLoading ||
       organizationDetailFetching ||
       (!organizationDetailFetched && !organizationDetailError))
 
@@ -1162,11 +1170,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (!selectedOrg) {
       if (waitingForOrganizationDetail) return
 
-      // If there are other organizations, redirect to the first one
-      if (organizations.length > 0) {
+      const fallbackOrgId = resolveFallbackOrganizationIdFromList(
+        organizations,
+        account,
+      )
+      if (fallbackOrgId) {
         navigate({
           to: '/organizations/$orgId',
-          params: { orgId: organizations[0].$id },
+          params: { orgId: fallbackOrgId },
           replace: true})
       } else {
         // No memberships: empty state is rendered below (avoids /, /upgrade, /account loops).
@@ -1180,6 +1191,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     waitingForOrganizationDetail,
     orgId,
     navigate,
+    account,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -1188,10 +1200,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const accountPrefs = (
         account as { prefs?: Record<string, unknown> } | null | undefined
       )?.prefs
-      return await updateAccountPrefs({
-        ...accountPrefs,
-        organization: orgId,
-      })
+      return await updateAccountPrefs(
+        {
+          ...accountPrefs,
+          [USER_PREFS_KEY_ORGANIZATION]: orgId,
+        },
+        'organization-switch',
+        { force: true },
+      )
     },
     onMutate: (orgId) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
@@ -1200,7 +1216,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, organization: orgId }}
+                prefs: {
+                  ...current.prefs,
+                  [USER_PREFS_KEY_ORGANIZATION]: orgId,
+                },
+              }
             : current,
       )
       syncConsoleAccountAfterMutation(queryClient)
@@ -1274,8 +1294,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Pins live in org-level team prefs and are shared by every member, so a
   // project-scoped member would otherwise see pinned cards for projects they
-  // cannot open. Filtering here also keeps them out of the exclude list and
-  // the project count.
+  // cannot open. Filtering here also keeps them out of the exclude list.
   const pinnedIds = useMemo(() => {
     if (!restrictToProjectIds) return allPinnedIds
     const allowed = new Set(restrictToProjectIds)
@@ -1291,6 +1310,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
     placeholderData: keepPreviousData})
+
+  const { data: activeProjectsTotalData } = useQuery(
+    activeProjectsTotalQueryOptions(orgTeamId, restrictToProjectIds),
+  )
 
   // Sync page state from URL when it changes (e.g. browser back or initial load)
   useEffect(() => {
@@ -1616,18 +1639,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for plan-limit checks.
-  // The active-projects listing excludes pinned ids, so when no search is
-  // active the unconditional total is just `listing total + pinned count`.
-  // We cache the last value seen while the search box was empty so the
-  // limit check stays accurate when the user starts typing a query (the
-  // listing's total is filtered by the search and would otherwise drift).
+  // Total active projects in the org (API `total`, pinned included) for plan limits.
+  // Cache the last unfiltered total while searching so the limit check does not drift.
   const lastUnfilteredTotalRef = useRef(0)
-  if (!searchQuery && activeProjectsData?.total != null) {
-    lastUnfilteredTotalRef.current = activeProjectsData.total + pinnedIds.length
+  if (!searchQuery && activeProjectsTotalData?.total != null) {
+    lastUnfilteredTotalRef.current = activeProjectsTotalData.total
   }
   const totalProjectsCount = !searchQuery
-    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    ? (activeProjectsTotalData?.total ?? 0)
     : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
@@ -2016,6 +2035,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             GRID_DEFAULT_PAGE_SIZE,
             '',
           ),
+        ),
+        queryClient.ensureQueryData(
+          activeProjectsTotalQueryOptions(nextOrgId, nextProjectScope),
         ),
         ...projectPages.map((page) =>
           queryClient.ensureQueryData(

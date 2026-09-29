@@ -1,3 +1,8 @@
+export type DocsFaq = {
+  question: string
+  answer: string
+}
+
 export type DocsPageMeta = {
   slug: string
   title: string
@@ -8,6 +13,7 @@ export type DocsPageMeta = {
   category?: string
   framework?: string
   draft?: boolean
+  faqs?: DocsFaq[]
 }
 
 export type DocsNavLink = {

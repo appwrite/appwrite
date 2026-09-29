@@ -1,5 +1,8 @@
 // Database product workspace (see ../Workspace.tsx router).
 import { cn } from '@/lib/utils'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
+import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
+import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
   SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -34,6 +37,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   useProjectDatabase,
+  useResolvedProductDatabaseLifecycleStatus,
   useProjectTables,
   useProjectTableColumns,
   useProjectTable,
@@ -78,7 +82,6 @@ import {
   DatabaseMonitorHeaderActions,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
-import type { DateRange } from 'react-day-picker'
 import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
@@ -116,7 +119,6 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -154,7 +156,6 @@ import { TableRowsEditSessionProvider } from './_components/TableRowsEditSession
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
@@ -174,6 +175,9 @@ import {
   type WorkspaceProps,
 } from '../workspace-types'
 import { useT } from '@/lib/i18n/translate'
+import { useDatabaseRowsFullscreen } from '@/hooks/use-database-rows-fullscreen'
+import { DatabaseRowsFullscreenToggle } from '../_components/DatabaseRowsFullscreenToggle'
+import { DatabaseRowsFullscreenShell } from '../_components/DatabaseRowsFullscreenShell'
 
 const DB_KIND = 'tablesdb' as const satisfies DatabaseRouteKind
 const sidebarTableListScrollTopByKey = new Map<string, number>()
@@ -194,6 +198,10 @@ export function Workspace({
     | Record<string, unknown>
     | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
+  const canUseRowsFullscreen =
+    !isDatabaseLevelView && activeTab === 'rows' && tableId !== '-'
+  const { rowsFullscreen, toggleRowsFullscreen } =
+    useDatabaseRowsFullscreen(canUseRowsFullscreen)
   const { features } = useConsoleProfile()
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
@@ -216,9 +224,12 @@ export function Workspace({
     databaseId,
     DB_KIND,
   )
-  const provisioning = isDedicatedDatabaseProvisioning(
-    (database as { status?: string | null } | null)?.status,
+  const lifecycleStatus = useResolvedProductDatabaseLifecycleStatus(
+    projectId,
+    databaseId,
+    DB_KIND,
   )
+  const provisioning = isDedicatedDatabaseProvisioning(lifecycleStatus)
   const provisioningDisabledSections = provisioning
     ? {
         monitor: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
@@ -1429,8 +1440,42 @@ export function Workspace({
     </div>
   )
 
+  const tableRowsSpreadsheet =
+    activeTab === 'rows' && selectedTable ? (
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <RowsSpreadsheet
+          key={selectedTable.$id}
+          table={selectedTable}
+          canWriteRows={!noCreateRowPermission}
+          canWriteTables={!noCreateTablePermission}
+          onRefetchReady={(refetchFn) => {
+            rowsRefetchRef.current = refetchFn
+          }}
+          onCreateRowReady={(openCreateDrawer) => {
+            openCreateRowDrawerRef.current = openCreateDrawer
+          }}
+          onCreateColumnReady={openCreateColumnDialogRef.current}
+          onRowsCountChange={handleRowsCountChange}
+          rowsUrlSearch={rowsUrlSearch}
+          rowsUrlPage={rowsUrlPage}
+          rowsUrlLimit={rowsUrlLimit}
+          rowsFilterQueries={rowsFilterQueries}
+          rowsFilterQueryString={rowsFilterQueryString}
+          rowsSortBy={rowsSortBy}
+          rowsSortOrder={rowsSortOrder}
+          onNavigateToRowsList={navigateToRowsList}
+          rowsListSelectAttrKeys={rowsListSelectAttrKeys}
+        />
+      </div>
+    ) : null
+
   const tableViewMain = (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <DatabaseRowsFullscreenShell
+      active={rowsFullscreen}
+      onExit={toggleRowsFullscreen}
+      className="h-full min-w-0 flex-1"
+    >
+      {!rowsFullscreen ? (
       <ServiceHeader
         title={
           isDatabaseLevelView ? (
@@ -1449,6 +1494,16 @@ export function Workspace({
                   id={selectedTable.$id}
                   size="xs"
                   className="shrink-0"
+                />
+              ) : null}
+              {selectedTable ? (
+                <TerraformIndicator
+                  projectId={projectId}
+                  resource={getTerraformResourcePath(
+                    'table',
+                    selectedTable.$id,
+                    databaseId,
+                  )}
                 />
               ) : null}
             </div>
@@ -1644,6 +1699,14 @@ export function Workspace({
         exportDisabled={
           !isDatabaseLevelView && activeTab === 'rows' && !hasRows
         }
+        afterRefreshButtons={
+          canUseRowsFullscreen ? (
+            <DatabaseRowsFullscreenToggle
+              active={rowsFullscreen}
+              onToggle={toggleRowsFullscreen}
+            />
+          ) : undefined
+        }
         beforeCreateButtons={
           isDatabaseLevelView ||
           !showTableSecuritySettings ? undefined : activeTab === 'columns' &&
@@ -1725,6 +1788,19 @@ export function Workspace({
         }
         contentAfterBorder={
           <>
+            {/* Rows are data; only structure and configuration tabs are Terraform's. */}
+            {isDatabaseLevelView ||
+            activeTab === 'rows' ||
+            activeTab === 'documents' ? null : (
+              <TerraformResourceAlert
+                projectId={projectId}
+                resource={getTerraformResourcePath(
+                  'table',
+                  tableId ?? '',
+                  databaseId,
+                )}
+              />
+            )}
             {databaseTab === 'monitor' ? (
               <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                 <DatabaseMonitorMobileNav
@@ -1896,13 +1972,16 @@ export function Workspace({
           </>
         }
       />
+      ) : null}
 
       <div
         className={cn(
           'flex-1 min-h-0',
           databaseTab === 'settings' && children
             ? 'flex flex-col overflow-hidden'
-            : 'overflow-y-auto',
+            : rowsFullscreen || activeTab === 'rows'
+              ? 'flex min-h-0 flex-col overflow-hidden'
+              : 'overflow-y-auto',
         )}
       >
         {isDatabaseLevelView ? (
@@ -1929,33 +2008,7 @@ export function Workspace({
           )
         ) : (
           <>
-            {activeTab === 'rows' && selectedTable ? (
-              <div className="contents">
-                <RowsSpreadsheet
-                  key={selectedTable.$id}
-                  table={selectedTable}
-                  canWriteRows={!noCreateRowPermission}
-                  canWriteTables={!noCreateTablePermission}
-                  onRefetchReady={(refetchFn) => {
-                    rowsRefetchRef.current = refetchFn
-                  }}
-                  onCreateRowReady={(openCreateDrawer) => {
-                    openCreateRowDrawerRef.current = openCreateDrawer
-                  }}
-                  onCreateColumnReady={openCreateColumnDialogRef.current}
-                  onRowsCountChange={handleRowsCountChange}
-                  rowsUrlSearch={rowsUrlSearch}
-                  rowsUrlPage={rowsUrlPage}
-                  rowsUrlLimit={rowsUrlLimit}
-                  rowsFilterQueries={rowsFilterQueries}
-                  rowsFilterQueryString={rowsFilterQueryString}
-                  rowsSortBy={rowsSortBy}
-                  rowsSortOrder={rowsSortOrder}
-                  onNavigateToRowsList={navigateToRowsList}
-                  rowsListSelectAttrKeys={rowsListSelectAttrKeys}
-                />
-              </div>
-            ) : null}
+            {tableRowsSpreadsheet}
             {selectedTable && activeTab === 'documents' && (
               <>
                 <DocumentsJsonSpreadsheet
@@ -2027,7 +2080,7 @@ export function Workspace({
           </>
         )}
       </div>
-    </div>
+    </DatabaseRowsFullscreenShell>
   )
 
   return (
@@ -2037,7 +2090,7 @@ export function Workspace({
       canWrite={!noCreateRowPermission}
     >
       <div className="@container flex h-full min-h-0 min-w-0">
-        {showDesktopTableSidebar ? (
+        {showDesktopTableSidebar && !rowsFullscreen ? (
           <TableViewResizableLayout sidebar={tableViewSidebar}>
             {tableViewMain}
           </TableViewResizableLayout>

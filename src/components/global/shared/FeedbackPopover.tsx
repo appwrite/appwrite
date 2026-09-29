@@ -24,7 +24,6 @@ export function FeedbackPopover({
   source = 'n/a',
   orgId = '',
   projectId = '',
-  billingPlanId,
 }: FeedbackPopoverContext = {}) {
   const t = useT()
   const [isOpen, setIsOpen] = useState(false)
@@ -64,13 +63,15 @@ export function FeedbackPopover({
           <p>{t('Feedback')}</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent
+        align="end"
+        className="overlay-scrollbar w-80 max-h-[85dvh] overflow-x-hidden overflow-y-auto overscroll-contain p-0"
+      >
         <FeedbackForm
           key={formKey}
           source={source}
           orgId={orgId}
           projectId={projectId}
-          billingPlanId={billingPlanId}
           onSubmitted={handleSubmitted}
         />
       </PopoverContent>

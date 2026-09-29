@@ -123,7 +123,11 @@ export function CreateDatabaseSetupProgress({
         {t('Setting up your database')}
       </h2>
       <p className="mt-2 max-w-xs text-center text-[13px] leading-relaxed text-muted-foreground">
-        {t('This usually takes a few seconds. Please keep this window open.')}
+        {progress.showProvisioningStep
+          ? t(
+              'This usually takes a few seconds to a couple of minutes. Please keep this window open.',
+            )
+          : t('This usually takes a few seconds. Please keep this window open.')}
       </p>
 
       <ol className="mt-10 mx-auto w-full max-w-xs space-y-0">

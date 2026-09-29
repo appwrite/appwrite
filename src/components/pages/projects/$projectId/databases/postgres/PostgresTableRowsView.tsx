@@ -48,6 +48,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useT } from '@/lib/i18n/translate'
+import { useDatabaseTableRowsFullscreen } from '../_components/DatabaseTableRowsFullscreenContext'
+import { DatabaseRowsFullscreenToggle } from '../_components/DatabaseRowsFullscreenToggle'
+import { DatabaseRowsFullscreenShell } from '../_components/DatabaseRowsFullscreenShell'
 
 export type PostgresTableRowsViewProps = {
   databaseId: string
@@ -455,6 +458,8 @@ export function PostgresTableRowsView({
 
   const rowsTotal = requestedTotal ?? total
   const showRowsSearch = hasActiveFilters || rowsTotal > 0
+  const { rowsFullscreen, toggleRowsFullscreen } =
+    useDatabaseTableRowsFullscreen()
 
   usePostgresTableHeaderSlot({
     searchPlaceholder: showRowsSearch ? 'Search rows...' : undefined,
@@ -468,6 +473,12 @@ export function PostgresTableRowsView({
     onRefresh: handleRefresh,
     isRefreshing: isFetching,
     filterTrigger,
+    afterRefreshButtons: (
+      <DatabaseRowsFullscreenToggle
+        active={rowsFullscreen}
+        onToggle={toggleRowsFullscreen}
+      />
+    ),
   })
 
   const emptyContent = hasActiveFilters ? (
@@ -488,6 +499,34 @@ export function PostgresTableRowsView({
     [selectedRows],
   )
 
+  const rowsSpreadsheetPanel = (
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <PostgresRowsSpreadsheet
+        databaseId={databaseId}
+        tableId={tableId}
+        columns={tableColumns}
+        rows={rows}
+        rowNumberOffset={(displayedPage - 1) * pageSize}
+        canWrite={canWrite}
+        isLoading={isLoading && rows.length === 0}
+        emptyContent={emptyContent}
+        onOpenRow={openRowInDrawer}
+        selectedRowKeys={canWrite ? selectedRowKeys : undefined}
+        onToggleRow={canWrite ? handleToggleRow : undefined}
+        onToggleAllRows={canWrite ? handleToggleAllRows : undefined}
+        sortBy={rowsSort?.sortBy}
+        sortOrder={rowsSort?.sortOrder}
+        onSortColumn={handleSortColumn}
+        currentPage={displayedPage}
+        totalItems={requestedFetching ? total : (requestedTotal ?? total)}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onPaginationInteract={handlePaginationInteract}
+      />
+    </div>
+  )
+
   return (
     <PostgresRowsEditSessionProvider
       projectId={projectId}
@@ -495,31 +534,12 @@ export function PostgresTableRowsView({
       tableId={tableId}
       canWrite={canWrite}
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <PostgresRowsSpreadsheet
-          databaseId={databaseId}
-          tableId={tableId}
-          columns={tableColumns}
-          rows={rows}
-          rowNumberOffset={(displayedPage - 1) * pageSize}
-          canWrite={canWrite}
-          isLoading={isLoading && rows.length === 0}
-          emptyContent={emptyContent}
-          onOpenRow={openRowInDrawer}
-          selectedRowKeys={canWrite ? selectedRowKeys : undefined}
-          onToggleRow={canWrite ? handleToggleRow : undefined}
-          onToggleAllRows={canWrite ? handleToggleAllRows : undefined}
-          sortBy={rowsSort?.sortBy}
-          sortOrder={rowsSort?.sortOrder}
-          onSortColumn={handleSortColumn}
-          currentPage={displayedPage}
-          totalItems={requestedFetching ? total : (requestedTotal ?? total)}
-          pageSize={pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onPaginationInteract={handlePaginationInteract}
-        />
-      </div>
+      <DatabaseRowsFullscreenShell
+        active={rowsFullscreen}
+        onExit={toggleRowsFullscreen}
+      >
+        {rowsSpreadsheetPanel}
+      </DatabaseRowsFullscreenShell>
 
       {canWrite ? (
         <PostgresRowsBulkDelete

@@ -12,7 +12,11 @@ import {
   organizationProjectScopeQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
 } from '@/lib/react-query/hooks/organizations'
-import { activeProjectsQueryOptions, pinnedProjectsQueryOptions } from '@/lib/react-query/hooks/projects'
+import {
+  activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
+  pinnedProjectsQueryOptions,
+} from '@/lib/react-query/hooks/projects'
 import {
   consoleTeamQueryOptions,
   organizationMembershipsQueryOptions,
@@ -59,6 +63,24 @@ function preferredOrganizationIdFromAccount(
     USER_PREFS_KEY_ORGANIZATION
   ]
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+/** When the URL org is missing, prefer account prefs over the first list item. */
+export function resolveFallbackOrganizationIdFromList(
+  organizations: Array<{ $id: string }>,
+  account: Pick<Models.User, 'prefs'> | null | undefined,
+): string | undefined {
+  if (organizations.length === 0) return undefined
+  const preferredId = preferredOrganizationIdFromAccount(
+    account ?? { prefs: {} },
+  )
+  if (
+    preferredId &&
+    organizations.some((organization) => organization.$id === preferredId)
+  ) {
+    return preferredId
+  }
+  return organizations[0].$id
 }
 
 /**
@@ -108,6 +130,9 @@ export async function prefetchOrganizationOverviewData(
     )
 
     await Promise.all([
+      queryClient.ensureQueryData(
+        activeProjectsTotalQueryOptions(orgId, projectScope ?? null),
+      ),
       queryClient.ensureQueryData(
         activeProjectsQueryOptions(
           orgId,

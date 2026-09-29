@@ -9,8 +9,7 @@ import {
 } from '@tanstack/react-router'
 import { z } from 'zod'
 import { SignIn } from '@/components/global/auth/SignIn'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
@@ -221,33 +220,15 @@ function SignInPage() {
   })
 
   return (
-    <div className="bg-background relative h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full max-w-sm md:max-w-4xl">
-          <SignIn
-            mode="sign-in"
-            onSubmit={(data) => signInMutation.mutate(data)}
-            onOAuthLogin={handleOAuthLogin}
-            isLoading={signInMutation.isPending || isOpeningMfa}
-            oauthLoading={oauthLoading}
-            redirect={search.redirect}
-          />
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {t('By clicking continue, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-          <div className="mt-10 md:mt-16 flex justify-center">
-            <AppwriteLogo className="h-6 w-auto" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowShell width="illustration">
+      <SignIn
+        mode="sign-in"
+        onSubmit={(data) => signInMutation.mutate(data)}
+        onOAuthLogin={handleOAuthLogin}
+        isLoading={signInMutation.isPending || isOpeningMfa}
+        oauthLoading={oauthLoading}
+        redirect={search.redirect}
+      />
+    </AuthFlowShell>
   )
 }

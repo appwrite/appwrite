@@ -29,7 +29,7 @@ export type ConsoleProfileFeatures = {
   multiTenancy: boolean
   /** Cloud role scopes and additional organization roles (editor, analyst, billing). Owner and developer are always available. */
   orgRoles: boolean
-  /** Appwrite Cloud system status (status.appwrite.online) */ // pragma: allowlist secret
+  /** Appwrite Cloud system status (appwrite.online) */ // pragma: allowlist secret
   systemStatus: boolean
   /** Console account MFA (enable/disable, TOTP, email, SMS, recovery codes) */
   accountMfa: boolean

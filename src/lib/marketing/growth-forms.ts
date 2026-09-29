@@ -1,47 +1,13 @@
-import { getRuntimeConfig } from '@/lib/runtime-config'
+import { ConversationType, createConversation } from '@/lib/growth'
+import { getReferrerAndUtmSource } from '@/lib/marketing/utm'
 
-const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
-
-function getGrowthBaseUrl(): string | null {
-  const trimmed = GROWTH_ENDPOINT?.trim()
-  if (!trimmed) return null
-  return trimmed.replace(/\/$/, '')
-}
-
-function getReferrerAndUtmSource(): Record<string, string | undefined> {
-  if (typeof window === 'undefined') return {}
-  const params = new URLSearchParams(window.location.search)
-  return {
-    referrer: document.referrer || undefined,
-    utmSource: params.get('utm_source') ?? undefined,
-    utmMedium: params.get('utm_medium') ?? undefined,
-    utmCampaign: params.get('utm_campaign') ?? undefined,
+/** Prefixes `https://` when the visitor typed a bare domain; empty stays empty. */
+function withProtocol(url: string): string {
+  const trimmed = url.trim()
+  if (trimmed === '' || /^https?:\/\//i.test(trimmed)) {
+    return trimmed
   }
-}
-
-async function postGrowthJson(path: string, body: Record<string, unknown>): Promise<boolean> {
-  const baseUrl = getGrowthBaseUrl()
-  if (!baseUrl) return false
-
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, ...getReferrerAndUtmSource() }),
-  })
-
-  if (response.status >= 400) {
-    throw new Error(
-      response.status >= 500
-        ? 'Internal server error.'
-        : 'Error submitting form. Please contact support.',
-    )
-  }
-
-  return true
-}
-
-export function isGrowthFormsConfigured(): boolean {
-  return !!getGrowthBaseUrl()
+  return `https://${trimmed}`
 }
 
 export type PartnerApplicationPayload = {
@@ -52,29 +18,54 @@ export type PartnerApplicationPayload = {
   message: string
 }
 
+/**
+ * Sent without the console session: the applicant's typed contact details
+ * must be kept, and the server would replace them with the session's.
+ *
+ * @throws GrowthError when the server rejects the request.
+ */
 export async function submitPartnerApplication(
   payload: PartnerApplicationPayload,
-): Promise<boolean> {
-  return postGrowthJson('/conversations/partner', payload)
+): Promise<void> {
+  await createConversation({
+    type: ConversationType.Partner,
+    session: false,
+    name: payload.name,
+    email: payload.email,
+    message: payload.message,
+    attributes: {
+      companyName: payload.companyName,
+      companyUrl: withProtocol(payload.companyUrl),
+      ...getReferrerAndUtmSource(),
+    },
+  })
 }
 
 export type StartupsApplicationPayload = {
-  personName: string
-  personEmail: string
+  name: string
+  email: string
   companyName: string
   companyUrl: string
 }
 
+/**
+ * Sent without the console session, like partner applications.
+ *
+ * @throws GrowthError when the server rejects the request.
+ */
 export async function submitStartupsApplication(
   payload: StartupsApplicationPayload,
-): Promise<boolean> {
-  const companyUrl = payload.companyUrl.startsWith('http')
-    ? payload.companyUrl
-    : `https://${payload.companyUrl}`
-
-  return postGrowthJson('/conversations/startups', {
-    ...payload,
-    companyUrl,
+): Promise<void> {
+  await createConversation({
+    type: ConversationType.Startup,
+    session: false,
+    name: payload.name,
+    email: payload.email,
+    attributes: {
+      companyName: payload.companyName,
+      companyUrl: withProtocol(payload.companyUrl),
+      ...getReferrerAndUtmSource(),
+    },
   })
 }
 
@@ -83,32 +74,40 @@ export type EnterpriseApplicationPayload = {
   lastName: string
   email: string
   companyName: string
-  companySize?: string
+  companySize: string
   companyWebsite: string
-  preferredDeployment?: string
-  timeline?: string
+  preferredDeployment?: string | null
+  timeline?: string | null
   useCase: string
-  cloudEmail?: string
+  cloudEmail?: string | null
+  /**
+   * Identify the signed-in console user from the session. Leave off when the
+   * form lets the visitor type the contact email.
+   */
+  session?: boolean
 }
 
+/**
+ * @throws GrowthError when the server rejects the request.
+ */
 export async function submitEnterpriseApplication(
   payload: EnterpriseApplicationPayload,
-): Promise<boolean> {
-  const companyWebsite = payload.companyWebsite.startsWith('http')
-    ? payload.companyWebsite
-    : `https://${payload.companyWebsite}`
-
-  return postGrowthJson('/conversations/enterprises', {
-    firstName: payload.firstName,
-    lastName: payload.lastName,
+): Promise<void> {
+  await createConversation({
+    type: ConversationType.Enterprise,
+    session: payload.session ?? false,
+    name: `${payload.firstName.trim()} ${payload.lastName.trim()}`,
     email: payload.email,
     message: payload.useCase,
-    companyName: payload.companyName,
-    companySize: payload.companySize,
-    companyWebsite,
-    preferredDeployment: payload.preferredDeployment,
-    timeline: payload.timeline,
-    cloudEmail: payload.cloudEmail,
-    platform: 'appwrite',
+    attributes: {
+      companyName: payload.companyName,
+      companySize: payload.companySize,
+      companyWebsite: withProtocol(payload.companyWebsite),
+      preferredDeployment: payload.preferredDeployment ?? undefined,
+      timeline: payload.timeline ?? undefined,
+      cloudEmail: payload.cloudEmail ?? undefined,
+      platform: 'appwrite',
+      ...getReferrerAndUtmSource(),
+    },
   })
 }

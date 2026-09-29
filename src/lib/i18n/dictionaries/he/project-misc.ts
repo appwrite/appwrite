@@ -785,6 +785,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   project: 'פרויקט',
   activities: 'פעילויות',
   'No activities yet': 'אין עדיין פעילויות',
+  'Failed to load activity': 'טעינת הפעילות נכשלה',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'לא הצלחנו לאחזר את לוג הפעילות. ייתכן שזו תקלה זמנית. נסו שוב.',
   'Activity will appear here as you use your project':
     'פעילות תופיע כאן ככל שתשתמשו בפרויקט',
   'Activity log': 'יומן פעילות',
@@ -1648,6 +1651,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
     'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API וחברו סוכן פיתוח עם MCP.',
+  'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.':
+    'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API, והתקינו CLI או MCP כשאתם מוכנים.',
+  'Install the Appwrite CLI': 'התקנת Appwrite CLI',
+  'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.':
+    'השתמשו ב-CLI מהטרמינל כדי לנהל את הפרויקט, לפרוס פונקציות ולהריץ אוטומציה.',
+  'Install CLI': 'התקנת CLI',
+  'Open CLI': 'פתיחת CLI',
   "You've reached the limit of": 'הגעתם למגבלה של',
   'Approaching the limit for': 'מתקרבים למגבלה של',
   'Your plan': 'התוכנית שלכם',
@@ -1783,6 +1793,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": 'לא ניתן היה לטעון הרצות',
   "Couldn't load requests": 'לא ניתן היה לטעון בקשות',
   "Couldn't load storage": 'לא ניתן היה לטעון נתוני אחסון',
+  "Couldn't load firewall traffic": 'לא ניתן היה לטעון תעבורת Firewall',
+  "Couldn't load impact estimate": 'לא ניתן היה לטעון הערכת השפעה',
   Deployments: 'פריסות',
   Executions: 'הרצות',
   'Executions over time': 'הרצות לאורך זמן',
@@ -2905,6 +2917,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'שם הנושא',
   'Topic name updated successfully': 'שם הנושא עודכן בהצלחה',
   'Topic not found': 'הנושא לא נמצא',
+  'Subscriber not found': 'המנוי לא נמצא',
   'Topics group subscribers for email, SMS, or push.':
     'נושאים מקבצים מנויים לאימייל, SMS או Push.',
   'Type:': 'סוג:',
@@ -3158,4 +3171,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
+  'AI discovery': 'גילוי AI',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
+  'No changes were made. This resource is managed by Terraform.':
+    'לא בוצעו שינויים. המשאב הזה מנוהל על ידי Terraform.',
+  'Managed by Terraform': 'מנוהל על ידי Terraform',
+  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
+    'ספק ה-Terraform של Appwrite יצר את המשאב הזה. עדכנו אותו בתצורת ה-Terraform שלכם.',
+  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
+    'המשאבים בפרויקט הזה נוצרו על ידי ספק ה-Terraform של Appwrite. עדכנו אותם בתצורת ה-Terraform שלכם.',
+  'Managed resources': 'משאבים מנוהלים',
+  'Last apply': 'apply אחרון',
+  'View activity': 'צפייה בפעילות',
+  'Changed outside Terraform': 'שונה מחוץ ל-Terraform',
+  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
+    'המשאב הזה מנוהל על ידי Terraform, אבל הוא השתנה אחרי ה-apply האחרון. הריצו terraform plan כדי לראות מה שונה מהתצורה שלכם.',
+  'Last change:': 'שינוי אחרון:',
+  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
+    'שינויים שתבצעו כאן לא נמצאים בתצורת ה-Terraform שלכם. ה-terraform apply הבא עשוי לבטל אותם.',
+  'Delete a Terraform-managed resource?': 'למחוק משאב שמנוהל על ידי Terraform?',
+  'Update a Terraform-managed resource?': 'לעדכן משאב שמנוהל על ידי Terraform?',
+  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
+    'Terraform יצר את המשאב הזה. ה-terraform apply הבא ייצור אותו מחדש, אלא אם תסירו אותו גם מתצורת ה-Terraform שלכם.',
+  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
+    'Terraform יצר את המשאב הזה. ה-terraform apply הבא עשוי לדרוס את השינוי, אלא אם תעדכנו גם את תצורת ה-Terraform שלכם.',
+  "Don't ask again for this project": 'לא לשאול שוב עבור הפרויקט הזה',
+  'Delete anyway': 'מחיקה בכל זאת',
+  'Update anyway': 'עדכון בכל זאת',
+  'Via Terraform': 'דרך Terraform',
+
+  // Project environment switcher
+  Environments: 'סביבות',
+  Staging: 'Staging',
+  Development: 'פיתוח',
+  'Switch environment': 'החלפת סביבה',
+  'Environment switched': 'הסביבה הוחלפה',
+  'Create environment': 'יצירת סביבה',
+  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
 }

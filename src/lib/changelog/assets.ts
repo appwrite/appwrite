@@ -1,7 +1,7 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 
 /** Image trees shipped in this repo's public/ directory (served locally, not from the marketing site). */
-const LOCAL_ASSET_PREFIXES = ['/images/blog/']
+const LOCAL_ASSET_PREFIXES = ['/images/blog/', '/images/changelog/']
 
 export function resolveChangelogAssetUrl(path?: string): string | undefined {
   if (!path) return undefined

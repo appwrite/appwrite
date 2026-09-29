@@ -10,7 +10,7 @@ Appwrite Functions now supports **Rust 1.83** as a first-class runtime. You can 
 
 The runtime gives you compiled, memory-safe performance for the hot paths in your backend, payment and webhook signature verification, image processing, data transformation, and any workload where latency and predictability matter. It is available on Appwrite Cloud today.
 
-A new **Starter** template for Rust is available in the function templates catalog, and the [Functions documentation](/docs/products/functions/develop) covers the runtime contract, request and response helpers, environment variables, dynamic API keys, and end-to-end examples for the new runtime.
+A new **Starter** template for Rust is available in the function templates catalog, and the [Functions documentation](/docs/products/functions/develop) covers the runtime contract, request and response helpers, environment variables, ephemeral API keys, and end-to-end examples for the new runtime.
 
 {% arrow_link href="/blog/post/announcing-rust-runtime" %}
 Read the announcement

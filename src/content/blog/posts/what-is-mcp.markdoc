@@ -223,7 +223,7 @@ With the MCP server successfully started on Claude Desktop, you should now be ab
 
 ![Claude Desktop MCP chat](/images/blog/what-is-mcp/claude-mcp-chat.avif)
 
-You can also set up the Appwrite MCP server with other AI tools like Cursor and WindSurf. For more examples and specific setup instructions, check out the [MCP documentation](https://appwrite.io/docs/tooling/mcp?doFollow=true).
+You can also set up the Appwrite MCP server with other AI tools like Cursor and WindSurf. For more examples and specific setup instructions, check out the [MCP documentation](https://appwrite.io/docs/tooling/ai/mcp-servers?doFollow=true).
 
 # MCP server for Appwrite docs
 
@@ -248,7 +248,7 @@ You can integrate the documentation MCP server with multiple tools and editors:
 - VS Code
 - OpenCode
 
-For setup instructions and examples, check out the [Appwrite Docs MCP server documentation](/docs/tooling/mcp/docs).
+For setup instructions and examples, check out the [Appwrite Docs MCP server documentation](/docs/tooling/ai/mcp-servers).
 
 # Final thoughts
 
@@ -259,7 +259,7 @@ This shift will increase the usefulness of AI in day-to-day workflows. So if you
 And because MCP is an **open standard**, it doesn't lock anyone into a single platform or tool. It's something that can evolve and be adopted across different industries. The more systems that integrate MCP, the more natural it becomes to interact with AI as something that can actually get things done.
 
 # Further reading
-- [Appwrite MCP documentation](/docs/tooling/mcp?doFollow=true)
-- [Appwrite Docs MCP server](/docs/tooling/mcp/docs)
+- [Appwrite MCP documentation](/docs/tooling/ai/mcp-servers?doFollow=true)
+- [Appwrite Docs MCP server](/docs/tooling/ai/mcp-servers)
 - [Anthropic MCP documentation](https://docs.anthropic.com/en/docs/agents-and-tools/mcp)
 - [Building a chat app with Appwrite and Google Gemini](/blog/post/build-a-chat-app-with-appwrite-and-gemini?doFollow=true)

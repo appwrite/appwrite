@@ -36,7 +36,7 @@ To find the branch and commit URLs of any deployment, follow these steps:
 
 1. Navigate to your site on Appwrite Console.
 2. Head to the **Deployments** tab and click on any deployment.
-3. In the **Domains** section, click on the **+2** next to the mentioned domain.
+3. The panel lists every URL for that deployment under **URLs**, including the branch and commit URLs.
 
 # Add a custom domain
 

@@ -1,23 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AppwriteException, Query } from '@appwrite.io/console'
 import { Loader2, Lock, TriangleAlert } from 'lucide-react'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
+import { AuthFlowAccountSwitcherStatic } from '@/components/global/auth/AuthFlowAccountSwitcherStatic'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
+import { useAuthAccountSwitch } from '@/components/global/auth/useAuthAccountSwitch'
 import { Button } from '@/components/ui/button'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { isValidRelativeRedirect } from '@/lib/post-auth-navigation'
-import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
+
+export type SitesAuthPreviewStatus = 'checking' | 'denied' | 'error' | 'invalid'
 
 type ViewProps = {
   projectId?: string
   origin?: string
   path?: string
   accountLabel: string
+  preview?: boolean
+  previewStatus?: SitesAuthPreviewStatus
 }
 
 export function View({
@@ -25,10 +34,11 @@ export function View({
   origin,
   path = '/',
   accountLabel,
+  preview = false,
+  previewStatus = 'checking',
 }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [status, setStatus] = useState<'checking' | 'denied' | 'error'>(
     'checking',
   )
@@ -56,6 +66,7 @@ export function View({
       : null
 
   useEffect(() => {
+    if (preview) return
     if (
       !projectId ||
       !origin ||
@@ -126,82 +137,81 @@ export function View({
         )
       }
     })()
-  }, [projectId, origin, path, previewHostname, attempt])
+  }, [preview, projectId, origin, path, previewHostname, attempt])
 
   const handleRetry = () => {
+    if (preview) return
     setStatus('checking')
     setAttempt((current) => current + 1)
   }
 
+  const switchAccount = useAuthAccountSwitch({ preview })
   const handleSwitchAccount = () => {
     if (isSwitchingAccount) return
     setIsSwitchingAccount(true)
-    void performConsoleSignOut(queryClient, {
-      redirect: `${window.location.pathname}${window.location.search}`,
-    })
+    void switchAccount().finally(() => setIsSwitchingAccount(false))
   }
 
-  const denied = status === 'denied'
-  const failed = status === 'error'
+  const previewHostnameDisplay =
+    preview && previewStatus !== 'invalid'
+      ? 'example.com'
+      : previewHostname
+  const denied = preview ? previewStatus === 'denied' : status === 'denied'
+  const failed = preview ? previewStatus === 'error' : status === 'error'
+  const invalidPreview = preview && previewStatus === 'invalid'
+  const checking = preview
+    ? previewStatus === 'checking'
+    : !denied && !failed && !!previewHostname
 
   return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <main className="my-auto w-full max-w-md">
-          <div className="mb-8 flex justify-center">
-            <AppwriteLogo className="h-7 w-auto" />
-          </div>
-          <section
-            className="overflow-hidden rounded-xl border border-border bg-card/50 p-6 md:p-8"
-            aria-live="polite"
-          >
-            <div className="space-y-6">
+    <AuthFlowShell
+      width="narrow"
+      accountSwitcher={
+        denied && accountLabel ? (
+          <AuthFlowAccountSwitcherStatic
+            accountLabel={accountLabel}
+            preview={preview}
+            onSwitchAccount={handleSwitchAccount}
+            disabled={isSwitchingAccount}
+          />
+        ) : null
+      }
+    >
+      <AuthFlowNarrowCard>
+            <div className="space-y-6" aria-live="polite">
               <div className="flex flex-col items-center gap-4 text-center">
-                {!previewHostname || failed ? (
-                  <div className="bg-destructive/10 flex size-10 items-center justify-center rounded-xl">
-                    <TriangleAlert className="text-destructive size-4" />
-                  </div>
+                {invalidPreview || !previewHostnameDisplay || failed ? (
+                  <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+                ) : checking ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
                 ) : (
-                  <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-muted">
-                    {denied ? (
-                      <Lock
-                        aria-hidden="true"
-                        className="size-5 text-muted-foreground"
-                      />
-                    ) : (
-                      <Loader2
-                        aria-hidden="true"
-                        className="size-5 animate-spin text-muted-foreground motion-reduce:animate-none"
-                      />
-                    )}
-                  </div>
+                  <AuthFlowHeaderIcon icon={Lock} />
                 )}
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    {!previewHostname
+                <div className="flex w-full max-w-sm flex-col items-center gap-3">
+                  <AuthFlowTitle>
+                    {invalidPreview || !previewHostnameDisplay
                       ? t('Invalid preview link')
                       : denied
                         ? t('Preview is private')
                         : failed
                           ? t("Couldn't open preview")
                           : t('Opening preview…')}
-                  </h1>
-                  {previewHostname ? (
-                    <p
-                      dir="ltr"
-                      className="break-all font-mono text-[13px] text-foreground"
-                    >
-                      {previewHostname}
-                    </p>
+                  </AuthFlowTitle>
+                  {previewHostnameDisplay ? (
+                    <div dir="ltr" className="w-full flex justify-center">
+                      <span className="inline-block max-w-full break-all rounded-lg border border-border bg-muted/30 px-3 py-2 text-center font-mono text-[13px] leading-snug text-foreground">
+                        {previewHostnameDisplay}
+                      </span>
+                    </div>
                   ) : null}
-                  <p className="text-muted-foreground text-[13px] leading-relaxed">
-                    {!previewHostname
+                  <AuthFlowDescription className="w-full">
+                    {invalidPreview || !previewHostnameDisplay
                       ? t(
                           'This link is missing or has a malformed preview address. Open the preview URL again to start over.',
                         )
                       : denied
                         ? t(
-                            "You don't have access to this preview. Ask a member of the project's organization to add you.",
+                            "Your account isn't in the organization that owns this site. Ask an organization member to invite you.",
                           )
                         : failed
                           ? t(
@@ -210,17 +220,10 @@ export function View({
                           : t(
                               'Checking your access to this preview deployment.',
                             )}
-                  </p>
+                  </AuthFlowDescription>
                 </div>
-                {denied && accountLabel ? (
-                  <AuthAccountChip
-                    accountLabel={accountLabel}
-                    onSwitchAccount={handleSwitchAccount}
-                    disabled={isSwitchingAccount}
-                  />
-                ) : null}
               </div>
-              {!previewHostname || denied || failed ? (
+              {invalidPreview || !previewHostnameDisplay || denied || failed ? (
                 <div className="flex flex-col gap-2">
                   {denied ? (
                     <Button
@@ -237,6 +240,7 @@ export function View({
                       variant="brandCta"
                       className="w-full"
                       onClick={handleRetry}
+                      disabled={preview}
                     >
                       {t('Try again')}
                     </Button>
@@ -244,7 +248,10 @@ export function View({
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => navigate({ to: '/', replace: true })}
+                    onClick={() => {
+                      if (preview) return
+                      navigate({ to: '/', replace: true })
+                    }}
                     disabled={isSwitchingAccount}
                   >
                     {t('Go to console')}
@@ -252,9 +259,7 @@ export function View({
                 </div>
               ) : null}
             </div>
-          </section>
-        </main>
-      </div>
-    </div>
+      </AuthFlowNarrowCard>
+    </AuthFlowShell>
   )
 }

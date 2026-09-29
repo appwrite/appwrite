@@ -19,7 +19,8 @@ import {
   MoreHorizontal,
   Eye,
   EyeOff,
-  ArrowLeftRight} from 'lucide-react'
+  ArrowLeftRight,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import {
@@ -28,13 +29,15 @@ import {
   useDomainZone,
   useDomainTransferStatus,
   DNS_RECORDS_DEFAULT_SORT_BY,
-  DNS_RECORDS_DEFAULT_SORT_ORDER} from '@/lib/react-query/hooks'
+  DNS_RECORDS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks'
 import {
   DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION,
   getDomainTransferStatusBadgeConfig,
   isDomainTransferInProgress,
   isPendingDomainTransferStatus,
-  shouldShowDomainTransferStatus} from '@/lib/domains/transfer-status'
+  shouldShowDomainTransferStatus,
+} from '@/lib/domains/transfer-status'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -42,7 +45,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
@@ -53,7 +57,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   DropdownMenu,
@@ -62,20 +67,23 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
-  DropdownMenuSubTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger} from '@/components/ui/dialog'
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue} from '@/components/ui/select'
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -84,7 +92,8 @@ import {
   useNavigate,
   useParams,
   useLocation,
-  useSearch} from '@tanstack/react-router'
+  useSearch,
+} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -110,7 +119,8 @@ import {
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
-  useUpdateDomainAutoRenewal} from '@/lib/react-query/hooks'
+  useUpdateDomainAutoRenewal,
+} from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import {
@@ -122,7 +132,8 @@ import {
   mapToQueryParam,
   buildListSearchParams,
   urlFromRouterLocation,
-  dnsRecordsFilterColumns} from '@/lib/table-filters'
+  dnsRecordsFilterColumns,
+} from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
@@ -139,7 +150,8 @@ export function View({ initialData }: ViewProps = {}) {
   const t = useT()
   const { features } = useConsoleProfile()
   const { orgId, domainId } = useParams({
-    strict: false})
+    strict: false,
+  })
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -203,7 +215,8 @@ export function View({ initialData }: ViewProps = {}) {
     return (
       parsed ?? {
         sortBy: DNS_RECORDS_DEFAULT_SORT_BY,
-        sortOrder: DNS_RECORDS_DEFAULT_SORT_ORDER as 'asc' | 'desc'}
+        sortOrder: DNS_RECORDS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+      }
     )
   }, [isRecordsIndex, search?.sort, location.pathname, location.search])
   const recordsSortBy = recordsSortParams?.sortBy ?? DNS_RECORDS_DEFAULT_SORT_BY
@@ -298,7 +311,8 @@ export function View({ initialData }: ViewProps = {}) {
       label: isVerified ? 'Verified' : 'Unverified',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
-        : 'text-yellow-600 dark:text-yellow-500'}
+        : 'text-yellow-600 dark:text-yellow-500',
+    }
   }, [domain])
   const canManageAutoRenewal =
     domain?.registrar?.toLowerCase() === 'appwrite' && !!domainId
@@ -336,12 +350,14 @@ export function View({ initialData }: ViewProps = {}) {
         id: 'records',
         label: t('DNS Records'),
         to: '/organizations/$orgId/domains/$domainId',
-        params: { orgId: orgId as string, domainId: domainId as string }},
+        params: { orgId: orgId as string, domainId: domainId as string },
+      },
       {
         id: 'settings',
         label: t('Settings'),
         to: '/organizations/$orgId/domains/$domainId/settings',
-        params: { orgId: orgId as string, domainId: domainId as string }},
+        params: { orgId: orgId as string, domainId: domainId as string },
+      },
     ],
     [orgId, domainId, t],
   )
@@ -372,7 +388,9 @@ export function View({ initialData }: ViewProps = {}) {
           priority: data.priority,
           weight: data.weight,
           port: data.port,
-          comment: data.comment}},
+          comment: data.comment,
+        },
+      },
       {
         onSuccess: () => {
           toast.success(t('DNS record created successfully'))
@@ -380,7 +398,8 @@ export function View({ initialData }: ViewProps = {}) {
         },
         onError: (error) => {
           toast.error(getErrorMessage(error))
-        }},
+        },
+      },
     )
   }
 
@@ -411,7 +430,9 @@ export function View({ initialData }: ViewProps = {}) {
           priority: data.priority,
           weight: data.weight,
           port: data.port,
-          comment: data.comment}},
+          comment: data.comment,
+        },
+      },
       {
         onSuccess: () => {
           toast.success(t('DNS record updated successfully'))
@@ -420,7 +441,8 @@ export function View({ initialData }: ViewProps = {}) {
         },
         onError: (error) => {
           toast.error(getErrorMessage(error))
-        }},
+        },
+      },
     )
   }
 
@@ -436,7 +458,8 @@ export function View({ initialData }: ViewProps = {}) {
       },
       onError: (error) => {
         toast.error(getErrorMessage(error))
-      }})
+      },
+    })
   }
 
   // Deletable records (non-locked) on current page for bulk actions
@@ -454,9 +477,11 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onSuccess: async (_, recordIds) => {
       await queryClient.refetchQueries({
-        queryKey: ['dns-records', 'domain', domainId]})
+        queryKey: ['dns-records', 'domain', domainId],
+      })
       await queryClient.refetchQueries({
-        queryKey: ['domain', domainId]})
+        queryKey: ['domain', domainId],
+      })
       toast.success(
         `${t('Deleted')} ${recordIds.length} ${recordIds.length > 1 ? t('DNS records') : t('DNS record')}`,
       )
@@ -465,7 +490,8 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error))
-    }})
+    },
+  })
 
   const handleBulkDeleteRecords = () => {
     if (selectedRecords.size === 0) return
@@ -508,7 +534,8 @@ export function View({ initialData }: ViewProps = {}) {
       },
       onError: (error) => {
         toast.error(getErrorMessage(error))
-      }})
+      },
+    })
   }
 
   // Handle preset selection
@@ -553,7 +580,8 @@ export function View({ initialData }: ViewProps = {}) {
       mailgun: 'Mailgun',
       zoho: 'Zoho',
       protonmail: 'ProtonMail',
-      icloud: 'iCloud'}
+      icloud: 'iCloud',
+    }
 
     try {
       // Create all records from the preset
@@ -568,7 +596,9 @@ export function View({ initialData }: ViewProps = {}) {
               priority: record.priority,
               weight: record.weight,
               port: record.port,
-              comment: record.comment}}),
+              comment: record.comment,
+            },
+          }),
         ),
       )
 
@@ -576,7 +606,8 @@ export function View({ initialData }: ViewProps = {}) {
         `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
       queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId]})
+        queryKey: ['dns-records', 'domain', domainId],
+      })
       setSelectedPreset(null)
     } catch (error) {
       toast.error(getErrorMessage(error))
@@ -591,11 +622,7 @@ export function View({ initialData }: ViewProps = {}) {
     try {
       const result = await refetchZone()
       if (result.data) {
-        const content =
-          typeof result.data === 'string'
-            ? result.data
-            : (result.data as { message?: string })?.message || ''
-        const blob = new Blob([content], { type: 'text/plain' })
+        const blob = new Blob([result.data], { type: 'text/plain' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -636,7 +663,9 @@ export function View({ initialData }: ViewProps = {}) {
       ...(typeof prev === 'object' && prev !== null ? prev : {}),
       ...buildListSearchParams({
         query: queryParam ?? undefined,
-        sort: sortParam ?? undefined})})
+        sort: sortParam ?? undefined,
+      }),
+    })
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
@@ -654,7 +683,8 @@ export function View({ initialData }: ViewProps = {}) {
           : undefined,
         sortParam,
       ),
-      replace: true})
+      replace: true,
+    })
   }
   const applyFilter = (
     compactKey: CompactFilterKey,
@@ -678,7 +708,8 @@ export function View({ initialData }: ViewProps = {}) {
         mapToQueryParam(next) || undefined,
         sortParam,
       ),
-      replace: true})
+      replace: true,
+    })
   }
   const removeFilter = (compactKey: CompactFilterKey) => {
     const next = new Map(recordsFilterMap)
@@ -698,7 +729,8 @@ export function View({ initialData }: ViewProps = {}) {
         next.size > 0 ? mapToQueryParam(next) : undefined,
         sortParam,
       ),
-      replace: true})
+      replace: true,
+    })
   }
   const clearAllFilters = () => {
     setCurrentPage(1)
@@ -713,13 +745,15 @@ export function View({ initialData }: ViewProps = {}) {
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
       search: recordsSearchWithSort(undefined, sortParam),
-      replace: true})
+      replace: true,
+    })
   }
 
   const handleBack = () => {
     navigate({
       to: '/organizations/$orgId/domains',
-      params: { orgId: orgId! }})
+      params: { orgId: orgId! },
+    })
   }
 
   const handleCopy = (text: string, field: string) => {
@@ -739,7 +773,8 @@ export function View({ initialData }: ViewProps = {}) {
       .filter((org) => org.$id !== domain.teamId)
       .map((org) => ({
         value: org.$id,
-        label: org.name}))
+        label: org.name,
+      }))
   }, [allOrganizations, domain])
   const supportsMultiTenancy = canSwitchOrganizations(
     features,
@@ -757,7 +792,8 @@ export function View({ initialData }: ViewProps = {}) {
       }
       return createDomainTransferOut({
         domainId,
-        organizationId: orgId})
+        organizationId: orgId,
+      })
     },
     onSuccess: (data) => {
       setRegistrarTransferAuthCode(data.authCode)
@@ -765,7 +801,8 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to start transfer out'))
-    }})
+    },
+  })
 
   const handleTransferDomain = async () => {
     if (!domainId || !selectedOrgId) return
@@ -773,11 +810,10 @@ export function View({ initialData }: ViewProps = {}) {
     try {
       await transferDomainMutation.mutateAsync({
         domainId,
-        teamId: targetOrgId})
+        teamId: targetOrgId,
+      })
 
-      const selectedOrg = organizations.find(
-        (org) => org.value === targetOrgId,
-      )
+      const selectedOrg = organizations.find((org) => org.value === targetOrgId)
       toast.success(
         `${domain?.domain || t('Domain')} ${t('has been transferred to')} ${selectedOrg?.label || t('the selected organization')}`,
       )
@@ -787,7 +823,8 @@ export function View({ initialData }: ViewProps = {}) {
 
       navigate({
         to: '/organizations/$orgId/domains',
-        params: { orgId: targetOrgId }})
+        params: { orgId: targetOrgId },
+      })
     } catch (error) {
       toast.error(getErrorMessage(error) || t('Failed to transfer domain'))
     }
@@ -810,11 +847,13 @@ export function View({ initialData }: ViewProps = {}) {
         // Navigate back to domains list
         navigate({
           to: '/organizations/$orgId/domains',
-          params: { orgId: orgId! }})
+          params: { orgId: orgId! },
+        })
       },
       onError: (error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete domain'))
-      }})
+      },
+    })
   }
 
   const handleUpdateAutoRenewal = () => {
@@ -831,8 +870,11 @@ export function View({ initialData }: ViewProps = {}) {
           )
         },
         onError: (error) => {
-          toast.error(getErrorMessage(error) || t('Failed to update auto renewal'))
-        }},
+          toast.error(
+            getErrorMessage(error) || t('Failed to update auto renewal'),
+          )
+        },
+      },
     )
   }
 
@@ -840,8 +882,7 @@ export function View({ initialData }: ViewProps = {}) {
     const colors: Record<string, string> = {
       A: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
       AAAA: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      CNAME:
-        'bg-green-500/10 text-green-600 dark:text-green-400',
+      CNAME: 'bg-green-500/10 text-green-600 dark:text-green-400',
       MX: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
       TXT: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
       NS: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
@@ -849,8 +890,8 @@ export function View({ initialData }: ViewProps = {}) {
       CAA: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
       HTTPS:
         'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-      ALIAS:
-        'bg-amber-500/10 text-amber-600 dark:text-amber-400'}
+      ALIAS: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    }
     return colors[type] || 'bg-muted text-muted-foreground'
   }
 
@@ -867,7 +908,8 @@ export function View({ initialData }: ViewProps = {}) {
             onClick={() =>
               navigate({
                 to: '/organizations/$orgId/domains',
-                params: { orgId: orgId! }})
+                params: { orgId: orgId! },
+              })
             }
           >
             {t('Back to domains')}
@@ -882,7 +924,8 @@ export function View({ initialData }: ViewProps = {}) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: () => {},
-          onCreateOrganization: () => {}}}
+          onCreateOrganization: () => {},
+        }}
         headerBanner={
           <OrganizationBillingHeaderBanners organizationId={orgId} />
         }
@@ -890,17 +933,18 @@ export function View({ initialData }: ViewProps = {}) {
         containerClassName="domain-detail-layout-container"
       >
         <ServiceHeader
-        title={
-          <DetailResourceHeaderTitle
-            kind="domain"
-            label={domain?.domain ?? t('Domain')}
-            resourceId={domain?.$id ?? ''}
-            organizationId={orgId}
-            back={{
-              onClick: handleBack,
-              'aria-label': t('Back to domains')}}
-          />
-        }
+          title={
+            <DetailResourceHeaderTitle
+              kind="domain"
+              label={domain?.domain ?? t('Domain')}
+              resourceId={domain?.$id ?? ''}
+              organizationId={orgId}
+              back={{
+                onClick: handleBack,
+                'aria-label': t('Back to domains'),
+              }}
+            />
+          }
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
@@ -949,7 +993,10 @@ export function View({ initialData }: ViewProps = {}) {
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
-                            {t("Update your domain's nameservers to point to Appwrite")} {/* pragma: allowlist secret */}
+                            {t(
+                              "Update your domain's nameservers to point to Appwrite",
+                            )}{' '}
+                            {/* pragma: allowlist secret */}
                           </span>
                         </AlertDescription>
                       </div>
@@ -1057,7 +1104,8 @@ export function View({ initialData }: ViewProps = {}) {
                                 {
                                   year: 'numeric',
                                   month: 'short',
-                                  day: 'numeric'},
+                                  day: 'numeric',
+                                },
                               )
                             : '-'}
                         </code>
@@ -1145,7 +1193,8 @@ export function View({ initialData }: ViewProps = {}) {
                         queryParam ?? undefined,
                         sortParam ?? undefined,
                       ),
-                      replace: true})
+                      replace: true,
+                    })
                   }}
                   sortBy={recordsSortBy}
                   sortOrder={recordsSortOrder}
@@ -1159,7 +1208,8 @@ export function View({ initialData }: ViewProps = {}) {
                       to: recordsRouteTo,
                       params: { orgId: orgId!, domainId: domainId! },
                       search: {},
-                      replace: true})
+                      replace: true,
+                    })
                   }}
                   teamId={orgId}
                 />
@@ -1436,7 +1486,8 @@ export function View({ initialData }: ViewProps = {}) {
                                       {value === 'a.a.a.a' ||
                                       value === 'b:b::b:b:b'
                                         ? t('Served by Appwrite') // pragma: allowlist secret
-                                        : t('Generated by Appwrite')} {/* pragma: allowlist secret */}
+                                        : t('Generated by Appwrite')}{' '}
+                                      {/* pragma: allowlist secret */}
                                     </Badge>
                                   ) : (
                                     <>
@@ -1532,7 +1583,7 @@ export function View({ initialData }: ViewProps = {}) {
                                   </TooltipProvider>
                                 ) : (
                                   <span className="text-[12px] text-muted-foreground">
-                                     - 
+                                    -
                                   </span>
                                 )}
                               </TableCell>
@@ -1975,7 +2026,9 @@ export function View({ initialData }: ViewProps = {}) {
                             <div className="flex gap-2">
                               <Input
                                 readOnly
-                                type={transferCodeRevealed ? 'text' : 'password'}
+                                type={
+                                  transferCodeRevealed ? 'text' : 'password'
+                                }
                                 value={registrarTransferAuthCode}
                                 className="h-10 font-mono text-[13px]"
                               />

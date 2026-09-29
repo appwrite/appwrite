@@ -109,7 +109,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Deployment actions': 'デプロイの操作',
   'Deployment activated successfully': 'デプロイを有効化しました',
   'Deployment deleted successfully': 'デプロイを削除しました',
+  'Deployment view': 'デプロイの表示',
   'Deployment not found': 'デプロイが見つかりません',
+  'Site not found': 'サイトが見つかりません',
+  'Execution not found': '実行が見つかりません',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Deployment screenshot': 'デプロイのスクリーンショット',
   'Deselect all': 'すべての選択を解除',
@@ -373,6 +376,47 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Select shown': '表示分を選択',
   'Send feedback': 'フィードバックを送信',
   'Share your feedback...': 'フィードバックを共有...',
+  'How is your experience with the console?':
+    'コンソールの使い心地はいかがですか?',
+  'How is the console working for you?': 'コンソールは問題なく使えていますか?',
+  'Feedback sentiment': 'フィードバックの種類',
+  'Works well': '問題ない',
+  'Needs improvement': '改善してほしい',
+  Positive: '良い',
+  Negative: '改善したい',
+  'Add details (optional)': '詳細 (任意)',
+  'Submit feedback': 'フィードバックを送信',
+  'Report a bug on GitHub': 'GitHub でバグを報告',
+  'For issues in Appwrite with steps to reproduce':
+    'Appwrite 本体の再現手順付きの不具合',
+  'Tell us what you build': '作っているものを教えてください',
+  'Request received. We will be in touch.':
+    '依頼を受け付けました。追って連絡します。',
+  'What you build and results you have seen. We may reach out for a short interview.':
+    '構築内容と得られた成果。短いインタビューのためご連絡することがあります。',
+  'What you ship and the results you have seen': 'リリース内容と得られた成果',
+  'Request interview': 'インタビューを依頼',
+  'What could we improve?': '改善してほしい点は?',
+  'What is working well? (optional)': 'うまくいっている点 (任意)',
+  'Tell us what was confusing or missing':
+    '分かりにくかった点や不足していた点を教えてください',
+  'Share what you liked (optional)': '良かった点を共有 (任意)',
+  'Report a bug': 'バグを報告',
+  'For reproducible defects in Appwrite itself, open a GitHub issue with steps to reproduce.':
+    'Appwrite 本体の再現可能な不具合は、再現手順付きで GitHub issue を開いてください。',
+  'Open GitHub issue': 'GitHub issue を開く',
+  'Share your customer story': '導入事例を共有',
+  'Story request received': 'ストーリー依頼を受け付けました',
+  'Our team will review your note and contact you if we move forward with a customer story.':
+    '内容を確認し、導入事例として進める場合はご連絡します。',
+  'What would you like to share?': '何を共有したいですか?',
+  'Product, results, and how Appwrite fits your stack':
+    'プロダクト、成果、Appwrite がスタックにどうフィットするか',
+  'Request customer story interview': '導入事例インタビューを依頼',
+  'Failed to submit story request': 'ストーリー依頼の送信に失敗しました',
+  'Too many requests. Try again in a few minutes.':
+    'リクエストが多すぎます。数分後にもう一度お試しください。',
+  'Internal server error.': '内部サーバーエラー。',
   'Sort field': 'ソートフィールド',
   'Source code': 'ソースコード',
   'Status Code': 'ステータスコード',
@@ -837,8 +881,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'すべての変数を一度に編集します。シークレット変数は表示されず、影響を受けません。',
   'Enter text that matches the start of a name, email, phone, or user ID.':
     '名前、メール、電話番号、またはユーザー ID の先頭に一致するテキストを入力してください。',
-  'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
-    'フィードバックが設定されていません。送信を有効にするには、.env で VITE_GROWTH_ENDPOINT を設定してください。',
   "If selected, you and your team won't be able to read the values after creation.":
     '選択すると、作成後はあなたとチームメンバーが値を読み取れなくなります。',
   'Impersonation active. Operating as another console user. Exit to return to your operator session.':

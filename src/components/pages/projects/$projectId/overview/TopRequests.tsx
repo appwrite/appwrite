@@ -8,9 +8,14 @@ import {
   type ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
+  getStorageBreakdownResourceTypeLabel,
   resolveStorageBreakdownResource,
   type StorageBreakdownResourceMap,
 } from '@/lib/usage/resolve-storage-breakdown-resources'
+import {
+  formatUsageResourceTypeLabel,
+  USAGE_BREAKDOWN_RESOURCE_NOT_FOUND_LABEL,
+} from '@/lib/usage/usage-resource-filters'
 import {
   getDatabaseBreakdownServiceLabel,
   resolveDatabaseBreakdownResource,
@@ -51,6 +56,41 @@ function formatBreakdownPath(path: string): string {
   return truncateMiddle(compactUsagePathIds(path), PATH_DISPLAY_MAX)
 }
 
+function renderTypeOnlyResourceRow(
+  t: (text: string) => string,
+  typeLabel: string,
+) {
+  return (
+    <span
+      className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground/70"
+      title={t(typeLabel)}
+    >
+      {t(typeLabel)}
+    </span>
+  )
+}
+
+function renderUnresolvedResourceRow(
+  t: (text: string) => string,
+  typeLabel: string,
+  notFoundLabel: string,
+) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+      <span className="shrink-0 text-[11px] text-muted-foreground">
+        {t(typeLabel)}
+      </span>
+      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+      <span
+        className="min-w-0 truncate text-[12px] font-medium text-muted-foreground"
+        title={`${typeLabel} / ${notFoundLabel}`}
+      >
+        {notFoundLabel}
+      </span>
+    </div>
+  )
+}
+
 type MetricType = OverviewBreakdownMetric
 
 interface TopRequestsProps {
@@ -63,6 +103,8 @@ interface TopRequestsProps {
   resourceLookup?: ComputeBreakdownResourceMap
   storageLookup?: StorageBreakdownResourceMap
   databaseLookup?: DatabaseBreakdownResourceMap
+  /** When false, unresolved resource IDs omit "Not found" until name lookups finish. */
+  resourceNamesResolved?: boolean
   storageBreakdownKind?: OverviewStorageBreakdownType
   headerAddon?: ReactNode
   itemCount?: number
@@ -84,6 +126,7 @@ interface RequestItem {
   statusCode: number
   path: string
   count: number
+  resourceType?: string
 }
 
 // Mock data for top requests
@@ -141,6 +184,7 @@ export function TopRequests({
   resourceLookup,
   storageLookup,
   databaseLookup,
+  resourceNamesResolved = true,
   storageBreakdownKind = 'buckets',
   headerAddon,
   itemCount = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
@@ -257,6 +301,7 @@ export function TopRequests({
               }
 
               const resourceKey = request.path || request.id
+              const resourceType = request.resourceType?.trim() ?? ''
               const storageResource = useStorageBucketLookup
                 ? resolveStorageBreakdownResource(resourceKey, storageLookup)
                 : undefined
@@ -339,6 +384,56 @@ export function TopRequests({
                       </span>
                     </div>
                   )
+                }
+
+                if (isResourceBreakdown) {
+                  const notFoundLabel = t(USAGE_BREAKDOWN_RESOURCE_NOT_FOUND_LABEL)
+
+                  if (
+                    resourceType === 'site' ||
+                    resourceType === 'function' ||
+                    (isStorageBreakdown &&
+                      (storageBreakdownKind === 'functions' ||
+                        storageBreakdownKind === 'sites') &&
+                      !!resourceKey)
+                  ) {
+                    const typeLabel =
+                      resourceType === 'site' || resourceType === 'function'
+                        ? getComputeBreakdownResourceTypeLabel(resourceType)
+                        : storageBreakdownKind === 'sites'
+                          ? getComputeBreakdownResourceTypeLabel('site')
+                          : getComputeBreakdownResourceTypeLabel('function')
+                    if (!resourceNamesResolved) {
+                      return renderTypeOnlyResourceRow(t, typeLabel)
+                    }
+                    return renderUnresolvedResourceRow(t, typeLabel, notFoundLabel)
+                  }
+
+                  if (useStorageBucketLookup && resourceKey) {
+                    const typeLabel = getStorageBreakdownResourceTypeLabel()
+                    if (!resourceNamesResolved) {
+                      return renderTypeOnlyResourceRow(t, typeLabel)
+                    }
+                    return renderUnresolvedResourceRow(
+                      t,
+                      typeLabel,
+                      notFoundLabel,
+                    )
+                  }
+
+                  if (useDatabaseLookup && resourceKey) {
+                    const typeLabel = resourceType
+                      ? formatUsageResourceTypeLabel(resourceType)
+                      : 'Database'
+                    if (!resourceNamesResolved) {
+                      return renderTypeOnlyResourceRow(t, typeLabel)
+                    }
+                    return renderUnresolvedResourceRow(
+                      t,
+                      typeLabel,
+                      notFoundLabel,
+                    )
+                  }
                 }
 
                 return (

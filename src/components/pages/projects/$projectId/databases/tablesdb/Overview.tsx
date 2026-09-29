@@ -1,5 +1,7 @@
 // Database-level overview (tabs: tables list, visualizer, monitor, …) - per product copy.
 import { cn } from '@/lib/utils'
+import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
+import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -533,18 +535,39 @@ export function Overview({
       if (!projectId || !databaseId) {
         throw new Error('Project ID and Database ID are required')
       }
-      // Delete all tables in parallel
-      await Promise.all(
+      // Delete all tables in parallel. Settle each one, so a partial failure
+      // still cleans up the tables that were deleted.
+      const results = await Promise.allSettled(
         tableIds.map((tableId) =>
           deleteProjectTable(projectId, databaseId, DB_KIND, tableId),
         ),
       )
-    },
-    onSuccess: async () => {
       // Refetch tables list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
+      const deleted = tableIds.filter(
+        (_, index) => results[index].status === 'fulfilled',
+      )
+      // Drop deleted tables' cached details, or reopening a URL renders them.
+      for (const tableId of deleted) {
+        queryClient.removeQueries({
+          queryKey: ['table', 'project', projectId, databaseId, tableId],
+        })
+      }
+      const failure = results.find(
+        (result): result is PromiseRejectedResult =>
+          result.status === 'rejected',
+      )
+      if (failure) {
+        // Keep only the tables that are left, so a retry does not resend deleted ones.
+        setSelectedTables(
+          (prev) => new Set([...prev].filter((id) => !deleted.includes(id))),
+        )
+        throw failure.reason
+      }
+    },
+    onSuccess: () => {
       toast.success(
         `${t('Successfully deleted')} ${selectedTables.size} ${
           selectedTables.size === 1
@@ -793,6 +816,12 @@ export function Overview({
           }
           contentAfterBorder={
             <>
+              {activeTab === 'settings' ? (
+                <TerraformResourceAlert
+                  projectId={projectId}
+                  resource={getTerraformResourcePath('database', databaseId)}
+                />
+              ) : null}
               {activeTab === 'monitor' ? (
                 <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                   <DatabaseMonitorMobileNav

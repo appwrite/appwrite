@@ -236,6 +236,21 @@ export function getOperatorsForColumn(
   return base.filter((op) => allowed.has(op.key))
 }
 
+/**
+ * Attributes whose stored value varies in case between writers, so a filter has to
+ * match either spelling. Executions are the case in point: the router and the WAF
+ * store `requestMethod` uppercase while cloud's edge stores it lowercase, and the
+ * API compares case-sensitively.
+ */
+const CASE_INSENSITIVE_ATTRIBUTES = new Set(['requestMethod'])
+
+/** Both spellings of a value, or just the one when they are identical. */
+function caseVariants(value: string): string[] {
+  const upper = value.toUpperCase()
+  const lower = value.toLowerCase()
+  return upper === lower ? [upper] : [upper, lower]
+}
+
 /** Parse "start,end" for between/notBetween; returns [start, end] or null if invalid. */
 function parseBetweenValue(
   value: string | number | string[] | boolean | null | undefined,
@@ -264,13 +279,30 @@ export function buildFilterQueryString(
   value: string | number | string[] | boolean | null | undefined,
 ): string {
   const safeVal = value ?? ''
+  const caseInsensitive =
+    CASE_INSENSITIVE_ATTRIBUTES.has(columnId) &&
+    typeof safeVal === 'string' &&
+    safeVal !== ''
   switch (operatorKey) {
     case 'equal':
+      if (caseInsensitive) {
+        return Query.equal(columnId, caseVariants(safeVal as string))
+      }
       return Array.isArray(safeVal)
         ? Query.equal(columnId, safeVal)
         : Query.equal(columnId, safeVal)
-    case 'notEqual':
+    case 'notEqual': {
+      if (caseInsensitive) {
+        const variants = caseVariants(safeVal as string)
+        // `notEqual` takes exactly one value, so exclude each spelling in turn
+        if (variants.length > 1) {
+          return Query.and(
+            variants.map((variant) => Query.notEqual(columnId, variant)),
+          )
+        }
+      }
       return Query.notEqual(columnId, safeVal as string | number | boolean)
+    }
     case 'startsWith':
       return Query.startsWith(columnId, String(safeVal))
     case 'notStartsWith':
@@ -383,6 +415,14 @@ export function buildFilterTagFromCompactKey(
     tagDisplayVal = key.v ? 'Enabled' : 'Disabled'
   } else if (col.format === 'size' && typeof key.v === 'number') {
     tagDisplayVal = formatBytesForFilter(key.v)
+  } else if (col.type === 'enum' && key.v !== undefined && key.v !== '') {
+    // Enum values can differ from their label (e.g. Method "GET" filters on "get")
+    const elementLabel = (value: string | number | boolean) =>
+      col.elements?.find((el) => String(el.value) === String(value))?.label ??
+      String(value)
+    tagDisplayVal = Array.isArray(key.v)
+      ? key.v.map(elementLabel).join(', ')
+      : elementLabel(key.v)
   } else if (key.v !== undefined && key.v !== '') {
     tagDisplayVal = Array.isArray(key.v) ? key.v.join(', ') : String(key.v)
   } else {

@@ -1027,6 +1027,22 @@ export function useDeleteSiteDeployment(
 }
 
 /**
+ * Delete a site log (execution) by its unique ID.
+ */
+export async function deleteSiteLog(
+  projectId: string,
+  siteId: string,
+  logId: string,
+) {
+  if (!projectId || !siteId || !logId) {
+    throw new Error('Project ID, Site ID, and Log ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.sites.deleteLog({ siteId, logId })
+}
+
+/**
  * Hook to delete a site log
  */
 export function useDeleteSiteLog(
@@ -1040,11 +1056,10 @@ export function useDeleteSiteLog(
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
-      const projectSdk = sdk.forProject(projectId)
-      await projectSdk.sites.deleteLog({ siteId, logId })
+      return await deleteSiteLog(projectId, siteId, logId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['logs', 'site', projectId, siteId],
       })
     },

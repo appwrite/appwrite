@@ -18,6 +18,7 @@ import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
@@ -32,6 +33,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
@@ -41,6 +43,7 @@ import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookie
 import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
 import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -48,7 +51,6 @@ import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privac
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
 import { Route as PublicAppRouteImport } from './routes/_public/app'
@@ -115,9 +117,21 @@ import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.
 import { Route as PublicAuthPreviewRouteImport } from './routes/_public/auth.preview'
 import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
+import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
+import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
+import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
+import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
+import { Route as PublicDebugMagicUrlPreviewRouteImport } from './routes/_public/debug.magic-url-preview'
+import { Route as PublicDebugMfaPreviewRouteImport } from './routes/_public/debug.mfa-preview'
 import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
+import { Route as PublicDebugOauth2RelayPreviewRouteImport } from './routes/_public/debug.oauth2-relay-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
+import { Route as PublicDebugRecoveryPreviewRouteImport } from './routes/_public/debug.recovery-preview'
+import { Route as PublicDebugResetPreviewRouteImport } from './routes/_public/debug.reset-preview'
+import { Route as PublicDebugSignInPreviewRouteImport } from './routes/_public/debug.sign-in-preview'
+import { Route as PublicDebugSignUpPreviewRouteImport } from './routes/_public/debug.sign-up-preview'
+import { Route as PublicDebugSitesAuthPreviewRouteImport } from './routes/_public/debug.sites-auth-preview'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
@@ -475,6 +489,11 @@ const DocsDotmdRoute = DocsDotmdRouteImport.update({
   path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -545,6 +564,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
   id: '/affiliates',
   path: '/affiliates',
@@ -590,6 +614,11 @@ const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
   path: '/enterprise',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -626,11 +655,6 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -973,9 +997,44 @@ const PublicDebugCodeEditorPreviewRoute =
     path: '/debug/code-editor-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugCommunityShareExamplesRoute =
+  PublicDebugCommunityShareExamplesRouteImport.update({
+    id: '/debug/community-share-examples',
+    path: '/debug/community-share-examples',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationJoinPreviewRoute =
+  PublicDebugEducationJoinPreviewRouteImport.update({
+    id: '/debug/education-join-preview',
+    path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
   id: '/debug/error-preview',
   path: '/debug/error-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugImpersonatePreviewRoute =
+  PublicDebugImpersonatePreviewRouteImport.update({
+    id: '/debug/impersonate-preview',
+    path: '/debug/impersonate-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugJoinInvitePreviewRoute =
+  PublicDebugJoinInvitePreviewRouteImport.update({
+    id: '/debug/join-invite-preview',
+    path: '/debug/join-invite-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMagicUrlPreviewRoute =
+  PublicDebugMagicUrlPreviewRouteImport.update({
+    id: '/debug/magic-url-preview',
+    path: '/debug/magic-url-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMfaPreviewRoute = PublicDebugMfaPreviewRouteImport.update({
+  id: '/debug/mfa-preview',
+  path: '/debug/mfa-preview',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicDebugOauth2PreviewRoute =
@@ -984,10 +1043,45 @@ const PublicDebugOauth2PreviewRoute =
     path: '/debug/oauth2-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugOauth2RelayPreviewRoute =
+  PublicDebugOauth2RelayPreviewRouteImport.update({
+    id: '/debug/oauth2-relay-preview',
+    path: '/debug/oauth2-relay-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
     path: '/debug/org-setup-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugRecoveryPreviewRoute =
+  PublicDebugRecoveryPreviewRouteImport.update({
+    id: '/debug/recovery-preview',
+    path: '/debug/recovery-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugResetPreviewRoute = PublicDebugResetPreviewRouteImport.update({
+  id: '/debug/reset-preview',
+  path: '/debug/reset-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugSignInPreviewRoute =
+  PublicDebugSignInPreviewRouteImport.update({
+    id: '/debug/sign-in-preview',
+    path: '/debug/sign-in-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSignUpPreviewRoute =
+  PublicDebugSignUpPreviewRouteImport.update({
+    id: '/debug/sign-up-preview',
+    path: '/debug/sign-up-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSitesAuthPreviewRoute =
+  PublicDebugSitesAuthPreviewRouteImport.update({
+    id: '/debug/sites-auth-preview',
+    path: '/debug/sites-auth-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugVerifyEmailPreviewRoute =
@@ -3097,12 +3191,13 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
   )
 
 export interface FileRoutesByFullPath {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -3126,6 +3221,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3193,9 +3289,21 @@ export interface FileRoutesByFullPath {
   '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3519,11 +3627,12 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
@@ -3546,6 +3655,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3609,9 +3719,21 @@ export interface FileRoutesByTo {
   '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3901,6 +4023,7 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -3924,6 +4047,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -3952,7 +4076,7 @@ export interface FileRoutesById {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/_public/': typeof PublicIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3992,9 +4116,21 @@ export interface FileRoutesById {
   '/_public/auth/preview': typeof PublicAuthPreviewRoute
   '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/_public/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/_public/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/_public/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/_public/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/_public/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/_public/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/_public/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -4326,6 +4462,7 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
@@ -4349,6 +4486,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4416,9 +4554,21 @@ export interface FileRouteTypes {
     | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4747,6 +4897,7 @@ export interface FileRouteTypes {
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
@@ -4769,6 +4920,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4832,9 +4984,21 @@ export interface FileRouteTypes {
     | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -5123,6 +5287,7 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
@@ -5146,6 +5311,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5174,7 +5340,7 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/_public/'
+    | '/_marketing/'
     | '/docs/'
     | '/generator/'
     | '/_api/blog/rss.xml'
@@ -5214,9 +5380,21 @@ export interface FileRouteTypes {
     | '/_public/auth/preview'
     | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
+    | '/_public/debug/community-share-examples'
+    | '/_public/debug/education-join-preview'
     | '/_public/debug/error-preview'
+    | '/_public/debug/impersonate-preview'
+    | '/_public/debug/join-invite-preview'
+    | '/_public/debug/magic-url-preview'
+    | '/_public/debug/mfa-preview'
     | '/_public/debug/oauth2-preview'
+    | '/_public/debug/oauth2-relay-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/recovery-preview'
+    | '/_public/debug/reset-preview'
+    | '/_public/debug/sign-in-preview'
+    | '/_public/debug/sign-up-preview'
+    | '/_public/debug/sites-auth-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
     | '/_public/impersonate/$userId'
@@ -5550,6 +5728,7 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
@@ -5645,6 +5824,13 @@ declare module '@tanstack/react-router' {
       path: '/docs.md'
       fullPath: '/docs.md'
       preLoaderRoute: typeof DocsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generator': {
@@ -5745,6 +5931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/affiliates': {
       id: '/_marketing/affiliates'
       path: '/affiliates'
@@ -5808,6 +6001,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingEnterpriseRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
@@ -5856,13 +6056,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
     }
     '/_public/account': {
       id: '/_public/account'
@@ -6326,11 +6519,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/community-share-examples': {
+      id: '/_public/debug/community-share-examples'
+      path: '/debug/community-share-examples'
+      fullPath: '/debug/community-share-examples'
+      preLoaderRoute: typeof PublicDebugCommunityShareExamplesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-join-preview': {
+      id: '/_public/debug/education-join-preview'
+      path: '/debug/education-join-preview'
+      fullPath: '/debug/education-join-preview'
+      preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/error-preview': {
       id: '/_public/debug/error-preview'
       path: '/debug/error-preview'
       fullPath: '/debug/error-preview'
       preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/impersonate-preview': {
+      id: '/_public/debug/impersonate-preview'
+      path: '/debug/impersonate-preview'
+      fullPath: '/debug/impersonate-preview'
+      preLoaderRoute: typeof PublicDebugImpersonatePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/join-invite-preview': {
+      id: '/_public/debug/join-invite-preview'
+      path: '/debug/join-invite-preview'
+      fullPath: '/debug/join-invite-preview'
+      preLoaderRoute: typeof PublicDebugJoinInvitePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/magic-url-preview': {
+      id: '/_public/debug/magic-url-preview'
+      path: '/debug/magic-url-preview'
+      fullPath: '/debug/magic-url-preview'
+      preLoaderRoute: typeof PublicDebugMagicUrlPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/mfa-preview': {
+      id: '/_public/debug/mfa-preview'
+      path: '/debug/mfa-preview'
+      fullPath: '/debug/mfa-preview'
+      preLoaderRoute: typeof PublicDebugMfaPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/oauth2-preview': {
@@ -6340,11 +6575,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/oauth2-relay-preview': {
+      id: '/_public/debug/oauth2-relay-preview'
+      path: '/debug/oauth2-relay-preview'
+      fullPath: '/debug/oauth2-relay-preview'
+      preLoaderRoute: typeof PublicDebugOauth2RelayPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
       fullPath: '/debug/org-setup-preview'
       preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/recovery-preview': {
+      id: '/_public/debug/recovery-preview'
+      path: '/debug/recovery-preview'
+      fullPath: '/debug/recovery-preview'
+      preLoaderRoute: typeof PublicDebugRecoveryPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/reset-preview': {
+      id: '/_public/debug/reset-preview'
+      path: '/debug/reset-preview'
+      fullPath: '/debug/reset-preview'
+      preLoaderRoute: typeof PublicDebugResetPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-in-preview': {
+      id: '/_public/debug/sign-in-preview'
+      path: '/debug/sign-in-preview'
+      fullPath: '/debug/sign-in-preview'
+      preLoaderRoute: typeof PublicDebugSignInPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-up-preview': {
+      id: '/_public/debug/sign-up-preview'
+      path: '/debug/sign-up-preview'
+      fullPath: '/debug/sign-up-preview'
+      preLoaderRoute: typeof PublicDebugSignUpPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sites-auth-preview': {
+      id: '/_public/debug/sites-auth-preview'
+      path: '/debug/sites-auth-preview'
+      fullPath: '/debug/sites-auth-preview'
+      preLoaderRoute: typeof PublicDebugSitesAuthPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/verify-email-preview': {
@@ -8603,12 +8880,14 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -8635,12 +8914,14 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
@@ -10285,13 +10566,24 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
-  PublicIndexRoute: typeof PublicIndexRoute
   PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
+  PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
+  PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
+  PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
+  PublicDebugMagicUrlPreviewRoute: typeof PublicDebugMagicUrlPreviewRoute
+  PublicDebugMfaPreviewRoute: typeof PublicDebugMfaPreviewRoute
   PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
+  PublicDebugOauth2RelayPreviewRoute: typeof PublicDebugOauth2RelayPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugRecoveryPreviewRoute: typeof PublicDebugRecoveryPreviewRoute
+  PublicDebugResetPreviewRoute: typeof PublicDebugResetPreviewRoute
+  PublicDebugSignInPreviewRoute: typeof PublicDebugSignInPreviewRoute
+  PublicDebugSignUpPreviewRoute: typeof PublicDebugSignUpPreviewRoute
+  PublicDebugSitesAuthPreviewRoute: typeof PublicDebugSitesAuthPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
@@ -10313,14 +10605,26 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
-  PublicIndexRoute: PublicIndexRoute,
   PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
+  PublicDebugCommunityShareExamplesRoute:
+    PublicDebugCommunityShareExamplesRoute,
+  PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
+  PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,
+  PublicDebugMagicUrlPreviewRoute: PublicDebugMagicUrlPreviewRoute,
+  PublicDebugMfaPreviewRoute: PublicDebugMfaPreviewRoute,
   PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
+  PublicDebugOauth2RelayPreviewRoute: PublicDebugOauth2RelayPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugRecoveryPreviewRoute: PublicDebugRecoveryPreviewRoute,
+  PublicDebugResetPreviewRoute: PublicDebugResetPreviewRoute,
+  PublicDebugSignInPreviewRoute: PublicDebugSignInPreviewRoute,
+  PublicDebugSignUpPreviewRoute: PublicDebugSignUpPreviewRoute,
+  PublicDebugSitesAuthPreviewRoute: PublicDebugSitesAuthPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
@@ -10406,6 +10710,7 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,

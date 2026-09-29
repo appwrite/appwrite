@@ -3,10 +3,24 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heAuthStorageDictionary: Record<string, string> = {
+  'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.': 'הזינו את מזהה הלקוח מסוג Web application מ-Google Cloud. האפליקציה שלכם שולחת את אותו מזהה ל-Google כ-server client ID. מזהי לקוח של Android לא מוזנים כאן.',
+  "Enter your app's bundle ID, such as com.example.app.": 'הזינו את ה-bundle ID של האפליקציה, לדוגמה com.example.app.',
+  'Learn more about native sign-in': 'מידע נוסף על התחברות נייטיב',
+  'Web client IDs': 'מזהי לקוח מסוג Web',
+  'Add a web client ID and press Enter': 'הוסיפו מזהה לקוח מסוג Web ולחצו Enter',
+  'Bundle IDs': 'Bundle IDs',
+  'Add a bundle ID and press Enter': 'הוסיפו bundle ID ולחצו Enter',
+  'Add native OAuth to your app': 'הוסיפו Native OAuth לאפליקציה',
+  'Configure OAuth': 'הגדרת OAuth',
+  'Read announcement': 'קריאת ההכרזה',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'הוסיפו דיאלוגי התחברות נייטיב ל-Apple, Google ועוד. המשתמשים נשארים באפליקציה, בלי סודות לקוח בקוד.',
   'Native sign-in': 'התחברות נייטיב',
   'Sessions can be created from ID tokens obtained on device': 'ניתן ליצור סשנים מטוקני ID שהתקבלו במכשיר',
   'Native sign-in is turned off for this project': 'התחברות נייטיב כבויה בפרויקט זה',
-  'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.': 'מאמת טוקני ID מה-SDK הנייטיב, כגון Sign in with Apple או Google Credential Manager, ללא client secret.',
+  'Verifies ID tokens from Credential Manager on Android, without a client secret.': 'מאמת טוקני ID מ-Credential Manager ב-Android, ללא client secret.',
+  'Verifies ID tokens from Sign in with Apple on iOS, without a client secret.': 'מאמת טוקני ID מ-Sign in with Apple ב-iOS, ללא client secret.',
+  'Verifies ID tokens from the native SDK, without a client secret.': 'מאמת טוקני ID מה-SDK הנייטיב, ללא client secret.',
   'Add a client ID and press Enter': 'הוסיפו client ID ולחצו Enter',
   'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'הוסיפו לפחות client ID נייטיב אחד, או הגדירו את ה-client ID, כדי שניתן יהיה להתאים טוקנים לאפליקציה שלכם.',
   'native': 'נייטיב',
@@ -982,6 +996,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Team name': 'שם צוות',
   'Team name is required': 'שם צוות הוא שדה חובה',
   'Team not found': 'הצוות לא נמצא',
+  'Membership not found': 'החברות לא נמצאה',
+  'Target not found': 'היעד לא נמצא',
   'Team presets are available when the project belongs to an organization.': 'ערכות צוות זמינות כאשר הפרויקט שייך לארגון.',
   'Teams': 'צוותים',
   'Templates': 'תבניות',
@@ -1259,4 +1275,25 @@ export const heAuthStorageDictionary: Record<string, string> = {
 
   'View prompt': 'הצגת הפרומפט',
 
+  // Breached (pwned) password policy and per-user breach check result
+  'Breached passwords': 'סיסמאות שדלפו',
+  'Check every password your users sign up, sign in, or reset with against the Have I Been Pwned breach database and record the result on the user. Only the first five characters of the password hash are ever shared.':
+    'בדיקת כל סיסמה שהמשתמשים נרשמים, מתחברים או מאפסים איתה מול מאגר הדליפות Have I Been Pwned, ורישום התוצאה אצל המשתמש. רק חמשת התווים הראשונים של ה-hash של הסיסמה משותפים.',
+  'Check passwords against known data breaches':
+    'בדיקת סיסמאות מול דליפות מידע ידועות',
+  'Reject breached passwords': 'דחיית סיסמאות שדלפו',
+  'A password found in a known breach cannot be set when a user signs up or changes their password.':
+    'סיסמה שנמצאה בדליפה ידועה לא תתקבל כשמשתמש נרשם או משנה את הסיסמה שלו.',
+  'Block sign-in with a breached password': 'חסימת התחברות עם סיסמה שדלפה',
+  'Users whose password appears in a known breach cannot sign in until they reset it.':
+    'משתמשים שהסיסמה שלהם מופיעה בדליפה ידועה לא יוכלו להתחבר עד שיאפסו אותה.',
+  'Updated breached password policy': 'מדיניות הסיסמאות שדלפו עודכנה',
+  'Failed to update breached password policy':
+    'עדכון מדיניות הסיסמאות שדלפו נכשל',
+  'Password found in a known data breach': 'הסיסמה נמצאה בדליפת מידע ידועה',
+  'Password not found in known data breaches':
+    'הסיסמה לא נמצאה בדליפות מידע ידועות',
+  'Password not checked against known data breaches':
+    'הסיסמה לא נבדקה מול דליפות מידע ידועות',
+  'breached password': 'סיסמה שדלפה',
 }

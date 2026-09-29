@@ -32,6 +32,8 @@ import {
   XCircle,
   Mail,
   Phone,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   useProjectUsers,
@@ -397,6 +399,7 @@ export function View({
   ])
 
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
+  const [usersDisplayedLimit, setUsersDisplayedLimit] = useState(urlLimit)
   const [usersDisplayedSearch, setUsersDisplayedSearch] = useState<
     string | undefined
   >(undefined)
@@ -471,6 +474,7 @@ export function View({
     if (!isAuthUsersIndex || !usersListParams) return
     if (!hasInitedUsersDisplayedRef.current) {
       setUsersDisplayedPage(urlPage)
+      setUsersDisplayedLimit(urlLimit)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
       setUsersDisplayedSortBy(urlSortBy)
@@ -481,6 +485,7 @@ export function View({
     isAuthUsersIndex,
     usersListParams,
     urlPage,
+    urlLimit,
     urlSearch,
     usersFilterQueryString,
     urlSortBy,
@@ -491,11 +496,12 @@ export function View({
   const {
     users: apiUsers,
     total: displayedUsersTotal,
+    hasMore: usersHasMore,
     isLoading: usersDisplayedLoading,
   } = useProjectUsers(
     projectId,
     usersDisplayedPage - 1,
-    urlLimit,
+    usersDisplayedLimit,
     usersDisplayedSearch ?? undefined,
     usersDisplayedFilterQueries,
     usersDisplayedSortBy,
@@ -507,12 +513,14 @@ export function View({
       return
     const match =
       urlPage === usersDisplayedPage &&
+      urlLimit === usersDisplayedLimit &&
       (urlSearch ?? '') === (usersDisplayedSearch ?? '') &&
       usersFilterQueryString === usersDisplayedFilterQueryString &&
       urlSortBy === usersDisplayedSortBy &&
       urlSortOrder === usersDisplayedSortOrder
     if (!match) {
       setUsersDisplayedPage(urlPage)
+      setUsersDisplayedLimit(urlLimit)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
       setUsersDisplayedSortBy(urlSortBy)
@@ -524,11 +532,13 @@ export function View({
     usersLoading,
     usersFetched,
     urlPage,
+    urlLimit,
     urlSearch,
     usersFilterQueryString,
     urlSortBy,
     urlSortOrder,
     usersDisplayedPage,
+    usersDisplayedLimit,
     usersDisplayedSearch,
     usersDisplayedFilterQueryString,
     usersDisplayedSortBy,
@@ -634,6 +644,19 @@ export function View({
   // Paginated data - users and teams are already paginated by the API
   const paginatedUsers = extendedUsers
   const paginatedTeams = apiTeams
+
+  // `total` stops at APP_LIMIT_COUNT, so the range is built from rows actually rendered.
+  // Page and limit both come from the displayed snapshot; mixing in the URL limit would
+  // briefly describe old rows with a new page size and inflate the range past the count.
+  const usersItemRange =
+    paginatedUsers.length === 0
+      ? { start: 0, end: 0 }
+      : {
+          start: (usersDisplayedPage - 1) * usersDisplayedLimit + 1,
+          end:
+            (usersDisplayedPage - 1) * usersDisplayedLimit +
+            paginatedUsers.length,
+        }
 
   const getUserVerificationStatus = (user: (typeof paginatedUsers)[number]) => {
     if (user.status === 'verified') {
@@ -1458,6 +1481,7 @@ export function View({
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[80px]">
                             {t('MFA')}
                           </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[100px]" />
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
                             {t('Joined')}
                           </TableHead>
@@ -1713,6 +1737,49 @@ export function View({
                                   </div>
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
+                                  <div className="flex items-center justify-center">
+                                    <Link
+                                      to="/projects/$projectId/auth/users/$userId"
+                                      params={{
+                                        projectId: projectId!,
+                                        userId: user.$id,
+                                      }}
+                                      className="block"
+                                    >
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center justify-center">
+                                            {user.passwordPwned === true ? (
+                                              <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                            ) : user.passwordPwned === false ? (
+                                              <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            ) : (
+                                              <span className="text-[11px] text-muted-foreground">
+                                                -
+                                              </span>
+                                            )}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">
+                                            {user.passwordPwned === true
+                                              ? t(
+                                                  'Password found in a known data breach',
+                                                )
+                                              : user.passwordPwned === false
+                                                ? t(
+                                                    'Password not found in known data breaches',
+                                                  )
+                                                : t(
+                                                    'Password not checked against known data breaches',
+                                                  )}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </Link>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                   <Link
                                     to="/projects/$projectId/auth/users/$userId"
                                     params={{
@@ -1757,7 +1824,9 @@ export function View({
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={urlLimit}
+                    hasNextPage={usersHasMore}
+                    displayItemRange={usersItemRange}
+                    pageSize={usersDisplayedLimit}
                     pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}
@@ -1869,7 +1938,9 @@ export function View({
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={urlLimit}
+                    hasNextPage={usersHasMore}
+                    displayItemRange={usersItemRange}
+                    pageSize={usersDisplayedLimit}
                     pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}

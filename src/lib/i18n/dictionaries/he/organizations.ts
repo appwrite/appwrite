@@ -443,6 +443,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Enterprise': 'אנטרפרייז',
   'Estimate, subject to change based on usage':
     'הערכה, עשויה להשתנות בהתאם לשימוש',
+  'Usage-based estimate; updates may take up to 4 hours.':
+    'הערכה על בסיס שימוש; העדכון עשוי לקחת עד 4 שעות.',
   'Estimated fees from the registry before you pay.':
     'עמלות משוערות מהמרשם לפני התשלום.',
   'Estimated total': 'סכום משוער',
@@ -1099,6 +1101,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'This organization has no projects.': 'לארגון הזה אין פרויקטים.',
   'This usually takes a few seconds. Please keep this window open.':
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
+  'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
+    'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',

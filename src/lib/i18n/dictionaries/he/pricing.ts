@@ -156,6 +156,31 @@ export const hePricingDictionary: Record<string, string> = {
   'Daily backups stored for 7 days': 'גיבויים יומיים נשמרים ל-7 ימים',
   'Dedicated priority queues for build jobs': 'תורים בעדיפות ייעודיים לעבודות build',
   'Dedicated resources per project:': 'משאבים ייעודיים לפרויקט:',
+  'Domain pricing': 'תמחור דומיינים',
+  'Domain registration': 'רישום דומיין',
+  'Domains': 'דומיינים',
+  'Domains per organization': 'דומיינים לכל ארגון',
+  'Register or transfer domains through Appwrite at registry pricing. Quotes appear before checkout.':
+    'רישום והעברת דומיינים דרך Appwrite לפי תמחור הרישום. הצעות מחיר מוצגות לפני התשלום.',
+  'Register, transfer, and renew domains through Appwrite at registry rates. Prices depend on the TLD, registration period, and whether the name is premium. Organization plans set how many domains you can manage.':
+    'רישום, העברה וחידוש דומיינים דרך Appwrite לפי תעריפי הרישום. המחיר תלוי ב-TLD, בתקופת הרישום ובכך אם השם פרימיום. תוכניות הארגון קובעות כמה דומיינים ניתן לנהל.',
+  'Registration and transfer': 'רישום והעברה',
+  'Quoted before checkout': 'מחיר מוצג לפני התשלום',
+  'Renewal': 'חידוש',
+  'Charged at the domain renewal price': 'חיוב לפי מחיר החידוש של הדומיין',
+  'Premium domains': 'דומיינים פרימיום',
+  'Registry premium pricing': 'תמחור פרימיום של הרישום',
+  'Billing': 'חיוב',
+  'See': 'ראו',
+  'domain pricing in the docs': 'תמחור דומיינים בתיעוד',
+  'for quotes, premium names, and registration periods.':
+    'לקבלת הצעות מחיר, שמות פרימיום ותקופות רישום.',
+  'Organization domain limits are in': 'מגבלות הדומיינים של הארגון נמצאות ב',
+  'Limit for Appwrite-registered, transferred, and external domains with Appwrite DNS in an organization.':
+    'מגבלה על דומיינים שנרשמו או הועברו דרך Appwrite ודומיינים חיצוניים עם Appwrite DNS בארגון.',
+  'Appwrite DNS': 'Appwrite DNS',
+  'Private WHOIS': 'WHOIS פרטי',
+  '50': '50',
   'DocumentsDB, VectorsDB,\nPostgreSQL, MySQL,\nor upgraded TablesDB':
     'DocumentsDB, VectorsDB,\nPostgreSQL, MySQL,\nאו TablesDB משודרג',
   'Email support': 'תמיכה באימייל',

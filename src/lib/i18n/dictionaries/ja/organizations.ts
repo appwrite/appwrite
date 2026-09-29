@@ -795,6 +795,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Enter your card details to add a new payment method.': '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.': '見積もりを取得するには、ドメイン名をすべて入力してください。',
   'Estimate, subject to change based on usage': '見積もりであり、使用量に応じて変動する場合があります',
+  'Usage-based estimate; updates may take up to 4 hours.':
+    '使用量に基づく見積もりです。反映まで最大 4 時間かかる場合があります。',
   'Estimated fees from the registry before you pay.': '支払い前のレジストリからの見積もり手数料。',
   'Explore all apps available in the marketplace.': 'マーケットプレイスで利用可能なすべてのアプリを見る。',
   'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
@@ -895,6 +897,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'This invoice is missing authentication details.': 'この請求書には認証情報がありません。',
   'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.': 'この名前はプレミアムとして登録されています。最終的な移管料金は支払いを送信した時点で確定します。',
   'This usually takes a few seconds. Please keep this window open.': '通常は数秒で完了します。このウィンドウを開いたままにしてください。',
+  'This usually takes a few seconds to a couple of minutes. Please keep this window open.': '通常は数秒から数分で完了します。このウィンドウを開いたままにしてください。',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.': 'ドメインの移管認可コードを生成します。移管先のレジストラで使用するまで、他人に知られないようにしてください。',
   'Tickets can be submitted anytime; we reply during support hours.': 'チケットはいつでも送信できます。返信はサポート時間内に行います。',
   'Time to live in seconds (default: 3600)': 'TTL (秒単位、デフォルト: 3600)',

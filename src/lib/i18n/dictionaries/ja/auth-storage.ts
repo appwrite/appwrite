@@ -3,10 +3,24 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaAuthStorageDictionary: Record<string, string> = {
+  'Enter the Web application client ID from Google Cloud. Your app sends the same ID to Google as the server client ID. Android client IDs do not go here.': 'Google Cloud の Web application タイプのクライアント ID を入力します。アプリは同じ ID を server client ID として Google に送信します。Android のクライアント ID はここに入力しません。',
+  "Enter your app's bundle ID, such as com.example.app.": 'アプリの bundle ID を入力します（例: com.example.app）。',
+  'Learn more about native sign-in': 'ネイティブサインインの詳細',
+  'Web client IDs': 'Web クライアント ID',
+  'Add a web client ID and press Enter': 'Web クライアント ID を追加して Enter を押します',
+  'Bundle IDs': 'Bundle ID',
+  'Add a bundle ID and press Enter': 'bundle ID を追加して Enter を押します',
+  'Add native OAuth to your app': 'アプリに Native OAuth を追加',
+  'Configure OAuth': 'OAuth を設定',
+  'Read announcement': '告知を読む',
+  'Ship native sign-in dialogs for Apple, Google, and more. Your users never leave the app, and you never ship client secrets.':
+    'Apple、Google などのネイティブサインインダイアログをそのまま組み込めます。ユーザーはアプリから離れず、クライアントシークレットも配布しません。',
   'Native sign-in': 'ネイティブサインイン',
   'Sessions can be created from ID tokens obtained on device': 'デバイス上で取得した ID トークンからセッションを作成できます',
   'Native sign-in is turned off for this project': 'このプロジェクトではネイティブサインインは無効です',
-  'Verifies ID tokens from the native SDK, such as Sign in with Apple or Google Credential Manager, without a client secret.': 'Sign in with Apple や Google Credential Manager などのネイティブ SDK から取得した ID トークンを、クライアントシークレットなしで検証します。',
+  'Verifies ID tokens from Credential Manager on Android, without a client secret.': 'Android の Credential Manager から取得した ID トークンを、クライアントシークレットなしで検証します。',
+  'Verifies ID tokens from Sign in with Apple on iOS, without a client secret.': 'iOS の Sign in with Apple から取得した ID トークンを、クライアントシークレットなしで検証します。',
+  'Verifies ID tokens from the native SDK, without a client secret.': 'ネイティブ SDK から取得した ID トークンを、クライアントシークレットなしで検証します。',
   'Add a client ID and press Enter': 'クライアント ID を入力して Enter を押してください',
   'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.': 'トークンをアプリに照合できるよう、ネイティブクライアント ID を 1 つ以上追加するか、クライアント ID を設定してください。',
   'native': 'ネイティブ',
@@ -957,6 +971,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Team name': 'チーム名',
   'Team name is required': 'チーム名は必須です',
   'Team not found': 'チームが見つかりません',
+  'Membership not found': 'メンバーシップが見つかりません',
+  'Target not found': 'ターゲットが見つかりません',
   'Team presets are available when the project belongs to an organization.': 'プロジェクトが組織に属している場合、チームプリセットを利用できます。',
   'Teams': 'チーム',
   'Templates': 'テンプレート',
@@ -1252,4 +1268,27 @@ export const jaAuthStorageDictionary: Record<string, string> = {
 
   'View prompt': 'プロンプトを表示',
 
+  // Breached (pwned) password policy and per-user breach check result
+  'Breached passwords': '漏洩したパスワード',
+  'Check every password your users sign up, sign in, or reset with against the Have I Been Pwned breach database and record the result on the user. Only the first five characters of the password hash are ever shared.':
+    'ユーザーが登録、サインイン、リセットに使用するすべてのパスワードを Have I Been Pwned の漏洩データベースと照合し、結果をユーザーに記録します。共有されるのはパスワードハッシュの先頭5文字のみです。',
+  'Check passwords against known data breaches':
+    '既知のデータ漏洩とパスワードを照合する',
+  'Reject breached passwords': '漏洩したパスワードを拒否',
+  'A password found in a known breach cannot be set when a user signs up or changes their password.':
+    '既知の漏洩で見つかったパスワードは、ユーザーの登録時やパスワード変更時に設定できません。',
+  'Block sign-in with a breached password':
+    '漏洩したパスワードでのサインインをブロック',
+  'Users whose password appears in a known breach cannot sign in until they reset it.':
+    'パスワードが既知の漏洩に含まれるユーザーは、リセットするまでサインインできません。',
+  'Updated breached password policy': '漏洩パスワードポリシーを更新しました',
+  'Failed to update breached password policy':
+    '漏洩パスワードポリシーの更新に失敗しました',
+  'Password found in a known data breach':
+    'パスワードが既知のデータ漏洩で見つかりました',
+  'Password not found in known data breaches':
+    'パスワードは既知のデータ漏洩では見つかりませんでした',
+  'Password not checked against known data breaches':
+    'パスワードは既知のデータ漏洩と照合されていません',
+  'breached password': '漏洩したパスワード',
 }

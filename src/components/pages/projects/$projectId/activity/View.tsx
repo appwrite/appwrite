@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
+import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
+import { isTerraformActivity } from '@/lib/terraform/activity'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -557,6 +559,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isLoading,
     isFetching,
     isPending,
+    error: activitiesError,
     refetch,
   } = useProjectActivities({
     projectId,
@@ -582,7 +585,10 @@ export function View({ projectId, initialData }: ViewProps) {
   const hasMore =
     useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
   const showListLoading =
-    events.length === 0 && (isLoading || isFetching || isPending)
+    events.length === 0 &&
+    !activitiesError &&
+    (isLoading || isFetching || isPending)
+  const showListError = events.length === 0 && !!activitiesError
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -1070,6 +1076,27 @@ export function View({ projectId, initialData }: ViewProps) {
 
         {showListLoading ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
+        ) : showListError ? (
+          <EmptyState
+            icon={AlertCircle}
+            title={t('Failed to load activity')}
+            description={t(
+              "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.",
+            )}
+            isEmpty={true}
+            variant="centered"
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void refetch()
+                }}
+              >
+                {t('Try again')}
+              </Button>
+            }
+          />
         ) : events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
@@ -1176,6 +1203,26 @@ export function View({ projectId, initialData }: ViewProps) {
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     {t('Via MCP')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : null}
+                              {isTerraformActivity(rawEvent) ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      className="inline-flex shrink-0 text-violet-600 dark:text-violet-400"
+                                      aria-label={t('Via Terraform')}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                      <TerraformIcon
+                                        variant="mark"
+                                        className="h-3.5 w-3.5"
+                                      />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    {t('Via Terraform')}
                                   </TooltipContent>
                                 </Tooltip>
                               ) : null}

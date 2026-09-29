@@ -45,7 +45,7 @@ In this tutorial, you’ll:
 **MCP (Model Context Protocol)** lets AI tools like Cursor securely connect to APIs and databases.  
 The **Appwrite MCP server** gives Cursor access to your Appwrite project so it can create tables, write code, and query real data.
 
-👉 [**Add Appwrite MCP to Cursor**](https://appwrite.io/docs/tooling/mcp/cursor)
+👉 [**Add Appwrite MCP to Cursor**](https://appwrite.io/docs/tooling/ai/agents/cursor)
 
 ---
 

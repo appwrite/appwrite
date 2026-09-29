@@ -88,9 +88,16 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'feedback-github-issue': 'Feedback GitHub Issue Clicked',
+  'feedback-customer-story-submit': 'Feedback Customer Story Submit Clicked',
   'partners-become': 'Become Partner Clicked',
   'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
+  'mcp-connect': 'MCP Connect Clicked',
+  'skills-install': 'Skills Install Clicked',
+  'for-agents-install-skills': 'For Agents Install Skills Clicked',
+  'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
+  'for-agents-view-docs': 'For Agents View Docs Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -210,8 +217,13 @@ export const ANALYTICS_ACTIONS = {
   'create-organization': 'Create Organization Clicked',
   'create-database': 'Create Database Clicked',
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
+  'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'native-oauth-promo-banner-open-settings':
+    'Native OAuth Promo Banner Open Settings Clicked',
+  'native-oauth-promo-banner-learn-more':
+    'Native OAuth Promo Banner Learn More Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',

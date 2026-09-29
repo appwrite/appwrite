@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useMemo, useEffect } from 'react'
 import {
   useParams,
@@ -9,7 +10,6 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -33,6 +33,8 @@ import {
   ExternalLink,
   Copy,
   Check,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -593,7 +595,11 @@ function OverviewTab({
       </div>
       <UpdateEmailSection user={user} projectId={projectId} userId={userId} />
       <UpdatePhoneSection user={user} projectId={projectId} userId={userId} />
-      <UpdatePasswordSection projectId={projectId} userId={userId} />
+      <UpdatePasswordSection
+        user={user}
+        projectId={projectId}
+        userId={userId}
+      />
       <UpdateLabelsSection user={user} projectId={projectId} userId={userId} />
       <div id="user-preferences">
         <UpdatePreferencesSection
@@ -743,6 +749,12 @@ function UserStatusCard({
               >
                 {t(statusBadge.label)}
               </Badge>
+              {user.passwordPwned === true && (
+                <Badge variant="error" className="text-[10px] shrink-0 gap-1">
+                  <ShieldAlert className="h-3 w-3" />
+                  {t('breached password')}
+                </Badge>
+              )}
             </div>
             <div className="space-y-1 text-[13px] text-muted-foreground">
               <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
@@ -864,7 +876,10 @@ function UserImpersonationCapabilityCard({
           {t(
             "When enabled, this user may use the Appwrite client SDK's impersonation support in your app: you designate which other project user a session should run as, and the SDK applies that context on outgoing requests so the API treats each call like it came from the impersonated user - permissions, data access, and limits follow that identity.", // pragma: allowlist secret
           )}{' '}
-          <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/impersonation">
+          <DocsRouteLink
+            className="link-neutral inline-flex items-center gap-1"
+            href="/docs/products/auth/impersonation"
+          >
             {t('Documentation')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
@@ -1151,11 +1166,45 @@ function UpdatePhoneSection({
   )
 }
 
+// Result of the last breached-password check. Null means never checked,
+// for example when the pwned policy is off or the user signs in with OAuth.
+function PasswordBreachStatus({
+  passwordPwned,
+}: {
+  passwordPwned: boolean | null | undefined
+}) {
+  const t = useT()
+
+  if (passwordPwned === true) {
+    return (
+      <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
+        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+        {t('Password found in a known data breach')}
+      </p>
+    )
+  }
+  if (passwordPwned === false) {
+    return (
+      <p className="flex items-center gap-1.5 text-[13px] text-green-600 dark:text-green-400 mt-2">
+        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+        {t('Password not found in known data breaches')}
+      </p>
+    )
+  }
+  return (
+    <p className="text-[13px] text-muted-foreground mt-2">
+      {t('Password not checked against known data breaches')}
+    </p>
+  )
+}
+
 // Update Password Section
 function UpdatePasswordSection({
+  user,
   projectId,
   userId,
 }: {
+  user: Models.User
   projectId: string
   userId: string
 }) {
@@ -1189,6 +1238,7 @@ function UpdatePasswordSection({
         <p className="text-[13px] text-muted-foreground mt-2">
           {t("Update the user's password.")}
         </p>
+        <PasswordBreachStatus passwordPwned={user.passwordPwned} />
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
@@ -1690,7 +1740,10 @@ function UpdateMFASection({
             {t(
               "Enhance the user's account security by requiring a second sign-in method.",
             )}{' '}
-            <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/mfa">
+            <DocsRouteLink
+              className="link-neutral inline-flex items-center gap-1"
+              href="/docs/products/auth/mfa"
+            >
               {t('Documentation')}
               <ExternalLink className="h-3 w-3 shrink-0" />
             </DocsRouteLink>
@@ -1913,7 +1966,8 @@ function DeleteUserSection({
                   if (lastActivity) {
                     parts.push(
                       <>
-                        {t('Last activity:')} <DateTooltip date={lastActivity} />
+                        {t('Last activity:')}{' '}
+                        <DateTooltip date={lastActivity} />
                       </>,
                     )
                   }
@@ -2363,7 +2417,10 @@ function CreateUserMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   {t('Roles are used to manage access permissions.')}{' '}
-                  <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
+                  <DocsRouteLink
+                    className="link-neutral"
+                    href="/docs/advanced/platform/permissions"
+                  >
                     {t('Learn more about permissions')}
                   </DocsRouteLink>
                 </AlertDescription>
@@ -2380,10 +2437,7 @@ function CreateUserMembershipDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!teamId || isLoading}
-          >
+          <Button onClick={handleSubmit} disabled={!teamId || isLoading}>
             {t('Create')}
           </Button>
         </div>
@@ -2947,7 +3001,8 @@ function CreateTargetDialog({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="provider-id" className="text-[12px]">
-                    {t('Provider ID')} <span className="text-destructive">*</span>
+                    {t('Provider ID')}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="provider-id"
@@ -3150,7 +3205,12 @@ function SessionsTab({
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return sdk.forConsole.avatars.getFlag({
+      code: countryCode.toLowerCase() as Flag,
+      width: 20,
+      height: 20,
+      quality: 100,
+    })
   }
 
   if (isLoading) {
@@ -3303,7 +3363,7 @@ function SessionsTab({
                       </code>
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">
-                         - 
+                        -
                       </span>
                     )}
                   </TableCell>

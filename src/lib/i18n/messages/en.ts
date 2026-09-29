@@ -61,11 +61,11 @@ export const enCatalog = {
         accountId: 'Account ID',
         copyAccountId: 'Copy account ID',
         copied: 'Copied!',
-        twoFactor: '2FA',
         active: 'Active',
         inactive: 'Inactive',
-        enabled: 'Enabled',
-        disabled: 'Disabled',
+        twoFactorEnabled: '2FA enabled',
+        twoFactorDisabled: '2FA disabled',
+        passwordBreached: 'Password breached',
         console: 'Console',
         home: 'Home',
         docs: 'Docs',
@@ -421,7 +421,7 @@ export const enCatalog = {
           'Subscribe to live events and react to changes as they happen.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'Connect AI agents to your Appwrite project, APIs, and docs through MCP servers.', // pragma: allowlist secret
+          'Connect AI agents to your Appwrite project, APIs, and docs through one remote MCP server.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'Manage Appwrite infrastructure as code with the official provider.', // pragma: allowlist secret

@@ -3,6 +3,7 @@ import {
   PasswordHistoryCard,
   PasswordDictionaryCard,
   PersonalDataCard,
+  PasswordPwnedCard,
   MfaFactorsCard,
 } from '../Security'
 import { PasswordStrengthCard } from './PasswordStrengthCard'
@@ -20,6 +21,7 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
   const t = useT()
   const security = useAuthSecuritySnapshot(projectId)
   const mfaFactors = security.mfaFactors
+  const passwordPwned = security.authPasswordPwned
 
   const cards: SettingsCardItem[] = [
     {
@@ -84,6 +86,33 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
         />
       ),
     },
+    // Like MFA factors below, servers without a password-pwned policy report
+    // none, so the card is hidden rather than showing defaults it cannot save.
+    ...(passwordPwned
+      ? [
+          {
+            id: 'breached-passwords',
+            search: {
+              title: 'Breached passwords',
+              keywords: [
+                'pwned',
+                'have i been pwned',
+                'hibp',
+                'breach',
+                'leaked',
+                'compromised',
+                'sign-in',
+              ],
+            },
+            node: (
+              <PasswordPwnedCard
+                projectId={projectId}
+                currentPolicy={passwordPwned}
+              />
+            ),
+          },
+        ]
+      : []),
     // Servers without an mfa-factors policy report none; the old console hides
     // the card in that case rather than showing defaults it cannot save.
     ...(mfaFactors

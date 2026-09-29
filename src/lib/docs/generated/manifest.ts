@@ -199,13 +199,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "advanced/security/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
@@ -266,7 +259,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Rate-limits",
     "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/roles",
@@ -315,7 +308,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 20
+    "readingTimeMinutes": 21
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -483,7 +476,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 3
   },
   {
     "slug": "apis",
@@ -749,7 +742,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "API keys",
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 6
   },
   {
     "slug": "partners/project/auth-methods",
@@ -1225,7 +1218,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/mfa",
@@ -1240,6 +1233,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn how to implement multi-tenancy in your applications using Appwrite Teams.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/auth/native-sign-in",
+    "title": "Native sign-in",
+    "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
+    "layout": "article",
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/auth/oauth-server",
@@ -1582,6 +1582,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 6
   },
   {
+    "slug": "products/avatars/user-photos",
+    "title": "User photos",
+    "description": "Show a profile photo for any user with one Avatars call. Appwrite resolves OAuth2 identity photos, Gravatar, Libravatar, and initials, with a built-in placeholder as a fallback.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/databases",
     "title": "Databases",
     "description": "Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.",
@@ -1862,6 +1869,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/mysql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native MySQL database. Configure the mysql2 client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/mysql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native MySQL database. Configure MysqlDialect with mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/mysql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -1904,9 +1925,23 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/mysql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native MySQL database. Configure the mysql dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/mysql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/mysql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native MySQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
     "layout": "article",
     "readingTimeMinutes": 4
   },
@@ -2114,6 +2149,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/postgresql/integrations/knex",
+    "title": "Knex",
+    "description": "Use Knex.js with an Appwrite native PostgreSQL database. Configure the pg client, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/kysely",
+    "title": "Kysely",
+    "description": "Use Kysely with an Appwrite native PostgreSQL database. Configure PostgresDialect with node-postgres, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/postgresql/integrations/laravel",
     "title": "Laravel",
     "description": "Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
@@ -2156,11 +2205,25 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/databases/postgresql/integrations/sequelize",
+    "title": "Sequelize",
+    "description": "Use Sequelize with an Appwrite native PostgreSQL database. Configure the postgres dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/databases/postgresql/integrations/spring-boot",
     "title": "Spring Boot",
     "description": "Connect a Spring Boot application to an Appwrite native PostgreSQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against PostgreSQL.",
     "layout": "article",
     "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/typeorm",
+    "title": "TypeORM",
+    "description": "Use TypeORM with an Appwrite native PostgreSQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/databases/postgresql/maintenance",
@@ -2909,7 +2972,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Resend",
     "description": "Send emails to your Appwrite users using Resend and Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/send-email-messages",
@@ -3168,7 +3231,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Previews",
     "description": "Preview site deployments to test changes before promoting to production.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites/quick-start",
@@ -3591,6 +3654,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "tooling/ai/agents/chatgpt",
+    "title": "ChatGPT",
+    "description": "Connect Appwrite to ChatGPT with the remote MCP server, OAuth, and agent skills so ChatGPT can call your project and search the docs.",
+    "layout": "article",
+    "readingTimeMinutes": 2,
+    "faqs": [
+      {
+        "question": "How do I connect Appwrite to ChatGPT?",
+        "answer": "Add a custom ChatGPT connector or App with the MCP URL https://mcp.appwrite.io and the server name appwrite. Then complete OAuth. Also run npx skills add appwrite/skills so ChatGPT has current SDK and CLI patterns."
+      },
+      {
+        "question": "Do I need an API key for the ChatGPT connector?",
+        "answer": "No. Cloud uses OAuth. You sign in to Appwrite and authorize the connector. Self-hosted Appwrite still uses a local stdio server with a project API key."
+      },
+      {
+        "question": "Is the ChatGPT connector the same as Codex?",
+        "answer": "No. The ChatGPT connector is for ChatGPT chat and Apps. Codex inside ChatGPT uses the Codex plugin plus `codex mcp add appwrite --url https://mcp.appwrite.io/`."
+      }
+    ]
+  },
+  {
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
@@ -3600,7 +3684,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "tooling/ai/agents/codex",
     "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
+    "description": "Use Appwrite's official ChatGPT plugin within Codex, with quick start prompts and the Appwrite MCP server for AI-assisted development.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -3666,6 +3750,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "tooling/ai/backend-for-agents",
+    "title": "Backend for coding agents",
+    "description": "When a coding agent should pick Appwrite over Firebase or Supabase, and how to install skills plus MCP in Cursor, Claude Code, Codex, and ChatGPT.",
+    "layout": "article",
+    "readingTimeMinutes": 1,
+    "faqs": [
+      {
+        "question": "When should a coding agent pick Appwrite?",
+        "answer": "When the app needs user accounts, a database, file uploads, serverless functions, or hosting, and you want one open-source backend the agent can install and call. Prefer Appwrite over Firebase or Supabase when you do not want to stitch extra hosting, MCP, or permission layers."
+      },
+      {
+        "question": "How do I add Appwrite to Cursor, Claude Code, Codex, or ChatGPT?",
+        "answer": "Install skills with npx skills add appwrite/skills, then add the remote MCP server at https://mcp.appwrite.io (server name appwrite). ChatGPT uses a custom connector with that URL. Cursor, Claude Code, and Codex have plugins plus the same MCP endpoint."
+      },
+      {
+        "question": "Is there more than one Appwrite MCP server?",
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+      }
+    ]
   },
   {
     "slug": "tooling/ai/docs-as-markdown",

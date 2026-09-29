@@ -87,16 +87,21 @@ export function formatBreakdownLabel(
   computeLookup?: ComputeBreakdownResourceMap | null,
   storageLookup?: StorageBreakdownResourceMap | null,
   tableLookup?: TableBreakdownResourceMap | null,
+  resourceNamesResolved = true,
 ): string {
   const label = item.label
 
   if (dimension === 'resource') {
-    const resolved = resolveUsageResourceBreakdownItem(item, {
-      databaseLookup,
-      computeLookup,
-      storageLookup,
-      tableLookup,
-    })
+    const resolved = resolveUsageResourceBreakdownItem(
+      item,
+      {
+        databaseLookup,
+        computeLookup,
+        storageLookup,
+        tableLookup,
+      },
+      { resourceNamesResolved },
+    )
     if (!resolved.name) {
       return resolved.typeLabel
     }
@@ -268,6 +273,7 @@ type UsageBreakdownRowProps = {
   maxCount: number
   formatValue?: (value: number) => string
   onAddFilter?: (filters: UsageBreakdownFilterEntry[]) => void
+  resourceNamesResolved?: boolean
 }
 
 export function UsageBreakdownRow({
@@ -282,6 +288,7 @@ export function UsageBreakdownRow({
   maxCount,
   formatValue = formatRequestsValue,
   onAddFilter,
+  resourceNamesResolved = true,
 }: UsageBreakdownRowProps) {
   const usageFilters = useOptionalUsageFilters()
   const showCountryFlags = dimension === 'country' && !!countryLookups
@@ -292,12 +299,16 @@ export function UsageBreakdownRow({
   const showMethodBadges = dimension === 'method'
   const resolvedResource =
     dimension === 'resource'
-      ? resolveUsageResourceBreakdownItem(item, {
-          databaseLookup,
-          computeLookup,
-          storageLookup,
-          tableLookup,
-        })
+      ? resolveUsageResourceBreakdownItem(
+          item,
+          {
+            databaseLookup,
+            computeLookup,
+            storageLookup,
+            tableLookup,
+          },
+          { resourceNamesResolved },
+        )
       : null
   const computeResource =
     dimension === 'resourceId'
@@ -330,6 +341,7 @@ export function UsageBreakdownRow({
     computeLookup,
     storageLookup,
     tableLookup,
+    resourceNamesResolved,
   )
   const countryCode =
     showCountryFlags && countryLookups
@@ -571,6 +583,7 @@ type UsageBreakdownRowsListProps = {
   className?: string
   formatValue?: (value: number) => string
   onAddFilter?: (filters: UsageBreakdownFilterEntry[]) => void
+  resourceNamesResolved?: boolean
 }
 
 export function UsageBreakdownRowsList({
@@ -586,6 +599,7 @@ export function UsageBreakdownRowsList({
   className,
   formatValue,
   onAddFilter,
+  resourceNamesResolved = true,
 }: UsageBreakdownRowsListProps) {
   const usageFilters = useOptionalUsageFilters()
   const handleAddFilter =
@@ -630,6 +644,7 @@ export function UsageBreakdownRowsList({
             maxCount={maxCount}
             formatValue={formatValue}
             onAddFilter={handleAddFilter}
+            resourceNamesResolved={resourceNamesResolved}
           />
         )
       })}

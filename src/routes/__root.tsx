@@ -41,6 +41,7 @@ import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
 } from '@/components/global/providers/ConsoleRightPane'
+import { DebugDemoNavigatorMount } from '@/components/global/providers/DebugDemoNavigatorMount'
 import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
@@ -71,6 +72,8 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   applyScreenshotModeOrganizationName,
   isScreenshotModeActive,
+  readScreenshotModeOpen,
+  subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
@@ -91,7 +94,10 @@ import { I18nProvider } from '@/lib/i18n'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
-import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
+import {
+  isConsoleRedirectHopPath,
+  isRootHomeMatch,
+} from '@/lib/root-guest-redirect'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -401,13 +407,16 @@ function isProjectRoute(pathname: string) {
 
 /** Full-viewport shell: construction stripe spans main column + right pane. */
 function RootAppShell({ children }: { children: React.ReactNode }) {
-  // Use the rendered location, not the pending one. During `/` → `/home`
-  // (or `/` → org) the desired path can already be the destination while the
-  // outlet is still the blank hop; wrapping that hop would flash the footer.
+  // Use the rendered location, not the pending one. During `/` → org the
+  // desired path can already be the destination while the outlet is still
+  // the blank hop; wrapping that hop would flash the footer.
   const renderedPathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
   })
-  if (isConsoleRedirectHopPath(renderedPathname)) {
+  const rootHome = useRouterState({
+    select: (s) => isRootHomeMatch(s.matches),
+  })
+  if (isConsoleRedirectHopPath(renderedPathname) && !rootHome) {
     return <>{children}</>
   }
 
@@ -429,7 +438,7 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-const STATUS_PAGE_URL = 'https://status.appwrite.online'
+const STATUS_PAGE_URL = 'https://appwrite.online'
 
 function RootFullscreenLoader() {
   const { isLoading, skipStaticLoader } = useInitialLoader()
@@ -442,14 +451,20 @@ function RootFullscreenLoader() {
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
   const { showFullscreenLoader } = useDebugOverrides()
+  const [screenshotModeOpen, setScreenshotModeOpen] = useState(() =>
+    readScreenshotModeOpen(),
+  )
 
   useEffect(() => {
     setClientMounted(true)
   }, [])
 
+  useEffect(() => subscribeScreenshotMode(setScreenshotModeOpen), [])
+
   const isLoaderVisible = isLoading || showFullscreenLoader
   const statusBanner =
     cloudStatusEnabled &&
+    !screenshotModeOpen &&
     showCloudStatusToOperator &&
     isLoaderVisible &&
     isStatusSuccess &&
@@ -518,6 +533,7 @@ function RootAppProviders({ children }: { children: React.ReactNode }) {
     <>
       <RootAppShell>{children}</RootAppShell>
       <ClientOnly>
+        <DebugDemoNavigatorMount />
         <DebugMenuMount />
       </ClientOnly>
     </>

@@ -27,6 +27,8 @@ type PostgresTableHeaderProps = {
   searchValue?: string
   onSearchChange?: (value: string) => void
   filterTrigger?: React.ReactNode
+  beforeRefreshButtons?: React.ReactNode
+  afterRefreshButtons?: React.ReactNode
 }
 
 export function PostgresTableHeader({
@@ -45,6 +47,8 @@ export function PostgresTableHeader({
   searchValue,
   onSearchChange,
   filterTrigger,
+  beforeRefreshButtons,
+  afterRefreshButtons,
 }: PostgresTableHeaderProps) {
   const t = useT()
   const { schema, table } = parsePostgresTableId(tableId)
@@ -93,6 +97,8 @@ export function PostgresTableHeader({
       searchValue={searchValue}
       onSearchChange={onSearchChange}
       filterTrigger={filterTrigger}
+      beforeRefreshButtons={beforeRefreshButtons}
+      afterRefreshButtons={afterRefreshButtons}
     />
   )
 }
