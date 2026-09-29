@@ -192,13 +192,18 @@ final class FactoryTest extends TestCase
 
     public function testGetWebhookSecret(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $entry = [
+            'adapter' => GitHub::class,
+            'variables' => [
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
+            ],
+        ];
+        $factory = new Factory($this->cache(), ['github' => $entry]);
 
         $this->assertSame('', $factory->getWebhookSecret('github'));
 
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET=hunter2');
+        \putenv('_APP_VCS_TEST_TOKEN=hunter2');
         $this->assertSame('hunter2', $factory->getWebhookSecret('github'));
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET');
     }
 
     protected function cache(): Cache
