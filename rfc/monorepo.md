@@ -18,7 +18,7 @@ Every `utopia-php/*` library Appwrite depends on moves into this repository unde
 
 - Rewriting library APIs. Absorption moves code; API changes are separate work with their own releases.
 - Folding libraries into `src/Appwrite/`. Generic code stays generic and lives in `packages/`. `src/Utopia/` is gone: `Bus`, its only occupant, became `packages/bus` with a mirror like every other package.
-- Moving the four monorepo packages Appwrite does not use. `fastly` is archived, `nats` and `replication` go to `appwrite/cloud`, `reputation` is undecided (Cloud or here).
+- Moving the three monorepo packages Appwrite does not use. `fastly` and `replication` are archived, `reputation` is undecided (Cloud or here). `nats` was planned for `appwrite/cloud` but lives in `packages/nats`: its real consumer is `queue`'s NATS JetStream broker (`Broker\Nats`), and Cloud takes it through `server-ce`.
 - Adopting `utopia-php/config` 2.x. See [Version gaps](#version-gaps).
 
 ## Current state
@@ -263,7 +263,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 
 ### Phase 7. Retire the old homes and move Cloud
 
-- Archive `utopia-php/monorepo` with a README pointer here. Move `nats` and `replication` to `appwrite/cloud`; archive `fastly`; place `reputation` per the phase 0 decision.
+- Archive `utopia-php/monorepo` with a README pointer here. Archive `fastly` and `replication` (`nats` already lives in `packages/`); place `reputation` per the phase 0 decision.
 - `appwrite/cloud` removes its `utopia-php/*` requirements and takes the classes through `server-ce`'s autoloader. Its stale pins (`validators ^0.5`, `span 3.0`, `usage 0.14`, `audit ^3`, `query 0.1`) disappear with them; that upgrade is Cloud's own PR series and is not blocked by anything here.
 
 ### Phase 8. Harvest
@@ -287,6 +287,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `emails`: 25 findings, all in `src` (its standalone repository analysed it at level 4): unvalued `array` types on the canonical providers' domain lists and `Email`'s parts and domain caches, and concatenation of `mixed` parts in `Email`.
   - `http`: 394 findings (level 7 in the monorepo): 81 in `src`, casts and offset access on `mixed` request globals, Swoole server stats and the `__utopia__` coroutine context in the FPM and Swoole adapters, and the `mixed` param and injection definitions in `Http`; 313 in its tests, mostly calls on nullable `?Request`, `?Response`, `?Route` and `?Http` fixtures in `RequestTest`, `HttpTest` and `RouteTest`.
   - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
+  - `nats`: 445 findings (level 5 in the monorepo): 292 in `src`, nearly all arguments, offset access and casts on the decoded `mixed` JSON in the `fromArray()` builders of the JetStream, KeyValue and ObjectStore configs and infos (`StreamConfig`, `ConsumerConfig`), `ServerInfo` and `Connection`; 153 in its tests, generator key types and decoded protocol frames in `ConnectionDeathDetectionTest`, `ParserTest` and `RequestsTest`, and decoded service replies in the `ServiceTest` and `ServiceExtrasTest` e2e tests.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.
   - `platform`: 182 findings (level 5 in the monorepo): 146 in `src`, nearly all `mixed` values read from the untyped `array` param, option and label definitions and worker params in `Platform` and passed on to `Hook`, `Http`, `CLI` and the queue `Server`, plus unvalued `array` types in `Action` and `Module`; 36 in its tests, calls on the nullable `?Http` and `?Service` fixtures in `HttpServicesTest` and `WorkerServicesTest` and untyped `$response` parameters in the test actions.
   - `queue`: 296 findings (level 5 in the monorepo): 162 in `src`, unvalued `array` payloads and returns across `Connection`, `Message` and the brokers, and `mixed` Redis replies and decoded jobs in `Connection\Redis`, `Connection\RedisCluster`, `Broker\Redis`, `Broker\Pool` and `Server`; 134 in its tests, loosely typed connection fakes, the Swoole restart and proxy fixture servers, and decoded NATS and Redis payloads in its e2e tests.
