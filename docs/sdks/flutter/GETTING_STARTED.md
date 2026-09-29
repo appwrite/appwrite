@@ -30,6 +30,8 @@ In order to capture the Appwrite OAuth callback url, the following activity need
 </manifest>
 ```
 
+> On Android, iOS and macOS, call `createOAuth2Session` without the `success` and `failure` URLs. The SDK only returns to your app through the `appwrite-callback-[PROJECT_ID]` scheme, and only the default redirect carries the new session with it. A custom URL, such as an https App Link, makes the call fail (for example with `PlatformException(CANCELED)`) even when the login itself succeeded. Await the returned `Future` and navigate from your Dart code instead.
+
 ### iOS
 For **iOS** first add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
