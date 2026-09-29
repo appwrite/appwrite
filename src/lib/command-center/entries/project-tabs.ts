@@ -13,6 +13,7 @@
 import {
   Bell,
   Code,
+  Fingerprint,
   Globe,
   KeyRound,
   Layers,
@@ -153,6 +154,18 @@ const PROJECT_TABS: CommandEntry[] = [
     keywords: ['password', 'history', 'dictionary', 'personal data'],
     available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passwords`,
+  },
+  {
+    id: 'project.tab.auth.policies.passkeys',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Auth',
+    label: 'Auth · Policies · Passkeys',
+    description: 'Relying party ID and allowed origins for passkey sign-in',
+    icon: Fingerprint,
+    keywords: ['passkey', 'passkeys', 'webauthn', 'relying party', 'origins'],
+    available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passkeys`,
   },
   {
     id: 'project.tab.auth.social-providers',

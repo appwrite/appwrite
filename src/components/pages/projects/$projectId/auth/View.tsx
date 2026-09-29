@@ -108,6 +108,7 @@ import { SessionsPolicies } from './policies/Sessions'
 import { MembershipsPolicies } from './policies/Memberships'
 import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
+import { PasskeysPolicies } from './policies/Passkeys'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { formatRelativeDuration } from '@/lib/i18n/relative-time'
@@ -261,6 +262,7 @@ export function View({
       if (subTab === 'emails') return 'emails'
       if (subTab === 'memberships') return 'memberships'
       if (subTab === 'passwords') return 'passwords'
+      if (subTab === 'passkeys') return 'passkeys'
       if (subTab === 'sessions') return 'sessions'
       return 'sessions'
     }
@@ -2314,6 +2316,8 @@ export function View({
               <MembershipsPolicies projectId={projectId} />
             ) : policiesSubTab === 'passwords' ? (
               <PasswordsPolicies projectId={projectId} />
+            ) : policiesSubTab === 'passkeys' ? (
+              <PasskeysPolicies projectId={projectId} />
             ) : (
               <SessionsPolicies projectId={projectId} />
             )}

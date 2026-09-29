@@ -1,6 +1,13 @@
 import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Clock, KeyRound, Mail, Users, UsersRound } from 'lucide-react'
+import {
+  Clock,
+  Fingerprint,
+  KeyRound,
+  Mail,
+  Users,
+  UsersRound,
+} from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { useT } from '@/lib/i18n/translate'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
@@ -15,6 +22,7 @@ export type PoliciesSubTab =
   | 'emails'
   | 'memberships'
   | 'passwords'
+  | 'passkeys'
 
 type PoliciesLayoutProps = {
   projectId: string
@@ -80,6 +88,13 @@ const NAV_ITEMS = [
       'dictionary',
       'personal data',
     ],
+  },
+  {
+    id: 'passkeys' as const,
+    label: 'Passkeys',
+    to: '/projects/$projectId/auth/policies/passkeys' as const,
+    icon: Fingerprint,
+    keywords: ['passkey', 'webauthn', 'relying party', 'rp id', 'origins'],
   },
 ]
 
