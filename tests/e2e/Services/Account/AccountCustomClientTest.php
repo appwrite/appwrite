@@ -2535,7 +2535,10 @@ final class AccountCustomClientTest extends Scope
      * app's success URL. The headers (a session cookie) ride along on every
      * hop, like a browser would send them. Returns the final redirect response.
      */
-    private function followMockOAuth2Flow(string $path, array $headers = []): array
+    private function followMockOAuth2Flow(string $path, array $headers = [], array $params = [
+        'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+        'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+    ]): array
     {
         $projectId = $this->getProject()['$id'];
 
@@ -2543,10 +2546,7 @@ final class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $headers), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ], followRedirects: false);
+        ], $headers), $params, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -3465,23 +3465,8 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Omit success so Appwrite uses the default relay URL (/auth/oauth2/success)
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], followRedirects: false);
-
-        $this->assertEquals(301, $response['headers']['status-code']);
-
-        // Provider consent, Appwrite callback, Appwrite redirect
-        $oauthClient = new Client();
-        $oauthClient->setEndpoint('');
-
-        for ($hop = 0; $hop < 3; $hop++) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
-            $this->assertEquals(301, $response['headers']['status-code']);
-        }
+        // Omit success and failure so Appwrite uses the default relay URLs
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/' . $provider, params: []);
 
         $location = $response['headers']['location'];
         $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
@@ -3489,9 +3474,16 @@ final class AccountCustomClientTest extends Scope
         // parse_url() rejects a scheme with no host, so read the query directly
         $query = [];
         \parse_str(\explode('?', $location, 2)[1], $query);
-        $this->assertEquals($projectId, $query['project'] ?? null);
-        $this->assertEquals('a_session_' . $projectId, $query['key'] ?? null);
-        $this->assertNotEmpty($query['secret'] ?? null);
+
+        // Native SDKs store the handoff as their session cookie
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => ($query['key'] ?? '') . '=' . ($query['secret'] ?? ''),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     /**
