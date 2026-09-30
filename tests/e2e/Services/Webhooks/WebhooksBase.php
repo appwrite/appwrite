@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Event\Event;
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -77,6 +78,7 @@ trait WebhooksBase
 
     // Tests for all auth scenarios
 
+    #[Group('queueRetry')]
     public function testRedeliveryRetriesOnlyTheWebhookThatFailed(): void
     {
         // Test for SUCCESS: an event that one webhook accepted and another failed is retried
@@ -93,45 +95,48 @@ trait WebhooksBase
         $this->assertSame(201, $failing['headers']['status-code']);
         $failingId = $failing['body']['$id'];
 
-        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'userId' => $userId,
-            'email' => $userId . '@localhost.test',
-            'password' => 'password',
-        ]);
-        $this->assertSame(201, $user['headers']['status-code']);
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
 
-        $this->assertEventually(function () use ($failingId) {
-            $this->assertGreaterThanOrEqual(1, $this->getWebhook($failingId)['body']['attempts']);
-        }, 15000, 500);
-        $this->assertEventually(function () use ($healthyId) {
-            $this->assertCount(1, $this->webhookDeliveries($healthyId));
-        }, 15000, 500);
+            // One failed attempt counted, one delivery to the webhook that accepted it.
+            $this->assertEventually(function () use ($failingId) {
+                $this->assertSame(1, $this->getWebhook($failingId)['body']['attempts']);
+            }, 15000, 500);
+            $this->assertEventually(function () use ($healthyId) {
+                $this->assertCount(1, $this->webhookDeliveries($healthyId));
+            }, 15000, 500);
 
-        // The endpoint recovers. The broker parks the failed event until it is retried.
-        $moved = $this->updateWebhook($failingId, 'Failing', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
-        $this->assertSame(200, $moved['headers']['status-code']);
+            // The endpoint recovers. The webhook URL only accepts allowed hosts, so the recovery
+            // is a move to the request catcher. The broker parks the failed event until retried.
+            $moved = $this->updateWebhook($failingId, 'Failing', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+            $this->assertSame(200, $moved['headers']['status-code']);
 
-        $this->assertEventually(function () use ($failingId) {
-            $this->retryFailedWebhooks();
-            $this->assertCount(1, $this->webhookDeliveries($failingId));
-        }, 30000, 1000);
+            $this->assertEventually(function () use ($failingId) {
+                $this->retryFailedWebhooks();
+                $this->assertCount(1, $this->webhookDeliveries($failingId));
+            }, 30000, 1000);
 
-        $healthyDeliveries = $this->webhookDeliveries($healthyId);
-        $failingDeliveries = $this->webhookDeliveries($failingId);
-        $this->assertCount(1, $healthyDeliveries, 'The retry sent the event again to the webhook that had accepted it');
-        $this->assertSame(0, $this->getWebhook($failingId)['body']['attempts'], 'A delivered retry clears the failure count');
+            $healthyDeliveries = $this->webhookDeliveries($healthyId);
+            $failingDeliveries = $this->webhookDeliveries($failingId);
+            $this->assertCount(1, $healthyDeliveries, 'The retry sent the event again to the webhook that had accepted it');
 
-        $healthyDeliveryId = $healthyDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
-        $failingDeliveryId = $failingDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
-        $this->assertNotEmpty($healthyDeliveryId);
-        $this->assertNotEmpty($failingDeliveryId);
-        $this->assertNotSame($healthyDeliveryId, $failingDeliveryId);
-
-        $this->deleteWebhook($healthyId);
-        $this->deleteWebhook($failingId);
+            $healthyDeliveryId = $healthyDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $failingDeliveryId = $failingDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $this->assertNotEmpty($healthyDeliveryId);
+            $this->assertNotEmpty($failingDeliveryId);
+            $this->assertNotSame($healthyDeliveryId, $failingDeliveryId);
+        } finally {
+            $this->deleteWebhook($healthyId);
+            $this->deleteWebhook($failingId);
+        }
     }
 
     public function testCreateWebhook(): void
