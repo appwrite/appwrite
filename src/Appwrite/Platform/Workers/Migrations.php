@@ -346,16 +346,20 @@ class Migrations extends Action
             ->setKey($key);
 
         $probe = self::SCOPE_PROBE_ID;
+        $headers = [
+            'X-Appwrite-Project' => $projectId,
+            'accept' => 'application/json',
+        ];
 
         try {
-            $client->call(Client::METHOD_GET, '/tablesdb');
+            $client->call(Client::METHOD_GET, '/tablesdb', $headers);
 
             if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
-                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables"));
+                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables", $headers));
             }
 
             if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
-                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables/{$probe}/rows"));
+                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables/{$probe}/rows", $headers));
             }
         } catch (AppwriteException $error) {
             throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
