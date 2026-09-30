@@ -24,9 +24,9 @@ faqs:
     answer: "No. The rules run on Appwrite Cloud's edge. On a self-hosted instance, upgrading TanStack Start is the fix. You can also add the same header and navigation checks to the reverse proxy in front of your sites."
 ---
 
-TanStack published a critical advisory for TanStack Start on September 30, 2026. A crafted link to a server function can make your app respond with HTML the attacker wrote, served from your own domain. Anyone who opens that link runs the attacker's JavaScript as if your app had shipped it. The advisory is [GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8), tracked as CVE-2026-102989, with a CVSS score of 9.3.
+TanStack [released a fix](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989) for a critical vulnerability in TanStack Start on September 30, 2026. A crafted link to a server function can make your app respond with HTML the attacker wrote, served from your own domain. Anyone who opens that link runs the attacker's JavaScript as if your app had shipped it. The advisory is [GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8), tracked as CVE-2026-102989, with a CVSS score of 9.3.
 
-The attacker needs no account and no access to your code, only one person who clicks a link. Lovable found the issue and reported it to TanStack.
+The attacker needs no account and no access to your code, only one person who clicks a link. Lovable helped TanStack discover the issue and worked with them on the fix.
 
 If you run TanStack Start on [Appwrite Sites](/docs/products/sites), upgrade to the patched release and push a new deployment. Until you do, Appwrite Cloud blocks the known attack pattern at the edge on every site. The rest of this post covers the upgrade, what our rules block, and what they don't.
 
@@ -147,6 +147,7 @@ Rules you create count toward your plan's limit like any others. On the Free pla
 
 The edge rules buy time. Your site is only fixed once `@tanstack/start-server-core` resolves to 1.169.39 or later and that build is the active deployment. Check your lockfile, upgrade, push, and confirm the new deployment is live. If a server function starts returning `403` afterward, the `X-Appwrite-WAF-Rule` header tells you which rule fired.
 
+- [TanStack Start security update: CVE-2026-102989](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)
 - [TanStack advisory GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8)
 - [Deploy a TanStack Start app to Appwrite Sites](/docs/products/sites/quick-start/tanstack-start)
 - [Deploy Sites from Git](/docs/products/sites/deploy-from-git)
