@@ -231,7 +231,7 @@ final class QueryTest extends TestCase
     #[DataProvider('legacyTypes')]
     public function testLegacyTypeRoundTripsThroughParse(string $type, string $attribute, array $values, Query $expected): void
     {
-        $parsed = Query::parse((new Query($type, $attribute, $values))->toString());
+        $parsed = Query::parse(new Query($type, $attribute, $values)->toString());
 
         $this->assertInstanceOf(Query::class, $parsed);
         $this->assertSame($expected->toArray(), $parsed->toArray());
@@ -240,10 +240,10 @@ final class QueryTest extends TestCase
     public function testLegacyTypesParseInABatch(): void
     {
         $parsed = Query::parseQueries([
-            (new Query(Query::TYPE_EQUAL, 'userId', ['123']))->toString(),
-            (new Query(Query::TYPE_GREATER, 'time', ['2023-01-01']))->toString(),
-            (new Query(Query::TYPE_ORDER_DESC, 'time'))->toString(),
-            (new Query(Query::TYPE_LIMIT, values: [10]))->toString(),
+            new Query(Query::TYPE_EQUAL, 'userId', ['123'])->toString(),
+            new Query(Query::TYPE_GREATER, 'time', ['2023-01-01'])->toString(),
+            new Query(Query::TYPE_ORDER_DESC, 'time')->toString(),
+            new Query(Query::TYPE_LIMIT, values: [10])->toString(),
         ]);
 
         $this->assertSame(
