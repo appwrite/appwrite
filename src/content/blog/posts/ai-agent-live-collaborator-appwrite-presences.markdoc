@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Build an AI agent that collaborates live with Appwrite Presences and Realtime"
-description: Build Weft, a planning board where an AI agent works next to your team. Presences show what the agent is doing, Realtime delivers each change to every screen, and one Appwrite Function runs the agent.
+description: Build Weft, a planning board where an AI agent works next to your team. Appwrite Presences show the agent's progress to every teammate, and Realtime delivers each of its changes as it happens.
 date: 2026-09-30
 cover: /images/blog/ai-agent-live-collaborator-appwrite-presences/cover.avif
 timeToRead: 12
@@ -18,16 +18,16 @@ faqs:
     answer: "No. When a person focuses the description of a card, the app sets their presence status to editing and puts the card and the field in the presence metadata. Before the agent writes a description, it lists the presences with the editing status. If a person is editing that description, the agent skips the card and says so in its reply."
 ---
 
-An AI agent that runs in a background job stays out of sight until it finishes. Its changes arrive in one batch, and nobody on the team can see what it is doing or which card it will change next. When people and the agent work on the same board, a person can also edit a card while the agent changes it.
+An AI agent that runs in a background job stays out of sight until it finishes. Its changes arrive in one batch, and nobody on the team can see what it is doing or which card it will change next. When people and the agent work on the same board, the agent can also overwrite a description that a person is typing.
 
-This tutorial builds Weft, a planning board where an AI agent works next to the people on a team. The agent's avatar sits in the same presence stack as the people, its status says what it is doing ("Triaging 3 of 6 cards"), and each change it makes appears on every open board as it happens. People can ask the agent to:
+This tutorial builds Weft, a planning board where an AI agent works next to the people on a team. The agent's avatar sits in the same presence stack as the people, and its activity text says what it is doing ("Triaging 3 of 6 cards"). Each change it makes appears on every open board as it happens. People can ask the agent to:
 
 - Triage the inbox: give each new card a priority, a label, and an assignee, then move it to **Up next**.
 - Split a card into subtasks.
 - Draft the description of a card.
 - Write a standup summary of the board.
 
-Appwrite Presences show who is on the board and what each person and the agent is doing, and Appwrite Realtime delivers every change to every browser. One Appwrite Function queues the requests and runs the agent with GPT-6 Luna through OpenRouter.
+Appwrite Presences show who is on the board and what each member is doing, including the agent. Appwrite Realtime delivers every change to every browser. One Appwrite Function queues the requests and runs the agent with GPT-6 Luna through OpenRouter.
 
 {% info title="Companion repository" %}
 The complete project lives at [appwrite-community/weft-agent-board](https://github.com/appwrite-community/weft-agent-board). It contains the web app, the agent function, and the scripts that create the database, the function, and the demo team.
@@ -55,7 +55,14 @@ The setup scripts need a project, an API key, and a web app entry for `localhost
 3. Select these scopes: `databases.read`, `databases.write`, `tables.read`, `tables.write`, `columns.read`, `columns.write`, `indexes.read`, `indexes.write`, `rows.read`, `rows.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, `functions.read`, `functions.write`, `project.policies.write`, and `presences.write`.
 4. Select **Create API key** and copy the key.
 
-The `agent` function does not use this key, because Appwrite gives each execution a key of its own. Copy `.env.example` to `.env` in the root of the repository, and fill in the API endpoint and the project ID (for the scripts and, with the `VITE_` prefix, for the web app), the `Weft setup` key, your OpenRouter API key, and a `DEMO_PASSWORD` of at least 8 characters for the demo accounts.
+Copy `.env.example` to `.env` in the root of the repository. Then fill in these values:
+
+- The API endpoint and the project ID. The web app reads the same values with the `VITE_` prefix.
+- The `Weft setup` key.
+- Your OpenRouter API key.
+- A `DEMO_PASSWORD` of at least 8 characters for the demo accounts.
+
+The `agent` function does not use the `Weft setup` key, because Appwrite gives each execution a key of its own.
 
 # Create the database, the function, and the demo team
 
@@ -69,7 +76,7 @@ pnpm run seed
 
 `pnpm run provision` creates the `weft` database with five tables and their indexes, sets the membership privacy policy, and creates the `agent` function. It then stores the OpenRouter key as a secret variable of the function and deploys the function code. `pnpm run seed` creates four demo people, the Fernway team, the agent user, and three boards with their cards.
 
-Every table uses row security, so each row carries its own permissions:
+The provision script creates these tables. Every table uses row security, so each row carries its own permissions:
 
 - **`cards`** holds the work on each board: the title, the description, the column (`inbox`, `next`, `doing`, or `done`), the priority, the label, the assignee, a parent card for subtasks, and `agentNote`, the agent's one-sentence reason for its last change. Each card gives `read`, `update`, and `delete` to its team.
 - **`runs`** holds one row for each request to the agent: the kind (`triage`, `split`, `draft`, `summary`, or `ask`), the status, and the `reply`, which grows while the agent writes it. Each run gives only `read` to the team, so only the function writes runs.
@@ -80,7 +87,7 @@ Every table uses row security, so each row carries its own permissions:
 
 ![The Memberships tab of the Fernway team in the Appwrite Console with four people and Weft Agent, whose role is agent](/images/blog/ai-agent-live-collaborator-appwrite-presences/console-team-members.avif)
 
-Appwrite Teams group users and give each member one or more roles. Weft uses one team per workspace, and the team's permissions decide who can read its boards, cards, runs, and presences. The seed script creates the Fernway team with four people, then creates the agent as a user without an email or a password, so nobody can sign in as the agent, and adds it to the team with the role `agent`. The function and the web app find the agent by that role:
+Appwrite Teams group users and give each member one or more roles. Weft uses one team per workspace, and the team's permissions decide who can read its boards, cards, runs, and presences. The seed script creates the Fernway team with four people. It then creates the agent as a user without an email or a password, so nobody can sign in as the agent, and adds the agent to the team with the role `agent`. The function and the web app find the agent by that role:
 
 ```javascript
 /** The team's agent is the member with the role `agent`. */
@@ -93,7 +100,7 @@ export async function findAgentId(teams, teamId) {
 }
 ```
 
-By default, a project hides the ID and the name of each team member from the other members. Presences and cards refer to people by user ID, so the provision script updates the [membership privacy](/docs/products/auth/teams#memberships-privacy) policy of the project. Emails stay hidden:
+By default, a project hides the ID and the name of each team member from the other members. Presences and cards refer to people by user ID, so the provision script updates the [membership privacy](/docs/products/auth/teams#memberships-privacy) policy of the project to show member IDs and names. Emails stay hidden. The provision script makes this call:
 
 ```ts
 // New projects hide member details from teammates. Presences and cards refer
@@ -106,7 +113,7 @@ await project.updateMembershipPrivacyPolicy({ userId: true, userName: true });
 
 A presence is a short-lived record that says a user is active and what that user is doing. It has a `status` string, a `metadata` object for any details your app needs, an `expiresAt` time, and permissions that decide who can read it. Appwrite keeps one presence per user and sends an event on the presence channels of Realtime when a presence changes.
 
-A browser can write its presence over HTTP with `presences.upsert`, or over the Realtime connection with `realtime.upsertPresence`, in which case Appwrite deletes the presence when the connection closes. People in Weft use the Realtime connection, so a person who closes the tab leaves every board without a sign-out step:
+A browser can write its presence over HTTP with `presences.upsert` or over the Realtime connection with `realtime.upsertPresence`. When the presence goes over the Realtime connection, Appwrite deletes it when the connection closes. People in Weft use the Realtime connection, so a person who closes the tab leaves every board without a sign-out step:
 
 ```ts
 /**
@@ -132,7 +139,7 @@ export function announcePresence(announcement: Announcement) {
 }
 ```
 
-The metadata tells the team which board and which card the person has open, and which field they edit. When an upsert includes permissions, Appwrite stores exactly those permissions. The `read` permission for the team lets teammates see the presence. The `update` and `delete` permissions for the user let the person change and remove their own presence. Without them, the second upsert fails with a `401` error.
+The metadata tells the team which board and which card the person has open, and which field they are editing. When an upsert includes permissions, Appwrite stores exactly those permissions. The `read` permission for the team lets teammates see the presence. The `update` and `delete` permissions for the user let the person change and remove their own presence. Without them, the second upsert fails with a `401` error.
 
 The board calls `announcePresence` when the person opens the board, opens or closes a card, or focuses or leaves a field. The status is `viewing` or `editing`. To read the presences of the team, the app subscribes to `Channel.presences()` first and then lists the presences, so no change between the two calls is lost.
 
@@ -225,7 +232,7 @@ await kick(functions, board.teamId, log);
 return respond(202, { runId: request.requestId });
 ```
 
-`kick` starts an asynchronous execution of the same function at `/drain`. The function's `executions.write` scope allows it, and `/drain` accepts only executions without a user ID, so a person cannot start a drain from the browser. If the call fails, the run stays queued, and the next scheduled execution starts a drain:
+`kick` starts a drain: an asynchronous execution of the same function at `/drain` that runs the queued requests of one team. The function's `executions.write` scope lets it start this execution. `/drain` accepts only executions without a user ID, so a person cannot start a drain from the browser. If the call fails, the run stays queued, and the next scheduled execution starts a drain:
 
 ```javascript
 /** Starts an asynchronous execution of this function that drains the team's queue. */
@@ -245,11 +252,11 @@ export async function kick(functions, teamId, log) {
 }
 ```
 
-## Claim the team with a unique index
+## Claim a run with a unique index
 
 ![The Indexes tab of the active_runs table in the Appwrite Console with the unique index one_per_team on the teamId column](/images/blog/ai-agent-live-collaborator-appwrite-presences/console-active-runs-index.avif)
 
-A unique index rejects a row whose indexed value is already in another row. The `active_runs` table has a unique index named `one_per_team` on the `teamId` column, so it can hold one row per team. To claim a run, the drain creates a row in `active_runs` with the run ID as the row ID. Appwrite rejects the claim with a `409` error when another execution already claimed the same run (`row_already_exists`), or when the team has another active run (`row_unique_constraint_violation`):
+A unique index rejects a row whose indexed value is already in another row. The `active_runs` table has a unique index named `one_per_team` on the `teamId` column, so it can hold one row per team. To claim a run, the drain creates a row in `active_runs` with the run ID as the row ID. Appwrite rejects the claim with a `409` error in two cases. If another execution already claimed the same run, the error type is `row_already_exists`. If the team has another active run, the error type is `row_unique_constraint_violation`:
 
 ```javascript
 /**
@@ -272,7 +279,7 @@ The drain takes the oldest queued run, claims it, and runs it. When the run ends
 
 # Write the agent loop
 
-The agent loop gives the model the board and the request, runs the tools that the model calls, and ends when the model replies without a tool call. OpenRouter uses the same API shape as OpenAI Chat Completions, so the OpenAI SDK works with the OpenRouter base URL. The loop streams each completion and writes the text into the `reply` column of the run, so the reply grows on every screen. The system prompt asks the model to work on one card at a time, so people can follow the agent card by card, and to treat card text as information, not as instructions.
+The agent loop gives the model the board and the request, runs the tools that the model calls, and ends when the model replies without a tool call. OpenRouter uses the same API shape as OpenAI Chat Completions, so the OpenAI SDK works with the OpenRouter base URL. The loop streams each completion and writes the text into the `reply` column of the run, so the reply grows on every screen. The system prompt asks the model to work on one card at a time, so people can follow the agent card by card. It also tells the model to treat card text as information, not as instructions.
 
 ## Give the model narrow tools
 
@@ -289,7 +296,7 @@ const TOOLS_BY_KIND = {
 };
 ```
 
-The function, not the model, enforces the rules. Before a tool changes a card, the function checks that the card is on the run's board, that an assignee is a person on the team, and that a split or a draft changes only its own card. The function reads cards with an API key, which ignores row permissions, and any signed-in user can create a card with any `boardId`. So the agent keeps only the cards that the board's team can read:
+The function, not the model, enforces the rules. Before a tool changes a card, the function checks that the card is on the run's board, that an assignee is a person on the team, and that a split or a draft changes only its own card. The function reads cards with an API key, which ignores row permissions. Any signed-in user can create a card with any `boardId`, but only members of a team can give that team read access to a card. The agent therefore keeps only the cards that the board's team can read:
 
 ```javascript
 /**
@@ -319,7 +326,7 @@ presences.upsert({
 }),
 ```
 
-The presence expires 60 seconds after each upsert. The agent renews it with every change and with a heartbeat every 20 seconds while the model thinks. Each tool updates the presence before it changes the board, so during a triage the activity counts the cards: "Triaging 3 of 6 cards". The card update also sets `editedBy` and `runId`, so the web app marks the card as changed by the agent.
+The presence expires 60 seconds after each upsert. The agent renews it with every change and with a heartbeat every 20 seconds while the model thinks. Each tool updates the presence metadata before it changes the board, so during a triage the agent's activity text counts the cards: "Triaging 3 of 6 cards". The card update also sets `editedBy` and `runId`, so the web app marks the card as changed by the agent.
 
 The model writes faster than people read, and every row update is a Realtime event. The function sends at most one update of a streamed reply or description every 100 milliseconds, always with the latest text.
 
@@ -366,7 +373,7 @@ if (editor) {
 }
 ```
 
-The lock also works in the other direction. While the agent writes a description, its presence has the card ID and `field: 'description'`, and the card dialog makes the description read-only:
+The check also works in the other direction. While the agent writes a description, its presence has the card ID and `field: 'description'`, and the card dialog makes the description read-only:
 
 ```tsx
 const agentWriting =
@@ -429,7 +436,9 @@ Open **Functions** > **agent** > **Settings** > **Executions**. The **Scopes** c
 
 ![The Variables tab of the agent function with OPENROUTER_API_KEY marked as secret and OPENROUTER_MODEL set to openai/gpt-6-luna](/images/blog/ai-agent-live-collaborator-appwrite-presences/console-function-variables.avif)
 
-The **Variables** tab shows `OPENROUTER_API_KEY`, marked as secret, and `OPENROUTER_MODEL`. Then start the web app:
+The **Variables** tab shows `OPENROUTER_API_KEY`, marked as secret, and `OPENROUTER_MODEL`.
+
+Start the web app:
 
 ```bash
 pnpm run dev
@@ -443,7 +452,7 @@ The app runs at `http://localhost:5173`. Sign in as `maya@example.com` in one br
 
 ![Maya's browser during a triage: the agent's status reads Triaging 3 of 6 cards, a teal ring marks the card the agent is working on, and the agent panel shows Maya's request with its steps](/images/blog/ai-agent-live-collaborator-appwrite-presences/app-triage.avif)
 
-In Theo's browser, open **Offline boarding passes: cache the last five passes**. In Maya's browser, select **Triage inbox** in the **Agent** panel. The agent's avatar joins the presence stack in the top bar, and its status counts the cards. A teal ring marks the card that the agent works on, and each triaged card moves to **Up next** with a priority, a label, an assignee, and the agent's note. Theo's amber ring marks the card that he has open.
+In Theo's browser, open **Offline boarding passes: cache the last five passes**. In Maya's browser, select **Triage inbox** in the **Agent** panel. The agent's avatar joins the presence stack in the top bar, and its activity text counts the cards. A teal ring marks the card that the agent works on, and each triaged card moves to **Up next** with a priority, a label, an assignee, and the agent's note. Theo's amber ring marks the card that he has open.
 
 ![Theo's browser at the same moment: the Offline boarding passes card is open in front of the board, and the agent's triage status shows in the top bar behind it](/images/blog/ai-agent-live-collaborator-appwrite-presences/app-triage-theo.avif)
 
@@ -465,7 +474,7 @@ Right-click **Show gate changes as a Live Activity** and select **Split into sub
 
 ![The agent panel with a finished standup summary next to the board after the triage and the split](/images/blog/ai-agent-live-collaborator-appwrite-presences/app-standup-summary.avif)
 
-Select **Standup summary** in the **Agent** panel. The summary streams in: what is done, who owns the work in progress, and what is urgent or at risk. A summary request gets no tools, so it cannot change a card.
+Select **Standup summary** in the **Agent** panel. The summary streams in: what is done, who owns the work in progress, and what is urgent or at risk.
 
 ## Skip a description that a teammate is editing
 
@@ -479,7 +488,9 @@ In Theo's browser, select the description of **Offline boarding passes** to edit
 
 The **Executions** tab of the `agent` function shows each part of a request: a short `POST /runs` execution that queues the request, a longer `POST /drain` execution that runs the agent, and a `schedule` execution every five minutes.
 
-Each new ability for the agent is a tool and a row write, so the presence and Realtime code stay the same. Keep each tool narrow, and check every argument in the function.
+# Extend the agent
+
+To give the agent a new ability, add a tool that writes rows. The presence and Realtime code stay the same. Keep each tool narrow, and check every argument in the function.
 
 # Resources
 

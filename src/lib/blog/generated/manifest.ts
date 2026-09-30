@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "ai-agent-live-collaborator-appwrite-presences",
     "href": "/blog/post/ai-agent-live-collaborator-appwrite-presences",
     "title": "Build an AI agent that collaborates live with Appwrite Presences and Realtime",
-    "description": "Build Weft, a planning board where an AI agent works next to your team. Presences show what the agent is doing, Realtime delivers each change to every screen, and one Appwrite Function runs the agent.",
+    "description": "Build Weft, a planning board where an AI agent works next to your team. Appwrite Presences show the agent's progress to every teammate, and Realtime delivers each of its changes as it happens.",
     "date": "2026-09-30",
     "lastUpdated": "2026-09-30",
     "timeToRead": 12,
