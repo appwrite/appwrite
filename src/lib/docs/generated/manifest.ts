@@ -3269,6 +3269,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/sites/quick-start/jaspr",
+    "title": "Deploy a Jaspr app to Appwrite Sites",
+    "description": "Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/sites/quick-start/nextjs",
     "title": "Deploy a Next.js app to Appwrite Sites",
     "description": "Learn how to setup and deploy Next.js apps on Appwrite Sites.",

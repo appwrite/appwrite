@@ -1,0 +1,182 @@
+---
+layout: post
+title: "Announcing Jaspr support in Appwrite Sites: SSR in Dart"
+description: Appwrite Sites now supports Jaspr with server-side rendering. Build websites in Dart, deploy them from Git, and render every request on Appwrite Cloud.
+date: 2026-10-01
+cover: /images/blog/announcing-jaspr-support/cover.avif
+timeToRead: 7
+author: matej-baco
+category: announcements
+featured: false
+callToAction: true
+faqs:
+  - question: "What is Jaspr?"
+    answer: "[Jaspr](https://jaspr.site) is an open-source web framework for Dart. It uses a component model similar to Flutter widgets, with `StatelessComponent`, `StatefulComponent`, and a `build` method, but it renders real HTML and CSS instead of drawing to a canvas. It supports static site generation, server-side rendering, and client-side rendering."
+  - question: "Does Appwrite Sites support Jaspr with server-side rendering?"
+    answer: "Yes. [Appwrite Sites](/docs/products/sites) runs Jaspr apps in server mode. Appwrite builds your project into a native Dart executable and runs it for every request, so each page is rendered on the server before it reaches the browser."
+  - question: "How do I deploy a Jaspr app to Appwrite Sites?"
+    answer: "Set `mode: server` in the `jaspr` section of `pubspec.yaml`, push the project to GitHub, and create a site from the repository in the Appwrite Console. Pick **Jaspr** as the framework, keep the default build settings (`dart pub get`, `jaspr build`, `./build/jaspr`), and deploy. The [Jaspr quick start](/docs/products/sites/quick-start/jaspr) walks through each step."
+  - question: "Can I deploy a Jaspr site in static or client mode?"
+    answer: "Not with the Jaspr preset yet. Appwrite Sites supports Jaspr's server mode, which builds the server executable the preset runs. Static and client mode builds produce only web assets, so switch `jaspr.mode` to `server` to deploy with the Jaspr preset."
+  - question: "Do I need to add jaspr_cli to my pubspec.yaml?"
+    answer: "No. The Flutter 3.44 build runtime that Appwrite uses for Jaspr ships with the Jaspr CLI installed, which matches how Jaspr's own deployment guide sets up its build image. Your project needs version 0.23.0 or later of the core Jaspr packages, such as `jaspr` and `jaspr_builder`."
+  - question: "How do I call Appwrite from a Jaspr server component?"
+    answer: "Add the `dart_appwrite` package, read the ephemeral API key from the `x-appwrite-key` request header with `context.headers`, and create a client per request with the `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID` environment variables. See [Use the key in SSR code](/docs/products/sites/develop#use-the-ephemeral-api-key) for a full example."
+  - question: "Should I use Jaspr or Flutter Web for my website?"
+    answer: "Use Jaspr for websites where HTML, search indexing, and first load time matter, such as landing pages, docs, blogs, and stores. Use Flutter Web when you are sharing an app-like Flutter UI across mobile and web. Appwrite Sites hosts both: Jaspr with SSR and [Flutter Web](/docs/products/sites/quick-start/flutter) as a static site."
+---
+
+If you write Dart, Flutter Web has been your one real path onto [Appwrite Sites](/docs/products/sites) so far. You build the project and Sites serves the output as static files. That's a good fit for app-like interfaces. It's a poor fit for websites. Flutter Web paints the interface onto a canvas and ships the Flutter engine with the first load, so search engines get very little HTML to index and visitors wait longer before anything shows up. The [Flutter web FAQ](https://docs.flutter.dev/platform-integration/web/faq#what-scenarios-are-ideal-for-flutter-on-the-web) says as much. "Flutter is not suitable for static websites with text-rich flow-based content."
+
+[Jaspr](https://jaspr.site) covers the other half. It lets you build websites in Dart that render real HTML and CSS, and its server mode renders every page on the server before it reaches the browser. Until today, Appwrite Sites had no preset that could build a Jaspr server and run it.
+
+Today, we are announcing **Jaspr support in Appwrite Sites**, with full server-side rendering. You can deploy a Jaspr app from Git, and Appwrite runs your compiled Dart server for every request.
+
+# What is Jaspr?
+
+Jaspr is an open-source web framework for Dart, created by [Kilian Schultek](https://github.com/schultek) and released under the MIT license. Its component model is close to Flutter's widgets. You write `StatelessComponent` and `StatefulComponent` classes with a `build` method, but the output is HTML elements and CSS instead of pixels on a canvas. Links behave like links, text is selectable, and crawlers read the page the same way they read any other site.
+
+Here's a component that renders a heading and a paragraph:
+
+```dart
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
+
+class Greeting extends StatelessComponent {
+  const Greeting({required this.name, super.key});
+
+  final String name;
+
+  @override
+  Component build(BuildContext context) {
+    return div([
+      h1([text('Hello, $name')]),
+      p([text('This page was rendered on the server.')]),
+    ], classes: 'greeting');
+  }
+}
+```
+
+If you've written a Flutter widget, you can read this without a tutorial. The difference is the output. Jaspr turns it into a `div` with an `h1` and a `p` inside, which is exactly what the browser and search engines receive.
+
+Jaspr has three rendering modes, set in the `jaspr` section of `pubspec.yaml`:
+
+- **Static** renders every page to HTML at build time.
+- **Server** compiles a server executable that pre-renders pages for each incoming request.
+- **Client** skips pre-rendering and runs as a client-side single-page app.
+
+The Flutter team builds on it. The sources for [dart.dev](https://github.com/dart-lang/site-www), [docs.flutter.dev](https://github.com/flutter/website/tree/main/sites/docs), and [flutter.dev](https://github.com/flutter/website/tree/main/sites/www) are all Jaspr projects. If you've wondered whether a Dart web framework holds up on large, high-traffic sites, those three are the answer.
+
+# How Jaspr server-side rendering works on Appwrite Sites
+
+Appwrite Sites runs Jaspr in **server mode**. Pages render at request time, so a component can read headers and cookies, fetch fresh data, and call Appwrite before any HTML leaves the server.
+
+Here's what happens when you deploy:
+
+1. Appwrite pulls your repository and starts a build on the [Flutter 3.44 runtime](/blog/post/announcing-dart-flutter-runtimes), which ships with the Jaspr CLI installed.
+2. `dart pub get` installs your dependencies. `jaspr build` compiles your server entrypoint into a self-contained native executable named `app`, and writes it to `./build/jaspr` next to a `web/` folder with your static assets and compiled client code.
+3. Appwrite starts the executable in your site's runtime and sends each request to it. Jaspr renders the matching page to HTML and returns it. Components marked with `@client` then hydrate in the browser and become interactive.
+
+Most of your components never reach the browser as code. Jaspr compiles only the `@client` components to JavaScript, so a content page with one interactive widget ships the code for that widget and plain HTML for everything else.
+
+Your server is a native binary compiled ahead of time from Dart. Locally, `jaspr serve` runs the same components in development mode.
+
+# What Jaspr support gives you
+
+- **Server-side rendering in Dart.** Every page request runs your Jaspr server, and the browser receives finished HTML.
+- **A Jaspr preset.** Selecting Jaspr fills in `dart pub get`, `jaspr build`, and `./build/jaspr`, and builds on Flutter 3.44.
+- **The Jaspr CLI in the build image.** Projects created with `jaspr create` don't list `jaspr_cli` as a dependency, and they don't need to. The build runtime already has it.
+- **An ephemeral API key on every request.** Each SSR request carries a short-lived key in the `x-appwrite-key` header, limited to the scopes you grant the site.
+- **The rest of Appwrite Sites.** [Git deployments](/docs/products/sites/deploy-from-git), private [preview deployments](/docs/products/sites/previews) for pull requests, [instant rollbacks](/docs/products/sites/instant-rollbacks), [custom domains](/docs/products/sites/domains), environment variables, and logs all work the same way they do for Next.js or SvelteKit.
+
+# Deploy a Jaspr app to Appwrite Sites
+
+The [Jaspr quick start](/docs/products/sites/quick-start/jaspr) covers the same steps if you want them in the docs.
+
+## Create a Jaspr project in server mode
+
+Install the Jaspr CLI and create a project with server mode and multi-page routing:
+
+```bash
+dart pub global activate jaspr_cli
+jaspr create --mode server --routing multi-page my_site
+```
+
+Run `jaspr serve` inside the project to try it locally. If you already have a Jaspr project, open `pubspec.yaml` and make sure the `jaspr` section sets server mode:
+
+```yaml
+jaspr:
+  mode: server
+```
+
+The CLI in Appwrite's build image expects version 0.23.0 or later of the core Jaspr packages, such as `jaspr` and `jaspr_builder`. Projects pinned to 0.22 need to upgrade before they build. Push the project to a GitHub repository when you're ready.
+
+## Create the site in the Appwrite Console
+
+1. In your Appwrite project, open **Sites**, click **Create site**, and select **Connect a repository**.
+2. Pick your repository, production branch, and root directory.
+3. Check the framework field. Jaspr and Flutter projects both use a `pubspec.yaml` file, so if **Flutter** is selected, switch it to **Jaspr**.
+4. Keep the default build settings: install command `dart pub get`, build command `jaspr build`, and output directory `./build/jaspr`.
+5. Add any environment variables your site needs and click **Deploy**.
+
+When the build finishes, click **Visit site**. Every push to the production branch deploys again, and each pull request gets its own preview deployment.
+
+# Call Appwrite from a Jaspr server component
+
+Server-side rendering matters most when the server has something to fetch. On Appwrite Sites, that usually means your own Appwrite project. Appwrite sends an [ephemeral API key](/docs/products/sites/develop#ephemeral-api-key) on the `x-appwrite-key` header of every SSR request, so your site doesn't need a stored API key.
+
+Jaspr's `AsyncStatelessComponent` is a server-only component whose `build` method returns a `Future`. It can read request headers through `context.headers` and await Appwrite calls before the page renders. Add the Dart server SDK with `dart pub add dart_appwrite`, then:
+
+```dart
+// lib/pages/users.dart
+import 'dart:io';
+
+import 'package:dart_appwrite/dart_appwrite.dart' show Client, Users;
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/server.dart';
+
+class UsersPage extends AsyncStatelessComponent {
+  const UsersPage({super.key});
+
+  @override
+  Future<Component> build(BuildContext context) async {
+    final key = context.headers['x-appwrite-key']!;
+    final client = Client()
+        .setEndpoint(Platform.environment['APPWRITE_SITE_API_ENDPOINT']!)
+        .setProject(Platform.environment['APPWRITE_SITE_PROJECT_ID']!)
+        .setKey(key);
+
+    final users = await Users(client).list();
+    return p([text('${users.total} users')]);
+  }
+}
+```
+
+Create the client inside `build` rather than sharing one, because each key belongs to the request that carried it. `APPWRITE_SITE_API_ENDPOINT` and `APPWRITE_SITE_PROJECT_ID` are [injected at run time](/docs/products/sites/environment-variables), so there's nothing to configure.
+
+A new site starts with no scopes, so this key can't do anything until you grant some. For this example, open the site's **Settings** tab, go to the **Build** section, and add `users.read` in the **Scopes** card. The key bypasses permissions, so use it only for work Appwrite can't authorize on the visitor's behalf. For anything a signed-in visitor does, forward their session instead, as described in [Server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering).
+
+`dart_appwrite` is the same SDK you'd use in a [Dart function](/docs/products/functions), so models, validation, and query helpers can live in one shared package that both your site and your functions import.
+
+# When to choose Jaspr over Flutter Web
+
+Both frameworks are Dart and both deploy to Appwrite Sites, but they solve different problems. Here's how we'd decide.
+
+**Choose Jaspr for websites.** Landing pages, documentation, blogs, and stores all need indexable HTML, a fast first load, and normal browser behavior. Server mode also gives you per-request rendering for personalized or frequently changing content.
+
+**Choose Flutter Web for apps.** If you're sharing a full Flutter app across mobile and web, and the UI is app-like (editors, internal tools, games), Flutter Web gets you there with one codebase. Sites hosts it as a [static site](/docs/products/sites/quick-start/flutter).
+
+**Use both when your product needs both.** A common setup is a Flutter app for the product and a Jaspr site for everything around it: marketing pages, docs, and a blog. The two can share Dart packages. If one screen of the Flutter app belongs on the website, Jaspr can embed it (run `jaspr create` with `--flutter embedded` to start from that setup).
+
+Keep two limits in mind. The Jaspr preset supports server mode only, so a project in static or client mode needs `jaspr.mode` switched to `server`. And the build needs Jaspr 0.23.0 or later, as covered above.
+
+# Getting started with Jaspr on Appwrite Sites
+
+Jaspr support is available on Appwrite Cloud today. Self-hosted instances picked it up in [Appwrite 2.3](/changelog/entry/2026-09-23-1). If you have a Dart website you've been hosting somewhere else because Sites couldn't run it, move it over and point your domain at it.
+
+Starting fresh? Create a project with `jaspr create --mode server`, deploy it, then add the `UsersPage` component from this post and grant the site `users.read`. You'll have a server-rendered page reading live data from your Appwrite project, with every line written in Dart.
+
+- [Deploy a Jaspr app to Appwrite Sites](/docs/products/sites/quick-start/jaspr)
+- [Server-side rendering on Appwrite Sites](/docs/products/sites/rendering/ssr)
+- [Use the ephemeral API key in SSR code](/docs/products/sites/develop#use-the-ephemeral-api-key)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)
