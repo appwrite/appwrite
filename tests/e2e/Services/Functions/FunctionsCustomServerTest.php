@@ -2585,59 +2585,45 @@ final class FunctionsCustomServerTest extends Scope
         }, 5000, 500);
     }
 
-    public function testEventExecutionIsNotRunAgainAfterTheExecutorFailed(): void
+    #[Group('queueRetry')]
+    public function testEventSubscribersAreNotRunAgainAfterTheExecutorFailed(): void
     {
         // Test for SUCCESS: once the executor has been called, its failure is recorded on the
-        // execution and the event is not retried: whether the function ran cannot be told from
-        // the worker, and a retry would run it a second time under a new execution.
+        // execution and the event is not retried: the function has run, and a retry would run
+        // it, and every other subscriber of the event, a second time under new executions.
         $userId = ID::unique();
-        $functionId = $this->setupDeployedFunction('Event subscriber', 'basic', ['events' => ["users.{$userId}.create"]]);
+        $event = "users.{$userId}.create";
+        $succeeding = $this->setupDeployedFunction('Event subscriber that succeeds', 'basic', ['events' => [$event]]);
+        // The runtime exits in the middle of the request, so the executor answers with an error.
+        $crashing = $this->setupDeployedFunction('Event subscriber that crashes', 'crash', ['events' => [$event]]);
 
         try {
-            // The executor goes away while the event is delivered: the worker's call to it fails.
-            $this->setExecutorRunning(false);
-            try {
-                $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                ], $this->getHeaders()), [
-                    'userId' => $userId,
-                    'email' => $userId . '@localhost.test',
-                    'password' => 'password',
-                ]);
-                $this->assertSame(201, $user['headers']['status-code']);
+            $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
 
-                $this->assertEventually(function () use ($functionId) {
-                    $this->assertSame(['failed'], $this->executionStatuses($functionId));
-                }, 30000, 1000);
-            } finally {
-                $this->setExecutorRunning(true);
-            }
+            $this->assertEventually(function () use ($succeeding, $crashing) {
+                $this->assertSame(['completed'], $this->executionStatuses($succeeding));
+                $this->assertSame(['failed'], $this->executionStatuses($crashing));
+            }, 60000, 1000);
 
-            // Whatever the broker parked as failed is now run again, with the executor back.
+            // Whatever the broker parked as failed is now run again.
             $this->retryFailedFunctions();
             $settled = \microtime(true) + 15;
             while (\microtime(true) < $settled) {
-                $this->assertSame(['failed'], $this->executionStatuses($functionId), 'The retry ran the function a second time');
+                $this->assertSame(['completed'], $this->executionStatuses($succeeding), 'The retry ran the subscriber that succeeded a second time');
+                $this->assertSame(['failed'], $this->executionStatuses($crashing), 'The retry ran the subscriber that crashed a second time');
                 \usleep(1000000);
             }
         } finally {
-            $this->cleanupFunction($functionId);
-        }
-    }
-
-    /**
-     * Stop or start the executor container, and wait until a started one reports healthy.
-     */
-    private function setExecutorRunning(bool $running): void
-    {
-        \exec('docker ' . ($running ? 'start' : 'stop') . ' exc1 2>&1', $output, $exitCode);
-        $this->assertSame(0, $exitCode, \implode("\n", $output));
-
-        if ($running) {
-            $this->assertEventually(function () {
-                $this->assertSame('healthy', \trim((string) \shell_exec("docker inspect -f '{{.State.Health.Status}}' exc1 2>/dev/null")));
-            }, 120000, 1000);
+            $this->cleanupFunction($succeeding);
+            $this->cleanupFunction($crashing);
         }
     }
 
