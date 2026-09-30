@@ -2453,7 +2453,6 @@ export function useApiExplorerExpandedProductGroup(
 // AI CHAT PANEL + BUILD NOTIFICATIONS (ACCOUNT PREFERENCES)
 // ============================================================================
 
-const AI_CHAT_PANEL_WIDTH_PERSIST_DEBOUNCE_MS = 250
 const RIGHT_PANE_WIDTH_PERSIST_DEBOUNCE_MS = 250
 
 async function migrateLegacyBrowserPrefsToAccount(
