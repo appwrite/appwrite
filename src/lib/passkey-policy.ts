@@ -7,6 +7,11 @@ export const PasskeyPolicyId = 'passkey' as const
 /** The server rejects more origins than this. */
 export const MAX_PASSKEY_ORIGINS = 10
 
+/** The server rejects a longer relying party ID (the maximum length of a domain name). */
+export const MAX_PASSKEY_RP_ID_LENGTH = 253
+
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+
 export type PasskeyPolicy = {
   /** Mirrors the passkey auth method, which the pinned SDK's response format hides. */
   enabled: boolean
@@ -56,6 +61,9 @@ export function passkeyRpIdError(rpId: string): string | null {
   if (rpId === '' || rpId === 'localhost') return null
   if (rpId.includes('://') || rpId.includes('/')) {
     return 'Enter a domain without a scheme or path, like example.com.'
+  }
+  if (IPV4.test(rpId) || rpId.includes('[') || rpId.split(':').length > 2) {
+    return 'The relying party ID must be a domain, not an IP address.'
   }
   if (rpId !== rpId.toLowerCase()) {
     return 'The relying party ID must be lowercase.'

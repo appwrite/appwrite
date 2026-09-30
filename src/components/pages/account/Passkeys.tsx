@@ -22,6 +22,7 @@ import {
   useDeleteAccountPasskey,
   useUpdateAccountPasskey,
 } from '@/lib/react-query/hooks'
+import type { PasskeyList } from '@/lib/appwrite/passkeys'
 import {
   defaultPasskeyName,
   isPasskeyCancellation,
@@ -36,10 +37,15 @@ import { useT } from '@/lib/i18n/translate'
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
-export function PasskeysSection() {
+export function PasskeysSection({
+  initialData,
+}: {
+  initialData?: PasskeyList
+} = {}) {
   const t = useT()
   const { signOut } = useAuth()
-  const { data, isFetched } = useAccountPasskeys()
+  const { data: passkeysFromHook, isFetched } = useAccountPasskeys()
+  const data = passkeysFromHook ?? initialData
   const createPasskey = useCreateAccountPasskey()
   const updatePasskey = useUpdateAccountPasskey()
   const deletePasskey = useDeleteAccountPasskey()
@@ -130,7 +136,7 @@ export function PasskeysSection() {
           <h3 className="text-[15px] font-semibold text-foreground">
             {t('Passkeys')}
           </h3>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <p className="text-[13px] text-muted-foreground mt-2">
             {t(
               'Sign in with your fingerprint, face or device PIN instead of a password.',
             )}
@@ -154,7 +160,7 @@ export function PasskeysSection() {
         )}
       </div>
       <div className="border-t border-border" />
-      {!isFetched ? null : passkeys.length === 0 ? (
+      {!isFetched && !initialData ? null : passkeys.length === 0 ? (
         <div className="px-6 py-4">
           <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
             <p className="text-[14px] font-medium text-foreground mb-1">
@@ -308,6 +314,7 @@ export function PasskeysSection() {
             label: 'Name',
             defaultValue: defaultPasskeyName(),
             required: false,
+            maxLength: 128,
           },
         ]}
         confirmLabel="Continue"

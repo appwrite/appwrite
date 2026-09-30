@@ -7,7 +7,10 @@ import {
   projectQueryOptions,
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
-import { authMethodsRecordFromProject } from '@/lib/project-settings'
+import {
+  authMethodsRecordFromProject,
+  type AuthMethodId,
+} from '@/lib/project-settings'
 import {
   PasskeyAuthMethodId,
   isPasskeyPolicyConfigured,
@@ -50,7 +53,7 @@ type AuthMethodPolicy = {
 }
 
 const AUTH_METHODS: ReadonlyArray<{
-  key: string
+  key: AuthMethodId
   label: string
   icon: LucideIcon
   policy?: AuthMethodPolicy
@@ -133,7 +136,9 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   )
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
-  const baseAuthMethods = useMemo(
+  // The pinned SDK's response format hides passkey from project.authMethods, so its
+  // state comes from the passkey policy's mirror.
+  const baseAuthMethods = useMemo<Record<AuthMethodId, boolean>>(
     () => ({
       ...authMethodsRecordFromProject(projectData),
       [PasskeyAuthMethodId]: security.authPasskey.enabled,
@@ -144,8 +149,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   useEffect(() => {
     Object.keys(lastSubmittedAuthMethods.current).forEach((method) => {
       const expectedValue = lastSubmittedAuthMethods.current[method]
-      const serverValue =
-        baseAuthMethods[method as keyof typeof baseAuthMethods]
+      const serverValue = baseAuthMethods[method as AuthMethodId]
 
       if (serverValue === expectedValue) {
         setOptimisticAuthMethods((prev) => {
@@ -169,7 +173,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   const updateAuthMethodMutation = useUpdateAuthMethod(projectId)
 
-  const handleAuthMethodToggle = (method: string, checked: boolean) => {
+  const handleAuthMethodToggle = (method: AuthMethodId, checked: boolean) => {
     setOptimisticAuthMethods((prev) => ({ ...prev, [method]: checked }))
     setUpdatingAuthMethods((prev) => new Set(prev).add(method))
     lastSubmittedAuthMethods.current[method] = checked
@@ -229,6 +233,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                 method.key === PasskeyAuthMethodId &&
                 !passkeyConfigured &&
                 !enabled
+              const setupHintId = `${method.key}-setup-hint`
 
               return (
                 <div
@@ -263,11 +268,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="text-xs">
-                                {needsPasskeySetup
-                                  ? t(
-                                      'Set a relying party ID and origins in passkey policies to enable.',
-                                    )
-                                  : t(method.policy.label)}
+                                {t(method.policy.label)}
                               </p>
                             </TooltipContent>
                           </Tooltip>
@@ -285,9 +286,29 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                           handleAuthMethodToggle(method.key, checked)
                         }
                         disabled={isUpdating || needsPasskeySetup}
+                        aria-describedby={
+                          needsPasskeySetup ? setupHintId : undefined
+                        }
                       />
                     </div>
                   </div>
+                  {needsPasskeySetup && method.policy && (
+                    <p
+                      id={setupHintId}
+                      className="mt-2 text-[12px] text-muted-foreground"
+                    >
+                      {t(
+                        'Set a relying party ID and origins in passkey policies to enable.',
+                      )}{' '}
+                      <Link
+                        to={method.policy.to}
+                        params={{ projectId }}
+                        className="link-neutral"
+                      >
+                        {t('Configure')}
+                      </Link>
+                    </p>
+                  )}
                 </div>
               )
             })}

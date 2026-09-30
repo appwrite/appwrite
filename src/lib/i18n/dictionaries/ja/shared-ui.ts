@@ -677,6 +677,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Auth · Policies · Emails': '認証 · ポリシー · メール',
   'Auth · Policies · Memberships': '認証 · ポリシー · メンバーシップ',
   'Auth · Policies · Passwords': '認証 · ポリシー · パスワード',
+  'Auth · Policies · Passkeys': '認証 · ポリシー · パスキー',
+  'Relying party ID and allowed origins for passkey sign-in':
+    'パスキーでのサインインに使う Relying Party ID と許可されたオリジン',
   'Auth · Social providers': '認証 · OAuth プロバイダー',
   'Auth · OAuth2 server · Server': '認証 · OAuth2 サーバー · サーバー',
   'Auth · OAuth2 server · Apps': '認証 · OAuth2 サーバー · アプリ',

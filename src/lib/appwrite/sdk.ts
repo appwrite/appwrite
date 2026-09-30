@@ -50,6 +50,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Passkeys } from '@/lib/appwrite/passkeys'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -236,6 +237,7 @@ function createConsoleSdkRaw(client: Client) {
     migrations: new Migrations(client),
     console: new Console(client),
     agent: new Agent(client),
+    passkeys: new Passkeys(client),
     /** Legacy `/console/assistant` chat stream. Prefer `agent` for conversations. */
     assistant: new Assistant(client),
     sites: new Sites(client),
@@ -556,6 +558,7 @@ const sdkForProjectRaw = {
   locale: new Locale(clientProject),
   messaging: new Messaging(clientProject),
   project: new Project(clientProject),
+  passkeys: new Passkeys(clientProject),
   projectApi: new ProjectApi(clientProject),
   storage: new Storage(clientProject),
   tokens: new Tokens(clientProject),

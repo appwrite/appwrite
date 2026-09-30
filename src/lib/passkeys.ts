@@ -1,73 +1,30 @@
 import { AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { Passkey, PasskeyToken } from '@/lib/appwrite/passkeys'
 import type { Translator } from '@/lib/i18n/translate'
 
-/** A passkey on the console account (not yet a model in the pinned SDK build). */
-export type Passkey = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  name: string
-  /** Empty until the passkey is first used to sign in. */
-  accessedAt: string
-  /** Synced across devices by a passkey provider, rather than bound to one device. */
-  backedUp: boolean
-}
+export type { Passkey, PasskeyList } from '@/lib/appwrite/passkeys'
 
-export type PasskeyList = {
-  total: number
-  passkeys: Passkey[]
-}
-
-type PasskeyChallenge<Options> = {
-  $id: string
-  passkeyId: string
-  expire: string
-  publicKey: Options
-}
-
-type PasskeyToken = {
-  userId: string
-  secret: string
-  expire: string
-}
-
-/**
- * The pinned @appwrite.io/console build has no passkey methods, so these call the
- * endpoints through the generic client. Replace them with the generated methods once
- * the SDK is regenerated.
- *
- * The 'content-type' header key must stay lowercase: the SDK switches on that exact key
- * to decide to JSON-encode the body, and a capitalised key silently sends no body at all.
- */
-async function call<T>(
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete',
-  path: string,
-  body: Record<string, unknown> = {},
-): Promise<T> {
-  const client = sdk.forConsole.client
-  return (await client.call(
-    method,
-    new URL(`${client.config.endpoint}${path}`),
-    {
-      'X-Appwrite-Project': client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    body,
-  )) as T
-}
-
-/** WebAuthn plus the JSON helpers the ceremonies rely on. */
+/** WebAuthn in this browser. The JSON helpers are optional: see the fallbacks below. */
 export function isPasskeySupported(): boolean {
   if (typeof window === 'undefined') return false
-  const credential = window.PublicKeyCredential
   return (
-    typeof credential === 'function' &&
-    typeof credential.parseRequestOptionsFromJSON === 'function' &&
-    typeof credential.parseCreationOptionsFromJSON === 'function' &&
-    typeof navigator.credentials?.get === 'function'
+    typeof window.PublicKeyCredential === 'function' &&
+    typeof navigator.credentials?.get === 'function' &&
+    typeof navigator.credentials?.create === 'function'
   )
+}
+
+/** Whether the browser can offer passkeys in the email field's autofill. */
+export async function isPasskeyAutofillAvailable(): Promise<boolean> {
+  if (!isPasskeySupported()) return false
+  try {
+    return (
+      (await PublicKeyCredential.isConditionalMediationAvailable?.()) ?? false
+    )
+  } catch {
+    return false
+  }
 }
 
 /** The user dismissed the browser prompt, or it timed out without a choice. */
@@ -85,6 +42,103 @@ export function isPasskeyReauthenticationError(error: unknown): boolean {
   )
 }
 
+function fromBase64Url(value: string): ArrayBuffer {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
+  const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='))
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes.buffer
+}
+
+function toBase64Url(buffer: ArrayBuffer | null): string | undefined {
+  if (!buffer) return undefined
+  let binary = ''
+  for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte)
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function parseDescriptors(
+  descriptors: PublicKeyCredentialDescriptorJSON[] | undefined,
+): PublicKeyCredentialDescriptor[] | undefined {
+  return descriptors?.map((descriptor) => ({
+    ...descriptor,
+    type: descriptor.type as PublicKeyCredentialType,
+    transports: descriptor.transports as AuthenticatorTransport[] | undefined,
+    id: fromBase64Url(descriptor.id),
+  }))
+}
+
+function parseRequestOptions(
+  options: PublicKeyCredentialRequestOptionsJSON,
+): PublicKeyCredentialRequestOptions {
+  if (typeof PublicKeyCredential.parseRequestOptionsFromJSON === 'function') {
+    return PublicKeyCredential.parseRequestOptionsFromJSON(options)
+  }
+  return {
+    ...options,
+    userVerification: options.userVerification as
+      | UserVerificationRequirement
+      | undefined,
+    extensions: options.extensions as AuthenticationExtensionsClientInputs,
+    challenge: fromBase64Url(options.challenge),
+    allowCredentials: parseDescriptors(options.allowCredentials),
+  }
+}
+
+function parseCreationOptions(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): PublicKeyCredentialCreationOptions {
+  if (typeof PublicKeyCredential.parseCreationOptionsFromJSON === 'function') {
+    return PublicKeyCredential.parseCreationOptionsFromJSON(options)
+  }
+  return {
+    ...options,
+    attestation: options.attestation as AttestationConveyancePreference,
+    authenticatorSelection:
+      options.authenticatorSelection as AuthenticatorSelectionCriteria,
+    extensions: options.extensions as AuthenticationExtensionsClientInputs,
+    pubKeyCredParams:
+      options.pubKeyCredParams as PublicKeyCredentialParameters[],
+    challenge: fromBase64Url(options.challenge),
+    user: { ...options.user, id: fromBase64Url(options.user.id) },
+    excludeCredentials: parseDescriptors(options.excludeCredentials),
+  }
+}
+
+function credentialToJSON(
+  credential: PublicKeyCredential,
+): PublicKeyCredentialJSON {
+  if (typeof credential.toJSON === 'function') return credential.toJSON()
+  const response = credential.response
+  const base = {
+    id: credential.id,
+    rawId: toBase64Url(credential.rawId),
+    type: credential.type,
+    authenticatorAttachment: credential.authenticatorAttachment ?? undefined,
+    clientExtensionResults: credential.getClientExtensionResults(),
+  }
+  if (response instanceof AuthenticatorAttestationResponse) {
+    return {
+      ...base,
+      response: {
+        clientDataJSON: toBase64Url(response.clientDataJSON),
+        attestationObject: toBase64Url(response.attestationObject),
+        transports: response.getTransports?.() ?? [],
+      },
+    }
+  }
+  const assertion = response as AuthenticatorAssertionResponse
+  return {
+    ...base,
+    response: {
+      clientDataJSON: toBase64Url(assertion.clientDataJSON),
+      authenticatorData: toBase64Url(assertion.authenticatorData),
+      signature: toBase64Url(assertion.signature),
+      userHandle: toBase64Url(assertion.userHandle),
+    },
+  }
+}
+
 function asPublicKeyCredential(
   credential: Credential | null,
 ): PublicKeyCredential {
@@ -93,62 +147,49 @@ function asPublicKeyCredential(
 }
 
 /**
- * Signs in with a passkey and returns a token to exchange for a session. No email is
- * needed: the browser offers every passkey it holds for the console.
+ * Signs in with a passkey and returns a token to exchange for a session. With
+ * `autofill`, the browser offers the passkeys in the email field's suggestions
+ * instead of opening a prompt, and the request waits until one is picked or
+ * `signal` aborts it. `onSelected` runs once the user has picked a passkey.
  */
-export async function createPasskeyToken(): Promise<PasskeyToken> {
-  const challenge = await call<
-    PasskeyChallenge<PublicKeyCredentialRequestOptionsJSON>
-  >('post', '/account/tokens/passkey')
+export async function signInWithPasskey(
+  options: {
+    autofill?: boolean
+    signal?: AbortSignal
+    onSelected?: () => void
+  } = {},
+): Promise<PasskeyToken> {
+  const passkeys = sdk.forConsole.passkeys
+  const challenge = await passkeys.createPasskeyToken()
+  options.signal?.throwIfAborted()
   const credential = asPublicKeyCredential(
     await navigator.credentials.get({
-      publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(
-        challenge.publicKey,
-      ),
+      publicKey: parseRequestOptions(challenge.publicKey),
+      mediation: options.autofill ? 'conditional' : undefined,
+      signal: options.signal,
     }),
   )
-  return call<PasskeyToken>('put', '/account/tokens/passkey', {
+  options.onSelected?.()
+  return passkeys.updatePasskeyToken({
     challengeId: challenge.$id,
-    credential: credential.toJSON(),
+    credential: credentialToJSON(credential),
   })
 }
 
-export function listPasskeys(): Promise<PasskeyList> {
-  return call<PasskeyList>('get', '/account/passkeys')
-}
-
 /** Registers a new passkey on this device for the signed-in account. */
-export async function createPasskey(name: string): Promise<Passkey> {
-  const challenge = await call<
-    PasskeyChallenge<PublicKeyCredentialCreationOptionsJSON>
-  >('post', '/account/passkeys', { name })
+export async function registerPasskey(name: string): Promise<Passkey> {
+  const passkeys = sdk.forConsole.passkeys
+  const challenge = await passkeys.createPasskey({ name })
   const credential = asPublicKeyCredential(
     await navigator.credentials.create({
-      publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(
-        challenge.publicKey,
-      ),
+      publicKey: parseCreationOptions(challenge.publicKey),
     }),
   )
-  return call<Passkey>(
-    'put',
-    `/account/passkeys/${encodeURIComponent(challenge.passkeyId)}/verification`,
-    { challengeId: challenge.$id, credential: credential.toJSON() },
-  )
-}
-
-export function updatePasskey(passkeyId: string, name: string) {
-  return call<Passkey>(
-    'patch',
-    `/account/passkeys/${encodeURIComponent(passkeyId)}`,
-    { name },
-  )
-}
-
-export async function deletePasskey(passkeyId: string): Promise<void> {
-  await call<unknown>(
-    'delete',
-    `/account/passkeys/${encodeURIComponent(passkeyId)}`,
-  )
+  return passkeys.updatePasskeyVerification({
+    passkeyId: challenge.passkeyId,
+    challengeId: challenge.$id,
+    credential: credentialToJSON(credential),
+  })
 }
 
 /** A readable default name for a passkey created here, like "Chrome on macOS". */
@@ -193,7 +234,7 @@ export function passkeySignInErrorMessage(
     switch (error.type) {
       case 'user_passkey_invalid':
         return t(
-          'That passkey is not recognised. It may have been removed from your account.',
+          'That passkey is not recognized. It may have been removed from your account.',
         )
       case 'user_invalid_token':
         return t('The passkey sign-in expired. Please try again.')
@@ -202,6 +243,9 @@ export function passkeySignInErrorMessage(
       case 'user_blocked':
         return t('This account has been blocked.')
     }
+  }
+  if (error instanceof DOMException && error.name === 'SecurityError') {
+    return t('Passkeys are not set up for this domain.')
   }
   if (error instanceof DOMException) {
     return t('Your browser could not use a passkey. Please try again.')
@@ -234,6 +278,9 @@ export function passkeyErrorMessage(
   }
   if (error instanceof DOMException && error.name === 'InvalidStateError') {
     return t('This passkey is already added to your account.')
+  }
+  if (error instanceof DOMException && error.name === 'SecurityError') {
+    return t('Passkeys are not set up for this domain.')
   }
   return null
 }

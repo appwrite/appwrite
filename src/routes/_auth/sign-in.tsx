@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createFileRoute,
   redirect,
@@ -26,9 +26,10 @@ import {
 } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  createPasskeyToken,
+  isPasskeyAutofillAvailable,
   isPasskeyCancellation,
   passkeySignInErrorMessage,
+  signInWithPasskey,
 } from '@/lib/passkeys'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
@@ -227,9 +228,22 @@ function SignInPage() {
     },
   })
 
+  const [passkeySelected, setPasskeySelected] = useState(false)
+  const selected = useRef(false)
+  const autofill = useRef<AbortController | null>(null)
+
   const passkeySignInMutation = useMutation({
-    mutationFn: async () => {
-      const token = await createPasskeyToken()
+    mutationFn: async (options: {
+      autofill?: boolean
+      signal?: AbortSignal
+    }) => {
+      const token = await signInWithPasskey({
+        ...options,
+        onSelected: () => {
+          selected.current = true
+          setPasskeySelected(true)
+        },
+      })
       await sdk.forConsole.account.createSession({
         userId: token.userId,
         secret: token.secret,
@@ -239,9 +253,17 @@ function SignInPage() {
       await fetchConsoleAccount({ force: true })
     },
     onSuccess: () => finishSignIn('passkey'),
-    onError: async (error: unknown) => {
+    onMutate: () => {
+      selected.current = false
+      setPasskeySelected(false)
+    },
+    onError: async (error: unknown, options) => {
+      const wasSelected = selected.current
+      setPasskeySelected(false)
       if (isPasskeyCancellation(error)) return
       if (await openMfaIfRequired(error)) return
+      // Autofill starts on page load, so stay quiet until the user has picked a passkey.
+      if (options.autofill && !wasSelected) return
 
       toast.error(
         passkeySignInErrorMessage(error, t) ??
@@ -250,6 +272,33 @@ function SignInPage() {
       console.error('Passkey sign in error:', error)
     },
   })
+  const { mutate: mutatePasskeySignIn } = passkeySignInMutation
+
+  const startPasskeyAutofill = useCallback(async () => {
+    autofill.current?.abort()
+    const controller = new AbortController()
+    autofill.current = controller
+    if (!(await isPasskeyAutofillAvailable()) || controller.signal.aborted) {
+      return
+    }
+    mutatePasskeySignIn({ autofill: true, signal: controller.signal })
+  }, [mutatePasskeySignIn])
+
+  useEffect(() => {
+    if (!features.accountPasskeys) return
+    void startPasskeyAutofill()
+    return () => autofill.current?.abort()
+  }, [features.accountPasskeys, startPasskeyAutofill])
+
+  const handlePasskeyLogin = () => {
+    // A pending autofill request blocks the browser prompt.
+    autofill.current?.abort()
+    mutatePasskeySignIn({}, { onError: () => void startPasskeyAutofill() })
+  }
+
+  const passkeyBusy =
+    passkeySignInMutation.isPending &&
+    (!passkeySignInMutation.variables?.autofill || passkeySelected)
 
   return (
     <AuthFlowShell width="illustration">
@@ -258,16 +307,11 @@ function SignInPage() {
         onSubmit={(data) => signInMutation.mutate(data)}
         onOAuthLogin={handleOAuthLogin}
         onPasskeyLogin={
-          features.accountPasskeys
-            ? () => passkeySignInMutation.mutate()
-            : undefined
+          features.accountPasskeys ? handlePasskeyLogin : undefined
         }
-        passkeyLoading={passkeySignInMutation.isPending}
-        isLoading={
-          signInMutation.isPending ||
-          passkeySignInMutation.isPending ||
-          isOpeningMfa
-        }
+        passkeyAutofill={features.accountPasskeys}
+        passkeyLoading={passkeyBusy}
+        isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
       />

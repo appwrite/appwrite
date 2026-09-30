@@ -845,8 +845,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'This permanently deletes the model credentials.':
     'פעולה זו מוחקת את פרטי הגישה של המודל לצמיתות.',
   'Delete model': 'מחיקת מודל',
-  'Model deleted': 'המודל נמחק',
-  'Failed to delete model': 'מחיקת המודל נכשלה',
   'Failed to resolve project': 'פתרון הפרויקט נכשל',
   'Appwrite MCP connected': 'Appwrite MCP חובר',
   'Appwrite MCP disconnected': 'Appwrite MCP נותק',
@@ -1326,7 +1324,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   // Console passkeys: sign-in and account management
   'Sign in with a passkey': 'התחברות עם מפתח גישה',
   'Failed to sign in with a passkey': 'ההתחברות עם מפתח גישה נכשלה',
-  'That passkey is not recognised. It may have been removed from your account.':
+  'Passkeys are not set up for this domain.':
+    'מפתחות גישה לא הוגדרו עבור הדומיין הזה.',
+  'That passkey is not recognized. It may have been removed from your account.':
     'מפתח הגישה הזה לא מזוהה. ייתכן שהוא הוסר מהחשבון שלכם.',
   'The passkey sign-in expired. Please try again.':
     'תוקף ההתחברות עם מפתח הגישה פג. נסו שוב.',

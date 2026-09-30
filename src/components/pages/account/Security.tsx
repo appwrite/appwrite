@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { fetchAccountIdentities } from '@/lib/react-query/hooks'
+import type { PasskeyList } from '@/lib/appwrite/passkeys'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -14,6 +15,7 @@ import { PasskeysSection } from './Passkeys'
 
 export type AccountSecurityInitialData = {
   identities?: Awaited<ReturnType<typeof fetchAccountIdentities>>
+  passkeys?: PasskeyList
 }
 
 export function AccountSecurity({
@@ -70,7 +72,7 @@ export function AccountSecurity({
             'biometric',
           ],
         },
-        node: <PasskeysSection />,
+        node: <PasskeysSection initialData={initialData?.passkeys} />,
       })
     }
 
@@ -80,6 +82,7 @@ export function AccountSecurity({
     features.accountMfa,
     features.accountPasskeys,
     initialData?.identities,
+    initialData?.passkeys,
   ])
 
   return <SettingsCardsList cards={cards} />

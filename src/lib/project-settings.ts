@@ -364,8 +364,8 @@ export type AuthMethodId = ProjectAuthMethodId | typeof PasskeyAuthMethodId
 
 export function authMethodsRecordFromProject(
   project: Models.Project | null | undefined,
-): Record<AuthMethodId, boolean> {
-  const defaults: Record<AuthMethodId, boolean> = {
+): Record<ProjectAuthMethodId, boolean> {
+  const defaults: Record<ProjectAuthMethodId, boolean> = {
     [ProjectAuthMethodId.Emailpassword]: false,
     [ProjectAuthMethodId.Phone]: false,
     [ProjectAuthMethodId.Magicurl]: false,
@@ -373,7 +373,6 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Anonymous]: false,
     [ProjectAuthMethodId.Invites]: false,
     [ProjectAuthMethodId.Jwt]: false,
-    [PasskeyAuthMethodId]: false,
   }
   if (!project?.authMethods?.length) {
     return defaults

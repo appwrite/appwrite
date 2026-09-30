@@ -287,7 +287,7 @@ function rpIdInput(page: Page) {
 }
 
 function originInput(page: Page, index: number) {
-  return card(page).getByRole('textbox', { name: `Origin ${index}` })
+  return card(page).getByRole('textbox', { name: `Origin URL ${index}` })
 }
 
 function updateButton(page: Page) {
@@ -342,7 +342,9 @@ test.describe('passkeys (mocked API)', () => {
 
     await updateButton(page).click()
 
-    await expect(page.getByText('Updated passkey settings.')).toBeVisible()
+    await expect(
+      page.getByText('Updated passkey settings', { exact: true }),
+    ).toBeVisible()
     expect(calls.policyPatches).toHaveLength(1)
     expect(new URL(calls.policyPatches[0].url()).pathname).toBe(
       `/v1${PASSKEY_POLICY_PATH}`,
@@ -368,7 +370,62 @@ test.describe('passkeys (mocked API)', () => {
       'Origins must be on the relying party ID or one of its subdomains.',
     )
     await expect(updateButton(page)).toBeDisabled()
+
+    await originInput(page, 1).fill('https://app.example.com/')
+    await expect(card(page)).toContainText(
+      'This origin is already in the list.',
+    )
+    await expect(originInput(page, 2)).toHaveAttribute('aria-describedby', /.+/)
+    await expect(updateButton(page)).toBeDisabled()
+
+    await originInput(page, 1).fill('https://example.com')
+    await rpIdInput(page).fill('192.168.1.10')
+    await expect(card(page)).toContainText(
+      'The relying party ID must be a domain, not an IP address.',
+    )
+    await expect(updateButton(page)).toBeDisabled()
     expect(calls.policyPatches).toHaveLength(0)
+  })
+
+  test('removing a row keeps the other rows and their errors in place', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { policy: CONFIGURED })
+    await openPasskeyPolicies(page)
+
+    await originInput(page, 1).fill('http://example.com')
+    await card(page)
+      .getByRole('button', { name: 'Add origin', exact: true })
+      .click()
+    await originInput(page, 3).fill('https://docs.example.com')
+
+    await card(page)
+      .getByRole('button', { name: 'Remove origin 2', exact: true })
+      .click()
+
+    await expect(originInput(page, 1)).toHaveValue('http://example.com')
+    await expect(originInput(page, 2)).toHaveValue('https://docs.example.com')
+    await expect(originInput(page, 1)).toHaveAttribute('aria-invalid', 'true')
+    await expect(originInput(page, 2)).toHaveAttribute('aria-invalid', 'false')
+  })
+
+  test('clearing the policy while the method is on warns first', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { policy: { ...CONFIGURED, enabled: true } })
+    await openPasskeyPolicies(page)
+
+    const status = page.getByTestId('passkey-method-status')
+    await expect(status).toContainText('Enabled')
+    await expect(page.getByTestId('passkey-policy-warning')).toHaveCount(0)
+
+    await rpIdInput(page).fill('')
+    await expect(page.getByTestId('passkey-policy-warning')).toBeVisible()
+
+    await status.click()
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/auth/settings$`),
+    )
   })
 
   test('a refusal from the backend is shown as written', async ({ page }) => {
@@ -410,16 +467,15 @@ test.describe('passkeys (mocked API)', () => {
     const toggle = page.locator(`#${PASSKEY_ID}`)
     await expect(toggle).toBeDisabled()
     await expect(toggle).not.toBeChecked()
-    const policyLink = page.getByRole('link', {
-      name: 'Passkey policies',
-      exact: true,
-    })
-    await policyLink.hover()
-    await expect(page.getByRole('tooltip')).toContainText(
+    const hint = page.getByText(
       'Set a relying party ID and origins in passkey policies to enable.',
     )
+    await expect(hint).toBeVisible()
+    const hintId = await hint.getAttribute('id')
+    expect(hintId).toBeTruthy()
+    await expect(toggle).toHaveAttribute('aria-describedby', hintId!)
 
-    await policyLink.click()
+    await hint.getByRole('link', { name: 'Configure', exact: true }).click()
     await expect(page).toHaveURL(
       new RegExp(`/projects/${PROJECT_ID}/auth/policies/passkeys$`),
     )
@@ -427,7 +483,9 @@ test.describe('passkeys (mocked API)', () => {
     await rpIdInput(page).fill('example.com')
     await originInput(page, 1).fill('https://example.com')
     await updateButton(page).click()
-    await expect(page.getByText('Updated passkey settings.')).toBeVisible()
+    await expect(
+      page.getByText('Updated passkey settings', { exact: true }),
+    ).toBeVisible()
 
     await openAuthSettings(page)
     await expect(toggle).toBeEnabled()

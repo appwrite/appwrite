@@ -35,6 +35,7 @@ import {
 } from '@/lib/utils/auth-storage'
 import { DEFAULT_CONSOLE_OAUTH_LOGIN } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { isPasskeySupported } from '@/lib/passkeys'
 import { useT, type Translator } from '@/lib/i18n/translate'
 import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
@@ -256,6 +257,8 @@ interface SignInProps {
   /** Shows a "Sign in with a passkey" button when the browser supports passkeys. */
   onPasskeyLogin?: () => void
   passkeyLoading?: boolean
+  /** Lets the browser offer passkeys in the email field's autofill. */
+  passkeyAutofill?: boolean
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -269,6 +272,7 @@ export function SignIn({
   oauthLoading,
   onPasskeyLogin,
   passkeyLoading = false,
+  passkeyAutofill = false,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -348,19 +352,13 @@ export function SignIn({
 
   const handleCreateDemoUser = async () => {
     if (preview) {
-      form.setValue('email', DEMO_USER_EMAIL, {
-        shouldDirty: true,
-        shouldValidate: true,
-      })
+      form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
       form.setValue('password', DEMO_USER_PASSWORD, {
         shouldDirty: true,
         shouldValidate: true,
       })
       if (mode === 'sign-up') {
-        form.setValue('name', DEMO_USER_NAME, {
-          shouldDirty: true,
-          shouldValidate: true,
-        })
+        form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
       }
       setShowPassword(true)
       toast.message(t('Preview only'), {
@@ -371,19 +369,13 @@ export function SignIn({
       return
     }
 
-    form.setValue('email', DEMO_USER_EMAIL, {
-      shouldDirty: true,
-      shouldValidate: true,
-    })
+    form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
     form.setValue('password', DEMO_USER_PASSWORD, {
       shouldDirty: true,
       shouldValidate: true,
     })
     if (mode === 'sign-up') {
-      form.setValue('name', DEMO_USER_NAME, {
-        shouldDirty: true,
-        shouldValidate: true,
-      })
+      form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
     }
     setShowPassword(true)
 
@@ -437,7 +429,7 @@ export function SignIn({
 
           {(onOAuthLogin || showPasskey) && (
             <>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {onOAuthLogin && (
                   <>
                     <style>{OAUTH_ACCORDION_STYLES}</style>
@@ -503,9 +495,6 @@ export function SignIn({
                     </div>
                   </>
                 )}
-                {onOAuthLogin && showPasskey && (
-                  <AuthSeparator label={t('Or')} />
-                )}
                 {showPasskey && (
                   <div className="relative">
                     {lastLoginMethod === 'passkey' && (
@@ -517,6 +506,7 @@ export function SignIn({
                       variant="outline"
                       type="button"
                       data-testid="passkey-sign-in"
+                      {...analyticsAttrs('auth-passkey-sign-in')}
                       className="h-9 w-full"
                       onClick={onPasskeyLogin}
                       disabled={!!oauthLoading || formBusy}
@@ -564,6 +554,11 @@ export function SignIn({
                     <Input
                       type="email"
                       placeholder={t('Your email')}
+                      autoComplete={
+                        showPasskey && passkeyAutofill
+                          ? 'username webauthn'
+                          : undefined
+                      }
                       {...field}
                     />
                   </FormControl>

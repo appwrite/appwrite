@@ -301,6 +301,17 @@ async function addVirtualAuthenticator(
   }
 }
 
+/**
+ * Turns off passkey autofill. A virtual authenticator answers the autofill request
+ * on its own, which would sign in before the test clicks anything.
+ */
+async function disablePasskeyAutofill(page: Page) {
+  await page.addInitScript(() => {
+    PublicKeyCredential.isConditionalMediationAvailable = () =>
+      Promise.resolve(false)
+  })
+}
+
 /** Makes the browser prompt behave as if the user closed it. */
 async function cancelBrowserPrompts(page: Page) {
   await page.addInitScript(() => {
@@ -362,8 +373,9 @@ test.describe('console passkeys (mocked API)', () => {
   }) => {
     await useProfile(page, 'cloud')
     const calls = await mockAppwriteApi(page)
-    await addVirtualAuthenticator(page, { withCredential: true })
+    await disablePasskeyAutofill(page)
     await openSignIn(page)
+    await addVirtualAuthenticator(page, { withCredential: true })
 
     await passkeyButton(page).click()
 
@@ -392,6 +404,19 @@ test.describe('console passkeys (mocked API)', () => {
     })
   })
 
+  test('picking a passkey from autofill signs in', async ({ page }) => {
+    await useProfile(page, 'cloud')
+    const calls = await mockAppwriteApi(page)
+    await addVirtualAuthenticator(page, { withCredential: true })
+    await page.goto('/sign-in?redirect=%2Faccount%2Fsecurity', {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page).toHaveURL(/\/account\/security$/, { timeout: 30_000 })
+    expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(1)
+    expect(countCalls(calls, 'POST', '/account/sessions/token')).toBe(1)
+  })
+
   test('closing the passkey prompt leaves the sign-in page usable', async ({
     page,
   }) => {
@@ -400,11 +425,17 @@ test.describe('console passkeys (mocked API)', () => {
     await cancelBrowserPrompts(page)
     await openSignIn(page)
 
+    // Autofill asks for a challenge on load and fails quietly when cancelled.
+    await expect
+      .poll(() => countCalls(calls, 'POST', '/account/tokens/passkey'))
+      .toBeGreaterThanOrEqual(1)
+    const beforeClick = countCalls(calls, 'POST', '/account/tokens/passkey')
+
     await passkeyButton(page).click()
 
     await expect
       .poll(() => countCalls(calls, 'POST', '/account/tokens/passkey'))
-      .toBe(1)
+      .toBeGreaterThan(beforeClick)
     await expect(passkeyButton(page)).toBeEnabled()
     await expect(
       page.getByRole('button', { name: 'Login', exact: true }),
@@ -413,6 +444,46 @@ test.describe('console passkeys (mocked API)', () => {
     expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(0)
     expect(countCalls(calls, 'POST', '/account/sessions/token')).toBe(0)
     await expect(page).toHaveURL(/\/sign-in/)
+  })
+
+  test('the email field offers passkeys through autofill', async ({ page }) => {
+    await useProfile(page, 'cloud')
+    const calls = await mockAppwriteApi(page)
+    await page.addInitScript(() => {
+      const mediations: (string | undefined)[] = []
+      Object.assign(window, { passkeyMediations: mediations })
+      navigator.credentials.get = (options) => {
+        mediations.push(options?.mediation)
+        // Autofill waits for a pick; nothing picks one here.
+        return new Promise((_, reject) =>
+          options?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('Aborted', 'AbortError')),
+          ),
+        )
+      }
+    })
+    await openSignIn(page)
+
+    await expect(page.getByPlaceholder('Your email')).toHaveAttribute(
+      'autocomplete',
+      'username webauthn',
+    )
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as unknown as { passkeyMediations: string[] })
+              .passkeyMediations,
+        ),
+      )
+      .toEqual(['conditional'])
+    // A pending autofill request neither blocks the form nor shows an error.
+    await expect(
+      page.getByRole('button', { name: 'Login', exact: true }),
+    ).toBeEnabled()
+    await expect(passkeyButton(page)).toBeEnabled()
+    await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
+    expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(0)
   })
 
   test('the account lists, adds, renames and deletes passkeys', async ({

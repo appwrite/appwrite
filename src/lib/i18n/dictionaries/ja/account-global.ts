@@ -1141,10 +1141,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Display name': '表示名',
   'Model created': 'モデルを作成しました',
   'Model updated': 'モデルを更新しました',
-  'Model deleted': 'モデルを削除しました',
   'Failed to create model': 'モデルの作成に失敗しました',
   'Failed to update model': 'モデルの更新に失敗しました',
-  'Failed to delete model': 'モデルの削除に失敗しました',
   'My OpenAI key': '自分の OpenAI キー',
   'Model ID': 'モデル ID',
   'Enter API key': 'API キーを入力',
@@ -1323,7 +1321,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   // Console passkeys: sign-in and account management
   'Sign in with a passkey': 'パスキーでサインイン',
   'Failed to sign in with a passkey': 'パスキーでのサインインに失敗しました',
-  'That passkey is not recognised. It may have been removed from your account.':
+  'Passkeys are not set up for this domain.':
+    'このドメインではパスキーが設定されていません。',
+  'That passkey is not recognized. It may have been removed from your account.':
     'このパスキーは認識されません。アカウントから削除された可能性があります。',
   'The passkey sign-in expired. Please try again.':
     'パスキーでのサインインの有効期限が切れました。もう一度お試しください。',
