@@ -279,7 +279,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_GITLAB_APP_ID',
-                'description' => 'GitLab OAuth application ID used for signing in to the Appwrite console. On that application, enable the read_user, openid, and email scopes. An existing application that only allows read_user must have openid and email added before the next sign-in. You can find the ID in your GitLab application details. This is separate from _APP_VCS_GITLAB_CLIENT_ID, which powers repository integration rather than console sign-in.',
+                'description' => 'GitLab OAuth application ID used for signing in to the Appwrite console. You can find it in your GitLab application details. This is separate from _APP_VCS_GITLAB_CLIENT_ID, which powers repository integration rather than console sign-in.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
@@ -1662,7 +1662,7 @@ return [
             ],
             [
                 'name' => '_APP_VCS_GITLAB_CLIENT_ID',
-                'description' => 'GitLab OAuth2 application client ID. Create it under Settings > Applications and enable the read_user, api, openid, and email scopes. An existing application needs openid and email added, then the GitLab connection authorized again.',
+                'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
