@@ -74,6 +74,19 @@ final class FetcherTest extends TestCase
         $this->assertSame(2, $client->callCount);
     }
 
+    public function testFetchReportsFinalRedirectUrl(): void
+    {
+        $client = $this->scriptedClient([
+            $this->redirect('https://1.1.1.1/blog/page'),
+            $this->ok('FINAL_BODY'),
+        ]);
+
+        $finalUrl = '';
+        (new TestableGet())->fetchForTest('http://8.8.8.8/start', $client, $finalUrl);
+
+        $this->assertSame('https://1.1.1.1/blog/page', $finalUrl);
+    }
+
     public function testFetchBlocksRedirectToPrivateIp(): void
     {
         // This is the exact SSRF chain from the report:
@@ -235,8 +248,8 @@ class TestableGet extends Get
         parent::assertSafeUrl($url);
     }
 
-    public function fetchForTest(string $url, ClientInterface $client): ResponseInterface
+    public function fetchForTest(string $url, ClientInterface $client, ?string &$finalUrl = null): ResponseInterface
     {
-        return $this->safeFetch($url, 'test', $client);
+        return $this->safeFetch($url, 'test', $client, $finalUrl);
     }
 }
