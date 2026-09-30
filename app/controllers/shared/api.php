@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Key;
-use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -456,17 +455,9 @@ Http::init()
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        // Step 12: Validate MFA requirements
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
-
-        // Step 13: Handle Multi-Factor Authentication
+        // Step 12: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
-            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
+            if ($session && $user->sessionNeedsMoreFactors($session->getId())) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }

@@ -272,6 +272,7 @@ return function (Container $container): void {
         }
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        $jwtSessionId = '';
         if (!empty($authJWT) && !$project->isEmpty()) {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -310,6 +311,7 @@ return function (Container $container): void {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
+            /** @var User $accountKeyUser */
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
                 $key = $accountKeyUser->find(
@@ -335,7 +337,12 @@ return function (Container $container): void {
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
         $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
 
-        if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
+        // Impersonation needs the operator to have completed their own MFA, as in the HTTP user resource.
+        if (
+            !$user->isEmpty()
+            && $user->getAttribute('impersonator', false)
+            && !$user->sessionNeedsMoreFactors($user->sessionVerify($store->getProperty('secret', ''), $proofForToken) ?: $jwtSessionId)
+        ) {
             $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
             $targetUser = null;
 
