@@ -72,6 +72,8 @@ return [
             Attribute::boolean(key: 'emailIsCorporate'),
             Attribute::boolean(key: 'emailIsCanonical'),
             Attribute::boolean(key: 'impersonator', default: false),
+            Attribute::string(key: 'photoId'),
+            Attribute::integer(key: 'photoSize', size: 8, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [Order::Asc]),

@@ -282,6 +282,15 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
+                    // Added in 2.3.0 for custom user photos
+                    foreach (['photoId', 'photoSize'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 

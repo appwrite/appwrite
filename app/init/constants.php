@@ -132,6 +132,7 @@ const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -471,6 +472,7 @@ const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_AVATARS_STORAGE = 'avatars.storage';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 

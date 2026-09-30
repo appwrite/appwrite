@@ -667,20 +667,42 @@ final class VCSGitHubConsoleClientTest extends Scope
         $headers = [
             'content-type' => 'application/json',
             'x-github-event' => 'push',
-        ];
-        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
-        if (!empty($secret)) {
-            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
                 'sha256',
                 \json_encode($payload, JSON_THROW_ON_ERROR),
-                $secret,
-            );
-        }
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ];
 
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
 
         return ['event' => $event, 'commit' => $commit];
+    }
+
+    public function testCreateEventWithInvalidSignature(): void
+    {
+        $payload = [
+            'action' => 'deleted',
+            'installation' => ['id' => (int) $this->providerInstallationId],
+        ];
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), 'wrong-secret'),
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
     }
 
     public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void

@@ -57,6 +57,7 @@ services:
       start_period: 120s
     networks:
       - appwrite
+      - browser
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -441,6 +442,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -1042,6 +1044,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
@@ -1659,7 +1662,12 @@ services:
     container_name: appwrite-browser
     image: appwrite/browser:0.3.4
     networks:
-      - appwrite
+      - browser
+    # Public resolvers only, so the browser cannot resolve internal service
+    # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
@@ -1939,6 +1947,8 @@ networks:
     name: appwrite
   runtimes:
     name: runtimes
+  browser:
+    name: browser
 volumes:
   appwrite-mariadb: null
   appwrite-mongodb: null

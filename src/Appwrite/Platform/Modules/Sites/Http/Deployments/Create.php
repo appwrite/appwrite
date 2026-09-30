@@ -185,6 +185,11 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
+            $idValidator = new UID();
+            if (!$idValidator->isValid($deploymentId)) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
+            }
+
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }

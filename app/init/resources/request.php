@@ -531,8 +531,19 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
+            // Every project shares the signing key, and a user ID can be chosen at
+            // signup, so a token is only good for the project that minted it. Tokens
+            // minted before the projectId claim existed are accepted only when bound
+            // to a session, whose ID the server generated and no other project holds.
+            // An unbound token authenticates nobody rather than failing the request:
+            // a function domain resolves to the console, and clients send their
+            // project's JWT there for the function to read.
+            $jwtProjectId = $payload['projectId'] ?? '';
+            $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
+            $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : ! empty($payload['sessionId']);
+
             $jwtUserId = $payload['userId'] ?? '';
-            if (! empty($jwtUserId)) {
+            if ($bound && ! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -894,7 +905,9 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (! empty($orgHeader)) {
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
                 return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
