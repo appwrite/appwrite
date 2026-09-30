@@ -13,13 +13,10 @@ import { cn } from '@/lib/utils'
 import { InitRecapPromoBanner } from '@/components/global/shared/InitRecapPromoBanner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
-  isFirewallPromoOperatorEarlyAccess,
+  isFirewallPromoOperatorAudience,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
-import {
-  FIREWALL_PROMO_BANNER_ENABLED,
-  FIREWALL_PROMO_BANNER_ID,
-} from '@/lib/console-banners/catalog'
+import { FIREWALL_PROMO_BANNER_ID } from '@/lib/console-banners/catalog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { OperatorAccount } from '@/lib/operator-account'
 import { useT } from '@/lib/i18n/translate'
@@ -34,12 +31,10 @@ function FirewallPromoBannerGate() {
   const { account } = useAuth()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const preview = isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
-  const operatorEarlyAccess = isFirewallPromoOperatorEarlyAccess(
+  const operatorAudience = isFirewallPromoOperatorAudience(
     account as OperatorAccount | undefined,
   )
-  const show =
-    FIREWALL_PROMO_BANNER_ENABLED || preview || operatorEarlyAccess
-  if (!show) return null
+  if (!preview && !operatorAudience) return null
   return (
     <Suspense fallback={null}>
       <FirewallPromoBannerLazy />
