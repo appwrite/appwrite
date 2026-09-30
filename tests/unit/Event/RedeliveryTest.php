@@ -13,15 +13,15 @@ use Utopia\Queue\Message;
 
 final class RedeliveryTest extends TestCase
 {
-    public function testAFirstDeliveryHandlesEveryTargetWithoutReadingTheCache(): void
+    public function testAFirstDeliveryHandlesEveryTargetWhateverTheCacheSays(): void
     {
         $cache = new UnreliableCache();
         $cache->failLoads = true;
 
-        $redelivery = new Redelivery(new Cache($cache), 'webhooks', $this->message(['eventId' => 'event-1']), handledWhenUnknown: true);
+        // An unreadable record would answer "handled" here; a first delivery must not ask.
+        $redelivery = new Redelivery(new Cache($cache), 'functions', $this->message(['eventId' => 'event-1']), handledWhenUnknown: true);
 
-        $this->assertFalse($redelivery->wasHandled('webhook-a'));
-        $this->assertSame(0, $cache->loads);
+        $this->assertFalse($redelivery->wasHandled('function-a'));
     }
 
     /**
@@ -51,20 +51,22 @@ final class RedeliveryTest extends TestCase
         $this->assertSame($first->id('webhook-a'), $again->id('webhook-a'));
     }
 
-    public function testAMessageWithoutAnEventIdIsNamedByItsPayload(): void
+    public function testAMessageWithoutAnEventIdIsNotTracked(): void
     {
         $cache = new Cache(new Memory());
-        $payload = ['payload' => ['$id' => 'row-1'], 'events' => ['databases.*.create']];
+        // What a publisher from before events were named put on the queue. Two distinct events
+        // can carry exactly this payload, so nothing about it may be shared between them.
+        $payload = ['payload' => ['$id' => 'row-1'], 'events' => ['databases.*.update']];
 
         $first = new Redelivery($cache, 'functions', $this->message($payload, 'pid-1', attempts: 0), handledWhenUnknown: true);
-        $first->record(['function-a']);
+        $this->assertFalse($first->record(['function-a']), 'An untracked message cannot promise the retry will skip anything');
+        $this->assertTrue($first->record([]));
 
-        $requeued = new Redelivery($cache, 'functions', $this->message($payload, 'pid-2', attempts: 1), handledWhenUnknown: true);
-        $other = new Redelivery($cache, 'functions', $this->message(['payload' => ['$id' => 'row-2']] + $payload, 'pid-3', attempts: 1), handledWhenUnknown: true);
+        $retried = new Redelivery($cache, 'functions', $this->message($payload, 'pid-1', attempts: 1), handledWhenUnknown: true);
+        $this->assertFalse($retried->wasHandled('function-a'));
 
-        $this->assertTrue($requeued->wasHandled('function-a'));
-        $this->assertSame($first->id('function-a'), $requeued->id('function-a'));
-        $this->assertFalse($other->wasHandled('function-a'), 'A different event is not the same message');
+        $twin = new Redelivery($cache, 'functions', $this->message($payload, 'pid-2', attempts: 0), handledWhenUnknown: true);
+        $this->assertNotSame($first->id('function-a'), $twin->id('function-a'), 'Two events with one payload are still two events');
     }
 
     public function testIdsDifferForEveryOtherEventAndTarget(): void
@@ -113,7 +115,7 @@ final class RedeliveryTest extends TestCase
     public function testARecordTheCacheRefusedIsReportedAndTheRestAreStillWritten(): void
     {
         $adapter = new UnreliableCache();
-        $adapter->refuseSaves = ['redelivery:webhooks:' . \md5('event-1:webhook-a')];
+        $adapter->refuseSave = 1;
         $cache = new Cache($adapter);
         $payload = ['eventId' => 'event-1'];
 
@@ -161,15 +163,13 @@ final class UnreliableCache extends Memory
 
     public bool $failSaves = false;
 
-    /** @var list<string> */
-    public array $refuseSaves = [];
+    /** Which write, counting from 1, the server refuses. */
+    public int $refuseSave = 0;
 
-    public int $loads = 0;
+    private int $saves = 0;
 
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
-        $this->loads++;
-
         if ($this->failLoads) {
             throw new \RedisException('read error on connection');
         }
@@ -183,7 +183,7 @@ final class UnreliableCache extends Memory
             throw new \RedisException('read error on connection');
         }
 
-        if (\in_array($key, $this->refuseSaves, true)) {
+        if (++$this->saves === $this->refuseSave) {
             return false;
         }
 
