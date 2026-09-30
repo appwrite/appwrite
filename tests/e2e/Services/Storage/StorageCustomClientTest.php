@@ -1713,6 +1713,9 @@ final class StorageCustomClientTest extends Scope
             $hijack = $upload($otherHeaders, $nextRange, $nextBody, $otherPermissions, $privateFileId);
             $this->assertEquals(401, $hijack['headers']['status-code']);
             $this->assertEquals('user_unauthorized', $hijack['body']['type']);
+            $this->assertArrayNotHasKey('name', $hijack['body']);
+            $this->assertArrayNotHasKey('signature', $hijack['body']);
+            $this->assertArrayNotHasKey('mimeType', $hijack['body']);
 
             $afterHijack = $read($privateFileId);
             $this->assertEquals(200, $afterHijack['headers']['status-code']);
@@ -1739,11 +1742,27 @@ final class StorageCustomClientTest extends Scope
 
             /**
              * Test for FAILURE
-             * Resuming a finished upload must not return that file to someone else.
+             * A caller who cannot read or update the finished file must not
+             * receive it back from a chunked resume. Reading it is not found.
              */
+            $hidden = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $privateFileId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => $otherHeaders['cookie'],
+            ]);
+            $this->assertEquals(404, $hidden['headers']['status-code']);
+            $this->assertEquals('storage_file_not_found', $hidden['body']['type']);
+
             $replay = $upload($otherHeaders, $nextRange, $nextBody, $otherPermissions, $privateFileId);
             $this->assertEquals(401, $replay['headers']['status-code']);
             $this->assertEquals('user_unauthorized', $replay['body']['type']);
+            $this->assertArrayNotHasKey('$id', $replay['body']);
+            $this->assertArrayNotHasKey('name', $replay['body']);
+            $this->assertArrayNotHasKey('signature', $replay['body']);
+            $this->assertArrayNotHasKey('mimeType', $replay['body']);
+            $this->assertArrayNotHasKey('sizeOriginal', $replay['body']);
+            $this->assertArrayNotHasKey('chunksTotal', $replay['body']);
+            $this->assertArrayNotHasKey('$permissions', $replay['body']);
 
             /**
              * Test for SUCCESS
