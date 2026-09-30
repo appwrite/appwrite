@@ -21,6 +21,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Multiple;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
@@ -66,7 +67,7 @@ class Update extends Action
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
             ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('authPassword', null, new Nullable(new PasswordFormat(new Text(256))), 'Webhook HTTP password. Max length: 256 chars. Omit to keep the current password; it is cleared when the URL changes or TLS verification is disabled.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -83,7 +84,7 @@ class Update extends Action
         bool $enabled,
         bool $tls,
         string $authUsername,
-        string $authPassword,
+        ?string $authPassword,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
@@ -105,9 +106,15 @@ class Update extends Action
             'url' => $url,
             'security' => $tls,
             'httpUser' => $authUsername,
-            'httpPass' => $authPassword,
             'enabled' => $enabled,
         ]);
+
+        // The stored password is bound to the endpoint it was set for. Keeping it across a URL change or
+        // a TLS-verification downgrade would let a write-only key redirect it somewhere it can read.
+        $sameEndpoint = $url === $webhook->getAttribute('url') && ($tls || !$webhook->getAttribute('security'));
+        if ($authPassword !== null || !$sameEndpoint) {
+            $updates->setAttribute('httpPass', $authPassword ?? '');
+        }
 
         if ($enabled) {
             $updates->setAttribute('attempts', 0);

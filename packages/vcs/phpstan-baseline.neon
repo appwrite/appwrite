@@ -2017,12 +2017,6 @@ parameters:
 			path: tests/E2E/Base.php
 
 		-
-			message: '#^Parameter \#1 \$needle of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/E2E/Base.php
-
-		-
 			message: '#^Parameter \#1 \$payload of method Utopia\\VCS\\Adapter\:\:validateWebhookEvent\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1

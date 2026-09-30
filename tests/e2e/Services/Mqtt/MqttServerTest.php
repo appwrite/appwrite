@@ -125,6 +125,42 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testJwtFromAnotherProjectConnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+
+        // Another project holds a user with the same ID and mints a session-less JWT for it.
+        $otherProject = $this->getProject(true);
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ], [
+            'userId' => $userId,
+            'email' => 'mqtt-other-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        // Still good where it was minted.
+        $own = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $own->connect($otherProject['$id'], $jwt['body']['jwt'], 'e2e-jwt-own-' . $userId, cleanStart: true));
+        $own->disconnect();
+
+        // Test for FAILURE: replayed against this project, it must not authenticate as this project's user.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $jwt['body']['jwt'], 'e2e-jwt-cross-' . $userId, cleanStart: true));
+        $subscriber->disconnect();
+    }
+
     public function testSessionAuthConnect(): void
     {
         $projectId = $this->getProject()['$id'];
