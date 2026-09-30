@@ -17,7 +17,7 @@ const partnerIconTileClassName = cn(
 )
 
 /**
- * GitHub × Appwrite partnership mark for the education join card. Overlapping
+ * Appwrite × GitHub partnership mark for the education program. Overlapping
  * circular tiles reuse auth header sizing but read as a dual-brand lockup.
  */
 export function EducationJoinPartnerHeader({
@@ -29,14 +29,14 @@ export function EducationJoinPartnerHeader({
     <div
       className={cn('flex items-center justify-center', className)}
       role="img"
-      aria-label={t('GitHub and Appwrite')}
+      aria-label={t('Appwrite and GitHub')}
     >
       <div className="flex items-center ps-0.5">
         <div className={cn(partnerIconTileClassName, 'relative z-10')}>
-          <GitHubIcon className={authFlowHeaderIconClassName} />
+          <AppwriteMarkIcon className={authFlowHeaderIconClassName} />
         </div>
         <div className={cn(partnerIconTileClassName, '-ms-4')}>
-          <AppwriteMarkIcon className={authFlowHeaderIconClassName} />
+          <GitHubIcon className={authFlowHeaderIconClassName} />
         </div>
       </div>
     </div>

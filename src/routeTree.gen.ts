@@ -120,6 +120,7 @@ import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './ro
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
 import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
 import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
+import { Route as PublicDebugEducationPlanPreviewRouteImport } from './routes/_public/debug.education-plan-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
 import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
@@ -1015,6 +1016,12 @@ const PublicDebugEducationJoinPreviewRoute =
   PublicDebugEducationJoinPreviewRouteImport.update({
     id: '/debug/education-join-preview',
     path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationPlanPreviewRoute =
+  PublicDebugEducationPlanPreviewRouteImport.update({
+    id: '/debug/education-plan-preview',
+    path: '/debug/education-plan-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
@@ -3312,6 +3319,7 @@ export interface FileRoutesByFullPath {
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -3745,6 +3753,7 @@ export interface FileRoutesByTo {
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -4145,6 +4154,7 @@ export interface FileRoutesById {
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
   '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/_public/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
   '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
@@ -4586,6 +4596,7 @@ export interface FileRouteTypes {
     | '/debug/code-editor-preview'
     | '/debug/community-share-examples'
     | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
     | '/debug/impersonate-preview'
     | '/debug/join-invite-preview'
@@ -5019,6 +5030,7 @@ export interface FileRouteTypes {
     | '/debug/code-editor-preview'
     | '/debug/community-share-examples'
     | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
     | '/debug/impersonate-preview'
     | '/debug/join-invite-preview'
@@ -5418,6 +5430,7 @@ export interface FileRouteTypes {
     | '/_public/debug/code-editor-preview'
     | '/_public/debug/community-share-examples'
     | '/_public/debug/education-join-preview'
+    | '/_public/debug/education-plan-preview'
     | '/_public/debug/error-preview'
     | '/_public/debug/impersonate-preview'
     | '/_public/debug/join-invite-preview'
@@ -6577,6 +6590,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/education-join-preview'
       fullPath: '/debug/education-join-preview'
       preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-plan-preview': {
+      id: '/_public/debug/education-plan-preview'
+      path: '/debug/education-plan-preview'
+      fullPath: '/debug/education-plan-preview'
+      preLoaderRoute: typeof PublicDebugEducationPlanPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/error-preview': {
@@ -10635,6 +10655,7 @@ interface PublicRouteChildren {
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
   PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
   PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
+  PublicDebugEducationPlanPreviewRoute: typeof PublicDebugEducationPlanPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
   PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
@@ -10676,6 +10697,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicDebugCommunityShareExamplesRoute:
     PublicDebugCommunityShareExamplesRoute,
   PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
+  PublicDebugEducationPlanPreviewRoute: PublicDebugEducationPlanPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
   PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,

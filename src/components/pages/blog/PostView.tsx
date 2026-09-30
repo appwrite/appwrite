@@ -75,7 +75,7 @@ export function PostView({ post, contentHtml, faqs }: PostViewProps) {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <div className="mt-8 grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,56rem)_1px_minmax(192px,208px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
+          <div className="mt-8 grid items-start gap-8 overflow-visible @[900px]:grid-cols-[minmax(0,56rem)_1px_minmax(220px,240px)] @[900px]:gap-x-12 @[1080px]:gap-x-16">
             <article className="min-w-0">
               <BlogArticleHeader
                 slug={post.slug}

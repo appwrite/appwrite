@@ -17,7 +17,6 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useOrganizationById,
   useOrganizationPlan,
-  useBillingPlans,
   useCouponAccount,
   useOrganizationProjects,
   usePlanEstimation,
@@ -34,11 +33,7 @@ import {
   organizationPlanQueryOptions,
   billingPlansQueryOptions,
 } from '@/lib/react-query/hooks'
-import { filterBillingPlansByLocation } from '@/lib/pricing/start-plan'
-import {
-  useVisitorCountryCode,
-  useVisitorCountryResolutionComplete,
-} from '@/hooks/use-visitor-country'
+import { useSelectableBillingPlans } from '@/hooks/use-selectable-billing-plans'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -480,21 +475,11 @@ export function ChangePlanWizardFullscreen() {
   const { organization } = useOrganizationById(orgId)
   const { plan } = useOrganizationPlan(orgId)
   const { organizations } = useOrganizations()
-  const { plans: billingPlans, isLoading: billingPlansLoading } =
-    useBillingPlans()
-  const visitorCountryCode = useVisitorCountryCode()
-  const visitorCountryReady = useVisitorCountryResolutionComplete()
-  const plansLoading = billingPlansLoading || !visitorCountryReady
-
-  const selectablePlans = useMemo(
-    () =>
-      filterBillingPlansByLocation(
-        billingPlans,
-        visitorCountryCode,
-        isCreateMode ? null : organization?.billingPlan,
-      ),
-    [billingPlans, visitorCountryCode, isCreateMode, organization?.billingPlan],
-  )
+  const {
+    billingPlans,
+    selectablePlans,
+    isLoading: plansLoading,
+  } = useSelectableBillingPlans(isCreateMode ? null : organization?.billingPlan)
 
   // A free org, including one with a scheduled downgrade to Free, occupies
   // the account's single free-organization slot.
@@ -522,13 +507,18 @@ export function ChangePlanWizardFullscreen() {
           getPlanCanonicalFromRecord(planId, selectablePlans) !== 'free',
       )
       .sort((a, b) => {
-        const orderA = resolveBillingPlanRecord(a, selectablePlans)?.order ?? 999
-        const orderB = resolveBillingPlanRecord(b, selectablePlans)?.order ?? 999
+        const orderA =
+          resolveBillingPlanRecord(a, selectablePlans)?.order ?? 999
+        const orderB =
+          resolveBillingPlanRecord(b, selectablePlans)?.order ?? 999
         return orderA - orderB
       })[0]
 
     if (isCreateMode) {
-      return (firstPaidPlan as BillingPlanTierType | undefined) ?? BillingPlanTier.Tier1
+      return (
+        (firstPaidPlan as BillingPlanTierType | undefined) ??
+        BillingPlanTier.Tier1
+      )
     }
 
     const current = organization?.billingPlan || BillingPlanTier.Tier0

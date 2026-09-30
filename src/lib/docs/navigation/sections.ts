@@ -1477,7 +1477,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -1671,7 +1671,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          }
+          },
         ],
       },
     ],

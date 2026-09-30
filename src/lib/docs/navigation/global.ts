@@ -157,9 +157,9 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
     label: 'Advanced',
     items: [
       {
-        label: 'Platform',
-        href: '/docs/advanced/platform',
-        icon: 'platform',
+        label: 'Billing',
+        href: '/docs/advanced/billing',
+        icon: 'billing',
         isParent: true,
       },
       {

@@ -1262,7 +1262,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
-  'GitHub and Appwrite': 'GitHub と Appwrite',
+  'Appwrite and GitHub': 'Appwrite と GitHub',
   'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
