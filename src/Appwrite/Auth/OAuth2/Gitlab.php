@@ -28,6 +28,10 @@ class Gitlab extends OAuth2
     protected array $tokens = [];
 
     /**
+     * Existing GitLab applications must allow these scopes. openid and email
+     * are what /oauth/userinfo uses for the primary address. read_user remains
+     * for grants issued before those scopes existed.
+     *
      * @var array
      */
     protected array $scopes = [
@@ -230,16 +234,46 @@ class Gitlab extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
+        if (!empty($this->user)) {
+            return $this->user;
+        }
+
+        try {
             $user = $this->request(
                 'GET',
                 $this->getEndpoint() . '/oauth/userinfo',
                 ['Authorization: Bearer ' . $accessToken],
             );
             $this->user = \json_decode($user, true) ?? [];
+        } catch (\Throwable) {
+            // A grant from before the openid scope cannot call userinfo.
+            // The profile still identifies the user. It does not verify the email.
+            $this->user = $this->profile($accessToken);
         }
 
         return $this->user;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    private function profile(string $accessToken): array
+    {
+        $response = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
+            'access_token' => $accessToken,
+        ]));
+        $profile = \json_decode($response, true) ?? [];
+
+        return [
+            'sub' => isset($profile['id']) ? (string) $profile['id'] : '',
+            'email' => $profile['email'] ?? '',
+            'email_verified' => false,
+            'name' => $profile['name'] ?? '',
+            'preferred_username' => $profile['username'] ?? '',
+            'picture' => $profile['avatar_url'] ?? '',
+        ];
     }
 
     /**
