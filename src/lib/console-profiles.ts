@@ -35,6 +35,8 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
+  /** Console passkeys (sign in with a passkey, manage the account's passkeys) */
+  accountPasskeys: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
@@ -102,6 +104,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
+  accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
@@ -149,6 +152,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
+      accountPasskeys: true,
       accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
@@ -184,6 +188,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
+      accountPasskeys: false,
       accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,
