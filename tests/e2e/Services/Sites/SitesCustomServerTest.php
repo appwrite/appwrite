@@ -3323,8 +3323,23 @@ final class SitesCustomServerTest extends Scope
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
 
+        // Success: Path defaults to the site root
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => ''
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
         // Failure: Path must be relative to the site root
         $paths = [
+            ['contact'],
             'contact',
             'example.com',
             '@example.com',
@@ -3341,9 +3356,10 @@ final class SitesCustomServerTest extends Scope
                 'jwt' => $jwt['body']['jwt'],
                 'path' => $path
             ], followRedirects: false);
-            $this->assertEquals(400, $response['headers']['status-code'], $path);
-            $this->assertArrayNotHasKey('location', $response['headers'], $path);
-            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $path);
+            $message = \var_export($path, true);
+            $this->assertEquals(400, $response['headers']['status-code'], $message);
+            $this->assertArrayNotHasKey('location', $response['headers'], $message);
+            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
         }
 
         // Failure: Session missing (old bad, new ok)

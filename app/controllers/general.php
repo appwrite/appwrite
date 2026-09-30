@@ -1647,7 +1647,8 @@ Http::get('/_appwrite/authorize')
         // The path is appended to this host's origin, so it must stay a path:
         // root-relative, not scheme-relative, and single-line.
         if (
-            !\str_starts_with($path, '/')
+            !\is_string($path)
+            || !\str_starts_with($path, '/')
             || \str_starts_with($path, '//')
             || \str_starts_with($path, '/\\')
             || \str_contains($path, "\r")
