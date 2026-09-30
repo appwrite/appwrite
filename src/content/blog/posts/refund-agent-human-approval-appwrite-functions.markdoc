@@ -18,15 +18,15 @@ faqs:
     answer: "The refund row in the payments table has an ID derived from the request: refund_<requestId>. A second attempt to create it, for example from a retried execution or a second approval, fails with the 409 error row_already_exists. The agent then reads the refund that exists instead of creating a new one."
 ---
 
-A small online store gets refund requests every day. Many are routine, such as a glass carafe that arrived cracked. Others need a person to look at them: an expensive grinder, a customer who had a refund last month, or a photo that does not show any damage. An AI agent can close the routine requests and prepare the others for staff. For the others, the agent has to wait for a person, sometimes until the next day.
+A small online store gets refund requests every day. Many are routine, such as a glass carafe that arrived cracked. Others need a person to look at them: an expensive grinder, a customer who had a refund last month, or a photo that does not show any damage. An AI agent can close the routine requests and prepare the others for staff, but then it has to wait for a person, sometimes until the next day.
 
 This tutorial builds Pourhaven Refund Desk for a fictional store that sells coffee brewing gear. Customers ask for a refund from their order page and add a photo. A refund agent on Appwrite Functions investigates each request with GPT-6 Luna:
 
-- It refunds small, clear requests on its own: $50 or less, delivered in the last 30 days, a photo of the problem, and no other refund in 90 days.
+- It refunds small, clear requests on its own: damage, a defect, or a wrong item, $50 or less, delivered in the last 30 days, a photo of the problem, and no other refund in 90 days.
 - It sends every other request to the support team as an approval card with a recommendation, findings, and concerns.
 - It carries out the staff member's decision: a refund, a return code, a question to the customer, or a decline.
 
-An Appwrite Function execution can run for 15 minutes at most, and a staff decision can take a day. The refund agent does not wait inside an execution. It saves the case in TablesDB, and the execution ends. The staff decision updates a row, and that update starts a new execution. A staff desk shows every step of the agent live through Appwrite Realtime.
+An Appwrite Function execution can run for 15 minutes at most, and a staff decision can take a day. The refund agent does not wait inside an execution. It saves the case in TablesDB, and a staff decision starts a new execution. A staff desk shows every step of the agent live through Appwrite Realtime.
 
 {% info title="Companion repository" %}
 The complete project lives at [appwrite-community/refund-desk-agent](https://github.com/appwrite-community/refund-desk-agent). It contains both functions, the web app with the customer pages and the staff desk, and the scripts that create the Appwrite resources and the demo data.
@@ -56,16 +56,18 @@ Appwrite emits an event when a row is created, updated, or deleted. A function c
 
 When a request needs a person, the agent creates an `approvals` row, and the execution ends. No execution runs while the request waits. When a staff member decides, the web app updates that row, and Appwrite starts a new execution for the update event. The new run reads the request, the approval, and the customer's answers from TablesDB, so it needs nothing from the first run.
 
-Event subscriptions need one precaution. Appwrite starts a function for a matching event also when the function's own write caused the event. The [events documentation](/docs/products/functions/execute#events) warns that this can cause infinite recursion. None of the agent's writes matches its own events:
+Event subscriptions need one precaution. Appwrite starts a function for a matching event even when the function's own write caused the event. The [events documentation](/docs/products/functions/execute#events) warns that this can cause infinite recursion. None of the agent's writes matches its own events:
 
 - The agent creates `approvals` rows and never updates them. Only staff update approvals.
 - The agent never creates `refund_requests` or `replies` rows. Only the `intake` function creates them.
+
+This approval pattern also works for other agents that must stop for a person. The agent saves its recommendation as a row that only people update, and the update event starts the next execution.
 
 # Create the project and API key
 
 ![The Create API key panel in the Appwrite Console with scopes selected in the Auth, Databases, Functions, Storage, and Project groups](/images/blog/refund-agent-human-approval-appwrite-functions/console-api-key-scopes.avif)
 
-The companion repository creates the Appwrite resources with a script that uses the Appwrite server SDK. The script needs a project and an API key.
+A script in the companion repository creates the Appwrite resources with the Appwrite server SDK. The script needs a project and an API key.
 
 1. In the [Appwrite Console](https://appwrite.io/console), create a project.
 2. Open **Settings** and copy the **Project ID** and the **API Endpoint**.
@@ -103,7 +105,7 @@ pnpm seed
 
 ## Request and approval tables
 
-TablesDB stores data as rows in tables, and each table defines typed columns. The `refund_requests` table holds one row per request: the order and the item, the amount that `intake` computed, the reason, the customer's text, the photo, and a `status` that moves through `submitted`, `working`, `needs_approval`, `needs_customer`, `awaiting_return`, `refunded`, `declined`, and `closed`. A unique index on `orderId` and `itemSku` allows one request per item.
+TablesDB stores data as rows in tables, and each table defines typed columns. The `refund_requests` table holds one row per request: the order and the item, the amount that `intake` computed, the reason, the customer's text, the photo, and a `status`. The status moves through `submitted`, `working`, `needs_approval`, `needs_customer`, `awaiting_return`, `refunded`, `declined`, and `closed`. A unique index on `orderId` and `itemSku` allows one request per item.
 
 The `approvals` table holds the agent's recommendation and, after a staff member decides, the decision:
 
@@ -136,15 +138,15 @@ Appwrite checks permissions on every read and write from a client. A table grant
 | `approvals` | Read, update | None | Off |
 | `replies` | Read | Read own rows | On |
 
-To see a table's permissions in the Console, open the table and go to the **Security** tab. Customers write to no table. The functions create the requests, steps, approvals, answers, and refunds, and staff update only `approvals` and the return status on `refund_requests`.
+To see a table's permissions in the Console, open the table and go to the **Security** tab. Customers cannot write to any table. The functions create the requests, steps, approvals, answers, and refunds, and staff update only `approvals` and the return status on `refund_requests`.
+
+The `request_photos` Storage bucket uses the same two levels. It lets any signed-in user upload a file and gives the staff team read access to every file. File security is on, so each file also carries its own permissions.
 
 ## The staff team
 
 ![The members of the Staff team in the Appwrite Console: Maya Okafor with the lead role and Daniel Reyes with the support role](/images/blog/refund-agent-human-approval-appwrite-functions/console-staff-team.avif)
 
 A team is a group of users in a project. A permission for `Role.team('staff')` applies to every member of the `staff` team. The seed script adds Maya Okafor with the `lead` role and Daniel Reyes with the `support` role. To see the members in the Console, open **Auth** > **Teams** > **Staff**.
-
-The `request_photos` Storage bucket lets any signed-in user upload a file and gives the staff team read access to every file. File security is on, so each file also carries its own permissions.
 
 ## The refund-agent function
 
@@ -163,7 +165,7 @@ The **Variables** tab holds the values that `pnpm provision` copied from `.env`.
 
 # Accept refund requests with the intake function
 
-A customer who creates a `refund_requests` row from the browser chooses every column, including the amount and the status. A client that creates a row without explicit permissions also gets update and delete permissions on it. For these reasons, the web app uploads the photo and then calls the `intake` function with `createExecution`, and the function creates the row.
+The web app does not create `refund_requests` rows. It uploads the photo and calls the `intake` function with `createExecution`, and the function creates the row. A row created from the browser would let the customer set every column, including the amount and the status. It would also give the customer update and delete permissions on the row.
 
 The function reads the caller from the `x-appwrite-user-id` header, which Appwrite sets when a signed-in user creates the execution. It checks that the order belongs to the caller and was delivered, and it computes the amount from the order. Then it creates the row with one permission, read access for the customer:
 
@@ -218,9 +220,9 @@ async function createRequest({ tablesDB, storage, tokens }, userId, body) {
 }
 ```
 
-Two submissions for the same item can arrive at the same moment. The unique index on `orderId` and `itemSku` rejects the second row with a `409` error of the type `row_unique_constraint_violation`, and the function answers with the request that exists.
+Two submissions for the same item can arrive at the same moment. The unique index on `orderId` and `itemSku` rejects the second row with a `409` error of the type `row_unique_constraint_violation`, and the function returns the request that exists.
 
-`lockPhoto` replaces the customer's permissions on the photo with read access only, so the customer cannot delete the evidence after the agent inspected it. It also creates a [file token](/docs/products/storage/file-tokens), a secret that gives access to one file, which the web app uses to show the photo in an `<img>` tag.
+`lockPhoto` replaces the customer's permissions on the photo with read access only, so the customer cannot delete the photo after the agent inspects it. It also creates a [file token](/docs/products/storage/file-tokens), a secret that gives access to one file. The web app uses the token to show the photo in an `<img>` tag.
 
 # Write the refund agent
 
@@ -228,7 +230,7 @@ The `refund-agent` function has one file per job in `src/jobs/`: a new request, 
 
 ## Claim each trigger once
 
-Two executions can start for one trigger, for example when two staff members approve the same request at the same moment. Row IDs are unique in a table, so `createRow` fails with a `409` error of the type `row_already_exists` when a row with the same ID exists. The first write of every run is its trigger step in `run_steps`, with an ID derived from the trigger, such as `req_<requestId>` for a new request or `apr_<approvalId>` for a decision. The run that writes the step first owns the trigger, and any other run stops:
+Two executions can start for one trigger, for example when two staff members approve the same request at the same moment. Row IDs are unique in a table, so `createRow` fails with a `409` error of the type `row_already_exists` when a row with the same ID exists. Each run claims its trigger with a row in `run_steps`. The row ID comes from the trigger, for example `req_<requestId>` for a new request or `apr_<approvalId>` for a decision. The first run to create this row owns the trigger. Any other run gets the `409` error and stops:
 
 ```javascript
 /**
@@ -299,7 +301,7 @@ The tools are OpenAI function tools with strict JSON schemas. No tool takes a re
 - `issue_refund` refunds the item when the rules allow it.
 - `request_approval` hands the request to staff.
 
-Each tool call writes a `run_steps` row with the status `running` before the tool starts, and the result when it ends. That row is what the staff desk shows live.
+Before a tool starts, the agent creates a `run_steps` row with the status `running`. When the tool ends, the agent updates the row with the result. The staff desk shows these rows live.
 
 A tool result is text, so the tool loop cannot give the photo itself to the model. `inspect_photo` makes a separate call to the model with the image. It reads the private file from Storage with `getFileView`, which returns the bytes, and sends them as a data URL:
 
@@ -322,7 +324,7 @@ A JSON schema fixes the shape of the answer: a description and a verdict (`yes`,
 
 ## Enforce the refund rules in code
 
-The model decides which tool to call, but code decides whether money moves. `issue_refund` takes only a reason for staff and no amount, so the customer's text cannot change the amount. Its handler runs `checkAutoRefund`, which returns every rule that fails: the reason, the $50 limit, the 30-day window, a photo inspected in this run with the verdict `yes`, and no refund in the last 90 days. When a rule fails, the tool tells the model to call `request_approval`. Only the first run of a request has this tool, because after staff are involved, a person makes every decision.
+The model decides which tool to call, but code decides whether money moves. `issue_refund` takes only a reason for staff and no amount, so the customer's text cannot change the amount. Its handler runs `checkAutoRefund`, which checks five rules and returns every rule that fails. The rules are the reason, the $50 limit, the 30-day window, a photo inspected in this run with the verdict `yes`, and no refund in the last 90 days. When a rule fails, the tool tells the model to call `request_approval`. Only the first run of a request has the `issue_refund` tool. After staff are involved, a person makes every decision.
 
 `issueRefund` writes the refund to the `payments` table. The row ID is `refund_<requestId>`, so a second attempt fails with `row_already_exists`, and the function reads the refund that exists instead of paying twice:
 
@@ -522,7 +524,7 @@ export function scheduleReturnCheck(ctx, request, attempt, at) {
 }
 ```
 
-The time must be a whole minute in the future, so `checkTime` rounds up to the next minute. The body tells the future run which request to check. `refund-agent` can create executions of itself, although no user can execute it, because its API key has the `executions.write` scope. The check refunds the item when staff marked it as received. Otherwise, it reminds the customer once and closes the request after the second missed check.
+The time must be a whole minute in the future, so `checkTime` rounds up to the next minute. The body tells the future run which request to check. No user can execute `refund-agent`, but the function can create executions of itself because its API key has the `executions.write` scope. The check refunds the item when staff marked it as received. Otherwise, it reminds the customer once and closes the request after the second missed check.
 
 # Show the agent's work in the staff desk
 
@@ -629,7 +631,7 @@ As Priya, request a refund for the glass carafe from order PH-20417 with the rea
 
 ![The customer request page for the carafe with the status Refunded, the refund of $34.00 to the Visa card, the payment reference, and the updates from the refund agent](/images/blog/refund-agent-human-approval-appwrite-functions/app-customer-refunded.avif)
 
-If Maya approves the kettle first, the carafe goes to staff instead, with a concern about the earlier refund.
+Request the carafe refund before Maya approves the kettle. After the kettle refund, Priya has a refund in the last 90 days, so the agent sends the carafe to staff.
 
 ## Approve a request
 
@@ -663,9 +665,7 @@ The return check is a scheduled execution seven days ahead. When the grinder arr
 
 # Connect a payment provider
 
-The `payments` table stands in for a payment provider. `issueRefund` is the only function that moves money, so it is the only function to change. Call the refund API of the provider there, and pass `refund_<requestId>` as the idempotency key, so a retry cannot refund twice at the provider either.
-
-The approval pattern also works for other agents that must stop for a person. The agent saves its recommendation as a row that only people update, and the update event starts the next execution.
+The `payments` table stands in for a payment provider. `issueRefund` is the only code that moves money, so it is the only code to change. Call the refund API of the provider there, and pass `refund_<requestId>` as the idempotency key, so a retry cannot refund twice at the provider either.
 
 # Resources
 
