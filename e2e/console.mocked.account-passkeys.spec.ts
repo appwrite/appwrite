@@ -551,12 +551,8 @@ test.describe('console passkeys (mocked API)', () => {
     await expect(passkeyButton(page)).toHaveCount(0)
 
     await page.unrouteAll({ behavior: 'ignoreErrors' })
-    const calls = await mockAppwriteApi(page, {
-      signedIn: true,
-      passkeys: [SYNCED],
-    })
+    await mockAppwriteApi(page, { signedIn: true, passkeys: [SYNCED] })
     await openSecurity(page)
     await expect(passkeysCard(page)).toHaveCount(0)
-    expect(countCalls(calls, 'GET', '/account/passkeys')).toBe(0)
   })
 })

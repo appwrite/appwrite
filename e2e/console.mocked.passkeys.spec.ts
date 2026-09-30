@@ -410,13 +410,16 @@ test.describe('passkeys (mocked API)', () => {
     const toggle = page.locator(`#${PASSKEY_ID}`)
     await expect(toggle).toBeDisabled()
     await expect(toggle).not.toBeChecked()
-    const setupLink = page.getByRole('link', {
-      name: 'passkey policies',
+    const policyLink = page.getByRole('link', {
+      name: 'Passkey policies',
       exact: true,
     })
-    await expect(setupLink).toBeVisible()
+    await policyLink.hover()
+    await expect(page.getByRole('tooltip')).toContainText(
+      'Set a relying party ID and origins in passkey policies to enable.',
+    )
 
-    await setupLink.click()
+    await policyLink.click()
     await expect(page).toHaveURL(
       new RegExp(`/projects/${PROJECT_ID}/auth/policies/passkeys$`),
     )
@@ -428,7 +431,6 @@ test.describe('passkeys (mocked API)', () => {
 
     await openAuthSettings(page)
     await expect(toggle).toBeEnabled()
-    await expect(setupLink).toHaveCount(0)
     await toggle.click()
 
     await expect(toggle).toBeChecked()
