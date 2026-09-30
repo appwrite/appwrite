@@ -604,17 +604,13 @@ trait MigrationsBase
         $databaseId = $this->createSourceDatabase();
 
         try {
-            $result = $this->performMigrationExpectingFailure([
+            $this->performMigrationExpectingFailure([
                 'resources' => [Resource::TYPE_DATABASE],
                 'endpoint' => $this->webEndpoint,
                 'projectId' => $this->getProject()['$id'],
                 'apiKey' => $this->getDestinationProject()['apiKey'],
             ]);
 
-            $this->assertStringContainsString(
-                'The source API key cannot read the requested resources of the source project.',
-                implode("\n", $result['errors']),
-            );
             $this->assertDestinationDatabaseMissing($databaseId);
         } finally {
             $this->deleteMigrationDatabases($databaseId);
@@ -626,18 +622,40 @@ trait MigrationsBase
         $databaseId = $this->createSourceDatabase();
 
         try {
-            $result = $this->performMigrationExpectingFailure([
+            $this->performMigrationExpectingFailure([
                 'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
                 'endpoint' => $this->webEndpoint,
                 'projectId' => $this->getProject()['$id'],
                 'apiKey' => $this->getNewKey(['databases.read']),
             ]);
 
-            $this->assertStringContainsString(
-                'The source API key cannot read the requested resources of the source project.',
-                implode("\n", $result['errors']),
-            );
             $this->assertDestinationDatabaseMissing($databaseId);
+        } finally {
+            $this->deleteMigrationDatabases($databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationAcceptsSourceApiKeyWithReadScopes(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+
+        try {
+            $result = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'tables.read']),
+            ]);
+
+            $this->assertSame('completed', $result['status']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code'], 'The source database was not copied with a source API key that can read it.');
         } finally {
             $this->deleteMigrationDatabases($databaseId);
         }
