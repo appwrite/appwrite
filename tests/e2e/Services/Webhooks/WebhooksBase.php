@@ -157,7 +157,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']['$id']);
         $this->assertEquals('username', $webhook['body']['authUsername']);
-        $this->assertEquals('password', $webhook['body']['authPassword']);
+        $this->assertSame('', $webhook['body']['authPassword']);
         $this->assertEquals(true, $webhook['body']['tls']);
 
         // Verify via GET
@@ -456,7 +456,7 @@ trait WebhooksBase
 
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals('newuser', $updated['body']['authUsername']);
-        $this->assertEquals('newpass', $updated['body']['authPassword']);
+        $this->assertSame('', $updated['body']['authPassword']);
 
         // Verify via GET
         $get = $this->getWebhook($webhookId);
@@ -715,7 +715,7 @@ trait WebhooksBase
         $this->assertEquals('https://appwrite.io/updated', $updated['body']['url']);
         $this->assertEquals(true, $updated['body']['tls']);
         $this->assertEquals('user', $updated['body']['authUsername']);
-        $this->assertEquals('pass', $updated['body']['authPassword']);
+        $this->assertSame('', $updated['body']['authPassword']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -1109,6 +1109,111 @@ trait WebhooksBase
         $this->deleteWebhook($webhookId);
     }
 
+    public function testWebhookAuthPasswordNotExposedInResponses(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Exposure Test',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $this->assertSame('hook-user', $webhook['body']['authUsername']);
+        $this->assertSame('', $webhook['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $webhook['body']);
+
+        $get = $this->getWebhook($webhookId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('hook-user', $get['body']['authUsername']);
+        $this->assertSame('', $get['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $get['body']);
+
+        $list = $this->listWebhooks(null, true);
+        $this->assertSame(200, $list['headers']['status-code']);
+        foreach ($list['body']['webhooks'] as $item) {
+            $this->assertSame('', $item['authPassword']);
+            $this->assertArrayNotHasKey('httpPass', $item);
+        }
+
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Exposure Test Updated',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            'hook-user',
+            'new-hook-password'
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $updated['body']);
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookKeepsAuthPasswordWhenOmitted(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Retention Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Clients can no longer read the password back, so an update that omits it must keep the stored one.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Retention Test Renamed',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'retention@localhost.test',
+            'password' => 'password',
+            'name' => 'Retention User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($userId) {
+            $delivery = $this->getLastRequest(function (array $request) use ($userId) {
+                $this->assertStringContainsString(
+                    "users.{$userId}.create",
+                    $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                );
+            });
+
+            $headers = \array_change_key_case($delivery['headers'], CASE_LOWER);
+            $this->assertSame('Basic ' . \base64_encode('hook-user:hook-password'), $headers['authorization'] ?? '');
+        }, 15000, 500);
+
+        $this->deleteWebhook($webhookId);
+    }
+
     // URL validation tests
 
     public function testCreateWebhookWithPrivateDomain(): void
@@ -1356,7 +1461,7 @@ trait WebhooksBase
         $this->assertEquals(true, $get['body']['enabled']);
         $this->assertEquals(true, $get['body']['tls']);
         $this->assertEquals('myuser', $get['body']['authUsername']);
-        $this->assertEquals('mypass', $get['body']['authPassword']);
+        $this->assertSame('', $get['body']['authPassword']);
         $this->assertEmpty($get['body']['secret']);
         $this->assertEquals(0, $get['body']['attempts']);
         $this->assertEquals('', $get['body']['logs']);
