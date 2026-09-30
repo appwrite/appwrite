@@ -500,9 +500,6 @@ readonly class Deployments
                 'deploymentId' => $deploymentId,
                 'resourceId' => $resource->getId(),
                 'resourceType' => $resource->getCollection(),
-                // Echoed back on the exit callback, so an exit without a measured
-                // duration can be bounded by this build's own timeout.
-                'timeoutSeconds' => $timeout,
             ],
             // The orchestrator expects environment as a string->string map.
             'environment' => \array_map('strval', $env),
