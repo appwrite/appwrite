@@ -12,9 +12,13 @@ export const OAUTH_LOGIN_METHODS = [
 ] as const
 
 export type OAuthLoginMethod = (typeof OAUTH_LOGIN_METHODS)[number]
-export type LoginMethod = OAuthLoginMethod | 'email'
+export type LoginMethod = OAuthLoginMethod | 'email' | 'passkey'
 
-const LOGIN_METHODS = new Set<LoginMethod>([...OAUTH_LOGIN_METHODS, 'email'])
+const LOGIN_METHODS = new Set<LoginMethod>([
+  ...OAUTH_LOGIN_METHODS,
+  'email',
+  'passkey',
+])
 
 export function isOAuthLoginMethod(
   method: string | null,

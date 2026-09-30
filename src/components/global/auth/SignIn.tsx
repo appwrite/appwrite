@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff } from 'lucide-react'
+import { Bug, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,6 +35,7 @@ import {
 } from '@/lib/utils/auth-storage'
 import { DEFAULT_CONSOLE_OAUTH_LOGIN } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { isPasskeySupported } from '@/lib/passkeys'
 import { useT, type Translator } from '@/lib/i18n/translate'
 import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
@@ -219,6 +220,9 @@ interface SignInProps {
   onOAuthLogin?: (provider: OAuthLoginMethod) => void
   isLoading?: boolean
   oauthLoading?: OAuthLoginMethod | null
+  /** Shows a "Sign in with a passkey" button when the browser supports passkeys. */
+  onPasskeyLogin?: () => void
+  passkeyLoading?: boolean
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -230,6 +234,8 @@ export function SignIn({
   onOAuthLogin,
   isLoading,
   oauthLoading,
+  onPasskeyLogin,
+  passkeyLoading = false,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -246,6 +252,12 @@ export function SignIn({
     },
   })
   const [isCreatingDemo, setIsCreatingDemo] = useState(false)
+  // Read after mount: the server render cannot know what the browser supports.
+  const [passkeySupported, setPasskeySupported] = useState(false)
+  useEffect(() => {
+    setPasskeySupported(isPasskeySupported())
+  }, [])
+  const showPasskey = mode === 'sign-in' && !!onPasskeyLogin && passkeySupported
 
   // Watch email value to pass it to recovery page
   const emailValue = form.watch('email')
@@ -390,57 +402,93 @@ export function SignIn({
             </AuthFlowDescription>
           </div>
 
-          {onOAuthLogin && (
+          {(onOAuthLogin || showPasskey) && (
             <>
-              <style>{OAUTH_ACCORDION_STYLES}</style>
-              <div className="oauth-login-row">
-                {OAUTH_PROVIDERS.map(({ id, Icon }) => {
-                  const label = oauthProviderLabel(id, mode, t)
-                  const isLastUsed =
-                    mode === 'sign-in' && lastLoginMethod === id
-                  const isExpanded = expandedOAuth === id
-                  return (
-                    <div
-                      key={id}
-                      className={
-                        isExpanded
-                          ? 'relative min-w-0 is-expanded'
-                          : 'relative min-w-0'
-                      }
-                      onMouseEnter={() => setExpandedOAuth(id)}
-                    >
-                      {isLastUsed && (
-                        <span data-last-used={id} className="oauth-last-used">
-                          <span className="oauth-last-used-dot" />
-                          <span className="oauth-last-used-pill">
-                            {t('Last used')}
-                          </span>
-                        </span>
-                      )}
-                      <Button
-                        variant="outline"
-                        type="button"
-                        data-provider={id}
-                        aria-label={
-                          isLastUsed ? `${label}. ${t('Last used')}` : label
-                        }
-                        className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
-                        onClick={() => onOAuthLogin(id)}
-                        onFocus={() => setExpandedOAuth(id)}
-                        disabled={!!oauthLoading || formBusy}
-                      >
-                        <Icon className="size-4 shrink-0" />
-                        <span className="oauth-login-label">
-                          <span>
-                            <span className="oauth-login-label-text">
-                              {label}
-                            </span>
-                          </span>
-                        </span>
-                      </Button>
+              <div className="space-y-2">
+                {onOAuthLogin && (
+                  <>
+                    <style>{OAUTH_ACCORDION_STYLES}</style>
+                    <div className="oauth-login-row">
+                      {OAUTH_PROVIDERS.map(({ id, Icon }) => {
+                        const label = oauthProviderLabel(id, mode, t)
+                        const isLastUsed =
+                          mode === 'sign-in' && lastLoginMethod === id
+                        const isExpanded = expandedOAuth === id
+                        return (
+                          <div
+                            key={id}
+                            className={
+                              isExpanded
+                                ? 'relative min-w-0 is-expanded'
+                                : 'relative min-w-0'
+                            }
+                            onMouseEnter={() => setExpandedOAuth(id)}
+                          >
+                            {isLastUsed && (
+                              <span
+                                data-last-used={id}
+                                className="oauth-last-used"
+                              >
+                                <span className="oauth-last-used-dot" />
+                                <span className="oauth-last-used-pill">
+                                  {t('Last used')}
+                                </span>
+                              </span>
+                            )}
+                            <Button
+                              variant="outline"
+                              type="button"
+                              data-provider={id}
+                              aria-label={
+                                isLastUsed
+                                  ? `${label}. ${t('Last used')}`
+                                  : label
+                              }
+                              className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
+                              onClick={() => onOAuthLogin(id)}
+                              onFocus={() => setExpandedOAuth(id)}
+                              disabled={!!oauthLoading || formBusy}
+                            >
+                              <Icon className="size-4 shrink-0" />
+                              <span className="oauth-login-label">
+                                <span>
+                                  <span className="oauth-login-label-text">
+                                    {label}
+                                  </span>
+                                </span>
+                              </span>
+                            </Button>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
+                  </>
+                )}
+                {showPasskey && (
+                  <div className="relative">
+                    {lastLoginMethod === 'passkey' && (
+                      <span className="absolute -top-2 start-3 z-10 rounded border border-border bg-foreground px-1.5 py-0.5 text-[10px] font-medium text-background">
+                        {t('Last used')}
+                      </span>
+                    )}
+                    <Button
+                      variant="outline"
+                      type="button"
+                      data-testid="passkey-sign-in"
+                      className="h-9 w-full"
+                      onClick={onPasskeyLogin}
+                      disabled={!!oauthLoading || formBusy}
+                      aria-busy={passkeyLoading}
+                    >
+                      {passkeyLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <KeyRound className="size-4" />
+                      )}
+                      {t('Sign in with a passkey')}
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="relative">
