@@ -205,7 +205,7 @@ final class FunctionsTest extends TestCase
 
         $this->assertSame(1, $executor->calls, 'A redelivery ran the function again');
         $this->assertSame(1, $attempts);
-        $this->assertSame(1, \count($publisher->getEvents('v1-webhooks') ?? []), 'The webhook must go out even though the functions publish failed');
+        $this->assertCount(1, $publisher->getEvents('v1-webhooks') ?? [], 'The webhook must go out even though the functions publish failed');
         $this->assertSame(1, $realtime->triggers, 'Realtime must be notified even though the functions publish failed');
     }
 
@@ -438,7 +438,7 @@ final class FunctionsTest extends TestCase
         $dbForProject = $this->createStub(Database::class);
         $dbForProject
             ->method('find')
-            ->willReturnCallback(fn () => \array_values($functions));
+            ->willReturnCallback(fn (): array => \array_values($functions));
         $dbForProject
             ->method('getDocument')
             ->willReturnCallback(function (string $collection, string $id) use ($functions, $deployments): Document {
