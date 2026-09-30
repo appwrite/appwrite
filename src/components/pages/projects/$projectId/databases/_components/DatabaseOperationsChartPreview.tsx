@@ -2,6 +2,7 @@ import { useId, useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer } from 'recharts'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { useT } from '@/lib/i18n/translate'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
@@ -117,6 +118,9 @@ export function DatabaseOperationsChartPreview({
     writesQuery.data?.chartPoints,
   ])
 
+  const fadeKey = usageReady ? 'data' : 'loading'
+  const fadeClassName = usageReady && enabled && USAGE_CHART_FADE_IN_CLASS_NAME
+
   return (
     <div
       className={cn(
@@ -134,7 +138,13 @@ export function DatabaseOperationsChartPreview({
                 aria-hidden
               />
               {t('Reads')}
-              <span className="font-mono tabular-nums text-foreground">
+              <span
+                key={fadeKey}
+                className={cn(
+                  'font-mono tabular-nums text-foreground',
+                  fadeClassName,
+                )}
+              >
                 {totals.reads.toLocaleString()}
               </span>
             </span>
@@ -145,7 +155,13 @@ export function DatabaseOperationsChartPreview({
                 aria-hidden
               />
               {t('Writes')}
-              <span className="font-mono tabular-nums text-foreground">
+              <span
+                key={fadeKey}
+                className={cn(
+                  'font-mono tabular-nums text-foreground',
+                  fadeClassName,
+                )}
+              >
                 {totals.writes.toLocaleString()}
               </span>
             </span>
@@ -157,9 +173,11 @@ export function DatabaseOperationsChartPreview({
       </div>
 
       <div
+        key={fadeKey}
         className={cn(
           'relative min-h-0 w-full min-w-0 flex-1 overflow-hidden',
           FORCE_LTR_CLASS,
+          fadeClassName,
         )}
         role="img"
         aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}

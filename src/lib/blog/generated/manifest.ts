@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "build-a-permission-aware-ai-copilot",
+    "href": "/blog/post/build-a-permission-aware-ai-copilot",
+    "title": "Build a permission-aware AI copilot with Appwrite Functions",
+    "description": "Build a CRM copilot that acts as the signed-in user. An Appwrite Function receives the caller's JWT, so every tool call gets the same row permissions and team roles as the user's own requests.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-a-permission-aware-ai-copilot/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "expense-tracker-receipt-intake-agent",
     "href": "/blog/post/expense-tracker-receipt-intake-agent",
     "title": "Build an expense tracker with an AI receipt intake agent",
@@ -13,6 +26,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "atharva",
     "category": "tutorials",
     "cover": "/images/blog/expense-tracker-receipt-intake-agent/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "refund-agent-human-approval-appwrite-functions",
+    "href": "/blog/post/refund-agent-human-approval-appwrite-functions",
+    "title": "Build an AI refund agent with human approval on Appwrite Functions",
+    "description": "Build a refund desk where an AI agent refunds small cases on its own, hands the rest to staff, and resumes from TablesDB when they decide.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 13,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/refund-agent-human-approval-appwrite-functions/cover.avif",
     "hasCover": true
   },
   {
@@ -27,6 +53,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements, security",
     "featured": false,
     "cover": "/images/blog/announcing-breached-password-detection/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
+    "href": "/blog/post/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
+    "title": "Claude Sonnet 5.5 costs up to 30% less per task",
+    "description": "Claude Sonnet 5.5 costs up to 30% less per task and improves coding, agentic work, and everyday tasks at the same Sonnet 5 pricing.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less/cover.avif",
     "hasCover": true
   },
   {
