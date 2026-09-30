@@ -37,9 +37,9 @@ Premium Geo DB adds these attributes:
 | ISP | `isp` | Internet service provider of the IP |
 | AS number | `autonomousSystemNumber` | Autonomous System Number (ASN) of the IP |
 | AS organization | `autonomousSystemOrganization` | Organization that owns the ASN |
-| Connection type | `connectionType` | Connection type of the IP, such as cable, cellular, or corporate |
-| Connection usage type | `connectionUsageType` | What the network is used for, such as residential, business, or hosting |
-| Connection organization | `connectionOrganization` | Registered organization of the IP |
+| Connection type | - | Connection type of the IP, such as `Cable/DSL`, `Cellular`, or `Corporate`. Available in Firewall conditions |
+| Connection usage type | - | What the network is used for, such as `residential`, `cellular`, `business`, or `hosting`. Available in Firewall conditions |
+| Connection organization | - | Registered organization of the IP. Available in Firewall conditions |
 
 Without the add-on, the premium fields are empty in every response.
 
@@ -49,12 +49,9 @@ Without the add-on, the premium fields are empty in every response.
 
 All 13 premium attributes become available as [Firewall conditions](/docs/products/firewall/conditions#premium-geo-db). The network attributes separate data center traffic from residential and mobile connections, which country conditions cannot do.
 
-The add-on also enables two presets in the scraping group under **Add preset** on the **Firewall** page:
+The add-on also enables the **Block hosting provider traffic** preset in the **Scraping prevention** group under **Add preset** on the **Firewall** page. It denies API requests whose connection usage type is `hosting`, which covers cloud providers, VPS hosts, and data centers.
 
-- **Block hosting provider traffic** denies API requests whose connection usage type is `hosting`.
-- **Block datacenter connection traffic** denies API requests from datacenter connection types.
-
-Server-side SDKs, Functions, and your own backends also run on hosting networks. Before you deny hosting traffic, add a [bypass rule](/docs/products/firewall/actions) with a lower priority number for your trusted callers, and check the [impact preview](/docs/products/firewall/monitor#impact-preview).
+Server-side SDKs, Functions, and your own backends also run on hosting networks. Before you deny hosting traffic, add a [bypass rule](/docs/products/firewall/actions) with a lower priority number for your trusted callers, and check the [impact preview](/docs/products/firewall/monitor#impact-preview). Match the bypass on the IP addresses your servers send from. Do not match on a custom header alone, because any caller can send the same header and skip your deny rules.
 
 ## Usage {% #usage %}
 
@@ -64,9 +61,11 @@ The Firewall rule wizard uses the same data. Its impact preview charts the top v
 
 ## Locale API {% #locale-api %}
 
-The `get` method of the Locale API returns the location of the IP that sent the request. With Premium Geo DB, the response includes the premium fields. The client SDKs declare them as optional fields on the `Locale` model.
+The `get` method of the Locale API returns the location of the IP that sent the request. With Premium Geo DB, the response includes the location and network fields listed under [Attributes](#attributes). The client SDKs declare them as optional fields on the `Locale` model.
 
 Call it from a client SDK. From a server SDK, the IP that sends the request is your server's, so you get your server's location.
+
+The response has a `Cache-Control: private, max-age=3888000` header, so a browser can reuse it for up to 45 days. A cached response can be from before the add-on was active or before the user moved, so treat the fields as a hint.
 
 {% multicode %}
 ```client-web
@@ -80,7 +79,7 @@ const locale = new Locale(client);
 
 const result = await locale.get();
 
-console.log(result.city, result.timeZone, result.connectionUsageType);
+console.log(result.city, result.timeZone, result.isp);
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -93,7 +92,7 @@ final locale = Locale(client);
 
 final result = await locale.get();
 
-print('${result.city} ${result.timeZone} ${result.connectionUsageType}');
+print('${result.city} ${result.timeZone} ${result.isp}');
 ```
 ```client-apple
 import Appwrite
@@ -106,7 +105,7 @@ let locale = Locale(client)
 
 let result = try await locale.get()
 
-print(result.city ?? "", result.timeZone ?? "", result.connectionUsageType ?? "")
+print(result.city ?? "", result.timeZone ?? "", result.isp ?? "")
 ```
 ```client-android-kotlin
 import io.appwrite.Client
@@ -120,13 +119,13 @@ val locale = Locale(client)
 
 val result = locale.get()
 
-println("${result.city} ${result.timeZone} ${result.connectionUsageType}")
+println("${result.city} ${result.timeZone} ${result.isp}")
 ```
 {% /multicode %}
 
 ## Sessions and activity {% #sessions-and-activity %}
 
-Auth sessions and activity events created while the add-on is active record the same location and network details.
+Auth sessions created while the add-on is active record the same location and network details. Activity events show them while the add-on is active.
 
 # Enable Premium Geo DB {% #enable %}
 

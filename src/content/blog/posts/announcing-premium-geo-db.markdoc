@@ -14,9 +14,9 @@ faqs:
   - question: "How much does Premium Geo DB cost?"
     answer: "Premium Geo DB costs $10 per project per month, plus applicable taxes. When you enable it, Appwrite charges the prorated amount for the days left in your billing cycle, then adds the full price to each invoice after that. It is available on the Pro and Scale plans, not on Free."
   - question: "How do I block datacenter and hosting provider traffic in Appwrite?"
-    answer: "Enable Premium Geo DB on the project, open **Firewall**, keep the resource selector on **API**, and choose **Add preset**. Under **Scraping prevention**, pick **Block hosting provider traffic** or **Block datacenter connection traffic**, review the impact preview, and create the rule. Your own servers and Functions run on hosting networks too, so add a [bypass rule](/docs/products/firewall/actions) for them first."
+    answer: "Enable Premium Geo DB on the project, open **Firewall**, keep the resource selector on **API**, and choose **Add preset**. Under **Scraping prevention**, pick **Block hosting provider traffic**, review the impact preview, and create the rule. It denies requests whose connection usage type is `hosting`, which covers cloud providers, VPS hosts, and data centers. Your own servers and Functions run on hosting networks too, so add a [bypass rule](/docs/products/firewall/actions) that matches their IP addresses first."
   - question: "How do I get a user's city from their IP address in Appwrite?"
-    answer: "Enable Premium Geo DB, then call `locale.get()` from a client SDK. The response includes `city`, `timeZone`, `postalCode`, `latitude`, `longitude`, and the network fields for the IP that sent the request. Call it from the client, not a server SDK, or you get your server's location instead of the user's."
+    answer: "Enable Premium Geo DB, then call `locale.get()` from a client SDK. The response includes `city`, `timeZone`, `postalCode`, `latitude`, `longitude`, `isp`, and the AS fields for the IP that sent the request. Call it from the client, not a server SDK, or you get your server's location instead of the user's."
   - question: "What happens to my Firewall rules if I disable Premium Geo DB?"
     answer: "The add-on stays active until the end of the billing cycle. After that, Appwrite treats premium attributes as empty on API traffic. **Equals** conditions on them never match and **Not equal** conditions match every request, so a deny rule can start denying all traffic. Rewrite or delete rules that use premium attributes before the add-on ends."
   - question: "Is Premium Geo DB available on self-hosted Appwrite?"
@@ -34,9 +34,9 @@ Today, we are announcing **Premium Geo DB**, an add-on for Appwrite Cloud projec
 Premium Geo DB switches a project's IP lookups to a more detailed geolocation database. Requests keep the country data they had before and gain the city and network behind the IP. With the add-on on a project, you get:
 
 - 13 more [Firewall condition](/docs/products/firewall/conditions#premium-geo-db) attributes, from city to connection organization.
-- Two Firewall presets that deny API traffic from hosting and datacenter networks.
+- A Firewall preset that denies API traffic from hosting and datacenter networks.
 - Request breakdowns on the project **Usage** page by city, ISP, AS number, and connection type.
-- The same fields in responses from the [Locale API](/docs/references/cloud/client-web/locale#get), typed in the client SDKs.
+- City, time zone, ISP, and AS fields in responses from the [Locale API](/docs/references/cloud/client-web/locale#get), typed in the client SDKs.
 - Location and network details on Auth sessions and activity events.
 
 It costs $10 per project per month and is available on the Pro and Scale plans.
@@ -56,18 +56,15 @@ Premium Geo DB adds 13 attributes to the lookup Appwrite already runs on every r
 
 The location fields are the obvious part. The network fields change what you can do. **Connection usage type** says what a network is used for, such as residential, business, or hosting. **AS number** and **AS organization** name the operator that routes the IP. A home broadband connection in Virginia and a VM in a data center down the road now look different, even though both are still `US`.
 
-The [Premium Geo DB docs](/docs/advanced/billing/premium-geo-db) list every attribute with its API field name.
+The [Premium Geo DB docs](/docs/advanced/billing/premium-geo-db) list every attribute and where you can read it.
 
 # Block hosting and datacenter traffic with Firewall
 
 Automated traffic tends to come from rented servers. A cloud VM costs cents per hour, and a fresh IP is one API call away. OWASP's list of [automated threats to web applications](https://owasp.org/www-project-automated-threats-to-web-applications/) names scraping (OAT-011), credential stuffing (OAT-008), and account creation (OAT-019) among the attacks that bots run at scale. Your real users rarely sign in from a data center.
 
-Premium Geo DB enables two [Firewall presets](/blog/post/announcing-firewall-presets) in the **Scraping prevention** group:
+Premium Geo DB enables the **Block hosting provider traffic** [Firewall preset](/blog/post/announcing-firewall-presets) in the **Scraping prevention** group. It denies API requests whose connection usage type is `hosting`. That covers the big cloud providers, VPS hosts, and data centers.
 
-- **Block hosting provider traffic** denies API requests whose connection usage type is `hosting`.
-- **Block datacenter connection traffic** denies API requests from datacenter connection types.
-
-Open **Firewall**, choose **Add preset**, and pick one. The impact preview shows how many recent requests the rule would have denied before you save it.
+Open **Firewall**, choose **Add preset**, and pick it. The impact preview shows how many recent requests the rule would have denied before you save it.
 
 For anything more specific, build the rule yourself. The condition builder unlocks all 13 premium attributes, so rules like these become possible:
 
@@ -79,7 +76,7 @@ For anything more specific, build the rule yourself. The condition builder unloc
 
 Your own infrastructure is hosting traffic too. Server-side SDK calls from a Function, a backend on a VPS, and a CI job all come from hosting networks. A hosting deny with no exceptions blocks them along with the scrapers.
 
-Add a [bypass rule](/docs/products/firewall/actions) for trusted callers before you turn on a hosting deny. Give it a lower priority number than the deny rule so it runs first, and match on something your servers send, such as a fixed IP range or a custom header. Then check the [impact preview](/docs/products/firewall/monitor#impact-preview) against real traffic. The Console is never blocked, so a rule that goes wrong can't lock you out of the page you need to fix it.
+Add a [bypass rule](/docs/products/firewall/actions) for trusted callers before you turn on a hosting deny. Give it a lower priority number than the deny rule so it runs first, and match on the IP addresses or ranges your servers send from. Don't match on a custom header alone: any caller can send the same header, and a matching bypass skips every rule after it. Then check the [impact preview](/docs/products/firewall/monitor#impact-preview) against real traffic. The Console is never blocked, so a rule that goes wrong can't lock you out of the page you need to fix it.
 
 ## Keep rules working if the add-on ends
 
@@ -87,7 +84,7 @@ If the add-on ends, Appwrite treats premium attributes as empty on API traffic. 
 
 # Read location and network data with the Locale API
 
-Firewall acts before a request reaches your app. Sometimes your app wants the same data. The Locale API's `get` method returns the location of the IP that sent the request, and with Premium Geo DB it includes the premium fields. Recent versions of the Web, Flutter, Apple, and Android SDKs declare them as optional fields on the `Locale` model.
+Firewall acts before a request reaches your app. Sometimes your app wants the same data. The Locale API's `get` method returns the location of the IP that sent the request, and with Premium Geo DB it includes the city, postal code, coordinates, time zone, ISP, and AS fields. Recent versions of the Web, Flutter, Apple, and Android SDKs declare them as optional fields on the `Locale` model.
 
 ```client-web
 import { Client, Locale } from "appwrite";
@@ -98,18 +95,20 @@ const client = new Client()
 
 const locale = new Locale(client);
 
-const { city, timeZone, connectionUsageType } = await locale.get();
+const { city, timeZone } = await locale.get();
 
 // Pre-fill the time zone on a settings form
 document.querySelector('#timezone').value = timeZone ?? '';
 
-// Ask for an extra verification step on sign-up from a hosting network
-const needsExtraCheck = connectionUsageType === 'hosting';
+// Suggest a default city for a store picker
+document.querySelector('#city').value = city ?? '';
 ```
 
 Call it from the client. The lookup runs on the IP that sends the request, so a call from a server SDK returns your server's location.
 
-Treat the result as a hint in client code. Anyone can skip a check that runs in their own browser. Use the Locale API for decisions that are fine to get wrong or skip, like defaulting a time zone, picking a nearby store, or adding a step to a sign-up that looks risky. Put anything that must hold in a Firewall rule, which runs before the request reaches your app.
+The response has a `Cache-Control: private, max-age=3888000` header, so the browser can reuse it for up to 45 days. A user who moved, or who called it before you enabled the add-on, can get an older result. Keep pre-filled values editable.
+
+Treat the result as a hint in client code. Anyone can skip a check that runs in their own browser. Use the Locale API for decisions that are fine to get wrong or skip, like defaulting a time zone or picking a nearby store. Put anything that must hold in a Firewall rule, which runs before the request reaches your app.
 
 IP geolocation is also an estimate. VPNs, mobile carriers, and corporate proxies can place a user in the wrong city, so a city on its own is a poor reason to lock someone out.
 
