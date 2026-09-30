@@ -17,20 +17,15 @@ import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { preferredOrganizationId } from '@/lib/assistant/agent-paths'
-import {
-  useOrganizationById,
-  useOrganizations,
-} from '@/lib/react-query/hooks'
+import { useOrganizationById, useOrganizations } from '@/lib/react-query/hooks'
 import {
   enterpriseCompanySizeOptions,
   enterpriseFormBullets,
   enterprisePreferredDeploymentOptions,
   enterpriseTimelineOptions,
 } from '@/lib/enterprise/content'
-import {
-  isGrowthFormsConfigured,
-  submitEnterpriseApplication,
-} from '@/lib/marketing/growth-forms'
+import { GrowthError } from '@/lib/growth'
+import { submitEnterpriseApplication } from '@/lib/marketing/growth-forms'
 import { trackEvent } from '@/lib/analytics'
 import { toast } from 'sonner'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
@@ -90,17 +85,15 @@ export function SalesWizardFullscreen() {
   const [companyName, setCompanyName] = useState(formDefaults.companyName)
   const [companySize, setCompanySize] = useState(NO_SELECTION_VALUE)
   const [companyWebsite, setCompanyWebsite] = useState('')
-  const [preferredDeployment, setPreferredDeployment] = useState(NO_SELECTION_VALUE)
+  const [preferredDeployment, setPreferredDeployment] =
+    useState(NO_SELECTION_VALUE)
   const [timeline, setTimeline] = useState(NO_SELECTION_VALUE)
   const [useCase, setUseCase] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState(false)
 
-  const growthFormsConfigured = isGrowthFormsConfigured()
-
   const canSubmit =
-    growthFormsConfigured &&
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
     email.trim().length > 0 &&
@@ -116,7 +109,7 @@ export function SalesWizardFullscreen() {
     setSubmitError(false)
     setIsSubmitting(true)
     try {
-      const sent = await submitEnterpriseApplication({
+      await submitEnterpriseApplication({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
@@ -132,21 +125,17 @@ export function SalesWizardFullscreen() {
         cloudEmail: account?.email,
       })
 
-      if (!sent) {
-        toast.error(
-          t(
-            'Sales inquiries are not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
-          ),
-        )
-        return
-      }
-
       trackEvent('Form Submitted', { form: 'enterprise' })
       setSubmitted(true)
-    } catch {
+    } catch (error) {
       setSubmitError(true)
+      // API messages are dynamic, so only the rate limit and fallback copy go through t().
       toast.error(
-        t('Error submitting form. Please contact support.'),
+        error instanceof GrowthError
+          ? error.isRateLimited
+            ? t(error.message)
+            : error.message
+          : t('Error submitting form. Please contact support.'),
       )
     } finally {
       setIsSubmitting(false)
@@ -197,7 +186,9 @@ export function SalesWizardFullscreen() {
             {t('Learn more')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            {t('Compare plans and explore enterprise capabilities on our marketing site.')}
+            {t(
+              'Compare plans and explore enterprise capabilities on our marketing site.',
+            )}
           </p>
         </div>
         <div className="border-t border-border/80" />
@@ -271,12 +262,6 @@ export function SalesWizardFullscreen() {
     </div>
   ) : (
     <div className={cn(MAIN_CONTENT_MIN_HEIGHT, 'space-y-6')}>
-      {!growthFormsConfigured ? (
-        <WarningAlert title="Sales inquiries are not configured">
-          Set VITE_GROWTH_ENDPOINT in .env to enable submission.
-        </WarningAlert>
-      ) : null}
-
       {submitError ? (
         <WarningAlert title="We couldn't submit your inquiry">
           Something went wrong while sending your request. Please try again in a
@@ -290,13 +275,18 @@ export function SalesWizardFullscreen() {
             {t('Your details')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Fields marked with your account email help us connect your inquiry to your Appwrite account.')}
+            {t(
+              'Fields marked with your account email help us connect your inquiry to your Appwrite account.',
+            )}
           </p>
         </div>
         <div className="border-t border-border px-6 py-4 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="sales-first-name" className="text-[13px] font-medium">
+              <Label
+                htmlFor="sales-first-name"
+                className="text-[13px] font-medium"
+              >
                 {t('First name')}
               </Label>
               <Input
@@ -308,7 +298,10 @@ export function SalesWizardFullscreen() {
               />
             </div>
             <div>
-              <Label htmlFor="sales-last-name" className="text-[13px] font-medium">
+              <Label
+                htmlFor="sales-last-name"
+                className="text-[13px] font-medium"
+              >
                 {t('Last name')}
               </Label>
               <Input
@@ -337,7 +330,10 @@ export function SalesWizardFullscreen() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="sales-company" className="text-[13px] font-medium">
+              <Label
+                htmlFor="sales-company"
+                className="text-[13px] font-medium"
+              >
                 {t('Company name')}
               </Label>
               <Input
@@ -349,15 +345,23 @@ export function SalesWizardFullscreen() {
               />
             </div>
             <div>
-              <Label htmlFor="sales-company-size" className="text-[13px] font-medium">
+              <Label
+                htmlFor="sales-company-size"
+                className="text-[13px] font-medium"
+              >
                 {t('Company size')}
               </Label>
               <Select value={companySize} onValueChange={setCompanySize}>
-                <SelectTrigger id="sales-company-size" className="mt-2 h-9 w-full">
+                <SelectTrigger
+                  id="sales-company-size"
+                  className="mt-2 h-9 w-full"
+                >
                   <SelectValue placeholder={t('Select size')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_SELECTION_VALUE}>{t('Select size')}</SelectItem>
+                  <SelectItem value={NO_SELECTION_VALUE}>
+                    {t('Select size')}
+                  </SelectItem>
                   {enterpriseCompanySizeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {t(option.label)}
@@ -404,7 +408,10 @@ export function SalesWizardFullscreen() {
                 value={preferredDeployment}
                 onValueChange={setPreferredDeployment}
               >
-                <SelectTrigger id="sales-deployment" className="mt-2 h-9 w-full">
+                <SelectTrigger
+                  id="sales-deployment"
+                  className="mt-2 h-9 w-full"
+                >
                   <SelectValue placeholder={t('Select deployment')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -420,7 +427,10 @@ export function SalesWizardFullscreen() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="sales-timeline" className="text-[13px] font-medium">
+              <Label
+                htmlFor="sales-timeline"
+                className="text-[13px] font-medium"
+              >
                 {t('Timeline')}
               </Label>
               <Select value={timeline} onValueChange={setTimeline}>
@@ -448,7 +458,9 @@ export function SalesWizardFullscreen() {
             <Textarea
               id="sales-use-case"
               value={useCase}
-              onChange={(e) => setUseCase(e.target.value.slice(0, USE_CASE_MAX))}
+              onChange={(e) =>
+                setUseCase(e.target.value.slice(0, USE_CASE_MAX))
+              }
               placeholder={t(
                 'Describe your use case and how our Enterprise plan can support it',
               )}
@@ -468,8 +480,8 @@ export function SalesWizardFullscreen() {
     <WizardLayout
       title={submitted ? t('Inquiry submitted') : t('Contact sales')}
       fullscreen
-      useSidebar={true}
-      sidebar={sidebar}
+      useSidebar={!submitted}
+      sidebar={submitted ? undefined : sidebar}
       footerAlign="right"
       skipInitialFieldFocus
       initialFocusKey={submitted ? 'submitted' : 'form'}
@@ -485,7 +497,10 @@ export function SalesWizardFullscreen() {
             >
               {t('Cancel')}
             </Button>
-            <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSubmitting}
+            >
               {t('Submit')}
             </Button>
           </>

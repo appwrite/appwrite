@@ -930,12 +930,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Activate deployment after build': 'ビルド後にデプロイを有効化',
   'Deployment docs': 'デプロイドキュメント',
   'Only .tar.gz files are allowed.': '.tar.gz ファイルのみ許可されています。',
-  'File size exceeds': 'ファイルサイズが超過',
   'Deployment created successfully': 'デプロイを作成しました',
   'Please select a .tar.gz file.': '.tar.gz ファイルを選択してください。',
   'Create manual deployment': '手動デプロイの作成',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'コードの .tar.gz アーカイブをアップロードしてください。最大ファイルサイズ:',
+  'Upload a .tar.gz archive of your code.':
+    'コードの .tar.gz アーカイブをアップロードしてください。',
   'Drop a .tar.gz file here or click to browse':
     '.tar.gz ファイルをここにドロップするか、クリックして参照',
   'Uploading…': 'アップロード中…',
@@ -986,6 +987,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': '試すに進む',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'コーディングエージェントを開き、次のプロンプトのいずれかを試して Appwrite MCP が動作していることを確認してください。',
+  'Explore Appwrite': 'Appwrite を探索',
+  'Open a product in this project and keep building with your agent.':
+    'このプロジェクトのプロダクトを開き、エージェントと一緒に構築を続けましょう。',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'Appwrite MCP でプロジェクト {projectName} のデータベースを一覧表示して',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -998,8 +1002,44 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'Appwrite MCP をインストール',
   'Build with an agent': 'エージェントで構築',
   'Connect your coding agent': 'コーディングエージェントを接続',
+  'Connect Appwrite with your agents': 'Appwrite をエージェントに接続',
+  'Choose your agent': 'エージェントを選択',
+  'List databases, buckets, and users from your editor.':
+    'エディターからデータベース、バケット、ユーザーを一覧表示できます。',
+  'Run approved actions without leaving your agent.':
+    'エージェントを離れることなく、承認済みの操作を実行できます。',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'OAuth で一度承認するだけです。プロンプトに API キーは不要です。',
+  'Authorize Appwrite MCP': 'Appwrite MCP を許可',
+  'Install in your editor': 'エディターにインストール',
+  'Ask your agent to list project resources':
+    'エージェントにプロジェクトのリソース一覧を依頼',
+  'Show details': '詳細を表示',
+  'Hide details': '詳細を非表示',
+  'Next: install MCP in your editor': '次へ: エディターに MCP をインストール',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'Cursor、Claude Code、Codex、または VS Code に Appwrite MCP をインストールすると、エージェントがこのプロジェクトを管理できます。',
+  'What you get': 'できること',
+  'Why connect': '接続する理由',
+  'Without MCP': 'MCP なし',
+  'With MCP': 'MCP あり',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'エージェントは Appwrite を説明できますが、このプロジェクトを変更することはできません。',
+  'The agent can list resources and run approved actions in this project.':
+    'エージェントはこのプロジェクトのリソースを一覧表示し、承認済みの操作を実行できます。',
+  'Recommended next step': '推奨される次のステップ',
+  'To do': '未完了',
+  'Coding agent': 'コーディングエージェント',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'エディターを選び、Appwrite MCP をインストールしてから OAuth で承認します。',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP は承認済みです。まだならエディター側のインストールを完了してください。',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'このプロンプトをコーディングエージェントに貼り付けてください。公開セットアップページに従って、このプロジェクト向けに Appwrite MCP をインストールします。',
+  'Or install Appwrite MCP manually': 'または Appwrite MCP を手動インストール',
+  'Skip for this project': 'このプロジェクトではスキップ',
+  'Preferences are unavailable.': '設定を保存できません。',
+  'Failed to update preferences': '設定の更新に失敗しました',
   'Install MCP': 'MCP をインストール',
   'Open MCP': 'MCP を開く',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
@@ -2563,6 +2603,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ツアーはこれで完了です。さあ、作り始めましょう。',
   by: 'による',
   Firewall: 'Firewall',
+  'Open Firewall': 'Firewall を開く',
+  'Turn off sound': '音声をオフ',
+  'Turn on sound': '音声をオン',
+  'Skip to console': 'コンソールへスキップ',
+  'Project rules that run before traffic reaches your API, Functions, or Sites.':
+    'API、Functions、Sites へのトラフィックに到達する前に適用されるプロジェクトルール。',
+  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
+    'API、Functions、サイトに届く前に、リクエストを拒否、レート制限、リダイレクト、またはチャレンジできます。',
   Rules: 'ルール',
   Analytics: 'アナリティクス',
   Logs: 'ログ',
@@ -2999,4 +3047,18 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'ライブ更新を再開',
   'Updating…': '更新中…',
   Paused: '一時停止',
+  'AI discovery': 'AI ディスカバリー',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'このデータセットではエージェントクローラーの内訳はまだ利用できません',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
+
+  // Project environment switcher
+  Environments: '環境',
+  Staging: 'ステージング',
+  Development: '開発',
+  'Switch environment': '環境を切り替え',
+  'Environment switched': '環境を切り替えました',
+  'Create environment': '環境を作成',
+  'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
 }

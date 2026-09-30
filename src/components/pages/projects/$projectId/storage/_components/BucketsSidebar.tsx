@@ -175,7 +175,7 @@ export function BucketsSidebar({
         backLabel={t('Back to project')}
         onBack={() =>
           navigate({
-            to: '/projects/$projectId',
+            to: '/projects/$projectId/overview',
             params: { projectId: projectId! },
           })
         }

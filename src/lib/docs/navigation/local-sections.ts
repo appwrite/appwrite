@@ -64,6 +64,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
             href: '/docs/tooling/ai/agents/claude-code',
           },
           {
+            label: 'ChatGPT',
+            href: '/docs/tooling/ai/agents/chatgpt',
+          },
+          {
             label: 'Codex',
             href: '/docs/tooling/ai/agents/codex',
           },
@@ -121,6 +125,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
       {
         label: 'Guides',
         items: [
+          {
+            label: 'Backend for coding agents',
+            href: '/docs/tooling/ai/backend-for-agents',
+          },
           {
             label: 'AI in Functions',
             href: '/docs/tooling/ai/ai-in-functions',

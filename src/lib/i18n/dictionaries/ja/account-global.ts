@@ -1200,7 +1200,20 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
 
   // Console account password breach check result
   breached: '漏洩',
-  'no known breach': '既知の漏洩なし',
   'This password was found in a known data breach. Change it as soon as possible.':
     'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
+
+  // Full-screen curtain for console accounts with a breached password
+  'Your password was found in a data breach':
+    'パスワードがデータ漏洩で見つかりました',
+  'Your security is important to us. We continuously check console passwords against known data breaches, and yours was found in one, which means others may be able to sign in as you.':
+    'お客様のセキュリティは私たちにとって重要です。コンソールのパスワードを既知のデータ漏洩と継続的に照合しており、お客様のパスワードがその中で見つかりました。第三者があなたとしてサインインできる可能性があります。',
+  'Set a new password': '新しいパスワードを設定',
+  "Pick a strong password you don't use anywhere else.":
+    '他の場所で使用していない強力なパスワードを選択してください。',
+  'Turn on multi-factor authentication': '多要素認証を有効にする',
+  'Require a second verification step every time you sign in.':
+    'サインインのたびに追加の認証ステップを求めます。',
+  'Secure account': 'アカウントを保護',
+  'Remind me later': '後で通知',
 }

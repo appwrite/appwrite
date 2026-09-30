@@ -8,6 +8,7 @@ import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/u
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { BlocksList } from './BlocksList'
 import { ComposeBlock } from './ComposeBlock'
+import { OrganizationStatusPanel } from './OrganizationStatusPanel'
 import { TargetBar } from './TargetBar'
 import { UserStatusPanel } from './UserStatusPanel'
 
@@ -55,7 +56,7 @@ export function BlocksConsoleView() {
               Blocks
             </h1>
             <p className="text-[13px] text-muted-foreground">
-              Manage resource blocks and user access.
+              Manage resource blocks and user and organization access.
             </p>
           </div>
         </div>
@@ -63,21 +64,26 @@ export function BlocksConsoleView() {
         <div className="border-b border-border" />
 
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-          <div className="space-y-6">
-            <TargetBar
-              draft={draft}
-              onDraftChange={setDraft}
-              onSubmit={handleSubmit}
-              focusedProjectId={focusedProjectId}
-              onClear={handleClear}
-            />
-
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="space-y-6">
+              <TargetBar
+                draft={draft}
+                onDraftChange={setDraft}
+                onSubmit={handleSubmit}
+                focusedProjectId={focusedProjectId}
+                onClear={handleClear}
+              />
               <BlocksList projectId={focusedProjectId} />
-              <ComposeBlock projectId={focusedProjectId} />
             </div>
+            <ComposeBlock />
+          </div>
 
+          <div className="mt-6">
             <UserStatusPanel />
+          </div>
+
+          <div className="mt-6">
+            <OrganizationStatusPanel />
           </div>
         </div>
       </ConsoleLayout>

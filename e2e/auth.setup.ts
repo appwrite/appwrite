@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { env } from './config/env'
 import {
@@ -34,6 +35,66 @@ async function sweepStaleE2eProjects(): Promise<void> {
   }
 }
 
+async function signIn(page: Page, email: string, password: string) {
+  await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+  await acceptCookieBannerIfPresent(page)
+
+  await page.locator('input[name="email"]').fill(email)
+  await page.locator('input[name="password"]').fill(password)
+
+  const sessionPromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/sessions') &&
+      response.request().method() === 'POST',
+    { timeout: 30_000 },
+  )
+
+  await page.getByRole('button', { name: 'Login', exact: true }).click()
+
+  const response = await sessionPromise
+  if (!response.ok()) {
+    throw new Error(
+      `Login failed: ${response.status()} ${await response.text()}`,
+    )
+  }
+
+  await page.waitForURL(
+    (url) => {
+      const pathname = new URL(url).pathname
+      return (
+        pathname === '/account' ||
+        pathname.startsWith('/organizations/') ||
+        pathname === '/'
+      )
+    },
+    { timeout: 30_000 },
+  )
+}
+
+async function reuseSession(page: Page, fallbackCookies: string) {
+  await page.context().addInitScript((value) => {
+    window.localStorage.setItem('cookieFallback', value)
+  }, fallbackCookies)
+
+  const accountPromise = page.waitForResponse(
+    (response) =>
+      response.request().resourceType() === 'fetch' &&
+      response.request().method() === 'GET' &&
+      new URL(response.url()).pathname.endsWith('/account'),
+    { timeout: 30_000 },
+  )
+
+  await page.goto('/account', { waitUntil: 'domcontentloaded' })
+  await acceptCookieBannerIfPresent(page)
+
+  const response = await accountPromise
+  if (!response.ok()) {
+    throw new Error(
+      `Shared session rejected: ${response.status()} ${await response.text()}`,
+    )
+  }
+}
+
 test('authenticate once and persist storage state', async ({
   page,
   context,
@@ -45,6 +106,13 @@ test('authenticate once and persist storage state', async ({
 
   fs.mkdirSync(authDir, { recursive: true })
 
+  const fallbackCookies = env.E2E_FALLBACK_COOKIES
+  if (env.CI && !fallbackCookies) {
+    throw new Error(
+      'E2E_FALLBACK_COOKIES must be set in CI so every lane shares one session',
+    )
+  }
+
   // Prefer email/password when available so storage state is captured against
   // this run's origin (localhost:4173). Session secret is a CI fast-path only
   // when credentials are not provided.
@@ -52,7 +120,7 @@ test('authenticate once and persist storage state', async ({
   const password = env.E2E_TEST_PASSWORD
   const canPasswordLogin = Boolean(email && password)
 
-  if (env.E2E_TEST_SESSION_SECRET && !canPasswordLogin) {
+  if (!fallbackCookies && env.E2E_TEST_SESSION_SECRET && !canPasswordLogin) {
     try {
       const storageState = parseSessionSecret(env.E2E_TEST_SESSION_SECRET)
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
@@ -65,54 +133,25 @@ test('authenticate once and persist storage state', async ({
     return
   }
 
-  if (!email || !password) {
-    throw new Error('E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
-  }
-
   // Always sign in fresh so local credential changes take effect.
   if (fs.existsSync(authPath)) {
     fs.unlinkSync(authPath)
   }
 
-  await test.step('sign in with E2E credentials', async () => {
-    await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
-    await acceptCookieBannerIfPresent(page)
-
-    await page.locator('input[name="email"]').fill(email)
-    await page.locator('input[name="password"]').fill(password)
-
-    const sessionPromise = page.waitForResponse(
-      (response) =>
-        response.url().includes('/sessions') &&
-        response.request().method() === 'POST',
-      { timeout: 30_000 },
-    )
-
-    await page.getByRole('button', { name: 'Login', exact: true }).click()
-
-    const response = await sessionPromise
-    if (!response.ok()) {
-      throw new Error(
-        `Login failed: ${response.status()} ${await response.text()}`,
-      )
+  if (fallbackCookies) {
+    await test.step('reuse the workflow session', () =>
+      reuseSession(page, fallbackCookies))
+  } else {
+    if (!email || !password) {
+      throw new Error('E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
     }
+    await test.step('sign in with E2E credentials', () =>
+      signIn(page, email, password))
+  }
 
-    await page.waitForURL(
-      (url) => {
-        const pathname = new URL(url).pathname
-        return (
-          pathname === '/account' ||
-          pathname.startsWith('/organizations/') ||
-          pathname === '/'
-        )
-      },
-      { timeout: 30_000 },
-    )
-
-    // Same idea as the cookie banner: dismiss this overlay at session start
-    // so later tests are not blocked. Prefs load after login, so wait briefly.
-    await skipCommunitySupportWizardIfPresent(page, { waitMs: 8_000 })
-  })
+  // Same idea as the cookie banner: dismiss this overlay at session start
+  // so later tests are not blocked. Prefs load after login, so wait briefly.
+  await skipCommunitySupportWizardIfPresent(page, { waitMs: 8_000 })
 
   // Cookie fallback (localStorage) is what the SDK uses cross-origin; storageState
   // captures both cookies and origin localStorage.

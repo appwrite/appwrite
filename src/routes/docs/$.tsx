@@ -11,6 +11,7 @@ import { getDocsMetaTags } from '@/lib/docs/route-meta'
 import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
+  getDocsFaqSchema,
 } from '@/lib/docs/seo'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
@@ -121,6 +122,14 @@ export const Route = createFileRoute('/docs/$')({
           type: 'application/ld+json',
           children: stringifyJsonLd(getDocsArticleSchema(meta, slug)),
         },
+        ...(meta.faqs?.length
+          ? [
+              {
+                type: 'application/ld+json' as const,
+                children: stringifyJsonLd(getDocsFaqSchema(meta.faqs)),
+              },
+            ]
+          : []),
       ],
     }
   },

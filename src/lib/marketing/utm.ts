@@ -1,10 +1,13 @@
 /**
  * Acquisition-source tracking for the marketing site shell, ported from
- * https://github.com/appwrite/website. `/` is a home-vs-console hop and is
- * not a marketing page, so it never POSTs.
+ * https://github.com/appwrite/website. The marketing shell only mounts on `/`
+ * when it renders the guest homepage, never for the console hop.
  */
 
-import { isConsoleRedirectHopPath } from '@/lib/root-guest-redirect'
+import {
+  isConsoleRedirectHopPath,
+  isRootRedirectPath,
+} from '@/lib/root-guest-redirect'
 
 const STORAGE_KEYS = {
   utmReferral: 'utmReferral',
@@ -13,6 +16,19 @@ const STORAGE_KEYS = {
   utmCampaign: 'utmCampaign',
   posted: 'utmSourcePosted',
 } as const
+
+/** Query keys Plausible uses for campaign / click-id attribution. */
+export const ATTRIBUTION_QUERY_PARAM_NAMES = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+  'ref',
+  'gclid',
+  'fbclid',
+  'msclkid',
+] as const
 
 export type AcquisitionSource = {
   ref: string | null
@@ -80,8 +96,10 @@ export function persistAcquisitionSource(
   source: AcquisitionSource,
   storage: Pick<Storage, 'setItem'>,
 ): void {
-  if (source.utmSource) storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
-  if (source.utmMedium) storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
+  if (source.utmSource)
+    storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
+  if (source.utmMedium)
+    storage.setItem(STORAGE_KEYS.utmMedium, source.utmMedium)
   if (source.utmCampaign) {
     storage.setItem(STORAGE_KEYS.utmCampaign, source.utmCampaign)
   }
@@ -123,9 +141,7 @@ export function getReferrerAndUtmSource(
 ): Record<string, string> {
   if (!storage) return {}
 
-  return (
-    ['utmReferral', 'utmSource', 'utmMedium'] as const
-  ).reduce(
+  return (['utmReferral', 'utmSource', 'utmMedium'] as const).reduce(
     (acc, key) => {
       const value = storage.getItem(STORAGE_KEYS[key])
       if (value) acc[key] = value
@@ -147,6 +163,44 @@ export function getUtmSourceForLink(
   })
 
   return params.toString()
+}
+
+export function pickAttributionSearchParams(
+  params: URLSearchParams,
+): URLSearchParams {
+  const picked = new URLSearchParams()
+  for (const key of ATTRIBUTION_QUERY_PARAM_NAMES) {
+    const value = params.get(key)?.trim()
+    if (value) picked.set(key, value)
+  }
+  return picked
+}
+
+/**
+ * Attribution query string for Plausible pageviews on marketing/docs.
+ * Uses the current URL first, then session-stored UTMs so SPA navigations
+ * keep campaign tags after the address bar drops them.
+ */
+export function getAttributionSearchForPlausible(
+  urlSearch: string,
+  storage: Pick<Storage, 'getItem'> | undefined = getSessionStorage(),
+): string {
+  const merged = pickAttributionSearchParams(new URLSearchParams(urlSearch))
+
+  if (storage) {
+    const storedUtms = new URLSearchParams(getUtmSourceForLink(storage))
+    for (const [key, value] of storedUtms) {
+      if (!merged.has(key)) merged.set(key, value)
+    }
+
+    const referral = storage.getItem(STORAGE_KEYS.utmReferral)
+    if (referral && !looksLikeHttpUrl(referral) && !merged.has('ref')) {
+      merged.set('ref', referral)
+    }
+  }
+
+  const serialized = merged.toString()
+  return serialized ? `?${serialized}` : ''
 }
 
 function getSessionStorage(): Storage | undefined {
@@ -196,10 +250,10 @@ function createSource(source: AcquisitionSource): void {
       const client = sdk.forConsole.client
       const endpoint = client.config.endpoint.replace(/\/$/, '')
       const project = client.config.project || 'console'
-      // Cloud marks this route `origin: *` with credentials disabled. The SDK
-      // always sends cookies, which makes the browser reject the preflight
-      // (`PreflightInvalidAllowCredentials`). Attribution is IP/UA fingerprint,
-      // so a cookieless POST is enough.
+      // Cloud marks this route `origin: *` with credentials disabled, so the
+      // POST goes out without cookies; attribution is by IP/UA fingerprint.
+      // This stays a raw fetch because the SDK can't set `keepalive`, which
+      // lets the POST finish when the visitor leaves the landing page.
       const response = await fetch(`${endpoint}/console/sources`, {
         method: 'POST',
         credentials: 'omit',
@@ -221,9 +275,10 @@ function createSource(source: AcquisitionSource): void {
 }
 
 /**
- * Capture landing-page source from the marketing site shell. `/` is a
- * home-vs-console hop and must not POST. Cloud only stores a row when at
- * least one of `ref`, an external referrer, or a UTM param is present.
+ * Capture landing-page source from the marketing site shell. `/` only counts
+ * when it renders the guest homepage; as a console hop it must not POST.
+ * Cloud only stores a row when at least one of `ref`, an external referrer,
+ * or a UTM param is present.
  */
 export function saveReferrerAndUtmSource(
   url: URL = typeof window === 'undefined'
@@ -237,7 +292,9 @@ export function saveReferrerAndUtmSource(
     : window.location.origin,
 ): void {
   if (typeof window === 'undefined') return
-  if (isConsoleRedirectHopPath(url.pathname)) return
+  if (isConsoleRedirectHopPath(url.pathname) && !isRootRedirectPath(url.pathname)) {
+    return
+  }
 
   const source = parseAcquisitionSource(url, documentReferrer, currentOrigin)
   const storage = getSessionStorage()

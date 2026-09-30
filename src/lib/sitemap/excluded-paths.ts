@@ -5,7 +5,6 @@
 
 /** Exact paths that are not public marketing content. */
 export const SITEMAP_EXCLUDED_EXACT_PATHS = [
-  '/',
   '/sign-in',
   '/sign-up',
   '/sign-out',
@@ -24,6 +23,7 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/llms.txt',
   '/llms-full.txt',
   '/docs/llms.txt',
+  '/for-agents.md',
   '/docs.md',
   '/blog.md',
   '/changelog.md',

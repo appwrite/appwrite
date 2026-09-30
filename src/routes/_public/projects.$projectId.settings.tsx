@@ -12,7 +12,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/settings')({
     const canAccess = await canAccessProjectSettings(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId },
         replace: true,
       })

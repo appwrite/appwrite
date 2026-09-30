@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Lock, ArrowUpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FullScreenCurtain } from '@/components/global/shared/FullScreenCurtain'
 import {
   getPlanUsageLimitRecoveryCopy,
   getSingleRecognizedPlanUsageLimitLabel,
@@ -30,29 +31,24 @@ export function PlanUsageLimitProjectCurtain({
   const resourceLabel = getSingleRecognizedPlanUsageLimitLabel(billingLimits)
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <div className="mx-4 flex max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Lock className="size-9" />
-        </div>
-        <h1 className="text-[22px] font-semibold text-foreground">
-          {t('Plan limit reached')}
-        </h1>
-        <p className="mt-3 text-[15px] text-muted-foreground">
-          {resourceLabel ? (
-            <>
-              {t('This organization has reached its plan limit for')}{' '}
-              {t(resourceLabel)}
-              {t(getPlanUsageLimitRecoveryCopy(billingLimits))}
-            </>
-          ) : (
-            t(
-              'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.',
-            )
-          )}
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
+    <FullScreenCurtain
+      icon={Lock}
+      title={t('Plan limit reached')}
+      description={
+        resourceLabel ? (
+          <>
+            {t('This organization has reached its plan limit for')}{' '}
+            {t(resourceLabel)}
+            {t(getPlanUsageLimitRecoveryCopy(billingLimits))}
+          </>
+        ) : (
+          t(
+            'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.',
+          )
+        )
+      }
+      actions={
+        <>
           {hasTeamId ? (
             <Button asChild variant="brandCta" className="gap-1.5">
               <Link to="/upgrade" search={{ orgId: teamId }}>
@@ -76,9 +72,10 @@ export function PlanUsageLimitProjectCurtain({
               {t('Back to console')}
             </Button>
           )}
-        </div>
-
-        {hasTeamId ? (
+        </>
+      }
+      footer={
+        hasTeamId ? (
           <Button
             variant="ghost"
             className="mt-6 text-muted-foreground"
@@ -91,8 +88,8 @@ export function PlanUsageLimitProjectCurtain({
           >
             {t('Back to organization')}
           </Button>
-        ) : null}
-      </div>
-    </div>
+        ) : null
+      }
+    />
   )
 }

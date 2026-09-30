@@ -7,9 +7,11 @@
  * Exposes:
  * - listBlocks(projectId)            - resource blocks for a project
  * - createBlock                       - create a resource block
+ * - createBlocks                      - create one block per resource ID
  * - deleteBlock                       - remove resource block(s)
  * - deleteCache                        - flush internal caches by region/target
  * - updateUserStatus                  - block/unblock a console user
+ * - updateOrganizationStatus          - block/unblock an organization
  *
  * Resource blocks are region-scoped on the server. Because the console SDK
  * points at the base endpoint, we pass through `sdk.forConsole.manager` and
@@ -30,6 +32,7 @@ import type {
   Region,
   CacheTarget,
   CacheDatabase,
+  Manager,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
@@ -106,6 +109,138 @@ export function useCreateBlock(
     ...options,
     onSuccess: (data, vars, onMutateResult, ctx) => {
       qc.invalidateQueries({ queryKey: blocksKey(vars.projectId) })
+      options?.onSuccess?.(data, vars, onMutateResult, ctx)
+    },
+  })
+}
+
+/** How many createBlock calls run at once when blocking a list of IDs. */
+const BULK_CREATE_CONCURRENCY = 5
+
+export type CreateBlocksParams = {
+  /** Project that owns the resources. Omitted when `projectIds` is set. */
+  projectId?: string
+  /**
+   * Whole-project blocks. Each ID is created as its own project block,
+   * with no resource ID.
+   */
+  projectIds?: string[]
+  resourceType: BlockResourceType
+  /**
+   * Resource IDs to block inside `projectId`. An empty list creates one
+   * wildcard block (all resources of this type in the project). Ignored
+   * when `projectIds` is set.
+   */
+  resourceIds: string[]
+  mode?: BlockMode
+  reason?: string
+  expiredAt?: string
+  onProgress?: (done: number, total: number) => void
+}
+
+export type CreateBlockFailure = {
+  projectId: string
+  resourceId?: string
+  message: string
+}
+
+export type CreateBlocksResult = {
+  created: Models.ManagerBlock[]
+  failed: CreateBlockFailure[]
+}
+
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message
+  return String(error)
+}
+
+async function runPool(
+  count: number,
+  concurrency: number,
+  worker: (index: number) => Promise<void>,
+) {
+  let next = 0
+  const runners = Array.from(
+    { length: Math.min(concurrency, count) },
+    async () => {
+      while (next < count) {
+        const index = next
+        next += 1
+        await worker(index)
+      }
+    },
+  )
+  await Promise.all(runners)
+}
+
+export function useCreateBlocks(
+  options?: Omit<
+    UseMutationOptions<CreateBlocksResult, unknown, CreateBlocksParams>,
+    'mutationFn'
+  >,
+) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: CreateBlocksParams): Promise<CreateBlocksResult> => {
+      const entries: { projectId: string; resourceId?: string }[] =
+        params.projectIds && params.projectIds.length > 0
+          ? params.projectIds.map((id) => ({ projectId: id }))
+          : (params.resourceIds.length > 0 ? params.resourceIds : [undefined]).map(
+              (resourceId) => ({
+                projectId: params.projectId ?? '',
+                resourceId,
+              }),
+            )
+      const outcomes: Array<
+        | { ok: true; block: Models.ManagerBlock }
+        | { ok: false; message: string }
+      > = new Array(entries.length)
+      let done = 0
+
+      await runPool(entries.length, BULK_CREATE_CONCURRENCY, async (index) => {
+        const entry = entries[index]
+        try {
+          const block = await sdk.forConsole.manager.createBlock({
+            projectId: entry.projectId,
+            resourceType: params.resourceType,
+            resourceId: entry.resourceId,
+            mode: params.mode,
+            reason: params.reason?.trim() || undefined,
+            expiredAt: params.expiredAt?.trim() || undefined,
+          })
+          outcomes[index] = { ok: true, block }
+        } catch (error) {
+          outcomes[index] = { ok: false, message: toErrorMessage(error) }
+        }
+        done += 1
+        params.onProgress?.(done, entries.length)
+      })
+
+      const created: Models.ManagerBlock[] = []
+      const failed: CreateBlockFailure[] = []
+      for (let i = 0; i < outcomes.length; i++) {
+        const outcome = outcomes[i]
+        const entry = entries[i]
+        if (!outcome || !entry) continue
+        if (outcome.ok) created.push(outcome.block)
+        else
+          failed.push({
+            projectId: entry.projectId,
+            resourceId: entry.resourceId,
+            message: outcome.message,
+          })
+      }
+      return { created, failed }
+    },
+    retry: false,
+    ...options,
+    onSuccess: (data, vars, onMutateResult, ctx) => {
+      const projectIds = new Set<string>()
+      if (vars.projectId) projectIds.add(vars.projectId)
+      for (const id of vars.projectIds ?? []) projectIds.add(id)
+      for (const id of projectIds) {
+        qc.invalidateQueries({ queryKey: blocksKey(id) })
+      }
       options?.onSuccess?.(data, vars, onMutateResult, ctx)
     },
   })
@@ -197,6 +332,42 @@ export function useUpdateUserStatus(
         status: params.status,
         userId: params.userId?.trim() || undefined,
         email: params.email?.trim() || undefined,
+        reason: params.reason?.trim() || undefined,
+      })
+    },
+    ...options,
+  })
+}
+
+export type UpdateOrganizationStatusParams = {
+  teamId: string
+  status: boolean
+  reason?: string
+}
+
+// TODO: drop once the console SDK ships `manager.updateOrganizationStatus` (appwrite-labs/cloud#6118).
+type ManagerWithOrganizationStatus = Manager & {
+  updateOrganizationStatus(
+    params: UpdateOrganizationStatusParams,
+  ): Promise<Models.Organization>
+}
+
+export function useUpdateOrganizationStatus(
+  options?: Omit<
+    UseMutationOptions<
+      Models.Organization,
+      unknown,
+      UpdateOrganizationStatusParams
+    >,
+    'mutationFn'
+  >,
+) {
+  return useMutation({
+    mutationFn: async (params: UpdateOrganizationStatusParams) => {
+      const manager = sdk.forConsole.manager as ManagerWithOrganizationStatus
+      return manager.updateOrganizationStatus({
+        teamId: params.teamId.trim(),
+        status: params.status,
         reason: params.reason?.trim() || undefined,
       })
     },

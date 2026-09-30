@@ -96,20 +96,18 @@ For teams already building with Claude Code, Claude Design is a natural extensio
 
 # Build with Claude Code and Appwrite
 
-Claude Design handoffs land in Claude Code, and Claude Code works beautifully with Appwrite. If you are shipping a real product (not just a prototype) you need a backend, and the Appwrite MCP servers let Claude Code work directly against your Appwrite project and documentation without you leaving the terminal.
+Claude Design handoffs land in Claude Code, and Claude Code works with Appwrite. If you are shipping a real product (not just a prototype) you need a backend, and the Appwrite MCP server lets Claude Code work directly against your Appwrite project and documentation without you leaving the terminal.
 
-You can set up the Appwrite MCP server in Claude Code with a couple of commands:
-
-```bash
-claude mcp add-json appwrite-api '{"command":"uvx","args":["mcp-server-appwrite"],"env":{"APPWRITE_PROJECT_ID": "your-project-id", "APPWRITE_API_KEY": "your-api-key", "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"}}'
-```
+You can set up the Appwrite MCP server in Claude Code with:
 
 ```bash
-claude mcp add appwrite-docs https://mcp-for-docs.appwrite.io -t http
+npx skills add appwrite/skills
+claude mcp add appwrite --transport http https://mcp.appwrite.io
+claude "/mcp"
 ```
 
 With this setup, the flow looks like: design in Claude Design, hand off to Claude Code, and let Claude Code create users, manage databases, query tables, and wire up auth against your Appwrite backend. Three tools, one conversation.
 
-Check out our [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and our [Appwrite MCP server docs](/docs/tooling/mcp) to get started. If you want to get more out of Claude Code itself, our [Claude Code tips and best practices](/blog/post/claude-code-tips-tricks) is a good place to start.
+Check out our [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) and our [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started. If you want to get more out of Claude Code itself, our [Claude Code tips and best practices](/blog/post/claude-code-tips-tricks) is a good place to start.
 
 The tools are catching up to how we actually want to build. The best time to learn the new workflow is before everyone else does.

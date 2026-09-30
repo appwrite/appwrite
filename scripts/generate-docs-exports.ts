@@ -26,8 +26,10 @@ import {
   buildIntegrationsMarkdownIndex,
 } from '../src/lib/seo/llms'
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
+import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
 import { markdocToMarkdown } from '../src/lib/seo/markdoc-to-markdown'
+import { generateAgentSetupMarkdown } from '../src/lib/seo/agent-setup'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -254,6 +256,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildDocsMarkdownIndex(DOCS_PAGES, SITE_ORIGIN),
     },
     {
+      relativePath: 'setup.md',
+      contents: generateAgentSetupMarkdown(),
+    },
+    {
       relativePath: 'blog.md',
       contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
     },
@@ -276,6 +282,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     {
       relativePath: '.well-known/agent-skills/index.json',
       contents: serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+    },
+    {
+      relativePath: 'for-agents.md',
+      contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
     {
       relativePath: 'robots.txt',

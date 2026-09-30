@@ -18,11 +18,13 @@ import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
@@ -32,6 +34,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
@@ -41,6 +44,7 @@ import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookie
 import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
 import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -48,7 +52,6 @@ import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privac
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
 import { Route as PublicAppRouteImport } from './routes/_public/app'
@@ -174,6 +177,7 @@ import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
+import { Route as PublicProjectsProjectIdAgentsRouteImport } from './routes/_public/projects.$projectId.agents'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
@@ -185,6 +189,7 @@ import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -486,6 +491,11 @@ const DocsDotmdRoute = DocsDotmdRouteImport.update({
   path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -509,6 +519,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupDotmdRoute = SetupDotmdRouteImport.update({
+  id: '/setup.md',
+  path: '/setup.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -556,6 +571,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
   id: '/affiliates',
   path: '/affiliates',
@@ -601,6 +621,11 @@ const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
   path: '/enterprise',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -637,11 +662,6 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -1321,6 +1341,12 @@ const PublicProjectsProjectIdAdvisorRoute =
     path: '/advisor',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdAgentsRoute =
+  PublicProjectsProjectIdAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdAnalyticsRoute =
   PublicProjectsProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
@@ -1385,6 +1411,12 @@ const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
     path: '/onboarding',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeRoute =
@@ -3172,17 +3204,19 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
   )
 
 export interface FileRoutesByFullPath {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3201,6 +3235,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3329,6 +3364,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -3340,6 +3376,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3605,15 +3642,17 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3632,6 +3671,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3750,12 +3790,14 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -3998,11 +4040,13 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -4021,6 +4065,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -4049,7 +4094,7 @@ export interface FileRoutesById {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/_public/': typeof PublicIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -4150,6 +4195,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/_public/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -4161,6 +4207,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4434,11 +4481,13 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4457,6 +4506,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4585,6 +4635,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -4596,6 +4647,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4866,10 +4918,12 @@ export interface FileRouteTypes {
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4888,6 +4942,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -5006,12 +5061,14 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5253,11 +5310,13 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
@@ -5276,6 +5335,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5304,7 +5364,7 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/_public/'
+    | '/_marketing/'
     | '/docs/'
     | '/generator/'
     | '/_api/blog/rss.xml'
@@ -5405,6 +5465,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
+    | '/_public/projects/$projectId/agents'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -5416,6 +5477,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -5691,11 +5753,13 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
@@ -5788,6 +5852,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
@@ -5821,6 +5892,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup.md': {
+      id: '/setup.md'
+      path: '/setup.md'
+      fullPath: '/setup.md'
+      preLoaderRoute: typeof SetupDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -5886,6 +5964,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/affiliates': {
       id: '/_marketing/affiliates'
       path: '/affiliates'
@@ -5949,6 +6034,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingEnterpriseRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
@@ -5997,13 +6089,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
     }
     '/_public/account': {
       id: '/_public/account'
@@ -6880,6 +6965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/agents': {
+      id: '/_public/projects/$projectId/agents'
+      path: '/agents'
+      fullPath: '/projects/$projectId/agents'
+      preLoaderRoute: typeof PublicProjectsProjectIdAgentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/analytics': {
       id: '/_public/projects/$projectId/analytics'
       path: '/analytics'
@@ -6955,6 +7047,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/projects/$projectId/onboarding'
       preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/realtime': {
@@ -8821,12 +8920,14 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -8853,12 +8954,14 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
@@ -10419,6 +10522,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
+  PublicProjectsProjectIdAgentsRoute: typeof PublicProjectsProjectIdAgentsRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -10430,6 +10534,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -10445,6 +10550,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
     PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
+    PublicProjectsProjectIdAgentsRoute: PublicProjectsProjectIdAgentsRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -10464,6 +10570,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -10500,7 +10607,6 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
-  PublicIndexRoute: typeof PublicIndexRoute
   PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
@@ -10540,7 +10646,6 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
-  PublicIndexRoute: PublicIndexRoute,
   PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
@@ -10646,11 +10751,13 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,

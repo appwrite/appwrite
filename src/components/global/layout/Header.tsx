@@ -384,7 +384,7 @@ interface ConsoleHeaderProps {
 }
 
 /** Survives header remounts: fade once on first reveal, then keep the last auth UI. */
-let marketingHeaderAuthSnapshot = {
+const marketingHeaderAuthSnapshot = {
   revealed: false,
   authenticated: false,
   playedFade: false,
@@ -1518,7 +1518,6 @@ export function ConsoleHeader({
                       source="navbar"
                       orgId={orgId}
                       projectId={projectId ?? ''}
-                      billingPlanId={organizationPlan?.$id}
                     />
                   </div>
 

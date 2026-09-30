@@ -30,6 +30,7 @@ import {
   organizationScopesQueryOptions,
   organizationsQueryOptions,
   prefetchOrganizationInvoiceDataIfAllowed,
+  consoleAccountQueryOptions,
   useProject,
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
@@ -422,6 +423,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         queryClient
           .ensureQueryData(organizationsQueryOptions())
           .catch(() => {}),
+        queryClient
+          .ensureQueryData(consoleAccountQueryOptions())
+          .catch(() => {}),
       ])
 
       registerProjectRegionFromProject(projectData)
@@ -743,6 +747,7 @@ function ProjectLayout() {
     activeSection === 'realtime' ||
     activeSection === 'storage' ||
     activeSection === 'explorer' ||
+    activeSection === 'agents' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||
     isSiteLogsTab

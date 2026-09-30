@@ -271,6 +271,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Firewall
   Firewall: 'חומת אש',
+  'Open Firewall': 'פתיחת Firewall',
+  'Turn off sound': 'כיבוי שמע',
+  'Turn on sound': 'הפעלת שמע',
+  'Skip to console': 'דילוג לקונסול',
+  'Project rules that run before traffic reaches your API, Functions, or Sites.':
+    'כללי פרויקט שרצים לפני שהתעבורה מגיעה ל-API, לפונקציות או לאתרים שלכם.',
+  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
+    'חסמו, הגבילו קצב, הפנו או אתגרו בקשות לפני שהן מגיעות ל-API, לפונקציות או לאתרים שלכם.',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',
@@ -1417,12 +1425,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deployment docs': 'דוקומנטציית פריסות',
   Back: 'חזרה',
   'Only .tar.gz files are allowed.': 'מותרים רק קובצי ‎.tar.gz.',
-  'File size exceeds': 'גודל הקובץ חורג מ',
   'Deployment created successfully': 'הפריסה נוצרה בהצלחה',
   'Please select a .tar.gz file.': 'בחרו קובץ ‎.tar.gz.',
   'Create manual deployment': 'יצירת פריסה ידנית',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
+  'Upload a .tar.gz archive of your code.':
+    'העלו ארכיון ‎.tar.gz של הקוד שלכם.',
   'Drop a .tar.gz file here or click to browse':
     'גררו קובץ ‎.tar.gz לכאן או לחצו לעיון',
   'Uploading…': 'מעלה…',
@@ -1480,6 +1489,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': 'המשך ל-נסו',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'פתחו את סוכן הפיתוח שלכם ובקשו אחת מהבקשות האלה כדי לוודא ש-Appwrite MCP פועל.',
+  'Explore Appwrite': 'גלו את Appwrite',
+  'Open a product in this project and keep building with your agent.':
+    'פתחו מוצר בפרויקט הזה והמשיכו לבנות עם הסוכן שלכם.',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'השתמשו ב-Appwrite MCP כדי להציג את מסדי הנתונים בפרויקט {projectName}',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -1492,8 +1504,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'התקנת Appwrite MCP',
   'Build with an agent': 'בנו עם סוכן',
   'Connect your coding agent': 'חיבור סוכן הפיתוח שלכם',
+  'Connect Appwrite with your agents': 'חברו את Appwrite לסוכנים שלכם',
+  'Choose your agent': 'בחרו סוכן',
+  'List databases, buckets, and users from your editor.':
+    'הציגו מסדי נתונים, באקטים ומשתמשים מהעורך.',
+  'Run approved actions without leaving your agent.':
+    'הריצו פעולות מאושרות בלי לעזוב את הסוכן.',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'אשרו פעם אחת עם OAuth. בלי מפתח API בפרומפט.',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'Install in your editor': 'התקנה בעורך',
+  'Ask your agent to list project resources':
+    'בקשו מהסוכן להציג את משאבי הפרויקט',
+  'Show details': 'הצגת פרטים',
+  'Hide details': 'הסתרת פרטים',
+  'Next: install MCP in your editor': 'השלב הבא: התקינו MCP בעורך',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'התקינו את Appwrite MCP ב-Cursor, Claude Code, Codex או VS Code כדי שהסוכן שלכם יוכל לנהל את הפרויקט.',
+  'What you get': 'מה תקבלו',
+  'Why connect': 'למה להתחבר',
+  'Without MCP': 'בלי MCP',
+  'With MCP': 'עם MCP',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'הסוכן יכול להסביר את Appwrite, אבל הוא לא יכול לשנות את הפרויקט הזה.',
+  'The agent can list resources and run approved actions in this project.':
+    'הסוכן יכול להציג משאבים ולהריץ פעולות מאושרות בפרויקט הזה.',
+  'Recommended next step': 'השלב הבא המומלץ',
+  'To do': 'לביצוע',
+  'Coding agent': 'סוכן פיתוח',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'בחרו עורך, התקינו Appwrite MCP, ואז אשרו עם OAuth.',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP מאושר. השלימו את ההתקנה בעורך אם עדיין צריך.',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'הדביקו את הפרומפט בכל סוכן פיתוח. הוא יעקוב אחר דף ההתקנה הציבורי כדי להתקין Appwrite MCP לפרויקט הזה.',
+  'Or install Appwrite MCP manually': 'או התקינו Appwrite MCP ידנית',
+  'Skip for this project': 'דילוג בפרויקט זה',
+  'Preferences are unavailable.': 'ההעדפות אינן זמינות.',
+  'Failed to update preferences': 'עדכון ההעדפות נכשל',
   'Install MCP': 'התקנת MCP',
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
@@ -3018,4 +3066,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
+  'AI discovery': 'גילוי AI',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
+
+  // Project environment switcher
+  Environments: 'סביבות',
+  Staging: 'Staging',
+  Development: 'פיתוח',
+  'Switch environment': 'החלפת סביבה',
+  'Environment switched': 'הסביבה הוחלפה',
+  'Create environment': 'יצירת סביבה',
+  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
 }

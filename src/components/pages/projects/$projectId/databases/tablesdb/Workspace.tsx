@@ -79,7 +79,6 @@ import {
   DatabaseMonitorHeaderActions,
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
-import type { DateRange } from 'react-day-picker'
 import { useDatabaseMonitorChartFilters } from '@/hooks/use-database-monitor-chart-filters'
 import { ImportCsv } from '../_components/ImportCsv'
 import { ExportCsv } from '../_components/ExportCsv'
@@ -117,7 +116,6 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -155,7 +153,6 @@ import { TableRowsEditSessionProvider } from './_components/TableRowsEditSession
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 

@@ -87,4 +87,4 @@ If you are building that, [Appwrite](/) gives you the backend half of the stack 
 
 The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles the Appwrite API MCP server, the Appwrite Docs MCP server, and eleven SDK-specific agent skills into a single install, so your Claude Code agent can stand up users, databases, storage, and functions against your Appwrite project without manually wiring together the MCP infrastructure yourself.
 
-Check out the [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and the [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started, or [join us on Discord](https://appwrite.io/discord).
+Check out the [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) and the [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started, or [join us on Discord](https://appwrite.io/discord).

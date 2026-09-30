@@ -2,6 +2,25 @@
 User-agent: *
 Allow: /
 
+# Retrieval crawlers that answer live queries (not training-only bots)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 # Console and authenticated areas (not public marketing content)
 Disallow: /projects/
 Disallow: /organizations/

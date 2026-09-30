@@ -226,7 +226,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
           <EmptyState
             icon={ShieldOff}
             title="No target selected"
-            description="Enter a project ID above and load to see its blocks."
+            description="Load a project in Look up to see its blocks."
             iconSize="md"
           />
         </div>

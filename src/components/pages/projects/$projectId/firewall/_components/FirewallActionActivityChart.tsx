@@ -32,6 +32,7 @@ import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 
 const ACTIVITY_CHART_MARGIN = { top: 12, right: 4, left: 0, bottom: 0 } as const
 const ACTIVITY_CHART_Y_AXIS_WIDTH = 40
@@ -97,6 +98,7 @@ export function FirewallActionActivityChart({
         <div className={overviewChartPanelChartFillClass}>
           {hasData ? (
             <ResponsiveContainer
+              className={USAGE_CHART_FADE_IN_CLASS_NAME}
               {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
               minHeight={height}
             >

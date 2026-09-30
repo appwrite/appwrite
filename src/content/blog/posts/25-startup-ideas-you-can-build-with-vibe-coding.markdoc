@@ -166,7 +166,7 @@ The backend is half the story. The other half is how your AI tool talks to it. A
 - **[API MCP server](/docs/tooling/ai/mcp-servers).** Your agent in Cursor, Claude Code, or Windsurf can create users, manage tables, run queries, invoke functions, and operate on storage through tool calls instead of synthesized HTTP requests. Scope the API key to the resources the agent should manage, and the blast radius shrinks with it.
 - **[Docs MCP server](/docs/tooling/ai/mcp-servers).** The agent reads current Appwrite docs at call time instead of relying on whatever was in its training cutoff. Method names stop hallucinating.
 - **[Agent Skills](/docs/tooling/ai/skills).** Curated skills for the Appwrite CLI and every major SDK, including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift. The agent picks the right SDK pattern instead of guessing.
-- **Editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code), [Cursor](/docs/tooling/ai/ai-dev-tools/cursor), and [Codex](/docs/tooling/ai/ai-dev-tools/codex).** One-step install for MCP, docs MCP, and skills. Open the editor, start prompting, the agent can already act on your project.
+- **Editor plugins for [Claude Code](/docs/tooling/ai/agents/claude-code), [Cursor](/docs/tooling/ai/ai-dev-tools/cursor), and [Codex](/docs/tooling/ai/agents/codex).** One-step install for MCP, docs MCP, and skills. Open the editor, start prompting, the agent can already act on your project.
 
 If you are still picking the AI tool to build with, [Best vibe coding tools in 2026](/blog/post/comparing-vibe-coding-tools) walks through the trade-offs.
 
