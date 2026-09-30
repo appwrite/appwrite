@@ -19,8 +19,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
     "href": "/blog/post/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
-    "title": "Claude Sonnet 5.5 is 30% faster and costs up to 30% less",
-    "description": "Claude Sonnet 5.5 delivers 30%+ faster output, costs up to 30% less per task, and improves coding and everyday work at the same Sonnet 5 pricing.",
+    "title": "Claude Sonnet 5.5 costs up to 30% less per task",
+    "description": "Claude Sonnet 5.5 costs up to 30% less per task and improves coding, agentic work, and everyday tasks at the same Sonnet 5 pricing.",
     "date": "2026-09-29",
     "lastUpdated": "2026-09-29",
     "timeToRead": 5,
