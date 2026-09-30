@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "build-a-permission-aware-ai-copilot",
+    "href": "/blog/post/build-a-permission-aware-ai-copilot",
+    "title": "Build a permission-aware AI copilot with Appwrite Functions",
+    "description": "Build a CRM copilot that acts as the signed-in user. An Appwrite Function receives the caller's JWT, so every tool call follows the same row permissions and teams as the user's own requests.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-a-permission-aware-ai-copilot/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-breached-password-detection",
     "href": "/blog/post/announcing-breached-password-detection",
     "title": "Announcing breached password detection for Appwrite Auth",
