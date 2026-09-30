@@ -3711,6 +3711,7 @@ export type ServiceListViewModeScope =
   | 'sites'
   | 'projects'
   | 'stores'
+  | 'videos'
 
 /** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
@@ -3722,6 +3723,9 @@ export const USER_PREFS_KEY_SITES_LIST_VIEW_MODE = 'console.sites.listViewMode'
 /** Full key: `console.organizations.projects.listViewMode` - org projects tab. */
 export const USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE =
   'console.organizations.projects.listViewMode'
+
+/** Full key: `console.videos.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE = 'console.videos.listViewMode'
 
 /** Full key: `console.stores.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_STORES_LIST_VIEW_MODE =
@@ -3737,6 +3741,8 @@ function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
       return USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE
     case 'stores':
       return USER_PREFS_KEY_STORES_LIST_VIEW_MODE
+    case 'videos':
+      return USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE
   }
 }
 

@@ -225,6 +225,7 @@ export const heCatalog: EnCatalog = {
         storage: 'אחסון',
         functions: 'פונקציות',
         messaging: 'הודעות',
+        videos: 'סרטונים',
         sites: 'אתרים',
         distribution: 'הפצה',
         activity: 'פעילות',

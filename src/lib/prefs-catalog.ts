@@ -79,6 +79,7 @@ import {
   USER_PREFS_KEY_STORES_LIST_VIEW_MODE,
   USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX,
   USER_PREFS_KEY_USAGE_CHART_DATE_RANGE,
+  USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -268,6 +269,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_SITES_LIST_VIEW_MODE,
     description: 'Sites list view mode (list or grid).',
+    category: 'List views',
+  },
+  {
+    id: 'videosListViewMode',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
+    description: 'Videos list view mode (list or grid).',
     category: 'List views',
   },
   {

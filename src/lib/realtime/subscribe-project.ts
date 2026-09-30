@@ -21,6 +21,10 @@ import {
 } from './dedicated-database-cache'
 import { mergeMigrationPayloadIntoCache } from './migration-cache'
 import {
+  handleVideoRealtimeEvents,
+  isVideoRealtimeSignal,
+} from './video-cache'
+import {
   resolveDeploymentResourceId,
   type DeploymentResourceType,
 } from './deployment-events'
@@ -401,6 +405,10 @@ function handleRealtimeEvent(
 
   // Project-scoped events: only invalidate if the event is for this project
   if (!isForThisProject) return
+
+  if (isVideoRealtimeSignal(events)) {
+    handleVideoRealtimeEvents(queryClient, projectId, events, payload)
+  }
 
   if (
     eventMatches(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_ANY) ||

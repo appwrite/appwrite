@@ -34,6 +34,8 @@ export const DEFAULT_SCOPES = [
   'subscribers.write',
   'sites.read',
   'sites.write',
+  'videos.read',
+  'videos.write',
   'domains.write',
   'executions.write',
   'migrations.write',
@@ -61,6 +63,7 @@ export type ConsoleAccess = {
   canSeeMessages: boolean
   canSeeTeams: boolean
   canSeeSites: boolean
+  canSeeVideos: boolean
   /** Activity / audit log events (`GET /activities/events`). */
   canSeeEvents: boolean
   canSeeBilling: boolean
@@ -80,6 +83,7 @@ export type ConsoleAccess = {
   canWriteTopics: boolean
   canWriteProviders: boolean
   canWriteSites: boolean
+  canWriteVideos: boolean
   canWriteDomains: boolean
   canWriteExecutions: boolean
   canWriteMigrations: boolean
@@ -110,6 +114,7 @@ export function deriveAccessFromRolesScopes(
     canSeeMessages: has('messages.read'),
     canSeeTeams: has('teams.read'),
     canSeeSites: has('sites.read'),
+    canSeeVideos: has('videos.read'),
     canSeeEvents: has('events.read'),
     canSeeBilling: has('billing.read'),
     canWriteProjects: has('projects.write'),
@@ -127,6 +132,7 @@ export function deriveAccessFromRolesScopes(
     canWriteTopics: has('topics.write'),
     canWriteProviders: has('providers.write'),
     canWriteSites: has('sites.write'),
+    canWriteVideos: has('videos.write'),
     canWriteDomains: has('domains.write'),
     canWriteExecutions: has('executions.write'),
     canWriteMigrations: has('migrations.write'),

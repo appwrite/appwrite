@@ -15,6 +15,7 @@ import {
   canShowBucketSecuritySettings,
   canShowFunctionSecuritySettings,
   canShowSiteSettingsTab,
+  canShowVideoSettings,
   canShowTopicSettingsTab,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
@@ -184,6 +185,17 @@ export async function canAccessSiteSettings(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowSiteSettingsTab(access, features)
+}
+
+/** Video Settings. */
+export async function canAccessVideoSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowVideoSettings(access, features)
 }
 
 /** Messaging topic Settings. */

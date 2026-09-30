@@ -202,6 +202,7 @@ export const enCatalog = {
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
+        videos: 'Videos',
         sites: 'Sites',
         distribution: 'Distribution',
         activity: 'Activity',

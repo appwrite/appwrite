@@ -61,6 +61,8 @@ export type ConsoleProfileFeatures = {
   databaseSpecifications: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
+  /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
+  videos: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -113,6 +115,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databasePitrRestore: 'Database PITR restore',
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
+  videos: 'Videos',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -160,6 +163,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databasePitrRestore: false,
       databaseSpecifications: true,
       nativeDbsMongo: false,
+      videos: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -195,6 +199,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databasePitrRestore: false,
       databaseSpecifications: false,
       nativeDbsMongo: false,
+      videos: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

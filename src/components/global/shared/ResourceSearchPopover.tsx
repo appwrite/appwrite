@@ -15,6 +15,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { LucideIcon } from 'lucide-react'
 import {
   Database,
+  Film,
   FolderOpen,
   Globe,
   Loader2,
@@ -53,6 +54,7 @@ import {
   teamsQueryOptions,
   topicsQueryOptions,
   usersQueryOptions,
+  videosQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { resolveModalPortalHost } from '@/lib/layout/modal-portal-host'
@@ -70,6 +72,7 @@ export type ResourceSearchKind =
   | 'topic'
   | 'provider'
   | 'domain'
+  | 'video'
 
 export type ResourceSearchListItem = {
   id: string
@@ -142,6 +145,7 @@ const SEARCH_PLACEHOLDERS: Record<ResourceSearchKind, string> = {
   topic: 'Search topics by name or ID...',
   provider: 'Search providers by name or ID...',
   domain: 'Search domains by name or ID...',
+  video: 'Search videos by name...',
 }
 
 const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
@@ -155,6 +159,7 @@ const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
   topic: MessageSquare,
   provider: Mail,
   domain: Globe,
+  video: Film,
 }
 
 function ResourceSearchListSkeleton({
@@ -262,6 +267,11 @@ function useResourceSearchList(
     enabled: enabled && kind === 'provider' && !!projectId,
     placeholderData: keepPreviousData,
   })
+  const videoQuery = useQuery({
+    ...videosQueryOptions(projectId, 0, PICK_LIMIT, search),
+    enabled: enabled && kind === 'video' && !!projectId,
+    placeholderData: keepPreviousData,
+  })
   const domainQuery = useQuery({
     ...organizationDomainsQueryOptions(organizationId, 0, PICK_LIMIT, search),
     enabled: enabled && kind === 'domain' && !!organizationId,
@@ -360,6 +370,14 @@ function useResourceSearchList(
           })),
           isFetching: domainQuery.isFetching,
         }
+      case 'video':
+        return {
+          items: (videoQuery.data?.videos ?? []).map((item) => ({
+            id: item.$id,
+            label: item.name || item.$id,
+          })),
+          isFetching: videoQuery.isFetching,
+        }
       default:
         return { items: [] as ResourceSearchListItem[], isFetching: false }
     }
@@ -385,6 +403,8 @@ function useResourceSearchList(
     providerQuery.isFetching,
     domainQuery.data,
     domainQuery.isFetching,
+    videoQuery.data,
+    videoQuery.isFetching,
   ])
 }
 

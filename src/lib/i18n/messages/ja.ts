@@ -226,6 +226,7 @@ export const jaCatalog: EnCatalog = {
         storage: 'ストレージ',
         functions: 'Functions',
         messaging: 'メッセージング',
+        videos: '動画',
         sites: 'サイト',
         distribution: 'Distribution',
         activity: 'アクティビティ',

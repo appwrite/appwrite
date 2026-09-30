@@ -44,6 +44,7 @@ import {
   Folder,
   Zap,
   MessageSquare,
+  Film,
   Settings,
   BarChart3,
   Key,
@@ -111,6 +112,7 @@ interface SidebarCopy {
     storage: string
     functions: string
     messaging: string
+    videos: string
     sites: string
     distribution: string
     activity: string
@@ -207,6 +209,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.messaging,
           icon: MessageSquare,
           path: `/projects/${projectId}/messaging`,
+        },
+        {
+          id: 'videos',
+          label: sidebarCopy.items.videos,
+          icon: Film,
+          path: `/projects/${projectId}/videos`,
         },
       ],
     },
@@ -352,6 +360,10 @@ export function ConsoleSidebar({
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
             return isCloud && canSeeProjectNavItem(access, features, item.id)
+          if (item.id === 'videos')
+            return (
+              features.videos && canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'agents')
             return (
               showProjectAgents && canShowAgentMcpConnectCta(access, features)

@@ -1735,6 +1735,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               createProfileFeatureFlagItem(
+                'Videos',
+                'Show the Videos product (transcoding, renditions, subtitles, stream player) in projects.',
+                'videos',
+                profileId,
+                features.videos,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2236,6 +2244,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     faviconStatus,
     profileId,
+    features.videos,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.userVerification,
