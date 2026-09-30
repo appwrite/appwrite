@@ -175,6 +175,8 @@ export const DEFAULT_COVER_VALUES = {
   integrationIconSize: 140,
   titleIconSize: 80,
   titleIconTitle: 'Auth',
+  /** Two-line screenshot default: the `\n` shows the explicit break in thumbnails. */
+  screenshotTwoLineTitle: 'Build like a team\nof hundreds',
   titleIconIcon: 'lucide:users',
   zoom: 1,
   focusX: 0,
@@ -468,6 +470,7 @@ export function parseCoverRenderData(
         ),
       }
     case 'screenshot':
+    case 'screenshot-two-line':
       return {
         ...shared,
         template,
@@ -784,6 +787,7 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
       setOptional('iconSize', data.iconSize)
       break
     case 'screenshot':
+    case 'screenshot-two-line':
       appendCoverScreenshotSearchParams(params, data)
       break
     case 'screenshot-side':
@@ -1040,7 +1044,9 @@ export function createDefaultCoverData(
           title: DEFAULT_COVER_VALUES.titleIconTitle,
           icon: DEFAULT_COVER_VALUES.titleIconIcon,
         }
-      : {}
+      : template === 'screenshot-two-line'
+        ? { title: DEFAULT_COVER_VALUES.screenshotTwoLineTitle }
+        : {}
 
   const extraTemplateParams = isCoverExtraTemplateId(template)
     ? buildCoverExtraTemplateDefaultParams(template)

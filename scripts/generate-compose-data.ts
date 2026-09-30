@@ -35,21 +35,32 @@ const COMBINED_TOPOLOGY_SERVICES = [
   'appwrite-task-scheduler',
 ]
 const SEPARATE_TOPOLOGY_PROFILE = 'separate'
+// Profiles the installer leaves on a service. Generator.php only acts on the
+// topology profile, so a service under any of these keeps its `profiles:` list
+// in the generated compose and stays opt-in through COMPOSE_PROFILES. The
+// embeddings container is the one case today: resource-heavy, so it is not
+// started until an operator adds "embedding" to COMPOSE_PROFILES.
+const KEPT_PROFILES = ['embedding']
 // Every Compose profile the appwrite compose file is allowed to use. Any other
 // profile aborts generation, because the docs generator would not know which
 // topology or database option it belongs to.
-const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE]
+const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE, ...KEPT_PROFILES]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
 const ASSISTANT_SERVICE = 'appwrite-assistant'
+const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
 
 // The appwrite repo's .env is a development file. These keys are dropped from the
 // .env the docs hand to a self-hoster:
-//   - COMPOSE_PROFILES selects services by Compose profile, and stripProfiles()
-//     removes every profile from the docs compose, so the key does nothing here.
+//   - COMPOSE_PROFILES holds a development selection upstream. The installer
+//     does not write the key either; a self-hoster who wants an opt-in profile
+//     such as "embedding" adds it to their own .env.
 //   - The DocumentsDB and VectorsDB keys point at engines a self-hosted install
 //     does not deploy. Both products ship disabled, so the keys have no effect.
+//   - VITE_GROWTH_ENDPOINT pointed the console at the retired growth server.
+//     The console now sends support and feedback to Appwrite Cloud directly.
 const OMITTED_ENV_KEYS = [
   'COMPOSE_PROFILES',
+  'VITE_GROWTH_ENDPOINT',
   '_APP_DOCUMENTSDB',
   '_APP_VECTORSDB',
   '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -69,16 +80,16 @@ const OMITTED_ENV_KEYS = [
 ]
 
 /**
- * Removes the OMITTED_ENV_KEYS pass-through entries from a service's
- * `environment:` list. Compose passes an unset key through as unset, and both
- * products default to disabled, so dropping the entries changes no behaviour.
+ * Removes the OMITTED_ENV_KEYS entries, pass-through or with a value, from a
+ * service's `environment:` list. Compose passes an unset key through as unset,
+ * and nothing reads the omitted keys, so dropping them changes no behaviour.
  */
 function stripOmittedServiceEnv(block: string): string {
   const omitted = new Set(OMITTED_ENV_KEYS)
   return block
     .split('\n')
     .filter((line) => {
-      const match = line.match(/^      - ([A-Z0-9_]+)$/)
+      const match = line.match(/^      - ([A-Z0-9_]+)(=.*)?$/)
       return match === null || !omitted.has(match[1])
     })
     .join('\n')
@@ -177,7 +188,15 @@ function resolveExtends(
   return [`  ${child.name}:`, ...merged.map((k) => k.block)].join('\n')
 }
 
-function stripProfiles(block: string): string {
+/**
+ * Removes the topology `profiles:` list from a service block. A service whose
+ * profiles are all in KEPT_PROFILES keeps the list, mirroring Generator.php,
+ * which only rewrites the topology profile.
+ */
+function stripProfiles(block: string, profiles: string[]): string {
+  if (profiles.length > 0 && profiles.every((p) => KEPT_PROFILES.includes(p))) {
+    return block
+  }
   const lines = block.split('\n')
   const result: string[] = []
   let skipping = false
@@ -330,7 +349,9 @@ async function main() {
     }
     return {
       name: s.name,
-      block: pinImage(stripOmittedServiceEnv(stripProfiles(block))),
+      block: pinImage(
+        stripOmittedServiceEnv(stripProfiles(block, profilesOf(def))),
+      ),
     }
   })
   const volumes = splitBlocks(volumesSection, '  ', true)
@@ -340,6 +361,7 @@ async function main() {
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
     ASSISTANT_SERVICE,
+    AUTOGRAVITY_SERVICE,
   ]
   for (const name of expected) {
     if (!knownNames.has(name)) {
@@ -359,6 +381,8 @@ export const DATABASE_SERVICES = ${JSON.stringify(DATABASE_SERVICES)} as const
 export const TOPOLOGY_SERVICES = ${JSON.stringify(TOPOLOGY_SERVICES, null, 2)}
 
 export const ASSISTANT_SERVICE = ${JSON.stringify(ASSISTANT_SERVICE)}
+
+export const AUTOGRAVITY_SERVICE = ${JSON.stringify(AUTOGRAVITY_SERVICE)}
 
 export const DATABASE_VOLUMES: Record<string, string[]> = ${JSON.stringify(
     {

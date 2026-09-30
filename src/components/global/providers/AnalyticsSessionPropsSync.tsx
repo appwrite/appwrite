@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useLocation, useMatches } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -7,25 +7,24 @@ import { useI18n } from '@/lib/i18n'
 import {
   getAnalyticsPlanFromBillingId,
   getAnalyticsRoutePath,
+  getAnalyticsSurface,
+  getPlausibleScriptSrc,
   setAnalyticsSessionProps,
   trackPageView,
 } from '@/lib/analytics'
-import {
-  canTrackAnalytics,
-  subscribeCookieConsent,
-} from '@/lib/cookie-consent/consent-state'
+import { loadPlausibleScript } from '@/lib/cookie-consent/load-tracking-scripts'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { getConsoleRouteIds } from '@/lib/utils/page-title'
 
 /**
  * Keeps Plausible session custom properties (auth, plan, lang) in sync and
- * records pageviews once auth has settled.
+ * records pageviews.
  *
- * Do not wait for org plan before the first pageview: the global click/dialog
- * tracker can fire earlier, and custom events without a pageview create
- * Plausible visits with 0 pageviews (views/visit < 1). Plan is still synced
- * onto later events as soon as it loads.
+ * Marketing and docs must not wait on `account.get`. That 401 round trip
+ * delayed the first `/home` pageview until after most bounce visitors had
+ * already left. Console / account / auth still wait so `auth` / `plan` are
+ * correct. Org plan is still synced onto later events as soon as it loads.
  */
 export function AnalyticsSessionPropsSync() {
   const location = useLocation()
@@ -34,7 +33,6 @@ export function AnalyticsSessionPropsSync() {
   const { account, isAuthenticated, isFetched } = useAuth()
   const { language } = useI18n()
   const accountUser = account as Models.User | undefined
-  const [consentTick, setConsentTick] = useState(0)
 
   const { projectId, orgId: orgIdFromUrl } = getConsoleRouteIds(
     location.pathname,
@@ -70,22 +68,22 @@ export function AnalyticsSessionPropsSync() {
     lang: language,
   })
 
-  useEffect(() => {
-    return subscribeCookieConsent(() => {
-      setConsentTick((tick) => tick + 1)
-    })
-  }, [])
+  const routePath = getAnalyticsRoutePath(
+    leafRoute?.routeId,
+    location.pathname,
+  )
+  const surface = getAnalyticsSurface(routePath)
+  const waitForAuth =
+    surface === 'console' || surface === 'account' || surface === 'auth'
+  const authGate = waitForAuth ? isFetched : true
 
   useEffect(() => {
-    if (!canTrackAnalytics() || typeof window === 'undefined' || !isFetched)
+    loadPlausibleScript()
+    if (!getPlausibleScriptSrc() || typeof window === 'undefined' || !authGate)
       return
 
-    const routePath = getAnalyticsRoutePath(
-      leafRoute?.routeId,
-      location.pathname,
-    )
     trackPageView(routePath)
-  }, [isFetched, consentTick, leafRoute?.routeId, location.pathname])
+  }, [authGate, routePath])
 
   return null
 }

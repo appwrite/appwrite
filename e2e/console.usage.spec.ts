@@ -250,7 +250,9 @@ test.describe('project usage contract (mocked)', () => {
       waitUntil: 'domcontentloaded',
     })
 
-    await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/?$`))
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${projectId}/overview/?$`),
+    )
   })
 
   test('shows loading cards while the usage response is pending', async ({

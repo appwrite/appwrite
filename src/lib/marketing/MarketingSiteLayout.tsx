@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useMatches, useRouterState } from '@tanstack/react-router'
 import { InitOrgPromoBanner } from '@/components/pages/organizations/$orgId/overview/_components/InitOrgPromoBanner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
@@ -11,7 +11,9 @@ import {
 import { MarketingScrollToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { MarketingSiteLayoutProvider } from '@/lib/marketing/marketing-site-layout-context'
 import { resolveMarketingRouteShellOptions } from '@/lib/marketing/marketing-route-shell'
+import { saveReferrerAndUtmSource } from '@/lib/marketing/utm'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
+import { setMarketingDocumentScroll } from '@/lib/layout/marketing-document-scroll'
 
 type MarketingSiteLayoutProps = {
   children: ReactNode
@@ -19,6 +21,14 @@ type MarketingSiteLayoutProps = {
 
 function isDocsPath(pathname: string): boolean {
   return pathname === '/docs' || pathname.startsWith('/docs/')
+}
+
+function MarketingAcquisitionSourceCapture() {
+  useEffect(() => {
+    saveReferrerAndUtmSource()
+  }, [])
+
+  return null
 }
 
 function MarketingConsoleShell({ children }: MarketingSiteLayoutProps) {
@@ -30,6 +40,19 @@ function MarketingConsoleShell({ children }: MarketingSiteLayoutProps) {
   const isReferenceExplorer = isDocs && isApiReferenceExplorerPath(pathname)
   const docsSearch = useDocsSearchContext()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Console keeps a nested scroller (`#main-content`) because the shell is
+  // `position: fixed`. Plausible only measures window/document scroll, so that
+  // nested scroller reported 100% depth on every marketing visit. Explorer
+  // stays nested so the API docs pane can manage its own overflow.
+  useEffect(() => {
+    if (isReferenceExplorer) {
+      setMarketingDocumentScroll(false)
+      return
+    }
+    setMarketingDocumentScroll(true)
+    return () => setMarketingDocumentScroll(false)
+  }, [isReferenceExplorer])
 
   const shellOptions =
     resolveMarketingRouteShellOptions(matches) ?? {
@@ -91,6 +114,7 @@ export function MarketingSiteLayout({ children }: MarketingSiteLayoutProps) {
   return (
     <MarketingSiteLayoutProvider>
       <DocsSearchProvider>
+        <MarketingAcquisitionSourceCapture />
         <MarketingConsoleShell>{children}</MarketingConsoleShell>
       </DocsSearchProvider>
     </MarketingSiteLayoutProvider>

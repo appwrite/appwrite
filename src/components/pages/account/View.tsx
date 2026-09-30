@@ -123,13 +123,23 @@ export function View() {
         icon: Monitor,
         keywords: ['sessions', 'devices', 'logout', 'revoke'],
       },
-      {
-        id: 'applications',
-        label: t('Applications'),
-        to: '/account/applications',
-        icon: Package,
-        keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
-      },
+      ...(features.accountApplications
+        ? [
+            {
+              id: 'applications',
+              label: t('Applications'),
+              to: '/account/applications',
+              icon: Package,
+              keywords: [
+                'applications',
+                'oauth',
+                'authorized',
+                'consent',
+                'revoke',
+              ],
+            },
+          ]
+        : []),
       ...(features.affiliates
         ? [
             {
@@ -173,7 +183,13 @@ export function View() {
     ]
 
     return items
-  }, [features.affiliates, features.billing, features.browserAlerts, t])
+  }, [
+    features.affiliates,
+    features.billing,
+    features.browserAlerts,
+    features.accountApplications,
+    t,
+  ])
 
   const accountSettingsCardIndex = useMemo(() => {
     return ACCOUNT_SETTINGS_CARD_INDEX.filter((entry) => {
@@ -182,6 +198,9 @@ export function View() {
       }
       if (entry.sectionId === 'affiliates') {
         return features.affiliates
+      }
+      if (entry.sectionId === 'applications') {
+        return features.accountApplications
       }
       if (
         entry.sectionId === 'payment-methods' ||
@@ -203,6 +222,7 @@ export function View() {
     features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
+    features.accountApplications,
   ])
 
   useEffect(() => {

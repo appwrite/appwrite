@@ -11,6 +11,10 @@ export interface Organization {
   avatar?: string
   plan: CanonicalPlanId
   members: number
+  /** Raw billing tier from the organizations API (e.g. tier-1, tier-1-1). */
+  billingPlan?: string
+  /** Specific catalogue plan id when it differs from billingPlan. */
+  billingPlanId?: string
   /** Cloud billing: e.g. `readonly` when the org is restricted after failed payment */
   status?: string
   /** Cloud billing: scheduled downgrade date or marker. */
@@ -35,6 +39,8 @@ export interface Project {
   archived?: boolean
   /** True when the project is paused due to inactivity (cloud). */
   paused?: boolean
+  /** True when the project has an active full moderation block. */
+  blocked?: boolean
   /** Number of times the ping was received for this project. */
   pingCount?: number
   /** Last ping datetime in ISO 8601 format. */
@@ -129,11 +135,11 @@ export interface Invoice {
     | 'overdue'
     | 'failed'
     | 'cancelled'
+    | 'abandoned'
     | 'requires_authentication'
   amount: number
   currency: string
   downloadUrl?: string
-  clientSecret?: string
   lastError?: string
 }
 

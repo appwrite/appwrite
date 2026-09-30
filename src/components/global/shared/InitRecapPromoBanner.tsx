@@ -2,18 +2,23 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
+  consoleBannerFloatingCardShellClassName,
   getConsoleBannerById,
   INIT_RECAP_PROMO_BANNER_ID,
   isConsoleBannerVisible,
   isInitRecapPromoPath,
   POSTGRES_PROMO_BANNER_ID,
+  PRODUCT_HUNT_BANNER_ID,
   shouldHideInitRecapForHeaderPromo,
+  shouldHideInitRecapForNativeOAuthPromo,
   useDebugConsoleBannerPreviews,
+  useNativeOAuthPromoVisibility,
 } from '@/lib/console-banners'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -25,12 +30,14 @@ import {
 
 const INIT_RECAP_PROMO_BANNER = getConsoleBannerById(INIT_RECAP_PROMO_BANNER_ID)!
 const POSTGRES_PROMO_BANNER = getConsoleBannerById(POSTGRES_PROMO_BANNER_ID)!
+const PRODUCT_HUNT_BANNER = getConsoleBannerById(PRODUCT_HUNT_BANNER_ID)!
 
 export function InitRecapPromoBanner() {
   const t = useT()
   const location = useLocation()
   const { account, isAuthenticated } = useAuth()
   const { features } = useConsoleProfile()
+  const { isScreenshotModeActive } = useScreenshotMode()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const dismissBanner = useDismissConsoleBanner()
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
@@ -52,8 +59,14 @@ export function InitRecapPromoBanner() {
     preview: isPreviewEnabled(POSTGRES_PROMO_BANNER_ID),
     dismissed: isConsoleBannerDismissed(prefs, POSTGRES_PROMO_BANNER_ID),
   })
+  const productHuntHeaderVisible = isConsoleBannerVisible(PRODUCT_HUNT_BANNER, {
+    preview: isPreviewEnabled(PRODUCT_HUNT_BANNER_ID),
+    dismissed: isConsoleBannerDismissed(prefs, PRODUCT_HUNT_BANNER_ID),
+  })
+  const headerPromoVisible = postgresHeaderVisible || productHuntHeaderVisible
+  const nativeOAuthPromoVisible = useNativeOAuthPromoVisibility()
 
-  if (!visible) return null
+  if (!visible || isScreenshotModeActive) return null
   if (
     location.pathname === '/init' ||
     location.pathname.startsWith('/init/')
@@ -63,7 +76,15 @@ export function InitRecapPromoBanner() {
   if (!preview) {
     if (!features.init || !isAuthenticated || !onPromoPath) return null
   }
-  if (shouldHideInitRecapForHeaderPromo(location.pathname, postgresHeaderVisible)) {
+  if (shouldHideInitRecapForHeaderPromo(location.pathname, headerPromoVisible)) {
+    return null
+  }
+  if (
+    shouldHideInitRecapForNativeOAuthPromo(
+      location.pathname,
+      nativeOAuthPromoVisible,
+    )
+  ) {
     return null
   }
 
@@ -82,9 +103,8 @@ export function InitRecapPromoBanner() {
 
   return (
     <div
-      className={cn(
-        'fixed bottom-4 start-4 z-50 w-[min(calc(100%-2rem),280px)] overflow-hidden rounded-lg border border-[#2d2d31]',
-        'bg-[linear-gradient(to_bottom,#0d0d10_0%,#131316_55%,#19191c_100%)]',
+      className={consoleBannerFloatingCardShellClassName(
+        INIT_RECAP_PROMO_BANNER.cardSize,
       )}
     >
       <div className="relative flex h-[180px] items-center justify-center overflow-hidden">

@@ -3,7 +3,8 @@
  *
  * Filterable attributes match `listExecutions` / `listLogs` SDK docs:
  * trigger, status, responseStatusCode, duration, requestMethod, requestPath,
- * deploymentId (plus $id and $createdAt).
+ * deploymentId (plus $id and $createdAt). `listLogs` does not accept `trigger`,
+ * so site logs use `siteLogsFilterColumns`.
  */
 
 import type { FilterColumn } from '../types'
@@ -22,6 +23,11 @@ const EXECUTION_TRIGGER_ELEMENTS = [
   { value: 'event', label: 'Event' },
 ]
 
+/**
+ * Values match the public `ExecutionMethod` enum. Stored executions hold the method
+ * in either case, so filters on `requestMethod` match both spellings - see
+ * CASE_INSENSITIVE_ATTRIBUTES in ../operators.
+ */
 const EXECUTION_METHOD_ELEMENTS = [
   { value: 'GET', label: 'GET' },
   { value: 'POST', label: 'POST' },
@@ -64,3 +70,10 @@ export const executionsFilterColumns: FilterColumn[] = [
   { id: 'duration', title: 'Duration', type: 'double' },
   { id: '$createdAt', title: '$createdAt', type: 'datetime' },
 ]
+
+/**
+ * Site logs: same columns minus `trigger`, which `listLogs` rejects
+ * (site logs are always HTTP-triggered).
+ */
+export const siteLogsFilterColumns: FilterColumn[] =
+  executionsFilterColumns.filter((column) => column.id !== 'trigger')

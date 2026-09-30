@@ -31,14 +31,14 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
+    runs-on: gcrunner=${{ github.run_id }}-qa-${{ strategy.job-index }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      # RunsOn instances share a few NAT egress IPs, and launching all ~40
-      # lanes at once got the runners' downloads throttled per-IP (mise's
-      # bootstrap curl died with connection resets). 15 concurrent jobs is
-      # the scale the web QA workflow runs at without issues.
+      # Launching all ~40 lanes at once got the runners' downloads throttled
+      # per-IP behind shared NAT egress (mise's bootstrap curl died with
+      # connection resets). 15 concurrent jobs is the scale the web QA
+      # workflow runs at without issues.
       max-parallel: 15
       matrix:
         # Two sample shapes, two assertion tools:
@@ -47,9 +47,7 @@ jobs:
         #     against the running server.
         #   kind: cli - the sample runs to completion; commander
         #     (commander.yaml) asserts its exit code and printed output.
-        # Runtimes not preinstalled on ubuntu-latest come from mise (tools:)
-        # or a setup action (swift, dart); python, php, ruby, go, rust and
-        # dotnet use the runner's.
+        # Every lane installs its runtime: mise (tools:) or a setup action.
         include:
           - id: node-vanilla
             kind: cli
@@ -419,8 +417,8 @@ jobs:
           # Install only this directory's assertion tools plus the lane's
           # runtime - a bare `mise install` would also pull node, maestro and
           # the JDK from the parent tests/connect-qa/mise.toml, which server
-          # lanes never use. On RunsOn all matrix jobs share a few NAT egress
-          # IPs, and the whole matrix downloading the JDK at once got
+          # lanes never use. All matrix jobs share a few NAT egress IPs, and
+          # the whole matrix downloading the JDK at once got
           # throttled (http2 "refused stream"). The retry with backoff and
           # jitter absorbs any throttling that still occurs.
           install_tools() {
@@ -438,6 +436,28 @@ jobs:
             sleep "$delay"
           done
           install_tools
+
+      - name: Install Python
+        if: startsWith(matrix.id, 'python')
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Install Go
+        if: startsWith(matrix.id, 'go')
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+
+      - name: Install .NET
+        if: startsWith(matrix.id, 'dotnet')
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Install Rust
+        if: startsWith(matrix.id, 'rust')
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
 
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')
@@ -496,7 +516,7 @@ jobs:
           echo "Waiting for http://localhost:${{ matrix.port }}/v1/policies ..."
           # No -f: any HTTP response means the server is accepting
           # connections; Hurl does the real status/body assertions next.
-          for i in $(seq 1 120); do
+          for _ in $(seq 1 120); do
             if curl -s -o /dev/null "http://localhost:${{ matrix.port }}/v1/policies"; then
               echo "Server is up."
               exit 0

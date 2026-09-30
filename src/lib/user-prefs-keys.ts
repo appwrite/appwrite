@@ -54,10 +54,24 @@ export type UserPrefs = Record<string, unknown>
 export const USER_PREFS_KEY_ORGANIZATION = 'organization'
 
 /**
- * Comma-separated feature IDs the user has dismissed (coming-soon curtains).
- * Value: string (legacy array format may still appear until rewritten).
+ * Comma-separated feature IDs the user asked to be notified about (coming-soon
+ * curtains, SMTP quick setup providers). Value: string (legacy array format
+ * may still appear until rewritten).
  */
 export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
+
+export function parseFeatureNotificationIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string')
+  }
+  return []
+}
 
 /**
  * Comma-separated console banner IDs the user has dismissed.
@@ -113,6 +127,70 @@ export function clearDismissedBannerPrefs(
     return rest as UserPrefs
   }
   return { ...base, [USER_PREFS_KEY_DISMISSED_BANNERS]: next.join(',') }
+}
+
+/**
+ * Project IDs where the user dismissed the Agents landing so project root
+ * goes to Overview. Value: JSON string of project ID strings.
+ */
+export const USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS =
+  'console.agents.dismissedProjectIds'
+
+const MAX_AGENTS_DISMISSED_PROJECT_IDS = 200
+
+function parseProjectIdList(raw: unknown): string[] {
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed) as unknown
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (id): id is string => typeof id === 'string' && id.length > 0,
+        )
+      }
+    } catch {
+      return trimmed
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    }
+    return []
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string' && id.length > 0)
+  }
+  return []
+}
+
+export function parseAgentsDismissedProjectIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  return parseProjectIdList(
+    prefs?.[USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS],
+  ).slice(0, MAX_AGENTS_DISMISSED_PROJECT_IDS)
+}
+
+export function isProjectAgentsLandingDismissed(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): boolean {
+  if (!projectId) return false
+  return parseAgentsDismissedProjectIds(prefs).includes(projectId)
+}
+
+export function mergeAgentsDismissedProjectIdsPrefs(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): UserPrefs {
+  const current = parseAgentsDismissedProjectIds(prefs)
+  const next = current.includes(projectId)
+    ? current
+    : [...current, projectId].slice(0, MAX_AGENTS_DISMISSED_PROJECT_IDS)
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS]: JSON.stringify(next),
+  }
 }
 
 /**
@@ -3713,8 +3791,13 @@ type RecentImpersonationDetails = {
   email?: string
 }
 
+/** sessionStorage: Record<operatorId, RecentImpersonationUser[]> not yet saved to prefs */
 const SESSION_STORAGE_RECENT_BY_OPERATOR_KEY =
   'console.impersonation.recentByOperator'
+
+/** sessionStorage: Record<operatorId, RecentImpersonationUser[]> this tab last saved to prefs */
+const SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY =
+  'console.impersonation.recentSavedByOperator'
 
 /** localStorage: Record<operatorId, Record<userId, { name?, email? }>> */
 const LOCAL_STORAGE_RECENT_DETAILS_BY_OPERATOR_KEY =
@@ -3776,10 +3859,12 @@ function sanitizeRecentImpersonationList(
   return out
 }
 
-function readRecentByOperatorMap(): Record<string, RecentImpersonationUser[]> {
+function readRecentByOperatorMap(
+  storageKey = SESSION_STORAGE_RECENT_BY_OPERATOR_KEY,
+): Record<string, RecentImpersonationUser[]> {
   if (typeof sessionStorage === 'undefined') return {}
   try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_RECENT_BY_OPERATOR_KEY)
+    const raw = sessionStorage.getItem(storageKey)
     if (!raw) return {}
     const parsed = JSON.parse(raw) as unknown
     if (typeof parsed !== 'object' || parsed === null) return {}
@@ -3798,6 +3883,7 @@ function readRecentByOperatorMap(): Record<string, RecentImpersonationUser[]> {
 
 function writeRecentByOperatorMap(
   map: Record<string, RecentImpersonationUser[]>,
+  storageKey = SESSION_STORAGE_RECENT_BY_OPERATOR_KEY,
 ) {
   if (typeof sessionStorage === 'undefined') return
   try {
@@ -3805,10 +3891,7 @@ function writeRecentByOperatorMap(
     for (const [operatorId, list] of Object.entries(map)) {
       sanitized[operatorId] = sanitizeRecentImpersonationList(list)
     }
-    sessionStorage.setItem(
-      SESSION_STORAGE_RECENT_BY_OPERATOR_KEY,
-      JSON.stringify(sanitized),
-    )
+    sessionStorage.setItem(storageKey, JSON.stringify(sanitized))
   } catch {
     /* private mode / quota */
   }
@@ -3871,9 +3954,14 @@ function writeRecentDetailsByOperatorMap(
   }
 }
 
+/** Labels kept per operator. Larger than the recents list so names outlive list churn. */
+const MAX_RECENT_IMPERSONATION_DETAILS = MAX_RECENT_IMPERSONATION_USERS * 4
+
 /**
  * Persist short display labels for recent targets in localStorage (not account prefs).
  * Call whenever the operator's recent list changes so the picker can show names offline.
+ * Labels for users outside `list` are kept (up to a cap): a partial list, such as
+ * one tab's session list, must not erase the names of the other recent targets.
  */
 export function writeRecentImpersonationDetails(
   operatorId: string,
@@ -3894,6 +3982,11 @@ export function writeRecentImpersonationDetails(
     if (name) details.name = name
     if (email) details.email = email
     if (details.name || details.email) byUser[user.$id] = details
+  }
+
+  for (const [userId, details] of Object.entries(previous)) {
+    if (Object.keys(byUser).length >= MAX_RECENT_IMPERSONATION_DETAILS) break
+    if (!byUser[userId]) byUser[userId] = details
   }
 
   if (Object.keys(byUser).length === 0) {
@@ -3921,7 +4014,10 @@ function enrichRecentImpersonationUsers(
   })
 }
 
-/** While impersonating, prefs belong to the target user - store recents per operator here until exit. */
+/**
+ * Recent targets picked in this tab but not saved to operator prefs yet: prefs can't
+ * be written while impersonating, and a navigation can cut a write off.
+ */
 export function readRecentImpersonationSessionList(
   operatorId: string,
 ): RecentImpersonationUser[] {
@@ -3953,6 +4049,34 @@ export function clearRecentImpersonationSessionList(operatorId: string) {
   const map = readRecentByOperatorMap()
   delete map[id]
   writeRecentByOperatorMap(map)
+}
+
+/**
+ * The recent list this tab last saved to operator prefs, shown while impersonating
+ * (prefs are unreadable then). Display only: another tab may have saved newer
+ * targets since, so never merge it into a prefs write.
+ */
+export function readRecentImpersonationSavedList(
+  operatorId: string,
+): RecentImpersonationUser[] {
+  const id = operatorId?.trim()
+  if (!id) return []
+  const map = readRecentByOperatorMap(SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
+  return enrichRecentImpersonationUsers(
+    id,
+    sanitizeRecentImpersonationList(map[id]),
+  )
+}
+
+export function writeRecentImpersonationSavedList(
+  operatorId: string,
+  list: RecentImpersonationUser[],
+) {
+  const id = operatorId?.trim()
+  if (!id) return
+  const map = readRecentByOperatorMap(SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
+  map[id] = sanitizeRecentImpersonationList(list)
+  writeRecentByOperatorMap(map, SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
 }
 
 /**

@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
@@ -70,7 +71,7 @@ function CloudStatusBannerInner({
   const regionsLine =
     mockCloudStatusAlert === 'live' ? data?.regionsLine : undefined
 
-  const statusUrl = 'https://status.appwrite.online'
+  const statusUrl = 'https://appwrite.online'
 
   return (
     <motion.div
@@ -88,13 +89,13 @@ function CloudStatusBannerInner({
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            'relative flex min-h-14 min-w-0 flex-col gap-3 px-4 py-3 transition-all duration-200 hover:opacity-95 sm:flex-row sm:items-center sm:gap-4',
+            'relative flex min-h-14 min-w-0 items-center gap-3 px-4 py-3 transition-all duration-200 hover:opacity-95 sm:gap-4',
             presentation.containerClassName,
           )}
         >
-          <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
-            <p className="text-[13px] font-medium leading-snug">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Icon className="h-4 w-4 shrink-0" />
+            <p className="min-w-0 truncate text-[13px] font-medium leading-snug sm:whitespace-normal">
               {t(presentation.title)}
               {activeReportTitle ? (
                 <>
@@ -120,7 +121,7 @@ function CloudStatusBannerInner({
           </div>
           <span
             className={cn(
-              'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ms-auto',
+              'ms-auto flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium',
               presentation.buttonClassName,
             )}
           >
@@ -135,6 +136,7 @@ function CloudStatusBannerInner({
 }
 
 export function CloudStatusBanner() {
+  const { isScreenshotModeActive } = useScreenshotMode()
   const { isCloud, features } = useConsoleProfile()
   const { account, isFetched } = useAuth()
   const cloudStatusEnabled = isCloud && features.systemStatus
@@ -160,7 +162,7 @@ export function CloudStatusBanner() {
     }
   }, [aggregateState])
 
-  if (!cloudStatusEnabled || !showToOperator) {
+  if (!cloudStatusEnabled || !showToOperator || isScreenshotModeActive) {
     return null
   }
 

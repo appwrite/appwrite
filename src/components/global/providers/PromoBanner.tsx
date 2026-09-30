@@ -1,5 +1,7 @@
 import {
   createContext,
+  lazy,
+  Suspense,
   useContext,
   useState,
   useCallback,
@@ -9,8 +11,32 @@ import {
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InitRecapPromoBanner } from '@/components/global/shared/InitRecapPromoBanner'
+import {
+  FIREWALL_PROMO_BANNER_ENABLED,
+  FIREWALL_PROMO_BANNER_ID,
+  useDebugConsoleBannerPreviews,
+} from '@/lib/console-banners'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
+
+const FirewallPromoBannerLazy = lazy(() =>
+  import('@/components/global/shared/FirewallPromoBanner').then((module) => ({
+    default: module.FirewallPromoBanner,
+  })),
+)
+
+function FirewallPromoBannerGate() {
+  const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
+  const show =
+    FIREWALL_PROMO_BANNER_ENABLED ||
+    isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
+  if (!show) return null
+  return (
+    <Suspense fallback={null}>
+      <FirewallPromoBannerLazy />
+    </Suspense>
+  )
+}
 
 export interface PromoBannerItem {
   id: string
@@ -284,6 +310,7 @@ export function PromoBannerProvider({ children }: PromoBannerProviderProps) {
     >
       {children}
       <InitRecapPromoBanner />
+      <FirewallPromoBannerGate />
       <PromoBannerComponent
         banners={banners}
         onDismiss={removeBanner}

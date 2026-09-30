@@ -132,7 +132,7 @@ export function CookieConsentBanner({
             style={{
               transform: `translate3d(0, ${translateY}px, 0)`,
             }}
-            role="dialog"
+            role="region"
             aria-labelledby="cookie-consent-title"
             aria-describedby="cookie-consent-description"
           >
@@ -228,11 +228,11 @@ export function CookieConsentBanner({
                   htmlFor="cookie-consent-analytics"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  {t('Analytics')}
+                  {t('Error reporting')}
                 </Label>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
                   {t(
-                    'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.',
+                    'Crash and performance diagnostics to help us fix issues in Appwrite.',
                   )}
                 </p>
               </div>

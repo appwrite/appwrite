@@ -2,7 +2,7 @@ import { Bell, CheckCircle2, Mail, Phone, Users } from 'lucide-react'
 import type { CSSProperties, LucideIcon } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { productBentoContainer, productBentoIdle } from './MockSyntax'
+import { productBentoContainer, productBentoIdle, productBentoLightAngle, productBentoLightStyle, productBentoSoftFillHover } from './MockSyntax'
 
 /** Brand supporting palette (orange, mint, purple) plus primary CTA pink. */
 const BRAND = {
@@ -44,9 +44,13 @@ function ChannelPill({
     <div
       className={cn(
         'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors duration-300 sm:text-[12px]',
-        'group-hover:bg-[color-mix(in_srgb,var(--channel-color)_16%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-background motion-reduce:group-hover:text-muted-foreground',
+        'group-hover:text-foreground motion-reduce:group-hover:text-muted-foreground',
+        productBentoSoftFillHover,
       )}
-      style={channelColorStyle(color, { transitionDelay: `${index * 60}ms` })}
+      style={productBentoLightStyle(color, productBentoLightAngle(index), {
+        '--channel-color': color,
+        transitionDelay: `${index * 60}ms`,
+      } as CSSProperties)}
     >
       <Icon
         className="size-3.5 shrink-0 transition-colors duration-300 group-hover:text-[var(--channel-color)] motion-reduce:group-hover:text-muted-foreground"
@@ -60,10 +64,12 @@ function ChannelPill({
 function DeliveryChip({
   label,
   color,
+  index,
   delayMs,
 }: {
   label: string
   color: string
+  index: number
   delayMs: number
 }) {
   const t = useT()
@@ -72,9 +78,13 @@ function DeliveryChip({
       className={cn(
         'flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 px-2 py-1.5 text-muted-foreground transition-colors duration-300',
         productBentoContainer.panelMd,
-        'group-hover:bg-[color-mix(in_srgb,var(--channel-color)_10%,var(--background))] group-hover:text-foreground motion-reduce:group-hover:bg-card/70 motion-reduce:group-hover:text-muted-foreground',
+        'group-hover:text-foreground motion-reduce:group-hover:text-muted-foreground',
+        productBentoSoftFillHover,
       )}
-      style={channelColorStyle(color, { transitionDelay: `${delayMs}ms` })}
+      style={productBentoLightStyle(color, productBentoLightAngle(index + 1), {
+        '--channel-color': color,
+        transitionDelay: `${delayMs}ms`,
+      } as CSSProperties)}
     >
       <CheckCircle2
         className={cn(
@@ -173,6 +183,7 @@ export function MessagingProductVisual() {
                     key={channel.id}
                     label={channel.label}
                     color={channel.color}
+                    index={index}
                     delayMs={220 + index * 120}
                   />
                 ))}

@@ -14,7 +14,7 @@ faqs:
   - question: "What should I evaluate when picking a backend for a Lovable app?"
     answer: "Auth that covers email, OAuth, MFA, and roles; a data model with explicit tables, columns, and row-level access rules; file storage with permissions tied to the data model; server-side functions with secrets and logs; realtime updates without standing up a message bus; hosting with custom domains, env vars, and rollbacks; agent access through a docs MCP and an API MCP; and an exit path through data export and self-hosting."
   - question: "Can I use Appwrite as a backend for a Lovable app?"
-    answer: "Yes. The integration is not the in-chat one-click flow Supabase has. It happens through the Appwrite docs MCP server connected as a Lovable personal connector pointing at https://mcp-for-docs.appwrite.io, plus the Appwrite web SDK for the generated frontend. Heavier work like schema changes, server-side logic, and deploys happens through the Appwrite Console, SDKs, CLI, or other AI tools configured with the Appwrite MCP servers."
+    answer: "Yes. The integration is not the in-chat one-click flow Supabase has. It happens through the Appwrite docs MCP server connected as a Lovable personal connector pointing at https://mcp.appwrite.io, plus the Appwrite web SDK for the generated frontend. Heavier work like schema changes, server-side logic, and deploys happens through the Appwrite Console, SDKs, CLI, or other AI tools configured with the Appwrite MCP servers."
   - question: "Does Appwrite Functions stream LLM responses for Lovable apps?"
     answer: "No. Appwrite Functions, like most serverless function products, return complete HTTP responses rather than streamed output. If your Lovable app needs token-by-token streaming from a model, plan for that at the client or proxy layer, not inside an Appwrite Function. Functions still cover model calls, webhooks, scheduled jobs, and admin actions where streaming is not required."
   - question: "Should I migrate an existing Lovable plus Supabase app to Appwrite?"
@@ -146,7 +146,7 @@ Here is how the pieces line up against the checklist.
 
 **Sites.** Appwrite Sites gives you source-control deploys, custom domains, environment variables, rollbacks, logs, and delivery through the Appwrite Network.
 
-**MCP.** Appwrite ships two MCP servers that matter for Lovable users. The docs MCP server connects to Lovable as a custom chat connector, via Connectors, Chat connectors, and New MCP server, pointing at `https://mcp-for-docs.appwrite.io`. The API MCP server lets other AI tools act on Appwrite resources with a project ID and API key.
+**MCP.** Appwrite ships two MCP servers that matter for Lovable users. The docs MCP server connects to Lovable as a custom chat connector, via Connectors, Chat connectors, and New MCP server, pointing at `https://mcp.appwrite.io`. The API MCP server lets other AI tools act on Appwrite resources with a project ID and API key.
 
 **Ownership.** Appwrite is open source. You can use Appwrite Cloud or self-host, which keeps the exit path open.
 

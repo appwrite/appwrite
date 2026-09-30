@@ -112,6 +112,16 @@ export function InviteMembersDialog({
   const t = useT()
   const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
+  const roleOptions = useMemo(
+    () =>
+      ROLE_OPTIONS.filter(
+        (role) =>
+          features.orgRoles ||
+          role.value === 'owner' ||
+          role.value === 'developer',
+      ),
+    [features.orgRoles],
+  )
   const [invites, setInvites] = useState<InviteMember[]>([
     { email: '', role: 'owner' },
   ])
@@ -137,8 +147,7 @@ export function InviteMembersDialog({
         buildProjectRole(row.projectId, row.roleName),
       )
     }
-    // When orgRoles is disabled, all members are owners
-    return [features.orgRoles ? invite.role : 'owner']
+    return [invite.role]
   }
 
   // Check if we're at or near the limit
@@ -190,14 +199,17 @@ export function InviteMembersDialog({
       invites.length > 0 &&
       invites.every(
         (invite) =>
-          invite.email.trim() !== '' && isValidEmail(invite.email.trim()),
+          invite.email.trim() !== '' &&
+          isValidEmail(invite.email.trim()) &&
+          (useProjectAccess ||
+            roleOptions.some((role) => role.value === invite.role)),
       ) &&
       canAddMore &&
       // Granting per-project access with no projects selected would send an
       // invite that carries no access at all.
       (!useProjectAccess || validProjectAccess.length > 0)
     )
-  }, [invites, canAddMore, useProjectAccess, validProjectAccess])
+  }, [invites, canAddMore, useProjectAccess, validProjectAccess, roleOptions])
 
   // Create membership mutation
   const createMembershipMutation = useMutation({
@@ -431,7 +443,7 @@ export function InviteMembersDialog({
                     idx !== index &&
                     i.email.trim() !== '',
                 ).length > 0
-              const selectedRole = ROLE_OPTIONS.find(
+              const selectedRole = roleOptions.find(
                 (r) => r.value === invite.role,
               )
               const RoleIcon = selectedRole?.icon || Shield
@@ -483,10 +495,8 @@ export function InviteMembersDialog({
                     )}
                   </div>
 
-                  {/* Role Select - hidden when orgRoles disabled (all members are
-                      owners), and when access is per project (the role is set
-                      per project row instead) */}
-                  {features.orgRoles && !useProjectAccess && (
+                  {/* Per-project access sets the role on each project row. */}
+                  {!useProjectAccess && (
                     <div className="w-36 shrink-0">
                       <Select
                         value={invite.role}
@@ -508,7 +518,7 @@ export function InviteMembersDialog({
                           </div>
                         </SelectTrigger>
                         <SelectContent className="min-w-[240px]">
-                          {ROLE_OPTIONS.map((role) => {
+                          {roleOptions.map((role) => {
                             const Icon = role.icon
                             return (
                               <SelectItem key={role.value} value={role.value}>

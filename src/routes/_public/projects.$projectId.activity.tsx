@@ -12,7 +12,6 @@ import {
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { isUsageHistoryLimitExceededError } from '@/lib/usage/usage-history-errors'
 
 const activitySearchSchema = z.object({
   /** Activity event `$id` - opens the detail drawer when valid. */
@@ -27,7 +26,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().activity) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId: params.projectId },
         replace: true,
       })
@@ -43,7 +42,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
     const canAccess = await canAccessProjectActivity(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId },
         replace: true,
       })
@@ -69,14 +68,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       filterQueryKey,
     })
 
-    let activities
-    try {
-      activities = await queryClient.ensureQueryData(activitiesOptions)
-    } catch (error) {
-      if (!isUsageHistoryLimitExceededError(error)) throw error
-    }
+    // Activity events come from ClickHouse. Never block or fail this route if
+    // that store is down, slow, or returns a retention/history error. The View
+    // still fetches and shows a retryable error state.
+    const activities = await Promise.race([
+      queryClient.ensureQueryData(activitiesOptions).catch(() => undefined),
+      new Promise<undefined>((resolve) => {
+        window.setTimeout(() => resolve(undefined), 4000)
+      }),
+    ])
 
-    await queryClient
+    void queryClient
       .ensureQueryData(countriesQueryOptions())
       .catch(() => undefined)
 

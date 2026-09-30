@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
@@ -30,13 +30,13 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
+  TriangleAlert,
   Sparkles,
   Eye,
   Home,
   LayoutDashboard,
   BookOpen,
   Clock,
-  ExternalLink,
 } from 'lucide-react'
 import {
   useAuth,
@@ -45,6 +45,7 @@ import {
 import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   getConsoleAccountFromCache,
   getConsoleAccountSync,
@@ -383,7 +384,7 @@ interface ConsoleHeaderProps {
 }
 
 /** Survives header remounts: fade once on first reveal, then keep the last auth UI. */
-let marketingHeaderAuthSnapshot = {
+const marketingHeaderAuthSnapshot = {
   revealed: false,
   authenticated: false,
   playedFade: false,
@@ -446,10 +447,30 @@ export function ConsoleHeader({
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
   const orgIdFromRoute = params?.orgId as string | undefined
+  const preferredOrgId = headerAccount?.prefs?.organization as
+    | string
+    | undefined
   const orgId = projectId
     ? (project?.teamId ?? undefined)
-    : (orgIdFromRoute ??
-      (headerAccount?.prefs?.organization as string | undefined))
+    : (orgIdFromRoute ?? preferredOrgId)
+  const isAccountScope = location.pathname.startsWith('/account')
+  const isAgentScope = isAgentPagePath(location.pathname)
+  const shouldValidateBackOrganizationLink =
+    (isAccountScope || isAgentScope) && !!orgId && !!headerAccount
+  const { data: consoleOrganizations, isSuccess: consoleOrganizationsLoaded } =
+    useQuery({
+      ...organizationsQueryOptions(),
+      enabled: shouldValidateBackOrganizationLink,
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    })
+  const backToOrganizationOrgId = shouldValidateBackOrganizationLink
+    ? consoleOrganizationsLoaded &&
+      consoleOrganizations?.teams?.some((team) => team.$id === orgId)
+      ? orgId
+      : undefined
+    : orgId
   const { features, isCloud } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
@@ -544,11 +565,11 @@ export function ConsoleHeader({
     headerAccount?.mfa === true ||
     headerAccount?.twoFactorAuthenticatorEnabled === true
 
+  const isPasswordPwned = headerAccount?.passwordPwned === true
+
   const hasSidebar = !isOrgOverview
-  const isAccountScope = location.pathname.startsWith('/account')
-  const isAgentScope = isAgentPagePath(location.pathname)
   const showBackToOrganization =
-    (isAccountScope || isAgentScope) && Boolean(orgId)
+    (isAccountScope || isAgentScope) && Boolean(backToOrganizationOrgId)
   const isInitScope =
     (features.init || preLaunch) && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
@@ -625,7 +646,6 @@ export function ConsoleHeader({
   const accountMenuLinks = getAccountMenuLinks({
     pathname: location.pathname,
     showMarketingNav,
-    isCloud,
   })
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
@@ -641,7 +661,7 @@ export function ConsoleHeader({
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
-          'ps-3 pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
+          'ps-2 pe-2 @[390px]:ps-3 @[390px]:pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
           // Equal side columns keep the marketing nav centered whether the right
           // cluster is Sign in/up or search + account actions.
           showMarketingLinks
@@ -743,13 +763,13 @@ export function ConsoleHeader({
                 aria-label="Appwrite"
                 className={cn(
                   'group inline-flex shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  showMarketingNav ? 'h-10 w-auto px-2' : 'size-10',
+                  showMarketingNav ? 'h-10 w-auto px-0 @[390px]:px-2' : 'size-10',
                   childClassName,
                 )}
               >
                 {showMarketingNav ? (
                   <AppwriteWordmark
-                    className="h-5 transition-transform duration-150 ease-out group-hover:scale-[1.02]"
+                    className="h-4 transition-transform duration-150 ease-out group-hover:scale-[1.02] @[390px]:h-5"
                     aria-label="Appwrite"
                   />
                 ) : (
@@ -770,12 +790,12 @@ export function ConsoleHeader({
                   {headerTitleSuffix ? (
                     <>
                       <span
-                        className="shrink-0 text-[15px] text-muted-foreground/40"
+                        className="hidden shrink-0 text-[15px] text-muted-foreground/40 @[640px]:inline"
                         aria-hidden
                       >
                         |
                       </span>
-                      <span className="truncate text-[13px] font-medium text-muted-foreground">
+                      <span className="hidden truncate text-[13px] font-medium text-muted-foreground @[640px]:inline">
                         {headerTitleSuffix}
                       </span>
                     </>
@@ -815,14 +835,17 @@ export function ConsoleHeader({
           })()}
 
           {/* Account / agent scope quick return */}
-          {showBackToOrganization && orgId ? (
+          {showBackToOrganization && backToOrganizationOrgId ? (
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              <Link to="/organizations/$orgId" params={{ orgId }}>
+              <Link
+                to="/organizations/$orgId"
+                params={{ orgId: backToOrganizationOrgId }}
+              >
                 <ArrowLeft className="h-4 w-4" />
                 {headerCopy.actions.backToOrganization}
               </Link>
@@ -1389,7 +1412,7 @@ export function ConsoleHeader({
                 asChild
                 size="sm"
                 variant="brandCta"
-                className="h-9 text-[13px]"
+                className="h-9 px-2 text-[13px] @[390px]:px-3"
               >
                 <Link
                   to="/sign-up"
@@ -1495,7 +1518,6 @@ export function ConsoleHeader({
                       source="navbar"
                       orgId={orgId}
                       projectId={projectId ?? ''}
-                      billingPlanId={organizationPlan?.$id}
                     />
                   </div>
 
@@ -1638,8 +1660,25 @@ export function ConsoleHeader({
                   className="w-64 border-border bg-popover p-1"
                 >
                   <div className="px-3 py-3 text-start">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {displayName}
+                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                      <span className="truncate">{displayName}</span>
+                      {isPasswordPwned && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TriangleAlert
+                              aria-label={
+                                headerCopy.accountMenu.passwordBreached
+                              }
+                              className="h-3.5 w-3.5 shrink-0 text-red-500"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              {headerCopy.accountMenu.passwordBreached}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </p>
                     {userEmail && (
                       <p className="text-[12px] text-muted-foreground">
@@ -1705,43 +1744,53 @@ export function ConsoleHeader({
                       </div>
                     )}
 
-                    {/* Account Status */}
+                    {/* Account status: activity and 2FA in one list */}
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <p className="text-[14px] text-foreground">
-                          {accountStatus}
-                        </p>
-                      </div>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <span className="flex h-3.5 w-3.5 items-center justify-center">
+                            <span
+                              className={cn(
+                                'h-2 w-2 rounded-full',
+                                headerAccount
+                                  ? 'bg-emerald-500'
+                                  : 'bg-muted-foreground',
+                              )}
+                            />
+                          </span>
+                          <p className="text-[14px] text-foreground">
+                            {accountStatus}
+                          </p>
+                        </li>
+                        {features.accountMfa && (
+                          <li className="flex items-center gap-2">
+                            <Shield
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                is2FAEnabled
+                                  ? 'text-emerald-500'
+                                  : 'text-muted-foreground',
+                              )}
+                            />
+                            <p
+                              className={cn(
+                                'text-[14px]',
+                                is2FAEnabled
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground',
+                              )}
+                            >
+                              {is2FAEnabled
+                                ? headerCopy.accountMenu.twoFactorEnabled
+                                : headerCopy.accountMenu.twoFactorDisabled}
+                            </p>
+                          </li>
+                        )}
+                      </ul>
                     </div>
-
-                    {features.accountMfa && (
-                      <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
-                          {headerCopy.accountMenu.twoFactor}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {is2FAEnabled ? (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                              <p className="text-[14px] text-foreground">
-                                {headerCopy.accountMenu.enabled}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                              <p className="text-[14px] text-muted-foreground">
-                                {headerCopy.accountMenu.disabled}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Account ID */}
                     {accountId && (
@@ -1890,23 +1939,6 @@ export function ConsoleHeader({
                               <span>{headerCopy.accountMenu.changelog}</span>
                             </Link>
                           )}
-                        </DropdownMenuItem>
-                      )}
-
-                      {/* Temporary: remove once the old console is retired.
-                        Cloud only: self-hosted 2.0 ships no legacy console. */}
-                      {accountMenuLinks.includes('oldConsole') && (
-                        <DropdownMenuItem asChild>
-                          <a
-                            href="https://cloud.appwrite.io"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-old-console')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.oldConsole}</span>
-                          </a>
                         </DropdownMenuItem>
                       )}
                     </>

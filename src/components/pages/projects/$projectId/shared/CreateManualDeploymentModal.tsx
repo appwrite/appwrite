@@ -13,17 +13,25 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Upload, Loader2, FileArchive } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  DEPLOYMENT_ARCHIVE_ACCEPT,
+  isDeploymentArchive,
+} from '@/lib/deployment-archive'
+import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export type CreateManualDeploymentResourceType = 'function' | 'site'
 
-/** Default max upload size (10MB). Can be overridden by plan/env. */
-export const DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES = 10 * 1024 * 1024
+/** The server's own fallback when _APP_COMPUTE_SIZE_LIMIT is unset. */
+export const DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES = 30_000_000
 
 export interface CreateManualDeploymentModalProps {
   open: boolean
@@ -32,13 +40,8 @@ export interface CreateManualDeploymentModalProps {
   projectId: string
   resourceId: string
   onSuccess?: () => void
-  /** Max file size in bytes; default 10MB */
+  /** Max file size in bytes; defaults to the limit the server enforces for the project */
   maxFileSizeBytes?: number
-}
-
-function isTarGzFile(file: File): boolean {
-  const name = file.name?.toLowerCase() ?? ''
-  return name.endsWith('.tar.gz') || name.endsWith('.tgz')
 }
 
 export function CreateManualDeploymentModal({
@@ -48,9 +51,24 @@ export function CreateManualDeploymentModal({
   projectId,
   resourceId,
   onSuccess,
-  maxFileSizeBytes = DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES,
+  maxFileSizeBytes: maxFileSizeBytesProp,
 }: CreateManualDeploymentModalProps) {
   const t = useT()
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { computeSizeLimit } = useConsoleVariables(project?.region)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const planSize = plan?.deploymentSize
+  // As on the server, a Cloud plan's deploymentSize replaces _APP_COMPUTE_SIZE_LIMIT
+  // and 0 means no limit. MAX_SAFE_INTEGER is the stand-in plan from a failed
+  // request, so the limit is unknown.
+  const serverSizeLimit = !getActiveProfileFeatures().billing
+    ? (computeSizeLimit ?? DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES)
+    : planSize !== undefined && planSize < Number.MAX_SAFE_INTEGER
+      ? planSize * 1_000_000
+      : undefined
+  const maxFileSizeBytes = maxFileSizeBytesProp ?? serverSizeLimit
+  // Floor, so the shown limit never exceeds what is enforced
+  const maxMb = Math.floor((maxFileSizeBytes ?? 0) / 1_000_000)
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -74,12 +92,11 @@ export function CreateManualDeploymentModal({
   }
 
   const validateFile = (f: File): string | null => {
-    if (!isTarGzFile(f)) {
+    if (!isDeploymentArchive(f)) {
       return t('Only .tar.gz files are allowed.')
     }
-    if (f.size > maxFileSizeBytes) {
-      const mb = (maxFileSizeBytes / (1024 * 1024)).toFixed(0)
-      return `${t('File size exceeds')} ${mb}MB.`
+    if (maxFileSizeBytes && f.size > maxFileSizeBytes) {
+      return `${t('File is too large. Maximum size:')} ${maxMb}MB`
     }
     return null
   }
@@ -94,6 +111,7 @@ export function CreateManualDeploymentModal({
     if (err) {
       setValidationError(err)
       setFile(null)
+      if (inputRef.current) inputRef.current.value = ''
       return
     }
     setFile(chosen)
@@ -196,17 +214,22 @@ export function CreateManualDeploymentModal({
     mutation.mutate()
   }
 
-  const maxMb = (maxFileSizeBytes / (1024 * 1024)).toFixed(0)
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Create manual deployment')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Upload a .tar.gz archive of your code. Maximum file size is')}{' '}
-            {maxMb}
-            MB.
+            {maxFileSizeBytes ? (
+              <>
+                {t(
+                  'Upload a .tar.gz archive of your code. Maximum file size is',
+                )}{' '}
+                {maxMb}MB.
+              </>
+            ) : (
+              t('Upload a .tar.gz archive of your code.')
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -214,11 +237,12 @@ export function CreateManualDeploymentModal({
           <input
             ref={inputRef}
             type="file"
-            accept=".tar.gz,.tgz,application/gzip"
+            accept={DEPLOYMENT_ARCHIVE_ACCEPT}
             className="hidden"
             onChange={handleFileChange}
           />
-          <div
+          <button
+            type="button"
             onClick={() => {
               if (!mutation.isPending) inputRef.current?.click()
             }}
@@ -227,7 +251,7 @@ export function CreateManualDeploymentModal({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             className={cn(
-              'flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 px-4 cursor-pointer transition-colors',
+              'flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 px-4 cursor-pointer transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
               isDragging
                 ? 'border-primary bg-primary/5'
                 : 'border-border bg-muted/20 hover:bg-muted/30',
@@ -235,7 +259,7 @@ export function CreateManualDeploymentModal({
             )}
           >
             {file ? (
-              <div className="pointer-events-none flex items-center gap-2 text-[13px] text-foreground">
+              <span className="pointer-events-none flex items-center gap-2 text-[13px] text-foreground">
                 <FileArchive className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium truncate max-w-[240px]">
                   {file.name}
@@ -243,16 +267,16 @@ export function CreateManualDeploymentModal({
                 <span className="text-muted-foreground">
                   ({(file.size / 1024).toFixed(1)} KB)
                 </span>
-              </div>
+              </span>
             ) : (
-              <div className="pointer-events-none flex flex-col items-center">
+              <span className="pointer-events-none flex flex-col items-center">
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-[13px] text-muted-foreground text-center">
+                <span className="text-[13px] text-muted-foreground text-center">
                   {t('Drop a .tar.gz file here or click to browse')}
-                </p>
-              </div>
+                </span>
+              </span>
             )}
-          </div>
+          </button>
           {validationError && (
             <p className="mt-2 text-[12px] text-destructive">
               {validationError}

@@ -27,12 +27,15 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Search, Lock, GitBranch, Loader2 } from 'lucide-react'
+import { Search, Lock, Loader2 } from 'lucide-react'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
+  GitIcon,
   getKnownVcsProvider,
   VcsIcon,
   buildVcsOrgOptions,
   getVisibleVcsOAuthProviders,
+  vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -261,9 +264,7 @@ export function RepositoryPicker({
           className,
         )}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
-          <GitBranch className="h-6 w-6 text-muted-foreground" />
-        </div>
+        <AuthFlowHeaderIcon icon={GitIcon} className="mb-4" />
         <h3 className="text-[13px] font-medium text-foreground mb-1">
           {t('Connect Git provider')}
         </h3>
@@ -274,7 +275,10 @@ export function RepositoryPicker({
           {vcsOAuthProviders.map((provider) => (
             <Button key={provider.id} size="sm" variant="secondary" asChild>
               <a href={vcsAuthUrl(provider.id)}>
-                <provider.Icon className="me-1.5 h-3.5 w-3.5" />
+                <VcsIcon
+                  type={provider.id}
+                  className={vcsProviderButtonIconClassName}
+                />
                 {t(`Connect ${provider.label}`)}
               </a>
             </Button>

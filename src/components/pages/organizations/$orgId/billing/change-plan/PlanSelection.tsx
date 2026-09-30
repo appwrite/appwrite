@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { BillingPlanTier } from '@/lib/constants/billing-plan'
+import { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -91,7 +91,9 @@ export function PlanSelection({
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
     plans && typeof plans === 'object'
-      ? (Object.entries(plans) as [string, PlanRecord | undefined][])
+      ? (Object.entries(plans) as [string, PlanRecord | undefined][]).sort(
+          (a, b) => (a[1]?.order ?? 999) - (b[1]?.order ?? 999),
+        )
       : []
 
   const planCatalog = plans as Record<string, PlanRecord>
@@ -101,10 +103,19 @@ export function PlanSelection({
 
   const isCurrentPlan = (planTier: string) => {
     if (isCreateMode) return false
+    if (planTier === currentPlan) return true
+
+    // Start shares Pro's canonical group, so two distinct catalogue entries compare by id and
+    // the group is only a fallback for a legacy alias that resolves to no entry of its own.
+    const plan = resolveBillingPlanRecord(planTier, planCatalog)
+    const current = resolveBillingPlanRecord(currentPlan as string, planCatalog)
+    if (plan?.$id && current?.$id) {
+      return plan.$id === current.$id
+    }
+
     return (
-      planTier === currentPlan ||
       getPlanCanonicalFromRecord(planTier, planCatalog) ===
-        getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
+      getPlanCanonicalFromRecord(currentPlan as string, planCatalog)
     )
   }
 
@@ -257,6 +268,10 @@ export function PlanSelection({
     </div>
   )
 
+  // Pro keeps the badge wherever Start is sold: Start is the regional price of Pro, not a
+  // better plan, so recommending it over Pro reads as a downgrade being pushed.
+  const recommendedPlanId = BillingPlanTier.Tier1
+
   const radioGroupContent = (
     <>
       {/* Self-service restriction alert */}
@@ -291,7 +306,8 @@ export function PlanSelection({
               : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
-              getPlanCanonicalFromRecord(planTier, planCatalog) === 'pro'
+              (planData?.$id ?? planTier) === recommendedPlanId ||
+              planTier === recommendedPlanId
 
             const handleSelect = () => {
               if (disabled) return

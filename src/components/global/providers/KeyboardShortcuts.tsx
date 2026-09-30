@@ -28,7 +28,7 @@ import {
   canShowProjectSettings,
 } from '@/lib/console-access-checks'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
+import { useCliShellOptional } from '@/components/global/cli-shell/cli-shell-context'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
   registerCommandCenterOpener,
@@ -70,7 +70,10 @@ export function KeyboardShortcutsProvider({
   const navigateToSection = useCallback(
     (section: string) => {
       if (section === 'overview') {
-        navigate({ to: '/projects/$projectId', params: { projectId } })
+        navigate({
+          to: '/projects/$projectId/overview',
+          params: { projectId },
+        })
         return
       }
       if (section === 'storage') {

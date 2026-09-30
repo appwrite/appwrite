@@ -65,6 +65,18 @@ export function BitbucketIcon({ className }: { className?: string }) {
   )
 }
 
+/** Connected repository summary tile on VCS cards. */
+export const vcsInlineProviderIconBoxClassName =
+  'flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted'
+
+export const vcsInlineProviderIconClassName = 'size-5 shrink-0'
+
+/** Provider connect buttons on VCS cards. */
+export const vcsProviderButtonIconClassName = 'size-4'
+
+/** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
+export { GitBranch as GitIcon } from 'lucide-react'
+
 export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
 
 export interface VcsProviderMeta {
@@ -126,7 +138,8 @@ export function getVisibleVcsOAuthProviders(
   extraVcsOAuth: boolean,
 ): VcsProviderMeta[] {
   return Object.values(VCS_PROVIDERS).filter(
-    (provider) => ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
+    (provider) =>
+      ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
   )
 }
 
@@ -166,25 +179,34 @@ export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
   return (id && VCS_PROVIDERS[id]) || null
 }
 
+/** Older servers and the SDK types don't have `organizationUrl` yet. */
+type InstallationWithOrganizationUrl = Models.Installation & {
+  organizationUrl?: string
+}
+
 /**
- * Build the "open in provider" owner/org URL, or null if the provider isn't
- * recognized -- callers should hide the link entirely rather than point it
- * at a fabricated github.com URL for an unknown provider.
+ * Build the "open in provider" owner/org URL, or null if there is none --
+ * callers should hide the link entirely rather than point it at a fabricated
+ * github.com URL for an unknown provider.
+ *
+ * Prefers `organizationUrl`, which the server builds from its configured host,
+ * so it is the only correct link for a self-hosted GitLab or Gitea. The server
+ * sends it empty when that provider is no longer configured there, which hides
+ * the link; only a server that predates the field falls back to the provider's
+ * public host.
  */
 export function getProviderOwnerUrl(
-  provider: string | undefined,
-  organization: string,
+  installation: Models.Installation,
 ): string | null {
-  const meta = getKnownVcsProvider(provider)
-  return meta ? meta.baseUrl(organization) : null
+  const { organizationUrl } = installation as InstallationWithOrganizationUrl
+  if (organizationUrl !== undefined) return organizationUrl || null
+
+  const meta = getKnownVcsProvider(installation.provider)
+  return meta ? meta.baseUrl(installation.organization) : null
 }
 
 function encodeVcsPath(value: string): string {
-  return value
-    .split('/')
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join('/')
+  return value.split('/').filter(Boolean).map(encodeURIComponent).join('/')
 }
 
 /**

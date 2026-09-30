@@ -201,8 +201,15 @@ export function accountConnectedAppsQueryOptions() {
   })
 }
 
-export function useAccountConnectedApps() {
-  return useQuery(accountConnectedAppsQueryOptions())
+export function useAccountConnectedApps(options?: {
+  enabled?: boolean
+  refetchOnWindowFocus?: boolean
+}) {
+  return useQuery({
+    ...accountConnectedAppsQueryOptions(),
+    enabled: options?.enabled ?? true,
+    refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false,
+  })
 }
 
 export function consentTokensQueryOptions(consentId: string) {

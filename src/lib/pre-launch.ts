@@ -43,6 +43,7 @@ export function isPreLaunchAllowedPath(
 ): boolean {
   const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
   if (normalized === '/init' || normalized.startsWith('/init/')) return true
+  if (normalized === '/setup.md') return true
   if (normalized === '/discord') return true
   if (normalized === '/og/init.png') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
@@ -90,6 +91,8 @@ export function isPreLaunchHeavyContentPath(
     '/docs.md',
     '/llms.txt',
     '/llms-full.txt',
+    '/for-agents',
+    '/for-agents.md',
     '/blog/rss.xml',
     '/changelog/rss.xml',
     '/robots.txt',

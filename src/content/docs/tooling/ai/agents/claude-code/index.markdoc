@@ -6,7 +6,7 @@ description: Learn how to use Claude Code with Appwrite through the Appwrite plu
 
 {% section #install-plugin step=1 title="Install the Appwrite plugin" %}
 
-The fastest way to get started with Appwrite in Claude Code is to install the [**Appwrite plugin**](https://claude.com/plugins/appwrite) from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects.
+The fastest way to get started with Appwrite in Claude Code is to install the [**Appwrite plugin**](https://claude.com/plugins/appwrite) from the official marketplace. The plugin includes the hosted Appwrite MCP server, agent skills for the CLI and all major SDKs, and commands for deploying sites and functions.
 
 To install the plugin, run the following command in your terminal:
 
@@ -14,21 +14,20 @@ To install the plugin, run the following command in your terminal:
 claude plugin install appwrite@claude-plugins-official
 ```
 
-Once installed, run Claude Code and configure the plugin:
+If Claude Code cannot find the plugin, add the Appwrite marketplace and install it from there:
 
-- Run `/plugins` in Claude Code.
-- Go to the **Installed** tab.
-- Select the **Appwrite** plugin from the list.
-- Choose **Configure options**.
-- Enter your Appwrite endpoint, project ID, and API key when prompted.
+```bash
+claude plugin marketplace add appwrite/claude-plugin
+claude plugin install appwrite@appwrite
+```
 
-![Configure the Appwrite plugin in Claude Code](/images/docs/mcp/claude-code/configure-plugin.avif)
+Run `/reload-plugins` in Claude Code to load the plugin in your current session. Then run `/mcp`, select the Appwrite server, and choose **Authenticate**. Your browser opens so you can sign in to your Appwrite account and authorize access. The plugin does not need an API key.
 
-After saving the configuration, run `/reload-plugins` to apply the changes to your current session. The plugin options configure agent skills. Add the remote Appwrite MCP server in [Step 3](#step-3) so Claude Code can call Appwrite APIs and search the documentation through OAuth.
+If you installed an earlier version that asked for an endpoint, project ID, and API key, run `/plugins`, open the **Installed** tab, and update the **Appwrite** plugin.
 
-{% info title="Prefer to skip the plugin?" %}
+{% info title="Prefer manual setup?" %}
 
-If you'd rather configure the MCP server on its own, skip to [Step 3](#step-3).
+If you'd rather use the MCP server without installing the plugin, skip to [Step 3](#step-3). Manual setup is an alternative to the plugin, not an additional requirement.
 
 {% /info %}
 
@@ -51,9 +50,9 @@ Browse all quick start prompts
 
 {% /section %}
 
-{% section #step-3 step=3 title="Add the MCP server" %}
+{% section #step-3 step=3 title="Manual setup without the plugin (optional)" %}
 
-Connect the Appwrite MCP server to Claude Code for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install.
+Skip this step if you installed the plugin, since it already includes the MCP server. Adding the server again registers it twice. To connect the Appwrite MCP server directly, add the remote HTTP server below. There are no additional prerequisites to install.
 
 Run the following command in your terminal to add the MCP server:
 

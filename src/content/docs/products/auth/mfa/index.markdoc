@@ -712,22 +712,6 @@ try {
 ```
 
 ```client-flutter
-const promise = account.get();
-
-promise.then(function (response) {
-    console.log(response);           // Success
-}, function (error) {
-    console.log(error);              // Failure
-    if (error.type === "user_more_factors_required"){
-        // redirect to perform MFA
-    }
-    else {
-        // handle other errors
-    }
-});
-```
-
-```client-flutter
 Future result = account.get();
 
 result.then((response) {

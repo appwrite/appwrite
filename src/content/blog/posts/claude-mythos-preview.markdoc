@@ -121,20 +121,18 @@ For developers, this means:
 
 # Build with Claude Code and Appwrite
 
-While Claude Mythos Preview is not publicly available, Claude Code with current Claude models is already a powerful tool for building applications. If you are building with Appwrite, Claude Code integrates directly through MCP servers that give the model access to both the Appwrite API and documentation.
+While Claude Mythos Preview is not publicly available, Claude Code with current Claude models is already a powerful tool for building applications. If you are building with Appwrite, Claude Code integrates directly through one remote MCP server that gives the model access to both the Appwrite API and documentation.
 
-You can set up the Appwrite MCP server in Claude Code with a couple of commands:
-
-```bash
-claude mcp add-json appwrite-api '{"command":"uvx","args":["mcp-server-appwrite","--users"],"env":{"APPWRITE_PROJECT_ID": "your-project-id", "APPWRITE_API_KEY": "your-api-key", "APPWRITE_ENDPOINT": "https://<REGION>.cloud.appwrite.io/v1"}}'
-```
+You can set up the Appwrite MCP server in Claude Code with:
 
 ```bash
-claude mcp add appwrite-docs https://mcp-for-docs.appwrite.io -t http
+npx skills add appwrite/skills
+claude mcp add appwrite --transport http https://mcp.appwrite.io
+claude "/mcp"
 ```
 
 With this setup, Claude Code can directly create users, manage databases, query tables, and build full features against your Appwrite backend without you switching between docs and your terminal.
 
-Check out our [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code) and our [Appwrite MCP server docs](/docs/tooling/mcp) to get started. You can also read our [Claude Code tips and best practices](/blog/post/claude-code-tips-tricks) for getting the most out of the tool.
+Check out our [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) and our [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers) to get started. You can also read our [Claude Code tips and best practices](/blog/post/claude-code-tips-tricks) for getting the most out of the tool.
 
 The capabilities previewed by Mythos are coming to publicly available models. The best way to be ready is to start building with the tools available today.

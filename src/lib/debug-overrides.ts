@@ -16,16 +16,19 @@ import {
   PRE_LAUNCH_DEBUG_STORAGE_KEY,
   syncPreLaunchCookie,
 } from '@/lib/pre-launch'
+import { syncMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showActivityChart: 'debug:showActivityChart',
+  showProjectEnvironments: 'debug:showProjectEnvironments',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
+  showProjectAgents: 'debug:showProjectAgents',
   showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
@@ -45,6 +48,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   pageDirection: 'debug:pageDirection',
   /** App copy language preference used by the i18n provider. */
   language: 'debug:language',
+  /** Mock ISO 3166-1 alpha-2 country for locale.get() consumers (Start plan, etc.). */
+  mockLocaleCountry: 'debug:mockLocaleCountry',
   /** Pre-launch lock: only Init (and sign-in) is reachable. Default on. */
   preLaunch: PRE_LAUNCH_DEBUG_STORAGE_KEY,
 } as const
@@ -75,6 +80,8 @@ export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
+  /** When true, the project sidebar shows the mock environment switcher. Default false. */
+  showProjectEnvironments: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean
   /** Mock Appwrite Cloud status alert state for design review in debug mode. */
@@ -86,6 +93,11 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
+  /**
+   * When true, exposes the project Agents page and lands new projects on it
+   * from the project root. When false, the root always opens Overview. Default false.
+   */
+  showProjectAgents: boolean
   /**
    * When true, show the DEV construction bar at the top of the header stack.
    * Default true, or VITE_CONSTRUCTION when set.
@@ -118,6 +130,11 @@ export type DebugOverrides = {
   pageDirection: PageDirectionOverride
   /** App language preference from debug menu. */
   language: DebugLanguageOverride
+  /**
+   * Mock visitor country (ISO 3166-1 alpha-2) for locale.get() consumers.
+   * Null uses the live Appwrite locale country.
+   */
+  mockLocaleCountry: string | null
   /**
    * When true, only `/init` is public; `/` redirects there and other pages are
    * locked. Sign-in stays open and returns to `/init`. Default on.
@@ -186,6 +203,16 @@ function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | 
   return isInitTicketTypeId(raw) ? raw : null
 }
 
+function readNullableCountryCodeFromStorage(key: string): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  const normalized = raw.trim().toUpperCase()
+  if (!/^[A-Z]{2}$/.test(normalized)) return null
+  return normalized
+}
+
 const USER_OS_OVERRIDE_VALUES = ['auto', ...USER_OS_VALUES] as const
 
 /**
@@ -226,6 +253,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showActivityChart,
       false,
     ),
+    showProjectEnvironments: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showProjectEnvironments,
+      false,
+    ),
     showSuccessTeamCard: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
       false,
@@ -238,6 +269,10 @@ export function loadDebugOverrides(): DebugOverrides {
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
+      false,
+    ),
+    showProjectAgents: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showProjectAgents,
       false,
     ),
     showConstruction: readBooleanFromStorage(
@@ -282,6 +317,9 @@ export function loadDebugOverrides(): DebugOverrides {
       ['en', 'he', 'ja'] as const,
       'en',
     ),
+    mockLocaleCountry: readNullableCountryCodeFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockLocaleCountry,
+    ),
     preLaunch: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.preLaunch,
       getPreLaunchDefault(),
@@ -291,6 +329,9 @@ export function loadDebugOverrides(): DebugOverrides {
   const storedPreLaunch = storage?.getItem(DEBUG_OVERRIDE_KEYS.preLaunch)
   if (storedPreLaunch === 'true' || storedPreLaunch === 'false') {
     syncPreLaunchCookie(storedPreLaunch === 'true')
+  }
+  if (typeof window !== 'undefined') {
+    syncMockLocaleCountryCookie(overrides.mockLocaleCountry)
   }
   return overrides
 }
@@ -316,8 +357,14 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
     }
   } else if (typeof value === 'string') {
     storage.setItem(storageKey, value)
+    if (key === 'mockLocaleCountry') {
+      syncMockLocaleCountryCookie(value)
+    }
   } else if (value === null) {
     storage.removeItem(storageKey)
+    if (key === 'mockLocaleCountry') {
+      syncMockLocaleCountryCookie(null)
+    }
   } else if (typeof value === 'number') {
     storage.setItem(storageKey, String(value))
   } else if (value) {
@@ -338,6 +385,7 @@ export function resetDebugOverrides() {
     storage.removeItem(key)
   })
   syncPreLaunchCookie(null)
+  syncMockLocaleCountryCookie(null)
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
@@ -345,9 +393,11 @@ export function resetDebugOverrides() {
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'preLaunch',
   'showActivityChart',
+  'showProjectEnvironments',
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'showProjectAgents',
   'showConstruction',
   'unlockOnboardingLocks',
   'previewOnboardingComplete',
@@ -364,9 +414,11 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
 > = {
   preLaunch: getPreLaunchDefault(),
   showActivityChart: false,
+  showProjectEnvironments: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
+  showProjectAgents: false,
   showConstruction: getShowConstructionDefault(),
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
@@ -439,10 +491,12 @@ export function getDefaultDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: false,
     showActivityChart: false,
+    showProjectEnvironments: false,
     showSuccessTeamCard: false,
     mockCloudStatusAlert: 'live',
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: false,
+    showProjectAgents: false,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
     mockInitTicketType: null,
@@ -454,6 +508,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     previewCommunitySupportWizard: false,
     pageDirection: 'ltr',
     language: 'en',
+    mockLocaleCountry: null,
     preLaunch: getPreLaunchDefault(),
   }
 }

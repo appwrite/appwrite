@@ -46,6 +46,11 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 import { truncateMiddle } from '@/lib/utils'
+import {
+  applyProjectResumeToCache,
+  hasActiveProjectBlock,
+} from '@/lib/project-blocks'
+import { refetchProjectScopedQueries } from '@/lib/react-query/project-query-keys'
 
 // ============================================================================
 // LIST SELECT - minimal fields for project list/cards (selector, org overview)
@@ -59,6 +64,17 @@ const PROJECT_LIST_SELECT = [
   '$createdAt',
   'status',
 ] as const
+
+/**
+ * `blocks` is a Cloud-only project attribute. Self-hosted Appwrite rejects a
+ * select on it ("Attribute not found in schema: blocks"), so only request it
+ * when billing (Cloud) is enabled.
+ */
+function getProjectListSelect(): string[] {
+  return getActiveProfileFeatures().billing
+    ? [...PROJECT_LIST_SELECT, 'blocks']
+    : [...PROJECT_LIST_SELECT]
+}
 
 /** Appwrite project name max length (see organization.createProject). */
 export const PROJECT_NAME_MAX_LENGTH = 128
@@ -103,6 +119,7 @@ export type ProjectListItem = {
   icon: string
   archived?: boolean
   paused?: boolean
+  blocked?: boolean
 }
 
 /** Map console project list rows to org overview / selector card shape. */
@@ -116,6 +133,7 @@ export function mapProjectToListItem(project: Models.Project): ProjectListItem {
     icon: project.name.charAt(0).toUpperCase(),
     archived: project.status === 'archived',
     paused: project.status === 'paused',
+    blocked: hasActiveProjectBlock(project, project.$id),
   }
 }
 
@@ -221,7 +239,7 @@ export async function fetchActiveProjects(
   const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
 
   const baseQueries = [
-    Query.select([...PROJECT_LIST_SELECT]),
+    Query.select(getProjectListSelect()),
     Query.equal('teamId', teamId),
     ...statusQueries,
     ...restrictQueries,
@@ -262,7 +280,7 @@ export async function fetchActiveProjects(
   const queries =
     excludeIds.length > 0
       ? [
-          Query.select([...PROJECT_LIST_SELECT]),
+          Query.select(getProjectListSelect()),
           Query.equal('teamId', teamId),
           ...statusQueries,
           ...restrictQueries,
@@ -313,7 +331,7 @@ export async function fetchProjectsByIds(
 
   const response = await listConsoleProjects({
     queries: [
-      Query.select([...PROJECT_LIST_SELECT]),
+      Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
       idQuery,
@@ -603,6 +621,29 @@ export function projectsForTeamInfiniteQueryKey(
   ]
 }
 
+/**
+ * Query options for the org's active project count (plan limits, create gating).
+ * Uses the list API `total` with pinned projects included (no exclude list).
+ */
+export function activeProjectsTotalQueryOptions(
+  orgId: string | null | undefined,
+  restrictToProjectIds?: string[] | null,
+) {
+  const restrictKey = projectRestrictionKey(restrictToProjectIds)
+  return queryOptions({
+    queryKey: ['projects', 'active', 'total', orgId, restrictKey],
+    queryFn: () =>
+      fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
+    enabled: !!orgId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function activeProjectsQueryOptions(
   orgId: string | null | undefined,
   page: number = 0,
@@ -838,33 +879,21 @@ export function useResumeProject(projectId: string | undefined) {
     },
     onSuccess: async () => {
       if (!projectId) return
-      // Refetch the current project immediately so paused-state UI updates without reload.
-      await queryClient.refetchQueries({
-        queryKey: ['project', projectId],
-        exact: true,
+
+      queryClient.setQueryData(
+        projectQueryOptions(projectId).queryKey,
+        (current: Models.Project | undefined) =>
+          current ? applyProjectResumeToCache(current, projectId) : current,
+      )
+
+      // Force a network read; refetchQueries alone can leave stale loader data
+      // when impersonating because the cached project stays fresh for 5 minutes.
+      await queryClient.fetchQuery({
+        ...projectQueryOptions(projectId),
+        staleTime: 0,
       })
 
-      // Refetch all project-scoped queries that include this project id.
-      await queryClient.refetchQueries({
-        predicate: (query) => {
-          const k = query.queryKey
-          return (
-            (k[0] === 'project' && k[1] === projectId) ||
-            (k[1] === 'project' && k[2] === projectId)
-          )
-        },
-      })
-
-      // Project lists/pickers can exclude paused projects; refresh them too.
-      await queryClient.refetchQueries({
-        predicate: (query) => {
-          const k = query.queryKey
-          return (
-            k[0] === 'projects' ||
-            (k[0] === 'organization' && k[1] === 'projects')
-          )
-        },
-      })
+      await refetchProjectScopedQueries(queryClient, projectId)
     },
   })
 }
@@ -1004,26 +1033,9 @@ export function useProjectsForTeamInfinite(
 
     const allProjects = data.pages.flatMap((page) => page.projects || [])
 
-    return allProjects.map((raw: unknown) => {
-      const p = raw as {
-        $id: string
-        name: string
-        teamId: string
-        region?: string
-        $createdAt?: string
-        status?: string
-      }
-      return {
-        $id: p.$id,
-        name: p.name,
-        teamId: p.teamId,
-        region: p.region || 'unknown',
-        createdAt: p.$createdAt || new Date().toISOString(),
-        icon: p.name.charAt(0).toUpperCase(),
-        archived: p.status === 'archived',
-        paused: p.status === 'paused',
-      }
-    }) as Project[]
+    return allProjects.map((raw) =>
+      mapProjectToListItem(raw as Models.Project),
+    ) as Project[]
   }, [data])
 
   const total = useMemo(() => {

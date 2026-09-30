@@ -19,6 +19,8 @@ export type PostgresTableHeaderSlotProps = {
   onRefresh?: () => void
   isRefreshing?: boolean
   filterTrigger?: ReactNode
+  beforeRefreshButtons?: ReactNode
+  afterRefreshButtons?: ReactNode
 }
 
 type PostgresTableHeaderSlotContextValue = {
@@ -67,6 +69,8 @@ function headerSlotEffectDeps(slot: PostgresTableHeaderSlotProps) {
     slot.onRefresh,
     slot.isRefreshing,
     slot.filterTrigger,
+    slot.beforeRefreshButtons,
+    slot.afterRefreshButtons,
   ] as const
 }
 

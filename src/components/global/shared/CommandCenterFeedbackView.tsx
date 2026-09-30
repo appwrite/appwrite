@@ -3,7 +3,6 @@
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FeedbackForm } from '@/components/global/shared/FeedbackForm'
-import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 
 type CommandCenterFeedbackViewProps = {
@@ -24,7 +23,6 @@ export function CommandCenterFeedbackView({
   onKeyDown,
 }: CommandCenterFeedbackViewProps) {
   const t = useT()
-  const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
   return (
     <div
@@ -56,7 +54,6 @@ export function CommandCenterFeedbackView({
           source="command-center"
           orgId={orgId ?? ''}
           projectId={projectId ?? ''}
-          billingPlanId={organizationPlan?.$id}
           onSubmitted={() => {
             setTimeout(onClose, 1500)
           }}

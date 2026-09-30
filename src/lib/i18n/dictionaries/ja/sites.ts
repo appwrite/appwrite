@@ -17,10 +17,17 @@ export const jaSitesDictionary: Record<string, string> = {
   'No sites yet': 'サイトがまだありません',
   'Preview not available': 'プレビューは利用できません',
   'Delete Sites': 'サイトの削除',
+  'Delete log': 'ログを削除',
+  'Delete logs': 'ログを削除',
   'Are you sure you want to delete': '次を削除してもよろしいですか',
+  'Are you sure you want to delete this log? This action cannot be undone.':
+    'このログを削除してもよろしいですか? この操作は元に戻せません。',
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'Site deleted successfully': 'サイトを削除しました',
   'Successfully deleted': '削除しました',
+  'Log deleted': 'ログを削除しました',
+  'Failed to delete log': 'ログの削除に失敗しました',
+  'Failed to delete logs': 'ログの削除に失敗しました',
   'Failed to delete sites': 'サイトの削除に失敗しました',
   // Deployments
   'Loading deployments...': 'デプロイを読み込み中...',
@@ -232,15 +239,14 @@ export const jaSitesDictionary: Record<string, string> = {
   'Upload your website manually': 'Web サイトを手動でアップロード',
   // Create wizard: manual upload
   'Only .tar.gz files are supported': '.tar.gz ファイルのみサポートしています',
-  'File size must be less than 100MB':
-    'ファイルサイズは 100MB 未満である必要があります',
   'Please enter a valid domain': '有効なドメインを入力してください',
   'Failed to create site': 'サイトの作成に失敗しました',
   'Other options': 'その他のオプション',
   'Import from Git': 'Git からインポート',
   'Browse templates': 'テンプレートを閲覧',
   'Upload file': 'ファイルのアップロード',
-  'Only .tar.gz files up to 100MB': '.tar.gz ファイルのみ、最大 100MB',
+  'Only .tar.gz files up to': '.tar.gz ファイルのみ、最大',
+  'File is too large. Maximum size:': 'ファイルが大きすぎます。最大サイズ:',
   'Site name': 'サイト名',
   'Site ID': 'サイト ID',
   'My awesome site': 'すばらしいサイト',
@@ -466,6 +472,7 @@ export const jaSitesDictionary: Record<string, string> = {
   Failed: '失敗',
   Canceled: 'キャンセル済み',
   Timeout: 'タイムアウト',
+  log: 'ログ',
   logs: 'ログ',
   Domain: 'ドメイン',
   Retry: '再試行',
@@ -511,4 +518,18 @@ export const jaSitesDictionary: Record<string, string> = {
   Secret: 'シークレット',
   Size: 'サイズ',
   Close: '閉じる',
+
+  // Protected preview authorization
+  'Opening preview…': 'プレビューを開いています…',
+  'Checking your access to this preview deployment.':
+    'このプレビューデプロイへのアクセス権を確認しています。',
+  'Preview is private': 'このプレビューは非公開です',
+  "Your account isn't in the organization that owns this site. Ask an organization member to invite you.":
+    'このサイトを所有する組織に所属していないアカウントです。組織のメンバーに招待を依頼してください。',
+  'Invalid preview link': 'プレビューリンクが無効です',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'このリンクにはプレビューのアドレスがないか、アドレスが正しくありません。プレビューの URL をもう一度開いてやり直してください。',
+  "Couldn't open preview": 'プレビューを開けませんでした',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'このプレビューへのアクセス権の確認中に問題が発生しました。しばらくしてからもう一度お試しください。',
 }

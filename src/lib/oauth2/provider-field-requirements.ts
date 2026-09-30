@@ -37,12 +37,65 @@ export function hasOidcWellKnownUrl(
   ).length > 0
 }
 
+/** Catalog parameter holding the audiences accepted for native ID token sign-in. */
+export const NATIVE_CLIENT_IDS_PARAM_ID = 'nativeClientIds'
+
+/**
+ * Catalog parameters that carry the browser flow's client ID. The server also
+ * accepts that value as a native audience, so it can stand in for the list.
+ */
+const CLIENT_ID_PARAM_IDS = new Set(['clientId', 'serviceId'])
+
 /** Params that are never required in the console form (server supplies defaults). */
 const ALWAYS_OPTIONAL_PARAM_IDS = new Set([
   'authorizationServerId',
   'prompt',
   'tenant',
+  NATIVE_CLIENT_IDS_PARAM_ID,
 ])
+
+/**
+ * The server lists the native audience parameter only for providers whose ID
+ * tokens it can verify, so the catalog is the source of truth for support.
+ */
+export function supportsNativeSignIn(
+  parameters: OAuth2CatalogParameter[],
+): boolean {
+  return parameters.some((p) => p.$id === NATIVE_CLIENT_IDS_PARAM_ID)
+}
+
+/**
+ * Mirrors the server's rule for switching native sign-in on. Tokens are matched
+ * to the app through an accepted audience, so a client ID or at least one
+ * native client ID must exist. Nothing else is required: this flow never
+ * redeems an authorization code, so it has no use for a client secret.
+ */
+export function getOAuth2NativeSignInError(input: {
+  parameters: OAuth2CatalogParameter[]
+  nativeEnabled: boolean
+  nativeClientIds: string[]
+  formFields: Record<string, string>
+  initialFields?: Record<string, string>
+}): string | undefined {
+  if (!input.nativeEnabled) return undefined
+  if (input.nativeClientIds.some((id) => id.trim())) return undefined
+
+  const clientIdParam = input.parameters.find((p) =>
+    CLIENT_ID_PARAM_IDS.has(p.$id),
+  )
+  if (
+    clientIdParam &&
+    effectiveField(
+      clientIdParam.$id,
+      input.formFields,
+      input.initialFields ?? {},
+    )
+  ) {
+    return undefined
+  }
+
+  return 'Add at least one native client ID, or set the client ID, so tokens can be matched to your app.'
+}
 
 /** Credential fields that may be omitted on update when the provider was already enabled. */
 export function isOAuth2SecretParameter(paramId: string): boolean {

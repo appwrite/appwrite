@@ -9,477 +9,462 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
-import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
-import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
-import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
-import { Route as GeneratorRouteImport } from './routes/generator'
-import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
-import { Route as DocsRouteImport } from './routes/docs'
-import { Route as DiscordRouteImport } from './routes/discord'
-import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
-import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
-import { Route as PublicRouteImport } from './routes/_public'
-import { Route as ProtectedRouteImport } from './routes/_protected'
-import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthRouteImport } from './routes/_auth'
-import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
-import { Route as DocsIndexRouteImport } from './routes/docs/index'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
-import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
-import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
-import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
-import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
-import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
-import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
-import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
-import { Route as DocsSplatRouteImport } from './routes/docs/$'
-import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
-import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
-import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
-import { Route as PublicSalesRouteImport } from './routes/_public/sales'
-import { Route as PublicResetRouteImport } from './routes/_public/reset'
-import { Route as PublicInitRouteImport } from './routes/_public/init'
-import { Route as PublicCompsRouteImport } from './routes/_public/comps'
-import { Route as PublicCacheRouteImport } from './routes/_public/cache'
-import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
-import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
-import { Route as PublicAppRouteImport } from './routes/_public/app'
-import { Route as PublicAgentRouteImport } from './routes/_public/agent'
-import { Route as PublicAccountRouteImport } from './routes/_public/account'
-import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
-import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
-import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
-import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
-import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
-import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
-import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
-import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
-import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
-import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
-import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookies'
-import { Route as MarketingCompanyRouteImport } from './routes/_marketing/company'
-import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
-import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
-import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
-import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
-import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
-import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
-import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
-import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
-import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
-import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
-import { Route as AuthJoinRouteImport } from './routes/_auth/join'
+import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as ProtectedRouteImport } from './routes/_protected'
+import { Route as PublicRouteImport } from './routes/_public'
+import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
+import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
+import { Route as DiscordRouteImport } from './routes/discord'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
+import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
-import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
-import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
-import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
-import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
-import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
-import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
-import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
-import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
-import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
-import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
-import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
-import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
-import { Route as PublicMarketplaceAppIdRouteImport } from './routes/_public/marketplace.$appId'
-import { Route as PublicImpersonateUserIdRouteImport } from './routes/_public/impersonate.$userId'
-import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
-import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
-import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
-import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
-import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
-import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
-import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
-import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
-import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
-import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
-import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
-import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
-import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
-import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
-import { Route as PublicAccountNotificationsRouteImport } from './routes/_public/account.notifications'
-import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
-import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
-import { Route as PublicAccountAffiliatesRouteImport } from './routes/_public/account.affiliates'
-import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
-import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
-import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
-import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/init.$ticketId'
-import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
-import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
-import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
-import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
-import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
-import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
-import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
-import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
-import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
-import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
-import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
-import { Route as ApiRERouteImport } from './routes/_api/r/e'
-import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
-import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
-import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
-import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
-import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
-import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
+import { Route as AuthJoinRouteImport } from './routes/_auth/join'
+import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
+import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
+import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
+import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
+import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
+import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
+import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
+import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
+import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
+import { Route as MarketingCompanyRouteImport } from './routes/_marketing/company'
+import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookies'
+import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
+import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
+import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
+import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
+import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
+import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
+import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
+import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
+import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
+import { Route as PublicAccountRouteImport } from './routes/_public/account'
+import { Route as PublicAgentRouteImport } from './routes/_public/agent'
+import { Route as PublicAppRouteImport } from './routes/_public/app'
+import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
+import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
+import { Route as PublicCacheRouteImport } from './routes/_public/cache'
+import { Route as PublicCompsRouteImport } from './routes/_public/comps'
+import { Route as PublicInitRouteImport } from './routes/_public/init'
+import { Route as PublicResetRouteImport } from './routes/_public/reset'
+import { Route as PublicSalesRouteImport } from './routes/_public/sales'
+import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
+import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
+import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
+import { Route as DocsIndexRouteImport } from './routes/docs/index'
+import { Route as DocsSplatRouteImport } from './routes/docs/$'
+import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
+import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
+import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
+import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
+import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
+import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
+import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
-import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
-import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
-import { Route as PublicAgentSettingsIndexRouteImport } from './routes/_public/agent.settings.index'
-import { Route as PublicAgentAutomationsIndexRouteImport } from './routes/_public/agent.automations.index'
-import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
-import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
-import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
-import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
-import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
-import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
-import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
-import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
-import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
-import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
-import { Route as PublicProjectsProjectIdExplorerRouteImport } from './routes/_public/projects.$projectId.explorer'
-import { Route as PublicProjectsProjectIdDatabasesRouteImport } from './routes/_public/projects.$projectId.databases'
-import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_public/projects.$projectId.auth'
-import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
-import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
-import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
-import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
-import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
-import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
-import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
-import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
-import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './routes/_public/organizations.$orgId.marketplace'
-import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
-import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
-import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
-import { Route as PublicOrganizationsOrgIdAgentRouteImport } from './routes/_public/organizations.$orgId.agent'
-import { Route as PublicAgentSettingsUsageRouteImport } from './routes/_public/agent.settings.usage'
-import { Route as PublicAgentSettingsModelsRouteImport } from './routes/_public/agent.settings.models'
-import { Route as PublicAgentSettingsMemoryRouteImport } from './routes/_public/agent.settings.memory'
-import { Route as PublicAgentSettingsMcpRouteImport } from './routes/_public/agent.settings.mcp'
-import { Route as PublicAgentAutomationsCreateRouteImport } from './routes/_public/agent.automations.create'
-import { Route as PublicAgentAutomationsAutomationIdRouteImport } from './routes/_public/agent.automations.$automationId'
-import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
-import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
-import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
-import { Route as MarketingBlogCategoriesCategoryRouteImport } from './routes/_marketing/blog.categories.$category'
-import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
-import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
-import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
-import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
-import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
-import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
-import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
-import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
+import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
+import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
+import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
+import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
+import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
+import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
+import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
+import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
+import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
+import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
+import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
+import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
+import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
+import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
+import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
+import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
+import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
+import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/init.$ticketId'
+import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
+import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
+import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
+import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
+import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
+import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
+import { Route as PublicAccountAffiliatesRouteImport } from './routes/_public/account.affiliates'
+import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
+import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
+import { Route as PublicAccountNotificationsRouteImport } from './routes/_public/account.notifications'
+import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
+import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
+import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
+import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
+import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
+import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
+import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
+import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
+import { Route as PublicAuthPreviewRouteImport } from './routes/_public/auth.preview'
+import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
+import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
+import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
+import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
+import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
+import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
+import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
+import { Route as PublicDebugMagicUrlPreviewRouteImport } from './routes/_public/debug.magic-url-preview'
+import { Route as PublicDebugMfaPreviewRouteImport } from './routes/_public/debug.mfa-preview'
+import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
+import { Route as PublicDebugOauth2RelayPreviewRouteImport } from './routes/_public/debug.oauth2-relay-preview'
+import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
+import { Route as PublicDebugRecoveryPreviewRouteImport } from './routes/_public/debug.recovery-preview'
+import { Route as PublicDebugResetPreviewRouteImport } from './routes/_public/debug.reset-preview'
+import { Route as PublicDebugSignInPreviewRouteImport } from './routes/_public/debug.sign-in-preview'
+import { Route as PublicDebugSignUpPreviewRouteImport } from './routes/_public/debug.sign-up-preview'
+import { Route as PublicDebugSitesAuthPreviewRouteImport } from './routes/_public/debug.sites-auth-preview'
+import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
+import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
+import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
+import { Route as PublicImpersonateUserIdRouteImport } from './routes/_public/impersonate.$userId'
+import { Route as PublicMarketplaceAppIdRouteImport } from './routes/_public/marketplace.$appId'
+import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
+import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
+import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
+import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
-import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
-import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
-import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
-import { Route as PublicProjectsProjectIdSitesIndexRouteImport } from './routes/_public/projects.$projectId.sites.index'
-import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
-import { Route as PublicProjectsProjectIdRealtimeIndexRouteImport } from './routes/_public/projects.$projectId.realtime.index'
-import { Route as PublicProjectsProjectIdMessagingIndexRouteImport } from './routes/_public/projects.$projectId.messaging.index'
-import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
-import { Route as PublicProjectsProjectIdFirewallIndexRouteImport } from './routes/_public/projects.$projectId.firewall.index'
-import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
-import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
-import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
-import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
-import { Route as PublicOrganizationsOrgIdAppsIndexRouteImport } from './routes/_public/organizations.$orgId.apps.index'
+import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
+import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
+import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
+import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
+import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
+import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
+import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
+import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
+import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
+import { Route as MarketingBlogCategoriesCategoryRouteImport } from './routes/_marketing/blog.categories.$category'
+import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
+import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
+import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
+import { Route as PublicAgentAutomationsIndexRouteImport } from './routes/_public/agent.automations.index'
+import { Route as PublicAgentAutomationsAutomationIdRouteImport } from './routes/_public/agent.automations.$automationId'
+import { Route as PublicAgentAutomationsCreateRouteImport } from './routes/_public/agent.automations.create'
+import { Route as PublicAgentSettingsIndexRouteImport } from './routes/_public/agent.settings.index'
+import { Route as PublicAgentSettingsMcpRouteImport } from './routes/_public/agent.settings.mcp'
+import { Route as PublicAgentSettingsMemoryRouteImport } from './routes/_public/agent.settings.memory'
+import { Route as PublicAgentSettingsModelsRouteImport } from './routes/_public/agent.settings.models'
+import { Route as PublicAgentSettingsUsageRouteImport } from './routes/_public/agent.settings.usage'
+import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
+import { Route as PublicOrganizationsOrgIdAgentRouteImport } from './routes/_public/organizations.$orgId.agent'
+import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
+import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
+import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
+import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './routes/_public/organizations.$orgId.marketplace'
+import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
+import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
+import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
+import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
+import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
+import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
+import { Route as PublicProjectsProjectIdAgentsRouteImport } from './routes/_public/projects.$projectId.agents'
+import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
+import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
+import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
+import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_public/projects.$projectId.auth'
+import { Route as PublicProjectsProjectIdDatabasesRouteImport } from './routes/_public/projects.$projectId.databases'
+import { Route as PublicProjectsProjectIdExplorerRouteImport } from './routes/_public/projects.$projectId.explorer'
+import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
+import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
+import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
+import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
+import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
+import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
+import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
+import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
+import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
+import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
 import { Route as PublicOrganizationsOrgIdAgentIndexRouteImport } from './routes/_public/organizations.$orgId.agent.index'
-import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
-import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
-import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
-import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
-import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
-import { Route as PublicProjectsProjectIdSitesSiteIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId'
-import { Route as PublicProjectsProjectIdSettingsWebhooksRouteImport } from './routes/_public/projects.$projectId.settings.webhooks'
-import { Route as PublicProjectsProjectIdSettingsVariablesRouteImport } from './routes/_public/projects.$projectId.settings.variables'
-import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
-import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
-import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
-import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
-import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
-import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
-import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
-import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
-import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './routes/_public/projects.$projectId.functions.editor'
-import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdRouteImport } from './routes/_public/projects.$projectId.functions.$functionId'
-import { Route as PublicProjectsProjectIdFirewallCreateRouteImport } from './routes/_public/projects.$projectId.firewall.create'
-import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './routes/_public/projects.$projectId.databases.create'
-import { Route as PublicProjectsProjectIdDatabasesDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId'
-import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './routes/_public/projects.$projectId.auth.templates'
-import { Route as PublicProjectsProjectIdAuthTeamsRouteImport } from './routes/_public/projects.$projectId.auth.teams'
-import { Route as PublicProjectsProjectIdAuthSocialProvidersRouteImport } from './routes/_public/projects.$projectId.auth.social-providers'
-import { Route as PublicProjectsProjectIdAuthSettingsRouteImport } from './routes/_public/projects.$projectId.auth.settings'
-import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './routes/_public/projects.$projectId.auth.security'
-import { Route as PublicProjectsProjectIdAuthPoliciesRouteImport } from './routes/_public/projects.$projectId.auth.policies'
-import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
-import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
-import { Route as PublicProjectsProjectIdAnalyticsAddRouteImport } from './routes/_public/projects.$projectId.analytics.add'
-import { Route as PublicProjectsProjectIdAnalyticsPropertyIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId'
-import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
-import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
-import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
-import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
-import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
-import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
-import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
-import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
-import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
-import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/_public/organizations.$orgId.apps.$appId'
-import { Route as PublicOrganizationsOrgIdAgentSettingsRouteImport } from './routes/_public/organizations.$orgId.agent.settings'
-import { Route as PublicOrganizationsOrgIdAgentAutomationsRouteImport } from './routes/_public/organizations.$orgId.agent.automations'
 import { Route as PublicOrganizationsOrgIdAgentAgentIdRouteImport } from './routes/_public/organizations.$orgId.agent.$agentId'
-import { Route as PublicProjectsProjectIdStoresAppIdIndexRouteImport } from './routes/_public/projects.$projectId.stores.$appId.index'
-import { Route as PublicProjectsProjectIdStorageBucketIdIndexRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.index'
-import { Route as PublicProjectsProjectIdSitesCreateIndexRouteImport } from './routes/_public/projects.$projectId.sites.create.index'
-import { Route as PublicProjectsProjectIdSitesSiteIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.index'
-import { Route as PublicProjectsProjectIdSettingsMigrationsIndexRouteImport } from './routes/_public/projects.$projectId.settings.migrations.index'
-import { Route as PublicProjectsProjectIdSettingsDomainsIndexRouteImport } from './routes/_public/projects.$projectId.settings.domains.index'
-import { Route as PublicProjectsProjectIdMessagingTopicsIndexRouteImport } from './routes/_public/projects.$projectId.messaging.topics.index'
-import { Route as PublicProjectsProjectIdMessagingProvidersIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.index'
-import { Route as PublicProjectsProjectIdMessagingMessageIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId.index'
-import { Route as PublicProjectsProjectIdFunctionsCreateIndexRouteImport } from './routes/_public/projects.$projectId.functions.create.index'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.index'
-import { Route as PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.$appId.index'
-import { Route as PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.index'
-import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
-import { Route as PublicOrganizationsOrgIdAgentSettingsIndexRouteImport } from './routes/_public/organizations.$orgId.agent.settings.index'
+import { Route as PublicOrganizationsOrgIdAgentAutomationsRouteImport } from './routes/_public/organizations.$orgId.agent.automations'
+import { Route as PublicOrganizationsOrgIdAgentSettingsRouteImport } from './routes/_public/organizations.$orgId.agent.settings'
+import { Route as PublicOrganizationsOrgIdAppsIndexRouteImport } from './routes/_public/organizations.$orgId.apps.index'
+import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/_public/organizations.$orgId.apps.$appId'
+import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
+import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
+import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
+import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
+import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
+import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
+import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
+import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
+import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
+import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
+import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
+import { Route as PublicProjectsProjectIdAnalyticsPropertyIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId'
+import { Route as PublicProjectsProjectIdAnalyticsAddRouteImport } from './routes/_public/projects.$projectId.analytics.add'
+import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
+import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
+import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
+import { Route as PublicProjectsProjectIdAuthPoliciesRouteImport } from './routes/_public/projects.$projectId.auth.policies'
+import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './routes/_public/projects.$projectId.auth.security'
+import { Route as PublicProjectsProjectIdAuthSettingsRouteImport } from './routes/_public/projects.$projectId.auth.settings'
+import { Route as PublicProjectsProjectIdAuthSocialProvidersRouteImport } from './routes/_public/projects.$projectId.auth.social-providers'
+import { Route as PublicProjectsProjectIdAuthTeamsRouteImport } from './routes/_public/projects.$projectId.auth.teams'
+import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './routes/_public/projects.$projectId.auth.templates'
+import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
+import { Route as PublicProjectsProjectIdDatabasesDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId'
+import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './routes/_public/projects.$projectId.databases.create'
+import { Route as PublicProjectsProjectIdFirewallIndexRouteImport } from './routes/_public/projects.$projectId.firewall.index'
+import { Route as PublicProjectsProjectIdFirewallCreateRouteImport } from './routes/_public/projects.$projectId.firewall.create'
+import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdRouteImport } from './routes/_public/projects.$projectId.functions.$functionId'
+import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
+import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './routes/_public/projects.$projectId.functions.editor'
+import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
+import { Route as PublicProjectsProjectIdMessagingIndexRouteImport } from './routes/_public/projects.$projectId.messaging.index'
+import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
+import { Route as PublicProjectsProjectIdRealtimeIndexRouteImport } from './routes/_public/projects.$projectId.realtime.index'
+import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
+import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
+import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
+import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
+import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
+import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
+import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
+import { Route as PublicProjectsProjectIdSettingsVariablesRouteImport } from './routes/_public/projects.$projectId.settings.variables'
+import { Route as PublicProjectsProjectIdSettingsWebhooksRouteImport } from './routes/_public/projects.$projectId.settings.webhooks'
+import { Route as PublicProjectsProjectIdSitesIndexRouteImport } from './routes/_public/projects.$projectId.sites.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId'
+import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
+import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
+import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
+import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
+import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
+import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
+import { Route as DocsReferencesVersionPlatformServiceRouteImport } from './routes/docs/references.$version.$platform.$service'
+import { Route as DocsReferencesVersionModelsModelRouteImport } from './routes/docs/references.$version.models.$model'
 import { Route as PublicOrganizationsOrgIdAgentAutomationsIndexRouteImport } from './routes/_public/organizations.$orgId.agent.automations.index'
-import { Route as PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId.$metricId'
-import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
-import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.security'
-import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './routes/_public/projects.$projectId.sites.create.manual'
-import { Route as PublicProjectsProjectIdSitesCreateFinishRouteImport } from './routes/_public/projects.$projectId.sites.create.finish'
-import { Route as PublicProjectsProjectIdSitesCreateDeployingRouteImport } from './routes/_public/projects.$projectId.sites.create.deploying'
-import { Route as PublicProjectsProjectIdSitesCreateDeployRouteImport } from './routes/_public/projects.$projectId.sites.create.deploy'
-import { Route as PublicProjectsProjectIdSitesSiteIdVariablesRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.variables'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings'
-import { Route as PublicProjectsProjectIdSitesSiteIdLogsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.logs'
-import { Route as PublicProjectsProjectIdSitesSiteIdDomainsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains'
-import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments'
-import { Route as PublicProjectsProjectIdSettingsMigrationsImportRouteImport } from './routes/_public/projects.$projectId.settings.migrations.import'
-import { Route as PublicProjectsProjectIdSettingsDomainsAddRouteImport } from './routes/_public/projects.$projectId.settings.domains.add'
-import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
-import { Route as PublicProjectsProjectIdMessagingProvidersCreateRouteImport } from './routes/_public/projects.$projectId.messaging.providers.create'
-import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId'
-import { Route as PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId.settings'
-import { Route as PublicProjectsProjectIdFunctionsCreateManualRouteImport } from './routes/_public/projects.$projectId.functions.create.manual'
-import { Route as PublicProjectsProjectIdFunctionsCreateDeployingRouteImport } from './routes/_public/projects.$projectId.functions.create.deploying'
-import { Route as PublicProjectsProjectIdFunctionsCreateDeployRouteImport } from './routes/_public/projects.$projectId.functions.create.deploy'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.variables'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.security'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.executions'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
-import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
-import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
-import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
-import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
-import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
-import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from './routes/_public/projects.$projectId.auth.policies.emails'
-import { Route as PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.settings'
-import { Route as PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.apps'
-import { Route as PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.settings'
-import { Route as PublicOrganizationsOrgIdAppsAppIdSupportRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.support'
-import { Route as PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.settings'
-import { Route as PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.secrets'
-import { Route as PublicOrganizationsOrgIdAppsAppIdOauthRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.oauth'
-import { Route as PublicOrganizationsOrgIdAppsAppIdLegalRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.legal'
-import { Route as PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.branding'
-import { Route as PublicOrganizationsOrgIdAgentSettingsUsageRouteImport } from './routes/_public/organizations.$orgId.agent.settings.usage'
-import { Route as PublicOrganizationsOrgIdAgentSettingsModelsRouteImport } from './routes/_public/organizations.$orgId.agent.settings.models'
-import { Route as PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport } from './routes/_public/organizations.$orgId.agent.settings.memory'
-import { Route as PublicOrganizationsOrgIdAgentSettingsMcpRouteImport } from './routes/_public/organizations.$orgId.agent.settings.mcp'
-import { Route as PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport } from './routes/_public/organizations.$orgId.agent.automations.create'
 import { Route as PublicOrganizationsOrgIdAgentAutomationsAutomationIdRouteImport } from './routes/_public/organizations.$orgId.agent.automations.$automationId'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.index'
-import { Route as PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains.index'
-import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.index'
-import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.index'
-import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.index'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.index'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.index'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.index'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.index'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.index'
-import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.git'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.danger-zone'
-import { Route as PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.build'
-import { Route as PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains.add'
-import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.$deploymentId'
-import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.settings'
-import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.activity'
-import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.settings'
-import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.activity'
-import { Route as PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport } from './routes/_public/projects.$projectId.functions.create.template.$templateId'
-import { Route as PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport } from './routes/_public/projects.$projectId.functions.create.repository.$repository'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.runtime'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.git'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.executions'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.danger-zone'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.build'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.visualizer'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.sql'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.roles'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.extensions'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.enums'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connections'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connect'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.backups'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.visualizer'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.sql'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.roles'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connections'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connect'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.backups'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.visualizer'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.export-import'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.db-security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.browser'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.backups'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.$tableId'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.targets'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.sessions'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.memberships'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.identities'
-import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
-import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
+import { Route as PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport } from './routes/_public/organizations.$orgId.agent.automations.create'
+import { Route as PublicOrganizationsOrgIdAgentSettingsIndexRouteImport } from './routes/_public/organizations.$orgId.agent.settings.index'
+import { Route as PublicOrganizationsOrgIdAgentSettingsMcpRouteImport } from './routes/_public/organizations.$orgId.agent.settings.mcp'
+import { Route as PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport } from './routes/_public/organizations.$orgId.agent.settings.memory'
+import { Route as PublicOrganizationsOrgIdAgentSettingsModelsRouteImport } from './routes/_public/organizations.$orgId.agent.settings.models'
+import { Route as PublicOrganizationsOrgIdAgentSettingsUsageRouteImport } from './routes/_public/organizations.$orgId.agent.settings.usage'
+import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
+import { Route as PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.branding'
+import { Route as PublicOrganizationsOrgIdAppsAppIdLegalRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.legal'
+import { Route as PublicOrganizationsOrgIdAppsAppIdOauthRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.oauth'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.secrets'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.settings'
+import { Route as PublicOrganizationsOrgIdAppsAppIdSupportRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.support'
+import { Route as PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.index'
+import { Route as PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.settings'
+import { Route as PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.$appId.index'
+import { Route as PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.apps'
+import { Route as PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server.settings'
+import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from './routes/_public/projects.$projectId.auth.policies.emails'
+import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
+import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
+import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
+import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
+import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.index'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.executions'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.security'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.variables'
+import { Route as PublicProjectsProjectIdFunctionsCreateIndexRouteImport } from './routes/_public/projects.$projectId.functions.create.index'
+import { Route as PublicProjectsProjectIdFunctionsCreateDeployRouteImport } from './routes/_public/projects.$projectId.functions.create.deploy'
+import { Route as PublicProjectsProjectIdFunctionsCreateDeployingRouteImport } from './routes/_public/projects.$projectId.functions.create.deploying'
+import { Route as PublicProjectsProjectIdFunctionsCreateManualRouteImport } from './routes/_public/projects.$projectId.functions.create.manual'
+import { Route as PublicProjectsProjectIdMessagingMessageIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId.index'
+import { Route as PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId.settings'
+import { Route as PublicProjectsProjectIdMessagingProvidersIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.index'
+import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId'
+import { Route as PublicProjectsProjectIdMessagingProvidersCreateRouteImport } from './routes/_public/projects.$projectId.messaging.providers.create'
+import { Route as PublicProjectsProjectIdMessagingTopicsIndexRouteImport } from './routes/_public/projects.$projectId.messaging.topics.index'
+import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
+import { Route as PublicProjectsProjectIdSettingsDomainsIndexRouteImport } from './routes/_public/projects.$projectId.settings.domains.index'
+import { Route as PublicProjectsProjectIdSettingsDomainsAddRouteImport } from './routes/_public/projects.$projectId.settings.domains.add'
+import { Route as PublicProjectsProjectIdSettingsMigrationsIndexRouteImport } from './routes/_public/projects.$projectId.settings.migrations.index'
+import { Route as PublicProjectsProjectIdSettingsMigrationsImportRouteImport } from './routes/_public/projects.$projectId.settings.migrations.import'
+import { Route as PublicProjectsProjectIdSitesSiteIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments'
+import { Route as PublicProjectsProjectIdSitesSiteIdDomainsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains'
+import { Route as PublicProjectsProjectIdSitesSiteIdLogsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.logs'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings'
+import { Route as PublicProjectsProjectIdSitesSiteIdVariablesRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.variables'
+import { Route as PublicProjectsProjectIdSitesCreateIndexRouteImport } from './routes/_public/projects.$projectId.sites.create.index'
+import { Route as PublicProjectsProjectIdSitesCreateDeployRouteImport } from './routes/_public/projects.$projectId.sites.create.deploy'
+import { Route as PublicProjectsProjectIdSitesCreateDeployingRouteImport } from './routes/_public/projects.$projectId.sites.create.deploying'
+import { Route as PublicProjectsProjectIdSitesCreateFinishRouteImport } from './routes/_public/projects.$projectId.sites.create.finish'
+import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './routes/_public/projects.$projectId.sites.create.manual'
+import { Route as PublicProjectsProjectIdStorageBucketIdIndexRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.index'
+import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.security'
+import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
+import { Route as PublicProjectsProjectIdStoresAppIdIndexRouteImport } from './routes/_public/projects.$projectId.stores.$appId.index'
+import { Route as PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId.$metricId'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
-import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.$deploymentId.index'
-import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.$deploymentId.index'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.index'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.index'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
-import { Route as PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport } from './routes/_public/projects.$projectId.sites.create.repositories.$installationId.$repositoryId'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.storage'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.replication'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.pitr'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.network'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.maintenance'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.extensions'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.compute'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.storage'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.replication'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.pitr'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.network'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.maintenance'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.compute'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.replication'
+import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.identities'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.memberships'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.sessions'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.targets'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.$tableId'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.backups'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.browser'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.db-security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.export-import'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.index'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.backups'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connect'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.connections'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.roles'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.sql'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.index'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.backups'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connect'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connections'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.enums'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.extensions'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.roles'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.sql'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.visualizer'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.index'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains.add'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.index'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.build'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.danger-zone'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.executions'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.git'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.runtime'
+import { Route as PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport } from './routes/_public/projects.$projectId.functions.create.repository.$repository'
+import { Route as PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport } from './routes/_public/projects.$projectId.functions.create.template.$templateId'
+import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.index'
+import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.activity'
+import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.settings'
+import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.index'
+import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.activity'
+import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.settings'
+import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.$deploymentId'
+import { Route as PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.domains.add'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.build'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.danger-zone'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.git'
+import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
+import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.replication'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.index'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.compute'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.maintenance'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.network'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.pitr'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.replication'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.settings.storage'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.index'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.compute'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.extensions'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.maintenance'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.network'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.pitr'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.replication'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings.storage'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.$deploymentId.index'
+import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.$deploymentId.index'
+import { Route as PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport } from './routes/_public/projects.$projectId.sites.create.repositories.$installationId.$repositoryId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.index'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.settings'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.security'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.rows'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.indexes'
-import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.columns'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.settings'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.security'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.rows'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.indexes'
-import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.columns'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.visualizer'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.settings'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.rows'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.indexes'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.export-import'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.documents'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.db-settings'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.db-security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.columns'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.backups'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.visualizer'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.settings'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.monitor'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.json'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.indexes'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.export-import'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.documents'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.db-settings'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.db-security'
-import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.db-security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.db-settings'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.documents'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.export-import'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.json'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.settings'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.index'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.backups'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.columns'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.db-security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.db-settings'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.documents'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.export-import'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.monitor'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.rows'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.settings'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.visualizer'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.columns'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.rows'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.security'
+import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId.tables.$tableId.settings'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.columns'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.rows'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.security'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.settings'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
-  id: '/robots.txt',
-  path: '/robots.txt',
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/_marketing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
-  id: '/llms.txt',
-  path: '/llms.txt',
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
-  id: '/llms-full.txt',
-  path: '/llms-full.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
-  id: '/integrations.md',
-  path: '/integrations.md',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GeneratorRoute = GeneratorRouteImport.update({
-  id: '/generator',
-  path: '/generator',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsDotmdRoute = DocsDotmdRouteImport.update({
-  id: '/docs.md',
-  path: '/docs.md',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiscordRoute = DiscordRouteImport.update({
-  id: '/discord',
-  path: '/discord',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogDotmdRoute = ChangelogDotmdRouteImport.update({
-  id: '/changelog.md',
-  path: '/changelog.md',
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
@@ -487,246 +472,74 @@ const BlogDotmdRoute = BlogDotmdRouteImport.update({
   path: '/blog.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicRoute = PublicRouteImport.update({
-  id: '/_public',
+const ChangelogDotmdRoute = ChangelogDotmdRouteImport.update({
+  id: '/changelog.md',
+  path: '/changelog.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProtectedRoute = ProtectedRouteImport.update({
-  id: '/_protected',
+const DiscordRoute = DiscordRouteImport.update({
+  id: '/discord',
+  path: '/discord',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingRoute = MarketingRouteImport.update({
-  id: '/_marketing',
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/_auth',
+const DocsDotmdRoute = DocsDotmdRouteImport.update({
+  id: '/docs.md',
+  path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GeneratorIndexRoute = GeneratorIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GeneratorRoute,
-} as any)
-const DocsIndexRoute = DocsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DocsRoute,
-} as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
-} as any)
-const LlmsTxtRoute = LlmsTxtRouteImport.update({
-  id: '/llms/txt',
-  path: '/llms/txt',
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
-  id: '/llms-full/txt',
-  path: '/llms-full/txt',
+const GeneratorRoute = GeneratorRouteImport.update({
+  id: '/generator',
+  path: '/generator',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ILinkIdRoute = ILinkIdRouteImport.update({
-  id: '/i/$linkId',
-  path: '/i/$linkId',
+const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
+  id: '/integrations.md',
+  path: '/integrations.md',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
-  id: '/$generationId',
-  path: '/$generationId',
-  getParentRoute: () => GeneratorRoute,
-} as any)
-const DomainsContinueRoute = DomainsContinueRouteImport.update({
-  id: '/domains/continue',
-  path: '/domains/continue',
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocsTutorialsRoute = DocsTutorialsRouteImport.update({
-  id: '/tutorials',
-  path: '/tutorials',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsQuickStartsRoute = DocsQuickStartsRouteImport.update({
-  id: '/quick-starts',
-  path: '/quick-starts',
-  getParentRoute: () => DocsRoute,
-} as any)
-const DocsSplatRoute = DocsSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => DocsRoute,
-} as any)
-const CliInstallDotshRoute = CliInstallDotshRouteImport.update({
-  id: '/cli/install.sh',
-  path: '/cli/install.sh',
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
-  id: '/cli/install.ps1',
-  path: '/cli/install.ps1',
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
-  id: '/upgrade',
-  path: '/upgrade',
-  getParentRoute: () => PublicRoute,
+const SetupDotmdRoute = SetupDotmdRouteImport.update({
+  id: '/setup.md',
+  path: '/setup.md',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const PublicSalesRoute = PublicSalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
-  getParentRoute: () => PublicRoute,
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const PublicResetRoute = PublicResetRouteImport.update({
-  id: '/reset',
-  path: '/reset',
-  getParentRoute: () => PublicRoute,
+const ApiHelloRoute = ApiHelloRouteImport.update({
+  id: '/_api/hello',
+  path: '/hello',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const PublicInitRoute = PublicInitRouteImport.update({
-  id: '/init',
-  path: '/init',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicCompsRoute = PublicCompsRouteImport.update({
-  id: '/comps',
-  path: '/comps',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicCacheRoute = PublicCacheRouteImport.update({
-  id: '/cache',
-  path: '/cache',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicBlocksRoute = PublicBlocksRouteImport.update({
-  id: '/blocks',
-  path: '/blocks',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAssistantRoute = PublicAssistantRouteImport.update({
-  id: '/assistant',
-  path: '/assistant',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAppRoute = PublicAppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAgentRoute = PublicAgentRouteImport.update({
-  id: '/agent',
-  path: '/agent',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAccountRoute = PublicAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => PublicRoute,
-} as any)
-const ProtectedExampleProtectedRouteRoute =
-  ProtectedExampleProtectedRouteRouteImport.update({
-    id: '/example-protected-route',
-    path: '/example-protected-route',
-    getParentRoute: () => ProtectedRoute,
-  } as any)
-const MarketingTermsRoute = MarketingTermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
-  id: '/startups',
-  path: '/startups',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPrivacyRoute = MarketingPrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPricingRoute = MarketingPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPartnersRoute = MarketingPartnersRouteImport.update({
-  id: '/partners',
-  path: '/partners',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingHomeRoute = MarketingHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
-  id: '/enterprise',
-  path: '/enterprise',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingEducationRoute = MarketingEducationRouteImport.update({
-  id: '/education',
-  path: '/education',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingDomainsRoute = MarketingDomainsRouteImport.update({
-  id: '/domains',
-  path: '/domains',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingCookiesRoute = MarketingCookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingCompanyRoute = MarketingCompanyRouteImport.update({
-  id: '/company',
-  path: '/company',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingCommunityRoute = MarketingCommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingBaaRoute = MarketingBaaRouteImport.update({
-  id: '/baa',
-  path: '/baa',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
-  id: '/assets',
-  path: '/assets',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
-  id: '/affiliates',
-  path: '/affiliates',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthSignUpRoute = AuthSignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthSignOutRoute = AuthSignOutRouteImport.update({
-  id: '/sign-out',
-  path: '/sign-out',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthSignInRoute = AuthSignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthRecoveryRoute = AuthRecoveryRouteImport.update({
-  id: '/recovery',
-  path: '/recovery',
+const AuthJoinRoute = AuthJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthMfaRoute = AuthMfaRouteImport.update({
@@ -734,44 +547,347 @@ const AuthMfaRoute = AuthMfaRouteImport.update({
   path: '/mfa',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthJoinRoute = AuthJoinRouteImport.update({
-  id: '/join',
-  path: '/join',
+const AuthRecoveryRoute = AuthRecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
   getParentRoute: () => AuthRoute,
 } as any)
-const ApiHelloRoute = ApiHelloRouteImport.update({
-  id: '/_api/hello',
-  path: '/hello',
-  getParentRoute: () => rootRouteImport,
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRoute,
 } as any)
-const GeneratorDiagramsIndexRoute = GeneratorDiagramsIndexRouteImport.update({
-  id: '/diagrams/',
-  path: '/diagrams/',
-  getParentRoute: () => GeneratorRoute,
+const AuthSignOutRoute = AuthSignOutRouteImport.update({
+  id: '/sign-out',
+  path: '/sign-out',
+  getParentRoute: () => AuthRoute,
 } as any)
-const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
-  id: '/partners/',
-  path: '/partners/',
-  getParentRoute: () => DocsRoute,
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AuthRoute,
 } as any)
-const PublicImpersonateIndexRoute = PublicImpersonateIndexRouteImport.update({
-  id: '/impersonate/',
-  path: '/impersonate/',
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRoute,
+} as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBaaRoute = MarketingBaaRouteImport.update({
+  id: '/baa',
+  path: '/baa',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCommunityRoute = MarketingCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCompanyRoute = MarketingCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCookiesRoute = MarketingCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingDomainsRoute = MarketingDomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingEducationRoute = MarketingEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingHomeRoute = MarketingHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPartnersRoute = MarketingPartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPricingRoute = MarketingPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPrivacyRoute = MarketingPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingTermsRoute = MarketingTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const ProtectedExampleProtectedRouteRoute =
+  ProtectedExampleProtectedRouteRouteImport.update({
+    id: '/example-protected-route',
+    path: '/example-protected-route',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+const PublicAccountRoute = PublicAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => PublicRoute,
 } as any)
-const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
+const PublicAgentRoute = PublicAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAppRoute = PublicAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAssistantRoute = PublicAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicBlocksRoute = PublicBlocksRouteImport.update({
+  id: '/blocks',
+  path: '/blocks',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicCacheRoute = PublicCacheRouteImport.update({
+  id: '/cache',
+  path: '/cache',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicCompsRoute = PublicCompsRouteImport.update({
+  id: '/comps',
+  path: '/comps',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicInitRoute = PublicInitRouteImport.update({
+  id: '/init',
+  path: '/init',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicResetRoute = PublicResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSalesRoute = PublicSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => PublicRoute,
+} as any)
+const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
+  id: '/cli/install.ps1',
+  path: '/cli/install.ps1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CliInstallDotshRoute = CliInstallDotshRouteImport.update({
+  id: '/cli/install.sh',
+  path: '/cli/install.sh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PublicAgentRoute,
+  getParentRoute: () => DocsRoute,
 } as any)
-const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
+const DocsSplatRoute = DocsSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsQuickStartsRoute = DocsQuickStartsRouteImport.update({
+  id: '/quick-starts',
+  path: '/quick-starts',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsTutorialsRoute = DocsTutorialsRouteImport.update({
+  id: '/tutorials',
+  path: '/tutorials',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DomainsContinueRoute = DomainsContinueRouteImport.update({
+  id: '/domains/continue',
+  path: '/domains/continue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GeneratorIndexRoute = GeneratorIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PublicAccountRoute,
+  getParentRoute: () => GeneratorRoute,
 } as any)
-const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
-  id: '/threads/',
-  path: '/threads/',
+const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
+  id: '/$generationId',
+  path: '/$generationId',
+  getParentRoute: () => GeneratorRoute,
+} as any)
+const ILinkIdRoute = ILinkIdRouteImport.update({
+  id: '/i/$linkId',
+  path: '/i/$linkId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
+  id: '/llms-full/txt',
+  path: '/llms-full/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsTxtRoute = LlmsTxtRouteImport.update({
+  id: '/llms/txt',
+  path: '/llms/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
+  id: '/_api/blog/rss.xml',
+  path: '/blog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
+  id: '/_api/changelog/rss.xml',
+  path: '/changelog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDebugIpRoute = ApiDebugIpRouteImport.update({
+  id: '/_api/debug/ip',
+  path: '/debug/ip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
+  id: '/_api/generator/cover',
+  path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
+  id: '/_api/generator/diagram',
+  path: '/generator/diagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
+  id: '/_api/og/image.png',
+  path: '/og/image.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgInitDotpngRoute = ApiOgInitDotpngRouteImport.update({
+  id: '/_api/og/init.png',
+  path: '/og/init.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
+  id: '/_api/references-api/model',
+  path: '/references-api/model',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferencesApiNavCountsRoute =
+  ApiReferencesApiNavCountsRouteImport.update({
+    id: '/_api/references-api/nav-counts',
+    path: '/references-api/nav-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiOpenApiSpecRoute =
+  ApiReferencesApiOpenApiSpecRouteImport.update({
+    id: '/_api/references-api/open-api-spec',
+    path: '/references-api/open-api-spec',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
+  id: '/_api/references-api/service',
+  path: '/references-api/service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResendApiKeysRoute = ApiResendApiKeysRouteImport.update({
+  id: '/_api/resend/api-keys',
+  path: '/resend/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResendDomainsRoute = ApiResendDomainsRouteImport.update({
+  id: '/_api/resend/domains',
+  path: '/resend/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
+  id: '/_api/sitemap/news.xml',
+  path: '/sitemap/news.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
+  id: '/auth/magic-url',
+  path: '/auth/magic-url',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthEducationJoinRoute = AuthEducationJoinRouteImport.update({
+  id: '/education/join',
+  path: '/education/join',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
+  id: '/oauth2/consent',
+  path: '/oauth2/consent',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
+  id: '/oauth2/device',
+  path: '/oauth2/device',
+  getParentRoute: () => AuthRoute,
+} as any)
+const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBlogPageRoute = MarketingBlogPageRouteImport.update({
+  id: '/blog/$page',
+  path: '/blog/$page',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingChangelogIndexRoute = MarketingChangelogIndexRouteImport.update({
+  id: '/changelog/',
+  path: '/changelog/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingInitTicketIdRoute = MarketingInitTicketIdRouteImport.update({
+  id: '/init/$ticketId',
+  path: '/init/$ticketId',
   getParentRoute: () => MarketingRoute,
 } as any)
 const MarketingIntegrationsIndexRoute =
@@ -780,147 +896,10 @@ const MarketingIntegrationsIndexRoute =
     path: '/integrations/',
     getParentRoute: () => MarketingRoute,
   } as any)
-const MarketingChangelogIndexRoute = MarketingChangelogIndexRouteImport.update({
-  id: '/changelog/',
-  path: '/changelog/',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const GeneratorDiagramsGenerationIdRoute =
-  GeneratorDiagramsGenerationIdRouteImport.update({
-    id: '/diagrams/$generationId',
-    path: '/diagrams/$generationId',
-    getParentRoute: () => GeneratorRoute,
-  } as any)
-const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
-  id: '/projects/$projectId',
-  path: '/projects/$projectId',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicOrganizationsOrgIdRoute =
-  PublicOrganizationsOrgIdRouteImport.update({
-    id: '/organizations/$orgId',
-    path: '/organizations/$orgId',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicMarketplaceAppIdRoute = PublicMarketplaceAppIdRouteImport.update({
-  id: '/marketplace/$appId',
-  path: '/marketplace/$appId',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicImpersonateUserIdRoute = PublicImpersonateUserIdRouteImport.update({
-  id: '/impersonate/$userId',
-  path: '/impersonate/$userId',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicGitAuthorizeContributorRoute =
-  PublicGitAuthorizeContributorRouteImport.update({
-    id: '/git/authorize-contributor',
-    path: '/git/authorize-contributor',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicDebugVerifyEmailPreviewRoute =
-  PublicDebugVerifyEmailPreviewRouteImport.update({
-    id: '/debug/verify-email-preview',
-    path: '/debug/verify-email-preview',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicDebugOrgSetupPreviewRoute =
-  PublicDebugOrgSetupPreviewRouteImport.update({
-    id: '/debug/org-setup-preview',
-    path: '/debug/org-setup-preview',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicDebugOauth2PreviewRoute =
-  PublicDebugOauth2PreviewRouteImport.update({
-    id: '/debug/oauth2-preview',
-    path: '/debug/oauth2-preview',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
-  id: '/debug/error-preview',
-  path: '/debug/error-preview',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicDebugCodeEditorPreviewRoute =
-  PublicDebugCodeEditorPreviewRouteImport.update({
-    id: '/debug/code-editor-preview',
-    path: '/debug/code-editor-preview',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicDebugAuthorizeContributorPreviewRoute =
-  PublicDebugAuthorizeContributorPreviewRouteImport.update({
-    id: '/debug/authorize-contributor-preview',
-    path: '/debug/authorize-contributor-preview',
-    getParentRoute: () => PublicRoute,
-  } as any)
-const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => PublicAgentRoute,
-} as any)
-const PublicAgentAutomationsRoute = PublicAgentAutomationsRouteImport.update({
-  id: '/automations',
-  path: '/automations',
-  getParentRoute: () => PublicAgentRoute,
-} as any)
-const PublicAgentAgentIdRoute = PublicAgentAgentIdRouteImport.update({
-  id: '/$agentId',
-  path: '/$agentId',
-  getParentRoute: () => PublicAgentRoute,
-} as any)
-const PublicAccountSessionsRoute = PublicAccountSessionsRouteImport.update({
-  id: '/sessions',
-  path: '/sessions',
-  getParentRoute: () => PublicAccountRoute,
-} as any)
-const PublicAccountSecurityRoute = PublicAccountSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => PublicAccountRoute,
-} as any)
-const PublicAccountPaymentsRoute = PublicAccountPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
-  getParentRoute: () => PublicAccountRoute,
-} as any)
-const PublicAccountPaymentMethodsRoute =
-  PublicAccountPaymentMethodsRouteImport.update({
-    id: '/payment-methods',
-    path: '/payment-methods',
-    getParentRoute: () => PublicAccountRoute,
-  } as any)
-const PublicAccountNotificationsRoute =
-  PublicAccountNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => PublicAccountRoute,
-  } as any)
-const PublicAccountBillingAddressesRoute =
-  PublicAccountBillingAddressesRouteImport.update({
-    id: '/billing-addresses',
-    path: '/billing-addresses',
-    getParentRoute: () => PublicAccountRoute,
-  } as any)
-const PublicAccountApplicationsRoute =
-  PublicAccountApplicationsRouteImport.update({
-    id: '/applications',
-    path: '/applications',
-    getParentRoute: () => PublicAccountRoute,
-  } as any)
-const PublicAccountAffiliatesRoute = PublicAccountAffiliatesRouteImport.update({
-  id: '/affiliates',
-  path: '/affiliates',
-  getParentRoute: () => PublicAccountRoute,
-} as any)
-const MarketingThreadsThreadIdRoute =
-  MarketingThreadsThreadIdRouteImport.update({
-    id: '/threads/$threadId',
-    path: '/threads/$threadId',
+const MarketingIntegrationsSlugRoute =
+  MarketingIntegrationsSlugRouteImport.update({
+    id: '/integrations/$slug',
+    path: '/integrations/$slug',
     getParentRoute: () => MarketingRoute,
   } as any)
 const MarketingProductsProductIdRoute =
@@ -929,382 +908,252 @@ const MarketingProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => MarketingRoute,
   } as any)
-const MarketingIntegrationsSlugRoute =
-  MarketingIntegrationsSlugRouteImport.update({
-    id: '/integrations/$slug',
-    path: '/integrations/$slug',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingInitTicketIdRoute = MarketingInitTicketIdRouteImport.update({
-  id: '/init/$ticketId',
-  path: '/init/$ticketId',
+const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
+  id: '/threads/',
+  path: '/threads/',
   getParentRoute: () => MarketingRoute,
 } as any)
-const MarketingBlogPageRoute = MarketingBlogPageRouteImport.update({
-  id: '/blog/$page',
-  path: '/blog/$page',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
-  id: '/oauth2/device',
-  path: '/oauth2/device',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
-  id: '/oauth2/consent',
-  path: '/oauth2/consent',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthEducationJoinRoute = AuthEducationJoinRouteImport.update({
-  id: '/education/join',
-  path: '/education/join',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
-  id: '/auth/magic-url',
-  path: '/auth/magic-url',
-  getParentRoute: () => AuthRoute,
-} as any)
-const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
-  id: '/_api/sitemap/news.xml',
-  path: '/sitemap/news.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
-  id: '/_api/references-api/service',
-  path: '/references-api/service',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiReferencesApiOpenApiSpecRoute =
-  ApiReferencesApiOpenApiSpecRouteImport.update({
-    id: '/_api/references-api/open-api-spec',
-    path: '/references-api/open-api-spec',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiReferencesApiNavCountsRoute =
-  ApiReferencesApiNavCountsRouteImport.update({
-    id: '/_api/references-api/nav-counts',
-    path: '/references-api/nav-counts',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
-  id: '/_api/references-api/model',
-  path: '/references-api/model',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
-  id: '/_api/r/v.js',
-  path: '/r/v.js',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRERoute = ApiRERouteImport.update({
-  id: '/_api/r/e',
-  path: '/r/e',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiOgInitDotpngRoute = ApiOgInitDotpngRouteImport.update({
-  id: '/_api/og/init.png',
-  path: '/og/init.png',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
-  id: '/_api/og/image.png',
-  path: '/og/image.png',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
-  id: '/_api/generator/diagram',
-  path: '/generator/diagram',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
-  id: '/_api/generator/cover',
-  path: '/generator/cover',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDebugIpRoute = ApiDebugIpRouteImport.update({
-  id: '/_api/debug/ip',
-  path: '/debug/ip',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
-  id: '/_api/changelog/rss.xml',
-  path: '/changelog/rss.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
-  id: '/_api/blog/rss.xml',
-  path: '/blog/rss.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PublicProjectsProjectIdIndexRoute =
-  PublicProjectsProjectIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdIndexRoute =
-  PublicOrganizationsOrgIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicAgentSettingsIndexRoute =
-  PublicAgentSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicAgentSettingsRoute,
-  } as any)
-const PublicAgentAutomationsIndexRoute =
-  PublicAgentAutomationsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicAgentAutomationsRoute,
-  } as any)
-const PublicProjectsProjectIdUsageRoute =
-  PublicProjectsProjectIdUsageRouteImport.update({
-    id: '/usage',
-    path: '/usage',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdStoresRoute =
-  PublicProjectsProjectIdStoresRouteImport.update({
-    id: '/stores',
-    path: '/stores',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdStorageRoute =
-  PublicProjectsProjectIdStorageRouteImport.update({
-    id: '/storage',
-    path: '/storage',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsRoute =
-  PublicProjectsProjectIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdRealtimeRoute =
-  PublicProjectsProjectIdRealtimeRouteImport.update({
-    id: '/realtime',
-    path: '/realtime',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdOnboardingRoute =
-  PublicProjectsProjectIdOnboardingRouteImport.update({
-    id: '/onboarding',
-    path: '/onboarding',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingRoute =
-  PublicProjectsProjectIdMessagingRouteImport.update({
-    id: '/messaging',
-    path: '/messaging',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdImagineRoute =
-  PublicProjectsProjectIdImagineRouteImport.update({
-    id: '/imagine',
-    path: '/imagine',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsRoute =
-  PublicProjectsProjectIdFunctionsRouteImport.update({
-    id: '/functions',
-    path: '/functions',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdFirewallRoute =
-  PublicProjectsProjectIdFirewallRouteImport.update({
-    id: '/firewall',
-    path: '/firewall',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdExplorerRoute =
-  PublicProjectsProjectIdExplorerRouteImport.update({
-    id: '/explorer',
-    path: '/explorer',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesRoute =
-  PublicProjectsProjectIdDatabasesRouteImport.update({
-    id: '/databases',
-    path: '/databases',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdAuthRoute =
-  PublicProjectsProjectIdAuthRouteImport.update({
-    id: '/auth',
-    path: '/auth',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdAppsRoute =
-  PublicProjectsProjectIdAppsRouteImport.update({
-    id: '/apps',
-    path: '/apps',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdApiKeysRoute =
-  PublicProjectsProjectIdApiKeysRouteImport.update({
-    id: '/api-keys',
-    path: '/api-keys',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdAnalyticsRoute =
-  PublicProjectsProjectIdAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdAdvisorRoute =
-  PublicProjectsProjectIdAdvisorRouteImport.update({
-    id: '/advisor',
-    path: '/advisor',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdActivityRoute =
-  PublicProjectsProjectIdActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdSupportRoute =
-  PublicOrganizationsOrgIdSupportRouteImport.update({
-    id: '/support',
-    path: '/support',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsRoute =
-  PublicOrganizationsOrgIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdMembersRoute =
-  PublicOrganizationsOrgIdMembersRouteImport.update({
-    id: '/members',
-    path: '/members',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdMarketplaceRoute =
-  PublicOrganizationsOrgIdMarketplaceRouteImport.update({
-    id: '/marketplace',
-    path: '/marketplace',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdDomainsRoute =
-  PublicOrganizationsOrgIdDomainsRouteImport.update({
-    id: '/domains',
-    path: '/domains',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdBillingRoute =
-  PublicOrganizationsOrgIdBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsRoute =
-  PublicOrganizationsOrgIdAppsRouteImport.update({
-    id: '/apps',
-    path: '/apps',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentRoute =
-  PublicOrganizationsOrgIdAgentRouteImport.update({
-    id: '/agent',
-    path: '/agent',
-    getParentRoute: () => PublicOrganizationsOrgIdRoute,
-  } as any)
-const PublicAgentSettingsUsageRoute =
-  PublicAgentSettingsUsageRouteImport.update({
-    id: '/usage',
-    path: '/usage',
-    getParentRoute: () => PublicAgentSettingsRoute,
-  } as any)
-const PublicAgentSettingsModelsRoute =
-  PublicAgentSettingsModelsRouteImport.update({
-    id: '/models',
-    path: '/models',
-    getParentRoute: () => PublicAgentSettingsRoute,
-  } as any)
-const PublicAgentSettingsMemoryRoute =
-  PublicAgentSettingsMemoryRouteImport.update({
-    id: '/memory',
-    path: '/memory',
-    getParentRoute: () => PublicAgentSettingsRoute,
-  } as any)
-const PublicAgentSettingsMcpRoute = PublicAgentSettingsMcpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => PublicAgentSettingsRoute,
-} as any)
-const PublicAgentAutomationsCreateRoute =
-  PublicAgentAutomationsCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => PublicAgentAutomationsRoute,
-  } as any)
-const PublicAgentAutomationsAutomationIdRoute =
-  PublicAgentAutomationsAutomationIdRouteImport.update({
-    id: '/$automationId',
-    path: '/$automationId',
-    getParentRoute: () => PublicAgentAutomationsRoute,
-  } as any)
-const MarketingThreadsAuthorsAuthorIdRoute =
-  MarketingThreadsAuthorsAuthorIdRouteImport.update({
-    id: '/threads/authors/$authorId',
-    path: '/threads/authors/$authorId',
+const MarketingThreadsThreadIdRoute =
+  MarketingThreadsThreadIdRouteImport.update({
+    id: '/threads/$threadId',
+    path: '/threads/$threadId',
     getParentRoute: () => MarketingRoute,
   } as any)
-const MarketingChangelogEntryEntryRoute =
-  MarketingChangelogEntryEntryRouteImport.update({
-    id: '/changelog/entry/$entry',
-    path: '/changelog/entry/$entry',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingBlogPostSlugRoute = MarketingBlogPostSlugRouteImport.update({
-  id: '/blog/post/$slug',
-  path: '/blog/post/$slug',
-  getParentRoute: () => MarketingRoute,
+const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicAccountRoute,
 } as any)
-const MarketingBlogCategoriesCategoryRoute =
-  MarketingBlogCategoriesCategoryRouteImport.update({
-    id: '/blog/categories/$category',
-    path: '/blog/categories/$category',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingBlogAuthorAuthorRoute =
-  MarketingBlogAuthorAuthorRouteImport.update({
-    id: '/blog/author/$author',
-    path: '/blog/author/$author',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const AuthAuthOauth2SuccessRoute = AuthAuthOauth2SuccessRouteImport.update({
-  id: '/auth/oauth2/success',
-  path: '/auth/oauth2/success',
-  getParentRoute: () => AuthRoute,
+const PublicAccountAffiliatesRoute = PublicAccountAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
+  getParentRoute: () => PublicAccountRoute,
 } as any)
-const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
-  id: '/auth/oauth2/failure',
-  path: '/auth/oauth2/failure',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthAssistantMcpCallbackRoute =
-  AuthAssistantMcpCallbackRouteImport.update({
-    id: '/assistant/mcp/callback',
-    path: '/assistant/mcp/callback',
-    getParentRoute: () => AuthRoute,
+const PublicAccountApplicationsRoute =
+  PublicAccountApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => PublicAccountRoute,
   } as any)
-const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
-  id: '/agent/mcp/callback',
-  path: '/agent/mcp/callback',
-  getParentRoute: () => AuthRoute,
+const PublicAccountBillingAddressesRoute =
+  PublicAccountBillingAddressesRouteImport.update({
+    id: '/billing-addresses',
+    path: '/billing-addresses',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountNotificationsRoute =
+  PublicAccountNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountPaymentMethodsRoute =
+  PublicAccountPaymentMethodsRouteImport.update({
+    id: '/payment-methods',
+    path: '/payment-methods',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountPaymentsRoute = PublicAccountPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => PublicAccountRoute,
 } as any)
-const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
-  id: '/_api/init/ticket/$eventSlug',
-  path: '/init/ticket/$eventSlug',
+const PublicAccountSecurityRoute = PublicAccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
+const PublicAccountSessionsRoute = PublicAccountSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
+const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAgentAgentIdRoute = PublicAgentAgentIdRouteImport.update({
+  id: '/$agentId',
+  path: '/$agentId',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAgentAutomationsRoute = PublicAgentAutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAuthPreviewRoute = PublicAuthPreviewRouteImport.update({
+  id: '/auth/preview',
+  path: '/auth/preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugAuthorizeContributorPreviewRoute =
+  PublicDebugAuthorizeContributorPreviewRouteImport.update({
+    id: '/debug/authorize-contributor-preview',
+    path: '/debug/authorize-contributor-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugCodeEditorPreviewRoute =
+  PublicDebugCodeEditorPreviewRouteImport.update({
+    id: '/debug/code-editor-preview',
+    path: '/debug/code-editor-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugCommunityShareExamplesRoute =
+  PublicDebugCommunityShareExamplesRouteImport.update({
+    id: '/debug/community-share-examples',
+    path: '/debug/community-share-examples',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationJoinPreviewRoute =
+  PublicDebugEducationJoinPreviewRouteImport.update({
+    id: '/debug/education-join-preview',
+    path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
+  id: '/debug/error-preview',
+  path: '/debug/error-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugImpersonatePreviewRoute =
+  PublicDebugImpersonatePreviewRouteImport.update({
+    id: '/debug/impersonate-preview',
+    path: '/debug/impersonate-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugJoinInvitePreviewRoute =
+  PublicDebugJoinInvitePreviewRouteImport.update({
+    id: '/debug/join-invite-preview',
+    path: '/debug/join-invite-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMagicUrlPreviewRoute =
+  PublicDebugMagicUrlPreviewRouteImport.update({
+    id: '/debug/magic-url-preview',
+    path: '/debug/magic-url-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMfaPreviewRoute = PublicDebugMfaPreviewRouteImport.update({
+  id: '/debug/mfa-preview',
+  path: '/debug/mfa-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugOauth2PreviewRoute =
+  PublicDebugOauth2PreviewRouteImport.update({
+    id: '/debug/oauth2-preview',
+    path: '/debug/oauth2-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugOauth2RelayPreviewRoute =
+  PublicDebugOauth2RelayPreviewRouteImport.update({
+    id: '/debug/oauth2-relay-preview',
+    path: '/debug/oauth2-relay-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugOrgSetupPreviewRoute =
+  PublicDebugOrgSetupPreviewRouteImport.update({
+    id: '/debug/org-setup-preview',
+    path: '/debug/org-setup-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugRecoveryPreviewRoute =
+  PublicDebugRecoveryPreviewRouteImport.update({
+    id: '/debug/recovery-preview',
+    path: '/debug/recovery-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugResetPreviewRoute = PublicDebugResetPreviewRouteImport.update({
+  id: '/debug/reset-preview',
+  path: '/debug/reset-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugSignInPreviewRoute =
+  PublicDebugSignInPreviewRouteImport.update({
+    id: '/debug/sign-in-preview',
+    path: '/debug/sign-in-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSignUpPreviewRoute =
+  PublicDebugSignUpPreviewRouteImport.update({
+    id: '/debug/sign-up-preview',
+    path: '/debug/sign-up-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSitesAuthPreviewRoute =
+  PublicDebugSitesAuthPreviewRouteImport.update({
+    id: '/debug/sites-auth-preview',
+    path: '/debug/sites-auth-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugVerifyEmailPreviewRoute =
+  PublicDebugVerifyEmailPreviewRouteImport.update({
+    id: '/debug/verify-email-preview',
+    path: '/debug/verify-email-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicGitAuthorizeContributorRoute =
+  PublicGitAuthorizeContributorRouteImport.update({
+    id: '/git/authorize-contributor',
+    path: '/git/authorize-contributor',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicImpersonateIndexRoute = PublicImpersonateIndexRouteImport.update({
+  id: '/impersonate/',
+  path: '/impersonate/',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicImpersonateUserIdRoute = PublicImpersonateUserIdRouteImport.update({
+  id: '/impersonate/$userId',
+  path: '/impersonate/$userId',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicMarketplaceAppIdRoute = PublicMarketplaceAppIdRouteImport.update({
+  id: '/marketplace/$appId',
+  path: '/marketplace/$appId',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicOrganizationsOrgIdRoute =
+  PublicOrganizationsOrgIdRouteImport.update({
+    id: '/organizations/$orgId',
+    path: '/organizations/$orgId',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
+  id: '/projects/$projectId',
+  path: '/projects/$projectId',
+  getParentRoute: () => PublicRoute,
+} as any)
+const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
+  id: '/partners/',
+  path: '/partners/',
+  getParentRoute: () => DocsRoute,
+} as any)
+const GeneratorDiagramsIndexRoute = GeneratorDiagramsIndexRouteImport.update({
+  id: '/diagrams/',
+  path: '/diagrams/',
+  getParentRoute: () => GeneratorRoute,
+} as any)
+const GeneratorDiagramsGenerationIdRoute =
+  GeneratorDiagramsGenerationIdRouteImport.update({
+    id: '/diagrams/$generationId',
+    path: '/diagrams/$generationId',
+    getParentRoute: () => GeneratorRoute,
+  } as any)
+const ApiGeneratorCoverEncodeRoute = ApiGeneratorCoverEncodeRouteImport.update({
+  id: '/encode',
+  path: '/encode',
+  getParentRoute: () => ApiGeneratorCoverRoute,
+} as any)
+const ApiInitTicketIdOgDotpngRoute = ApiInitTicketIdOgDotpngRouteImport.update({
+  id: '/_api/init/$ticketId/og.png',
+  path: '/init/$ticketId/og.png',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiInitCalendarEventSlugRoute =
@@ -1313,368 +1162,298 @@ const ApiInitCalendarEventSlugRoute =
     path: '/init/calendar/$eventSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiInitTicketIdOgDotpngRoute = ApiInitTicketIdOgDotpngRouteImport.update({
-  id: '/_api/init/$ticketId/og.png',
-  path: '/init/$ticketId/og.png',
+const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
+  id: '/_api/init/ticket/$eventSlug',
+  path: '/init/ticket/$eventSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGeneratorCoverEncodeRoute = ApiGeneratorCoverEncodeRouteImport.update({
-  id: '/encode',
-  path: '/encode',
-  getParentRoute: () => ApiGeneratorCoverRoute,
+const ApiResendApiKeysApiKeyIdRoute =
+  ApiResendApiKeysApiKeyIdRouteImport.update({
+    id: '/$apiKeyId',
+    path: '/$apiKeyId',
+    getParentRoute: () => ApiResendApiKeysRoute,
+  } as any)
+const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
+  id: '/agent/mcp/callback',
+  path: '/agent/mcp/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
-const PublicProjectsProjectIdUsageIndexRoute =
-  PublicProjectsProjectIdUsageIndexRouteImport.update({
+const AuthAssistantMcpCallbackRoute =
+  AuthAssistantMcpCallbackRouteImport.update({
+    id: '/assistant/mcp/callback',
+    path: '/assistant/mcp/callback',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
+  id: '/auth/oauth2/failure',
+  path: '/auth/oauth2/failure',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAuthOauth2SuccessRoute = AuthAuthOauth2SuccessRouteImport.update({
+  id: '/auth/oauth2/success',
+  path: '/auth/oauth2/success',
+  getParentRoute: () => AuthRoute,
+} as any)
+const MarketingBlogAuthorAuthorRoute =
+  MarketingBlogAuthorAuthorRouteImport.update({
+    id: '/blog/author/$author',
+    path: '/blog/author/$author',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingBlogCategoriesCategoryRoute =
+  MarketingBlogCategoriesCategoryRouteImport.update({
+    id: '/blog/categories/$category',
+    path: '/blog/categories/$category',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingBlogPostSlugRoute = MarketingBlogPostSlugRouteImport.update({
+  id: '/blog/post/$slug',
+  path: '/blog/post/$slug',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingChangelogEntryEntryRoute =
+  MarketingChangelogEntryEntryRouteImport.update({
+    id: '/changelog/entry/$entry',
+    path: '/changelog/entry/$entry',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingThreadsAuthorsAuthorIdRoute =
+  MarketingThreadsAuthorsAuthorIdRouteImport.update({
+    id: '/threads/authors/$authorId',
+    path: '/threads/authors/$authorId',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const PublicAgentAutomationsIndexRoute =
+  PublicAgentAutomationsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+    getParentRoute: () => PublicAgentAutomationsRoute,
   } as any)
-const PublicProjectsProjectIdStoresIndexRoute =
-  PublicProjectsProjectIdStoresIndexRouteImport.update({
+const PublicAgentAutomationsAutomationIdRoute =
+  PublicAgentAutomationsAutomationIdRouteImport.update({
+    id: '/$automationId',
+    path: '/$automationId',
+    getParentRoute: () => PublicAgentAutomationsRoute,
+  } as any)
+const PublicAgentAutomationsCreateRoute =
+  PublicAgentAutomationsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicAgentAutomationsRoute,
+  } as any)
+const PublicAgentSettingsIndexRoute =
+  PublicAgentSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
+    getParentRoute: () => PublicAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdStorageIndexRoute =
-  PublicProjectsProjectIdStorageIndexRouteImport.update({
+const PublicAgentSettingsMcpRoute = PublicAgentSettingsMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => PublicAgentSettingsRoute,
+} as any)
+const PublicAgentSettingsMemoryRoute =
+  PublicAgentSettingsMemoryRouteImport.update({
+    id: '/memory',
+    path: '/memory',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicAgentSettingsModelsRoute =
+  PublicAgentSettingsModelsRouteImport.update({
+    id: '/models',
+    path: '/models',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicAgentSettingsUsageRoute =
+  PublicAgentSettingsUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdIndexRoute =
+  PublicOrganizationsOrgIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdStorageRoute,
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
-const PublicProjectsProjectIdSitesIndexRoute =
-  PublicProjectsProjectIdSitesIndexRouteImport.update({
-    id: '/sites/',
-    path: '/sites/',
+const PublicOrganizationsOrgIdAgentRoute =
+  PublicOrganizationsOrgIdAgentRouteImport.update({
+    id: '/agent',
+    path: '/agent',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsRoute =
+  PublicOrganizationsOrgIdAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdBillingRoute =
+  PublicOrganizationsOrgIdBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsRoute =
+  PublicOrganizationsOrgIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdMarketplaceRoute =
+  PublicOrganizationsOrgIdMarketplaceRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdMembersRoute =
+  PublicOrganizationsOrgIdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsRoute =
+  PublicOrganizationsOrgIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdSupportRoute =
+  PublicOrganizationsOrgIdSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicProjectsProjectIdIndexRoute =
+  PublicProjectsProjectIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdSettingsIndexRoute =
-  PublicProjectsProjectIdSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+const PublicProjectsProjectIdActivityRoute =
+  PublicProjectsProjectIdActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdRealtimeIndexRoute =
-  PublicProjectsProjectIdRealtimeIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+const PublicProjectsProjectIdAdvisorRoute =
+  PublicProjectsProjectIdAdvisorRouteImport.update({
+    id: '/advisor',
+    path: '/advisor',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdMessagingIndexRoute =
-  PublicProjectsProjectIdMessagingIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+const PublicProjectsProjectIdAgentsRoute =
+  PublicProjectsProjectIdAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdFunctionsIndexRoute =
-  PublicProjectsProjectIdFunctionsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+const PublicProjectsProjectIdAnalyticsRoute =
+  PublicProjectsProjectIdAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdFirewallIndexRoute =
-  PublicProjectsProjectIdFirewallIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
+const PublicProjectsProjectIdApiKeysRoute =
+  PublicProjectsProjectIdApiKeysRouteImport.update({
+    id: '/api-keys',
+    path: '/api-keys',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesIndexRoute =
-  PublicProjectsProjectIdDatabasesIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+const PublicProjectsProjectIdAppsRoute =
+  PublicProjectsProjectIdAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdAuthIndexRoute =
-  PublicProjectsProjectIdAuthIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+const PublicProjectsProjectIdAuthRoute =
+  PublicProjectsProjectIdAuthRouteImport.update({
+    id: '/auth',
+    path: '/auth',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicOrganizationsOrgIdMarketplaceIndexRoute =
-  PublicOrganizationsOrgIdMarketplaceIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
+const PublicProjectsProjectIdDatabasesRoute =
+  PublicProjectsProjectIdDatabasesRouteImport.update({
+    id: '/databases',
+    path: '/databases',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicOrganizationsOrgIdDomainsIndexRoute =
-  PublicOrganizationsOrgIdDomainsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+const PublicProjectsProjectIdExplorerRoute =
+  PublicProjectsProjectIdExplorerRouteImport.update({
+    id: '/explorer',
+    path: '/explorer',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicOrganizationsOrgIdAppsIndexRoute =
-  PublicOrganizationsOrgIdAppsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
+const PublicProjectsProjectIdFirewallRoute =
+  PublicProjectsProjectIdFirewallRouteImport.update({
+    id: '/firewall',
+    path: '/firewall',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsRoute =
+  PublicProjectsProjectIdFunctionsRouteImport.update({
+    id: '/functions',
+    path: '/functions',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdImagineRoute =
+  PublicProjectsProjectIdImagineRouteImport.update({
+    id: '/imagine',
+    path: '/imagine',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingRoute =
+  PublicProjectsProjectIdMessagingRouteImport.update({
+    id: '/messaging',
+    path: '/messaging',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOnboardingRoute =
+  PublicProjectsProjectIdOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeRoute =
+  PublicProjectsProjectIdRealtimeRouteImport.update({
+    id: '/realtime',
+    path: '/realtime',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsRoute =
+  PublicProjectsProjectIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdStorageRoute =
+  PublicProjectsProjectIdStorageRouteImport.update({
+    id: '/storage',
+    path: '/storage',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdStoresRoute =
+  PublicProjectsProjectIdStoresRouteImport.update({
+    id: '/stores',
+    path: '/stores',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdUsageRoute =
+  PublicProjectsProjectIdUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicOrganizationsOrgIdAgentIndexRoute =
   PublicOrganizationsOrgIdAgentIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
-  } as any)
-const DocsReferencesVersionModelsModelRoute =
-  DocsReferencesVersionModelsModelRouteImport.update({
-    id: '/references/$version/models/$model',
-    path: '/references/$version/models/$model',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const DocsReferencesVersionPlatformServiceRoute =
-  DocsReferencesVersionPlatformServiceRouteImport.update({
-    id: '/references/$version/$platform/$service',
-    path: '/references/$version/$platform/$service',
-    getParentRoute: () => DocsRoute,
-  } as any)
-const PublicProjectsProjectIdUsageCategoryIdRoute =
-  PublicProjectsProjectIdUsageCategoryIdRouteImport.update({
-    id: '/$categoryId',
-    path: '/$categoryId',
-    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
-  } as any)
-const PublicProjectsProjectIdStorageBucketIdRoute =
-  PublicProjectsProjectIdStorageBucketIdRouteImport.update({
-    id: '/$bucketId',
-    path: '/$bucketId',
-    getParentRoute: () => PublicProjectsProjectIdStorageRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateRoute =
-  PublicProjectsProjectIdSitesCreateRouteImport.update({
-    id: '/sites/create',
-    path: '/sites/create',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdRoute =
-  PublicProjectsProjectIdSitesSiteIdRouteImport.update({
-    id: '/sites/$siteId',
-    path: '/sites/$siteId',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsWebhooksRoute =
-  PublicProjectsProjectIdSettingsWebhooksRouteImport.update({
-    id: '/webhooks',
-    path: '/webhooks',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsVariablesRoute =
-  PublicProjectsProjectIdSettingsVariablesRouteImport.update({
-    id: '/variables',
-    path: '/variables',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsSmtpRoute =
-  PublicProjectsProjectIdSettingsSmtpRouteImport.update({
-    id: '/smtp',
-    path: '/smtp',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsMigrationsRoute =
-  PublicProjectsProjectIdSettingsMigrationsRouteImport.update({
-    id: '/migrations',
-    path: '/migrations',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsDomainsRoute =
-  PublicProjectsProjectIdSettingsDomainsRouteImport.update({
-    id: '/domains',
-    path: '/domains',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdRealtimeMessagesRoute =
-  PublicProjectsProjectIdRealtimeMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
-    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
-  } as any)
-const PublicProjectsProjectIdRealtimeDebuggerRoute =
-  PublicProjectsProjectIdRealtimeDebuggerRouteImport.update({
-    id: '/debugger',
-    path: '/debugger',
-    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
-  } as any)
-const PublicProjectsProjectIdRealtimeChannelsRoute =
-  PublicProjectsProjectIdRealtimeChannelsRouteImport.update({
-    id: '/channels',
-    path: '/channels',
-    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingMessageIdRoute =
-  PublicProjectsProjectIdMessagingMessageIdRouteImport.update({
-    id: '/$messageId',
-    path: '/$messageId',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsTemplatesRoute =
-  PublicProjectsProjectIdFunctionsTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsEditorRoute =
-  PublicProjectsProjectIdFunctionsEditorRouteImport.update({
-    id: '/editor',
-    path: '/editor',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateRoute =
-  PublicProjectsProjectIdFunctionsCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdRouteImport.update({
-    id: '/$functionId',
-    path: '/$functionId',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
-  } as any)
-const PublicProjectsProjectIdFirewallCreateRoute =
-  PublicProjectsProjectIdFirewallCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesCreateRoute =
-  PublicProjectsProjectIdDatabasesCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDatabaseIdRoute =
-  PublicProjectsProjectIdDatabasesDatabaseIdRouteImport.update({
-    id: '/$databaseId',
-    path: '/$databaseId',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthTemplatesRoute =
-  PublicProjectsProjectIdAuthTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthTeamsRoute =
-  PublicProjectsProjectIdAuthTeamsRouteImport.update({
-    id: '/teams',
-    path: '/teams',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthSocialProvidersRoute =
-  PublicProjectsProjectIdAuthSocialProvidersRouteImport.update({
-    id: '/social-providers',
-    path: '/social-providers',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthSettingsRoute =
-  PublicProjectsProjectIdAuthSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthSecurityRoute =
-  PublicProjectsProjectIdAuthSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesRoute =
-  PublicProjectsProjectIdAuthPoliciesRouteImport.update({
-    id: '/policies',
-    path: '/policies',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthOauth2ServerRoute =
-  PublicProjectsProjectIdAuthOauth2ServerRouteImport.update({
-    id: '/oauth2-server',
-    path: '/oauth2-server',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAppsAddRoute =
-  PublicProjectsProjectIdAppsAddRouteImport.update({
-    id: '/add',
-    path: '/add',
-    getParentRoute: () => PublicProjectsProjectIdAppsRoute,
-  } as any)
-const PublicProjectsProjectIdAnalyticsAddRoute =
-  PublicProjectsProjectIdAnalyticsAddRouteImport.update({
-    id: '/add',
-    path: '/add',
-    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
-  } as any)
-const PublicProjectsProjectIdAnalyticsPropertyIdRoute =
-  PublicProjectsProjectIdAnalyticsPropertyIdRouteImport.update({
-    id: '/$propertyId',
-    path: '/$propertyId',
-    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsPartnersRoute =
-  PublicOrganizationsOrgIdSettingsPartnersRouteImport.update({
-    id: '/partners',
-    path: '/partners',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsOauthAppsRoute =
-  PublicOrganizationsOrgIdSettingsOauthAppsRouteImport.update({
-    id: '/oauth-apps',
-    path: '/oauth-apps',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsMembersRoute =
-  PublicOrganizationsOrgIdSettingsMembersRouteImport.update({
-    id: '/members',
-    path: '/members',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsDangerZoneRoute =
-  PublicOrganizationsOrgIdSettingsDangerZoneRouteImport.update({
-    id: '/danger-zone',
-    path: '/danger-zone',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsComplianceRoute =
-  PublicOrganizationsOrgIdSettingsComplianceRouteImport.update({
-    id: '/compliance',
-    path: '/compliance',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdSettingsBillingRoute =
-  PublicOrganizationsOrgIdSettingsBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdDomainsTransferInRoute =
-  PublicOrganizationsOrgIdDomainsTransferInRouteImport.update({
-    id: '/transfer-in',
-    path: '/transfer-in',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
-  } as any)
-const PublicOrganizationsOrgIdDomainsBuyRoute =
-  PublicOrganizationsOrgIdDomainsBuyRouteImport.update({
-    id: '/buy',
-    path: '/buy',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
-  } as any)
-const PublicOrganizationsOrgIdDomainsDomainIdRoute =
-  PublicOrganizationsOrgIdDomainsDomainIdRouteImport.update({
-    id: '/$domainId',
-    path: '/$domainId',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdRoute =
-  PublicOrganizationsOrgIdAppsAppIdRouteImport.update({
-    id: '/$appId',
-    path: '/$appId',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentSettingsRoute =
-  PublicOrganizationsOrgIdAgentSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentAutomationsRoute =
-  PublicOrganizationsOrgIdAgentAutomationsRouteImport.update({
-    id: '/automations',
-    path: '/automations',
     getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
   } as any)
 const PublicOrganizationsOrgIdAgentAgentIdRoute =
@@ -1683,400 +1462,358 @@ const PublicOrganizationsOrgIdAgentAgentIdRoute =
     path: '/$agentId',
     getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
   } as any)
-const PublicProjectsProjectIdStoresAppIdIndexRoute =
-  PublicProjectsProjectIdStoresAppIdIndexRouteImport.update({
-    id: '/$appId/',
-    path: '/$appId/',
-    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
+const PublicOrganizationsOrgIdAgentAutomationsRoute =
+  PublicOrganizationsOrgIdAgentAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
   } as any)
-const PublicProjectsProjectIdStorageBucketIdIndexRoute =
-  PublicProjectsProjectIdStorageBucketIdIndexRouteImport.update({
+const PublicOrganizationsOrgIdAgentSettingsRoute =
+  PublicOrganizationsOrgIdAgentSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsIndexRoute =
+  PublicOrganizationsOrgIdAppsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
+    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
   } as any)
-const PublicProjectsProjectIdSitesCreateIndexRoute =
-  PublicProjectsProjectIdSitesCreateIndexRouteImport.update({
+const PublicOrganizationsOrgIdAppsAppIdRoute =
+  PublicOrganizationsOrgIdAppsAppIdRouteImport.update({
+    id: '/$appId',
+    path: '/$appId',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsIndexRoute =
+  PublicOrganizationsOrgIdDomainsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
-const PublicProjectsProjectIdSitesSiteIdIndexRoute =
-  PublicProjectsProjectIdSitesSiteIdIndexRouteImport.update({
+const PublicOrganizationsOrgIdDomainsDomainIdRoute =
+  PublicOrganizationsOrgIdDomainsDomainIdRouteImport.update({
+    id: '/$domainId',
+    path: '/$domainId',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsBuyRoute =
+  PublicOrganizationsOrgIdDomainsBuyRouteImport.update({
+    id: '/buy',
+    path: '/buy',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsTransferInRoute =
+  PublicOrganizationsOrgIdDomainsTransferInRouteImport.update({
+    id: '/transfer-in',
+    path: '/transfer-in',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdMarketplaceIndexRoute =
+  PublicOrganizationsOrgIdMarketplaceIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsMigrationsIndexRoute =
-  PublicProjectsProjectIdSettingsMigrationsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSettingsMigrationsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsDomainsIndexRoute =
-  PublicProjectsProjectIdSettingsDomainsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingTopicsIndexRoute =
-  PublicProjectsProjectIdMessagingTopicsIndexRouteImport.update({
-    id: '/topics/',
-    path: '/topics/',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingProvidersIndexRoute =
-  PublicProjectsProjectIdMessagingProvidersIndexRouteImport.update({
-    id: '/providers/',
-    path: '/providers/',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingMessageIdIndexRoute =
-  PublicProjectsProjectIdMessagingMessageIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdMessagingMessageIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateIndexRoute =
-  PublicProjectsProjectIdFunctionsCreateIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdIndexRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute =
-  PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport.update({
-    id: '/$appId/',
-    path: '/$appId/',
     getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
   } as any)
-const PublicOrganizationsOrgIdDomainsDomainIdIndexRoute =
-  PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
+const PublicOrganizationsOrgIdSettingsBillingRoute =
+  PublicOrganizationsOrgIdSettingsBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
-const PublicOrganizationsOrgIdAppsAppIdIndexRoute =
-  PublicOrganizationsOrgIdAppsAppIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+const PublicOrganizationsOrgIdSettingsComplianceRoute =
+  PublicOrganizationsOrgIdSettingsComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
-const PublicOrganizationsOrgIdAgentSettingsIndexRoute =
-  PublicOrganizationsOrgIdAgentSettingsIndexRouteImport.update({
+const PublicOrganizationsOrgIdSettingsDangerZoneRoute =
+  PublicOrganizationsOrgIdSettingsDangerZoneRouteImport.update({
+    id: '/danger-zone',
+    path: '/danger-zone',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsMembersRoute =
+  PublicOrganizationsOrgIdSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsOauthAppsRoute =
+  PublicOrganizationsOrgIdSettingsOauthAppsRouteImport.update({
+    id: '/oauth-apps',
+    path: '/oauth-apps',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsPartnersRoute =
+  PublicOrganizationsOrgIdSettingsPartnersRouteImport.update({
+    id: '/partners',
+    path: '/partners',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdAnalyticsPropertyIdRoute =
+  PublicProjectsProjectIdAnalyticsPropertyIdRouteImport.update({
+    id: '/$propertyId',
+    path: '/$propertyId',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
+  } as any)
+const PublicProjectsProjectIdAnalyticsAddRoute =
+  PublicProjectsProjectIdAnalyticsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
+  } as any)
+const PublicProjectsProjectIdAppsAddRoute =
+  PublicProjectsProjectIdAppsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdAppsRoute,
+  } as any)
+const PublicProjectsProjectIdAuthIndexRoute =
+  PublicProjectsProjectIdAuthIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthOauth2ServerRoute =
+  PublicProjectsProjectIdAuthOauth2ServerRouteImport.update({
+    id: '/oauth2-server',
+    path: '/oauth2-server',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesRoute =
+  PublicProjectsProjectIdAuthPoliciesRouteImport.update({
+    id: '/policies',
+    path: '/policies',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthSecurityRoute =
+  PublicProjectsProjectIdAuthSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthSettingsRoute =
+  PublicProjectsProjectIdAuthSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthSocialProvidersRoute =
+  PublicProjectsProjectIdAuthSocialProvidersRouteImport.update({
+    id: '/social-providers',
+    path: '/social-providers',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthTeamsRoute =
+  PublicProjectsProjectIdAuthTeamsRouteImport.update({
+    id: '/teams',
+    path: '/teams',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAuthTemplatesRoute =
+  PublicProjectsProjectIdAuthTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesIndexRoute =
+  PublicProjectsProjectIdDatabasesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDatabaseIdRoute =
+  PublicProjectsProjectIdDatabasesDatabaseIdRouteImport.update({
+    id: '/$databaseId',
+    path: '/$databaseId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesCreateRoute =
+  PublicProjectsProjectIdDatabasesCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdFirewallIndexRoute =
+  PublicProjectsProjectIdFirewallIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
+  } as any)
+const PublicProjectsProjectIdFirewallCreateRoute =
+  PublicProjectsProjectIdFirewallCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsIndexRoute =
+  PublicProjectsProjectIdFunctionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdRouteImport.update({
+    id: '/$functionId',
+    path: '/$functionId',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsCreateRoute =
+  PublicProjectsProjectIdFunctionsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsEditorRoute =
+  PublicProjectsProjectIdFunctionsEditorRouteImport.update({
+    id: '/editor',
+    path: '/editor',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsTemplatesRoute =
+  PublicProjectsProjectIdFunctionsTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingIndexRoute =
+  PublicProjectsProjectIdMessagingIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingMessageIdRoute =
+  PublicProjectsProjectIdMessagingMessageIdRouteImport.update({
+    id: '/$messageId',
+    path: '/$messageId',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeIndexRoute =
+  PublicProjectsProjectIdRealtimeIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeChannelsRoute =
+  PublicProjectsProjectIdRealtimeChannelsRouteImport.update({
+    id: '/channels',
+    path: '/channels',
+    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeDebuggerRoute =
+  PublicProjectsProjectIdRealtimeDebuggerRouteImport.update({
+    id: '/debugger',
+    path: '/debugger',
+    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+  } as any)
+const PublicProjectsProjectIdRealtimeMessagesRoute =
+  PublicProjectsProjectIdRealtimeMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => PublicProjectsProjectIdRealtimeRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsIndexRoute =
+  PublicProjectsProjectIdSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsDomainsRoute =
+  PublicProjectsProjectIdSettingsDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsMigrationsRoute =
+  PublicProjectsProjectIdSettingsMigrationsRouteImport.update({
+    id: '/migrations',
+    path: '/migrations',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsSmtpRoute =
+  PublicProjectsProjectIdSettingsSmtpRouteImport.update({
+    id: '/smtp',
+    path: '/smtp',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsVariablesRoute =
+  PublicProjectsProjectIdSettingsVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsWebhooksRoute =
+  PublicProjectsProjectIdSettingsWebhooksRouteImport.update({
+    id: '/webhooks',
+    path: '/webhooks',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesIndexRoute =
+  PublicProjectsProjectIdSitesIndexRouteImport.update({
+    id: '/sites/',
+    path: '/sites/',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdRoute =
+  PublicProjectsProjectIdSitesSiteIdRouteImport.update({
+    id: '/sites/$siteId',
+    path: '/sites/$siteId',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateRoute =
+  PublicProjectsProjectIdSitesCreateRouteImport.update({
+    id: '/sites/create',
+    path: '/sites/create',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdStorageIndexRoute =
+  PublicProjectsProjectIdStorageIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdStorageRoute,
+  } as any)
+const PublicProjectsProjectIdStorageBucketIdRoute =
+  PublicProjectsProjectIdStorageBucketIdRouteImport.update({
+    id: '/$bucketId',
+    path: '/$bucketId',
+    getParentRoute: () => PublicProjectsProjectIdStorageRoute,
+  } as any)
+const PublicProjectsProjectIdStoresIndexRoute =
+  PublicProjectsProjectIdStoresIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
+  } as any)
+const PublicProjectsProjectIdUsageIndexRoute =
+  PublicProjectsProjectIdUsageIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
+const PublicProjectsProjectIdUsageCategoryIdRoute =
+  PublicProjectsProjectIdUsageCategoryIdRouteImport.update({
+    id: '/$categoryId',
+    path: '/$categoryId',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
+const DocsReferencesVersionPlatformServiceRoute =
+  DocsReferencesVersionPlatformServiceRouteImport.update({
+    id: '/references/$version/$platform/$service',
+    path: '/references/$version/$platform/$service',
+    getParentRoute: () => DocsRoute,
+  } as any)
+const DocsReferencesVersionModelsModelRoute =
+  DocsReferencesVersionModelsModelRouteImport.update({
+    id: '/references/$version/models/$model',
+    path: '/references/$version/models/$model',
+    getParentRoute: () => DocsRoute,
   } as any)
 const PublicOrganizationsOrgIdAgentAutomationsIndexRoute =
   PublicOrganizationsOrgIdAgentAutomationsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentAutomationsRoute,
-  } as any)
-const PublicProjectsProjectIdUsageCategoryIdMetricIdRoute =
-  PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport.update({
-    id: '/$metricId',
-    path: '/$metricId',
-    getParentRoute: () => PublicProjectsProjectIdUsageCategoryIdRoute,
-  } as any)
-const PublicProjectsProjectIdStorageBucketIdSettingsRoute =
-  PublicProjectsProjectIdStorageBucketIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
-  } as any)
-const PublicProjectsProjectIdStorageBucketIdSecurityRoute =
-  PublicProjectsProjectIdStorageBucketIdSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateManualRoute =
-  PublicProjectsProjectIdSitesCreateManualRouteImport.update({
-    id: '/manual',
-    path: '/manual',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateFinishRoute =
-  PublicProjectsProjectIdSitesCreateFinishRouteImport.update({
-    id: '/finish',
-    path: '/finish',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateDeployingRoute =
-  PublicProjectsProjectIdSitesCreateDeployingRouteImport.update({
-    id: '/deploying',
-    path: '/deploying',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateDeployRoute =
-  PublicProjectsProjectIdSitesCreateDeployRouteImport.update({
-    id: '/deploy',
-    path: '/deploy',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdVariablesRoute =
-  PublicProjectsProjectIdSitesSiteIdVariablesRouteImport.update({
-    id: '/variables',
-    path: '/variables',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdLogsRoute =
-  PublicProjectsProjectIdSitesSiteIdLogsRouteImport.update({
-    id: '/logs',
-    path: '/logs',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdDomainsRoute =
-  PublicProjectsProjectIdSitesSiteIdDomainsRouteImport.update({
-    id: '/domains',
-    path: '/domains',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdDeploymentsRoute =
-  PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport.update({
-    id: '/deployments',
-    path: '/deployments',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsMigrationsImportRoute =
-  PublicProjectsProjectIdSettingsMigrationsImportRouteImport.update({
-    id: '/import',
-    path: '/import',
-    getParentRoute: () => PublicProjectsProjectIdSettingsMigrationsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsDomainsAddRoute =
-  PublicProjectsProjectIdSettingsDomainsAddRouteImport.update({
-    id: '/add',
-    path: '/add',
-    getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingTopicsTopicIdRoute =
-  PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport.update({
-    id: '/topics/$topicId',
-    path: '/topics/$topicId',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingProvidersCreateRoute =
-  PublicProjectsProjectIdMessagingProvidersCreateRouteImport.update({
-    id: '/providers/create',
-    path: '/providers/create',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingProvidersProviderIdRoute =
-  PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport.update({
-    id: '/providers/$providerId',
-    path: '/providers/$providerId',
-    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingMessageIdSettingsRoute =
-  PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdMessagingMessageIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateManualRoute =
-  PublicProjectsProjectIdFunctionsCreateManualRouteImport.update({
-    id: '/manual',
-    path: '/manual',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateDeployingRoute =
-  PublicProjectsProjectIdFunctionsCreateDeployingRouteImport.update({
-    id: '/deploying',
-    path: '/deploying',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateDeployRoute =
-  PublicProjectsProjectIdFunctionsCreateDeployRouteImport.update({
-    id: '/deploy',
-    path: '/deploy',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport.update({
-    id: '/variables',
-    path: '/variables',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport.update({
-    id: '/executions',
-    path: '/executions',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport.update({
-    id: '/domains',
-    path: '/domains',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport.update({
-    id: '/postgres/$databaseId',
-    path: '/postgres/$databaseId',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport.update({
-    id: '/mysql/$databaseId',
-    path: '/mysql/$databaseId',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport.update({
-    id: '/$dbKind/$databaseId',
-    path: '/$dbKind/$databaseId',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthUsersUserIdRoute =
-  PublicProjectsProjectIdAuthUsersUserIdRouteImport.update({
-    id: '/users/$userId',
-    path: '/users/$userId',
-    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
-  } as any)
-const PublicProjectsProjectIdAuthTeamsTeamIdRoute =
-  PublicProjectsProjectIdAuthTeamsTeamIdRouteImport.update({
-    id: '/$teamId',
-    path: '/$teamId',
-    getParentRoute: () => PublicProjectsProjectIdAuthTeamsRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesUsersRoute =
-  PublicProjectsProjectIdAuthPoliciesUsersRouteImport.update({
-    id: '/users',
-    path: '/users',
-    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesSessionsRoute =
-  PublicProjectsProjectIdAuthPoliciesSessionsRouteImport.update({
-    id: '/sessions',
-    path: '/sessions',
-    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
-  PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport.update({
-    id: '/passwords',
-    path: '/passwords',
-    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesMembershipsRoute =
-  PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport.update({
-    id: '/memberships',
-    path: '/memberships',
-    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthPoliciesEmailsRoute =
-  PublicProjectsProjectIdAuthPoliciesEmailsRouteImport.update({
-    id: '/emails',
-    path: '/emails',
-    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
-  } as any)
-const PublicProjectsProjectIdAuthOauth2ServerSettingsRoute =
-  PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdAuthOauth2ServerRoute,
-  } as any)
-const PublicProjectsProjectIdAuthOauth2ServerAppsRoute =
-  PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport.update({
-    id: '/apps',
-    path: '/apps',
-    getParentRoute: () => PublicProjectsProjectIdAuthOauth2ServerRoute,
-  } as any)
-const PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute =
-  PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdSupportRoute =
-  PublicOrganizationsOrgIdAppsAppIdSupportRouteImport.update({
-    id: '/support',
-    path: '/support',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdSettingsRoute =
-  PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdSecretsRoute =
-  PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport.update({
-    id: '/secrets',
-    path: '/secrets',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdOauthRoute =
-  PublicOrganizationsOrgIdAppsAppIdOauthRouteImport.update({
-    id: '/oauth',
-    path: '/oauth',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdLegalRoute =
-  PublicOrganizationsOrgIdAppsAppIdLegalRouteImport.update({
-    id: '/legal',
-    path: '/legal',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAppsAppIdBrandingRoute =
-  PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport.update({
-    id: '/branding',
-    path: '/branding',
-    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentSettingsUsageRoute =
-  PublicOrganizationsOrgIdAgentSettingsUsageRouteImport.update({
-    id: '/usage',
-    path: '/usage',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentSettingsModelsRoute =
-  PublicOrganizationsOrgIdAgentSettingsModelsRouteImport.update({
-    id: '/models',
-    path: '/models',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentSettingsMemoryRoute =
-  PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport.update({
-    id: '/memory',
-    path: '/memory',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentSettingsMcpRoute =
-  PublicOrganizationsOrgIdAgentSettingsMcpRouteImport.update({
-    id: '/mcp',
-    path: '/mcp',
-    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
-  } as any)
-const PublicOrganizationsOrgIdAgentAutomationsCreateRoute =
-  PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
     getParentRoute: () => PublicOrganizationsOrgIdAgentAutomationsRoute,
   } as any)
 const PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute =
@@ -2085,50 +1822,569 @@ const PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute =
     path: '/$automationId',
     getParentRoute: () => PublicOrganizationsOrgIdAgentAutomationsRoute,
   } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+const PublicOrganizationsOrgIdAgentAutomationsCreateRoute =
+  PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentAutomationsRoute,
   } as any)
-const PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute =
-  PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport.update({
+const PublicOrganizationsOrgIdAgentSettingsIndexRoute =
+  PublicOrganizationsOrgIdAgentSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDomainsRoute,
+    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute =
-  PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDeploymentsRoute,
+const PublicOrganizationsOrgIdAgentSettingsMcpRoute =
+  PublicOrganizationsOrgIdAgentSettingsMcpRouteImport.update({
+    id: '/mcp',
+    path: '/mcp',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdMessagingTopicsTopicIdIndexRoute =
-  PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
+const PublicOrganizationsOrgIdAgentSettingsMemoryRoute =
+  PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport.update({
+    id: '/memory',
+    path: '/memory',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute =
-  PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () =>
-      PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
+const PublicOrganizationsOrgIdAgentSettingsModelsRoute =
+  PublicOrganizationsOrgIdAgentSettingsModelsRouteImport.update({
+    id: '/models',
+    path: '/models',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
+const PublicOrganizationsOrgIdAgentSettingsUsageRoute =
+  PublicOrganizationsOrgIdAgentSettingsUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicOrganizationsOrgIdAgentSettingsRoute,
   } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport.update({
+const PublicOrganizationsOrgIdAppsAppIdIndexRoute =
+  PublicOrganizationsOrgIdAppsAppIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute,
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdBrandingRoute =
+  PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport.update({
+    id: '/branding',
+    path: '/branding',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdLegalRoute =
+  PublicOrganizationsOrgIdAppsAppIdLegalRouteImport.update({
+    id: '/legal',
+    path: '/legal',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdOauthRoute =
+  PublicOrganizationsOrgIdAppsAppIdOauthRouteImport.update({
+    id: '/oauth',
+    path: '/oauth',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSecretsRoute =
+  PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport.update({
+    id: '/secrets',
+    path: '/secrets',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSettingsRoute =
+  PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdSupportRoute =
+  PublicOrganizationsOrgIdAppsAppIdSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsDomainIdIndexRoute =
+  PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute =
+  PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute =
+  PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport.update({
+    id: '/$appId/',
+    path: '/$appId/',
+    getParentRoute: () => PublicOrganizationsOrgIdMarketplaceRoute,
+  } as any)
+const PublicProjectsProjectIdAuthOauth2ServerAppsRoute =
+  PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
+    getParentRoute: () => PublicProjectsProjectIdAuthOauth2ServerRoute,
+  } as any)
+const PublicProjectsProjectIdAuthOauth2ServerSettingsRoute =
+  PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdAuthOauth2ServerRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesEmailsRoute =
+  PublicProjectsProjectIdAuthPoliciesEmailsRouteImport.update({
+    id: '/emails',
+    path: '/emails',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesMembershipsRoute =
+  PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport.update({
+    id: '/memberships',
+    path: '/memberships',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
+  PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport.update({
+    id: '/passwords',
+    path: '/passwords',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesSessionsRoute =
+  PublicProjectsProjectIdAuthPoliciesSessionsRouteImport.update({
+    id: '/sessions',
+    path: '/sessions',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesUsersRoute =
+  PublicProjectsProjectIdAuthPoliciesUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthTeamsTeamIdRoute =
+  PublicProjectsProjectIdAuthTeamsTeamIdRouteImport.update({
+    id: '/$teamId',
+    path: '/$teamId',
+    getParentRoute: () => PublicProjectsProjectIdAuthTeamsRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdRoute =
+  PublicProjectsProjectIdAuthUsersUserIdRouteImport.update({
+    id: '/users/$userId',
+    path: '/users/$userId',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport.update({
+    id: '/$dbKind/$databaseId',
+    path: '/$dbKind/$databaseId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport.update({
+    id: '/mysql/$databaseId',
+    path: '/mysql/$databaseId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport.update({
+    id: '/postgres/$databaseId',
+    path: '/postgres/$databaseId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport.update({
+    id: '/executions',
+    path: '/executions',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsCreateIndexRoute =
+  PublicProjectsProjectIdFunctionsCreateIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsCreateDeployRoute =
+  PublicProjectsProjectIdFunctionsCreateDeployRouteImport.update({
+    id: '/deploy',
+    path: '/deploy',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsCreateDeployingRoute =
+  PublicProjectsProjectIdFunctionsCreateDeployingRouteImport.update({
+    id: '/deploying',
+    path: '/deploying',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsCreateManualRoute =
+  PublicProjectsProjectIdFunctionsCreateManualRouteImport.update({
+    id: '/manual',
+    path: '/manual',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingMessageIdIndexRoute =
+  PublicProjectsProjectIdMessagingMessageIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdMessagingMessageIdRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingMessageIdSettingsRoute =
+  PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdMessagingMessageIdRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingProvidersIndexRoute =
+  PublicProjectsProjectIdMessagingProvidersIndexRouteImport.update({
+    id: '/providers/',
+    path: '/providers/',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingProvidersProviderIdRoute =
+  PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport.update({
+    id: '/providers/$providerId',
+    path: '/providers/$providerId',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingProvidersCreateRoute =
+  PublicProjectsProjectIdMessagingProvidersCreateRouteImport.update({
+    id: '/providers/create',
+    path: '/providers/create',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingTopicsIndexRoute =
+  PublicProjectsProjectIdMessagingTopicsIndexRouteImport.update({
+    id: '/topics/',
+    path: '/topics/',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMessagingTopicsTopicIdRoute =
+  PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport.update({
+    id: '/topics/$topicId',
+    path: '/topics/$topicId',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsDomainsIndexRoute =
+  PublicProjectsProjectIdSettingsDomainsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsDomainsAddRoute =
+  PublicProjectsProjectIdSettingsDomainsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsMigrationsIndexRoute =
+  PublicProjectsProjectIdSettingsMigrationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSettingsMigrationsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsMigrationsImportRoute =
+  PublicProjectsProjectIdSettingsMigrationsImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => PublicProjectsProjectIdSettingsMigrationsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdIndexRoute =
+  PublicProjectsProjectIdSitesSiteIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdDeploymentsRoute =
+  PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport.update({
+    id: '/deployments',
+    path: '/deployments',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdDomainsRoute =
+  PublicProjectsProjectIdSitesSiteIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdLogsRoute =
+  PublicProjectsProjectIdSitesSiteIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdVariablesRoute =
+  PublicProjectsProjectIdSitesSiteIdVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateIndexRoute =
+  PublicProjectsProjectIdSitesCreateIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateDeployRoute =
+  PublicProjectsProjectIdSitesCreateDeployRouteImport.update({
+    id: '/deploy',
+    path: '/deploy',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateDeployingRoute =
+  PublicProjectsProjectIdSitesCreateDeployingRouteImport.update({
+    id: '/deploying',
+    path: '/deploying',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateFinishRoute =
+  PublicProjectsProjectIdSitesCreateFinishRouteImport.update({
+    id: '/finish',
+    path: '/finish',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateManualRoute =
+  PublicProjectsProjectIdSitesCreateManualRouteImport.update({
+    id: '/manual',
+    path: '/manual',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdStorageBucketIdIndexRoute =
+  PublicProjectsProjectIdStorageBucketIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
+  } as any)
+const PublicProjectsProjectIdStorageBucketIdSecurityRoute =
+  PublicProjectsProjectIdStorageBucketIdSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
+  } as any)
+const PublicProjectsProjectIdStorageBucketIdSettingsRoute =
+  PublicProjectsProjectIdStorageBucketIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
+  } as any)
+const PublicProjectsProjectIdStoresAppIdIndexRoute =
+  PublicProjectsProjectIdStoresAppIdIndexRouteImport.update({
+    id: '/$appId/',
+    path: '/$appId/',
+    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
+  } as any)
+const PublicProjectsProjectIdUsageCategoryIdMetricIdRoute =
+  PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport.update({
+    id: '/$metricId',
+    path: '/$metricId',
+    getParentRoute: () => PublicProjectsProjectIdUsageCategoryIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute =
+  PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute =
+  PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdActivityRoute =
+  PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute =
+  PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport.update({
+    id: '/identities',
+    path: '/identities',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute =
+  PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport.update({
+    id: '/memberships',
+    path: '/memberships',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdSessionsRoute =
+  PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport.update({
+    id: '/sessions',
+    path: '/sessions',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersUserIdTargetsRoute =
+  PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport.update({
+    id: '/targets',
+    path: '/targets',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport.update({
+    id: '/$tableId',
+    path: '/$tableId',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport.update({
+    id: '/backups',
+    path: '/backups',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport.update({
+    id: '/browser',
+    path: '/browser',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport.update(
+    {
+      id: '/collections',
+      path: '/collections',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport.update({
+    id: '/db-security',
+    path: '/db-security',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport.update(
+    {
+      id: '/export-import',
+      path: '/export-import',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport.update({
+    id: '/tables',
+    path: '/tables',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport.update({
+    id: '/visualizer',
+    path: '/visualizer',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport.update({
+    id: '/backups',
+    path: '/backups',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport.update({
+    id: '/connect',
+    path: '/connect',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport.update({
+    id: '/sql',
+    path: '/sql',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport.update({
+    id: '/visualizer',
+    path: '/visualizer',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute =
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport.update({
@@ -2137,198 +2393,17 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute =
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute =
-  PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport.update({
-    id: '/templates/$template',
-    path: '/templates/$template',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport.update({
-    id: '/runtime',
-    path: '/runtime',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsGitRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport.update({
-    id: '/git',
-    path: '/git',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport.update({
-    id: '/danger-zone',
-    path: '/danger-zone',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdSettingsBuildRoute =
-  PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport.update({
-    id: '/build',
-    path: '/build',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdDomainsAddRoute =
-  PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport.update({
-    id: '/add',
-    path: '/add',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDomainsRoute,
-  } as any)
-const PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute =
-  PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport.update({
-    id: '/$deploymentId',
-    path: '/$deploymentId',
-    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDeploymentsRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRoute =
-  PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingTopicsTopicIdActivityRoute =
-  PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
-    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
-  } as any)
-const PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRoute =
-  PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport.update(
-    {
-      id: '/settings',
-      path: '/settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute =
-  PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport.update(
-    {
-      id: '/activity',
-      path: '/activity',
-      getParentRoute: () =>
-        PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute =
-  PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport.update({
-    id: '/template/$templateId',
-    path: '/template/$templateId',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute =
-  PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport.update({
-    id: '/repository/$repository',
-    path: '/repository/$repository',
-    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport.update({
-    id: '/runtime',
-    path: '/runtime',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport.update({
-    id: '/git',
-    path: '/git',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport.update(
-    {
-      id: '/executions',
-      path: '/executions',
-      getParentRoute: () =>
-        PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport.update(
-    {
-      id: '/danger-zone',
-      path: '/danger-zone',
-      getParentRoute: () =>
-        PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport.update({
-    id: '/build',
-    path: '/build',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport.update({
-    id: '/add',
-    path: '/add',
-    getParentRoute: () =>
-      PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport.update(
-    {
-      id: '/visualizer',
-      path: '/visualizer',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport.update({
-    id: '/sql',
-    path: '/sql',
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport.update({
+    id: '/backups',
+    path: '/backups',
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () =>
-      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport.update({
-    id: '/roles',
-    path: '/roles',
-    getParentRoute: () =>
-      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport.update({
-    id: '/monitor',
-    path: '/monitor',
-    getParentRoute: () =>
-      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport.update(
-    {
-      id: '/extensions',
-      path: '/extensions',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport.update({
-    id: '/enums',
-    path: '/enums',
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport.update({
+    id: '/connect',
+    path: '/connect',
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
@@ -2341,224 +2416,241 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute =
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
     } as any,
   )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport.update({
-    id: '/connect',
-    path: '/connect',
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport.update({
+    id: '/enums',
+    path: '/enums',
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport.update({
-    id: '/backups',
-    path: '/backups',
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport.update(
+    {
+      id: '/extensions',
+      path: '/extensions',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport.update({
-    id: '/visualizer',
-    path: '/visualizer',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport.update({
-    id: '/sql',
-    path: '/sql',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport.update({
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport.update({
     id: '/roles',
     path: '/roles',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+    getParentRoute: () =>
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport.update({
-    id: '/monitor',
-    path: '/monitor',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport.update({
-    id: '/connections',
-    path: '/connections',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport.update({
-    id: '/connect',
-    path: '/connect',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport.update({
-    id: '/backups',
-    path: '/backups',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport.update({
-    id: '/visualizer',
-    path: '/visualizer',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport.update({
-    id: '/tables',
-    path: '/tables',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport.update({
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+    getParentRoute: () =>
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport.update({
+    id: '/sql',
+    path: '/sql',
+    getParentRoute: () =>
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport.update({
-    id: '/monitor',
-    path: '/monitor',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
-  } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport.update(
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport.update(
     {
-      id: '/export-import',
-      path: '/export-import',
+      id: '/visualizer',
+      path: '/visualizer',
       getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
     } as any,
   )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport.update({
-    id: '/db-security',
-    path: '/db-security',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+const PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport.update(
+const PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport.update({
+    id: '/build',
+    path: '/build',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport.update(
     {
-      id: '/collections',
-      path: '/collections',
+      id: '/danger-zone',
+      path: '/danger-zone',
       getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+        PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
     } as any,
   )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport.update({
-    id: '/browser',
-    path: '/browser',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport.update(
+    {
+      id: '/executions',
+      path: '/executions',
+      getParentRoute: () =>
+        PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport.update({
+    id: '/git',
+    path: '/git',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport.update({
-    id: '/backups',
-    path: '/backups',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+const PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport.update({
+    id: '/runtime',
+    path: '/runtime',
+    getParentRoute: () =>
+      PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
   } as any)
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport.update({
-    id: '/$tableId',
-    path: '/$tableId',
-    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+const PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute =
+  PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport.update({
+    id: '/repository/$repository',
+    path: '/repository/$repository',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
   } as any)
-const PublicProjectsProjectIdAuthUsersUserIdTargetsRoute =
-  PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport.update({
-    id: '/targets',
-    path: '/targets',
-    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+const PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute =
+  PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport.update({
+    id: '/template/$templateId',
+    path: '/template/$templateId',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
   } as any)
-const PublicProjectsProjectIdAuthUsersUserIdSessionsRoute =
-  PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport.update({
-    id: '/sessions',
-    path: '/sessions',
-    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+const PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute =
+  PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
   } as any)
-const PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute =
-  PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport.update({
-    id: '/memberships',
-    path: '/memberships',
-    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+const PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute =
+  PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport.update(
+    {
+      id: '/activity',
+      path: '/activity',
+      getParentRoute: () =>
+        PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRoute =
+  PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdMessagingProvidersProviderIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdMessagingTopicsTopicIdIndexRoute =
+  PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
   } as any)
-const PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute =
-  PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport.update({
-    id: '/identities',
-    path: '/identities',
-    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
-  } as any)
-const PublicProjectsProjectIdAuthUsersUserIdActivityRoute =
-  PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport.update({
+const PublicProjectsProjectIdMessagingTopicsTopicIdActivityRoute =
+  PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport.update({
     id: '/activity',
     path: '/activity',
-    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
   } as any)
-const PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute =
-  PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport.update({
-    id: '/members',
-    path: '/members',
-    getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
+const PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRoute =
+  PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdMessagingTopicsTopicIdRoute,
   } as any)
-const PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute =
-  PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
-    getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
+const PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute =
+  PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDeploymentsRoute,
   } as any)
-const PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute =
-  PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport.update(
+const PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute =
+  PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport.update({
+    id: '/$deploymentId',
+    path: '/$deploymentId',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDeploymentsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute =
+  PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdDomainsAddRoute =
+  PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsBuildRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport.update({
+    id: '/build',
+    path: '/build',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport.update({
+    id: '/danger-zone',
+    path: '/danger-zone',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsGitRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport.update({
+    id: '/git',
+    path: '/git',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute =
+  PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport.update({
+    id: '/runtime',
+    path: '/runtime',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute =
+  PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport.update({
+    id: '/templates/$template',
+    path: '/templates/$template',
+    getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport.update(
     {
-      id: '/',
-      path: '/',
+      id: '/$collectionId',
+      path: '/$collectionId',
       getParentRoute: () =>
-        PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute =
-  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport.update(
-    {
-      id: '/deployments/$deploymentId/',
-      path: '/deployments/$deploymentId/',
-      getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport.update(
-    {
-      id: '/',
-      path: '/',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute,
     } as any,
   )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute =
@@ -2570,172 +2662,11 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
     } as any,
   )
-const PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute =
-  PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport.update(
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport.update(
     {
-      id: '/repositories/$installationId/$repositoryId',
-      path: '/repositories/$installationId/$repositoryId',
-      getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport.update(
-    {
-      id: '/tables/$tableId',
-      path: '/tables/$tableId',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport.update(
-    {
-      id: '/storage',
-      path: '/storage',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport.update(
-    {
-      id: '/replication',
-      path: '/replication',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport.update(
-    {
-      id: '/pitr',
-      path: '/pitr',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport.update(
-    {
-      id: '/network',
-      path: '/network',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport.update(
-    {
-      id: '/maintenance',
-      path: '/maintenance',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport.update(
-    {
-      id: '/extensions',
-      path: '/extensions',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport.update(
-    {
-      id: '/compute',
-      path: '/compute',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport.update(
-    {
-      id: '/tables/$tableId',
-      path: '/tables/$tableId',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport.update(
-    {
-      id: '/storage',
-      path: '/storage',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport.update(
-    {
-      id: '/replication',
-      path: '/replication',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport.update(
-    {
-      id: '/pitr',
-      path: '/pitr',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport.update(
-    {
-      id: '/network',
-      path: '/network',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport.update(
-    {
-      id: '/maintenance',
-      path: '/maintenance',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport.update(
-    {
-      id: '/compute',
-      path: '/compute',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport.update(
-    {
-      id: '/$tableId',
-      path: '/$tableId',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport.update(
-    {
-      id: '/specification',
-      path: '/specification',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport.update(
-    {
-      id: '/security',
-      path: '/security',
+      id: '/',
+      path: '/',
       getParentRoute: () =>
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
@@ -2749,22 +2680,209 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
   )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport.update(
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport.update(
     {
-      id: '/$collectionId',
-      path: '/$collectionId',
+      id: '/security',
+      path: '/security',
       getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute,
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
   )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport.update(
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport.update(
+    {
+      id: '/specification',
+      path: '/specification',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport.update(
+    {
+      id: '/$tableId',
+      path: '/$tableId',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport.update(
     {
       id: '/',
       path: '/',
       getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport.update(
+    {
+      id: '/compute',
+      path: '/compute',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport.update(
+    {
+      id: '/maintenance',
+      path: '/maintenance',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport.update(
+    {
+      id: '/network',
+      path: '/network',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport.update(
+    {
+      id: '/pitr',
+      path: '/pitr',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport.update(
+    {
+      id: '/replication',
+      path: '/replication',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport.update(
+    {
+      id: '/storage',
+      path: '/storage',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport.update(
+    {
+      id: '/tables/$tableId',
+      path: '/tables/$tableId',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport.update(
+    {
+      id: '/compute',
+      path: '/compute',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport.update(
+    {
+      id: '/extensions',
+      path: '/extensions',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport.update(
+    {
+      id: '/maintenance',
+      path: '/maintenance',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport.update(
+    {
+      id: '/network',
+      path: '/network',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport.update(
+    {
+      id: '/pitr',
+      path: '/pitr',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport.update(
+    {
+      id: '/replication',
+      path: '/replication',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport.update(
+    {
+      id: '/storage',
+      path: '/storage',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport.update(
+    {
+      id: '/tables/$tableId',
+      path: '/tables/$tableId',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport.update(
+    {
+      id: '/deployments/$deploymentId/',
+      path: '/deployments/$deploymentId/',
+      getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute =
+  PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute =
+  PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport.update(
+    {
+      id: '/repositories/$installationId/$repositoryId',
+      path: '/repositories/$installationId/$repositoryId',
+      getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
     } as any,
   )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRoute =
@@ -2772,303 +2890,6 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInd
     {
       id: '/',
       path: '/',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport.update(
-    {
-      id: '/settings',
-      path: '/settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport.update(
-    {
-      id: '/security',
-      path: '/security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport.update(
-    {
-      id: '/rows',
-      path: '/rows',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport.update(
-    {
-      id: '/indexes',
-      path: '/indexes',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute =
-  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport.update(
-    {
-      id: '/columns',
-      path: '/columns',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport.update(
-    {
-      id: '/settings',
-      path: '/settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport.update(
-    {
-      id: '/security',
-      path: '/security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport.update(
-    {
-      id: '/rows',
-      path: '/rows',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport.update(
-    {
-      id: '/indexes',
-      path: '/indexes',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute =
-  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport.update(
-    {
-      id: '/columns',
-      path: '/columns',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport.update(
-    {
-      id: '/visualizer',
-      path: '/visualizer',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport.update(
-    {
-      id: '/settings',
-      path: '/settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport.update(
-    {
-      id: '/security',
-      path: '/security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport.update(
-    {
-      id: '/rows',
-      path: '/rows',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport.update(
-    {
-      id: '/monitor',
-      path: '/monitor',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport.update(
-    {
-      id: '/indexes',
-      path: '/indexes',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport.update(
-    {
-      id: '/export-import',
-      path: '/export-import',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport.update(
-    {
-      id: '/documents',
-      path: '/documents',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport.update(
-    {
-      id: '/db-settings',
-      path: '/db-settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport.update(
-    {
-      id: '/db-security',
-      path: '/db-security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport.update(
-    {
-      id: '/columns',
-      path: '/columns',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport.update(
-    {
-      id: '/backups',
-      path: '/backups',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport.update(
-    {
-      id: '/visualizer',
-      path: '/visualizer',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport.update(
-    {
-      id: '/settings',
-      path: '/settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport.update(
-    {
-      id: '/security',
-      path: '/security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport.update(
-    {
-      id: '/monitor',
-      path: '/monitor',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport.update(
-    {
-      id: '/json',
-      path: '/json',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport.update(
-    {
-      id: '/indexes',
-      path: '/indexes',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport.update(
-    {
-      id: '/export-import',
-      path: '/export-import',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport.update(
-    {
-      id: '/documents',
-      path: '/documents',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport.update(
-    {
-      id: '/db-settings',
-      path: '/db-settings',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport.update(
-    {
-      id: '/db-security',
-      path: '/db-security',
-      getParentRoute: () =>
-        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
-    } as any,
-  )
-const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRoute =
-  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport.update(
-    {
-      id: '/columns',
-      path: '/columns',
       getParentRoute: () =>
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
     } as any,
@@ -3082,18 +2903,327 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport.update(
+    {
+      id: '/columns',
+      path: '/columns',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport.update(
+    {
+      id: '/db-security',
+      path: '/db-security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport.update(
+    {
+      id: '/db-settings',
+      path: '/db-settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport.update(
+    {
+      id: '/documents',
+      path: '/documents',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport.update(
+    {
+      id: '/export-import',
+      path: '/export-import',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport.update(
+    {
+      id: '/indexes',
+      path: '/indexes',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport.update(
+    {
+      id: '/json',
+      path: '/json',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport.update(
+    {
+      id: '/monitor',
+      path: '/monitor',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport.update(
+    {
+      id: '/visualizer',
+      path: '/visualizer',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport.update(
+    {
+      id: '/backups',
+      path: '/backups',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport.update(
+    {
+      id: '/columns',
+      path: '/columns',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport.update(
+    {
+      id: '/db-security',
+      path: '/db-security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport.update(
+    {
+      id: '/db-settings',
+      path: '/db-settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport.update(
+    {
+      id: '/documents',
+      path: '/documents',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport.update(
+    {
+      id: '/export-import',
+      path: '/export-import',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport.update(
+    {
+      id: '/indexes',
+      path: '/indexes',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport.update(
+    {
+      id: '/monitor',
+      path: '/monitor',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport.update(
+    {
+      id: '/rows',
+      path: '/rows',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport.update(
+    {
+      id: '/visualizer',
+      path: '/visualizer',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport.update(
+    {
+      id: '/columns',
+      path: '/columns',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport.update(
+    {
+      id: '/indexes',
+      path: '/indexes',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport.update(
+    {
+      id: '/rows',
+      path: '/rows',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport.update(
+    {
+      id: '/columns',
+      path: '/columns',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport.update(
+    {
+      id: '/indexes',
+      path: '/indexes',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport.update(
+    {
+      id: '/rows',
+      path: '/rows',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport.update(
+    {
+      id: '/settings',
+      path: '/settings',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3112,6 +3242,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3140,7 +3271,6 @@ export interface FileRoutesByFullPath {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3150,12 +3280,12 @@ export interface FileRoutesByFullPath {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3177,11 +3307,24 @@ export interface FileRoutesByFullPath {
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3189,19 +3332,20 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
-  '/blog': typeof MarketingBlogIndexRoute
-  '/changelog': typeof MarketingChangelogIndexRoute
-  '/integrations': typeof MarketingIntegrationsIndexRoute
-  '/threads': typeof MarketingThreadsIndexRoute
+  '/blog/': typeof MarketingBlogIndexRoute
+  '/changelog/': typeof MarketingChangelogIndexRoute
+  '/integrations/': typeof MarketingIntegrationsIndexRoute
+  '/threads/': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
   '/agent/': typeof PublicAgentIndexRoute
-  '/impersonate': typeof PublicImpersonateIndexRoute
-  '/docs/partners': typeof DocsPartnersIndexRoute
-  '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
+  '/impersonate/': typeof PublicImpersonateIndexRoute
+  '/docs/partners/': typeof DocsPartnersIndexRoute
+  '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3227,6 +3371,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -3238,6 +3383,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3303,7 +3449,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
   '/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
-  '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
+  '/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
@@ -3362,18 +3508,18 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/agent/settings/': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
   '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
-  '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
+  '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
-  '/projects/$projectId/messaging/providers': typeof PublicProjectsProjectIdMessagingProvidersIndexRoute
-  '/projects/$projectId/messaging/topics': typeof PublicProjectsProjectIdMessagingTopicsIndexRoute
+  '/projects/$projectId/messaging/providers/': typeof PublicProjectsProjectIdMessagingProvidersIndexRoute
+  '/projects/$projectId/messaging/topics/': typeof PublicProjectsProjectIdMessagingTopicsIndexRoute
   '/projects/$projectId/settings/domains/': typeof PublicProjectsProjectIdSettingsDomainsIndexRoute
   '/projects/$projectId/settings/migrations/': typeof PublicProjectsProjectIdSettingsMigrationsIndexRoute
   '/projects/$projectId/sites/$siteId/': typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
   '/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
-  '/projects/$projectId/stores/$appId': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
+  '/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
@@ -3460,11 +3606,11 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/postgres/$databaseId/settings/storage': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteWithChildren
   '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute
-  '/projects/$projectId/databases/$dbKind/$databaseId/overview': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/overview/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRoute
-  '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments/$deploymentId/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments/$deploymentId/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRoute
@@ -3504,14 +3650,17 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3530,6 +3679,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3556,7 +3706,6 @@ export interface FileRoutesByTo {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/': typeof PublicIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3566,12 +3715,12 @@ export interface FileRoutesByTo {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3591,11 +3740,24 @@ export interface FileRoutesByTo {
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3614,6 +3776,7 @@ export interface FileRoutesByTo {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3635,12 +3798,14 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -3884,11 +4049,13 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -3907,6 +4074,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -3935,7 +4103,7 @@ export interface FileRoutesById {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/_public/': typeof PublicIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3945,12 +4113,12 @@ export interface FileRoutesById {
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
-  '/_api/r/e': typeof ApiRERoute
-  '/_api/r/v.js': typeof ApiRVDotjsRoute
   '/_api/references-api/model': typeof ApiReferencesApiModelRoute
   '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/_api/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/education/join': typeof AuthEducationJoinRoute
@@ -3972,11 +4140,24 @@ export interface FileRoutesById {
   '/_public/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/_public/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/_public/auth/preview': typeof PublicAuthPreviewRoute
   '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/_public/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/_public/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/_public/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/_public/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/_public/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/_public/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/_public/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3997,6 +4178,7 @@ export interface FileRoutesById {
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -4022,6 +4204,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/_public/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -4033,6 +4216,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4301,16 +4485,19 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4329,6 +4516,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4357,7 +4545,6 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/'
     | '/docs/'
     | '/generator/'
     | '/blog/rss.xml'
@@ -4367,12 +4554,12 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4394,11 +4581,24 @@ export interface FileRouteTypes {
     | '/agent/$agentId'
     | '/agent/automations'
     | '/agent/settings'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4406,19 +4606,20 @@ export interface FileRouteTypes {
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
-    | '/blog'
-    | '/changelog'
-    | '/integrations'
-    | '/threads'
+    | '/blog/'
+    | '/changelog/'
+    | '/integrations/'
+    | '/threads/'
     | '/account/'
     | '/agent/'
-    | '/impersonate'
-    | '/docs/partners'
-    | '/generator/diagrams'
+    | '/impersonate/'
+    | '/docs/partners/'
+    | '/generator/diagrams/'
     | '/generator/cover/encode'
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4444,6 +4645,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -4455,6 +4657,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4520,7 +4723,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/'
     | '/projects/$projectId/realtime/'
     | '/projects/$projectId/settings/'
-    | '/projects/$projectId/sites'
+    | '/projects/$projectId/sites/'
     | '/projects/$projectId/storage/'
     | '/projects/$projectId/stores/'
     | '/projects/$projectId/usage/'
@@ -4579,18 +4782,18 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/settings/'
     | '/organizations/$orgId/apps/$appId/'
     | '/organizations/$orgId/domains/$domainId/'
-    | '/organizations/$orgId/marketplace/$appId'
+    | '/organizations/$orgId/marketplace/$appId/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
-    | '/projects/$projectId/messaging/providers'
-    | '/projects/$projectId/messaging/topics'
+    | '/projects/$projectId/messaging/providers/'
+    | '/projects/$projectId/messaging/topics/'
     | '/projects/$projectId/settings/domains/'
     | '/projects/$projectId/settings/migrations/'
     | '/projects/$projectId/sites/$siteId/'
     | '/projects/$projectId/sites/create/'
     | '/projects/$projectId/storage/$bucketId/'
-    | '/projects/$projectId/stores/$appId'
+    | '/projects/$projectId/stores/$appId/'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
@@ -4677,11 +4880,11 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
     | '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
-    | '/projects/$projectId/databases/$dbKind/$databaseId/overview'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/overview/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/'
     | '/projects/$projectId/databases/mysql/$databaseId/settings/'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/'
-    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
+    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
     | '/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns'
@@ -4721,14 +4924,17 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4747,6 +4953,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4773,7 +4980,6 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/'
     | '/docs'
     | '/generator'
     | '/blog/rss.xml'
@@ -4783,12 +4989,12 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4808,11 +5014,24 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/account/sessions'
     | '/agent/$agentId'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4831,6 +5050,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4852,12 +5072,14 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5100,11 +5322,13 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
@@ -5123,6 +5347,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5151,7 +5376,7 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/_public/'
+    | '/_marketing/'
     | '/docs/'
     | '/generator/'
     | '/_api/blog/rss.xml'
@@ -5161,12 +5386,12 @@ export interface FileRouteTypes {
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
-    | '/_api/r/e'
-    | '/_api/r/v.js'
     | '/_api/references-api/model'
     | '/_api/references-api/nav-counts'
     | '/_api/references-api/open-api-spec'
     | '/_api/references-api/service'
+    | '/_api/resend/api-keys'
+    | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
     | '/_auth/education/join'
@@ -5188,11 +5413,24 @@ export interface FileRouteTypes {
     | '/_public/agent/$agentId'
     | '/_public/agent/automations'
     | '/_public/agent/settings'
+    | '/_public/auth/preview'
     | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
+    | '/_public/debug/community-share-examples'
+    | '/_public/debug/education-join-preview'
     | '/_public/debug/error-preview'
+    | '/_public/debug/impersonate-preview'
+    | '/_public/debug/join-invite-preview'
+    | '/_public/debug/magic-url-preview'
+    | '/_public/debug/mfa-preview'
     | '/_public/debug/oauth2-preview'
+    | '/_public/debug/oauth2-relay-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/recovery-preview'
+    | '/_public/debug/reset-preview'
+    | '/_public/debug/sign-in-preview'
+    | '/_public/debug/sign-up-preview'
+    | '/_public/debug/sites-auth-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
     | '/_public/impersonate/$userId'
@@ -5213,6 +5451,7 @@ export interface FileRouteTypes {
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
@@ -5238,6 +5477,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
+    | '/_public/projects/$projectId/agents'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -5249,6 +5489,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -5525,11 +5766,13 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
@@ -5545,12 +5788,12 @@ export interface RootRouteChildren {
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
-  ApiRERoute: typeof ApiRERoute
-  ApiRVDotjsRoute: typeof ApiRVDotjsRoute
   ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
   ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
   ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
   ApiReferencesApiServiceRoute: typeof ApiReferencesApiServiceRoute
+  ApiResendApiKeysRoute: typeof ApiResendApiKeysRouteWithChildren
+  ApiResendDomainsRoute: typeof ApiResendDomainsRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -5559,74 +5802,32 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/robots.txt': {
-      id: '/robots.txt'
-      path: '/robots.txt'
-      fullPath: '/robots.txt'
-      preLoaderRoute: typeof RobotsDottxtRouteImport
+    '/_marketing': {
+      id: '/_marketing'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/llms.txt': {
-      id: '/llms.txt'
-      path: '/llms.txt'
-      fullPath: '/llms.txt'
-      preLoaderRoute: typeof LlmsDottxtRouteImport
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/llms-full.txt': {
-      id: '/llms-full.txt'
-      path: '/llms-full.txt'
-      fullPath: '/llms-full.txt'
-      preLoaderRoute: typeof LlmsFullDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrations.md': {
-      id: '/integrations.md'
-      path: '/integrations.md'
-      fullPath: '/integrations.md'
-      preLoaderRoute: typeof IntegrationsDotmdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/generator': {
-      id: '/generator'
-      path: '/generator'
-      fullPath: '/generator'
-      preLoaderRoute: typeof GeneratorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs.md': {
-      id: '/docs.md'
-      path: '/docs.md'
-      fullPath: '/docs.md'
-      preLoaderRoute: typeof DocsDotmdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/discord': {
-      id: '/discord'
-      path: '/discord'
-      fullPath: '/discord'
-      preLoaderRoute: typeof DiscordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog.md': {
-      id: '/changelog.md'
-      path: '/changelog.md'
-      fullPath: '/changelog.md'
-      preLoaderRoute: typeof ChangelogDotmdRouteImport
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -5636,347 +5837,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public': {
-      id: '/_public'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof PublicRouteImport
+    '/changelog.md': {
+      id: '/changelog.md'
+      path: '/changelog.md'
+      fullPath: '/changelog.md'
+      preLoaderRoute: typeof ChangelogDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_protected': {
-      id: '/_protected'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof ProtectedRouteImport
+    '/discord': {
+      id: '/discord'
+      path: '/discord'
+      fullPath: '/discord'
+      preLoaderRoute: typeof DiscordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_marketing': {
-      id: '/_marketing'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof MarketingRouteImport
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthRouteImport
+    '/docs.md': {
+      id: '/docs.md'
+      path: '/docs.md'
+      fullPath: '/docs.md'
+      preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/generator/': {
-      id: '/generator/'
-      path: '/'
-      fullPath: '/generator/'
-      preLoaderRoute: typeof GeneratorIndexRouteImport
-      parentRoute: typeof GeneratorRoute
-    }
-    '/docs/': {
-      id: '/docs/'
-      path: '/'
-      fullPath: '/docs/'
-      preLoaderRoute: typeof DocsIndexRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/llms/txt': {
-      id: '/llms/txt'
-      path: '/llms/txt'
-      fullPath: '/llms/txt'
-      preLoaderRoute: typeof LlmsTxtRouteImport
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/llms-full/txt': {
-      id: '/llms-full/txt'
-      path: '/llms-full/txt'
-      fullPath: '/llms-full/txt'
-      preLoaderRoute: typeof LlmsFullTxtRouteImport
+    '/generator': {
+      id: '/generator'
+      path: '/generator'
+      fullPath: '/generator'
+      preLoaderRoute: typeof GeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/i/$linkId': {
-      id: '/i/$linkId'
-      path: '/i/$linkId'
-      fullPath: '/i/$linkId'
-      preLoaderRoute: typeof ILinkIdRouteImport
+    '/integrations.md': {
+      id: '/integrations.md'
+      path: '/integrations.md'
+      fullPath: '/integrations.md'
+      preLoaderRoute: typeof IntegrationsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/generator/$generationId': {
-      id: '/generator/$generationId'
-      path: '/$generationId'
-      fullPath: '/generator/$generationId'
-      preLoaderRoute: typeof GeneratorGenerationIdRouteImport
-      parentRoute: typeof GeneratorRoute
-    }
-    '/domains/continue': {
-      id: '/domains/continue'
-      path: '/domains/continue'
-      fullPath: '/domains/continue'
-      preLoaderRoute: typeof DomainsContinueRouteImport
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/docs/tutorials': {
-      id: '/docs/tutorials'
-      path: '/tutorials'
-      fullPath: '/docs/tutorials'
-      preLoaderRoute: typeof DocsTutorialsRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/quick-starts': {
-      id: '/docs/quick-starts'
-      path: '/quick-starts'
-      fullPath: '/docs/quick-starts'
-      preLoaderRoute: typeof DocsQuickStartsRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/$': {
-      id: '/docs/$'
-      path: '/$'
-      fullPath: '/docs/$'
-      preLoaderRoute: typeof DocsSplatRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/cli/install.sh': {
-      id: '/cli/install.sh'
-      path: '/cli/install.sh'
-      fullPath: '/cli/install.sh'
-      preLoaderRoute: typeof CliInstallDotshRouteImport
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cli/install.ps1': {
-      id: '/cli/install.ps1'
-      path: '/cli/install.ps1'
-      fullPath: '/cli/install.ps1'
-      preLoaderRoute: typeof CliInstallDotps1RouteImport
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public/upgrade': {
-      id: '/_public/upgrade'
-      path: '/upgrade'
-      fullPath: '/upgrade'
-      preLoaderRoute: typeof PublicUpgradeRouteImport
-      parentRoute: typeof PublicRoute
+    '/setup.md': {
+      id: '/setup.md'
+      path: '/setup.md'
+      fullPath: '/setup.md'
+      preLoaderRoute: typeof SetupDotmdRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_public/sales': {
-      id: '/_public/sales'
-      path: '/sales'
-      fullPath: '/sales'
-      preLoaderRoute: typeof PublicSalesRouteImport
-      parentRoute: typeof PublicRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_public/reset': {
-      id: '/_public/reset'
-      path: '/reset'
-      fullPath: '/reset'
-      preLoaderRoute: typeof PublicResetRouteImport
-      parentRoute: typeof PublicRoute
+    '/_api/hello': {
+      id: '/_api/hello'
+      path: '/hello'
+      fullPath: '/hello'
+      preLoaderRoute: typeof ApiHelloRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_public/init': {
-      id: '/_public/init'
-      path: '/init'
-      fullPath: '/init'
-      preLoaderRoute: typeof PublicInitRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/comps': {
-      id: '/_public/comps'
-      path: '/comps'
-      fullPath: '/comps'
-      preLoaderRoute: typeof PublicCompsRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/cache': {
-      id: '/_public/cache'
-      path: '/cache'
-      fullPath: '/cache'
-      preLoaderRoute: typeof PublicCacheRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/blocks': {
-      id: '/_public/blocks'
-      path: '/blocks'
-      fullPath: '/blocks'
-      preLoaderRoute: typeof PublicBlocksRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/assistant': {
-      id: '/_public/assistant'
-      path: '/assistant'
-      fullPath: '/assistant'
-      preLoaderRoute: typeof PublicAssistantRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/app': {
-      id: '/_public/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof PublicAppRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/agent': {
-      id: '/_public/agent'
-      path: '/agent'
-      fullPath: '/agent'
-      preLoaderRoute: typeof PublicAgentRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/account': {
-      id: '/_public/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof PublicAccountRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_protected/example-protected-route': {
-      id: '/_protected/example-protected-route'
-      path: '/example-protected-route'
-      fullPath: '/example-protected-route'
-      preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
-    '/_marketing/terms': {
-      id: '/_marketing/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof MarketingTermsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/startups': {
-      id: '/_marketing/startups'
-      path: '/startups'
-      fullPath: '/startups'
-      preLoaderRoute: typeof MarketingStartupsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/privacy': {
-      id: '/_marketing/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof MarketingPrivacyRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/pricing': {
-      id: '/_marketing/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof MarketingPricingRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/partners': {
-      id: '/_marketing/partners'
-      path: '/partners'
-      fullPath: '/partners'
-      preLoaderRoute: typeof MarketingPartnersRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/home': {
-      id: '/_marketing/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof MarketingHomeRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/enterprise': {
-      id: '/_marketing/enterprise'
-      path: '/enterprise'
-      fullPath: '/enterprise'
-      preLoaderRoute: typeof MarketingEnterpriseRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/education': {
-      id: '/_marketing/education'
-      path: '/education'
-      fullPath: '/education'
-      preLoaderRoute: typeof MarketingEducationRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/domains': {
-      id: '/_marketing/domains'
-      path: '/domains'
-      fullPath: '/domains'
-      preLoaderRoute: typeof MarketingDomainsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/cookies': {
-      id: '/_marketing/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof MarketingCookiesRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/company': {
-      id: '/_marketing/company'
-      path: '/company'
-      fullPath: '/company'
-      preLoaderRoute: typeof MarketingCompanyRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/community': {
-      id: '/_marketing/community'
-      path: '/community'
-      fullPath: '/community'
-      preLoaderRoute: typeof MarketingCommunityRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/baa': {
-      id: '/_marketing/baa'
-      path: '/baa'
-      fullPath: '/baa'
-      preLoaderRoute: typeof MarketingBaaRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/assets': {
-      id: '/_marketing/assets'
-      path: '/assets'
-      fullPath: '/assets'
-      preLoaderRoute: typeof MarketingAssetsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/affiliates': {
-      id: '/_marketing/affiliates'
-      path: '/affiliates'
-      fullPath: '/affiliates'
-      preLoaderRoute: typeof MarketingAffiliatesRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_auth/verify-email': {
-      id: '/_auth/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof AuthVerifyEmailRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/sign-up': {
-      id: '/_auth/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof AuthSignUpRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/sign-out': {
-      id: '/_auth/sign-out'
-      path: '/sign-out'
-      fullPath: '/sign-out'
-      preLoaderRoute: typeof AuthSignOutRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/sign-in': {
-      id: '/_auth/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof AuthSignInRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/recovery': {
-      id: '/_auth/recovery'
-      path: '/recovery'
-      fullPath: '/recovery'
-      preLoaderRoute: typeof AuthRecoveryRouteImport
+    '/_auth/join': {
+      id: '/_auth/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof AuthJoinRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/mfa': {
@@ -5986,396 +5942,326 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthMfaRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/join': {
-      id: '/_auth/join'
-      path: '/join'
-      fullPath: '/join'
-      preLoaderRoute: typeof AuthJoinRouteImport
+    '/_auth/recovery': {
+      id: '/_auth/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof AuthRecoveryRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_api/hello': {
-      id: '/_api/hello'
-      path: '/hello'
-      fullPath: '/hello'
-      preLoaderRoute: typeof ApiHelloRouteImport
+    '/_auth/sign-in': {
+      id: '/_auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-out': {
+      id: '/_auth/sign-out'
+      path: '/sign-out'
+      fullPath: '/sign-out'
+      preLoaderRoute: typeof AuthSignOutRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-up': {
+      id: '/_auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/affiliates': {
+      id: '/_marketing/affiliates'
+      path: '/affiliates'
+      fullPath: '/affiliates'
+      preLoaderRoute: typeof MarketingAffiliatesRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/assets': {
+      id: '/_marketing/assets'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof MarketingAssetsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/baa': {
+      id: '/_marketing/baa'
+      path: '/baa'
+      fullPath: '/baa'
+      preLoaderRoute: typeof MarketingBaaRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/community': {
+      id: '/_marketing/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof MarketingCommunityRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/company': {
+      id: '/_marketing/company'
+      path: '/company'
+      fullPath: '/company'
+      preLoaderRoute: typeof MarketingCompanyRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/cookies': {
+      id: '/_marketing/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof MarketingCookiesRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/domains': {
+      id: '/_marketing/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof MarketingDomainsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/education': {
+      id: '/_marketing/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof MarketingEducationRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/enterprise': {
+      id: '/_marketing/enterprise'
+      path: '/enterprise'
+      fullPath: '/enterprise'
+      preLoaderRoute: typeof MarketingEnterpriseRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home': {
+      id: '/_marketing/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof MarketingHomeRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/partners': {
+      id: '/_marketing/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof MarketingPartnersRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/pricing': {
+      id: '/_marketing/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof MarketingPricingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/privacy': {
+      id: '/_marketing/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof MarketingPrivacyRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/startups': {
+      id: '/_marketing/startups'
+      path: '/startups'
+      fullPath: '/startups'
+      preLoaderRoute: typeof MarketingStartupsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/terms': {
+      id: '/_marketing/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_protected/example-protected-route': {
+      id: '/_protected/example-protected-route'
+      path: '/example-protected-route'
+      fullPath: '/example-protected-route'
+      preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_public/account': {
+      id: '/_public/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof PublicAccountRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/agent': {
+      id: '/_public/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof PublicAgentRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/app': {
+      id: '/_public/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof PublicAppRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/assistant': {
+      id: '/_public/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof PublicAssistantRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/blocks': {
+      id: '/_public/blocks'
+      path: '/blocks'
+      fullPath: '/blocks'
+      preLoaderRoute: typeof PublicBlocksRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/cache': {
+      id: '/_public/cache'
+      path: '/cache'
+      fullPath: '/cache'
+      preLoaderRoute: typeof PublicCacheRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/comps': {
+      id: '/_public/comps'
+      path: '/comps'
+      fullPath: '/comps'
+      preLoaderRoute: typeof PublicCompsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/init': {
+      id: '/_public/init'
+      path: '/init'
+      fullPath: '/init'
+      preLoaderRoute: typeof PublicInitRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/reset': {
+      id: '/_public/reset'
+      path: '/reset'
+      fullPath: '/reset'
+      preLoaderRoute: typeof PublicResetRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/sales': {
+      id: '/_public/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof PublicSalesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/upgrade': {
+      id: '/_public/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof PublicUpgradeRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/cli/install.ps1': {
+      id: '/cli/install.ps1'
+      path: '/cli/install.ps1'
+      fullPath: '/cli/install.ps1'
+      preLoaderRoute: typeof CliInstallDotps1RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/generator/diagrams/': {
-      id: '/generator/diagrams/'
-      path: '/diagrams'
-      fullPath: '/generator/diagrams'
-      preLoaderRoute: typeof GeneratorDiagramsIndexRouteImport
-      parentRoute: typeof GeneratorRoute
+    '/cli/install.sh': {
+      id: '/cli/install.sh'
+      path: '/cli/install.sh'
+      fullPath: '/cli/install.sh'
+      preLoaderRoute: typeof CliInstallDotshRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/docs/partners/': {
-      id: '/docs/partners/'
-      path: '/partners'
-      fullPath: '/docs/partners'
-      preLoaderRoute: typeof DocsPartnersIndexRouteImport
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/_public/impersonate/': {
-      id: '/_public/impersonate/'
-      path: '/impersonate'
-      fullPath: '/impersonate'
-      preLoaderRoute: typeof PublicImpersonateIndexRouteImport
-      parentRoute: typeof PublicRoute
+    '/docs/$': {
+      id: '/docs/$'
+      path: '/$'
+      fullPath: '/docs/$'
+      preLoaderRoute: typeof DocsSplatRouteImport
+      parentRoute: typeof DocsRoute
     }
-    '/_public/agent/': {
-      id: '/_public/agent/'
+    '/docs/quick-starts': {
+      id: '/docs/quick-starts'
+      path: '/quick-starts'
+      fullPath: '/docs/quick-starts'
+      preLoaderRoute: typeof DocsQuickStartsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/tutorials': {
+      id: '/docs/tutorials'
+      path: '/tutorials'
+      fullPath: '/docs/tutorials'
+      preLoaderRoute: typeof DocsTutorialsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/domains/continue': {
+      id: '/domains/continue'
+      path: '/domains/continue'
+      fullPath: '/domains/continue'
+      preLoaderRoute: typeof DomainsContinueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generator/': {
+      id: '/generator/'
       path: '/'
-      fullPath: '/agent/'
-      preLoaderRoute: typeof PublicAgentIndexRouteImport
-      parentRoute: typeof PublicAgentRoute
-    }
-    '/_public/account/': {
-      id: '/_public/account/'
-      path: '/'
-      fullPath: '/account/'
-      preLoaderRoute: typeof PublicAccountIndexRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_marketing/threads/': {
-      id: '/_marketing/threads/'
-      path: '/threads'
-      fullPath: '/threads'
-      preLoaderRoute: typeof MarketingThreadsIndexRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/integrations/': {
-      id: '/_marketing/integrations/'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof MarketingIntegrationsIndexRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/changelog/': {
-      id: '/_marketing/changelog/'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof MarketingChangelogIndexRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/': {
-      id: '/_marketing/blog/'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof MarketingBlogIndexRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/generator/diagrams/$generationId': {
-      id: '/generator/diagrams/$generationId'
-      path: '/diagrams/$generationId'
-      fullPath: '/generator/diagrams/$generationId'
-      preLoaderRoute: typeof GeneratorDiagramsGenerationIdRouteImport
+      fullPath: '/generator/'
+      preLoaderRoute: typeof GeneratorIndexRouteImport
       parentRoute: typeof GeneratorRoute
     }
-    '/_public/projects/$projectId': {
-      id: '/_public/projects/$projectId'
-      path: '/projects/$projectId'
-      fullPath: '/projects/$projectId'
-      preLoaderRoute: typeof PublicProjectsProjectIdRouteImport
-      parentRoute: typeof PublicRoute
+    '/generator/$generationId': {
+      id: '/generator/$generationId'
+      path: '/$generationId'
+      fullPath: '/generator/$generationId'
+      preLoaderRoute: typeof GeneratorGenerationIdRouteImport
+      parentRoute: typeof GeneratorRoute
     }
-    '/_public/organizations/$orgId': {
-      id: '/_public/organizations/$orgId'
-      path: '/organizations/$orgId'
-      fullPath: '/organizations/$orgId'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/marketplace/$appId': {
-      id: '/_public/marketplace/$appId'
-      path: '/marketplace/$appId'
-      fullPath: '/marketplace/$appId'
-      preLoaderRoute: typeof PublicMarketplaceAppIdRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/impersonate/$userId': {
-      id: '/_public/impersonate/$userId'
-      path: '/impersonate/$userId'
-      fullPath: '/impersonate/$userId'
-      preLoaderRoute: typeof PublicImpersonateUserIdRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/git/authorize-contributor': {
-      id: '/_public/git/authorize-contributor'
-      path: '/git/authorize-contributor'
-      fullPath: '/git/authorize-contributor'
-      preLoaderRoute: typeof PublicGitAuthorizeContributorRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/verify-email-preview': {
-      id: '/_public/debug/verify-email-preview'
-      path: '/debug/verify-email-preview'
-      fullPath: '/debug/verify-email-preview'
-      preLoaderRoute: typeof PublicDebugVerifyEmailPreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/org-setup-preview': {
-      id: '/_public/debug/org-setup-preview'
-      path: '/debug/org-setup-preview'
-      fullPath: '/debug/org-setup-preview'
-      preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/oauth2-preview': {
-      id: '/_public/debug/oauth2-preview'
-      path: '/debug/oauth2-preview'
-      fullPath: '/debug/oauth2-preview'
-      preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/error-preview': {
-      id: '/_public/debug/error-preview'
-      path: '/debug/error-preview'
-      fullPath: '/debug/error-preview'
-      preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/code-editor-preview': {
-      id: '/_public/debug/code-editor-preview'
-      path: '/debug/code-editor-preview'
-      fullPath: '/debug/code-editor-preview'
-      preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/debug/authorize-contributor-preview': {
-      id: '/_public/debug/authorize-contributor-preview'
-      path: '/debug/authorize-contributor-preview'
-      fullPath: '/debug/authorize-contributor-preview'
-      preLoaderRoute: typeof PublicDebugAuthorizeContributorPreviewRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/agent/settings': {
-      id: '/_public/agent/settings'
-      path: '/settings'
-      fullPath: '/agent/settings'
-      preLoaderRoute: typeof PublicAgentSettingsRouteImport
-      parentRoute: typeof PublicAgentRoute
-    }
-    '/_public/agent/automations': {
-      id: '/_public/agent/automations'
-      path: '/automations'
-      fullPath: '/agent/automations'
-      preLoaderRoute: typeof PublicAgentAutomationsRouteImport
-      parentRoute: typeof PublicAgentRoute
-    }
-    '/_public/agent/$agentId': {
-      id: '/_public/agent/$agentId'
-      path: '/$agentId'
-      fullPath: '/agent/$agentId'
-      preLoaderRoute: typeof PublicAgentAgentIdRouteImport
-      parentRoute: typeof PublicAgentRoute
-    }
-    '/_public/account/sessions': {
-      id: '/_public/account/sessions'
-      path: '/sessions'
-      fullPath: '/account/sessions'
-      preLoaderRoute: typeof PublicAccountSessionsRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/security': {
-      id: '/_public/account/security'
-      path: '/security'
-      fullPath: '/account/security'
-      preLoaderRoute: typeof PublicAccountSecurityRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/payments': {
-      id: '/_public/account/payments'
-      path: '/payments'
-      fullPath: '/account/payments'
-      preLoaderRoute: typeof PublicAccountPaymentsRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/payment-methods': {
-      id: '/_public/account/payment-methods'
-      path: '/payment-methods'
-      fullPath: '/account/payment-methods'
-      preLoaderRoute: typeof PublicAccountPaymentMethodsRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/notifications': {
-      id: '/_public/account/notifications'
-      path: '/notifications'
-      fullPath: '/account/notifications'
-      preLoaderRoute: typeof PublicAccountNotificationsRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/billing-addresses': {
-      id: '/_public/account/billing-addresses'
-      path: '/billing-addresses'
-      fullPath: '/account/billing-addresses'
-      preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/applications': {
-      id: '/_public/account/applications'
-      path: '/applications'
-      fullPath: '/account/applications'
-      preLoaderRoute: typeof PublicAccountApplicationsRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_public/account/affiliates': {
-      id: '/_public/account/affiliates'
-      path: '/affiliates'
-      fullPath: '/account/affiliates'
-      preLoaderRoute: typeof PublicAccountAffiliatesRouteImport
-      parentRoute: typeof PublicAccountRoute
-    }
-    '/_marketing/threads/$threadId': {
-      id: '/_marketing/threads/$threadId'
-      path: '/threads/$threadId'
-      fullPath: '/threads/$threadId'
-      preLoaderRoute: typeof MarketingThreadsThreadIdRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/products/$productId': {
-      id: '/_marketing/products/$productId'
-      path: '/products/$productId'
-      fullPath: '/products/$productId'
-      preLoaderRoute: typeof MarketingProductsProductIdRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/integrations/$slug': {
-      id: '/_marketing/integrations/$slug'
-      path: '/integrations/$slug'
-      fullPath: '/integrations/$slug'
-      preLoaderRoute: typeof MarketingIntegrationsSlugRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/init/$ticketId': {
-      id: '/_marketing/init/$ticketId'
-      path: '/init/$ticketId'
-      fullPath: '/init/$ticketId'
-      preLoaderRoute: typeof MarketingInitTicketIdRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/$page': {
-      id: '/_marketing/blog/$page'
-      path: '/blog/$page'
-      fullPath: '/blog/$page'
-      preLoaderRoute: typeof MarketingBlogPageRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_auth/oauth2/device': {
-      id: '/_auth/oauth2/device'
-      path: '/oauth2/device'
-      fullPath: '/oauth2/device'
-      preLoaderRoute: typeof AuthOauth2DeviceRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/oauth2/consent': {
-      id: '/_auth/oauth2/consent'
-      path: '/oauth2/consent'
-      fullPath: '/oauth2/consent'
-      preLoaderRoute: typeof AuthOauth2ConsentRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/education/join': {
-      id: '/_auth/education/join'
-      path: '/education/join'
-      fullPath: '/education/join'
-      preLoaderRoute: typeof AuthEducationJoinRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/auth/magic-url': {
-      id: '/_auth/auth/magic-url'
-      path: '/auth/magic-url'
-      fullPath: '/auth/magic-url'
-      preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_api/sitemap/news.xml': {
-      id: '/_api/sitemap/news.xml'
-      path: '/sitemap/news.xml'
-      fullPath: '/sitemap/news.xml'
-      preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
+    '/i/$linkId': {
+      id: '/i/$linkId'
+      path: '/i/$linkId'
+      fullPath: '/i/$linkId'
+      preLoaderRoute: typeof ILinkIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_api/references-api/service': {
-      id: '/_api/references-api/service'
-      path: '/references-api/service'
-      fullPath: '/references-api/service'
-      preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
+    '/llms-full/txt': {
+      id: '/llms-full/txt'
+      path: '/llms-full/txt'
+      fullPath: '/llms-full/txt'
+      preLoaderRoute: typeof LlmsFullTxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_api/references-api/open-api-spec': {
-      id: '/_api/references-api/open-api-spec'
-      path: '/references-api/open-api-spec'
-      fullPath: '/references-api/open-api-spec'
-      preLoaderRoute: typeof ApiReferencesApiOpenApiSpecRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/references-api/nav-counts': {
-      id: '/_api/references-api/nav-counts'
-      path: '/references-api/nav-counts'
-      fullPath: '/references-api/nav-counts'
-      preLoaderRoute: typeof ApiReferencesApiNavCountsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/references-api/model': {
-      id: '/_api/references-api/model'
-      path: '/references-api/model'
-      fullPath: '/references-api/model'
-      preLoaderRoute: typeof ApiReferencesApiModelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/r/v.js': {
-      id: '/_api/r/v.js'
-      path: '/r/v.js'
-      fullPath: '/r/v.js'
-      preLoaderRoute: typeof ApiRVDotjsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/r/e': {
-      id: '/_api/r/e'
-      path: '/r/e'
-      fullPath: '/r/e'
-      preLoaderRoute: typeof ApiRERouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/og/init.png': {
-      id: '/_api/og/init.png'
-      path: '/og/init.png'
-      fullPath: '/og/init.png'
-      preLoaderRoute: typeof ApiOgInitDotpngRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/og/image.png': {
-      id: '/_api/og/image.png'
-      path: '/og/image.png'
-      fullPath: '/og/image.png'
-      preLoaderRoute: typeof ApiOgImageDotpngRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/generator/diagram': {
-      id: '/_api/generator/diagram'
-      path: '/generator/diagram'
-      fullPath: '/generator/diagram'
-      preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/generator/cover': {
-      id: '/_api/generator/cover'
-      path: '/generator/cover'
-      fullPath: '/generator/cover'
-      preLoaderRoute: typeof ApiGeneratorCoverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/debug/ip': {
-      id: '/_api/debug/ip'
-      path: '/debug/ip'
-      fullPath: '/debug/ip'
-      preLoaderRoute: typeof ApiDebugIpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/changelog/rss.xml': {
-      id: '/_api/changelog/rss.xml'
-      path: '/changelog/rss.xml'
-      fullPath: '/changelog/rss.xml'
-      preLoaderRoute: typeof ApiChangelogRssDotxmlRouteImport
+    '/llms/txt': {
+      id: '/llms/txt'
+      path: '/llms/txt'
+      fullPath: '/llms/txt'
+      preLoaderRoute: typeof LlmsTxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/blog/rss.xml': {
@@ -6385,326 +6271,487 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBlogRssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public/projects/$projectId/': {
-      id: '/_public/projects/$projectId/'
+    '/_api/changelog/rss.xml': {
+      id: '/_api/changelog/rss.xml'
+      path: '/changelog/rss.xml'
+      fullPath: '/changelog/rss.xml'
+      preLoaderRoute: typeof ApiChangelogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/debug/ip': {
+      id: '/_api/debug/ip'
+      path: '/debug/ip'
+      fullPath: '/debug/ip'
+      preLoaderRoute: typeof ApiDebugIpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/generator/cover': {
+      id: '/_api/generator/cover'
+      path: '/generator/cover'
+      fullPath: '/generator/cover'
+      preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/generator/diagram': {
+      id: '/_api/generator/diagram'
+      path: '/generator/diagram'
+      fullPath: '/generator/diagram'
+      preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/og/image.png': {
+      id: '/_api/og/image.png'
+      path: '/og/image.png'
+      fullPath: '/og/image.png'
+      preLoaderRoute: typeof ApiOgImageDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/og/init.png': {
+      id: '/_api/og/init.png'
+      path: '/og/init.png'
+      fullPath: '/og/init.png'
+      preLoaderRoute: typeof ApiOgInitDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/model': {
+      id: '/_api/references-api/model'
+      path: '/references-api/model'
+      fullPath: '/references-api/model'
+      preLoaderRoute: typeof ApiReferencesApiModelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/nav-counts': {
+      id: '/_api/references-api/nav-counts'
+      path: '/references-api/nav-counts'
+      fullPath: '/references-api/nav-counts'
+      preLoaderRoute: typeof ApiReferencesApiNavCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/open-api-spec': {
+      id: '/_api/references-api/open-api-spec'
+      path: '/references-api/open-api-spec'
+      fullPath: '/references-api/open-api-spec'
+      preLoaderRoute: typeof ApiReferencesApiOpenApiSpecRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/references-api/service': {
+      id: '/_api/references-api/service'
+      path: '/references-api/service'
+      fullPath: '/references-api/service'
+      preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/api-keys': {
+      id: '/_api/resend/api-keys'
+      path: '/resend/api-keys'
+      fullPath: '/resend/api-keys'
+      preLoaderRoute: typeof ApiResendApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/domains': {
+      id: '/_api/resend/domains'
+      path: '/resend/domains'
+      fullPath: '/resend/domains'
+      preLoaderRoute: typeof ApiResendDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/sitemap/news.xml': {
+      id: '/_api/sitemap/news.xml'
+      path: '/sitemap/news.xml'
+      fullPath: '/sitemap/news.xml'
+      preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/auth/magic-url': {
+      id: '/_auth/auth/magic-url'
+      path: '/auth/magic-url'
+      fullPath: '/auth/magic-url'
+      preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/education/join': {
+      id: '/_auth/education/join'
+      path: '/education/join'
+      fullPath: '/education/join'
+      preLoaderRoute: typeof AuthEducationJoinRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/oauth2/consent': {
+      id: '/_auth/oauth2/consent'
+      path: '/oauth2/consent'
+      fullPath: '/oauth2/consent'
+      preLoaderRoute: typeof AuthOauth2ConsentRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/oauth2/device': {
+      id: '/_auth/oauth2/device'
+      path: '/oauth2/device'
+      fullPath: '/oauth2/device'
+      preLoaderRoute: typeof AuthOauth2DeviceRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_marketing/blog/': {
+      id: '/_marketing/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof MarketingBlogIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/$page': {
+      id: '/_marketing/blog/$page'
+      path: '/blog/$page'
+      fullPath: '/blog/$page'
+      preLoaderRoute: typeof MarketingBlogPageRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/changelog/': {
+      id: '/_marketing/changelog/'
+      path: '/changelog'
+      fullPath: '/changelog/'
+      preLoaderRoute: typeof MarketingChangelogIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/init/$ticketId': {
+      id: '/_marketing/init/$ticketId'
+      path: '/init/$ticketId'
+      fullPath: '/init/$ticketId'
+      preLoaderRoute: typeof MarketingInitTicketIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/integrations/': {
+      id: '/_marketing/integrations/'
+      path: '/integrations'
+      fullPath: '/integrations/'
+      preLoaderRoute: typeof MarketingIntegrationsIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/integrations/$slug': {
+      id: '/_marketing/integrations/$slug'
+      path: '/integrations/$slug'
+      fullPath: '/integrations/$slug'
+      preLoaderRoute: typeof MarketingIntegrationsSlugRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/products/$productId': {
+      id: '/_marketing/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof MarketingProductsProductIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/threads/': {
+      id: '/_marketing/threads/'
+      path: '/threads'
+      fullPath: '/threads/'
+      preLoaderRoute: typeof MarketingThreadsIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/threads/$threadId': {
+      id: '/_marketing/threads/$threadId'
+      path: '/threads/$threadId'
+      fullPath: '/threads/$threadId'
+      preLoaderRoute: typeof MarketingThreadsThreadIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_public/account/': {
+      id: '/_public/account/'
       path: '/'
-      fullPath: '/projects/$projectId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+      fullPath: '/account/'
+      preLoaderRoute: typeof PublicAccountIndexRouteImport
+      parentRoute: typeof PublicAccountRoute
     }
-    '/_public/organizations/$orgId/': {
-      id: '/_public/organizations/$orgId/'
+    '/_public/account/affiliates': {
+      id: '/_public/account/affiliates'
+      path: '/affiliates'
+      fullPath: '/account/affiliates'
+      preLoaderRoute: typeof PublicAccountAffiliatesRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/applications': {
+      id: '/_public/account/applications'
+      path: '/applications'
+      fullPath: '/account/applications'
+      preLoaderRoute: typeof PublicAccountApplicationsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/billing-addresses': {
+      id: '/_public/account/billing-addresses'
+      path: '/billing-addresses'
+      fullPath: '/account/billing-addresses'
+      preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/notifications': {
+      id: '/_public/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof PublicAccountNotificationsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/payment-methods': {
+      id: '/_public/account/payment-methods'
+      path: '/payment-methods'
+      fullPath: '/account/payment-methods'
+      preLoaderRoute: typeof PublicAccountPaymentMethodsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/payments': {
+      id: '/_public/account/payments'
+      path: '/payments'
+      fullPath: '/account/payments'
+      preLoaderRoute: typeof PublicAccountPaymentsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/security': {
+      id: '/_public/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof PublicAccountSecurityRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/sessions': {
+      id: '/_public/account/sessions'
+      path: '/sessions'
+      fullPath: '/account/sessions'
+      preLoaderRoute: typeof PublicAccountSessionsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/agent/': {
+      id: '/_public/agent/'
       path: '/'
-      fullPath: '/organizations/$orgId/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+      fullPath: '/agent/'
+      preLoaderRoute: typeof PublicAgentIndexRouteImport
+      parentRoute: typeof PublicAgentRoute
     }
-    '/_public/agent/settings/': {
-      id: '/_public/agent/settings/'
-      path: '/'
-      fullPath: '/agent/settings/'
-      preLoaderRoute: typeof PublicAgentSettingsIndexRouteImport
-      parentRoute: typeof PublicAgentSettingsRoute
+    '/_public/agent/$agentId': {
+      id: '/_public/agent/$agentId'
+      path: '/$agentId'
+      fullPath: '/agent/$agentId'
+      preLoaderRoute: typeof PublicAgentAgentIdRouteImport
+      parentRoute: typeof PublicAgentRoute
     }
-    '/_public/agent/automations/': {
-      id: '/_public/agent/automations/'
-      path: '/'
-      fullPath: '/agent/automations/'
-      preLoaderRoute: typeof PublicAgentAutomationsIndexRouteImport
-      parentRoute: typeof PublicAgentAutomationsRoute
+    '/_public/agent/automations': {
+      id: '/_public/agent/automations'
+      path: '/automations'
+      fullPath: '/agent/automations'
+      preLoaderRoute: typeof PublicAgentAutomationsRouteImport
+      parentRoute: typeof PublicAgentRoute
     }
-    '/_public/projects/$projectId/usage': {
-      id: '/_public/projects/$projectId/usage'
-      path: '/usage'
-      fullPath: '/projects/$projectId/usage'
-      preLoaderRoute: typeof PublicProjectsProjectIdUsageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/stores': {
-      id: '/_public/projects/$projectId/stores'
-      path: '/stores'
-      fullPath: '/projects/$projectId/stores'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/storage': {
-      id: '/_public/projects/$projectId/storage'
-      path: '/storage'
-      fullPath: '/projects/$projectId/storage'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/settings': {
-      id: '/_public/projects/$projectId/settings'
+    '/_public/agent/settings': {
+      id: '/_public/agent/settings'
       path: '/settings'
-      fullPath: '/projects/$projectId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+      fullPath: '/agent/settings'
+      preLoaderRoute: typeof PublicAgentSettingsRouteImport
+      parentRoute: typeof PublicAgentRoute
     }
-    '/_public/projects/$projectId/realtime': {
-      id: '/_public/projects/$projectId/realtime'
-      path: '/realtime'
-      fullPath: '/projects/$projectId/realtime'
-      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/auth/preview': {
+      id: '/_public/auth/preview'
+      path: '/auth/preview'
+      fullPath: '/auth/preview'
+      preLoaderRoute: typeof PublicAuthPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/onboarding': {
-      id: '/_public/projects/$projectId/onboarding'
-      path: '/onboarding'
-      fullPath: '/projects/$projectId/onboarding'
-      preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/authorize-contributor-preview': {
+      id: '/_public/debug/authorize-contributor-preview'
+      path: '/debug/authorize-contributor-preview'
+      fullPath: '/debug/authorize-contributor-preview'
+      preLoaderRoute: typeof PublicDebugAuthorizeContributorPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/messaging': {
-      id: '/_public/projects/$projectId/messaging'
-      path: '/messaging'
-      fullPath: '/projects/$projectId/messaging'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/code-editor-preview': {
+      id: '/_public/debug/code-editor-preview'
+      path: '/debug/code-editor-preview'
+      fullPath: '/debug/code-editor-preview'
+      preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/imagine': {
-      id: '/_public/projects/$projectId/imagine'
-      path: '/imagine'
-      fullPath: '/projects/$projectId/imagine'
-      preLoaderRoute: typeof PublicProjectsProjectIdImagineRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/community-share-examples': {
+      id: '/_public/debug/community-share-examples'
+      path: '/debug/community-share-examples'
+      fullPath: '/debug/community-share-examples'
+      preLoaderRoute: typeof PublicDebugCommunityShareExamplesRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/functions': {
-      id: '/_public/projects/$projectId/functions'
-      path: '/functions'
-      fullPath: '/projects/$projectId/functions'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/education-join-preview': {
+      id: '/_public/debug/education-join-preview'
+      path: '/debug/education-join-preview'
+      fullPath: '/debug/education-join-preview'
+      preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/firewall': {
-      id: '/_public/projects/$projectId/firewall'
-      path: '/firewall'
-      fullPath: '/projects/$projectId/firewall'
-      preLoaderRoute: typeof PublicProjectsProjectIdFirewallRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/error-preview': {
+      id: '/_public/debug/error-preview'
+      path: '/debug/error-preview'
+      fullPath: '/debug/error-preview'
+      preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/explorer': {
-      id: '/_public/projects/$projectId/explorer'
-      path: '/explorer'
-      fullPath: '/projects/$projectId/explorer'
-      preLoaderRoute: typeof PublicProjectsProjectIdExplorerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/impersonate-preview': {
+      id: '/_public/debug/impersonate-preview'
+      path: '/debug/impersonate-preview'
+      fullPath: '/debug/impersonate-preview'
+      preLoaderRoute: typeof PublicDebugImpersonatePreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/databases': {
-      id: '/_public/projects/$projectId/databases'
-      path: '/databases'
-      fullPath: '/projects/$projectId/databases'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/join-invite-preview': {
+      id: '/_public/debug/join-invite-preview'
+      path: '/debug/join-invite-preview'
+      fullPath: '/debug/join-invite-preview'
+      preLoaderRoute: typeof PublicDebugJoinInvitePreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/auth': {
-      id: '/_public/projects/$projectId/auth'
-      path: '/auth'
-      fullPath: '/projects/$projectId/auth'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/magic-url-preview': {
+      id: '/_public/debug/magic-url-preview'
+      path: '/debug/magic-url-preview'
+      fullPath: '/debug/magic-url-preview'
+      preLoaderRoute: typeof PublicDebugMagicUrlPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/apps': {
-      id: '/_public/projects/$projectId/apps'
-      path: '/apps'
-      fullPath: '/projects/$projectId/apps'
-      preLoaderRoute: typeof PublicProjectsProjectIdAppsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/mfa-preview': {
+      id: '/_public/debug/mfa-preview'
+      path: '/debug/mfa-preview'
+      fullPath: '/debug/mfa-preview'
+      preLoaderRoute: typeof PublicDebugMfaPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/api-keys': {
-      id: '/_public/projects/$projectId/api-keys'
-      path: '/api-keys'
-      fullPath: '/projects/$projectId/api-keys'
-      preLoaderRoute: typeof PublicProjectsProjectIdApiKeysRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/oauth2-preview': {
+      id: '/_public/debug/oauth2-preview'
+      path: '/debug/oauth2-preview'
+      fullPath: '/debug/oauth2-preview'
+      preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/analytics': {
-      id: '/_public/projects/$projectId/analytics'
-      path: '/analytics'
-      fullPath: '/projects/$projectId/analytics'
-      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/oauth2-relay-preview': {
+      id: '/_public/debug/oauth2-relay-preview'
+      path: '/debug/oauth2-relay-preview'
+      fullPath: '/debug/oauth2-relay-preview'
+      preLoaderRoute: typeof PublicDebugOauth2RelayPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/advisor': {
-      id: '/_public/projects/$projectId/advisor'
-      path: '/advisor'
-      fullPath: '/projects/$projectId/advisor'
-      preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/org-setup-preview': {
+      id: '/_public/debug/org-setup-preview'
+      path: '/debug/org-setup-preview'
+      fullPath: '/debug/org-setup-preview'
+      preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/projects/$projectId/activity': {
-      id: '/_public/projects/$projectId/activity'
-      path: '/activity'
-      fullPath: '/projects/$projectId/activity'
-      preLoaderRoute: typeof PublicProjectsProjectIdActivityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
+    '/_public/debug/recovery-preview': {
+      id: '/_public/debug/recovery-preview'
+      path: '/debug/recovery-preview'
+      fullPath: '/debug/recovery-preview'
+      preLoaderRoute: typeof PublicDebugRecoveryPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/support': {
-      id: '/_public/organizations/$orgId/support'
-      path: '/support'
-      fullPath: '/organizations/$orgId/support'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSupportRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/debug/reset-preview': {
+      id: '/_public/debug/reset-preview'
+      path: '/debug/reset-preview'
+      fullPath: '/debug/reset-preview'
+      preLoaderRoute: typeof PublicDebugResetPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/settings': {
-      id: '/_public/organizations/$orgId/settings'
-      path: '/settings'
-      fullPath: '/organizations/$orgId/settings'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/debug/sign-in-preview': {
+      id: '/_public/debug/sign-in-preview'
+      path: '/debug/sign-in-preview'
+      fullPath: '/debug/sign-in-preview'
+      preLoaderRoute: typeof PublicDebugSignInPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/members': {
-      id: '/_public/organizations/$orgId/members'
-      path: '/members'
-      fullPath: '/organizations/$orgId/members'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdMembersRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/debug/sign-up-preview': {
+      id: '/_public/debug/sign-up-preview'
+      path: '/debug/sign-up-preview'
+      fullPath: '/debug/sign-up-preview'
+      preLoaderRoute: typeof PublicDebugSignUpPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/marketplace': {
-      id: '/_public/organizations/$orgId/marketplace'
-      path: '/marketplace'
-      fullPath: '/organizations/$orgId/marketplace'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/debug/sites-auth-preview': {
+      id: '/_public/debug/sites-auth-preview'
+      path: '/debug/sites-auth-preview'
+      fullPath: '/debug/sites-auth-preview'
+      preLoaderRoute: typeof PublicDebugSitesAuthPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/domains': {
-      id: '/_public/organizations/$orgId/domains'
-      path: '/domains'
-      fullPath: '/organizations/$orgId/domains'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/debug/verify-email-preview': {
+      id: '/_public/debug/verify-email-preview'
+      path: '/debug/verify-email-preview'
+      fullPath: '/debug/verify-email-preview'
+      preLoaderRoute: typeof PublicDebugVerifyEmailPreviewRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/billing': {
-      id: '/_public/organizations/$orgId/billing'
-      path: '/billing'
-      fullPath: '/organizations/$orgId/billing'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdBillingRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/git/authorize-contributor': {
+      id: '/_public/git/authorize-contributor'
+      path: '/git/authorize-contributor'
+      fullPath: '/git/authorize-contributor'
+      preLoaderRoute: typeof PublicGitAuthorizeContributorRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/apps': {
-      id: '/_public/organizations/$orgId/apps'
-      path: '/apps'
-      fullPath: '/organizations/$orgId/apps'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/impersonate/': {
+      id: '/_public/impersonate/'
+      path: '/impersonate'
+      fullPath: '/impersonate/'
+      preLoaderRoute: typeof PublicImpersonateIndexRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/organizations/$orgId/agent': {
-      id: '/_public/organizations/$orgId/agent'
-      path: '/agent'
-      fullPath: '/organizations/$orgId/agent'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    '/_public/impersonate/$userId': {
+      id: '/_public/impersonate/$userId'
+      path: '/impersonate/$userId'
+      fullPath: '/impersonate/$userId'
+      preLoaderRoute: typeof PublicImpersonateUserIdRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/agent/settings/usage': {
-      id: '/_public/agent/settings/usage'
-      path: '/usage'
-      fullPath: '/agent/settings/usage'
-      preLoaderRoute: typeof PublicAgentSettingsUsageRouteImport
-      parentRoute: typeof PublicAgentSettingsRoute
+    '/_public/marketplace/$appId': {
+      id: '/_public/marketplace/$appId'
+      path: '/marketplace/$appId'
+      fullPath: '/marketplace/$appId'
+      preLoaderRoute: typeof PublicMarketplaceAppIdRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/agent/settings/models': {
-      id: '/_public/agent/settings/models'
-      path: '/models'
-      fullPath: '/agent/settings/models'
-      preLoaderRoute: typeof PublicAgentSettingsModelsRouteImport
-      parentRoute: typeof PublicAgentSettingsRoute
+    '/_public/organizations/$orgId': {
+      id: '/_public/organizations/$orgId'
+      path: '/organizations/$orgId'
+      fullPath: '/organizations/$orgId'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/agent/settings/memory': {
-      id: '/_public/agent/settings/memory'
-      path: '/memory'
-      fullPath: '/agent/settings/memory'
-      preLoaderRoute: typeof PublicAgentSettingsMemoryRouteImport
-      parentRoute: typeof PublicAgentSettingsRoute
+    '/_public/projects/$projectId': {
+      id: '/_public/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof PublicProjectsProjectIdRouteImport
+      parentRoute: typeof PublicRoute
     }
-    '/_public/agent/settings/mcp': {
-      id: '/_public/agent/settings/mcp'
-      path: '/mcp'
-      fullPath: '/agent/settings/mcp'
-      preLoaderRoute: typeof PublicAgentSettingsMcpRouteImport
-      parentRoute: typeof PublicAgentSettingsRoute
+    '/docs/partners/': {
+      id: '/docs/partners/'
+      path: '/partners'
+      fullPath: '/docs/partners/'
+      preLoaderRoute: typeof DocsPartnersIndexRouteImport
+      parentRoute: typeof DocsRoute
     }
-    '/_public/agent/automations/create': {
-      id: '/_public/agent/automations/create'
-      path: '/create'
-      fullPath: '/agent/automations/create'
-      preLoaderRoute: typeof PublicAgentAutomationsCreateRouteImport
-      parentRoute: typeof PublicAgentAutomationsRoute
+    '/generator/diagrams/': {
+      id: '/generator/diagrams/'
+      path: '/diagrams'
+      fullPath: '/generator/diagrams/'
+      preLoaderRoute: typeof GeneratorDiagramsIndexRouteImport
+      parentRoute: typeof GeneratorRoute
     }
-    '/_public/agent/automations/$automationId': {
-      id: '/_public/agent/automations/$automationId'
-      path: '/$automationId'
-      fullPath: '/agent/automations/$automationId'
-      preLoaderRoute: typeof PublicAgentAutomationsAutomationIdRouteImport
-      parentRoute: typeof PublicAgentAutomationsRoute
+    '/generator/diagrams/$generationId': {
+      id: '/generator/diagrams/$generationId'
+      path: '/diagrams/$generationId'
+      fullPath: '/generator/diagrams/$generationId'
+      preLoaderRoute: typeof GeneratorDiagramsGenerationIdRouteImport
+      parentRoute: typeof GeneratorRoute
     }
-    '/_marketing/threads/authors/$authorId': {
-      id: '/_marketing/threads/authors/$authorId'
-      path: '/threads/authors/$authorId'
-      fullPath: '/threads/authors/$authorId'
-      preLoaderRoute: typeof MarketingThreadsAuthorsAuthorIdRouteImport
-      parentRoute: typeof MarketingRoute
+    '/_api/generator/cover/encode': {
+      id: '/_api/generator/cover/encode'
+      path: '/encode'
+      fullPath: '/generator/cover/encode'
+      preLoaderRoute: typeof ApiGeneratorCoverEncodeRouteImport
+      parentRoute: typeof ApiGeneratorCoverRoute
     }
-    '/_marketing/changelog/entry/$entry': {
-      id: '/_marketing/changelog/entry/$entry'
-      path: '/changelog/entry/$entry'
-      fullPath: '/changelog/entry/$entry'
-      preLoaderRoute: typeof MarketingChangelogEntryEntryRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/post/$slug': {
-      id: '/_marketing/blog/post/$slug'
-      path: '/blog/post/$slug'
-      fullPath: '/blog/post/$slug'
-      preLoaderRoute: typeof MarketingBlogPostSlugRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/categories/$category': {
-      id: '/_marketing/blog/categories/$category'
-      path: '/blog/categories/$category'
-      fullPath: '/blog/categories/$category'
-      preLoaderRoute: typeof MarketingBlogCategoriesCategoryRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/author/$author': {
-      id: '/_marketing/blog/author/$author'
-      path: '/blog/author/$author'
-      fullPath: '/blog/author/$author'
-      preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_auth/auth/oauth2/success': {
-      id: '/_auth/auth/oauth2/success'
-      path: '/auth/oauth2/success'
-      fullPath: '/auth/oauth2/success'
-      preLoaderRoute: typeof AuthAuthOauth2SuccessRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/auth/oauth2/failure': {
-      id: '/_auth/auth/oauth2/failure'
-      path: '/auth/oauth2/failure'
-      fullPath: '/auth/oauth2/failure'
-      preLoaderRoute: typeof AuthAuthOauth2FailureRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/assistant/mcp/callback': {
-      id: '/_auth/assistant/mcp/callback'
-      path: '/assistant/mcp/callback'
-      fullPath: '/assistant/mcp/callback'
-      preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/agent/mcp/callback': {
-      id: '/_auth/agent/mcp/callback'
-      path: '/agent/mcp/callback'
-      fullPath: '/agent/mcp/callback'
-      preLoaderRoute: typeof AuthAgentMcpCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_api/init/ticket/$eventSlug': {
-      id: '/_api/init/ticket/$eventSlug'
-      path: '/init/ticket/$eventSlug'
-      fullPath: '/init/ticket/$eventSlug'
-      preLoaderRoute: typeof ApiInitTicketEventSlugRouteImport
+    '/_api/init/$ticketId/og.png': {
+      id: '/_api/init/$ticketId/og.png'
+      path: '/init/$ticketId/og.png'
+      fullPath: '/init/$ticketId/og.png'
+      preLoaderRoute: typeof ApiInitTicketIdOgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/init/calendar/$eventSlug': {
@@ -6714,431 +6761,354 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInitCalendarEventSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_api/init/$ticketId/og.png': {
-      id: '/_api/init/$ticketId/og.png'
-      path: '/init/$ticketId/og.png'
-      fullPath: '/init/$ticketId/og.png'
-      preLoaderRoute: typeof ApiInitTicketIdOgDotpngRouteImport
+    '/_api/init/ticket/$eventSlug': {
+      id: '/_api/init/ticket/$eventSlug'
+      path: '/init/ticket/$eventSlug'
+      fullPath: '/init/ticket/$eventSlug'
+      preLoaderRoute: typeof ApiInitTicketEventSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_api/generator/cover/encode': {
-      id: '/_api/generator/cover/encode'
-      path: '/encode'
-      fullPath: '/generator/cover/encode'
-      preLoaderRoute: typeof ApiGeneratorCoverEncodeRouteImport
-      parentRoute: typeof ApiGeneratorCoverRoute
+    '/_api/resend/api-keys/$apiKeyId': {
+      id: '/_api/resend/api-keys/$apiKeyId'
+      path: '/$apiKeyId'
+      fullPath: '/resend/api-keys/$apiKeyId'
+      preLoaderRoute: typeof ApiResendApiKeysApiKeyIdRouteImport
+      parentRoute: typeof ApiResendApiKeysRoute
     }
-    '/_public/projects/$projectId/usage/': {
-      id: '/_public/projects/$projectId/usage/'
+    '/_auth/agent/mcp/callback': {
+      id: '/_auth/agent/mcp/callback'
+      path: '/agent/mcp/callback'
+      fullPath: '/agent/mcp/callback'
+      preLoaderRoute: typeof AuthAgentMcpCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/assistant/mcp/callback': {
+      id: '/_auth/assistant/mcp/callback'
+      path: '/assistant/mcp/callback'
+      fullPath: '/assistant/mcp/callback'
+      preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/oauth2/failure': {
+      id: '/_auth/auth/oauth2/failure'
+      path: '/auth/oauth2/failure'
+      fullPath: '/auth/oauth2/failure'
+      preLoaderRoute: typeof AuthAuthOauth2FailureRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/oauth2/success': {
+      id: '/_auth/auth/oauth2/success'
+      path: '/auth/oauth2/success'
+      fullPath: '/auth/oauth2/success'
+      preLoaderRoute: typeof AuthAuthOauth2SuccessRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_marketing/blog/author/$author': {
+      id: '/_marketing/blog/author/$author'
+      path: '/blog/author/$author'
+      fullPath: '/blog/author/$author'
+      preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/categories/$category': {
+      id: '/_marketing/blog/categories/$category'
+      path: '/blog/categories/$category'
+      fullPath: '/blog/categories/$category'
+      preLoaderRoute: typeof MarketingBlogCategoriesCategoryRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/post/$slug': {
+      id: '/_marketing/blog/post/$slug'
+      path: '/blog/post/$slug'
+      fullPath: '/blog/post/$slug'
+      preLoaderRoute: typeof MarketingBlogPostSlugRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/changelog/entry/$entry': {
+      id: '/_marketing/changelog/entry/$entry'
+      path: '/changelog/entry/$entry'
+      fullPath: '/changelog/entry/$entry'
+      preLoaderRoute: typeof MarketingChangelogEntryEntryRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/threads/authors/$authorId': {
+      id: '/_marketing/threads/authors/$authorId'
+      path: '/threads/authors/$authorId'
+      fullPath: '/threads/authors/$authorId'
+      preLoaderRoute: typeof MarketingThreadsAuthorsAuthorIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_public/agent/automations/': {
+      id: '/_public/agent/automations/'
       path: '/'
-      fullPath: '/projects/$projectId/usage/'
-      preLoaderRoute: typeof PublicProjectsProjectIdUsageIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+      fullPath: '/agent/automations/'
+      preLoaderRoute: typeof PublicAgentAutomationsIndexRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
     }
-    '/_public/projects/$projectId/stores/': {
-      id: '/_public/projects/$projectId/stores/'
+    '/_public/agent/automations/$automationId': {
+      id: '/_public/agent/automations/$automationId'
+      path: '/$automationId'
+      fullPath: '/agent/automations/$automationId'
+      preLoaderRoute: typeof PublicAgentAutomationsAutomationIdRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
+    }
+    '/_public/agent/automations/create': {
+      id: '/_public/agent/automations/create'
+      path: '/create'
+      fullPath: '/agent/automations/create'
+      preLoaderRoute: typeof PublicAgentAutomationsCreateRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
+    }
+    '/_public/agent/settings/': {
+      id: '/_public/agent/settings/'
       path: '/'
-      fullPath: '/projects/$projectId/stores/'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStoresRoute
+      fullPath: '/agent/settings/'
+      preLoaderRoute: typeof PublicAgentSettingsIndexRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
     }
-    '/_public/projects/$projectId/storage/': {
-      id: '/_public/projects/$projectId/storage/'
+    '/_public/agent/settings/mcp': {
+      id: '/_public/agent/settings/mcp'
+      path: '/mcp'
+      fullPath: '/agent/settings/mcp'
+      preLoaderRoute: typeof PublicAgentSettingsMcpRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/settings/memory': {
+      id: '/_public/agent/settings/memory'
+      path: '/memory'
+      fullPath: '/agent/settings/memory'
+      preLoaderRoute: typeof PublicAgentSettingsMemoryRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/settings/models': {
+      id: '/_public/agent/settings/models'
+      path: '/models'
+      fullPath: '/agent/settings/models'
+      preLoaderRoute: typeof PublicAgentSettingsModelsRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/settings/usage': {
+      id: '/_public/agent/settings/usage'
+      path: '/usage'
+      fullPath: '/agent/settings/usage'
+      preLoaderRoute: typeof PublicAgentSettingsUsageRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/organizations/$orgId/': {
+      id: '/_public/organizations/$orgId/'
       path: '/'
-      fullPath: '/projects/$projectId/storage/'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStorageRoute
+      fullPath: '/organizations/$orgId/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
-    '/_public/projects/$projectId/sites/': {
-      id: '/_public/projects/$projectId/sites/'
-      path: '/sites'
-      fullPath: '/projects/$projectId/sites'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesIndexRouteImport
+    '/_public/organizations/$orgId/agent': {
+      id: '/_public/organizations/$orgId/agent'
+      path: '/agent'
+      fullPath: '/organizations/$orgId/agent'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/apps': {
+      id: '/_public/organizations/$orgId/apps'
+      path: '/apps'
+      fullPath: '/organizations/$orgId/apps'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/billing': {
+      id: '/_public/organizations/$orgId/billing'
+      path: '/billing'
+      fullPath: '/organizations/$orgId/billing'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdBillingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/domains': {
+      id: '/_public/organizations/$orgId/domains'
+      path: '/domains'
+      fullPath: '/organizations/$orgId/domains'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/marketplace': {
+      id: '/_public/organizations/$orgId/marketplace'
+      path: '/marketplace'
+      fullPath: '/organizations/$orgId/marketplace'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/members': {
+      id: '/_public/organizations/$orgId/members'
+      path: '/members'
+      fullPath: '/organizations/$orgId/members'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMembersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/settings': {
+      id: '/_public/organizations/$orgId/settings'
+      path: '/settings'
+      fullPath: '/organizations/$orgId/settings'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/support': {
+      id: '/_public/organizations/$orgId/support'
+      path: '/support'
+      fullPath: '/organizations/$orgId/support'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSupportRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/projects/$projectId/': {
+      id: '/_public/projects/$projectId/'
+      path: '/'
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/settings/': {
-      id: '/_public/projects/$projectId/settings/'
-      path: '/'
-      fullPath: '/projects/$projectId/settings/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    '/_public/projects/$projectId/activity': {
+      id: '/_public/projects/$projectId/activity'
+      path: '/activity'
+      fullPath: '/projects/$projectId/activity'
+      preLoaderRoute: typeof PublicProjectsProjectIdActivityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/realtime/': {
-      id: '/_public/projects/$projectId/realtime/'
-      path: '/'
-      fullPath: '/projects/$projectId/realtime/'
-      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    '/_public/projects/$projectId/advisor': {
+      id: '/_public/projects/$projectId/advisor'
+      path: '/advisor'
+      fullPath: '/projects/$projectId/advisor'
+      preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/messaging/': {
-      id: '/_public/projects/$projectId/messaging/'
-      path: '/'
-      fullPath: '/projects/$projectId/messaging/'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    '/_public/projects/$projectId/agents': {
+      id: '/_public/projects/$projectId/agents'
+      path: '/agents'
+      fullPath: '/projects/$projectId/agents'
+      preLoaderRoute: typeof PublicProjectsProjectIdAgentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/functions/': {
-      id: '/_public/projects/$projectId/functions/'
-      path: '/'
-      fullPath: '/projects/$projectId/functions/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    '/_public/projects/$projectId/analytics': {
+      id: '/_public/projects/$projectId/analytics'
+      path: '/analytics'
+      fullPath: '/projects/$projectId/analytics'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/firewall/': {
-      id: '/_public/projects/$projectId/firewall/'
-      path: '/'
-      fullPath: '/projects/$projectId/firewall/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFirewallIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
+    '/_public/projects/$projectId/api-keys': {
+      id: '/_public/projects/$projectId/api-keys'
+      path: '/api-keys'
+      fullPath: '/projects/$projectId/api-keys'
+      preLoaderRoute: typeof PublicProjectsProjectIdApiKeysRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/databases/': {
-      id: '/_public/projects/$projectId/databases/'
-      path: '/'
-      fullPath: '/projects/$projectId/databases/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    '/_public/projects/$projectId/apps': {
+      id: '/_public/projects/$projectId/apps'
+      path: '/apps'
+      fullPath: '/projects/$projectId/apps'
+      preLoaderRoute: typeof PublicProjectsProjectIdAppsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/auth/': {
-      id: '/_public/projects/$projectId/auth/'
-      path: '/'
-      fullPath: '/projects/$projectId/auth/'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    '/_public/projects/$projectId/auth': {
+      id: '/_public/projects/$projectId/auth'
+      path: '/auth'
+      fullPath: '/projects/$projectId/auth'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/organizations/$orgId/marketplace/': {
-      id: '/_public/organizations/$orgId/marketplace/'
-      path: '/'
-      fullPath: '/organizations/$orgId/marketplace/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
+    '/_public/projects/$projectId/databases': {
+      id: '/_public/projects/$projectId/databases'
+      path: '/databases'
+      fullPath: '/projects/$projectId/databases'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/organizations/$orgId/domains/': {
-      id: '/_public/organizations/$orgId/domains/'
-      path: '/'
-      fullPath: '/organizations/$orgId/domains/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    '/_public/projects/$projectId/explorer': {
+      id: '/_public/projects/$projectId/explorer'
+      path: '/explorer'
+      fullPath: '/projects/$projectId/explorer'
+      preLoaderRoute: typeof PublicProjectsProjectIdExplorerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/organizations/$orgId/apps/': {
-      id: '/_public/organizations/$orgId/apps/'
-      path: '/'
-      fullPath: '/organizations/$orgId/apps/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
+    '/_public/projects/$projectId/firewall': {
+      id: '/_public/projects/$projectId/firewall'
+      path: '/firewall'
+      fullPath: '/projects/$projectId/firewall'
+      preLoaderRoute: typeof PublicProjectsProjectIdFirewallRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/functions': {
+      id: '/_public/projects/$projectId/functions'
+      path: '/functions'
+      fullPath: '/projects/$projectId/functions'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/imagine': {
+      id: '/_public/projects/$projectId/imagine'
+      path: '/imagine'
+      fullPath: '/projects/$projectId/imagine'
+      preLoaderRoute: typeof PublicProjectsProjectIdImagineRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/messaging': {
+      id: '/_public/projects/$projectId/messaging'
+      path: '/messaging'
+      fullPath: '/projects/$projectId/messaging'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/onboarding': {
+      id: '/_public/projects/$projectId/onboarding'
+      path: '/onboarding'
+      fullPath: '/projects/$projectId/onboarding'
+      preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/realtime': {
+      id: '/_public/projects/$projectId/realtime'
+      path: '/realtime'
+      fullPath: '/projects/$projectId/realtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/settings': {
+      id: '/_public/projects/$projectId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/storage': {
+      id: '/_public/projects/$projectId/storage'
+      path: '/storage'
+      fullPath: '/projects/$projectId/storage'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/stores': {
+      id: '/_public/projects/$projectId/stores'
+      path: '/stores'
+      fullPath: '/projects/$projectId/stores'
+      preLoaderRoute: typeof PublicProjectsProjectIdStoresRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/usage': {
+      id: '/_public/projects/$projectId/usage'
+      path: '/usage'
+      fullPath: '/projects/$projectId/usage'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/organizations/$orgId/agent/': {
       id: '/_public/organizations/$orgId/agent/'
       path: '/'
       fullPath: '/organizations/$orgId/agent/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAgentIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
-    }
-    '/docs/references/$version/models/$model': {
-      id: '/docs/references/$version/models/$model'
-      path: '/references/$version/models/$model'
-      fullPath: '/docs/references/$version/models/$model'
-      preLoaderRoute: typeof DocsReferencesVersionModelsModelRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/docs/references/$version/$platform/$service': {
-      id: '/docs/references/$version/$platform/$service'
-      path: '/references/$version/$platform/$service'
-      fullPath: '/docs/references/$version/$platform/$service'
-      preLoaderRoute: typeof DocsReferencesVersionPlatformServiceRouteImport
-      parentRoute: typeof DocsRoute
-    }
-    '/_public/projects/$projectId/usage/$categoryId': {
-      id: '/_public/projects/$projectId/usage/$categoryId'
-      path: '/$categoryId'
-      fullPath: '/projects/$projectId/usage/$categoryId'
-      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdUsageRoute
-    }
-    '/_public/projects/$projectId/storage/$bucketId': {
-      id: '/_public/projects/$projectId/storage/$bucketId'
-      path: '/$bucketId'
-      fullPath: '/projects/$projectId/storage/$bucketId'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStorageRoute
-    }
-    '/_public/projects/$projectId/sites/create': {
-      id: '/_public/projects/$projectId/sites/create'
-      path: '/sites/create'
-      fullPath: '/projects/$projectId/sites/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId': {
-      id: '/_public/projects/$projectId/sites/$siteId'
-      path: '/sites/$siteId'
-      fullPath: '/projects/$projectId/sites/$siteId'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/settings/webhooks': {
-      id: '/_public/projects/$projectId/settings/webhooks'
-      path: '/webhooks'
-      fullPath: '/projects/$projectId/settings/webhooks'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsWebhooksRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/settings/variables': {
-      id: '/_public/projects/$projectId/settings/variables'
-      path: '/variables'
-      fullPath: '/projects/$projectId/settings/variables'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsVariablesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/settings/smtp': {
-      id: '/_public/projects/$projectId/settings/smtp'
-      path: '/smtp'
-      fullPath: '/projects/$projectId/settings/smtp'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsSmtpRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/settings/migrations': {
-      id: '/_public/projects/$projectId/settings/migrations'
-      path: '/migrations'
-      fullPath: '/projects/$projectId/settings/migrations'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/settings/domains': {
-      id: '/_public/projects/$projectId/settings/domains'
-      path: '/domains'
-      fullPath: '/projects/$projectId/settings/domains'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/realtime/messages': {
-      id: '/_public/projects/$projectId/realtime/messages'
-      path: '/messages'
-      fullPath: '/projects/$projectId/realtime/messages'
-      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeMessagesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
-    }
-    '/_public/projects/$projectId/realtime/debugger': {
-      id: '/_public/projects/$projectId/realtime/debugger'
-      path: '/debugger'
-      fullPath: '/projects/$projectId/realtime/debugger'
-      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
-    }
-    '/_public/projects/$projectId/realtime/channels': {
-      id: '/_public/projects/$projectId/realtime/channels'
-      path: '/channels'
-      fullPath: '/projects/$projectId/realtime/channels'
-      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeChannelsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
-    }
-    '/_public/projects/$projectId/messaging/$messageId': {
-      id: '/_public/projects/$projectId/messaging/$messageId'
-      path: '/$messageId'
-      fullPath: '/projects/$projectId/messaging/$messageId'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/functions/templates': {
-      id: '/_public/projects/$projectId/functions/templates'
-      path: '/templates'
-      fullPath: '/projects/$projectId/functions/templates'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsTemplatesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
-    }
-    '/_public/projects/$projectId/functions/editor': {
-      id: '/_public/projects/$projectId/functions/editor'
-      path: '/editor'
-      fullPath: '/projects/$projectId/functions/editor'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsEditorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
-    }
-    '/_public/projects/$projectId/functions/create': {
-      id: '/_public/projects/$projectId/functions/create'
-      path: '/create'
-      fullPath: '/projects/$projectId/functions/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId': {
-      id: '/_public/projects/$projectId/functions/$functionId'
-      path: '/$functionId'
-      fullPath: '/projects/$projectId/functions/$functionId'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
-    }
-    '/_public/projects/$projectId/firewall/create': {
-      id: '/_public/projects/$projectId/firewall/create'
-      path: '/create'
-      fullPath: '/projects/$projectId/firewall/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdFirewallCreateRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
-    }
-    '/_public/projects/$projectId/databases/create': {
-      id: '/_public/projects/$projectId/databases/create'
-      path: '/create'
-      fullPath: '/projects/$projectId/databases/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesCreateRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
-    }
-    '/_public/projects/$projectId/databases/$databaseId': {
-      id: '/_public/projects/$projectId/databases/$databaseId'
-      path: '/$databaseId'
-      fullPath: '/projects/$projectId/databases/$databaseId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
-    }
-    '/_public/projects/$projectId/auth/templates': {
-      id: '/_public/projects/$projectId/auth/templates'
-      path: '/templates'
-      fullPath: '/projects/$projectId/auth/templates'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthTemplatesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/teams': {
-      id: '/_public/projects/$projectId/auth/teams'
-      path: '/teams'
-      fullPath: '/projects/$projectId/auth/teams'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/social-providers': {
-      id: '/_public/projects/$projectId/auth/social-providers'
-      path: '/social-providers'
-      fullPath: '/projects/$projectId/auth/social-providers'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthSocialProvidersRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/settings': {
-      id: '/_public/projects/$projectId/auth/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/auth/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/security': {
-      id: '/_public/projects/$projectId/auth/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/auth/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/policies': {
-      id: '/_public/projects/$projectId/auth/policies'
-      path: '/policies'
-      fullPath: '/projects/$projectId/auth/policies'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/oauth2-server': {
-      id: '/_public/projects/$projectId/auth/oauth2-server'
-      path: '/oauth2-server'
-      fullPath: '/projects/$projectId/auth/oauth2-server'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/apps/add': {
-      id: '/_public/projects/$projectId/apps/add'
-      path: '/add'
-      fullPath: '/projects/$projectId/apps/add'
-      preLoaderRoute: typeof PublicProjectsProjectIdAppsAddRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAppsRoute
-    }
-    '/_public/projects/$projectId/analytics/add': {
-      id: '/_public/projects/$projectId/analytics/add'
-      path: '/add'
-      fullPath: '/projects/$projectId/analytics/add'
-      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsAddRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
-    }
-    '/_public/projects/$projectId/analytics/$propertyId': {
-      id: '/_public/projects/$projectId/analytics/$propertyId'
-      path: '/$propertyId'
-      fullPath: '/projects/$projectId/analytics/$propertyId'
-      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
-    }
-    '/_public/organizations/$orgId/settings/partners': {
-      id: '/_public/organizations/$orgId/settings/partners'
-      path: '/partners'
-      fullPath: '/organizations/$orgId/settings/partners'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/oauth-apps': {
-      id: '/_public/organizations/$orgId/settings/oauth-apps'
-      path: '/oauth-apps'
-      fullPath: '/organizations/$orgId/settings/oauth-apps'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/members': {
-      id: '/_public/organizations/$orgId/settings/members'
-      path: '/members'
-      fullPath: '/organizations/$orgId/settings/members'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsMembersRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/danger-zone': {
-      id: '/_public/organizations/$orgId/settings/danger-zone'
-      path: '/danger-zone'
-      fullPath: '/organizations/$orgId/settings/danger-zone'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/compliance': {
-      id: '/_public/organizations/$orgId/settings/compliance'
-      path: '/compliance'
-      fullPath: '/organizations/$orgId/settings/compliance'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/settings/billing': {
-      id: '/_public/organizations/$orgId/settings/billing'
-      path: '/billing'
-      fullPath: '/organizations/$orgId/settings/billing'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsBillingRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
-    }
-    '/_public/organizations/$orgId/domains/transfer-in': {
-      id: '/_public/organizations/$orgId/domains/transfer-in'
-      path: '/transfer-in'
-      fullPath: '/organizations/$orgId/domains/transfer-in'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsTransferInRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
-    }
-    '/_public/organizations/$orgId/domains/buy': {
-      id: '/_public/organizations/$orgId/domains/buy'
-      path: '/buy'
-      fullPath: '/organizations/$orgId/domains/buy'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsBuyRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
-    }
-    '/_public/organizations/$orgId/domains/$domainId': {
-      id: '/_public/organizations/$orgId/domains/$domainId'
-      path: '/$domainId'
-      fullPath: '/organizations/$orgId/domains/$domainId'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId': {
-      id: '/_public/organizations/$orgId/apps/$appId'
-      path: '/$appId'
-      fullPath: '/organizations/$orgId/apps/$appId'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
-    }
-    '/_public/organizations/$orgId/agent/settings': {
-      id: '/_public/organizations/$orgId/agent/settings'
-      path: '/settings'
-      fullPath: '/organizations/$orgId/agent/settings'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
-    }
-    '/_public/organizations/$orgId/agent/automations': {
-      id: '/_public/organizations/$orgId/agent/automations'
-      path: '/automations'
-      fullPath: '/organizations/$orgId/agent/automations'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
     }
     '/_public/organizations/$orgId/agent/$agentId': {
@@ -7148,466 +7118,417 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAgentIdRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
     }
-    '/_public/projects/$projectId/stores/$appId/': {
-      id: '/_public/projects/$projectId/stores/$appId/'
+    '/_public/organizations/$orgId/agent/automations': {
+      id: '/_public/organizations/$orgId/agent/automations'
+      path: '/automations'
+      fullPath: '/organizations/$orgId/agent/automations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
+    }
+    '/_public/organizations/$orgId/agent/settings': {
+      id: '/_public/organizations/$orgId/agent/settings'
+      path: '/settings'
+      fullPath: '/organizations/$orgId/agent/settings'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentRoute
+    }
+    '/_public/organizations/$orgId/apps/': {
+      id: '/_public/organizations/$orgId/apps/'
+      path: '/'
+      fullPath: '/organizations/$orgId/apps/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId': {
+      id: '/_public/organizations/$orgId/apps/$appId'
       path: '/$appId'
-      fullPath: '/projects/$projectId/stores/$appId'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresAppIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStoresRoute
+      fullPath: '/organizations/$orgId/apps/$appId'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsRoute
     }
-    '/_public/projects/$projectId/storage/$bucketId/': {
-      id: '/_public/projects/$projectId/storage/$bucketId/'
+    '/_public/organizations/$orgId/domains/': {
+      id: '/_public/organizations/$orgId/domains/'
       path: '/'
-      fullPath: '/projects/$projectId/storage/$bucketId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
+      fullPath: '/organizations/$orgId/domains/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
-    '/_public/projects/$projectId/sites/create/': {
-      id: '/_public/projects/$projectId/sites/create/'
+    '/_public/organizations/$orgId/domains/$domainId': {
+      id: '/_public/organizations/$orgId/domains/$domainId'
+      path: '/$domainId'
+      fullPath: '/organizations/$orgId/domains/$domainId'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/domains/buy': {
+      id: '/_public/organizations/$orgId/domains/buy'
+      path: '/buy'
+      fullPath: '/organizations/$orgId/domains/buy'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsBuyRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/domains/transfer-in': {
+      id: '/_public/organizations/$orgId/domains/transfer-in'
+      path: '/transfer-in'
+      fullPath: '/organizations/$orgId/domains/transfer-in'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsTransferInRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/marketplace/': {
+      id: '/_public/organizations/$orgId/marketplace/'
       path: '/'
-      fullPath: '/projects/$projectId/sites/create/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/': {
-      id: '/_public/projects/$projectId/sites/$siteId/'
-      path: '/'
-      fullPath: '/projects/$projectId/sites/$siteId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/settings/migrations/': {
-      id: '/_public/projects/$projectId/settings/migrations/'
-      path: '/'
-      fullPath: '/projects/$projectId/settings/migrations/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsMigrationsRoute
-    }
-    '/_public/projects/$projectId/settings/domains/': {
-      id: '/_public/projects/$projectId/settings/domains/'
-      path: '/'
-      fullPath: '/projects/$projectId/settings/domains/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
-    }
-    '/_public/projects/$projectId/messaging/topics/': {
-      id: '/_public/projects/$projectId/messaging/topics/'
-      path: '/topics'
-      fullPath: '/projects/$projectId/messaging/topics'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/messaging/providers/': {
-      id: '/_public/projects/$projectId/messaging/providers/'
-      path: '/providers'
-      fullPath: '/projects/$projectId/messaging/providers'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/messaging/$messageId/': {
-      id: '/_public/projects/$projectId/messaging/$messageId/'
-      path: '/'
-      fullPath: '/projects/$projectId/messaging/$messageId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingMessageIdRoute
-    }
-    '/_public/projects/$projectId/functions/create/': {
-      id: '/_public/projects/$projectId/functions/create/'
-      path: '/'
-      fullPath: '/projects/$projectId/functions/create/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/': {
-      id: '/_public/projects/$projectId/functions/$functionId/'
-      path: '/'
-      fullPath: '/projects/$projectId/functions/$functionId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/organizations/$orgId/marketplace/$appId/': {
-      id: '/_public/organizations/$orgId/marketplace/$appId/'
-      path: '/$appId'
-      fullPath: '/organizations/$orgId/marketplace/$appId'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport
+      fullPath: '/organizations/$orgId/marketplace/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
     }
-    '/_public/organizations/$orgId/domains/$domainId/': {
-      id: '/_public/organizations/$orgId/domains/$domainId/'
-      path: '/'
-      fullPath: '/organizations/$orgId/domains/$domainId/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
+    '/_public/organizations/$orgId/settings/billing': {
+      id: '/_public/organizations/$orgId/settings/billing'
+      path: '/billing'
+      fullPath: '/organizations/$orgId/settings/billing'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsBillingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
-    '/_public/organizations/$orgId/apps/$appId/': {
-      id: '/_public/organizations/$orgId/apps/$appId/'
-      path: '/'
-      fullPath: '/organizations/$orgId/apps/$appId/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    '/_public/organizations/$orgId/settings/compliance': {
+      id: '/_public/organizations/$orgId/settings/compliance'
+      path: '/compliance'
+      fullPath: '/organizations/$orgId/settings/compliance'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
-    '/_public/organizations/$orgId/agent/settings/': {
-      id: '/_public/organizations/$orgId/agent/settings/'
+    '/_public/organizations/$orgId/settings/danger-zone': {
+      id: '/_public/organizations/$orgId/settings/danger-zone'
+      path: '/danger-zone'
+      fullPath: '/organizations/$orgId/settings/danger-zone'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/members': {
+      id: '/_public/organizations/$orgId/settings/members'
+      path: '/members'
+      fullPath: '/organizations/$orgId/settings/members'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsMembersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/oauth-apps': {
+      id: '/_public/organizations/$orgId/settings/oauth-apps'
+      path: '/oauth-apps'
+      fullPath: '/organizations/$orgId/settings/oauth-apps'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/partners': {
+      id: '/_public/organizations/$orgId/settings/partners'
+      path: '/partners'
+      fullPath: '/organizations/$orgId/settings/partners'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/projects/$projectId/analytics/$propertyId': {
+      id: '/_public/projects/$projectId/analytics/$propertyId'
+      path: '/$propertyId'
+      fullPath: '/projects/$projectId/analytics/$propertyId'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
+    }
+    '/_public/projects/$projectId/analytics/add': {
+      id: '/_public/projects/$projectId/analytics/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/analytics/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
+    }
+    '/_public/projects/$projectId/apps/add': {
+      id: '/_public/projects/$projectId/apps/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/apps/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdAppsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAppsRoute
+    }
+    '/_public/projects/$projectId/auth/': {
+      id: '/_public/projects/$projectId/auth/'
       path: '/'
-      fullPath: '/organizations/$orgId/agent/settings/'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
+      fullPath: '/projects/$projectId/auth/'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/oauth2-server': {
+      id: '/_public/projects/$projectId/auth/oauth2-server'
+      path: '/oauth2-server'
+      fullPath: '/projects/$projectId/auth/oauth2-server'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/policies': {
+      id: '/_public/projects/$projectId/auth/policies'
+      path: '/policies'
+      fullPath: '/projects/$projectId/auth/policies'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/security': {
+      id: '/_public/projects/$projectId/auth/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/auth/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/settings': {
+      id: '/_public/projects/$projectId/auth/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/auth/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/social-providers': {
+      id: '/_public/projects/$projectId/auth/social-providers'
+      path: '/social-providers'
+      fullPath: '/projects/$projectId/auth/social-providers'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthSocialProvidersRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/teams': {
+      id: '/_public/projects/$projectId/auth/teams'
+      path: '/teams'
+      fullPath: '/projects/$projectId/auth/teams'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/auth/templates': {
+      id: '/_public/projects/$projectId/auth/templates'
+      path: '/templates'
+      fullPath: '/projects/$projectId/auth/templates'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTemplatesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/databases/': {
+      id: '/_public/projects/$projectId/databases/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/databases/$databaseId': {
+      id: '/_public/projects/$projectId/databases/$databaseId'
+      path: '/$databaseId'
+      fullPath: '/projects/$projectId/databases/$databaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/databases/create': {
+      id: '/_public/projects/$projectId/databases/create'
+      path: '/create'
+      fullPath: '/projects/$projectId/databases/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/firewall/': {
+      id: '/_public/projects/$projectId/firewall/'
+      path: '/'
+      fullPath: '/projects/$projectId/firewall/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFirewallIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
+    }
+    '/_public/projects/$projectId/firewall/create': {
+      id: '/_public/projects/$projectId/firewall/create'
+      path: '/create'
+      fullPath: '/projects/$projectId/firewall/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdFirewallCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
+    }
+    '/_public/projects/$projectId/functions/': {
+      id: '/_public/projects/$projectId/functions/'
+      path: '/'
+      fullPath: '/projects/$projectId/functions/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId': {
+      id: '/_public/projects/$projectId/functions/$functionId'
+      path: '/$functionId'
+      fullPath: '/projects/$projectId/functions/$functionId'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/functions/create': {
+      id: '/_public/projects/$projectId/functions/create'
+      path: '/create'
+      fullPath: '/projects/$projectId/functions/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/functions/editor': {
+      id: '/_public/projects/$projectId/functions/editor'
+      path: '/editor'
+      fullPath: '/projects/$projectId/functions/editor'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsEditorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/functions/templates': {
+      id: '/_public/projects/$projectId/functions/templates'
+      path: '/templates'
+      fullPath: '/projects/$projectId/functions/templates'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsTemplatesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/messaging/': {
+      id: '/_public/projects/$projectId/messaging/'
+      path: '/'
+      fullPath: '/projects/$projectId/messaging/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/$messageId': {
+      id: '/_public/projects/$projectId/messaging/$messageId'
+      path: '/$messageId'
+      fullPath: '/projects/$projectId/messaging/$messageId'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/realtime/': {
+      id: '/_public/projects/$projectId/realtime/'
+      path: '/'
+      fullPath: '/projects/$projectId/realtime/'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    }
+    '/_public/projects/$projectId/realtime/channels': {
+      id: '/_public/projects/$projectId/realtime/channels'
+      path: '/channels'
+      fullPath: '/projects/$projectId/realtime/channels'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeChannelsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    }
+    '/_public/projects/$projectId/realtime/debugger': {
+      id: '/_public/projects/$projectId/realtime/debugger'
+      path: '/debugger'
+      fullPath: '/projects/$projectId/realtime/debugger'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    }
+    '/_public/projects/$projectId/realtime/messages': {
+      id: '/_public/projects/$projectId/realtime/messages'
+      path: '/messages'
+      fullPath: '/projects/$projectId/realtime/messages'
+      preLoaderRoute: typeof PublicProjectsProjectIdRealtimeMessagesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRealtimeRoute
+    }
+    '/_public/projects/$projectId/settings/': {
+      id: '/_public/projects/$projectId/settings/'
+      path: '/'
+      fullPath: '/projects/$projectId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/domains': {
+      id: '/_public/projects/$projectId/settings/domains'
+      path: '/domains'
+      fullPath: '/projects/$projectId/settings/domains'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/migrations': {
+      id: '/_public/projects/$projectId/settings/migrations'
+      path: '/migrations'
+      fullPath: '/projects/$projectId/settings/migrations'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/smtp': {
+      id: '/_public/projects/$projectId/settings/smtp'
+      path: '/smtp'
+      fullPath: '/projects/$projectId/settings/smtp'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsSmtpRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/variables': {
+      id: '/_public/projects/$projectId/settings/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/settings/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/settings/webhooks': {
+      id: '/_public/projects/$projectId/settings/webhooks'
+      path: '/webhooks'
+      fullPath: '/projects/$projectId/settings/webhooks'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsWebhooksRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/': {
+      id: '/_public/projects/$projectId/sites/'
+      path: '/sites'
+      fullPath: '/projects/$projectId/sites/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId': {
+      id: '/_public/projects/$projectId/sites/$siteId'
+      path: '/sites/$siteId'
+      fullPath: '/projects/$projectId/sites/$siteId'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/sites/create': {
+      id: '/_public/projects/$projectId/sites/create'
+      path: '/sites/create'
+      fullPath: '/projects/$projectId/sites/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/storage/': {
+      id: '/_public/projects/$projectId/storage/'
+      path: '/'
+      fullPath: '/projects/$projectId/storage/'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStorageRoute
+    }
+    '/_public/projects/$projectId/storage/$bucketId': {
+      id: '/_public/projects/$projectId/storage/$bucketId'
+      path: '/$bucketId'
+      fullPath: '/projects/$projectId/storage/$bucketId'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStorageRoute
+    }
+    '/_public/projects/$projectId/stores/': {
+      id: '/_public/projects/$projectId/stores/'
+      path: '/'
+      fullPath: '/projects/$projectId/stores/'
+      preLoaderRoute: typeof PublicProjectsProjectIdStoresIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStoresRoute
+    }
+    '/_public/projects/$projectId/usage/': {
+      id: '/_public/projects/$projectId/usage/'
+      path: '/'
+      fullPath: '/projects/$projectId/usage/'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
+    '/_public/projects/$projectId/usage/$categoryId': {
+      id: '/_public/projects/$projectId/usage/$categoryId'
+      path: '/$categoryId'
+      fullPath: '/projects/$projectId/usage/$categoryId'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
+    '/docs/references/$version/$platform/$service': {
+      id: '/docs/references/$version/$platform/$service'
+      path: '/references/$version/$platform/$service'
+      fullPath: '/docs/references/$version/$platform/$service'
+      preLoaderRoute: typeof DocsReferencesVersionPlatformServiceRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/references/$version/models/$model': {
+      id: '/docs/references/$version/models/$model'
+      path: '/references/$version/models/$model'
+      fullPath: '/docs/references/$version/models/$model'
+      preLoaderRoute: typeof DocsReferencesVersionModelsModelRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/_public/organizations/$orgId/agent/automations/': {
       id: '/_public/organizations/$orgId/agent/automations/'
       path: '/'
       fullPath: '/organizations/$orgId/agent/automations/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsIndexRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRoute
-    }
-    '/_public/projects/$projectId/usage/$categoryId/$metricId': {
-      id: '/_public/projects/$projectId/usage/$categoryId/$metricId'
-      path: '/$metricId'
-      fullPath: '/projects/$projectId/usage/$categoryId/$metricId'
-      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdUsageCategoryIdRoute
-    }
-    '/_public/projects/$projectId/storage/$bucketId/settings': {
-      id: '/_public/projects/$projectId/storage/$bucketId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/storage/$bucketId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
-    }
-    '/_public/projects/$projectId/storage/$bucketId/security': {
-      id: '/_public/projects/$projectId/storage/$bucketId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/storage/$bucketId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
-    }
-    '/_public/projects/$projectId/sites/create/manual': {
-      id: '/_public/projects/$projectId/sites/create/manual'
-      path: '/manual'
-      fullPath: '/projects/$projectId/sites/create/manual'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateManualRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/sites/create/finish': {
-      id: '/_public/projects/$projectId/sites/create/finish'
-      path: '/finish'
-      fullPath: '/projects/$projectId/sites/create/finish'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateFinishRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/sites/create/deploying': {
-      id: '/_public/projects/$projectId/sites/create/deploying'
-      path: '/deploying'
-      fullPath: '/projects/$projectId/sites/create/deploying'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateDeployingRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/sites/create/deploy': {
-      id: '/_public/projects/$projectId/sites/create/deploy'
-      path: '/deploy'
-      fullPath: '/projects/$projectId/sites/create/deploy'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateDeployRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/variables': {
-      id: '/_public/projects/$projectId/sites/$siteId/variables'
-      path: '/variables'
-      fullPath: '/projects/$projectId/sites/$siteId/variables'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/settings': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/sites/$siteId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/logs': {
-      id: '/_public/projects/$projectId/sites/$siteId/logs'
-      path: '/logs'
-      fullPath: '/projects/$projectId/sites/$siteId/logs'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdLogsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/domains': {
-      id: '/_public/projects/$projectId/sites/$siteId/domains'
-      path: '/domains'
-      fullPath: '/projects/$projectId/sites/$siteId/domains'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/sites/$siteId/deployments': {
-      id: '/_public/projects/$projectId/sites/$siteId/deployments'
-      path: '/deployments'
-      fullPath: '/projects/$projectId/sites/$siteId/deployments'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
-    }
-    '/_public/projects/$projectId/settings/migrations/import': {
-      id: '/_public/projects/$projectId/settings/migrations/import'
-      path: '/import'
-      fullPath: '/projects/$projectId/settings/migrations/import'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsImportRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsMigrationsRoute
-    }
-    '/_public/projects/$projectId/settings/domains/add': {
-      id: '/_public/projects/$projectId/settings/domains/add'
-      path: '/add'
-      fullPath: '/projects/$projectId/settings/domains/add'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsAddRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
-    }
-    '/_public/projects/$projectId/messaging/topics/$topicId': {
-      id: '/_public/projects/$projectId/messaging/topics/$topicId'
-      path: '/topics/$topicId'
-      fullPath: '/projects/$projectId/messaging/topics/$topicId'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/messaging/providers/create': {
-      id: '/_public/projects/$projectId/messaging/providers/create'
-      path: '/providers/create'
-      fullPath: '/projects/$projectId/messaging/providers/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersCreateRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/messaging/providers/$providerId': {
-      id: '/_public/projects/$projectId/messaging/providers/$providerId'
-      path: '/providers/$providerId'
-      fullPath: '/projects/$projectId/messaging/providers/$providerId'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
-    }
-    '/_public/projects/$projectId/messaging/$messageId/settings': {
-      id: '/_public/projects/$projectId/messaging/$messageId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/messaging/$messageId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingMessageIdRoute
-    }
-    '/_public/projects/$projectId/functions/create/manual': {
-      id: '/_public/projects/$projectId/functions/create/manual'
-      path: '/manual'
-      fullPath: '/projects/$projectId/functions/create/manual'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateManualRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/create/deploying': {
-      id: '/_public/projects/$projectId/functions/create/deploying'
-      path: '/deploying'
-      fullPath: '/projects/$projectId/functions/create/deploying'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployingRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/create/deploy': {
-      id: '/_public/projects/$projectId/functions/create/deploy'
-      path: '/deploy'
-      fullPath: '/projects/$projectId/functions/create/deploy'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/variables': {
-      id: '/_public/projects/$projectId/functions/$functionId/variables'
-      path: '/variables'
-      fullPath: '/projects/$projectId/functions/$functionId/variables'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/functions/$functionId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/security': {
-      id: '/_public/projects/$projectId/functions/$functionId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/functions/$functionId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/executions': {
-      id: '/_public/projects/$projectId/functions/$functionId/executions'
-      path: '/executions'
-      fullPath: '/projects/$projectId/functions/$functionId/executions'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/domains': {
-      id: '/_public/projects/$projectId/functions/$functionId/domains'
-      path: '/domains'
-      fullPath: '/projects/$projectId/functions/$functionId/domains'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId'
-      path: '/postgres/$databaseId'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId'
-      path: '/mysql/$databaseId'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId'
-      path: '/$dbKind/$databaseId'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
-    }
-    '/_public/projects/$projectId/auth/users/$userId': {
-      id: '/_public/projects/$projectId/auth/users/$userId'
-      path: '/users/$userId'
-      fullPath: '/projects/$projectId/auth/users/$userId'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthRoute
-    }
-    '/_public/projects/$projectId/auth/teams/$teamId': {
-      id: '/_public/projects/$projectId/auth/teams/$teamId'
-      path: '/$teamId'
-      fullPath: '/projects/$projectId/auth/teams/$teamId'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthTeamsRoute
-    }
-    '/_public/projects/$projectId/auth/policies/users': {
-      id: '/_public/projects/$projectId/auth/policies/users'
-      path: '/users'
-      fullPath: '/projects/$projectId/auth/policies/users'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
-    }
-    '/_public/projects/$projectId/auth/policies/sessions': {
-      id: '/_public/projects/$projectId/auth/policies/sessions'
-      path: '/sessions'
-      fullPath: '/projects/$projectId/auth/policies/sessions'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
-    }
-    '/_public/projects/$projectId/auth/policies/passwords': {
-      id: '/_public/projects/$projectId/auth/policies/passwords'
-      path: '/passwords'
-      fullPath: '/projects/$projectId/auth/policies/passwords'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
-    }
-    '/_public/projects/$projectId/auth/policies/memberships': {
-      id: '/_public/projects/$projectId/auth/policies/memberships'
-      path: '/memberships'
-      fullPath: '/projects/$projectId/auth/policies/memberships'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
-    }
-    '/_public/projects/$projectId/auth/policies/emails': {
-      id: '/_public/projects/$projectId/auth/policies/emails'
-      path: '/emails'
-      fullPath: '/projects/$projectId/auth/policies/emails'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesEmailsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
-    }
-    '/_public/projects/$projectId/auth/oauth2-server/settings': {
-      id: '/_public/projects/$projectId/auth/oauth2-server/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/auth/oauth2-server/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRoute
-    }
-    '/_public/projects/$projectId/auth/oauth2-server/apps': {
-      id: '/_public/projects/$projectId/auth/oauth2-server/apps'
-      path: '/apps'
-      fullPath: '/projects/$projectId/auth/oauth2-server/apps'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRoute
-    }
-    '/_public/organizations/$orgId/domains/$domainId/settings': {
-      id: '/_public/organizations/$orgId/domains/$domainId/settings'
-      path: '/settings'
-      fullPath: '/organizations/$orgId/domains/$domainId/settings'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/support': {
-      id: '/_public/organizations/$orgId/apps/$appId/support'
-      path: '/support'
-      fullPath: '/organizations/$orgId/apps/$appId/support'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSupportRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/settings': {
-      id: '/_public/organizations/$orgId/apps/$appId/settings'
-      path: '/settings'
-      fullPath: '/organizations/$orgId/apps/$appId/settings'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/secrets': {
-      id: '/_public/organizations/$orgId/apps/$appId/secrets'
-      path: '/secrets'
-      fullPath: '/organizations/$orgId/apps/$appId/secrets'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/oauth': {
-      id: '/_public/organizations/$orgId/apps/$appId/oauth'
-      path: '/oauth'
-      fullPath: '/organizations/$orgId/apps/$appId/oauth'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/legal': {
-      id: '/_public/organizations/$orgId/apps/$appId/legal'
-      path: '/legal'
-      fullPath: '/organizations/$orgId/apps/$appId/legal'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/apps/$appId/branding': {
-      id: '/_public/organizations/$orgId/apps/$appId/branding'
-      path: '/branding'
-      fullPath: '/organizations/$orgId/apps/$appId/branding'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
-    }
-    '/_public/organizations/$orgId/agent/settings/usage': {
-      id: '/_public/organizations/$orgId/agent/settings/usage'
-      path: '/usage'
-      fullPath: '/organizations/$orgId/agent/settings/usage'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsUsageRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
-    }
-    '/_public/organizations/$orgId/agent/settings/models': {
-      id: '/_public/organizations/$orgId/agent/settings/models'
-      path: '/models'
-      fullPath: '/organizations/$orgId/agent/settings/models'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsModelsRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
-    }
-    '/_public/organizations/$orgId/agent/settings/memory': {
-      id: '/_public/organizations/$orgId/agent/settings/memory'
-      path: '/memory'
-      fullPath: '/organizations/$orgId/agent/settings/memory'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
-    }
-    '/_public/organizations/$orgId/agent/settings/mcp': {
-      id: '/_public/organizations/$orgId/agent/settings/mcp'
-      path: '/mcp'
-      fullPath: '/organizations/$orgId/agent/settings/mcp'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsMcpRouteImport
-      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
-    }
-    '/_public/organizations/$orgId/agent/automations/create': {
-      id: '/_public/organizations/$orgId/agent/automations/create'
-      path: '/create'
-      fullPath: '/organizations/$orgId/agent/automations/create'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRoute
     }
     '/_public/organizations/$orgId/agent/automations/$automationId': {
@@ -7617,431 +7538,480 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/settings/': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings/'
-      path: '/'
-      fullPath: '/projects/$projectId/sites/$siteId/settings/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    '/_public/organizations/$orgId/agent/automations/create': {
+      id: '/_public/organizations/$orgId/agent/automations/create'
+      path: '/create'
+      fullPath: '/organizations/$orgId/agent/automations/create'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentAutomationsCreateRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentAutomationsRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/domains/': {
-      id: '/_public/projects/$projectId/sites/$siteId/domains/'
+    '/_public/organizations/$orgId/agent/settings/': {
+      id: '/_public/organizations/$orgId/agent/settings/'
       path: '/'
-      fullPath: '/projects/$projectId/sites/$siteId/domains/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRoute
+      fullPath: '/organizations/$orgId/agent/settings/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/deployments/': {
-      id: '/_public/projects/$projectId/sites/$siteId/deployments/'
+    '/_public/organizations/$orgId/agent/settings/mcp': {
+      id: '/_public/organizations/$orgId/agent/settings/mcp'
+      path: '/mcp'
+      fullPath: '/organizations/$orgId/agent/settings/mcp'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsMcpRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
+    }
+    '/_public/organizations/$orgId/agent/settings/memory': {
+      id: '/_public/organizations/$orgId/agent/settings/memory'
+      path: '/memory'
+      fullPath: '/organizations/$orgId/agent/settings/memory'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsMemoryRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
+    }
+    '/_public/organizations/$orgId/agent/settings/models': {
+      id: '/_public/organizations/$orgId/agent/settings/models'
+      path: '/models'
+      fullPath: '/organizations/$orgId/agent/settings/models'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsModelsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
+    }
+    '/_public/organizations/$orgId/agent/settings/usage': {
+      id: '/_public/organizations/$orgId/agent/settings/usage'
+      path: '/usage'
+      fullPath: '/organizations/$orgId/agent/settings/usage'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAgentSettingsUsageRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAgentSettingsRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/': {
+      id: '/_public/organizations/$orgId/apps/$appId/'
       path: '/'
-      fullPath: '/projects/$projectId/sites/$siteId/deployments/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRoute
+      fullPath: '/organizations/$orgId/apps/$appId/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
     }
-    '/_public/projects/$projectId/messaging/topics/$topicId/': {
-      id: '/_public/projects/$projectId/messaging/topics/$topicId/'
+    '/_public/organizations/$orgId/apps/$appId/branding': {
+      id: '/_public/organizations/$orgId/apps/$appId/branding'
+      path: '/branding'
+      fullPath: '/organizations/$orgId/apps/$appId/branding'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/legal': {
+      id: '/_public/organizations/$orgId/apps/$appId/legal'
+      path: '/legal'
+      fullPath: '/organizations/$orgId/apps/$appId/legal'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/oauth': {
+      id: '/_public/organizations/$orgId/apps/$appId/oauth'
+      path: '/oauth'
+      fullPath: '/organizations/$orgId/apps/$appId/oauth'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/secrets': {
+      id: '/_public/organizations/$orgId/apps/$appId/secrets'
+      path: '/secrets'
+      fullPath: '/organizations/$orgId/apps/$appId/secrets'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/settings': {
+      id: '/_public/organizations/$orgId/apps/$appId/settings'
+      path: '/settings'
+      fullPath: '/organizations/$orgId/apps/$appId/settings'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSettingsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/support': {
+      id: '/_public/organizations/$orgId/apps/$appId/support'
+      path: '/support'
+      fullPath: '/organizations/$orgId/apps/$appId/support'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdSupportRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/domains/$domainId/': {
+      id: '/_public/organizations/$orgId/domains/$domainId/'
       path: '/'
-      fullPath: '/projects/$projectId/messaging/topics/$topicId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
+      fullPath: '/organizations/$orgId/domains/$domainId/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
     }
-    '/_public/projects/$projectId/messaging/providers/$providerId/': {
-      id: '/_public/projects/$projectId/messaging/providers/$providerId/'
+    '/_public/organizations/$orgId/domains/$domainId/settings': {
+      id: '/_public/organizations/$orgId/domains/$domainId/settings'
+      path: '/settings'
+      fullPath: '/organizations/$orgId/domains/$domainId/settings'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
+    }
+    '/_public/organizations/$orgId/marketplace/$appId/': {
+      id: '/_public/organizations/$orgId/marketplace/$appId/'
+      path: '/$appId'
+      fullPath: '/organizations/$orgId/marketplace/$appId/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
+    }
+    '/_public/projects/$projectId/auth/oauth2-server/apps': {
+      id: '/_public/projects/$projectId/auth/oauth2-server/apps'
+      path: '/apps'
+      fullPath: '/projects/$projectId/auth/oauth2-server/apps'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerAppsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRoute
+    }
+    '/_public/projects/$projectId/auth/oauth2-server/settings': {
+      id: '/_public/projects/$projectId/auth/oauth2-server/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/auth/oauth2-server/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthOauth2ServerSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthOauth2ServerRoute
+    }
+    '/_public/projects/$projectId/auth/policies/emails': {
+      id: '/_public/projects/$projectId/auth/policies/emails'
+      path: '/emails'
+      fullPath: '/projects/$projectId/auth/policies/emails'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesEmailsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
+    '/_public/projects/$projectId/auth/policies/memberships': {
+      id: '/_public/projects/$projectId/auth/policies/memberships'
+      path: '/memberships'
+      fullPath: '/projects/$projectId/auth/policies/memberships'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
+    '/_public/projects/$projectId/auth/policies/passwords': {
+      id: '/_public/projects/$projectId/auth/policies/passwords'
+      path: '/passwords'
+      fullPath: '/projects/$projectId/auth/policies/passwords'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
+    '/_public/projects/$projectId/auth/policies/sessions': {
+      id: '/_public/projects/$projectId/auth/policies/sessions'
+      path: '/sessions'
+      fullPath: '/projects/$projectId/auth/policies/sessions'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
+    '/_public/projects/$projectId/auth/policies/users': {
+      id: '/_public/projects/$projectId/auth/policies/users'
+      path: '/users'
+      fullPath: '/projects/$projectId/auth/policies/users'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
+    '/_public/projects/$projectId/auth/teams/$teamId': {
+      id: '/_public/projects/$projectId/auth/teams/$teamId'
+      path: '/$teamId'
+      fullPath: '/projects/$projectId/auth/teams/$teamId'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthTeamsRoute
+    }
+    '/_public/projects/$projectId/auth/users/$userId': {
+      id: '/_public/projects/$projectId/auth/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/projects/$projectId/auth/users/$userId'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId'
+      path: '/$dbKind/$databaseId'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId'
+      path: '/mysql/$databaseId'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId'
+      path: '/postgres/$databaseId'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/': {
+      id: '/_public/projects/$projectId/functions/$functionId/'
       path: '/'
-      fullPath: '/projects/$projectId/messaging/providers/$providerId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
+      fullPath: '/projects/$projectId/functions/$functionId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
     }
-    '/_public/projects/$projectId/functions/$functionId/settings/': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/'
+    '/_public/projects/$projectId/functions/$functionId/domains': {
+      id: '/_public/projects/$projectId/functions/$functionId/domains'
+      path: '/domains'
+      fullPath: '/projects/$projectId/functions/$functionId/domains'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/executions': {
+      id: '/_public/projects/$projectId/functions/$functionId/executions'
+      path: '/executions'
+      fullPath: '/projects/$projectId/functions/$functionId/executions'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/security': {
+      id: '/_public/projects/$projectId/functions/$functionId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/functions/$functionId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/functions/$functionId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/variables': {
+      id: '/_public/projects/$projectId/functions/$functionId/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/functions/$functionId/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/functions/create/': {
+      id: '/_public/projects/$projectId/functions/create/'
       path: '/'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+      fullPath: '/projects/$projectId/functions/create/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
     }
-    '/_public/projects/$projectId/functions/$functionId/domains/': {
-      id: '/_public/projects/$projectId/functions/$functionId/domains/'
+    '/_public/projects/$projectId/functions/create/deploy': {
+      id: '/_public/projects/$projectId/functions/create/deploy'
+      path: '/deploy'
+      fullPath: '/projects/$projectId/functions/create/deploy'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/functions/create/deploying': {
+      id: '/_public/projects/$projectId/functions/create/deploying'
+      path: '/deploying'
+      fullPath: '/projects/$projectId/functions/create/deploying'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/functions/create/manual': {
+      id: '/_public/projects/$projectId/functions/create/manual'
+      path: '/manual'
+      fullPath: '/projects/$projectId/functions/create/manual'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateManualRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/messaging/$messageId/': {
+      id: '/_public/projects/$projectId/messaging/$messageId/'
       path: '/'
-      fullPath: '/projects/$projectId/functions/$functionId/domains/'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute
+      fullPath: '/projects/$projectId/messaging/$messageId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingMessageIdRoute
     }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/'
+    '/_public/projects/$projectId/messaging/$messageId/settings': {
+      id: '/_public/projects/$projectId/messaging/$messageId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/messaging/$messageId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingMessageIdRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/': {
+      id: '/_public/projects/$projectId/messaging/providers/'
+      path: '/providers'
+      fullPath: '/projects/$projectId/messaging/providers/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/$providerId': {
+      id: '/_public/projects/$projectId/messaging/providers/$providerId'
+      path: '/providers/$providerId'
+      fullPath: '/projects/$projectId/messaging/providers/$providerId'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/create': {
+      id: '/_public/projects/$projectId/messaging/providers/create'
+      path: '/providers/create'
+      fullPath: '/projects/$projectId/messaging/providers/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/topics/': {
+      id: '/_public/projects/$projectId/messaging/topics/'
+      path: '/topics'
+      fullPath: '/projects/$projectId/messaging/topics/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/topics/$topicId': {
+      id: '/_public/projects/$projectId/messaging/topics/$topicId'
+      path: '/topics/$topicId'
+      fullPath: '/projects/$projectId/messaging/topics/$topicId'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/settings/domains/': {
+      id: '/_public/projects/$projectId/settings/domains/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+      fullPath: '/projects/$projectId/settings/domains/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
     }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/'
+    '/_public/projects/$projectId/settings/domains/add': {
+      id: '/_public/projects/$projectId/settings/domains/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/settings/domains/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
+    }
+    '/_public/projects/$projectId/settings/migrations/': {
+      id: '/_public/projects/$projectId/settings/migrations/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+      fullPath: '/projects/$projectId/settings/migrations/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsMigrationsRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
+    '/_public/projects/$projectId/settings/migrations/import': {
+      id: '/_public/projects/$projectId/settings/migrations/import'
+      path: '/import'
+      fullPath: '/projects/$projectId/settings/migrations/import'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsMigrationsImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsMigrationsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/': {
+      id: '/_public/projects/$projectId/sites/$siteId/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+      fullPath: '/projects/$projectId/sites/$siteId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
     }
-    '/_public/projects/$projectId/sites/create/templates/$template': {
-      id: '/_public/projects/$projectId/sites/create/templates/$template'
-      path: '/templates/$template'
-      fullPath: '/projects/$projectId/sites/create/templates/$template'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport
+    '/_public/projects/$projectId/sites/$siteId/deployments': {
+      id: '/_public/projects/$projectId/sites/$siteId/deployments'
+      path: '/deployments'
+      fullPath: '/projects/$projectId/sites/$siteId/deployments'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/domains': {
+      id: '/_public/projects/$projectId/sites/$siteId/domains'
+      path: '/domains'
+      fullPath: '/projects/$projectId/sites/$siteId/domains'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/logs': {
+      id: '/_public/projects/$projectId/sites/$siteId/logs'
+      path: '/logs'
+      fullPath: '/projects/$projectId/sites/$siteId/logs'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdLogsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/sites/$siteId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/variables': {
+      id: '/_public/projects/$projectId/sites/$siteId/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/sites/$siteId/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/create/': {
+      id: '/_public/projects/$projectId/sites/create/'
+      path: '/'
+      fullPath: '/projects/$projectId/sites/create/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/settings/runtime': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings/runtime'
-      path: '/runtime'
-      fullPath: '/projects/$projectId/sites/$siteId/settings/runtime'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    '/_public/projects/$projectId/sites/create/deploy': {
+      id: '/_public/projects/$projectId/sites/create/deploy'
+      path: '/deploy'
+      fullPath: '/projects/$projectId/sites/create/deploy'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateDeployRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/settings/git': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings/git'
-      path: '/git'
-      fullPath: '/projects/$projectId/sites/$siteId/settings/git'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    '/_public/projects/$projectId/sites/create/deploying': {
+      id: '/_public/projects/$projectId/sites/create/deploying'
+      path: '/deploying'
+      fullPath: '/projects/$projectId/sites/create/deploying'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateDeployingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/settings/danger-zone': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings/danger-zone'
-      path: '/danger-zone'
-      fullPath: '/projects/$projectId/sites/$siteId/settings/danger-zone'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    '/_public/projects/$projectId/sites/create/finish': {
+      id: '/_public/projects/$projectId/sites/create/finish'
+      path: '/finish'
+      fullPath: '/projects/$projectId/sites/create/finish'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateFinishRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/settings/build': {
-      id: '/_public/projects/$projectId/sites/$siteId/settings/build'
-      path: '/build'
-      fullPath: '/projects/$projectId/sites/$siteId/settings/build'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    '/_public/projects/$projectId/sites/create/manual': {
+      id: '/_public/projects/$projectId/sites/create/manual'
+      path: '/manual'
+      fullPath: '/projects/$projectId/sites/create/manual'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateManualRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/domains/add': {
-      id: '/_public/projects/$projectId/sites/$siteId/domains/add'
-      path: '/add'
-      fullPath: '/projects/$projectId/sites/$siteId/domains/add'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRoute
+    '/_public/projects/$projectId/storage/$bucketId/': {
+      id: '/_public/projects/$projectId/storage/$bucketId/'
+      path: '/'
+      fullPath: '/projects/$projectId/storage/$bucketId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId': {
-      id: '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId'
-      path: '/$deploymentId'
-      fullPath: '/projects/$projectId/sites/$siteId/deployments/$deploymentId'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRoute
-    }
-    '/_public/projects/$projectId/messaging/topics/$topicId/settings': {
-      id: '/_public/projects/$projectId/messaging/topics/$topicId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/messaging/topics/$topicId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
-    }
-    '/_public/projects/$projectId/messaging/topics/$topicId/activity': {
-      id: '/_public/projects/$projectId/messaging/topics/$topicId/activity'
-      path: '/activity'
-      fullPath: '/projects/$projectId/messaging/topics/$topicId/activity'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
-    }
-    '/_public/projects/$projectId/messaging/providers/$providerId/settings': {
-      id: '/_public/projects/$projectId/messaging/providers/$providerId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/messaging/providers/$providerId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
-    }
-    '/_public/projects/$projectId/messaging/providers/$providerId/activity': {
-      id: '/_public/projects/$projectId/messaging/providers/$providerId/activity'
-      path: '/activity'
-      fullPath: '/projects/$projectId/messaging/providers/$providerId/activity'
-      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
-    }
-    '/_public/projects/$projectId/functions/create/template/$templateId': {
-      id: '/_public/projects/$projectId/functions/create/template/$templateId'
-      path: '/template/$templateId'
-      fullPath: '/projects/$projectId/functions/create/template/$templateId'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/create/repository/$repository': {
-      id: '/_public/projects/$projectId/functions/create/repository/$repository'
-      path: '/repository/$repository'
-      fullPath: '/projects/$projectId/functions/create/repository/$repository'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings/runtime': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/runtime'
-      path: '/runtime'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/runtime'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings/git': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/git'
-      path: '/git'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/git'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings/executions': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/executions'
-      path: '/executions'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/executions'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings/danger-zone': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/danger-zone'
-      path: '/danger-zone'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/danger-zone'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/settings/build': {
-      id: '/_public/projects/$projectId/functions/$functionId/settings/build'
-      path: '/build'
-      fullPath: '/projects/$projectId/functions/$functionId/settings/build'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
-    }
-    '/_public/projects/$projectId/functions/$functionId/domains/add': {
-      id: '/_public/projects/$projectId/functions/$functionId/domains/add'
-      path: '/add'
-      fullPath: '/projects/$projectId/functions/$functionId/domains/add'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer'
-      path: '/visualizer'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/visualizer'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/sql': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/sql'
-      path: '/sql'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/sql'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/roles': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/roles'
-      path: '/roles'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/roles'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/monitor': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/monitor'
-      path: '/monitor'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/monitor'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/extensions': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/extensions'
-      path: '/extensions'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/extensions'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/enums': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/enums'
-      path: '/enums'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/enums'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/connections': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/connections'
-      path: '/connections'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/connections'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/connect': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/connect'
-      path: '/connect'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/connect'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/backups': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/backups'
-      path: '/backups'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/backups'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer'
-      path: '/visualizer'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/visualizer'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/sql': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/sql'
-      path: '/sql'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/sql'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/roles': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/roles'
-      path: '/roles'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/roles'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/monitor': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/monitor'
-      path: '/monitor'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/monitor'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/connections': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
-      path: '/connections'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connections'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/connect': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connect'
-      path: '/connect'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connect'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/backups': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/backups'
-      path: '/backups'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/backups'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
-      path: '/visualizer'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables'
-      path: '/tables'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/security'
+    '/_public/projects/$projectId/storage/$bucketId/security': {
+      id: '/_public/projects/$projectId/storage/$bucketId/security'
       path: '/security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+      fullPath: '/projects/$projectId/storage/$bucketId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor'
-      path: '/monitor'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    '/_public/projects/$projectId/storage/$bucketId/settings': {
+      id: '/_public/projects/$projectId/storage/$bucketId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/storage/$bucketId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import'
-      path: '/export-import'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    '/_public/projects/$projectId/stores/$appId/': {
+      id: '/_public/projects/$projectId/stores/$appId/'
+      path: '/$appId'
+      fullPath: '/projects/$projectId/stores/$appId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdStoresAppIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdStoresRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security'
-      path: '/db-security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    '/_public/projects/$projectId/usage/$categoryId/$metricId': {
+      id: '/_public/projects/$projectId/usage/$categoryId/$metricId'
+      path: '/$metricId'
+      fullPath: '/projects/$projectId/usage/$categoryId/$metricId'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageCategoryIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections'
-      path: '/collections'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    '/_public/projects/$projectId/auth/teams/$teamId/activity': {
+      id: '/_public/projects/$projectId/auth/teams/$teamId/activity'
+      path: '/activity'
+      fullPath: '/projects/$projectId/auth/teams/$teamId/activity'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/browser': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/browser'
-      path: '/browser'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/browser'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    '/_public/projects/$projectId/auth/teams/$teamId/members': {
+      id: '/_public/projects/$projectId/auth/teams/$teamId/members'
+      path: '/members'
+      fullPath: '/projects/$projectId/auth/teams/$teamId/members'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/backups': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/backups'
-      path: '/backups'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/backups'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/$tableId': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/$tableId'
-      path: '/$tableId'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/$tableId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/auth/users/$userId/targets': {
-      id: '/_public/projects/$projectId/auth/users/$userId/targets'
-      path: '/targets'
-      fullPath: '/projects/$projectId/auth/users/$userId/targets'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
-    }
-    '/_public/projects/$projectId/auth/users/$userId/sessions': {
-      id: '/_public/projects/$projectId/auth/users/$userId/sessions'
-      path: '/sessions'
-      fullPath: '/projects/$projectId/auth/users/$userId/sessions'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
-    }
-    '/_public/projects/$projectId/auth/users/$userId/memberships': {
-      id: '/_public/projects/$projectId/auth/users/$userId/memberships'
-      path: '/memberships'
-      fullPath: '/projects/$projectId/auth/users/$userId/memberships'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport
+    '/_public/projects/$projectId/auth/users/$userId/activity': {
+      id: '/_public/projects/$projectId/auth/users/$userId/activity'
+      path: '/activity'
+      fullPath: '/projects/$projectId/auth/users/$userId/activity'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
     }
     '/_public/projects/$projectId/auth/users/$userId/identities': {
@@ -8051,200 +8021,452 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
     }
-    '/_public/projects/$projectId/auth/users/$userId/activity': {
-      id: '/_public/projects/$projectId/auth/users/$userId/activity'
-      path: '/activity'
-      fullPath: '/projects/$projectId/auth/users/$userId/activity'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport
+    '/_public/projects/$projectId/auth/users/$userId/memberships': {
+      id: '/_public/projects/$projectId/auth/users/$userId/memberships'
+      path: '/memberships'
+      fullPath: '/projects/$projectId/auth/users/$userId/memberships'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
     }
-    '/_public/projects/$projectId/auth/teams/$teamId/members': {
-      id: '/_public/projects/$projectId/auth/teams/$teamId/members'
-      path: '/members'
-      fullPath: '/projects/$projectId/auth/teams/$teamId/members'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
+    '/_public/projects/$projectId/auth/users/$userId/sessions': {
+      id: '/_public/projects/$projectId/auth/users/$userId/sessions'
+      path: '/sessions'
+      fullPath: '/projects/$projectId/auth/users/$userId/sessions'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
     }
-    '/_public/projects/$projectId/auth/teams/$teamId/activity': {
-      id: '/_public/projects/$projectId/auth/teams/$teamId/activity'
+    '/_public/projects/$projectId/auth/users/$userId/targets': {
+      id: '/_public/projects/$projectId/auth/users/$userId/targets'
+      path: '/targets'
+      fullPath: '/projects/$projectId/auth/users/$userId/targets'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdTargetsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/$tableId': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/$tableId'
+      path: '/$tableId'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/$tableId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTableIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/backups': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/backups'
+      path: '/backups'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdBackupsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/browser': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/browser'
+      path: '/browser'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/browser'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdBrowserRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections'
+      path: '/collections'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security'
+      path: '/db-security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import'
+      path: '/export-import'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables'
+      path: '/tables'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/backups': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/backups'
+      path: '/backups'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdBackupsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/connect': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connect'
+      path: '/connect'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connect'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/connections': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/connections'
+      path: '/connections'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/connections'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdConnectionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/monitor': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/roles': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/roles'
+      path: '/roles'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/roles'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRolesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/sql': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/sql'
+      path: '/sql'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/sql'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSqlRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/backups': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/backups'
+      path: '/backups'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/connect': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/connect'
+      path: '/connect'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/connect'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/connections': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/connections'
+      path: '/connections'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/connections'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/enums': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/enums'
+      path: '/enums'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/enums'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/extensions': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/extensions'
+      path: '/extensions'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/extensions'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdExtensionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/monitor': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/roles': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/roles'
+      path: '/roles'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/roles'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRolesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/sql': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/sql'
+      path: '/sql'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/sql'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/domains/': {
+      id: '/_public/projects/$projectId/functions/$functionId/domains/'
+      path: '/'
+      fullPath: '/projects/$projectId/functions/$functionId/domains/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/domains/add': {
+      id: '/_public/projects/$projectId/functions/$functionId/domains/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/functions/$functionId/domains/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/'
+      path: '/'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/build': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/build'
+      path: '/build'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/build'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsBuildRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/danger-zone': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/danger-zone'
+      path: '/danger-zone'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/danger-zone'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/executions': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/executions'
+      path: '/executions'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/executions'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/git': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/git'
+      path: '/git'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/git'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/settings/runtime': {
+      id: '/_public/projects/$projectId/functions/$functionId/settings/runtime'
+      path: '/runtime'
+      fullPath: '/projects/$projectId/functions/$functionId/settings/runtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
+    }
+    '/_public/projects/$projectId/functions/create/repository/$repository': {
+      id: '/_public/projects/$projectId/functions/create/repository/$repository'
+      path: '/repository/$repository'
+      fullPath: '/projects/$projectId/functions/create/repository/$repository'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/functions/create/template/$templateId': {
+      id: '/_public/projects/$projectId/functions/create/template/$templateId'
+      path: '/template/$templateId'
+      fullPath: '/projects/$projectId/functions/create/template/$templateId'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/$providerId/': {
+      id: '/_public/projects/$projectId/messaging/providers/$providerId/'
+      path: '/'
+      fullPath: '/projects/$projectId/messaging/providers/$providerId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/$providerId/activity': {
+      id: '/_public/projects/$projectId/messaging/providers/$providerId/activity'
       path: '/activity'
-      fullPath: '/projects/$projectId/auth/teams/$teamId/activity'
-      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
+      fullPath: '/projects/$projectId/messaging/providers/$providerId/activity'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
     }
-    '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/': {
-      id: '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
+    '/_public/projects/$projectId/messaging/providers/$providerId/settings': {
+      id: '/_public/projects/$projectId/messaging/providers/$providerId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/messaging/providers/$providerId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRoute
+    }
+    '/_public/projects/$projectId/messaging/topics/$topicId/': {
+      id: '/_public/projects/$projectId/messaging/topics/$topicId/'
       path: '/'
-      fullPath: '/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute
+      fullPath: '/projects/$projectId/messaging/topics/$topicId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
     }
-    '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': {
-      id: '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
-      path: '/deployments/$deploymentId'
-      fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
-      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    '/_public/projects/$projectId/messaging/topics/$topicId/activity': {
+      id: '/_public/projects/$projectId/messaging/topics/$topicId/activity'
+      path: '/activity'
+      fullPath: '/projects/$projectId/messaging/topics/$topicId/activity'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdActivityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
     }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/'
+    '/_public/projects/$projectId/messaging/topics/$topicId/settings': {
+      id: '/_public/projects/$projectId/messaging/topics/$topicId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/messaging/topics/$topicId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/deployments/': {
+      id: '/_public/projects/$projectId/sites/$siteId/deployments/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+      fullPath: '/projects/$projectId/sites/$siteId/deployments/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRoute
     }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/'
+    '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId': {
+      id: '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId'
+      path: '/$deploymentId'
+      fullPath: '/projects/$projectId/sites/$siteId/deployments/$deploymentId'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/domains/': {
+      id: '/_public/projects/$projectId/sites/$siteId/domains/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+      fullPath: '/projects/$projectId/sites/$siteId/domains/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/domains/add': {
+      id: '/_public/projects/$projectId/sites/$siteId/domains/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/sites/$siteId/domains/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings/': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings/'
+      path: '/'
+      fullPath: '/projects/$projectId/sites/$siteId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings/build': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings/build'
+      path: '/build'
+      fullPath: '/projects/$projectId/sites/$siteId/settings/build'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings/danger-zone': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings/danger-zone'
+      path: '/danger-zone'
+      fullPath: '/projects/$projectId/sites/$siteId/settings/danger-zone'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings/git': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings/git'
+      path: '/git'
+      fullPath: '/projects/$projectId/sites/$siteId/settings/git'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/settings/runtime': {
+      id: '/_public/projects/$projectId/sites/$siteId/settings/runtime'
+      path: '/runtime'
+      fullPath: '/projects/$projectId/sites/$siteId/settings/runtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/create/templates/$template': {
+      id: '/_public/projects/$projectId/sites/create/templates/$template'
+      path: '/templates/$template'
+      fullPath: '/projects/$projectId/sites/create/templates/$template'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+      path: '/$collectionId'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/'
+      path: '/overview'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/overview/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/'
       path: '/'
       fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/'
-      path: '/overview'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/overview'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': {
-      id: '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
-      path: '/repositories/$installationId/$repositoryId'
-      fullPath: '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
-      path: '/tables/$tableId'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/storage': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/storage'
-      path: '/storage'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/replication': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/replication'
-      path: '/replication'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/replication'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/pitr': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
-      path: '/pitr'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/network': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/network'
-      path: '/network'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/network'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
-      path: '/maintenance'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
-      path: '/extensions'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute'
-      path: '/compute'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
-      path: '/tables/$tableId'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage'
-      path: '/storage'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/storage'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication'
-      path: '/replication'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/replication'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
-      path: '/pitr'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network'
-      path: '/network'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/network'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
-      path: '/maintenance'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute'
-      path: '/compute'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/compute'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
-      path: '/$tableId'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
-      path: '/specification'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': {
@@ -8254,19 +8476,166 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
-      path: '/$collectionId'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRoute
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
+      path: '/specification'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
+      path: '/$tableId'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/'
       path: '/'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+      path: '/compute'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/compute'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsComputeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+      path: '/maintenance'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/maintenance'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsMaintenanceRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/network'
+      path: '/network'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/network'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsNetworkRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+      path: '/pitr'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/pitr'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsPitrRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+      path: '/replication'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/replication'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsReplicationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+      path: '/storage'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/settings/storage'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsStorageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
+      path: '/tables/$tableId'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/compute'
+      path: '/compute'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
+      path: '/extensions'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsExtensionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
+      path: '/maintenance'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsMaintenanceRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/network': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/network'
+      path: '/network'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/network'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsNetworkRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/pitr': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
+      path: '/pitr'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsPitrRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/replication': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/replication'
+      path: '/replication'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/replication'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsReplicationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/settings/storage': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/settings/storage'
+      path: '/storage'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsStorageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
+      path: '/tables/$tableId'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
+    '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': {
+      id: '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
+      path: '/deployments/$deploymentId'
+      fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/': {
+      id: '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
+      path: '/'
+      fullPath: '/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdRoute
+    }
+    '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': {
+      id: '/_public/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
+      path: '/repositories/$installationId/$repositoryId'
+      fullPath: '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/'
@@ -8275,228 +8644,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
     }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
-      path: '/rows'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
-      path: '/indexes'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': {
-      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
-      path: '/columns'
-      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
-      path: '/rows'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
-      path: '/indexes'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': {
-      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
-      path: '/columns'
-      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
-      path: '/visualizer'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
-      path: '/rows'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
-      path: '/monitor'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
-      path: '/indexes'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
-      path: '/export-import'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents'
-      path: '/documents'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings'
-      path: '/db-settings'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security'
-      path: '/db-security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns'
-      path: '/columns'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups'
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
       path: '/backups'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
-      path: '/visualizer'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
-      path: '/settings'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
-      path: '/security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
-      path: '/monitor'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
-      path: '/json'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
-      path: '/indexes'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import'
-      path: '/export-import'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents'
-      path: '/documents'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings'
-      path: '/db-settings'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
-    }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security'
-      path: '/db-security'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns': {
@@ -8506,12 +8658,236 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
     }
-    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups': {
-      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
-      path: '/backups'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
-      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security'
+      path: '/db-security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings'
+      path: '/db-settings'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDbSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents'
+      path: '/documents'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdDocumentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import'
+      path: '/export-import'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdExportImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
+      path: '/indexes'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
+      path: '/json'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
+      path: '/'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups'
+      path: '/backups'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdBackupsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns'
+      path: '/columns'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdColumnsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security'
+      path: '/db-security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings'
+      path: '/db-settings'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDbSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents'
+      path: '/documents'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdDocumentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
+      path: '/export-import'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
+      path: '/indexes'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
+      path: '/rows'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
+      path: '/visualizer'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdVisualizerRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+      path: '/columns'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/columns'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdColumnsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+      path: '/indexes'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/indexes'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdIndexesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+      path: '/rows'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/rows'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRowsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings': {
+      id: '/_public/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/mysql/$databaseId/tables/$tableId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
+      path: '/columns'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
+      path: '/indexes'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
+      path: '/rows'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
     }
   }
 }
@@ -8564,12 +8940,14 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -8596,12 +8974,14 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
@@ -10165,6 +10545,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
+  PublicProjectsProjectIdAgentsRoute: typeof PublicProjectsProjectIdAgentsRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -10176,6 +10557,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -10191,6 +10573,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
     PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
+    PublicProjectsProjectIdAgentsRoute: PublicProjectsProjectIdAgentsRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -10210,6 +10593,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -10246,12 +10630,24 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
-  PublicIndexRoute: typeof PublicIndexRoute
+  PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
+  PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
+  PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
+  PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
+  PublicDebugMagicUrlPreviewRoute: typeof PublicDebugMagicUrlPreviewRoute
+  PublicDebugMfaPreviewRoute: typeof PublicDebugMfaPreviewRoute
   PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
+  PublicDebugOauth2RelayPreviewRoute: typeof PublicDebugOauth2RelayPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugRecoveryPreviewRoute: typeof PublicDebugRecoveryPreviewRoute
+  PublicDebugResetPreviewRoute: typeof PublicDebugResetPreviewRoute
+  PublicDebugSignInPreviewRoute: typeof PublicDebugSignInPreviewRoute
+  PublicDebugSignUpPreviewRoute: typeof PublicDebugSignUpPreviewRoute
+  PublicDebugSitesAuthPreviewRoute: typeof PublicDebugSitesAuthPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
@@ -10273,13 +10669,26 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
-  PublicIndexRoute: PublicIndexRoute,
+  PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
+  PublicDebugCommunityShareExamplesRoute:
+    PublicDebugCommunityShareExamplesRoute,
+  PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
+  PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,
+  PublicDebugMagicUrlPreviewRoute: PublicDebugMagicUrlPreviewRoute,
+  PublicDebugMfaPreviewRoute: PublicDebugMfaPreviewRoute,
   PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
+  PublicDebugOauth2RelayPreviewRoute: PublicDebugOauth2RelayPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugRecoveryPreviewRoute: PublicDebugRecoveryPreviewRoute,
+  PublicDebugResetPreviewRoute: PublicDebugResetPreviewRoute,
+  PublicDebugSignInPreviewRoute: PublicDebugSignInPreviewRoute,
+  PublicDebugSignUpPreviewRoute: PublicDebugSignUpPreviewRoute,
+  PublicDebugSitesAuthPreviewRoute: PublicDebugSitesAuthPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
@@ -10344,6 +10753,17 @@ const ApiGeneratorCoverRouteChildren: ApiGeneratorCoverRouteChildren = {
 const ApiGeneratorCoverRouteWithChildren =
   ApiGeneratorCoverRoute._addFileChildren(ApiGeneratorCoverRouteChildren)
 
+interface ApiResendApiKeysRouteChildren {
+  ApiResendApiKeysApiKeyIdRoute: typeof ApiResendApiKeysApiKeyIdRoute
+}
+
+const ApiResendApiKeysRouteChildren: ApiResendApiKeysRouteChildren = {
+  ApiResendApiKeysApiKeyIdRoute: ApiResendApiKeysApiKeyIdRoute,
+}
+
+const ApiResendApiKeysRouteWithChildren =
+  ApiResendApiKeysRoute._addFileChildren(ApiResendApiKeysRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
@@ -10354,11 +10774,13 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
@@ -10374,12 +10796,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
-  ApiRERoute: ApiRERoute,
-  ApiRVDotjsRoute: ApiRVDotjsRoute,
   ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,
   ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
   ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,
   ApiReferencesApiServiceRoute: ApiReferencesApiServiceRoute,
+  ApiResendApiKeysRoute: ApiResendApiKeysRouteWithChildren,
+  ApiResendDomainsRoute: ApiResendDomainsRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
@@ -10388,3 +10810,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

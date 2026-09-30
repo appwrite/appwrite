@@ -7,6 +7,11 @@ import {
   MarketingHeroSection,
 } from '@/components/pages/marketing/MarketingSections'
 import type { ChangelogEntry, ChangelogTag } from '@/lib/changelog/types'
+import {
+  BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
+  BELOW_APP_HEADER_STICKY_TOP_CLASS,
+} from '@/lib/layout/app-header-height'
+import { cn } from '@/lib/utils'
 import { ChangelogTimeline } from './ChangelogTimeline'
 import { ChangelogFilters } from './ChangelogFilters'
 
@@ -34,7 +39,13 @@ export function View({ entries, nextPage }: ViewProps) {
         <div className="mx-auto max-w-7xl overflow-visible px-4 sm:px-6">
           <div className="grid grid-cols-1 items-start gap-8 overflow-visible lg:grid-cols-[280px_1fr] lg:gap-12">
             {/* Filter Sidebar */}
-            <aside className="sticky top-6 z-10 hidden max-h-[calc(100dvh-3rem)] self-start overflow-y-auto overscroll-y-contain lg:block">
+            <aside
+              className={cn(
+                BELOW_APP_HEADER_STICKY_TOP_CLASS,
+                BELOW_APP_HEADER_STICKY_MAX_HEIGHT_CLASS,
+                'z-10 hidden self-start overflow-y-auto overscroll-y-contain pt-6 lg:block',
+              )}
+            >
               <ChangelogFilters
                 selectedTag={selectedTag}
                 onTagSelect={handleTagSelect}

@@ -5,7 +5,6 @@
 
 /** Exact paths that are not public marketing content. */
 export const SITEMAP_EXCLUDED_EXACT_PATHS = [
-  '/',
   '/sign-in',
   '/sign-up',
   '/sign-out',
@@ -24,6 +23,7 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/llms.txt',
   '/llms-full.txt',
   '/docs/llms.txt',
+  '/for-agents.md',
   '/docs.md',
   '/blog.md',
   '/changelog.md',
@@ -34,9 +34,9 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/.well-known/mcp/server-card.json',
   '/.well-known/ai-catalog.json',
   '/.well-known/agent-skills/index.json',
+  '/.well-known/change-password',
+  '/.well-known/resource-that-should-not-exist-whose-status-code-should-not-be-200',
   '/upgrade',
-  '/r/v.js',
-  '/r/e',
 ] as const
 
 /** Path prefixes for authenticated console areas and non-indexable routes. */

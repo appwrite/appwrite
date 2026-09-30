@@ -70,14 +70,12 @@ export const heCatalog: EnCatalog = {
         accountId: 'מזהה חשבון',
         copyAccountId: 'העתק מזהה חשבון',
         copied: 'הועתק',
-        twoFactor: 'אימות דו-שלבי',
         active: 'פעיל',
         inactive: 'לא פעיל',
-        enabled: 'מופעל',
-        disabled: 'כבוי',
+        twoFactorEnabled: 'אימות דו-שלבי מופעל',
+        twoFactorDisabled: 'אימות דו-שלבי כבוי',
+        passwordBreached: 'הסיסמה דלפה',
         console: 'קונסול',
-        // Temporary: remove once the old console is retired
-        oldConsole: 'קונסול ישן',
         home: 'בית',
         docs: 'דוקומנטציה',
         changelog: 'יומן שינויים',
@@ -219,6 +217,7 @@ export const heCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: 'לוח בקרה',
         apps: 'אפליקציות',
+        agents: 'Agents',
         apiKeys: 'מפתחות API',
         explorer: 'אקספלורר',
         auth: 'אימות',
@@ -432,7 +431,7 @@ export const heCatalog: EnCatalog = {
           'הרשמה לאירועים חיים ותגובה לשינויים בזמן שהם קורים.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
+          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרת MCP מרוחק אחד.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret

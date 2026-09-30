@@ -83,6 +83,8 @@ interface ServiceHeaderProps {
   beforeCreateButtons?: React.ReactNode
   /** Renders in the right toolbar cluster immediately before the refresh button */
   beforeRefreshButtons?: React.ReactNode
+  /** Renders in the right toolbar cluster immediately after the refresh button */
+  afterRefreshButtons?: React.ReactNode
   /** Show refresh button */
   showRefresh?: boolean
   onRefresh?: () => void
@@ -247,6 +249,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       rightContent,
       beforeCreateButtons,
       beforeRefreshButtons,
+      afterRefreshButtons,
       beforeSearchButtons,
       showRefresh = false,
       onRefresh,
@@ -284,6 +287,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       showExport ||
       beforeCreateButtons ||
       beforeRefreshButtons ||
+      afterRefreshButtons ||
       beforeSearchButtons
     const showToolbarRow = hasToolbar || collapsible
 
@@ -510,8 +514,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           </div>
         )}
 
-        {/* Content after border separator */}
-        {contentAfterBorder ? (
+        {/* Content after border separator (e.g. mobile nav); hidden with collapsible header */}
+        {contentAfterBorder && !(collapsible && isCollapsed) ? (
           <div className="min-w-0">{contentAfterBorder}</div>
         ) : null}
 
@@ -584,9 +588,17 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   {beforeRefreshButtons}
                 </div>
               ) : null}
-              {showRefresh ? (
-                <RefreshButton onClick={onRefresh} isRefreshing={isRefreshing} />
-              ) : null}
+              {(showRefresh || afterRefreshButtons) && (
+                <div className="flex shrink-0 items-center gap-1.5 @[640px]:gap-2">
+                  {showRefresh ? (
+                    <RefreshButton
+                      onClick={onRefresh}
+                      isRefreshing={isRefreshing}
+                    />
+                  ) : null}
+                  {afterRefreshButtons}
+                </div>
+              )}
               <TooltipProvider delayDuration={0}>
                 {/* Import Button */}
                 {showImport && (

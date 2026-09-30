@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/onboarding')(
     const canAccess = await canAccessProjectOnboarding(queryClient, projectId)
     if (!canAccess) {
       throw redirect({
-        to: '/projects/$projectId',
+        to: '/projects/$projectId/overview',
         params: { projectId },
         replace: true,
       })

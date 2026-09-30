@@ -14,7 +14,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
-import { Card } from '@/components/ui/card'
+import {
+  AuthFlowDescription,
+  AuthFlowIllustrationCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
 const createResetPasswordSchema = (t: Translator) =>
@@ -34,9 +39,18 @@ interface ResetProps {
   onSubmit: (data: { password: string }) => void
   isLoading?: boolean
   isSuccess?: boolean
+  preview?: boolean
 }
 
-export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
+const illustration = <AuthFlowIllustrationColumn />
+
+export function Reset({
+  onSubmit,
+  isLoading,
+  isSuccess,
+  preview = false,
+}: ResetProps) {
+  const signInTo = preview ? '/debug/sign-in-preview' : '/sign-in'
   const t = useT()
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(createResetPasswordSchema(t)),
@@ -52,110 +66,87 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
 
   if (isSuccess) {
     return (
-      <Card className="overflow-hidden py-0">
-        <div className="grid md:grid-cols-2">
-          <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {t('Password reset')}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'Your password has been successfully reset. You can now sign in with your new password.',
-                  )}
-                </p>
-              </div>
-              <Link to="/sign-in">
-                <Button className="w-full">{t('Sign in')}</Button>
-              </Link>
-            </div>
+      <AuthFlowIllustrationCard illustration={illustration}>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <AuthFlowTitle>{t('Password reset')}</AuthFlowTitle>
+            <AuthFlowDescription>
+              {t(
+                'Your password has been successfully reset. You can now sign in with your new password.',
+              )}
+            </AuthFlowDescription>
           </div>
-          <div className="hidden bg-background md:block min-h-[600px]">
-            <img
-              alt="Image"
-              className="h-full w-full object-cover"
-              height="600"
-              src="/cover.avif"
-              width="600"
-            />
-          </div>
+          <Link to={signInTo}>
+            <Button variant="brandCta" className="w-full">
+              {t('Sign in')}
+            </Button>
+          </Link>
         </div>
-      </Card>
+      </AuthFlowIllustrationCard>
     )
   }
 
   return (
-    <Card className="overflow-hidden py-0">
-      <div className="grid md:grid-cols-2">
-        <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {t('Reset your password')}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {t('Enter your new password below.')}
-                </p>
-              </div>
+    <AuthFlowIllustrationCard illustration={illustration}>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-6"
+        >
+          <div className="space-y-2">
+            <AuthFlowTitle>{t('Reset your password')}</AuthFlowTitle>
+            <AuthFlowDescription>
+              {t('Enter your new password below.')}
+            </AuthFlowDescription>
+          </div>
 
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('New Password')}</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('New Password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('Confirm Password')}</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Confirm Password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {t('Reset password')}
-              </Button>
+          <Button
+            type="submit"
+            variant="brandCta"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {t('Reset password')}
+          </Button>
 
-              <p className="text-center text-sm text-muted-foreground">
-                {t('Remember your password?')}{' '}
-                <Link to="/sign-in" className="link-neutral">
-                  {t('Sign in')}
-                </Link>
-              </p>
-            </form>
-          </Form>
-        </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
-      </div>
-    </Card>
+          <AuthFlowDescription className="text-center">
+            {t('Remember your password?')}{' '}
+            <Link to={signInTo} className="link-neutral">
+              {t('Sign in')}
+            </Link>
+          </AuthFlowDescription>
+        </form>
+      </Form>
+    </AuthFlowIllustrationCard>
   )
 }

@@ -6,7 +6,7 @@ description: Connect any S3-compatible client, SDK, or tool to Appwrite Storage.
 
 Appwrite Storage exposes an S3-compatible API, so you can point the AWS CLI, the AWS SDKs, and third-party tools like rclone or s3cmd at your buckets and files. The API uses AWS Signature Version 4 and maps standard S3 operations onto Appwrite Storage, so most existing S3 code works after you change three settings: the endpoint, the credentials, and the region. Requests can be signed with an `Authorization` header or handed to a client without Appwrite credentials as a [presigned URL](#presigned-urls), including from a [browser](#browser-access).
 
-The S3 API is available on Appwrite Cloud. It needs a project ID and an [API key](/docs/advanced/security/api-keys) with the [storage scopes](#api-key-scopes) described below. It also works alongside your existing data: buckets and files are addressable over both the native Storage API and the S3 API at the same time, with no migration required.
+The S3 API needs a project ID and an [API key](/docs/advanced/security/api-keys) with the [storage scopes](#api-key-scopes) described below. It also works alongside your existing data: buckets and files are addressable over both the native Storage API and the S3 API at the same time, with no migration required.
 
 # Connect an S3 client {% #connect-an-s3-client %}
 

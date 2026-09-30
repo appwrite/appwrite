@@ -17,7 +17,7 @@ defaults:
 jobs:
   qa:
     name: ${{ matrix.id }}
-    runs-on: runs-on=${{ github.run_id }}/runner=snippets-qa
+    runs-on: gcrunner=${{ github.run_id }}-qa-${{ strategy.job-index }}/runner=snippets-qa
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -159,10 +159,21 @@ jobs:
       # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
       # which makes Chrome's sandbox crash on launch ("session not created:
       # Chrome instance exited" from Maestro's ChromeDriver). GitHub-hosted
-      # images ship with the restriction disabled; the RunsOn AMI keeps the
-      # Ubuntu default, so lift it here.
+      # images ship with the restriction disabled; the gcrunner image keeps
+      # the Ubuntu default, so lift it here.
       - name: Allow unprivileged user namespaces (Chrome sandbox)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      # Maestro's ChromeDriver needs a system Chrome; the image ships none.
+      - name: Install Chrome
+        run: |
+          sudo install -dm 755 /etc/apt/keyrings
+          curl -fsSL --retry 5 --retry-all-errors https://dl.google.com/linux/linux_signing_key.pub \
+            | gpg --dearmor | sudo tee /etc/apt/keyrings/google-chrome.gpg > /dev/null
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
+            | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq google-chrome-stable
 
       - name: Check Appwrite variables
         run: |
@@ -217,7 +228,7 @@ jobs:
           cd "$APP_DIR"
           nohup ${{ matrix.dev }} > "$RUNNER_TEMP/devserver.log" 2>&1 &
           echo "Waiting for http://localhost:${{ matrix.port }} ..."
-          for i in $(seq 1 120); do
+          for _ in $(seq 1 120); do
             if curl -fsS -o /dev/null "http://localhost:${{ matrix.port }}"; then
               echo "Dev server is up."
               exit 0

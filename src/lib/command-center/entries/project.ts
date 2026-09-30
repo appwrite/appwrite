@@ -22,13 +22,17 @@ import {
   Settings,
   Users,
   Zap,
+  type LucideIcon,
 } from 'lucide-react'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import {
+  canShowAgentMcpConnectCta,
   canShowConnectSection,
   canShowProjectSettings,
   canSeeUsageNav,
   canSeeActivityNav,
 } from '@/lib/console-access-checks'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -54,7 +58,29 @@ const PROJECT_NAV: CommandEntry[] = [
     icon: LayoutDashboard,
     shortcut: 'G O',
     keywords: ['home', 'dashboard', 'main', 'project'],
-    to: (ctx) => `/projects/${ctx.projectId}`,
+    to: (ctx) => `/projects/${ctx.projectId}/overview`,
+  },
+  {
+    id: 'project.nav.agents',
+    scopes: ['project'],
+    kind: 'navigation',
+    label: 'Agents',
+    description: 'Connect Appwrite MCP to your coding agent',
+    icon: McpIcon as LucideIcon,
+    keywords: [
+      'mcp',
+      'agent',
+      'agents',
+      'cursor',
+      'claude',
+      'codex',
+      'vscode',
+      'connect',
+    ],
+    available: (ctx) =>
+      loadDebugOverrides().showProjectAgents &&
+      canShowAgentMcpConnectCta(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/agents`,
   },
   {
     id: 'project.nav.apps',

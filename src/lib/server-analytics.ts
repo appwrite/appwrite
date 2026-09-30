@@ -3,8 +3,8 @@
  * exports, llms.txt, robots.txt, discovery JSON) that are fetched by LLMs,
  * crawlers, and scripts which never execute the client analytics script.
  *
- * Mirrors the first-party proxy behavior: events are sent to the upstream
- * Plausible /api/event endpoint with the visitor IP and user agent forwarded.
+ * Events are sent to the upstream Plausible /api/event endpoint with the
+ * visitor IP and user agent forwarded.
  * These are all public pages, so the full concrete path of the requested
  * page is reported (e.g. /blog/post/my-post.md), matching client-side
  * tracking for public pages.
@@ -12,10 +12,23 @@
  * Loaded raw by Bun from `server.ts` (not Vite-bundled). Must stay free of
  * Vite-only constructs (`import.meta.env`, `?url` imports, path aliases).
  */
+import {
+  classifyAgentUserAgent,
+  classifyAiReferrer,
+} from './agent-user-agent.ts'
 import { getAnalyticsArea, getAnalyticsSurface } from './analytics-route.ts'
 import { getClientIpFromRequest } from './client-ip.ts'
-import { resolvePlausibleEventUrl } from './plausible-proxy.ts'
 import { readRuntimeConfigFromEnv } from './runtime-config-shared.ts'
+
+const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
+
+function resolvePlausibleEventUrl(scriptSrc: string): string {
+  try {
+    return new URL('/api/event', new URL(scriptSrc).origin).toString()
+  } catch {
+    return `${PLAUSIBLE_ORIGIN_FALLBACK}/api/event`
+  }
+}
 
 export type ServerPageviewFormat = 'markdown' | 'text' | 'json'
 
@@ -61,10 +74,14 @@ export function trackServerPageview(
     const origin = url.origin
     const pathname = url.pathname || '/'
     const format = options.format ?? inferServerPageviewFormat(pathname)
+    const userAgent = request.headers.get('user-agent') || 'Unknown'
+    const referrer = request.headers.get('referer') || null
+    const classified = classifyAgentUserAgent(userAgent)
+    const aiReferrer = classifyAiReferrer(referrer)
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': request.headers.get('user-agent') || 'Unknown',
+      'User-Agent': userAgent,
       'X-Forwarded-For': clientIp,
     }
 
@@ -72,12 +89,15 @@ export function trackServerPageview(
       name: 'pageview',
       url: `${origin}${pathname}`,
       domain: url.hostname,
-      referrer: request.headers.get('referer') || null,
+      referrer,
       props: {
         route: pathname,
         area: getAnalyticsArea(pathname),
         surface: getAnalyticsSurface(pathname),
         format,
+        agent: classified.agent,
+        bot: classified.kind,
+        aiReferrer,
       },
     })
 

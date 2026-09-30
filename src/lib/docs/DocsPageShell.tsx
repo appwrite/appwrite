@@ -13,7 +13,8 @@ import { shouldResetDocsScrollOnPathChange } from '@/lib/docs/docs-scroll'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
 import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
 import { useMarketingSiteLayoutProvided } from '@/lib/marketing/marketing-site-layout-context'
-import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { resetPageSurfaceScroll } from '@/lib/layout/marketing-document-scroll'
 
 type DocsPageShellProps = {
   children: ReactNode
@@ -21,14 +22,7 @@ type DocsPageShellProps = {
 
 function scrollDocsContentToTop() {
   if (typeof document === 'undefined') return
-
-  const main = document.getElementById('main-content')
-  if (main) {
-    main.scrollTo({ top: 0, behavior: 'instant' })
-    return
-  }
-
-  resetConsoleShellDocumentScroll()
+  resetPageSurfaceScroll('instant')
 }
 
 function DocsScrollToTop() {

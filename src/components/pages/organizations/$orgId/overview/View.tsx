@@ -4,7 +4,8 @@ import {
   useNavigate,
   useLocation,
   useSearch,
-  useMatches} from '@tanstack/react-router'
+  useMatches,
+  useRouterState} from '@tanstack/react-router'
 import {
   Plus,
   Folder,
@@ -45,6 +46,7 @@ import {
   organizationScopesQueryOptions,
   organizationProjectScopeQueryOptions,
   activeProjectsQueryOptions,
+  activeProjectsTotalQueryOptions,
   projectsByIdsQueryOptions,
   deleteOrganization,
   organizationMembershipsQueryOptions,
@@ -57,10 +59,12 @@ import {
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
   useOrganizationPlan,
-  useOrganizationFailedInvoicePresence,
+  useBillingPlans,
+  useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
   isPlanUsageLimitReached,
+  isProjectLockedByPlanUsage,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -77,7 +81,12 @@ import {
   reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { resolveAndPrefetchDefaultOrganization, prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import {
+  prefetchOrganizationOverviewData,
+  resolveAndPrefetchDefaultOrganization,
+  resolveFallbackOrganizationIdFromList,
+} from '@/lib/organization-overview-prefetch'
+import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -151,6 +160,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { ConsoleNoOrganizationsScreen } from '@/components/global/auth/ConsoleNoOrganizationsScreen'
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
@@ -161,9 +171,13 @@ import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import {
-  getPlanNameFromTier,
+  getPlanBadgeColor,
+  getPlanBadgeStyle,
+  getPlanDisplayName,
+} from '@/lib/utils/plan-badge'
+import {
+  resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
   type CanonicalPlanId} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
@@ -383,6 +397,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const matches = useMatches()
+  const routerStatus = useRouterState({ select: (s) => s.status })
+  // Pathname updates as soon as navigation starts. OrgOverview renders tab
+  // content itself (child routes return null), so the pending URL would mount
+  // BillingTab before its loader finishes. Keep the last idle path until then.
+  const committedPathnameRef = useRef(location.pathname)
+  if (routerStatus === 'idle') {
+    committedPathnameRef.current = location.pathname
+  }
+  const resolvedPathname = committedPathnameRef.current
   const [searchQuery, setSearchQuery] = useState('')
   const [pinnedDragOverIndex, setPinnedDragOverIndex] = useState<number | null>(
     null,
@@ -393,13 +416,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const leavingOrganizationRef = useRef(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const roleOptions = ROLE_OPTIONS.filter(
+    (role) =>
+      features.orgRoles || role.value === 'owner' || role.value === 'developer',
+  )
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
     useServiceListViewMode('projects')
 
   const { data: failedInvoicePresence } =
-    useOrganizationFailedInvoicePresence(orgId)
+    useOrganizationBillingInvoicePresence(orgId)
   const showFailedInvoiceOrgAlert =
     features.billing && failedInvoicePresence?.hasFailedInvoice === true
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
@@ -537,9 +564,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return null
     }
 
-    // Extract tab from pathname
-    // Pattern: /organizations/:orgId or /organizations/:orgId/:tab
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    // Extract tab from the committed pathname so content stays on the current
+    // tab until the destination route loader has finished.
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
 
     if (orgIndex >= 0) {
@@ -559,11 +586,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname, isDomainDetailRoute, isAppDetailRoute])
+  }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
   // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
   const settingsSubTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
     if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'settings') {
       const subTab = pathParts[orgIndex + 3]
@@ -575,7 +602,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       return 'overview'
     }
     return 'overview'
-  }, [location.pathname])
+  }, [resolvedPathname])
 
   const orgSettingsNavItems = useMemo(() => {
     const allNavItems = [
@@ -906,7 +933,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
     {
       ...organizationsQueryOptions(),
-      placeholderData: keepPreviousData},
+      placeholderData: keepPreviousData,
+    },
   )
 
   const {
@@ -915,10 +943,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     isFetching: organizationDetailFetching,
     isFetched: organizationDetailFetched,
     isError: organizationDetailError,
+    isPlaceholderData: organizationDetailIsPlaceholder,
   } = useQuery({
     ...organizationQueryOptions(orgId),
     placeholderData: keepPreviousData,
   })
+  const { plans: billingPlans } = useBillingPlans()
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -931,15 +961,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         name: string
         total?: number
         billingPlan?: string
+        billingPlanId?: string
         billingPlanDowngrade?: unknown
         tier?: string
         prefs?: Record<string, unknown>
         status?: string
       }) => {
-        const planName = getPlanNameFromTier(
-          org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
-        )
-        const plan = planName as CanonicalPlanId
+        const plan = resolveOrganizationCanonicalPlan({
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
+          tier: (org.prefs as { tier?: string })?.tier ?? org.tier,
+          plans: billingPlans,
+        })
 
         return {
           $id: org.$id,
@@ -949,10 +982,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           plan,
           members: org.total || 0,
           status: org.status,
-          billingPlanDowngrade: org.billingPlanDowngrade}
+          billingPlan: org.billingPlan,
+          billingPlanId: org.billingPlanId,
+          billingPlanDowngrade: org.billingPlanDowngrade,
+        }
       },
     )
-  }, [organizationsData])
+  }, [organizationsData, billingPlans])
 
   // Get selected organization from URL param (orgId)
   const selectedOrg = useMemo(() => {
@@ -964,23 +1000,45 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (fromList) return fromList
     }
     if (organizationDetail && organizationDetail.$id === orgId) {
-      const planName = getPlanNameFromTier(
-        organizationDetail.billingPlan ??
-          (organizationDetail.prefs as { tier?: string })?.tier ??
-          'free',
-      )
+      const plan = resolveOrganizationCanonicalPlan({
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
+        tier: (organizationDetail.prefs as { tier?: string })?.tier,
+        plans: billingPlans,
+      })
       return {
         $id: organizationDetail.$id,
         name: organizationDetail.name,
         slug: organizationDetail.name.toLowerCase().replace(/\s+/g, '-'),
         avatar: undefined,
-        plan: planName as CanonicalPlanId,
+        plan,
         members: organizationDetail.total || 0,
         status: organizationDetail.status,
-        billingPlanDowngrade: organizationDetail.billingPlanDowngrade} satisfies Organization
+        billingPlan: organizationDetail.billingPlan,
+        billingPlanId: (organizationDetail as { billingPlanId?: string })
+          .billingPlanId,
+        billingPlanDowngrade: organizationDetail.billingPlanDowngrade,
+      } satisfies Organization
     }
     return null
-  }, [orgId, organizations, organizationDetail])
+  }, [orgId, organizations, organizationDetail, billingPlans])
+
+  const detailMatchesCurrentOrg = organizationDetail?.$id === orgId
+  const waitingForOrganizationDetail =
+    !!orgId &&
+    !detailMatchesCurrentOrg &&
+    (organizationDetailIsPlaceholder ||
+      organizationDetailLoading ||
+      organizationDetailFetching ||
+      (!organizationDetailFetched && !organizationDetailError))
+
+  const showNoOrganizationsEmptyState =
+    !!orgId &&
+    !organizationsLoading &&
+    !waitingForOrganizationDetail &&
+    !selectedOrg &&
+    organizations.length === 0
 
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
@@ -994,7 +1052,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     !showBudgetLimitAlert &&
     isPlanUsageLimitReached(organizationDetail)
   const showProjectsLockedAlert =
-    showBudgetLimitAlert || showPlanUsageLimitAlert
+    showBudgetLimitAlert ||
+    (features.billing && isProjectLockedByPlanUsage(organizationDetail))
 
   const [orgName, setOrgName] = useState('')
 
@@ -1109,46 +1168,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // If the selected org is not found
     if (!selectedOrg) {
-      // After create/upgrade navigation the list can lag behind the URL. Wait for
-      // the org detail query to settle before treating the org as missing, or we
-      // briefly bounce back to /upgrade (create form flash).
-      const detailMatchesCurrentOrg = organizationDetail?.$id === orgId
-      const waitingForDetail =
-        !detailMatchesCurrentOrg &&
-        (organizationDetailLoading ||
-          organizationDetailFetching ||
-          (!organizationDetailFetched && !organizationDetailError))
-      if (waitingForDetail) return
+      if (waitingForOrganizationDetail) return
 
-      // If there are other organizations, redirect to the first one
-      if (organizations.length > 0) {
+      const fallbackOrgId = resolveFallbackOrganizationIdFromList(
+        organizations,
+        account,
+      )
+      if (fallbackOrgId) {
         navigate({
           to: '/organizations/$orgId',
-          params: { orgId: organizations[0].$id },
+          params: { orgId: fallbackOrgId },
           replace: true})
-      } else if (features.billing) {
-        navigate({ to: '/upgrade', replace: true })
-      } else if (features.multiTenancy && !createOrgDialogOpen) {
-        // No organizations at all, open creation dialog (only if not already open)
-        setCreateOrgDialogOpen(true)
       } else {
-        navigate({ to: '/', replace: true })
+        // No memberships: empty state is rendered below (avoids /, /upgrade, /account loops).
+        return
       }
     }
   }, [
     selectedOrg,
     organizations,
     organizationsLoading,
-    organizationDetail,
-    organizationDetailLoading,
-    organizationDetailFetching,
-    organizationDetailFetched,
-    organizationDetailError,
+    waitingForOrganizationDetail,
     orgId,
     navigate,
-    createOrgDialogOpen,
-    features.billing,
-    features.multiTenancy,
+    account,
   ])
 
   // Mutation to update user prefs when switching organizations
@@ -1157,10 +1200,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const accountPrefs = (
         account as { prefs?: Record<string, unknown> } | null | undefined
       )?.prefs
-      return await updateAccountPrefs({
-        ...accountPrefs,
-        organization: orgId,
-      })
+      return await updateAccountPrefs(
+        {
+          ...accountPrefs,
+          [USER_PREFS_KEY_ORGANIZATION]: orgId,
+        },
+        'organization-switch',
+        { force: true },
+      )
     },
     onMutate: (orgId) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
@@ -1169,7 +1216,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, organization: orgId }}
+                prefs: {
+                  ...current.prefs,
+                  [USER_PREFS_KEY_ORGANIZATION]: orgId,
+                },
+              }
             : current,
       )
       syncConsoleAccountAfterMutation(queryClient)
@@ -1243,8 +1294,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Pins live in org-level team prefs and are shared by every member, so a
   // project-scoped member would otherwise see pinned cards for projects they
-  // cannot open. Filtering here also keeps them out of the exclude list and
-  // the project count.
+  // cannot open. Filtering here also keeps them out of the exclude list.
   const pinnedIds = useMemo(() => {
     if (!restrictToProjectIds) return allPinnedIds
     const allowed = new Set(restrictToProjectIds)
@@ -1260,6 +1310,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
     placeholderData: keepPreviousData})
+
+  const { data: activeProjectsTotalData } = useQuery(
+    activeProjectsTotalQueryOptions(orgTeamId, restrictToProjectIds),
+  )
 
   // Sync page state from URL when it changes (e.g. browser back or initial load)
   useEffect(() => {
@@ -1585,18 +1639,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for plan-limit checks.
-  // The active-projects listing excludes pinned ids, so when no search is
-  // active the unconditional total is just `listing total + pinned count`.
-  // We cache the last value seen while the search box was empty so the
-  // limit check stays accurate when the user starts typing a query (the
-  // listing's total is filtered by the search and would otherwise drift).
+  // Total active projects in the org (API `total`, pinned included) for plan limits.
+  // Cache the last unfiltered total while searching so the limit check does not drift.
   const lastUnfilteredTotalRef = useRef(0)
-  if (!searchQuery && activeProjectsData?.total != null) {
-    lastUnfilteredTotalRef.current = activeProjectsData.total + pinnedIds.length
+  if (!searchQuery && activeProjectsTotalData?.total != null) {
+    lastUnfilteredTotalRef.current = activeProjectsTotalData.total
   }
   const totalProjectsCount = !searchQuery
-    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    ? (activeProjectsTotalData?.total ?? 0)
     : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
@@ -1986,6 +2036,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             '',
           ),
         ),
+        queryClient.ensureQueryData(
+          activeProjectsTotalQueryOptions(nextOrgId, nextProjectScope),
+        ),
         ...projectPages.map((page) =>
           queryClient.ensureQueryData(
             activeProjectsQueryOptions(
@@ -2092,6 +2145,77 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
   }
 
+  if (showNoOrganizationsEmptyState) {
+    const showCreateOrganization = supportsMultiTenancy
+    return (
+      <>
+        <ConsoleLayout
+          header={{
+            onCommandCenterOpen: openOrgCommandCenter,
+            onCreateOrganization: showCreateOrganization
+              ? handleOpenCreateOrganization
+              : undefined,
+          }}
+          showFooter
+          containerClassName="org-layout-container"
+        >
+          <ConsoleNoOrganizationsScreen
+            actions={
+              showCreateOrganization ? (
+                <Button
+                  type="button"
+                  className="h-9 text-[13px]"
+                  onClick={handleOpenCreateOrganization}
+                  {...analyticsAttrs('create-organization')}
+                >
+                  {t('Create organization')}
+                </Button>
+              ) : undefined
+            }
+          />
+        </ConsoleLayout>
+        <CommandCenter
+          open={commandCenterOpen}
+          onOpenChange={(open) => {
+            setCommandCenterOpen(open)
+            if (!open) setCommandCenterInitialSubPage(null)
+          }}
+          context="org"
+          onOrgNavigate={handleOrgNavigate}
+          initialSubPage={commandCenterInitialSubPage}
+          onInitialSubPageConsumed={() => setCommandCenterInitialSubPage(null)}
+          orgId={orgId}
+        />
+        {showCreateOrganization && !features.billing && (
+          <CreateOrganizationDialog
+            open={createOrgDialogOpen}
+            onOpenChange={setCreateOrgDialogOpen}
+            onCreate={async (orgData) => {
+              try {
+                const newOrg = await createOrgMutation.mutateAsync(orgData)
+                if (isPaymentAuthentication(newOrg)) {
+                  throw new Error(t('Payment authentication is required'))
+                }
+                toast.success(t('Organization created successfully'))
+                setCreateOrgDialogOpen(false)
+                navigate({
+                  to: '/organizations/$orgId',
+                  params: { orgId: newOrg.$id },
+                  replace: true,
+                })
+              } catch (error: unknown) {
+                toast.error(
+                  getErrorMessage(error, t('Failed to create organization')),
+                )
+              }
+            }}
+            isLoading={createOrgMutation.isPending}
+          />
+        )}
+      </>
+    )
+  }
+
   return (
     <>
       <ConsoleLayout
@@ -2138,6 +2262,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 : getPlanBadgeColor(selectedOrg.plan),
                             )}
+                            style={
+                              selectedOrg.billingPlanDowngrade
+                                ? undefined
+                                : getPlanBadgeStyle(selectedOrg.plan)
+                            }
                           >
                             {selectedOrg.billingPlanDowngrade
                               ? t('Downgraded')
@@ -2180,6 +2309,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                         : getPlanBadgeColor(org.plan),
                                     )}
+                                    style={
+                                      org.billingPlanDowngrade
+                                        ? undefined
+                                        : getPlanBadgeStyle(org.plan)
+                                    }
                                   >
                                     {org.billingPlanDowngrade
                                       ? t('Downgraded')
@@ -3406,11 +3540,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                           {t('Member')}
                                         </TableHead>
-                                        {features.orgRoles && (
-                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                            {t('Role')}
-                                          </TableHead>
-                                        )}
+                                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                          {t('Role')}
+                                        </TableHead>
                                         {supportsProjectRoles && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden md:table-cell">
                                             {t('Projects')}
@@ -3532,24 +3664,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </div>
                                               </div>
                                             </TableCell>
-                                            {features.orgRoles && (
-                                              <TableCell className="px-4 py-3">
-                                                <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
-                                                  {isProjectScoped ? (
-                                                    // Roles are per project for
-                                                    // this member; the Projects
-                                                    // cell names them.
-                                                    <span className="text-[12px] text-muted-foreground">
-                                                      {t('Per project')}
-                                                    </span>
-                                                  ) : (
-                                                    <OrgRoleBadge
-                                                      role={member.role}
-                                                    />
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            )}
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
+                                                {isProjectScoped ? (
+                                                  // Roles are per project for
+                                                  // this member; the Projects
+                                                  // cell names them.
+                                                  <span className="text-[12px] text-muted-foreground">
+                                                    {t('Per project')}
+                                                  </span>
+                                                ) : (
+                                                  <OrgRoleBadge
+                                                    role={member.role}
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
                                             {supportsProjectRoles && (
                                               <TableCell className="px-4 py-3 hidden md:table-cell">
                                                 <div className="flex items-center justify-center">
@@ -4376,7 +4506,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 ) => setSelectedRole(value)}
                 className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
               >
-                {ROLE_OPTIONS.map((role) => {
+                {roleOptions.map((role) => {
                   const Icon = role.icon
                   const isSelected = selectedRole === role.value
                   return (
@@ -4447,6 +4577,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 if (!selectedMember || updateRoleMutation.isPending) return true
                 if (supportsProjectRoles && editAccessType === 'specific') {
                   return !editProjectAccess.some((row) => row.projectId)
+                }
+                if (!roleOptions.some((role) => role.value === selectedRole)) {
+                  return true
                 }
                 // Moving a project-scoped member back to org-wide is a real
                 // change even when the org role itself looks unchanged.

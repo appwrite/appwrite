@@ -12,6 +12,8 @@ import { ProjectListCardActionsMenu } from './ProjectListCardActionsMenu'
 import { useT } from '@/lib/i18n/translate'
 import { ProjectListName } from './ProjectListName'
 import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
+import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
+import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 
 type ProjectListCardMainProps = {
   project: ProjectListItem
@@ -32,7 +34,9 @@ export function ProjectListCardMain({
     !!project.region &&
     project.region !== 'unknown'
   const showLockedBadge = budgetLimitReached
-  const showPausedBadge = !showLockedBadge && !!project.paused
+  const showBlockedBadge = !showLockedBadge && !!project.blocked
+  const showPausedBadge =
+    !showLockedBadge && !showBlockedBadge && !!project.paused
 
   return (
     <div className="min-w-0 overflow-hidden">
@@ -46,6 +50,7 @@ export function ProjectListCardMain({
             {t('Locked')}
           </Badge>
         ) : null}
+        {showBlockedBadge ? <ProjectBlockedBadge show /> : null}
         {showPausedBadge ? (
           <Badge
             variant="error"
@@ -59,6 +64,13 @@ export function ProjectListCardMain({
           <div className="pointer-events-auto flex shrink-0 items-center">
             {failedInvoiceWarning}
           </div>
+        ) : null}
+        {/* Last in the row so it can appear late without shifting anything. */}
+        {!showLockedBadge && !showBlockedBadge && !showPausedBadge ? (
+          <TerraformIndicator
+            projectId={project.$id}
+            className="pointer-events-auto relative z-10"
+          />
         ) : null}
       </div>
       {showRegion ? (

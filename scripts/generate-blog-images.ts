@@ -205,6 +205,7 @@ async function generateAnnouncingBitbucketSupportCover(
 }
 
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
+  'announcing-sites-dynamic-api-keys': convertCoverSourceToAvif,
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'announcing-appwrite-domains': convertCoverSourceToAvif,
@@ -213,6 +214,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'turn-your-app-into-an-mcp-server': generateMcpServerOauth2Images,
   'announcing-appwrite-2': generateAnnouncingAppwrite2Cover,
   'announcing-console-iv': convertCoverSourceToAvif,
+  'build-support-chatbot-vectorsdb': convertCoverSourceToAvif,
 }
 
 async function main() {

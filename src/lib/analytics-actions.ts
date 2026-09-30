@@ -17,7 +17,9 @@ export const ANALYTICS_ACTIONS = {
   'sidebar-collapse': 'Sidebar Collapse Clicked',
   'database-admin-nav-collapse': 'Database Admin Nav Collapse Clicked',
   'connect-project': 'Connect Project Clicked',
+  'connect-agent-mcp-cta': 'Connect Agent MCP CTA Clicked',
   'copy-connect-sdk-prompt': 'Connect SDK Prompt Copied',
+  'copy-connect-agent-mcp-prompt': 'Connect Agent MCP Prompt Copied',
   'header-create-menu': 'Header Create Menu Clicked',
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
@@ -27,7 +29,6 @@ export const ANALYTICS_ACTIONS = {
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
   'header-console': 'Header Console Clicked',
-  'header-old-console': 'Header Old Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
   'create-affiliate-link': 'Create Affiliate Link Clicked',
@@ -75,6 +76,7 @@ export const ANALYTICS_ACTIONS = {
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
   'home-pricing-start-free': 'Home Pricing Start Free Clicked',
+  'home-pricing-start-start': 'Home Pricing Start Start Clicked',
   'home-pricing-start-pro': 'Home Pricing Start Pro Clicked',
   'home-pricing-contact-enterprise': 'Home Pricing Contact Enterprise Clicked',
   'product-start-building': 'Product Start Building Clicked',
@@ -88,18 +90,28 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'feedback-github-issue': 'Feedback GitHub Issue Clicked',
+  'feedback-customer-story-submit': 'Feedback Customer Story Submit Clicked',
   'partners-become': 'Become Partner Clicked',
   'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
+  'mcp-connect': 'MCP Connect Clicked',
+  'skills-install': 'Skills Install Clicked',
+  'for-agents-install-skills': 'For Agents Install Skills Clicked',
+  'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
+  'for-agents-view-docs': 'For Agents View Docs Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
+  'pricing-start-start': 'Pricing Start Start Clicked',
   'pricing-start-pro': 'Pricing Start Pro Clicked',
   'pricing-contact-enterprise': 'Pricing Contact Enterprise Clicked',
   'pricing-promo-start-free': 'Pricing Promo Start Free Clicked',
+  'pricing-promo-start-start': 'Pricing Promo Start Start Clicked',
   'pricing-promo-start-pro': 'Pricing Promo Start Pro Clicked',
   'pricing-promo-contact-enterprise': 'Pricing Promo Contact Enterprise Clicked',
   'pricing-compare-start-free': 'Pricing Compare Start Free Clicked',
+  'pricing-compare-start-start': 'Pricing Compare Start Start Clicked',
   'pricing-compare-start-pro': 'Pricing Compare Start Pro Clicked',
   'pricing-compare-contact-enterprise': 'Pricing Compare Contact Enterprise Clicked',
 
@@ -112,6 +124,7 @@ export const ANALYTICS_ACTIONS = {
   // Upgrade / change-plan wizard
   'billing-change-plan': 'Billing Change Plan Clicked',
   'upgrade-select-free': 'Upgrade Select Free Clicked',
+  'upgrade-select-start': 'Upgrade Select Start Clicked',
   'upgrade-select-pro': 'Upgrade Select Pro Clicked',
   'upgrade-select-scale': 'Upgrade Select Scale Clicked',
   'upgrade-select-enterprise': 'Upgrade Select Enterprise Clicked',
@@ -129,6 +142,7 @@ export const ANALYTICS_ACTIONS = {
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
   'nav-sidebar-apps': 'Sidebar Apps Clicked',
+  'nav-sidebar-agents': 'Sidebar Agents Clicked',
   'nav-sidebar-api-keys': 'Sidebar API Keys Clicked',
   'nav-sidebar-explorer': 'Sidebar Explorer Clicked',
   'nav-sidebar-auth': 'Sidebar Auth Clicked',
@@ -193,12 +207,32 @@ export const ANALYTICS_ACTIONS = {
   'docs-nav-advanced': 'Docs Advanced Nav Clicked',
   'docs-nav-partners': 'Docs Partners Nav Clicked',
 
+  // Project settings
+  'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
+  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
+
+  // Messaging
+  'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+
   // Resource creation
   'create-project': 'Create Project Clicked',
   'create-organization': 'Create Organization Clicked',
   'create-database': 'Create Database Clicked',
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
+  'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
+  'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'native-oauth-promo-banner-open-settings':
+    'Native OAuth Promo Banner Open Settings Clicked',
+  'native-oauth-promo-banner-learn-more':
+    'Native OAuth Promo Banner Learn More Clicked',
+  'firewall-promo-banner-learn-more':
+    'Firewall Promo Banner Learn More Clicked',
+  'firewall-promo-banner-open-firewall':
+    'Firewall Promo Banner Open Firewall Clicked',
+  'firewall-promo-banner-skip': 'Firewall Promo Banner Skip Clicked',
+  'firewall-promo-banner-sound': 'Firewall Promo Banner Sound Toggled',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
@@ -240,6 +274,7 @@ export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS
 const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   overview: 'nav-sidebar-overview',
   apps: 'nav-sidebar-apps',
+  agents: 'nav-sidebar-agents',
   'api-keys': 'nav-sidebar-api-keys',
   explorer: 'nav-sidebar-explorer',
   auth: 'nav-sidebar-auth',
@@ -287,6 +322,7 @@ const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
 
 const PRICING_PLAN_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
   free: 'pricing-start-free',
+  start: 'pricing-start-start',
   pro: 'pricing-start-pro',
   enterprise: 'pricing-contact-enterprise',
 }
@@ -294,6 +330,8 @@ const PRICING_PLAN_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
 const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   free: 'upgrade-select-free',
   'tier-0': 'upgrade-select-free',
+  start: 'upgrade-select-start',
+  'tier-1-1': 'upgrade-select-start',
   pro: 'upgrade-select-pro',
   'tier-1': 'upgrade-select-pro',
   scale: 'upgrade-select-scale',

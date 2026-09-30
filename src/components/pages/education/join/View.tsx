@@ -2,23 +2,31 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { AppwriteException, type Models } from '@appwrite.io/console'
-import { Loader2 } from 'lucide-react'
-import { AuthAccountChip } from '@/components/global/auth/AuthAccountChip'
+import { Loader2, TriangleAlert } from 'lucide-react'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+  authFlowMetaClassName,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { EducationJoinPartnerHeader } from '@/components/pages/education/join/EducationJoinPartnerHeader'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { useAnalytics } from '@/hooks/use-analytics'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { GitHubIcon } from '@/lib/vcs/providers'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import {
-  addToStudentMailingList,
   connectGithubForStudentProgram,
   hasGithubIdentity,
   joinGithubStudentProgram,
   rememberEducationOrganization,
 } from '@/lib/education/program'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
@@ -27,6 +35,7 @@ import {
 } from '@/lib/react-query/hooks/organizations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { GitHubIcon } from '@/lib/vcs/providers'
 
 type EnrollmentError = {
   title: string
@@ -69,7 +78,6 @@ export function View() {
       // navigation must never turn it into a failed enrollment or a second POST.
       setIsOpeningOrganization(true)
       track('Resource Created', { resource: 'education-membership' })
-      addToStudentMailingList(account)
       // Seed the returned organization, as in the organization creation wizard,
       // so the destination loader does not wait for a redundant list refresh.
       const organizationOptions: ReturnType<typeof organizationQueryOptions> = {
@@ -196,36 +204,40 @@ export function View() {
       : null)
 
   return (
-    <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
-        <div className="my-auto w-full min-w-0 max-w-md">
-          <div className="w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card/50 p-6 md:p-8">
+    <AuthFlowShell
+      width="narrow"
+      accountSwitcher={
+        accountLabel ? (
+          <AuthFlowAccountSwitcher accountLabel={accountLabel} />
+        ) : null
+      }
+    >
+      <AuthFlowNarrowCard>
             {visibleError ? (
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    {visibleError.title}
-                  </h1>
-                  <p className="text-muted-foreground text-[13px] leading-relaxed">
-                    {visibleError.description}
-                  </p>
-                  {accountLabel ? (
-                    <div className="break-words">
-                      <AuthAccountChip accountLabel={accountLabel} />
-                    </div>
-                  ) : null}
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <AuthFlowHeaderIcon icon={TriangleAlert} variant="destructive" />
+                  <div className="space-y-2">
+                    <AuthFlowTitle>{visibleError.title}</AuthFlowTitle>
+                    <AuthFlowDescription>
+                      {visibleError.description}
+                    </AuthFlowDescription>
+                  </div>
                 </div>
                 {error?.recovery === 'connect' ? (
                   <Button
+                    variant="brandCta"
                     className="w-full"
                     onClick={() => void handleConnectGithub()}
                     disabled={isRedirectingToGithub}
                     {...analyticsAttrs('education-connect-github')}
                   >
+                    <GitHubIcon className="size-4 shrink-0" />
                     {t('Connect GitHub')}
                   </Button>
                 ) : error?.recovery === 'retry' || identitiesQuery.isError ? (
                   <Button
+                    variant="brandCta"
                     className="w-full"
                     onClick={() => {
                       if (identitiesQuery.isError) {
@@ -251,52 +263,43 @@ export function View() {
               isCheckingIdentities ||
               isEnrolling ||
               needsEmailVerification ? (
-              <div className="space-y-4 py-4 text-center">
-                <Loader2 className="text-muted-foreground mx-auto h-8 w-8 animate-spin" />
-                <p className="text-muted-foreground text-[13px] leading-relaxed">
+              <div className="flex flex-col items-center gap-4 py-8 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground motion-reduce:animate-none" />
+                <AuthFlowDescription>
                   {isEnrolling
                     ? t('Setting up your Education plan organization...')
                     : t('Checking your account...')}
-                </p>
+                </AuthFlowDescription>
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex items-center justify-center gap-4">
-                  <img
-                    src="/assets/logomark/logo.svg"
-                    alt="Appwrite"
-                    className="h-6 w-auto"
-                  />
-                  <div className="bg-border h-6 w-px" aria-hidden />
-                  <GitHubIcon className="h-6 w-6" />
-                </div>
-                <div className="space-y-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <EducationJoinPartnerHeader />
+                  <div className="space-y-2">
+                  <AuthFlowTitle>
                     {t('Join the Appwrite Education Program')}
-                  </h1>
-                  <p className="text-muted-foreground text-[13px] leading-relaxed">
+                  </AuthFlowTitle>
+                  <AuthFlowDescription>
                     {t(
                       'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.',
                     )}
-                  </p>
-                  {accountLabel ? (
-                    <div className="break-words">
-                      <AuthAccountChip accountLabel={accountLabel} />
-                    </div>
-                  ) : null}
+                  </AuthFlowDescription>
+                  </div>
                 </div>
                 <Button
+                  variant="brandCta"
                   className="w-full"
                   onClick={() => void handleConnectGithub()}
                   disabled={isRedirectingToGithub}
                   {...analyticsAttrs('education-connect-github')}
                 >
+                  <GitHubIcon className="size-4 shrink-0" />
                   {isAuthenticated
                     ? t('Connect GitHub')
                     : t('Sign up with GitHub')}
                 </Button>
                 {!isAuthenticated ? (
-                  <p className="text-muted-foreground text-center text-xs">
+                  <p className={cn(authFlowMetaClassName, 'text-center')}>
                     {t('Already have an account?')}{' '}
                     <Link
                       className="link-neutral"
@@ -308,34 +311,21 @@ export function View() {
                   </p>
                 ) : null}
                 {search.status === 'failure' ? (
-                  <p className="text-muted-foreground text-[13px] leading-relaxed">
+                  <AuthFlowDescription>
                     {t(
                       'GitHub did not complete the sign in. Try again to join the program.',
                     )}
-                  </p>
+                  </AuthFlowDescription>
                 ) : null}
-                <p className="text-muted-foreground text-center text-xs">
+                <p className={cn(authFlowMetaClassName, 'text-center')}>
                   <MarketingSiteLink className="link-neutral" href="/education">
                     {t('Read about the program')}
                   </MarketingSiteLink>
                 </p>
               </div>
             )}
-          </div>
-          <p className="text-muted-foreground mt-6 text-center text-xs">
-            {t('By continuing, you agree to our')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/terms">
-              {t('Terms of Service')}
-            </MarketingSiteLink>{' '}
-            {t('and')}{' '}
-            <MarketingSiteLink className="link-neutral" href="/privacy">
-              {t('Privacy Policy')}
-            </MarketingSiteLink>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+      </AuthFlowNarrowCard>
+    </AuthFlowShell>
   )
 }
 

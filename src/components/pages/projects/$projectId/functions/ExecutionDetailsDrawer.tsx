@@ -7,6 +7,7 @@ import {
   Search,
   Link2,
   FileJson,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +16,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FixWithAgentDropdown } from '@/components/global/shared/FixWithAgentDropdown'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import {
   Accordion,
   AccordionContent,
@@ -43,11 +45,15 @@ import { getExecutionStatusBadge, getStatusCodeBadge } from './Executions'
 import {
   fetchFunctionExecution,
   fetchSiteLog,
+  useDeleteFunctionExecution,
+  useDeleteSiteLog,
 } from '@/lib/react-query/hooks'
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import { generateExecutionAIFixPrompt } from '@/lib/execution-ai-fix-prompt'
 import type { ExecutionRowContextMenuVariant } from '@/components/global/shared/ExecutionRowContextMenu'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 
 interface ExecutionDetailsDrawerProps {
@@ -57,6 +63,7 @@ interface ExecutionDetailsDrawerProps {
   executions: Models.Execution[]
   func: Models.Function | null
   onNavigate: (executionId: string) => void
+  onDeleted?: (executionId: string) => void
   projectId?: string
   resourceVariant?: ExecutionRowContextMenuVariant
   resourceId?: string
@@ -213,11 +220,13 @@ export function ExecutionDetailsDrawer({
   executions,
   func,
   onNavigate,
+  onDeleted,
   projectId,
   resourceVariant,
   resourceId,
 }: ExecutionDetailsDrawerProps) {
   const t = useT()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedJson, setCopiedJson] = useState(false)
@@ -233,6 +242,18 @@ export function ExecutionDetailsDrawer({
   const [logsSearch, setLogsSearch] = useState('')
   const [errorsSearch, setErrorsSearch] = useState('')
   const [bodySearch, setBodySearch] = useState('')
+
+  const deleteFunctionMutation = useDeleteFunctionExecution(
+    resourceVariant === 'function' ? projectId : null,
+    resourceVariant === 'function' ? resourceId : null,
+  )
+  const deleteSiteLogMutation = useDeleteSiteLog(
+    resourceVariant === 'site' ? projectId : null,
+    resourceVariant === 'site' ? resourceId : null,
+  )
+  const deleteMutation =
+    resourceVariant === 'site' ? deleteSiteLogMutation : deleteFunctionMutation
+  const canDelete = Boolean(projectId && resourceVariant && resourceId)
 
   // Find current execution index
   const currentIndex = useMemo(() => {
@@ -442,6 +463,31 @@ export function ExecutionDetailsDrawer({
     setTimeout(() => setCopiedErrors(false), 2000)
   }
 
+  const handleConfirmDelete = () => {
+    if (!execution) return
+    const executionId = execution.$id
+    setDeleteDialogOpen(false)
+    deleteMutation.mutate(executionId, {
+      onSuccess: () => {
+        toast.success(
+          resourceVariant === 'site'
+            ? t('Log deleted')
+            : t('Execution deleted'),
+        )
+        onOpenChange(false)
+        onDeleted?.(executionId)
+      },
+      onError: (error: Error) => {
+        toast.error(
+          getErrorMessage(error) ||
+            (resourceVariant === 'site'
+              ? t('Failed to delete log')
+              : t('Failed to delete execution')),
+        )
+      },
+    })
+  }
+
   // Format duration
   const durationDisplay =
     execution.status === 'processing' || execution.status === 'waiting'
@@ -451,6 +497,7 @@ export function ExecutionDetailsDrawer({
         : 'N/A'
 
   return (
+    <>
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
@@ -523,6 +570,26 @@ export function ExecutionDetailsDrawer({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {canDelete ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 cursor-pointer"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('Delete')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
         </>
       }
     >
@@ -1134,5 +1201,26 @@ export function ExecutionDetailsDrawer({
         </ScrollArea>
       </>
     </BaseDrawer>
+    <ConfirmActionDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title={resourceVariant === 'site' ? 'Delete log' : 'Delete execution'}
+      description={
+        resourceVariant === 'site'
+          ? t(
+              'Are you sure you want to delete this log? This action cannot be undone.',
+            )
+          : t(
+              'Are you sure you want to delete this execution? This action cannot be undone.',
+            )
+      }
+      confirmLabel="Delete"
+      confirmVariant="destructive"
+      onConfirm={handleConfirmDelete}
+      isConfirming={deleteMutation.isPending}
+      contentClassName="z-[130]"
+      overlayClassName="z-[130]"
+    />
+    </>
   )
 }

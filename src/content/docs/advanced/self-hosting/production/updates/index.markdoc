@@ -14,19 +14,37 @@ If you're trying to migrate to a newer minor version, you should upgrade to each
 1. `1.6.2`
 1. `1.7.4`
 
+Recent versions share a migration and can skip minor versions. The [latest upgrade section](#upgrading-to-latest) names the oldest version that upgrades to the current release in one step. From an older version, upgrade to that version first.
+
 Before upgrading, be sure to:
 
 1. [back up your server](/docs/advanced/self-hosting/production/backups) data before running the migration
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.0.0 {% #upgrading-to-2 %}
+# Upgrading to 2.3.0 {% #upgrading-to-latest %}
 
-Appwrite 2.0.0 requires a migration. Upgrade to `1.9.6` first, then to `2.0.0`.
+Appwrite 2.3.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.3.0` tag, then run the migration.
 
-Your existing database stays as it is. The database you installed with, whether MariaDB, MongoDB, or PostgreSQL, is the database you keep. PostgreSQL is the default for new installations only, and upgrading does not move your data onto it.
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:2.3.0
+```
 
-The upgrade also keeps the [worker topology](/docs/advanced/self-hosting/configuration/topologies) of your existing installation. Appwrite reads the topology from your Compose file and writes the new one to match. To change the topology at the same time, pass `--topology=combined` or `--topology=separate` to the upgrade command.
+Then run the migration from the `appwrite` directory.
+
+```sh
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+The migration drops the `devKeys` collection and project attribute from the console database, removes the dev key scopes from API keys, functions and sites, and in every project adds `providerIdToken` to `identities` and a `passwordPwned` attribute and index to `users`, restoring any missing email metadata attributes on the way. Its run time grows with the number of projects. The upgraded compose file adds an `appwrite-mqtt` container and has Traefik publish ports 8883 and 8084; set `_APP_MQTT_PORT` and `_APP_MQTT_WSS_PORT` in `.env` if those are taken. Remove `_APP_CONSOLE_URL_SCHEME` from your `.env`, and set `_APP_CONSOLE_URL` if your console is served from a different host than the API. To roll back to 2.2.0, stop the workers and let queued jobs drain first, since the older queue client can't recover jobs the new one has reserved. **Back up your data first.**
+
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0).
 
 # Installing the next version {% #install-next-version %}
 
@@ -45,7 +63,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.0.0`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.3.0`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix

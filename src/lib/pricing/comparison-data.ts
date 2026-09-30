@@ -99,6 +99,12 @@ export const comparisonTables: ComparisonTable[] = [
                     free: 'Not needed',
                     pro: true,
                     enterprise: true
+                },
+                {
+                    title: 'Pay as you go',
+                    free: '-',
+                    pro: true,
+                    enterprise: true
                 }
             ]
         },
@@ -107,8 +113,8 @@ export const comparisonTables: ComparisonTable[] = [
             rows: [
                 {
                     title: 'Users',
-                    free: '75,000 monthly active users',
-                    pro: '200,000 monthly active users',
+                    free: '75K MAU',
+                    pro: '200K MAU',
                     enterprise: 'Custom'
                 },
                 {
@@ -236,14 +242,14 @@ export const comparisonTables: ComparisonTable[] = [
                 {
                     title: 'Additional embedding tokens',
                     free: '-',
-                    pro: 'From $0.05 per 1M tokens',
+                    pro: 'From $0.05/1M',
                     enterprise: 'Custom',
                     info: 'nomic-embed-text is $0.10 per 1M tokens and all-minilm is $0.05 per 1M tokens, billed per started million above the plan allowance.'
                 },
                 {
                     title: 'Dedicated databases',
                     free: '-',
-                    pro: 'Compute tiers from $10/mo',
+                    pro: 'From $10/mo',
                     enterprise: 'Custom',
                     info: 'Fixed monthly compute tiers with reserved CPU, memory, and connections. See Database pricing for tier details and add-ons.'
                 }
@@ -469,6 +475,40 @@ export const comparisonTables: ComparisonTable[] = [
             ]
         },
         {
+            title: 'Domains',
+            rows: [
+                {
+                    title: 'Domains per organization',
+                    info: 'Limit for Appwrite-registered, transferred, and external domains with Appwrite DNS in an organization.',
+                    free: '1',
+                    pro: '50',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Domain registration',
+                    info: 'Register or transfer domains through Appwrite at registry pricing. Quotes appear before checkout.',
+                    free: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    },
+                    pro: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    },
+                    enterprise: {
+                        text: 'View pricing',
+                        href: '/docs/products/domains/pricing'
+                    }
+                },
+                {
+                    title: 'Appwrite DNS',
+                    free: true,
+                    pro: true,
+                    enterprise: true
+                }
+            ]
+        },
+        {
             title: 'Network',
             rows: [
                 {
@@ -529,7 +569,7 @@ export const comparisonTables: ComparisonTable[] = [
                 {
                     title: 'SOC-2, HIPAA, and BAA',
                     free: '-',
-                    pro: '-',
+                    pro: 'Add-on',
                     enterprise: true
                 },
                 {

@@ -445,7 +445,7 @@ export function ApiReferenceSectionSubnavPanel({
   return (
     <aside
       className={cn(
-        'relative z-10 hidden h-full shrink-0 flex-col overflow-hidden border-e border-border bg-background',
+        'relative z-10 hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-e border-border bg-background',
         SECONDARY_SIDEBAR_WIDTH_CLASS,
         REFERENCE_SECTION_SUBNAV_DESKTOP_CLASS,
       )}

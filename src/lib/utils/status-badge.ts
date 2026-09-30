@@ -88,9 +88,41 @@ export type InvoiceStatus =
   | 'pending'
   | 'due'
   | 'overdue'
-  | 'failed'
-  | 'cancelled'
-  | 'requires_authentication'
+    | 'failed'
+    | 'cancelled'
+    | 'abandoned'
+    | 'requires_authentication'
+
+/**
+ * Map billing API invoice status strings to UI statuses.
+ * Unknown values stay pending so we do not invent a terminal state.
+ */
+export function mapInvoiceApiStatus(
+  apiStatus: string | null | undefined,
+): InvoiceStatus {
+  switch (apiStatus?.toLowerCase() || '') {
+    case 'succeeded':
+    case 'paid':
+      return 'paid'
+    case 'requires_authentication':
+    case 'requires_action':
+      return 'requires_authentication'
+    case 'failed':
+      return 'failed'
+    case 'cancelled':
+    case 'canceled':
+      return 'cancelled'
+    case 'abandoned':
+      return 'abandoned'
+    case 'due':
+      return 'due'
+    case 'overdue':
+      return 'overdue'
+    case 'pending':
+    default:
+      return 'pending'
+  }
+}
 
 /**
  * Get invoice status badge color classes
@@ -107,6 +139,7 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
     case 'failed':
       return 'bg-red-500/10 text-red-600 dark:text-red-400'
     case 'cancelled':
+    case 'abandoned':
       return 'bg-muted text-muted-foreground'
     default:
       return 'bg-muted text-muted-foreground'
@@ -133,6 +166,7 @@ export function getInvoiceStatusBadgeVariant(
     case 'failed':
       return 'error'
     case 'cancelled':
+    case 'abandoned':
       return 'info'
     default:
       return 'info'
@@ -156,6 +190,8 @@ export function getPlanBadgeColor(plan: PlanType): string {
     case 'pro':
     case 'education':
       return 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-300'
+    case 'start':
+      return 'bg-orange-500/10 text-orange-700 dark:text-orange-300'
     case 'free':
     default:
       return 'bg-muted text-muted-foreground'

@@ -128,11 +128,11 @@ Extended thinking, Projects, and prompt caching address different layers of the 
 
 For extended thinking and prompt caching, the [Anthropic documentation](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking) has complete implementation details and model-specific notes worth reading before you ship anything to production.
 
-If you want to go further and connect Claude directly to a live backend, the [Appwrite MCP server](/docs/tooling/mcp) lets Claude interact with your Appwrite project through natural language in Claude Code or Claude Desktop. You can create users, query tables, manage files, and trigger functions without writing a single line of glue code. It's a practical way to bring agentic workflows into a real application stack.
+If you want to go further and connect Claude directly to a live backend, the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) lets Claude interact with your Appwrite project through natural language in Claude Code or Claude Desktop. You can create users, query tables, manage files, and trigger functions without writing a single line of glue code. It's a practical way to bring agentic workflows into a real application stack.
 
 # More resources
 
-- [Appwrite MCP server documentation](/docs/tooling/mcp)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
 - [What is MCP and why is it trending?](/blog/post/what-is-mcp)
 - [Build AI-powered applications with Appwrite](/docs/products/ai)
 - [Exploring AI and vibe coding: Insights from the Appwrite developer community](/blog/post/ai-vibe-coding-insights)

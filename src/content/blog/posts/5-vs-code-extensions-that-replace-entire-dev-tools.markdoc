@@ -17,7 +17,7 @@ faqs:
   - question: "Will too many VS Code extensions slow down the editor?"
     answer: "Yes, each extension consumes memory and can contribute to startup time. VS Code has a built-in profiler (`Help > Show Running Extensions`) that shows which ones cost you the most. Disable per-workspace what you do not need, and uninstall extensions you no longer use."
   - question: "Is there a VS Code extension for Appwrite?"
-    answer: "You can connect VS Code to Appwrite via the [Appwrite CLI](/docs/tooling/command-line) for deploying and managing functions, or through the [Appwrite MCP server](/docs/tooling/mcp/api) if you use an MCP-compatible AI assistant inside the editor. Both let you operate on your Appwrite project without leaving VS Code."
+    answer: "You can connect VS Code to Appwrite via the [Appwrite CLI](/docs/tooling/command-line) for deploying and managing functions, or through the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) if you use an MCP-compatible AI assistant inside the editor. Both let you operate on your Appwrite project without leaving VS Code."
   - question: "What does GitDoc actually do differently from a normal Git workflow?"
     answer: "GitDoc auto-commits on save, similar to Google Docs version history. By default it only commits when your code is error-free, so you do not preserve broken states. It is most useful for docs, notes, or solo feature work where you want a fine-grained timeline without crafting commit messages."
   - question: "Are these extensions worth using if I already have paid tools?"

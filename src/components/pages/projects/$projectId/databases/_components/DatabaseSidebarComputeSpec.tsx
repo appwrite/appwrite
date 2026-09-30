@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/tooltip'
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
-import { dbNavLink, isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
+import { dbNavLink } from '@/lib/database-routes'
 import {
   formatDatabaseSpecDisplayTooltip,
   getEffectiveDatabaseSpecIdForMonitoring,
@@ -89,12 +89,6 @@ function getNextLockedSpec(
   return specs.slice(start).find((spec) => spec.comingSoon === true)
 }
 
-function isDedicatedDbFeatureEnabled(
-  _dbKind: DatabaseRouteKind | undefined,
-): boolean {
-  return isCloudDedicatedDatabasesEnabled()
-}
-
 export function DatabaseSidebarComputeSpec({
   projectId,
   databaseId,
@@ -132,9 +126,8 @@ export function DatabaseSidebarComputeSpec({
     projectId,
     mode === 'mysql' ? databaseId : null,
   )
-  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
-    projectId,
-  )
+  const { databases: dedicatedDatabases } =
+    useProjectDedicatedDatabases(projectId)
 
   const specs = useMemo(
     () =>
@@ -179,8 +172,8 @@ export function DatabaseSidebarComputeSpec({
       const specTooltip =
         displayParts.variant === 'serverless'
           ? t('Serverless')
-          : formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
-            t('Compute tier')
+          : (formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
+            t('Compute tier'))
 
       const computeLink =
         mode === 'postgres'
@@ -245,8 +238,8 @@ export function DatabaseSidebarComputeSpec({
     const specTooltip =
       displayParts.variant === 'serverless'
         ? t('Serverless')
-        : formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
-          (serverless ? t('Serverless') : apiSpecId || t('Dedicated'))
+        : (formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
+          (serverless ? t('Serverless') : apiSpecId || t('Dedicated')))
 
     const tableNavParams = {
       projectId,
@@ -302,11 +295,15 @@ export function DatabaseSidebarComputeSpec({
     billingEnabled &&
     (planSupportsDedicatedCompute === false || !!nextLockedSpec)
 
-  if (!isDedicatedDbFeatureEnabled(dbKind) && mode === 'product') {
+  if (!features.databaseSpecifications && mode === 'product') {
     return null
   }
 
-  if (mode === 'postgres' && !postgresDatabase && !dedicatedById.has(databaseId)) {
+  if (
+    mode === 'postgres' &&
+    !postgresDatabase &&
+    !dedicatedById.has(databaseId)
+  ) {
     return null
   }
 
@@ -338,7 +335,7 @@ export function DatabaseSidebarComputeSpec({
     resolved.displayParts.variant === 'serverless'
       ? t('Serverless')
       : resolved.displayParts.variant === 'label'
-        ? resolved.displayParts.label ?? resolved.specTooltip
+        ? (resolved.displayParts.label ?? resolved.specTooltip)
         : null
 
   const specContent = (
@@ -378,14 +375,14 @@ export function DatabaseSidebarComputeSpec({
 
   const strip = (
     <TooltipProvider delayDuration={0}>
-      <div className={DATABASE_SIDEBAR_FOOTER_STRIP_ROW_CLASS}>{specContent}</div>
+      <div className={DATABASE_SIDEBAR_FOOTER_STRIP_ROW_CLASS}>
+        {specContent}
+      </div>
     </TooltipProvider>
   )
 
   if (variant === 'standalone') {
-    return (
-      <div className={DATABASE_SIDEBAR_FOOTER_STRIP_CLASS}>{strip}</div>
-    )
+    return <div className={DATABASE_SIDEBAR_FOOTER_STRIP_CLASS}>{strip}</div>
   }
 
   return (

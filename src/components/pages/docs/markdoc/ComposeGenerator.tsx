@@ -55,6 +55,19 @@ const ASSISTANT_OPTIONS: Option<'enabled' | 'disabled'>[] = [
   { value: 'disabled', label: 'Disabled', description: 'No AI assistant' },
 ]
 
+const AUTOGRAVITY_OPTIONS: Option<'enabled' | 'disabled'>[] = [
+  {
+    value: 'enabled',
+    label: 'Enabled',
+    description: 'Focal point detection for gravity=auto image previews',
+  },
+  {
+    value: 'disabled',
+    label: 'Disabled',
+    description: 'No AutoGravity container',
+  },
+]
+
 function OptionGroup<T extends string>({
   groupId,
   label,
@@ -131,11 +144,12 @@ export function ComposeGenerator() {
   const [database, setDatabase] = useState<ComposeDatabase>('postgresql')
   const [topology, setTopology] = useState<ComposeTopology>('combined')
   const [assistant, setAssistant] = useState(true)
+  const [autogravity, setAutogravity] = useState(true)
   const [activeFileId, setActiveFileId] = useState('docker-compose.yml')
 
   const files = useMemo(
-    () => generateFiles({ database, topology, assistant }),
-    [database, topology, assistant],
+    () => generateFiles({ database, topology, assistant, autogravity }),
+    [database, topology, assistant, autogravity],
   )
   const activeFile =
     files.find((file) => file.filename === activeFileId) ?? files[0]
@@ -162,6 +176,13 @@ export function ComposeGenerator() {
         options={ASSISTANT_OPTIONS}
         value={assistant ? 'enabled' : 'disabled'}
         onChange={(value) => setAssistant(value === 'enabled')}
+      />
+      <OptionGroup
+        groupId="compose-autogravity"
+        label="AutoGravity"
+        options={AUTOGRAVITY_OPTIONS}
+        value={autogravity ? 'enabled' : 'disabled'}
+        onChange={(value) => setAutogravity(value === 'enabled')}
       />
       <ConnectCodeExample
         code={activeFile.content}

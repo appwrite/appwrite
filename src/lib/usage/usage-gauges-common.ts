@@ -1,6 +1,10 @@
 import { parseISO } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
-import { Query, type Models } from '@appwrite.io/console'
+import {
+  Query,
+  type Models,
+  type UsageGaugeDimension,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
@@ -45,12 +49,7 @@ export interface ProjectUsageGaugeOverview {
 export type UsageGaugeAggregate = 'last' | 'max'
 
 /** Closed listGauges dimension contract used at the SDK boundary. */
-export type UsageGaugeApiDimension =
-  | 'resourceId'
-  | 'teamId'
-  | 'service'
-  | 'resourceType'
-  | 'ordinal'
+export type UsageGaugeApiDimension = `${UsageGaugeDimension}`
 
 interface ListUsageGaugeGroupsParams {
   metrics: readonly string[]
@@ -163,6 +162,9 @@ async function listUsageGaugeGroups(
   return groupsByMetric.get(params.metric) ?? []
 }
 
+/** Gauge rows tagged with resourceType but no resourceId (chart still sums them). */
+const GAUGE_BREAKDOWN_TYPE_ONLY_KEY_PREFIX = '__type__\0'
+
 function mapGaugeBreakdownGroups(
   groups: Models.UsageDataPoint[],
   dimensions: readonly UsageGaugeApiDimension[],
@@ -185,7 +187,9 @@ function mapGaugeBreakdownGroups(
         ? 'project'
         : resourceId && resourceType
           ? `${resourceType}\0${resourceId}`
-          : undefined
+          : resourceType
+            ? `${GAUGE_BREAKDOWN_TYPE_ONLY_KEY_PREFIX}${resourceType}`
+            : undefined
       : dimension === 'resourceType'
         ? resourceType
         : resourceId
@@ -218,6 +222,20 @@ function mapGaugeBreakdownGroups(
           path: 'project',
           count: value,
           resourceType: 'project',
+        }
+      }
+      if (
+        useResourceDimensions &&
+        key.startsWith(GAUGE_BREAKDOWN_TYPE_ONLY_KEY_PREFIX)
+      ) {
+        const typeOnly = key.slice(GAUGE_BREAKDOWN_TYPE_ONLY_KEY_PREFIX.length)
+        return {
+          id: `type-${typeOnly}`,
+          method: '',
+          statusCode: 0,
+          path: '',
+          count: value,
+          resourceType: typeOnly,
         }
       }
       const resourceId = useResourceDimensions

@@ -5,10 +5,11 @@ import {
   isOrganizationBillingReadonlyStatus,
   isPlanUsageLimitReached,
   organizationQueryOptions,
-  useOrganizationFailedInvoicePresence,
+  useOrganizationBillingInvoicePresence,
 } from '@/lib/react-query/hooks/organizations'
 import { OrganizationBudgetLimitHeaderBanner } from '@/components/global/shared/OrganizationBudgetLimitHeaderBanner'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 
 type OrganizationBillingHeaderBannersProps = {
@@ -26,11 +27,15 @@ export function OrganizationBillingHeaderBanners({
   const { data: organization } = useQuery(
     organizationQueryOptions(organizationId),
   )
-  const { data: failedInvoicePresence } =
-    useOrganizationFailedInvoicePresence(organizationId)
+  const { data: invoicePresence } =
+    useOrganizationBillingInvoicePresence(organizationId)
 
   const showFailedInvoice =
-    features.billing && failedInvoicePresence?.hasFailedInvoice === true
+    features.billing && invoicePresence?.hasFailedInvoice === true
+  const showInvoiceAuthorization =
+    features.billing &&
+    !showFailedInvoice &&
+    invoicePresence?.hasInvoiceRequiringAuthentication === true
   const showBudgetLimit =
     features.billing && isBudgetLimitReached(organization)
   // Budget cap takes precedence; plan overage is the free/starter path
@@ -44,7 +49,10 @@ export function OrganizationBillingHeaderBanners({
 
   if (
     !organizationId ||
-    (!showFailedInvoice && !showBudgetLimit && !showPlanUsageLimit)
+    (!showFailedInvoice &&
+      !showInvoiceAuthorization &&
+      !showBudgetLimit &&
+      !showPlanUsageLimit)
   ) {
     return null
   }
@@ -55,6 +63,10 @@ export function OrganizationBillingHeaderBanners({
         organizationId={organizationId}
         show={showFailedInvoice}
         orgBillingReadonly={orgBillingReadonly}
+      />
+      <OrganizationInvoiceAuthorizeHeaderBanner
+        organizationId={organizationId}
+        show={showInvoiceAuthorization}
       />
       <OrganizationBudgetLimitHeaderBanner
         organizationId={organizationId}
