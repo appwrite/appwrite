@@ -105,7 +105,7 @@ export function RowRank({ index }: { index: number }) {
  * limitation rather than a bug, and the country code is printed beside the
  * glyph anyway. Do not "fix" it by reintroducing an image fetch.
  */
-export function CountryFlag({ code }: { code: string }) {
+export function CountryFlag({ code }: { code: string | null | undefined }) {
   const trimmed = code?.trim() ?? ''
   // The geo stack stores codes lowercased and uses `--` for unknown, which the
   // enrichment maps to an empty string. Anything that is not exactly two ASCII

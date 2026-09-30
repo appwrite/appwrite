@@ -7,7 +7,7 @@ type EventAsideProps = {
   platformSlug: string
   eventReceived: boolean
   /** Name of the first event that landed, shown once received. */
-  firstEventName?: string
+  firstEventName?: string | null
 }
 
 /**

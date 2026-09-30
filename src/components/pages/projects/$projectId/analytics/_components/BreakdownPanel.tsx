@@ -28,12 +28,12 @@ type BreakdownPanelProps = {
   tabs: BreakdownTab[]
   /** Leading badge for a row (flag, colour dot, rank). */
   renderLeading?: (
-    entry: Models.AnalyticsBreakdown,
+    entry: Models.AnalyticsMetric,
     index: number,
     tabId: string,
   ) => ReactNode
   /** Bar colour for a row; falls back to the neutral accent bar. */
-  rowColor?: (entry: Models.AnalyticsBreakdown, index: number) => string
+  rowColor?: (entry: Models.AnalyticsMetric, index: number) => string
   /** Render values in a monospace face (paths, hostnames). */
   mono?: boolean
   /** Copy shown when the range has no data for this dimension. */

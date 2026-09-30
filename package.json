@@ -51,7 +51,7 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@6405aee",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c8b2829",
     "@appwrite.io/specs": "github:appwrite/specs#c4d6f8c88fe7c8c06e8202ce1173a21bf7cd6109",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -117,6 +117,7 @@
     "embla-carousel-react": "^8.6.0",
     "gray-matter": "^4.0.3",
     "html-to-image": "^1.11.13",
+    "https://pkg.vc/-/@appwrite/@appwrite.io/console!3965": "https://pkg.vc/-/@appwrite/@appwrite.io/console!3965",
     "input-otp": "^1.4.2",
     "js-yaml": "^4.2.0",
     "lucide-react": "^0.544.0",

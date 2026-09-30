@@ -61,12 +61,12 @@ import {
 } from '../_components/format'
 
 /**
- * `getEventMetrics` returns a daily series for a **single event name**, with
+ * The event series is a daily time series for a **single event name**, with
  * these three measures. There is no all-events time series, so the chart is
  * always scoped to one event and its tabs select a measure of that event.
  *
- * Property-wide aggregates from `getStats` cover every event and therefore
- * cannot be plotted; they live in the summary card instead.
+ * Property-wide aggregates cover every event and therefore cannot be plotted;
+ * they live in the summary card instead.
  */
 type ChartSeriesKey = 'visitors' | 'sessions' | 'events'
 
@@ -79,8 +79,8 @@ type ChartMetric = {
 export type PropertyDetailInitialData = {
   property: Models.AnalyticsProperty
   stats?: Models.AnalyticsMetric
-  events?: { events: Models.AnalyticsEvent[]; total: number }
-  series?: { points: Models.AnalyticsMetricPoint[]; total: number }
+  events?: { events: Models.AnalyticsMetric[]; total: number }
+  series?: { points: Models.AnalyticsMetric[]; total: number }
 }
 
 interface ViewProps {
@@ -91,11 +91,13 @@ interface ViewProps {
 }
 
 /**
- * Series points are `YYYY-MM-DD` day buckets, not instants. Parse as a plain
- * calendar date so the label never shifts a day across timezones.
+ * Series points carry the bucket start as an ISO 8601 instant. Label from its
+ * date part, parsed as a plain calendar date, so the label never shifts a day
+ * across timezones.
  */
-function formatChartDate(value: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+function formatChartDate(value: string | null | undefined): string {
+  if (!value) return ''
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
   if (!match) return value
   const [, year, month, day] = match
   const parsed = new Date(Number(year), Number(month) - 1, Number(day))
@@ -292,8 +294,8 @@ export function View({
   }, [activeTab])
 
   // Tab values are totals of the plotted series, so the number on the tab and
-  // the line in the chart are always the same quantity. Sourcing them from
-  // `getStats` instead would mix property-wide aggregates with a single
+  // the line in the chart are always the same quantity. Sourcing them from the
+  // property-wide aggregate instead would mix every event with a single
   // event's series, which can never agree.
   const chartMetrics: ChartMetric[] = useMemo(() => {
     const totals = points.reduce(
@@ -312,7 +314,9 @@ export function View({
   }, [points])
 
   const eventNames = useMemo(() => {
-    const names = events.map((event) => event.name)
+    const names = events
+      .map((event) => event.value)
+      .filter((name): name is string => name !== null)
     return names.includes(selectedEvent) ? names : [selectedEvent, ...names]
   }, [events, selectedEvent])
 
@@ -334,7 +338,7 @@ export function View({
   )
 
   const maxEventCount = useMemo(
-    () => events.reduce((max, event) => Math.max(max, event.count), 0),
+    () => events.reduce((max, event) => Math.max(max, event.events), 0),
     [events],
   )
 
@@ -687,13 +691,13 @@ export function View({
                           {events.map((event) => {
                             const percentage =
                               maxEventCount > 0
-                                ? (event.count / maxEventCount) * 100
+                                ? (event.events / maxEventCount) * 100
                                 : 0
                             return (
-                              <div key={event.name} className="space-y-1.5">
+                              <div key={event.value} className="space-y-1.5">
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="truncate text-[12px] font-medium text-foreground">
-                                    {event.name}
+                                    {event.value}
                                   </span>
                                   <div className="flex shrink-0 items-center gap-3">
                                     <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -701,7 +705,7 @@ export function View({
                                       {t('visitors')}
                                     </span>
                                     <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                                      {formatNumber(event.count)}
+                                      {formatNumber(event.events)}
                                     </span>
                                   </div>
                                 </div>

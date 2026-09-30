@@ -21,6 +21,7 @@ import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import {
   AnalyticsDimension,
+  AnalyticsInterval,
   ID,
   Query,
   type Models,
@@ -157,15 +158,10 @@ export function analyticsRangeKey(range: AnalyticsRange): string {
 /** Zero-filled metric used while loading or when a property has no data yet. */
 export const EMPTY_ANALYTICS_METRIC: Models.AnalyticsMetric = {
   visitors: 0,
-  // The API stopped returning these when the new-vs-returning split was
-  // withdrawn; they stay only to satisfy the console SDK type, which has
-  // not been regenerated since. Drop both once it is.
-  newVisitors: 0,
-  returningVisitors: 0,
   sessions: 0,
-  visits: 0,
   pageviews: 0,
   events: 0,
+  visits: 0,
   bounceRate: 0,
   visitDuration: 0,
   viewsPerVisit: 0,
@@ -288,19 +284,26 @@ export function useAnalyticsProperty(
 
 // ─── Stats ──────────────────────────────────────────────────────────────────
 
+/**
+ * Property-wide aggregate: no dimensions and no interval, which is the only
+ * shape the API populates `bounceRate`, `visitDuration`, `viewsPerVisit`,
+ * `scrollDepth` and `engagementTime` on. It is always a single row.
+ */
 export async function fetchAnalyticsStats(
   projectId: string,
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
-  return await withReadTimeout(
-    'getStats',
-    sdk.forProject(projectId).analytics.getStats({
+  const response = await withReadTimeout(
+    'stats',
+    sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
       startAt: range.startAt,
       endAt: range.endAt,
     }),
   )
+
+  return response.metrics?.[0] ?? EMPTY_ANALYTICS_METRIC
 }
 
 export function analyticsStatsQueryOptions(
@@ -341,7 +344,7 @@ export function useAnalyticsStats(
 
 /**
  * Stats for every property in the list view. `listProperties` does not embed
- * metrics, so the list fans out one `getStats` call per property. Each query is
+ * metrics, so the list fans out one stats read per property. Each query is
  * independent, so a property whose stats fail still renders its card.
  */
 export function useAnalyticsPropertiesStats(
@@ -369,22 +372,26 @@ export function useAnalyticsPropertiesStats(
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
+/** Distinct event names ranked by visitors: a breakdown on `eventName`. */
 export async function fetchAnalyticsEvents(
   projectId: string,
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
 ) {
   const response = await withReadTimeout(
-    'listEvents',
-    sdk.forProject(projectId).analytics.listEvents({
+    'events',
+    sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
+      dimensions: [AnalyticsDimension.EventName],
       startAt: range.startAt,
       endAt: range.endAt,
+      limit,
     }),
   )
 
   return {
-    events: response.events || [],
+    events: response.metrics || [],
     total: response.total || 0,
   }
 }
@@ -393,6 +400,7 @@ export function analyticsEventsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
 ) {
   return queryOptions({
     queryKey: [
@@ -401,8 +409,9 @@ export function analyticsEventsQueryOptions(
       projectId,
       propertyId,
       analyticsRangeKey(range),
+      limit,
     ],
-    queryFn: () => fetchAnalyticsEvents(projectId!, propertyId!, range),
+    queryFn: () => fetchAnalyticsEvents(projectId!, propertyId!, range, limit),
     enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -527,7 +536,7 @@ export function useAnalyticsFirstEvent(
 
   return {
     eventReceived: (data?.total ?? 0) > 0,
-    firstEventName: data?.events?.[0]?.name,
+    firstEventName: data?.events?.[0]?.value,
     isChecking: isFetching,
   }
 }
@@ -536,9 +545,10 @@ export function useAnalyticsEvents(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsEventsQueryOptions(projectId, propertyId, range),
+    analyticsEventsQueryOptions(projectId, propertyId, range, limit),
   )
 
   return {
@@ -558,10 +568,11 @@ export async function fetchAnalyticsEventMetrics(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const response = await withReadTimeout(
-    'getEventMetrics',
-    sdk.forProject(projectId).analytics.getEventMetrics({
+    'event metrics',
+    sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
-      eventName,
+      interval: AnalyticsInterval.OneDay,
+      queries: [Query.equal('eventName', [eventName])],
       startAt: range.startAt,
       endAt: range.endAt,
     }),
@@ -631,10 +642,10 @@ export async function fetchAnalyticsBreakdown(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
 ) {
   const response = await withReadTimeout(
-    'getBreakdown',
-    sdk.forProject(projectId).analytics.getBreakdown({
+    'breakdown',
+    sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
-      dimension,
+      dimensions: [dimension],
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
@@ -642,7 +653,7 @@ export async function fetchAnalyticsBreakdown(
   )
 
   return {
-    breakdown: response.breakdown || [],
+    breakdown: response.metrics || [],
     total: response.total || 0,
   }
 }
