@@ -1056,6 +1056,112 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client, "users.{$userId}.delete");
     }
 
+    public function testConnectionEndsWithImpersonatorSession(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $targetId = ID::unique();
+        $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => $targetId,
+            'email' => 'impersonation-target-' . $targetId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $actorId = ID::unique();
+        $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => $actorId,
+            'email' => 'impersonation-actor-' . $actorId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Actor',
+        ]);
+        $this->assertEquals(201, $actor['headers']['status-code']);
+
+        $actor = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $adminHeaders, [
+            'impersonator' => true,
+        ]);
+        $this->assertEquals(200, $actor['headers']['status-code']);
+
+        $createSession = function () use ($adminHeaders, $actorId): array {
+            $response = $this->client->call(Client::METHOD_POST, '/users/' . $actorId . '/sessions', $adminHeaders);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            return ['id' => $response['body']['$id'], 'secret' => $response['body']['secret']];
+        };
+
+        // Opened on the actor's session, but connected as the target.
+        $connect = function (array $session) use ($targetId): WebSocketClient {
+            $client = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'x-appwrite-session' => $session['secret'],
+                'x-appwrite-impersonate-user-id' => $targetId,
+            ]);
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertEquals($targetId, $response['data']['user']['$id']);
+
+            return $client;
+        };
+
+        $assertClosed = function (WebSocketClient $client): void {
+            $frames = $this->receiveUntilClosed($client);
+            $last = \end($frames);
+            $this->assertEquals('error', $last['type'] ?? null);
+            $this->assertEquals(401, $last['data']['code'] ?? null);
+        };
+
+        /**
+         * Test for SUCCESS - the target's events still reach the connection, and a
+         * change to the target keeps it bound to the actor
+         */
+        $session = $createSession();
+        $other = $createSession();
+        $client = $connect($session);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $adminHeaders, [
+            'name' => 'Target ' . uniqid(),
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $event = $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$targetId}.update.name", $message['data']['events'] ?? [], true));
+        $this->assertEquals('event', $event['type']);
+
+        /**
+         * Test for SUCCESS - another session of the actor ends, this connection stays
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $actorId . '/sessions/' . $other['id'], $adminHeaders);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $client->send(\json_encode(['type' => 'ping']));
+        $this->assertEquals('pong', json_decode($client->receive(), true)['type']);
+
+        /**
+         * Test for SUCCESS - the actor's session this connection was opened with ends
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $actorId . '/sessions/' . $session['id'], $adminHeaders);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the actor is blocked
+         */
+        $session = $createSession();
+        $client = $connect($session);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/status', $adminHeaders, [
+            'status' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $assertClosed($client);
+    }
+
     public function testChannelDatabase()
     {
         $user = $this->getUser();

@@ -669,6 +669,8 @@ final class MessagingTest extends TestCase
         $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
         $realtime->connections[1]['authorization'] = 'authorization';
         $realtime->connections[1]['sessionId'] = 'session';
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'];
 
         // A later subscribe on the same connection unions its channels and must not
         // drop what the connection handler recorded about how it was opened.
@@ -676,6 +678,8 @@ final class MessagingTest extends TestCase
 
         $this->assertSame('authorization', $realtime->connections[1]['authorization']);
         $this->assertSame('session', $realtime->connections[1]['sessionId']);
+        $this->assertSame('A', $realtime->connections[1]['impersonatedUserId']);
+        $this->assertSame(['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'], $realtime->connections[1]['impersonator']);
         $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
 
         // A full unsubscribe forgets the connection entirely.
@@ -710,6 +714,35 @@ final class MessagingTest extends TestCase
         // Closing forgets it.
         $realtime->unsubscribe(1);
         $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
+    }
+
+    public function testGetImpersonatorConnections(): void
+    {
+        $realtime = new Realtime();
+        $roleA = Role::user(ID::custom('A'))->toString();
+
+        // Console user C impersonates A in projects 1 and 2; A also connects directly.
+        $realtime->subscribe('1', 1, 'sub-1', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's1'];
+        $realtime->subscribe('2', 2, 'sub-2', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[2]['impersonatedUserId'] = 'A';
+        $realtime->connections[2]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's2'];
+        $realtime->subscribe('1', 3, 'sub-3', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[3]['impersonator'] = null;
+
+        // C's own events reach both impersonated connections, across projects.
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
+        // A project user with the same ID is someone else.
+        $this->assertSame([], $realtime->getImpersonatorConnections('1', 'C'));
+        $this->assertSame([], $realtime->getImpersonatorConnections('console', ''));
+
+        // A's own events still reach every connection carrying A, impersonated or not.
+        $this->assertEqualsCanonicalizing([1, 3], $realtime->getUserConnections('1', 'A'));
+
+        // A later subscribe on an impersonated connection keeps the binding.
+        $realtime->subscribe('1', 1, 'sub-1b', [$roleA], ['files'], []);
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
     }
 
     public function testFromPayloadPermissions(): void

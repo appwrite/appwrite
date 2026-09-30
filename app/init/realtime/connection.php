@@ -383,6 +383,9 @@ return function (Container $container): void {
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
             'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            // The project whose users hold this impersonator (see the `user` resource),
+            // so events about them can reach the connections they opened.
+            'projectId' => ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? 'console' : $project->getId(),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
 

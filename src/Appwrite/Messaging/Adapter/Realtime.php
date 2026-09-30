@@ -50,6 +50,8 @@ class Realtime extends MessagingAdapter
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
      *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
+     *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
+     *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
@@ -158,7 +160,7 @@ class Realtime extends MessagingAdapter
         ];
 
         // Recorded once by the connection handler; every later (re)subscribe keeps it.
-        foreach (['authorization', 'sessionId'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -434,6 +436,29 @@ class Realtime extends MessagingAdapter
         $connections = [];
         foreach ($this->connections as $connectionId => $connection) {
             if (($connection['projectId'] ?? null) === $projectId && ($connection['userId'] ?? '') === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every connection a user opened, in any project, while
+     * impersonating someone else.
+     *
+     * @return array<int, mixed>
+     */
+    public function getImpersonatorConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            $impersonator = $connection['impersonator'] ?? null;
+            if (($impersonator['projectId'] ?? null) === $projectId && ($impersonator['userId'] ?? null) === $userId) {
                 $connections[] = $connectionId;
             }
         }
