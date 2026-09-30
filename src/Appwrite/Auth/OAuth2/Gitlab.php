@@ -23,6 +23,11 @@ class Gitlab extends OAuth2
     protected array $user = [];
 
     /**
+     * @var bool
+     */
+    protected bool $userLoaded = false;
+
+    /**
      * @var array
      */
     protected array $tokens = [];
@@ -132,9 +137,10 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Check if the OAuth email is verified
+     * The profile email is the primary address. confirmed_at is that address's
+     * confirmation. Other addresses on the account are ignored.
      *
-     * @link https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
+     * @link https://docs.gitlab.com/api/users/#get-the-current-user
      *
      * @param string $accessToken
      *
@@ -144,11 +150,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if ($user['confirmed_at'] ?? false) {
-            return true;
-        }
-
-        return false;
+        return ($user['email'] ?? '') !== '' && !empty($user['confirmed_at']);
     }
 
     /**
@@ -234,10 +236,16 @@ class Gitlab extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?access_token=' . \urlencode($accessToken));
-            $this->user = \json_decode($user, true);
+        if ($this->userLoaded) {
+            return $this->user;
         }
+
+        $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
+            'access_token' => $accessToken,
+        ]));
+        $decoded = \json_decode($user, true);
+        $this->user = \is_array($decoded) ? $decoded : [];
+        $this->userLoaded = true;
 
         return $this->user;
     }
