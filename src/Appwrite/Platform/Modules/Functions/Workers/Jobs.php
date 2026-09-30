@@ -459,7 +459,7 @@ class Jobs extends Action
         $dbForProject->updateDocuments('deployments', new Document([
             'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
                 ? (int) \ceil($duration)
-                : $this->duration($deployment, (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900)),
+                : $this->duration($deployment),
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
@@ -798,13 +798,11 @@ class Jobs extends Action
      * creation time rather than reporting 0.
      *
      * Elapsed time is wall clock, not build time: an exit reported weeks late
-     * would be billed in full, so it is bounded by _APP_COMPUTE_BUILD_TIMEOUT
-     * plus the 300s headroom Deployments grants the build's credentials. A
-     * deployment given a longer timeout is under-billed on this path, never
-     * over-billed. A measured duration is never bounded; termination
-     * grace can legitimately run past the timeout.
+     * would be billed in full, so it is bounded by buildTimeout() plus the 300s
+     * headroom Deployments grants the build's credentials. A measured duration
+     * is never bounded; termination grace can legitimately run past the timeout.
      */
-    private function duration(Document $deployment, int $timeout): int
+    private function duration(Document $deployment): int
     {
         if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
             return (int) $deployment->getAttribute('buildDuration', 0);
@@ -825,8 +823,18 @@ class Jobs extends Action
         }
 
         $elapsed = (int) \ceil(\max(0.0, $ended - $started));
+        $timeout = $this->buildTimeout();
 
         return $timeout > 0 ? \min($elapsed, $timeout + 300) : $elapsed;
+    }
+
+    /**
+     * The timeout builds are submitted with. Override when it varies per
+     * project, so a late exit is bounded by the timeout that build really had.
+     */
+    protected function buildTimeout(): int
+    {
+        return (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
     }
 
     /**
