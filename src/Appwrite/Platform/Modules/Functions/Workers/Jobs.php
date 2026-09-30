@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
-use Appwrite\Deployment\BuildDuration;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
@@ -456,10 +455,11 @@ class Jobs extends Action
 
         // Only an exit records runtime. Artifact failures can seal the outcome
         // first; their later exit fills duration without repeating finalization.
-        // The same timeout the build was queued with: the plan's, else the operator's.
-        $timeout = (int) ($plan['buildTimeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
+        $duration = $exit->durationSeconds;
         $dbForProject->updateDocuments('deployments', new Document([
-            'buildDuration' => (new BuildDuration())->of($deployment, $exit->durationSeconds, $timeout, \microtime(true)),
+            'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
+                ? (int) \ceil($duration)
+                : $this->duration($deployment, (int) ($plan['buildTimeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))),
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
@@ -787,6 +787,45 @@ class Jobs extends Action
         }
 
         return $deployment;
+    }
+
+    /**
+     * Use the worker's measured duration once its exit callback has arrived.
+     * Older exit callbacks without a measurement fall back to elapsed time.
+     * Callbacks arrive out of order, so
+     * buildStartedAt (stamped by the first log callback) can be missing when a
+     * terminal callback finalizes first — fall back to the deployment's
+     * creation time rather than reporting 0.
+     *
+     * Elapsed time is wall clock, not build time: an exit reported weeks late
+     * would be billed in full, so it is bounded by the build timeout the build
+     * was queued with (the plan's, else the operator's) plus the 300s headroom
+     * Deployments grants the build's credentials. A measured duration is never
+     * bounded; termination grace can legitimately run past the timeout.
+     */
+    private function duration(Document $deployment, int $timeout): int
+    {
+        if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
+            return (int) $deployment->getAttribute('buildDuration', 0);
+        }
+
+        $startedAt = $deployment->getAttribute('buildStartedAt', '') ?: $deployment->getCreatedAt();
+        if (empty($startedAt)) {
+            return 0;
+        }
+
+        try {
+            $started = (float) (new \DateTimeImmutable($startedAt))->format('U.u');
+            $ended = empty($deployment->getAttribute('buildEndedAt'))
+                ? \microtime(true)
+                : (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u');
+        } catch (\Exception) {
+            return 0;
+        }
+
+        $elapsed = (int) \ceil(\max(0.0, $ended - $started));
+
+        return $timeout > 0 ? \min($elapsed, $timeout + 300) : $elapsed;
     }
 
     /**
