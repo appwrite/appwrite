@@ -113,15 +113,15 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        // Remote-source deployments (templates / VCS) on the jobs-service
-        // backend never store a source tarball — the build sidecar fetches
-        // it — so a duplicate re-fetches the same source from the
-        // coordinates persisted on the deployment.
+        // Remote-source deployments (templates / VCS) re-fetch from the
+        // coordinates persisted on the deployment, so a VCS redeploy picks up
+        // the resource's current root directory. The source kept from their
+        // build only serves downloads.
         $path = $deployment->getAttribute('sourcePath');
-        $hasSource = !empty($path) && $deviceForSites->exists($path);
         $installationId = $deployment->getAttribute('installationId', '');
         $owner = $deployment->getAttribute('providerRepositoryOwner', '');
         $repository = $deployment->getAttribute('providerRepositoryName', '');
+        $hasSource = ($owner === '' || $repository === '') && !empty($path) && $deviceForSites->exists($path);
 
         if (!$hasSource && ($owner === '' || $repository === '')) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
@@ -192,7 +192,7 @@ class Create extends Action
                 $owner,
                 $repository,
                 $ref,
-                $deployment->getAttribute('providerRootDirectory', ''),
+                $site->getAttribute('providerRootDirectory', ''),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

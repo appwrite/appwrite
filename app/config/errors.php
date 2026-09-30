@@ -69,6 +69,11 @@ return [
         'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
+    Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE => [
+        'name' => Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE,
+        'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -271,6 +276,11 @@ return [
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_PWNED => [
+        'name' => Exception::USER_PASSWORD_PWNED,
+        'description' => 'The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
@@ -352,6 +362,11 @@ return [
         'description' => 'The provided ID token is invalid, expired, or failed verification.',
         'code' => 401,
     ],
+    Exception::USER_OAUTH2_STATE_INVALID => [
+        'name' => Exception::USER_OAUTH2_STATE_INVALID,
+        'description' => 'The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again.',
+        'code' => 401,
+    ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
@@ -410,6 +425,11 @@ return [
     Exception::USER_JWT_CREATION_DENIED => [
         'name' => Exception::USER_JWT_CREATION_DENIED,
         'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
+        'code' => 403,
+    ],
+    Exception::USER_IMPERSONATION_READ_ONLY => [
+        'name' => Exception::USER_IMPERSONATION_READ_ONLY,
+        'description' => 'This account action is not allowed while impersonating a user.',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -1332,6 +1352,11 @@ return [
         'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
         'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
         'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_UNAUTHORIZED => [
+        'name' => Exception::MIGRATION_SOURCE_UNAUTHORIZED,
+        'description' => 'The source API key cannot read the requested resources of the source project. Verify the projectId, the API key, and that the key has read scopes for every resource you are migrating.',
+        'code' => 401,
     ],
     Exception::MIGRATION_SOURCE_TYPE_INVALID => [
         'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,

@@ -621,9 +621,8 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
-    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    private function sendPushEvent(): array
     {
-        $data = $this->setupFunctionUsingVCS();
         $github = new GitHub(new Cache(new None()));
         $github->initializeVariables(
             $this->providerInstallationId,
@@ -668,18 +667,48 @@ final class VCSGitHubConsoleClientTest extends Scope
         $headers = [
             'content-type' => 'application/json',
             'x-github-event' => 'push',
-        ];
-        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
-        if (!empty($secret)) {
-            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
                 'sha256',
                 \json_encode($payload, JSON_THROW_ON_ERROR),
-                $secret,
-            );
-        }
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ];
 
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        return ['event' => $event, 'commit' => $commit];
+    }
+
+    public function testCreateEventWithInvalidSignature(): void
+    {
+        $payload = [
+            'action' => 'deleted',
+            'installation' => ['id' => (int) $this->providerInstallationId],
+        ];
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), 'wrong-secret'),
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+    }
+
+    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        ['event' => $event, 'commit' => $commit] = $this->sendPushEvent();
 
         $this->assertEquals(200, $event['headers']['status-code']);
 
@@ -695,6 +724,37 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
         $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
+    }
+
+    public function testGitHubPushForDeletedFunctionIsSkipped(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Deleted before push',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        ['event' => $event] = $this->sendPushEvent();
+
+        $this->assertEquals(200, $event['headers']['status-code']);
     }
 
     public function testUpdateFunctionUsingVCS(): void

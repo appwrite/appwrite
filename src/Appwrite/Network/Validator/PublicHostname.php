@@ -2,6 +2,8 @@
 
 namespace Appwrite\Network\Validator;
 
+use Swoole\Coroutine;
+use Swoole\Coroutine\System;
 use Utopia\Validator;
 
 /**
@@ -117,6 +119,16 @@ class PublicHostname extends Validator
      */
     public static function resolve(string $hostname): array
     {
+        // Swoole 6.2 hooks dns_get_record() through a RemoteObject client that is
+        // created per call and never released (~140 KiB each), so coroutines resolve
+        // natively. getaddrinfo() needs a service; any port works for address lookup.
+        if (Coroutine::getCid() > 0) {
+            $ipv4 = System::getaddrinfo($hostname, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+            $ipv6 = System::getaddrinfo($hostname, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+
+            return \array_values(\array_unique([...$ipv4, ...$ipv6]));
+        }
+
         $ipv4 = [];
         $ipv6 = [];
 

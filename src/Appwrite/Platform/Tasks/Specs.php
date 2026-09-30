@@ -23,6 +23,7 @@ use Utopia\DI\Container;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -138,14 +139,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
@@ -204,14 +200,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -288,14 +279,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',

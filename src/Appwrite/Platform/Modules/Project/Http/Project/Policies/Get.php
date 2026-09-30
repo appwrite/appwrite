@@ -79,6 +79,7 @@ class Get extends Action
             'password-history' => Response::MODEL_POLICY_PASSWORD_HISTORY,
             'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            'password-pwned' => Response::MODEL_POLICY_PASSWORD_PWNED,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
             'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -133,6 +134,16 @@ class Get extends Action
                     'enabled' => $auths['personalDataCheck'] ?? false,
                 ]),
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            ],
+            'password-pwned' => [
+                new Document(\array_merge([
+                    'enabled' => true,
+                    'sessions' => false,
+                    'users' => false,
+                ], $auths['passwordPwned'] ?? [], [
+                    '$id' => 'password-pwned',
+                ])),
+                Response::MODEL_POLICY_PASSWORD_PWNED,
             ],
             'session-alert' => [
                 new Document([

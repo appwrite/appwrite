@@ -4195,6 +4195,347 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelDatabaseRelationshipDelete(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Relationship Delete DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collections = [];
+        foreach (['parent', 'child'] as $side) {
+            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+                'collectionId' => ID::unique(),
+                'name' => $side,
+                'permissions' => [Permission::create(Role::any())],
+                'documentSecurity' => true,
+            ]);
+            $collections[$side] = $collection['body']['$id'];
+        }
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/attributes/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collections, $headers) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/attributes/name', $headers);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 30000, 250);
+
+        /**
+         * Test for SUCCESS
+         *
+         * Every successful delete notifies the surviving side, whatever onDelete is.
+         */
+        $cases = [
+            ['type' => 'oneToMany', 'onDelete' => 'setNull', 'deleted' => 'child'],
+            ['type' => 'oneToMany', 'onDelete' => 'restrict', 'deleted' => 'child'],
+            ['type' => 'oneToMany', 'onDelete' => 'cascade', 'deleted' => 'child'],
+            ['type' => 'oneToOne', 'onDelete' => 'setNull', 'deleted' => 'parent'],
+            ['type' => 'manyToOne', 'onDelete' => 'restrict', 'deleted' => 'parent'],
+            ['type' => 'manyToMany', 'onDelete' => 'cascade', 'deleted' => 'child'],
+        ];
+
+        foreach ($cases as $index => $case) {
+            $key = 'children' . $index;
+            $twoWayKey = 'parent' . $index;
+
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/attributes/relationship', $headers, [
+                'relatedCollectionId' => $collections['child'],
+                'type' => $case['type'],
+                'twoWay' => true,
+                'key' => $key,
+                'twoWayKey' => $twoWayKey,
+                'onDelete' => $case['onDelete'],
+            ]);
+
+            $this->assertEventually(function () use ($databaseId, $collections, $headers, $key) {
+                $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/attributes/' . $key, $headers);
+                $this->assertEquals('available', $attribute['body']['status']);
+            }, 30000, 250);
+
+            $permissions = [
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ];
+
+            $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
+                'documentId' => ID::unique(),
+                'data' => ['name' => 'child'],
+                'permissions' => $permissions,
+            ]);
+            $childId = $child['body']['$id'];
+
+            $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
+                'documentId' => ID::unique(),
+                'data' => [$key => \in_array($case['type'], ['oneToMany', 'manyToMany']) ? [$childId] : $childId],
+                'permissions' => $permissions,
+            ]);
+            $this->assertEquals(201, $parent['headers']['status-code']);
+
+            $ids = ['parent' => $parent['body']['$id'], 'child' => $childId];
+            $survivor = $case['deleted'] === 'child' ? 'parent' : 'child';
+
+            $channel = 'databases.' . $databaseId . '.collections.' . $collections[$survivor] . '.documents.' . $ids[$survivor];
+
+            $client = $this->getWebsocket([$channel], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]);
+            $client->receive();
+
+            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collections[$case['deleted']] . '/documents/' . $ids[$case['deleted']], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $response['headers']['status-code']);
+
+            $event = $this->receiveUntilEvent(
+                $client,
+                fn (array $message): bool => \in_array($channel . '.update', $message['data']['events'] ?? [], true),
+                timeoutMs: 10000
+            );
+
+            $this->assertEquals($ids[$survivor], $event['data']['payload']['$id']);
+            $this->assertArrayNotHasKey($survivor === 'parent' ? $key : $twoWayKey, $event['data']['payload']);
+
+            $client->close();
+        }
+    }
+
+    public function testChannelDatabaseRelationshipDeletePermissions(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Relationship Delete Permissions DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collections = [];
+        foreach (['parent', 'child'] as $side) {
+            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+                'collectionId' => ID::unique(),
+                'name' => $side,
+                'permissions' => [Permission::create(Role::any())],
+                'documentSecurity' => true,
+            ]);
+            $collections[$side] = $collection['body']['$id'];
+        }
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/attributes/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/attributes/relationship', $headers, [
+            'relatedCollectionId' => $collections['child'],
+            'type' => 'oneToMany',
+            'twoWay' => true,
+            'key' => 'children',
+            'twoWayKey' => 'parent',
+            'onDelete' => 'setNull',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collections, $headers) {
+            $name = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/attributes/name', $headers);
+            $this->assertEquals('available', $name['body']['status']);
+
+            $children = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/attributes/children', $headers);
+            $this->assertEquals('available', $children['body']['status']);
+        }, 30000, 250);
+
+        $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'child'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $childId = $child['body']['$id'];
+
+        $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
+            'documentId' => ID::unique(),
+            'data' => ['children' => [$childId]],
+            'permissions' => [Permission::read(Role::user($user['$id']))],
+        ]);
+        $parentId = $parent['body']['$id'];
+
+        $channel = 'databases.' . $databaseId . '.collections.' . $collections['parent'] . '.documents.' . $parentId;
+
+        $owner = $this->getWebsocket([$channel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+        $owner->receive();
+
+        $guest = $this->getWebsocket([$channel], [
+            'origin' => 'http://localhost',
+        ]);
+        $guest->receive();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents/' . $childId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $this->receiveUntilEvent(
+            $owner,
+            fn (array $message): bool => \in_array($channel . '.update', $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        /**
+         * Test for FAILURE
+         */
+        try {
+            $guest->receive();
+            $this->fail('Guest should not receive an update for a parent it cannot read');
+        } catch (TimeoutException) {
+            $this->addToAssertionCount(1);
+        }
+
+        $owner->close();
+        $guest->close();
+    }
+
+    public function testChannelTablesDBRelationshipDelete(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Relationship Delete TablesDB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $tables = [];
+        foreach (['parent', 'child'] as $side) {
+            $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+                'tableId' => ID::unique(),
+                'name' => $side,
+                'permissions' => [Permission::create(Role::any())],
+                'rowSecurity' => true,
+            ]);
+            $tables[$side] = $table['body']['$id'];
+        }
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/columns/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['parent'] . '/columns/relationship', $headers, [
+            'relatedTableId' => $tables['child'],
+            'type' => 'oneToMany',
+            'twoWay' => true,
+            'key' => 'children',
+            'twoWayKey' => 'parent',
+            'onDelete' => 'setNull',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $tables, $headers) {
+            $name = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/columns/name', $headers);
+            $this->assertEquals('available', $name['body']['status']);
+
+            $children = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tables['parent'] . '/columns/children', $headers);
+            $this->assertEquals('available', $children['body']['status']);
+        }, 30000, 250);
+
+        $permissions = [
+            Permission::read(Role::any()),
+            Permission::delete(Role::any()),
+        ];
+
+        $child = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/rows', $headers, [
+            'rowId' => ID::unique(),
+            'data' => ['name' => 'child'],
+            'permissions' => $permissions,
+        ]);
+        $childId = $child['body']['$id'];
+
+        $parent = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['parent'] . '/rows', $headers, [
+            'rowId' => ID::unique(),
+            'data' => ['children' => [$childId]],
+            'permissions' => $permissions,
+        ]);
+        $parentId = $parent['body']['$id'];
+
+        $channel = 'databases.' . $databaseId . '.tables.' . $tables['parent'] . '.rows.' . $parentId;
+
+        $client = $this->getWebsocket([$channel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+        $client->receive();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/rows/' . $childId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array($channel . '.update', $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        $client->close();
+    }
+
     /**
      * Simulate concurrent realtime traffic using Swoole coroutines.
      * Opens multiple websocket clients concurrently, then performs create/update/delete ops.
@@ -4253,103 +4594,96 @@ final class RealtimeCustomClientTest extends Scope
             $this->assertEquals('available', $response['body']['status'] ?? null);
         }, 30000, 250);
 
-        Coroutine\run(function () use ($session, $projectId, $databaseId, $collectionId) {
-            $headers = [
-                'origin' => 'http://localhost',
-                'cookie' => 'a_session_' . $projectId . '=' . $session
-            ];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ];
 
-            $clientCount = 5;
-            $clients = [];
-            for ($i = 0; $i < $clientCount; $i++) {
-                $clients[] = $this->getWebsocket(['documents', 'collections'], $headers);
-            }
+        $clientCount = 5;
+        $clients = [];
+        for ($i = 0; $i < $clientCount; $i++) {
+            $clients[] = $this->getWebsocket(['documents', 'collections'], $headers);
+        }
 
-            foreach ($clients as $client) {
-                $response = json_decode($client->receive(), true);
-                $this->assertEquals('connected', $response['type']);
-            }
+        foreach ($clients as $client) {
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+        }
 
-            $creates = [
-                ['name' => 'Doc A'],
-                ['name' => 'Doc B'],
-                ['name' => 'Doc C'],
-                ['name' => 'Doc D'],
-                ['name' => 'Doc E'],
-                ['name' => 'Doc F'],
-            ];
+        $creates = [
+            ['name' => 'Doc A'],
+            ['name' => 'Doc B'],
+            ['name' => 'Doc C'],
+            ['name' => 'Doc D'],
+            ['name' => 'Doc E'],
+            ['name' => 'Doc F'],
+        ];
+        $expectedEvents = count($creates);
 
-            $expectedEvents = count($creates);
+        // The creates race each other through curl_multi rather than inside the
+        // coroutine below: curl under Swoole's coroutine hook fails on CI without
+        // ever reaching the API, which left the receivers waiting on nothing.
+        $responses = $this->client->callConcurrently(array_map(fn (array $payload) => [
+            Client::METHOD_POST,
+            "/databases/{$databaseId}/collections/{$collectionId}/documents",
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ],
+            [
+                'documentId' => ID::unique(),
+                'data' => $payload,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ],
+        ], $creates));
 
-            // Per-client receipts
-            /** @var array<int, list<mixed>> $receivedEvents */
-            $receivedEvents = array_fill(0, $clientCount, []);
+        foreach ($responses as $response) {
+            $this->assertEquals(201, $response['headers']['status-code']);
+        }
 
-            // Launch receiver coroutines (one per client)
+        // Drain every client at the same time; the frames are already buffered on
+        // the sockets. Assertions stay outside the coroutine so a failure reports
+        // instead of killing the process.
+        /** @var array<int, list<mixed>> $receivedEvents */
+        $receivedEvents = array_fill(0, $clientCount, []);
+        Coroutine\run(function () use ($clients, &$receivedEvents, $expectedEvents) {
             foreach ($clients as $idx => $client) {
                 Coroutine::create(function () use ($client, &$receivedEvents, $expectedEvents, $idx) {
-                    $local = [];
                     for ($i = 0; $i < $expectedEvents; $i++) {
-                        $event = json_decode($client->receive(), true);
-                        $local[] = $event;
+                        try {
+                            $receivedEvents[$idx][] = json_decode($client->receive(), true);
+                        } catch (TimeoutException | ConnectionException) {
+                            return;
+                        }
                     }
-                    $receivedEvents[$idx] = $local;
                 });
             }
-
-            // Create docs
-            foreach ($creates as $payload) {
-                $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ]), [
-                    'documentId' => ID::unique(),
-                    'data' => $payload,
-                    'permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                ]);
-            }
-
-            // Wait for receivers to collect; timeout ~10s
-            $deadline = microtime(true) + 10;
-            while (microtime(true) < $deadline) {
-                $done = true;
-                foreach ($receivedEvents as $events) {
-                    if (count($events) < $expectedEvents) {
-                        $done = false;
-                        break;
-                    }
-                }
-                if ($done) {
-                    break;
-                }
-                Coroutine::sleep(0.1);
-            }
-
-            $expectedNames = array_column($creates, 'name');
-
-            for ($c = 0; $c < $clientCount; $c++) {
-                $events = $receivedEvents[$c];
-                $this->assertCount($expectedEvents, $events, 'Unexpected event count on client '.$c);
-                $seen = [];
-                foreach ($events as $event) {
-                    $this->assertEquals('event', $event['type']);
-                    $this->assertArrayHasKey('payload', $event['data']);
-                    $seen[] = $event['data']['payload']['name'] ?? '';
-                }
-                foreach ($expectedNames as $name) {
-                    $this->assertContains($name, $seen);
-                }
-            }
-
-            foreach ($clients as $client) {
-                $client->close();
-            }
         });
+
+        $expectedNames = array_column($creates, 'name');
+
+        for ($c = 0; $c < $clientCount; $c++) {
+            $events = $receivedEvents[$c];
+            $this->assertCount($expectedEvents, $events, 'Unexpected event count on client ' . $c);
+            $seen = [];
+            foreach ($events as $event) {
+                $this->assertEquals('event', $event['type']);
+                $this->assertArrayHasKey('payload', $event['data']);
+                $seen[] = $event['data']['payload']['name'] ?? '';
+            }
+            foreach ($expectedNames as $name) {
+                $this->assertContains($name, $seen);
+            }
+        }
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
     }
     public function testChannelTablesDB()
     {

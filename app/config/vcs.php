@@ -28,11 +28,14 @@ return [
             'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
-            'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
+            'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
         ],
     ],
     'gitea' => [
         'adapter' => Gitea::class,
+        // The browser may reach Gitea on a different host than the server-side
+        // API does (e.g. both on a Docker network, Gitea published elsewhere).
+        'browserEndpoint' => System::getEnv('_APP_VCS_GITEA_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITEA_ENDPOINT', '')),
         'oauth2' => function (string $clientId, string $clientSecret, string $endpoint) {
             $oauth2 = new OAuth2Gitea($clientId, $clientSecret, '');
             $oauth2->setEndpoint($endpoint);
@@ -42,8 +45,6 @@ return [
             'endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_ENDPOINT'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_SECRET'],
-            // Unlike GitHub's legacy optional secret, Gitea webhooks must
-            // always have a shared secret because Appwrite creates them directly.
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_WEBHOOK_SECRET'],
         ],
     ],

@@ -23,6 +23,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -35,9 +36,9 @@ use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Client;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -46,6 +47,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -117,6 +119,19 @@ $container->set('autogravity', function (Cache $cache) {
 }, ['cache']);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
+
+/**
+ * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
+ * messaging job, so one bad platform variable must not stop a project's push and email.
+ */
+$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalSMS();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
@@ -404,7 +419,7 @@ $container->set('servers', function () {
 
     $languages = array_map(fn ($language) => strtolower($language['name']), $server['sdks']);
 
-    return $languages;
+    return [...$languages, ...APP_SDK_INTEGRATIONS];
 });
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
