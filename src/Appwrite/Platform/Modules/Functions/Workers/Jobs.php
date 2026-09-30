@@ -459,7 +459,7 @@ class Jobs extends Action
         $dbForProject->updateDocuments('deployments', new Document([
             'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
                 ? (int) \ceil($duration)
-                : $this->duration($deployment),
+                : $this->duration($deployment, $exit->meta['timeoutSeconds'] ?? null),
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
@@ -796,8 +796,15 @@ class Jobs extends Action
      * buildStartedAt (stamped by the first log callback) can be missing when a
      * terminal callback finalizes first — fall back to the deployment's
      * creation time rather than reporting 0.
+     *
+     * Elapsed time is wall clock, not build time: an exit reported late (one
+     * build billed 50 days when its exit arrived seven weeks after it started)
+     * would be billed in full. So the fallback is bounded by the build's own
+     * timeout, echoed back in the job's meta, plus the same 300s of headroom
+     * Deployments grants the build's credentials. A measured duration is never
+     * bounded: termination grace can legitimately run past the timeout.
      */
-    private function duration(Document $deployment): int
+    private function duration(Document $deployment, ?int $timeout = null): int
     {
         if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
             return (int) $deployment->getAttribute('buildDuration', 0);
@@ -817,9 +824,10 @@ class Jobs extends Action
             return 0;
         }
 
-        // A timeout is a budget, not a measurement: termination grace can
-        // legitimately leave the worker running past it.
-        return (int) \ceil(\max(0.0, $ended - $started));
+        $elapsed = (int) \ceil(\max(0.0, $ended - $started));
+        $timeout ??= (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+
+        return $timeout > 0 ? \min($elapsed, $timeout + 300) : $elapsed;
     }
 
     /**

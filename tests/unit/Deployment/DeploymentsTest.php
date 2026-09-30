@@ -174,6 +174,15 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v1', $payload['environment']['MY-VAR']);
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
+
+    public function testPayloadEchoesTheBuildTimeoutOnItsCallbacks(): void
+    {
+        // The exit callback carries the job's meta back; an exit without a
+        // measured duration is bounded by the timeout this job was given.
+        $payload = $this->buildPayload([]);
+
+        $this->assertSame($payload['timeoutSeconds'], $payload['meta']['timeoutSeconds']);
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments
