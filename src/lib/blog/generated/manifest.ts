@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "refund-agent-human-approval-appwrite-functions",
+    "href": "/blog/post/refund-agent-human-approval-appwrite-functions",
+    "title": "Build an AI refund agent with human approval on Appwrite Functions",
+    "description": "Build a refund desk where an AI agent refunds small cases on its own, hands the rest to staff, and resumes from TablesDB when they decide.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 13,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/refund-agent-human-approval-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-breached-password-detection",
     "href": "/blog/post/announcing-breached-password-detection",
     "title": "Announcing breached password detection for Appwrite Auth",
