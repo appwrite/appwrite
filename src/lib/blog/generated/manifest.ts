@@ -16,6 +16,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "expense-tracker-receipt-intake-agent",
+    "href": "/blog/post/expense-tracker-receipt-intake-agent",
+    "title": "Build an expense tracker with an AI receipt intake agent",
+    "description": "Upload a receipt, and an Appwrite Function reads it with GPT-6 Luna, files the expense in TablesDB, and sends unclear fields to a review queue.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/expense-tracker-receipt-intake-agent/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "refund-agent-human-approval-appwrite-functions",
     "href": "/blog/post/refund-agent-human-approval-appwrite-functions",
     "title": "Build an AI refund agent with human approval on Appwrite Functions",
