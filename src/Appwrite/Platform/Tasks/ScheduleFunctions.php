@@ -82,23 +82,6 @@ class ScheduleFunctions extends Action
     }
 
     /**
-     * A failed check enqueues anyway: the scheduler commits the window after
-     * dispatch, so a skipped run is gone, while the worker still enforces.
-     *
-     * @param array<string, mixed> $schedule
-     */
-    private function isEligible(array $schedule, Database $dbForPlatform): bool
-    {
-        try {
-            return $this->shouldEnqueue($schedule, $dbForPlatform);
-        } catch (\Throwable $th) {
-            Span::add('occurrence.check.error', $th->getMessage());
-
-            return true;
-        }
-    }
-
-    /**
      * @param list<Occurrence> $occurrences
      */
     private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
@@ -121,7 +104,16 @@ class ScheduleFunctions extends Action
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
 
-                if (!$this->isEligible($schedule, $dbForPlatform)) {
+                // A failed check enqueues anyway: the window is committed after
+                // dispatch, so a skipped run is lost, while the worker still enforces.
+                try {
+                    $eligible = $this->shouldEnqueue($schedule, $dbForPlatform);
+                } catch (\Throwable $th) {
+                    $error = $th;
+                    $eligible = true;
+                }
+
+                if (!$eligible) {
                     Span::add('occurrence.skipped', true);
                     continue;
                 }
