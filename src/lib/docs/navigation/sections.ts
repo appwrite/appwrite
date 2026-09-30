@@ -323,6 +323,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/self-hosting/configuration/sms',
           },
           {
+            label: 'Breached passwords',
+            href: '/docs/advanced/self-hosting/configuration/breached-passwords',
+          },
+          {
             label: 'Functions',
             href: '/docs/advanced/self-hosting/configuration/functions',
           },

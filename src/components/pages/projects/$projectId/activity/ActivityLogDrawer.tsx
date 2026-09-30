@@ -1,6 +1,4 @@
 import { useState, useCallback } from 'react'
-import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { isTerraformActivity } from '@/lib/terraform/activity'
 import { Browser, Flag, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -419,24 +417,6 @@ export function ActivityLogDrawer({
                             </TooltipTrigger>
                             <TooltipContent side="top">
                               {t('Via MCP')}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : null}
-                        {isTerraformActivity(event) ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                className="inline-flex shrink-0 text-violet-600 dark:text-violet-400"
-                                aria-label={t('Via Terraform')}
-                              >
-                                <TerraformIcon
-                                  variant="mark"
-                                  className="h-3.5 w-3.5"
-                                />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {t('Via Terraform')}
                             </TooltipContent>
                           </Tooltip>
                         ) : null}

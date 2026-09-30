@@ -9,6 +9,7 @@ import { RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME } from '@/components/pages/proj
 import type { UsageChartPoint } from '@/lib/usage/usage-events-common'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import {
   formatRequestsTotal,
   formatRequestsValue,
@@ -373,14 +374,19 @@ function RequestsChartBlock({
   }
 
   return (
-    <RequestsChartArea
-      chartData={chartData}
-      gradientId={gradientId}
-      isSkeleton={isLoading}
-      tooltipDisabled={isLoading}
-      height={chartHeight}
-      usePortalTooltip={usePortalTooltip}
-    />
+    <div
+      key={isLoading ? 'skeleton' : 'data'}
+      className={cn('h-full w-full', !isLoading && USAGE_CHART_FADE_IN_CLASS_NAME)}
+    >
+      <RequestsChartArea
+        chartData={chartData}
+        gradientId={gradientId}
+        isSkeleton={isLoading}
+        tooltipDisabled={isLoading}
+        height={chartHeight}
+        usePortalTooltip={usePortalTooltip}
+      />
+    </div>
   )
 }
 
@@ -445,7 +451,7 @@ export function ProjectListRequestsChart({
       aria-hidden
     />
   ) : showUnavailable || isZeroUsage ? (
-    <div className="min-w-0">
+    <div className={cn('min-w-0', USAGE_CHART_FADE_IN_CLASS_NAME)}>
       <span
         className={cn(
           valueTextLayoutClass,
@@ -457,7 +463,7 @@ export function ProjectListRequestsChart({
       </span>
     </div>
   ) : (
-    <div className="min-w-0">
+    <div className={cn('min-w-0', USAGE_CHART_FADE_IN_CLASS_NAME)}>
       <span
         className={cn(
           valueTextLayoutClass,
@@ -474,7 +480,7 @@ export function ProjectListRequestsChart({
     <span
       className={cn(
         'ms-auto inline-flex h-3.5 shrink-0 items-center gap-0.5 text-[11px] font-medium leading-none tabular-nums',
-        isLoading && 'invisible',
+        isLoading ? 'invisible' : USAGE_CHART_FADE_IN_CLASS_NAME,
         !isLoading &&
           showChange &&
           cn(

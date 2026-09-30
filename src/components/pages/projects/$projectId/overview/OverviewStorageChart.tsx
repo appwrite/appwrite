@@ -38,6 +38,7 @@ import {
 } from '@/lib/usage/chart-interval'
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import type { DateRange } from 'react-day-picker'
 
 /** One stacked series per `resourceType` family of the unified storage gauge. */
@@ -270,7 +271,13 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
               </div>
             ) : null}
             {renderChart ? (
-              <div className={overviewChartPanelChartFillClass}>
+              <div
+                key={showChartSkeleton ? 'skeleton' : 'data'}
+                className={cn(
+                  overviewChartPanelChartFillClass,
+                  !showChartSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
+                )}
+              >
                 <ResponsiveContainer
                   {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}
