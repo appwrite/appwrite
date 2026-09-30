@@ -1454,8 +1454,12 @@ Http::get('/v1/account/sessions/oauth2/:provider')
         // The provider echoes the state back untouched, so on its own it proves nothing about who
         // started the flow. The nonce also goes into a cookie only this browser holds, and the
         // callback accepts the state only when the two match. Host-only, because the callback
-        // lands on this host; an hour covers signing in at the provider.
+        // lands on this host; an hour covers signing in at the provider. A browser can have
+        // several flows open at once (two tabs, the session and the token flow), so the cookie
+        // keeps the newest few nonces rather than only the last one.
         $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
@@ -1465,7 +1469,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
         ], $scopes);
 
         $response
-            ->addCookie('a_oauth2_' . $project->getId(), $nonce, \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($oauth2->getLoginURL());
@@ -1682,13 +1686,16 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // The state comes back through the provider unchanged, so it says nothing about which
         // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
         // only that browser holds it, and no other site can read or set it.
-        $nonce = $request->getCookie('a_oauth2_' . $project->getId());
-        if ($nonce === '' || !\is_string($state['nonce'] ?? null) || !\hash_equals($nonce, $state['nonce'])) {
+        $nonces = \array_values(\array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId()))));
+        $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
+        $others = \array_values(\array_filter($nonces, fn (string $held) => !\hash_equals($held, $stateNonce)));
+        if (\count($others) === \count($nonces)) {
             $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
         }
 
-        // Consumed: a callback URL from this flow must not work a second time either.
-        $response->addCookie('a_oauth2_' . $project->getId(), '', \time() - 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX);
+        // Consumed, so a callback URL from this flow does not work a second time; flows the
+        // browser still has open keep theirs.
+        $response->addCookie('a_oauth2_' . $project->getId(), \implode(',', $others), empty($others) ? \time() - 3600 : \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX);
 
         if (!empty($error)) {
             $message = 'The ' . $providerName . ' OAuth2 provider returned an error: ' . $error;
@@ -2384,6 +2391,8 @@ Http::get('/v1/account/tokens/oauth2/:provider')
 
         // Same browser binding as createOAuth2Session: the callback is shared.
         $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
@@ -2395,7 +2404,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
         $loginURL = $oauth2->getLoginURL();
 
         $response
-            ->addCookie('a_oauth2_' . $project->getId(), $nonce, \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($loginURL);

@@ -2277,12 +2277,12 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
-        // The nonce cookie set when the flow started rides along on every hop, as a browser would send it.
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it; the provider never sees it.
         $nonceCookie = 'a_oauth2_' . $this->getProject()['$id'] . '=' . $response['cookies']['a_oauth2_' . $this->getProject()['$id']];
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
@@ -2340,12 +2340,12 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
-        // The nonce cookie set when the flow started rides along on every hop, as a browser would send it.
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it; the provider never sees it.
         $nonceCookie = 'a_oauth2_' . $this->getProject()['$id'] . '=' . $response['cookies']['a_oauth2_' . $this->getProject()['$id']];
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
@@ -2530,13 +2530,13 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        // The nonce cookie set when the flow started rides along on every hop, as a browser would send it.
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it; the provider never sees it.
         $nonceCookie = 'a_oauth2_' . $this->getProject()['$id'] . '=' . $response['cookies']['a_oauth2_' . $this->getProject()['$id']];
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
@@ -2604,13 +2604,13 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
-        // The nonce cookie set when the flow started rides along on every hop, as a browser would send it.
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it; the provider never sees it.
         $nonceCookie = 'a_oauth2_' . $this->getProject()['$id'] . '=' . $response['cookies']['a_oauth2_' . $this->getProject()['$id']];
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
@@ -2682,8 +2682,10 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        // The nonce cookie set when the flow started joins the headers, as a browser would send it.
-        $headers['cookie'] = \trim(($headers['cookie'] ?? '') . '; a_oauth2_' . $projectId . '=' . $response['cookies']['a_oauth2_' . $projectId], '; ');
+        // The nonce cookie set when the flow started joins the headers on the Appwrite hops,
+        // as a browser would send it; the provider never sees it.
+        $appwriteHeaders = $headers;
+        $appwriteHeaders['cookie'] = \trim(($headers['cookie'] ?? '') . '; a_oauth2_' . $projectId . '=' . $response['cookies']['a_oauth2_' . $projectId], '; ');
 
         // Provider consent, Appwrite callback, Appwrite redirect: follow each
         // Location as given rather than asserting the internal routes.
@@ -2691,7 +2693,7 @@ final class AccountCustomClientTest extends Scope
         $oauthClient->setEndpoint('');
 
         for ($hop = 0; $hop < 3; $hop++) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 
@@ -2865,14 +2867,12 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $callbackUrl = $response['headers']['location'];
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $projectId . '?code=', $callbackUrl);
 
         // The signed-in browser opens that URL. A top-level navigation sends its session
         // cookie, but it never held the nonce cookie of the flow it is completing.
         $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $signedInCookieHeader, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $signedInCookieHeader, followRedirects: false);
 
@@ -2948,6 +2948,113 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
+
+        // A client with a cookie jar that follows the redirects like a browser gets the cookie
+        // back on the callback host by itself and completes the flow with no hand-carried header.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+    }
+
+    public function testCreateOAuth2SessionKeepsConcurrentFlows(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $nonceCookieKey = 'a_oauth2_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Two flows start in the same browser, say two tabs; the second start sees the first one's cookie.
+        $first = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $first['headers']['status-code']);
+
+        $second = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $nonceCookieKey . '=' . $first['cookies'][$nonceCookieKey],
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $second['headers']['status-code']);
+        $nonceCookieHeader = ['cookie' => $nonceCookieKey . '=' . $second['cookies'][$nonceCookieKey]];
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        // The first flow completes although it is not the one started last.
+        $response = $oauthClient->call(Client::METHOD_GET, $first['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $firstRedirect = $response['headers']['location'];
+
+        $response = $oauthClient->call(Client::METHOD_GET, $firstRedirect, $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $nonceCookieHeader = ['cookie' => $nonceCookieKey . '=' . $response['cookies'][$nonceCookieKey]];
+
+        // The second flow completes with what the browser holds after the first one.
+        $response = $oauthClient->call(Client::METHOD_GET, $second['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
+
+        // Completing the first flow consumed it: the same callback does not work again.
+        $response = $oauthClient->call(Client::METHOD_GET, $firstRedirect, $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $error = \json_decode($failureParams['error'], true);
+        $this->assertEquals('user_oauth2_state_invalid', $error['type']);
     }
 
     public function testCreateOidcOAuth2Token(): void
