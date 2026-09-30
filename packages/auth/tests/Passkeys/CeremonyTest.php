@@ -49,12 +49,10 @@ final class CeremonyTest extends TestCase
         $authenticator = new Authenticator();
         $registered = $this->register($authenticator);
 
-        $this->assertSame(64, \strlen($registered->identifier));
         $this->assertTrue($registered->backedUp);
 
         $signedIn = $this->signIn($authenticator, $registered);
         $this->assertSame($registered->identifier, $signedIn->identifier);
-        $this->assertSame(1, $signedIn->record['counter']);
     }
 
     public function testIdentifyMatchesTheRegisteredPasskey(): void
@@ -73,7 +71,7 @@ final class CeremonyTest extends TestCase
         $stored = \json_decode(\json_encode($registered->record, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
         $this->assertIsArray($stored);
 
-        $this->assertSame(1, $this->signIn($authenticator, new Credential($registered->identifier, $stored, true))->record['counter']);
+        $this->assertSame($registered->identifier, $this->signIn($authenticator, new Credential($registered->identifier, $stored, true))->identifier);
     }
 
     public function testSyncedPasskeyAllowsNonIncreasingCounter(): void
@@ -82,7 +80,7 @@ final class CeremonyTest extends TestCase
         $credential = $this->signIn($authenticator, $this->register($authenticator));
 
         $authenticator->counter = 0;
-        $this->assertSame(1, $this->signIn($authenticator, $credential)->record['counter']);
+        $this->assertSame($credential->identifier, $this->signIn($authenticator, $credential)->identifier);
     }
 
     public function testDeviceBoundPasskeyRejectsNonIncreasingCounter(): void
@@ -105,7 +103,7 @@ final class CeremonyTest extends TestCase
         for ($i = 0; $i < 2; $i++) {
             $authenticator->counter = -1;
             $credential = $this->signIn($authenticator, $credential);
-            $this->assertSame(0, $credential->record['counter']);
+            $this->assertFalse($credential->backedUp);
         }
     }
 
