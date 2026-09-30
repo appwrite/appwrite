@@ -1177,6 +1177,7 @@ class Messaging extends Action
         $contentAvailable = $message['data']['contentAvailable'] ?? null;
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
+        $channelId = $message['data']['channelId'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1204,7 +1205,8 @@ class Messaging extends Action
             $badge,
             $contentAvailable,
             $critical,
-            $priority
+            $priority,
+            $channelId
         );
     }
 

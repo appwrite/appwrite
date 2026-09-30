@@ -26,6 +26,7 @@
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor",
+            "Utopia\\Abuse\\": "packages/abuse/src",
             "Utopia\\Agents\\": "packages/agents/src",
             "Utopia\\Audit\\": "packages/audit/src",
             "Utopia\\Auth\\": "packages/auth/src",
@@ -49,6 +50,7 @@
             "Utopia\\Lock\\": "packages/lock/src",
             "Utopia\\Messaging\\": "packages/messaging/src",
             "Utopia\\Mqtt\\": "packages/mqtt/src",
+            "Utopia\\NATS\\": "packages/nats/src",
             "Utopia\\OpenAPI\\": "packages/openapi/src",
             "Utopia\\Platform\\": "packages/platform/src",
             "Utopia\\Pools\\": "packages/pools/src",
@@ -78,6 +80,7 @@
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions",
+            "Utopia\\Abuse\\Tests\\": "packages/abuse/tests",
             "Utopia\\Agents\\Tests\\": "packages/agents/tests",
             "Utopia\\Audit\\Tests\\": "packages/audit/tests",
             "Utopia\\Auth\\Tests\\": "packages/auth/tests",
@@ -102,6 +105,7 @@
             "Utopia\\Lock\\Tests\\": "packages/lock/tests",
             "Utopia\\Messaging\\Tests\\": "packages/messaging/tests",
             "Utopia\\Mqtt\\Tests\\": "packages/mqtt/tests",
+            "Utopia\\NATS\\Tests\\": "packages/nats/tests",
             "Utopia\\OpenAPI\\Tests\\": "packages/openapi/tests",
             "Utopia\\Platform\\Tests\\": "packages/platform/tests",
             "Utopia\\Pools\\Tests\\": "packages/pools/tests",
@@ -144,9 +148,8 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/abuse": "2.0.*",
         "utopia-php/config": "1.*",
-        "utopia-php/database": "^7.3.11",
+        "utopia-php/database": "^7.4.0",
         "utopia-php/migration": "^2.0.0",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
@@ -164,7 +167,8 @@
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
-        "psr/container": "^2.0"
+        "psr/container": "^2.0",
+        "appwrite/appwrite": "^27.1"
     },
     "require-dev": {
         "ext-fileinfo": "*",
@@ -193,6 +197,7 @@
         }
     },
     "replace": {
+        "utopia-php/abuse": "*",
         "utopia-php/agents": "*",
         "utopia-php/audit": "*",
         "utopia-php/auth": "*",
@@ -217,6 +222,7 @@
         "utopia-php/lock": "*",
         "utopia-php/messaging": "*",
         "utopia-php/mqtt": "*",
+        "utopia-php/nats": "*",
         "utopia-php/openapi": "*",
         "utopia-php/platform": "*",
         "utopia-php/pools": "*",

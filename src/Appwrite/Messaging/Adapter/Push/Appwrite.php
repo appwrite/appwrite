@@ -238,6 +238,10 @@ class Appwrite extends PushAdapter
     {
         $envelope = [];
 
+        if ($this->messageId !== '') {
+            $envelope['messageId'] = $this->messageId;
+        }
+
         if ($message->getTitle() !== null) {
             $envelope['notification']['title'] = $message->getTitle();
         }
@@ -258,6 +262,9 @@ class Appwrite extends PushAdapter
         }
         if ($message->getTag() !== null) {
             $envelope['notification']['tag'] = $message->getTag();
+        }
+        if ($message->getChannelId() !== null) {
+            $envelope['notification']['channelId'] = $message->getChannelId();
         }
         if ($message->getBadge() !== null) {
             $envelope['notification']['badge'] = $message->getBadge();
