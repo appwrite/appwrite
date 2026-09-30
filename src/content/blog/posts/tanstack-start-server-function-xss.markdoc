@@ -130,7 +130,7 @@ The usual cause is an HTML form that posts straight to a server-function URL, su
 
 If your app serves server functions from a path other than `/_serverFn/`, recreate the checks as site rules. All conditions on a Firewall rule must match, so each check needs its own rule.
 
-1. Open your project in the [Appwrite Console](https://cloud.appwrite.io) and go to **Firewall**.
+1. Open your project in the [Appwrite Console](https://appwrite.io) and go to **Firewall**.
 2. Click **Create rule**, set **Resource type** to your site, and add two conditions:
    - **Path**, **Starts with**, your server-function base path
    - **Header** `x-tsr-serverfn`, **Not equal**, `true`
