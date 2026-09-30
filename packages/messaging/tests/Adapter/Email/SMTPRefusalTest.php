@@ -83,13 +83,13 @@ final class SMTPRefusalTest extends TestCase
         // What a client is left with after a 4xx to EHLO sends it back to
         // HELO: a session that offers no login at all, with no code behind it.
         yield 'no login offered' => [
-            ['220 smtp.example.test ESMTP', '250 mail.example.test'],
+            ['220 smtp.example.test ESMTP', '450 4.7.0 Temporary EHLO failure', '250 mail.example.test'],
             'No shared mechanism. The server offers: none',
             false,
         ];
     }
 
-    public function testRecipientsRefusedTogetherDoNotShareOneVerdict(): void
+    public function testEveryRecipientRefusedKeepsItsOwnVerdict(): void
     {
         $server = new ScriptedSmtpServer([
             '220 smtp.improvmx.com ESMTP',
@@ -111,12 +111,33 @@ final class SMTPRefusalTest extends TestCase
         ));
 
         $this->assertSame(0, $result['deliveredTo']);
-        $this->assertCount(2, $result['results']);
-        foreach ($result['results'] as $row) {
-            $this->assertSame('failure', $row['status']);
-            // Only one refusal came back, so neither can be called final.
-            $this->assertFalse($row['permanent']);
-        }
+        $verdicts = \array_column($result['results'], 'permanent', 'recipient');
+        $this->assertSame(['bounced@example.test' => true, 'later@example.test' => false], $verdicts);
+        $errors = \array_column($result['results'], 'error', 'recipient');
+        $this->assertStringContainsString('550 5.2.1', (string) $errors['bounced@example.test']);
+        $this->assertStringContainsString('450 4.0.0', (string) $errors['later@example.test']);
+    }
+
+    public function testAMessageRefusedAsAWholeIsFinalForEveryRecipient(): void
+    {
+        $server = new ScriptedSmtpServer([
+            '220 smtp.resend.com ESMTP',
+            self::EHLO,
+            '235 2.7.0 Authentication successful',
+            '550 The support.alvey.study domain is not verified. Please, add and verify your domain on https://resend.com/domains',
+        ]);
+        $adapter = new SMTP(host: "127.0.0.1:{$server->port}", username: 'jane', password: 'secret', timeout: 2, timelimit: 2);
+
+        $result = $adapter->send(new Email(
+            to: [['email' => 'a@example.test', 'name' => 'A'], ['email' => 'b@example.test', 'name' => 'B']],
+            subject: 'Your code',
+            content: '123456',
+            fromName: 'Sender',
+            fromEmail: 'sender@example.test',
+        ));
+
+        $this->assertSame(0, $result['deliveredTo']);
+        $this->assertSame([true, true], \array_column($result['results'], 'permanent'));
     }
 
     /**

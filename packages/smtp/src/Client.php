@@ -100,7 +100,7 @@ final class Client
                 $this->reset();
             }
 
-            throw new TransactionException($refusal, 'Every recipient was refused');
+            throw new TransactionException($refusal, 'Every recipient was refused', $rejected);
         }
 
         $this->command('DATA', [354]);

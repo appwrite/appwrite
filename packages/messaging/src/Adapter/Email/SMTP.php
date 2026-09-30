@@ -104,12 +104,11 @@ class SMTP extends EmailAdapter
                 $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
         } catch (TransactionException $exception) {
-            // The exception carries one reply. With several recipients the
-            // others may have been refused for a different reason, so only a
-            // lone recipient takes its verdict.
-            $permanent = \count($recipients) === 1 && $exception->isPermanent();
+            // Every recipient refused: each answers for itself. Otherwise the
+            // refusal was the message's own (MAIL FROM, DATA) and holds for all.
             foreach ($recipients as $email) {
-                $response->addResult($email, (string) $exception->reply, $permanent);
+                $reply = $exception->rejected[$email] ?? $exception->reply;
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
 
             // A 421 during RCPT ends the session with the transaction.
