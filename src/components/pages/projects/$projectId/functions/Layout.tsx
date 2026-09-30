@@ -1,7 +1,4 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
-import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
   useParams,
   useLocation,
@@ -399,15 +396,6 @@ function FunctionLayoutContent() {
     })
   }
 
-  const terraformResource = getTerraformResourcePath(
-    'function',
-    functionId ?? '',
-  )
-  const isTerraformManaged = !!useTerraformResourceOnMount(
-    projectId,
-    terraformResource,
-  )
-
   if (isLoading) {
     return (
       <div className="flex flex-col">
@@ -448,15 +436,6 @@ function FunctionLayoutContent() {
       </div>
     )
   }
-
-  // Executions are data, not configuration Terraform manages.
-  const terraformAlert =
-    isTerraformManaged && activeTab !== 'executions' ? (
-    <TerraformResourceAlert
-      projectId={projectId}
-      resource={terraformResource}
-    />
-  ) : undefined
 
   // Disabled alert
   const disabledAlert =
@@ -650,12 +629,8 @@ function FunctionLayoutContent() {
           }
           createDisabled={activeTab === 'executions' && !func?.deploymentId}
           contentAfterBorder={
-            terraformAlert ||
-            disabledAlert ||
-            buildingAlert ||
-            configAlert ? (
+            disabledAlert || buildingAlert || configAlert ? (
               <div>
-                {terraformAlert}
                 {disabledAlert}
                 {buildingAlert}
                 {configAlert}

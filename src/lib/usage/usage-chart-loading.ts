@@ -80,6 +80,10 @@ export function shouldShowUsageTabMetricSkeleton(
   return !isError && data == null && isFetching
 }
 
+/** Soft fade-in for chart content when data first replaces a loading state. */
+export const USAGE_CHART_FADE_IN_CLASS_NAME =
+  'animate-in fade-in animation-duration-500 motion-reduce:animate-none'
+
 /** Subtle fade while a chart refetches with previous data still visible. */
 export function usageChartRefreshingClassName(isRefreshing: boolean): string {
   return cn(

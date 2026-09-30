@@ -14,11 +14,10 @@ import {
 } from '@/components/ui/tooltip'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
-  FIREWALL_PROMO_BANNER_ENABLED,
   FIREWALL_PROMO_BANNER_ID,
-  getConsoleBannerById,
-  isConsoleBannerVisible,
+  isFirewallPromoOperatorAudience,
   isFirewallPromoPath,
+  isFirewallPromoVisible,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
 import { useT } from '@/lib/i18n/translate'
@@ -27,10 +26,8 @@ import type { OperatorAccount } from '@/lib/operator-account'
 import { useDismissConsoleBanner } from '@/lib/react-query/hooks'
 import { isConsoleBannerDismissed, type UserPrefs } from '@/lib/user-prefs-keys'
 
-const FIREWALL_PROMO_BANNER = getConsoleBannerById(FIREWALL_PROMO_BANNER_ID)!
-
-const FIREWALL_PROMO_VIDEO_HLS = '/videos/firewall-trailer/index.m3u8'
-const FIREWALL_PROMO_VIDEO_MP4_FALLBACK = '/videos/firewall-trailer.mp4'
+/** Full-quality source (~14 Mbps 1080p60); faststart moov enables range-based start. */
+const FIREWALL_PROMO_VIDEO = '/videos/firewall-trailer-faststart.mp4'
 
 /** Let the page settle before taking over the screen. */
 const FIREWALL_PROMO_OPEN_DELAY_MS = 800
@@ -59,21 +56,17 @@ export function FirewallPromoBanner() {
   )
 
   const operatorAccount = account as OperatorAccount | undefined
-  const canImpersonate =
-    operatorAccount?.impersonator === true &&
-    !operatorAccount?.impersonatorUserId
+  const operatorAudience = isFirewallPromoOperatorAudience(operatorAccount)
+  const onPromoPath = isFirewallPromoPath(location.pathname)
 
   const eligible =
-    (FIREWALL_PROMO_BANNER_ENABLED || preview) &&
-    isConsoleBannerVisible(FIREWALL_PROMO_BANNER, {
+    isFirewallPromoVisible({
       preview,
       dismissed: dismissedFromPrefs,
+      operatorAudience,
     }) &&
     !isScreenshotModeActive &&
-    (preview ||
-      (isAuthenticated &&
-        canImpersonate &&
-        isFirewallPromoPath(location.pathname)))
+    (preview || (operatorAudience && isAuthenticated && onPromoPath))
 
   useEffect(() => {
     if (!eligible) {
@@ -135,10 +128,7 @@ export function FirewallPromoBanner() {
           className="fixed inset-x-0 bottom-0 z-[100] flex w-full flex-col overflow-hidden bg-background text-foreground outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-500"
         >
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden p-6 sm:p-8 lg:p-10">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/20 via-background/40 to-background"
-            />
+            <HeadlessVideoPlayer src={FIREWALL_PROMO_VIDEO} variant="ambient" />
             <div
               className="relative z-[1] min-h-0 w-full flex-1"
               style={{ containerType: 'size' }}
@@ -153,8 +143,7 @@ export function FirewallPromoBanner() {
               >
                 <div className="relative size-full overflow-hidden rounded-xl sm:rounded-2xl">
                   <HeadlessVideoPlayer
-                    src={FIREWALL_PROMO_VIDEO_HLS}
-                    fallbackSrc={FIREWALL_PROMO_VIDEO_MP4_FALLBACK}
+                    src={FIREWALL_PROMO_VIDEO}
                     fit="cover"
                     muted={!soundOn}
                     className="rounded-xl sm:rounded-2xl"
@@ -226,7 +215,7 @@ export function FirewallPromoBanner() {
                   <Link
                     to="/products/$productId"
                     params={{ productId: 'firewall' }}
-                    {...analyticsAttrs(FIREWALL_PROMO_BANNER.event)}
+                    {...analyticsAttrs('firewall-promo-banner-learn-more')}
                     onClick={dismiss}
                   >
                     {t('Learn more')}

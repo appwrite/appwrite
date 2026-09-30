@@ -128,6 +128,11 @@
       },
     },
   },
+  "patchedDependencies": {
+    "@tanstack/router-core@1.171.28": "patches/@tanstack%2Frouter-core@1.171.28.patch",
+    "@tanstack/start-server-core@1.169.32": "patches/@tanstack%2Fstart-server-core@1.169.32.patch",
+    "@tanstack/start-client-core@1.170.28": "patches/@tanstack%2Fstart-client-core@1.170.28.patch",
+  },
   "overrides": {
     "@tanstack/react-store": "^0.9.3",
     "@tanstack/store": "^0.9.3",

@@ -74,7 +74,8 @@ function useVideoSource(
       }
       hls = new Hls({
         maxBufferLength: 30,
-        startLevel: 0,
+        startLevel: -1,
+        capLevelToPlayerSize: false,
       })
       hls.loadSource(src)
       hls.attachMedia(video)

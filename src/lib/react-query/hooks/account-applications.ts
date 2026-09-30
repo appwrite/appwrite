@@ -38,6 +38,15 @@ async function fetchAllPages<T extends { $id: string }>(
   return items
 }
 
+/** Every OAuth2 consent on the account: one paginated list call, nothing resolved. */
+export async function fetchAccountConsents(): Promise<Models.Oauth2Consent[]> {
+  return fetchAllPages((queries) =>
+    sdk.forConsole.account
+      .listConsents({ queries })
+      .then((response) => response.consents),
+  )
+}
+
 export type AccountConnectedApp = {
   consent: Models.Oauth2Consent
   /** Registered app ID or CIMD URL - whichever identifies the client. */
@@ -163,11 +172,7 @@ export async function fetchAccountConnectedApps(): Promise<{
   groups: AccountConnectedAppGroup[]
   total: number
 }> {
-  const consents = await fetchAllPages((queries) =>
-    sdk.forConsole.account
-      .listConsents({ queries })
-      .then((response) => response.consents),
-  )
+  const consents = await fetchAccountConsents()
 
   const connectedApps = await Promise.all(
     consents.map(async (consent) => {
@@ -189,6 +194,38 @@ export async function fetchAccountConnectedApps(): Promise<{
   }
 }
 
+/**
+ * Consents only. Answers "which clients has this account authorized?" with
+ * a single list call, so always-mounted UI (sidebar MCP status, overview
+ * CTA) and route loaders can use it freely. Keyed under the connected-apps
+ * prefix so revoking on the Applications page refreshes it too.
+ */
+export function accountConsentsQueryOptions() {
+  return queryOptions({
+    queryKey: ['applications', 'account', 'consents'],
+    queryFn: fetchAccountConsents,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+export function useAccountConsents(options?: { enabled?: boolean }) {
+  return useQuery({
+    ...accountConsentsQueryOptions(),
+    enabled: options?.enabled ?? true,
+  })
+}
+
+/**
+ * Consents with resolved client branding. Only the account Applications
+ * page should subscribe: every consent costs an apps.get call, and every
+ * URL-form (CIMD) client a cross-origin fetch of its metadata document.
+ * Anything that just needs to know whether a client is connected must use
+ * `accountConsentsQueryOptions` instead.
+ */
 export function accountConnectedAppsQueryOptions() {
   return queryOptions({
     queryKey: ['applications', 'account'],

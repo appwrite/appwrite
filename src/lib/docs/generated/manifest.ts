@@ -290,6 +290,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
@@ -1458,7 +1465,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -4099,7 +4106,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "tooling/command-line/non-interactive",

@@ -11,12 +11,14 @@ import {
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InitRecapPromoBanner } from '@/components/global/shared/InitRecapPromoBanner'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
-  FIREWALL_PROMO_BANNER_ENABLED,
-  FIREWALL_PROMO_BANNER_ID,
+  isFirewallPromoOperatorAudience,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
+import { FIREWALL_PROMO_BANNER_ID } from '@/lib/console-banners/catalog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { OperatorAccount } from '@/lib/operator-account'
 import { useT } from '@/lib/i18n/translate'
 
 const FirewallPromoBannerLazy = lazy(() =>
@@ -26,11 +28,13 @@ const FirewallPromoBannerLazy = lazy(() =>
 )
 
 function FirewallPromoBannerGate() {
+  const { account } = useAuth()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
-  const show =
-    FIREWALL_PROMO_BANNER_ENABLED ||
-    isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
-  if (!show) return null
+  const preview = isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
+  const operatorAudience = isFirewallPromoOperatorAudience(
+    account as OperatorAccount | undefined,
+  )
+  if (!preview && !operatorAudience) return null
   return (
     <Suspense fallback={null}>
       <FirewallPromoBannerLazy />
