@@ -1,5 +1,4 @@
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -19,19 +18,7 @@ import {
   resolvePreferredOsTabId,
 } from '@/lib/user-os'
 import { cn } from '@/lib/utils'
-
-type TabsContextValue = {
-  activeId: string
-  setActiveId: (id: string) => void
-  registerTab: (id: string, title: string) => void
-  tabs: Array<{ id: string; title: string }>
-}
-
-const TabsContext = createContext<TabsContextValue | null>(null)
-
-export function useTabsContext() {
-  return useContext(TabsContext)
-}
+import { TabsContext } from './tabs-context'
 
 export function Tabs({
   children,
@@ -56,6 +43,13 @@ export function Tabs({
   const selectTab = useCallback((id: string) => {
     userSelectedRef.current = true
     setActiveId(id)
+  }, [])
+
+  const registerTab = useCallback((id: string, title: string) => {
+    setTabs((prev) => {
+      if (prev.some((tab) => tab.id === id)) return prev
+      return [...prev, { id, title }]
+    })
   }, [])
 
   useEffect(() => {
@@ -87,15 +81,10 @@ export function Tabs({
     () => ({
       activeId,
       setActiveId: selectTab,
-      registerTab: (id: string, title: string) => {
-        setTabs((prev) => {
-          if (prev.some((tab) => tab.id === id)) return prev
-          return [...prev, { id, title }]
-        })
-      },
+      registerTab,
       tabs: orderedTabs,
     }),
-    [activeId, orderedTabs, selectTab],
+    [activeId, orderedTabs, selectTab, registerTab],
   )
 
   return (
@@ -138,11 +127,14 @@ export function TabsItem({
 }) {
   const ctx = useContext(TabsContext)
   const tabId = id ?? title ?? 'tab'
+  const tabTitle = title ?? tabId
+  const registerTab = ctx?.registerTab
 
-  if (ctx) {
-    ctx.registerTab(tabId, title ?? tabId)
-    if (ctx.activeId !== tabId) return null
-  }
+  useEffect(() => {
+    registerTab?.(tabId, tabTitle)
+  }, [registerTab, tabId, tabTitle])
+
+  if (ctx && ctx.activeId !== tabId) return null
 
   return <div>{children}</div>
 }

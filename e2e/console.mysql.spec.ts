@@ -237,11 +237,9 @@ test.describe('console mysql', () => {
     )
     await waitForMysqlDatabaseShell(page)
 
-    try {
-      schemaName = await selectMysqlSchema(page, database.databaseId)
-    } catch {
-      schemaName = await selectMysqlSchema(page)
-    }
+    // Managed MySQL exposes one application schema. Guessing a name first
+    // burned the picker's full poll window on every run before falling back.
+    schemaName = await selectMysqlSchema(page)
     expect(schemaName.length).toBeGreaterThan(0)
     await expect(page.getByRole('button', { name: 'Create table' })).toBeEnabled(
       { timeout: 30_000 },

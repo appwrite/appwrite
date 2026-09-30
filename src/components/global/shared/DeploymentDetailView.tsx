@@ -47,6 +47,7 @@ import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Dialog,
   DialogContent,
@@ -384,6 +385,8 @@ export function DeploymentDetailView({
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [deploymentActionsDrawerOpen, setDeploymentActionsDrawerOpen] =
     useState(false)
+  /** Below lg the logs and details panes share the screen; this picks which one is shown. */
+  const [mobilePane, setMobilePane] = useState<'logs' | 'details'>('logs')
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
@@ -2088,7 +2091,40 @@ export function DeploymentDetailView({
     >
       <>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:border-e lg:border-border">
+          <div className="shrink-0 border-b border-border px-6 py-2 lg:hidden">
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={mobilePane}
+              onValueChange={(value) => {
+                if (value === 'logs' || value === 'details') {
+                  setMobilePane(value)
+                }
+              }}
+              className="grid w-full grid-cols-2"
+              aria-label={t('Deployment view')}
+            >
+              <ToggleGroupItem
+                value="logs"
+                className="h-8 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+              >
+                {t('Logs')}
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="details"
+                className="h-8 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+              >
+                {t('Details')}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div
+            className={cn(
+              'min-h-0 min-w-0 flex-1 flex-col lg:flex lg:border-e lg:border-border',
+              mobilePane === 'logs' ? 'flex' : 'hidden',
+            )}
+          >
             <div className="min-w-0 shrink-0 border-b border-border">
               <TooltipProvider>
                 <div className="flex min-w-0 items-center gap-2 py-3 ps-6 pe-4 sm:pe-5">
@@ -2159,14 +2195,24 @@ export function DeploymentDetailView({
             </div>
           </div>
 
-          <aside className="hidden min-h-0 w-[min(100%,20rem)] shrink-0 flex-col overflow-y-auto bg-muted/10 px-6 py-3 lg:flex xl:w-[min(100%,22rem)]">
+          <aside
+            className={cn(
+              'min-h-0 w-full flex-1 flex-col overflow-y-auto bg-muted/10 px-6 py-3 lg:flex lg:w-[min(100%,20rem)] lg:flex-none lg:shrink-0 xl:w-[min(100%,22rem)]',
+              mobilePane === 'details' ? 'flex' : 'hidden',
+            )}
+          >
             {deploymentDetailSidebar}
           </aside>
         </div>
 
         {/* Scroll controls: fixed over logs; inset from right on lg+ to clear the side panel */}
         {buildLogs && (
-          <div className="pointer-events-none fixed bottom-24 end-8 z-[101] lg:end-[calc(20rem+1.25rem)] xl:end-[calc(22rem+1.25rem)]">
+          <div
+            className={cn(
+              'pointer-events-none fixed bottom-24 end-8 z-[101] lg:block lg:end-[calc(20rem+1.25rem)] xl:end-[calc(22rem+1.25rem)]',
+              mobilePane === 'logs' ? 'block' : 'hidden',
+            )}
+          >
             <div className="pointer-events-auto flex flex-col gap-2">
               <TooltipProvider>
                 <TooltipPrimitive.Root>

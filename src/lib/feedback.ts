@@ -1,97 +1,82 @@
 /**
- * Feedback submission to the Growth server.
- * Does not use the Appwrite SDK; uses plain fetch to PUBLIC_GROWTH_ENDPOINT.
- * If VITE_GROWTH_ENDPOINT is not set, submission is skipped (no request is sent).
+ * Console and docs feedback, filed as growth conversations.
  */
 
-import { getRuntimeConfig } from '@/lib/runtime-config'
+import { ConversationType, createConversation, GrowthError } from '@/lib/growth'
+import { translate } from '@/lib/i18n/translate'
 
-/** Set VITE_GROWTH_ENDPOINT in .env to enable feedback submission (e.g. https://growth.example.com) */
-const GROWTH_ENDPOINT = getRuntimeConfig().growthEndpoint
+export const MAX_FEEDBACK_LENGTH = 500
 
-/** Custom field IDs used by the Growth feedback API */
-export const FEEDBACK_CUSTOM_FIELDS = {
-  /** Current page (full URL) - always sent */
-  PAGE_URL: '47364',
-  /** NPS score (0-10) - only when subject is feedback-nps */
-  NPS_SCORE: '40655',
-  /** Billing plan ID - only when organization has a billing plan */
-  BILLING_PLAN: '56109',
-} as const
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export interface FeedbackMetaFields {
-  /** Where the feedback form was opened (e.g. navbar, sidebar). Use "n/a" when not from a specific place. */
-  source: string
-  /** Current organization ID (if any) */
-  orgId: string
-  /** Current project ID (if any) */
-  projectId: string
-  /** Current user ID (if any) */
-  userId: string
+const INVALID_EMAIL_MESSAGE = 'Please enter a valid email address'
+
+function isEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim())
 }
 
-export interface FeedbackCustomField {
-  id: string
-  value: string | number
+export type FeedbackSentiment = 'positive' | 'negative'
+
+export interface FeedbackDraft {
+  sentiment: FeedbackSentiment | null
+  message: string
+  /** The account email, or the one a signed-out visitor typed. */
+  email: string
+}
+
+/**
+ * Whether console feedback can be sent. Negative feedback needs a comment, and
+ * a valid email is always needed because signed-out visitors send without a
+ * session.
+ */
+export function isFeedbackReady(draft: FeedbackDraft): boolean {
+  return (
+    draft.sentiment !== null &&
+    isEmail(draft.email) &&
+    draft.message.length <= MAX_FEEDBACK_LENGTH &&
+    (draft.sentiment !== 'negative' || draft.message.trim().length > 0)
+  )
 }
 
 export interface SubmitFeedbackParams {
-  /** Feedback type: feedback-general or feedback-nps */
-  subject: string
-  /** User's free-text message */
   message: string
-  /** User's email (optional) */
-  email?: string
-  /** User's name, or "Unknown"; truncated to 40 characters */
-  firstname: string
-  /** Context: page URL, NPS score, billing plan ID, etc. */
-  customFields: FeedbackCustomField[]
-  /** Context: source, orgId, projectId, userId */
-  metaFields: FeedbackMetaFields
+  /** Where the feedback form was opened (e.g. navbar, command-center). */
+  source: string
+  /** Page the feedback was sent from. */
+  route: string
+  /**
+   * The account email, or the one a signed-out visitor typed. The server reads
+   * it from the session when there is one.
+   */
+  email: string
+  name?: string
+  organizationId?: string
+  projectId?: string
 }
 
-const FIRSTNAME_MAX_LENGTH = 40
-
 /**
- * Submits feedback to the Growth server.
- * If VITE_GROWTH_ENDPOINT is not set, returns false (no request is sent).
- * On response status >= 400, throws with message "Failed to submit feedback".
- * @returns true if the request was sent and succeeded, false if skipped (endpoint not configured)
+ * Submits general console feedback.
+ *
+ * @throws GrowthError when the email is invalid or the server rejects the request.
  */
 export async function submitFeedback(
   params: SubmitFeedbackParams,
-): Promise<boolean> {
-  if (!GROWTH_ENDPOINT?.trim()) {
-    return false
+): Promise<void> {
+  if (!isEmail(params.email)) {
+    throw new GrowthError(translate(INVALID_EMAIL_MESSAGE), 400)
   }
-
-  const firstname = params.firstname.slice(0, FIRSTNAME_MAX_LENGTH) || 'Unknown'
-
-  const body = {
-    subject: params.subject,
+  await createConversation({
+    type: ConversationType.Feedback,
+    email: params.email,
+    name: params.name,
     message: params.message,
-    email: params.email ?? '',
-    firstname,
-    customFields: params.customFields,
-    metaFields: params.metaFields,
-  }
-
-  const response = await fetch(
-    `${GROWTH_ENDPOINT.replace(/\/$/, '')}/feedback`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    organizationId: params.organizationId,
+    projectId: params.projectId,
+    attributes: {
+      route: params.route,
+      source: params.source,
     },
-  )
-
-  if (response.status >= 400) {
-    throw new Error('Failed to submit feedback')
-  }
-
-  return true
+  })
 }
 
 export type DocsFeedbackType = 'positive' | 'negative'
@@ -101,42 +86,23 @@ export interface SubmitDocsFeedbackParams {
   route: string
   comment: string
   email: string
-  userId?: string
 }
 
 /**
- * Submits docs page feedback to the Growth server (`/feedback/docs`).
- * Returns false when VITE_GROWTH_ENDPOINT is not configured.
+ * Submits a docs page rating.
+ *
+ * @throws GrowthError when the server rejects the request.
  */
 export async function submitDocsFeedback(
   params: SubmitDocsFeedbackParams,
-): Promise<boolean> {
-  if (!GROWTH_ENDPOINT?.trim()) {
-    return false
-  }
-
-  const response = await fetch(
-    `${GROWTH_ENDPOINT.replace(/\/$/, '')}/feedback/docs`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: params.email,
-        type: params.type,
-        route: params.route,
-        comment: params.comment,
-        metaFields: {
-          userId: params.userId,
-        },
-      }),
+): Promise<void> {
+  await createConversation({
+    type: ConversationType.Docs,
+    email: params.email,
+    message: params.comment,
+    attributes: {
+      rating: params.type,
+      route: params.route,
     },
-  )
-
-  if (response.status >= 400) {
-    throw new Error('Failed to submit feedback')
-  }
-
-  return true
+  })
 }

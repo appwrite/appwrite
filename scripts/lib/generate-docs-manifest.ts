@@ -26,6 +26,7 @@ type DocsPageEntry = {
   category?: string
   framework?: string
   draft?: boolean
+  faqs?: Array<{ question: string; answer: string }>
 }
 
 type DocsSearchEntry = {
@@ -86,6 +87,25 @@ function getReadingTimeMinutes(text: string): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE))
 }
 
+function parseFaqs(value: unknown): Array<{ question: string; answer: string }> | undefined {
+  if (!Array.isArray(value)) return undefined
+  const faqs: Array<{ question: string; answer: string }> = []
+  for (const item of value) {
+    if (
+      item &&
+      typeof item === 'object' &&
+      typeof (item as { question?: unknown }).question === 'string' &&
+      typeof (item as { answer?: unknown }).answer === 'string'
+    ) {
+      faqs.push({
+        question: (item as { question: string }).question,
+        answer: (item as { answer: string }).answer,
+      })
+    }
+  }
+  return faqs.length > 0 ? faqs : undefined
+}
+
 async function main() {
   const files = await walkMarkdocFiles(DOCS_DIR)
 
@@ -106,6 +126,7 @@ async function main() {
     const description =
       (typeof data.description === 'string' && data.description) || toSummary(raw)
 
+    const faqs = parseFaqs(data.faqs)
     pages.push({
       slug,
       title,
@@ -116,6 +137,7 @@ async function main() {
       ...(typeof data.category === 'string' ? { category: data.category.trim() } : {}),
       ...(typeof data.framework === 'string' ? { framework: data.framework.trim() } : {}),
       ...(data.draft === true ? { draft: true } : {}),
+      ...(faqs ? { faqs } : {}),
     })
 
     searchIndex.push({

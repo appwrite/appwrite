@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CONTENT_BODY_FONT_CLASS } from '@/lib/docs/prose-typography'
+import { BELOW_APP_HEADER_STICKY_TOP_CLASS } from '@/lib/layout/app-header-height'
 import { cn } from '@/lib/utils'
 import { slugifyHeading } from '@/lib/marketing/slugify'
 
@@ -135,15 +136,19 @@ export function PolicyMarkdown({ content, className }: PolicyMarkdownProps) {
           },
           table({ children }) {
             return (
-              <div className="my-4 overflow-hidden rounded-lg border border-border bg-card">
-                <Table>{children}</Table>
+              <div className="my-4 overflow-visible rounded-lg border border-border bg-card">
+                <Table withScrollContainer={false}>{children}</Table>
               </div>
             )
           },
           thead({ children }) {
             return (
               <PolicyTableSectionContext.Provider value="header">
-                <TableHeader>{children}</TableHeader>
+                <TableHeader
+                  className={cn(BELOW_APP_HEADER_STICKY_TOP_CLASS, 'z-10 bg-card')}
+                >
+                  {children}
+                </TableHeader>
               </PolicyTableSectionContext.Provider>
             )
           },
@@ -171,7 +176,7 @@ export function PolicyMarkdown({ content, className }: PolicyMarkdownProps) {
           },
           th({ children }) {
             return (
-              <TableHead className={policyTableHeadClassName}>
+              <TableHead className={cn(policyTableHeadClassName, 'bg-card')}>
                 <PolicyTableCellContent>{children}</PolicyTableCellContent>
               </TableHead>
             )

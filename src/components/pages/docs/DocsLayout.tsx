@@ -67,7 +67,7 @@ export function DocsLayout({
                 parent={parent}
                 actions={headerActions}
               />
-              <div className="min-w-0 overflow-x-clip">
+              <div className="min-w-0">
                 {children}
                 {showStepNav ? <DocsStepNav slug={slug} /> : null}
                 {!wideContent ? <DocsFeedback /> : null}

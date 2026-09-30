@@ -24,12 +24,16 @@ export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_WITH_BREAKDOWN = 360
 /** Desktop row height for chart-only layout (padding + header + chart). */
 export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_CHART_ONLY = 324
 
-import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+  OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+} from '@/lib/usage/breakdown-limits'
 
 /** Max rows shown in the overview top-endpoints breakdown (matches usage API limit). */
-export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT
+export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT =
+  OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT
 
-/** Executions / GB-hours breakdown rows (matches compute resource fetch limit). */
+/** Executions / GB-hours breakdown rows. */
 export const OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT =
   COMPUTE_BREAKDOWN_RESOURCE_LIMIT
 
@@ -85,9 +89,7 @@ export function overviewChartTabPanelVisibilityClass(
 }
 
 /** Chart + breakdown row - fixed height on wide layouts. */
-export function overviewChartContentRowClassName(
-  withBreakdown = true,
-): string {
+export function overviewChartContentRowClassName(withBreakdown = true): string {
   return withBreakdown
     ? 'flex min-h-[684px] min-w-0 flex-col @[700px]:h-[360px] @[700px]:min-h-[360px] @[700px]:max-h-[360px] @[700px]:flex-row @[700px]:items-stretch'
     : 'flex min-h-[324px] min-w-0 flex-col @[700px]:h-[324px] @[700px]:min-h-[324px] @[700px]:max-h-[324px] @[700px]:flex-row @[700px]:items-stretch'
@@ -120,8 +122,7 @@ export const overviewChartPanelChartAreaClass =
   'relative flex h-full min-h-0 w-full min-w-0 flex-col'
 
 /** Fills the chart area so ResponsiveContainer can measure 100% width and height. */
-export const overviewChartPanelChartFillClass =
-  `absolute inset-0 min-h-0 min-w-0 ${FORCE_LTR_CLASS}`
+export const overviewChartPanelChartFillClass = `absolute inset-0 min-h-0 min-w-0 ${FORCE_LTR_CLASS}`
 
 export const overviewChartPanelEmptyClass =
   'flex h-full min-h-0 w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'

@@ -13,7 +13,17 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
-import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate, EmbeddingModel } from '@appwrite.io/console'
+import {
+  Query,
+  ID,
+  DocumentsDBIndexType,
+  TablesDBIndexType,
+  VectorsDBIndexType,
+  OrderBy,
+  RelationshipType,
+  RelationMutate,
+  EmbeddingModel,
+} from '@appwrite.io/console'
 import {
   DatabaseType,
   coerceDatabaseType,
@@ -30,8 +40,14 @@ import {
   isCloudProfile,
 } from '@/lib/console-profiles'
 import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
-import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
-import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
+import {
+  getDedicatedDatabaseIdError,
+  resolveDedicatedDatabaseId,
+} from '@/lib/dedicated-database-id'
+import {
+  SERVERLESS_DATABASE_SPEC_ID,
+  isServerlessDatabaseSpecId,
+} from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
@@ -46,7 +62,22 @@ import {
 } from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
-import { coerceTrimmedString } from '@/lib/databases/dedicated-database-status'
+import {
+  coerceTrimmedString,
+  resolveDatabaseLifecycleStatus,
+} from '@/lib/databases/dedicated-database-status'
+import {
+  canAbortTablesDatabaseMigration,
+  getBlockingTablesDatabaseMigration,
+  hasTablesDatabaseMigrationCutover,
+  parseTablesDatabaseMigrationIdFromError,
+} from '@/lib/databases/tables-database-migration'
+import {
+  isAppwriteHttpStatus,
+  isHttpNotFoundError,
+} from '@/lib/utils/error-formatting'
+import { translate } from '@/lib/i18n/translate'
+import { readDatabaseSpecification } from '@/lib/databases/database-compute'
 import { waitForDatabaseRealtimeEvent } from '@/lib/realtime/wait-for-database-realtime'
 import { normalizeDedicatedRealtimeEngine } from '@/lib/realtime/dedicated-database-cache'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
@@ -73,7 +104,10 @@ import {
   serializeRowDataForApi,
   type PendingRowCellEdit,
 } from '@/lib/database-row-inline-edits'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  buildIdLookupQueryBatches,
+  fetchLookupBatches,
+} from '@/lib/appwrite-id'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
@@ -135,10 +169,7 @@ function listProductDatabasesIfEnabled(
  * Failures are not cached. Mutations that change a database should call
  * `invalidateDatabaseModel(projectId, databaseId)` so the next call refetches.
  */
-const databaseModelInflight = new Map<
-  string,
-  Promise<Models.Database | null>
->()
+const databaseModelInflight = new Map<string, Promise<Models.Database | null>>()
 const databaseModelCache = new Map<
   string,
   { value: Models.Database | null; expiresAt: number }
@@ -319,7 +350,12 @@ export async function waitForCreatedDatabaseLifecycleReady(
   if (kind.type === 'native') {
     return waitForDedicatedDatabaseReady(projectId, databaseId, {
       type: 'engine',
-      engine: kind.engine === 'postgres' ? 'postgresql' : kind.engine === 'mongo' ? 'mongodb' : 'mysql',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
     })
   }
 
@@ -466,9 +502,7 @@ function seedDatabaseModelCache(
   databaseTypeCache.set(key, { value: backend, expiresAt })
 }
 
-function readProductDatabaseSpecification(
-  db: Models.Database,
-): string | null {
+function readProductDatabaseSpecification(db: Models.Database): string | null {
   const value = db.specification
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
@@ -733,7 +767,7 @@ function flattenDocumentForTableRow(
   return { ...doc }
 }
 
-function mapCollectionAttributesToColumnLike(
+export function mapCollectionAttributesToColumnLike(
   attributes: unknown[] | undefined,
 ): unknown[] {
   if (!Array.isArray(attributes)) return []
@@ -957,12 +991,7 @@ export async function fetchProjectConsoleDatabases(
   )
 
   for (const db of databases) {
-    seedDatabaseModelCache(
-      projectId,
-      db.$id,
-      db,
-      coerceDatabaseType(db.type),
-    )
+    seedDatabaseModelCache(projectId, db.$id, db, coerceDatabaseType(db.type))
   }
 
   return {
@@ -980,60 +1009,47 @@ export async function fetchProjectDatabasesByIds(
     return { databases: [] }
   }
 
-  const validIds = [
-    ...new Set(
-      databaseIds.filter((id) => typeof id === 'string' && id.trim()),
-    ),
-  ].slice(0, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT)
-  if (validIds.length === 0) {
+  const batches = buildIdLookupQueryBatches(databaseIds)
+  if (batches.length === 0) {
     return { databases: [] }
   }
 
-  const idQuery =
-    validIds.length === 1
-      ? Query.equal('$id', validIds[0])
-      : Query.or(validIds.map((id) => Query.equal('$id', id)))
-
   const projectSdk = sdk.forProject(projectId)
-  const settled = await Promise.allSettled([
-    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Documentsdb, [
-      idQuery,
-      Query.limit(validIds.length),
-    ]),
-    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Vectorsdb, [
-      idQuery,
-      Query.limit(validIds.length),
-    ]),
-    projectSdk.tablesDB.list({
-      queries: [idQuery, Query.limit(validIds.length)],
-    }),
-  ])
+  const collect = (
+    list: (queries: string[]) => Promise<{ databases: Models.Database[] }>,
+  ): Promise<Models.Database[]> =>
+    fetchLookupBatches(
+      batches,
+      async (queries) => (await list(queries)).databases,
+    )
+
+  const [documentsDatabases, vectorsDatabases, tablesDatabases] =
+    await Promise.all([
+      collect((queries) =>
+        listProductDatabasesIfEnabled(
+          projectSdk,
+          DatabaseType.Documentsdb,
+          queries,
+        ),
+      ),
+      collect((queries) =>
+        listProductDatabasesIfEnabled(
+          projectSdk,
+          DatabaseType.Vectorsdb,
+          queries,
+        ),
+      ),
+      collect((queries) => projectSdk.tablesDB.list({ queries })),
+    ])
 
   const databases = mergeProjectDatabasesById([
-    {
-      databases:
-        settled[0].status === 'fulfilled' ? settled[0].value.databases : [],
-      defaultType: DatabaseType.Documentsdb,
-    },
-    {
-      databases:
-        settled[1].status === 'fulfilled' ? settled[1].value.databases : [],
-      defaultType: DatabaseType.Vectorsdb,
-    },
-    {
-      databases:
-        settled[2].status === 'fulfilled' ? settled[2].value.databases : [],
-      defaultType: DatabaseType.Tablesdb,
-    },
+    { databases: documentsDatabases, defaultType: DatabaseType.Documentsdb },
+    { databases: vectorsDatabases, defaultType: DatabaseType.Vectorsdb },
+    { databases: tablesDatabases, defaultType: DatabaseType.Tablesdb },
   ])
 
   for (const db of databases) {
-    seedDatabaseModelCache(
-      projectId,
-      db.$id,
-      db,
-      coerceDatabaseType(db.type),
-    )
+    seedDatabaseModelCache(projectId, db.$id, db, coerceDatabaseType(db.type))
   }
 
   return { databases }
@@ -1108,8 +1124,7 @@ function dedicatedComputeEngineForProductBackend(
 
 function requiresDedicatedCompute(backend: DatabaseType): boolean {
   return (
-    backend === DatabaseType.Documentsdb ||
-    backend === DatabaseType.Vectorsdb
+    backend === DatabaseType.Documentsdb || backend === DatabaseType.Vectorsdb
   )
 }
 
@@ -1129,8 +1144,10 @@ async function resolveDedicatedSpecification(
   )
   const specsSource =
     source ?? dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb)
-  const response =
-    await dedicatedDatabaseService(projectSdk, specsSource).listSpecifications()
+  const response = await dedicatedDatabaseService(
+    projectSdk,
+    specsSource,
+  ).listSpecifications()
   const specs = mapDedicatedDatabaseSpecifications(response.specifications)
   const defaultId = getDefaultEnabledSpecId(specs)
   if (!defaultId) {
@@ -1413,27 +1430,20 @@ export async function waitForCreatedDatabaseHaReady(
       return true
     }
     const status = typeof payload.status === 'string' ? payload.status : null
-    return (
-      typeof replicas !== 'number' &&
-      isDatabaseLifecycleReady(status)
-    )
+    return typeof replicas !== 'number' && isDatabaseLifecycleReady(status)
   }
 
   try {
     if (kind.type === 'native') {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        {
-          type: 'engine',
-          engine:
-            kind.engine === 'postgres'
-              ? 'postgresql'
-              : kind.engine === 'mongo'
-                ? 'mongodb'
-                : 'mysql',
-        },
-      )
+      const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      })
       if (database && matchesHaReady(database as Record<string, unknown>)) {
         return true
       }
@@ -1462,19 +1472,15 @@ export async function waitForCreatedDatabaseHaReady(
     })
 
     if (kind.type === 'native') {
-      const database = await fetchDedicatedDatabaseById(
-        projectId,
-        databaseId,
-        {
-          type: 'engine',
-          engine:
-            kind.engine === 'postgres'
-              ? 'postgresql'
-              : kind.engine === 'mongo'
-                ? 'mongodb'
-                : 'mysql',
-        },
-      ).catch(() => null)
+      const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+        type: 'engine',
+        engine:
+          kind.engine === 'postgres'
+            ? 'postgresql'
+            : kind.engine === 'mongo'
+              ? 'mongodb'
+              : 'mysql',
+      }).catch(() => null)
       return Boolean(
         database && matchesHaReady(database as Record<string, unknown>),
       )
@@ -1513,19 +1519,15 @@ export async function waitForCreatedDatabasePitrReady(
     payload.pitr === true
 
   try {
-    const database = await fetchDedicatedDatabaseById(
-      projectId,
-      databaseId,
-      {
-        type: 'engine',
-        engine:
-          kind.engine === 'postgres'
-            ? 'postgresql'
-            : kind.engine === 'mongo'
-              ? 'mongodb'
-              : 'mysql',
-      },
-    )
+    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+      type: 'engine',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
+    })
     if (database && matchesPitrReady(database as Record<string, unknown>)) {
       return true
     }
@@ -1541,19 +1543,15 @@ export async function waitForCreatedDatabasePitrReady(
       lifecycleOnly: true,
       timeoutMs: CREATED_DATABASE_READY_TIMEOUT_MS,
     })
-    const database = await fetchDedicatedDatabaseById(
-      projectId,
-      databaseId,
-      {
-        type: 'engine',
-        engine:
-          kind.engine === 'postgres'
-            ? 'postgresql'
-            : kind.engine === 'mongo'
-              ? 'mongodb'
-              : 'mysql',
-      },
-    ).catch(() => null)
+    const database = await fetchDedicatedDatabaseById(projectId, databaseId, {
+      type: 'engine',
+      engine:
+        kind.engine === 'postgres'
+          ? 'postgresql'
+          : kind.engine === 'mongo'
+            ? 'mongodb'
+            : 'mysql',
+    }).catch(() => null)
     return Boolean(
       database && matchesPitrReady(database as Record<string, unknown>),
     )
@@ -1597,6 +1595,53 @@ export async function updateProjectDatabase(
  * if already dedicated). Dedicated tier changes use
  * `updateTablesDatabaseSpecification` instead.
  */
+export async function deleteTablesDatabaseMigration(
+  projectId: string,
+  databaseId: string,
+  migrationId: string,
+) {
+  if (!projectId || !databaseId || !migrationId.trim()) {
+    throw new Error('Project ID, Database ID, and Migration ID are required')
+  }
+  await sdk.forProject(projectId).tablesDB.deleteMigration({
+    databaseId,
+    migrationId: migrationId.trim(),
+  })
+}
+
+async function clearAbortableTablesDatabaseMigrations(
+  projectId: string,
+  databaseId: string,
+): Promise<void> {
+  const migrations = await fetchTablesDatabaseMigrations(projectId, databaseId)
+  if (!migrations.length) return
+
+  for (const migration of migrations) {
+    const phase = coerceTrimmedString(migration.phase).toLowerCase()
+    if (phase === 'done') continue
+    if (!canAbortTablesDatabaseMigration(migration)) {
+      throw new Error(
+        translate(
+          'A migration is in progress past cutover and cannot be aborted from the Console. Contact support if it is stuck.',
+        ),
+      )
+    }
+    await deleteTablesDatabaseMigration(projectId, databaseId, migration.$id)
+  }
+}
+
+async function startTablesDatabaseProductMigration(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  databaseId: string,
+  specification: string,
+) {
+  return projectSdk.tablesDB.createMigration({
+    databaseId,
+    specification,
+    autoCutover: true,
+  })
+}
+
 export async function createTablesDatabaseMigration(
   projectId: string,
   databaseId: string,
@@ -1609,10 +1654,149 @@ export async function createTablesDatabaseMigration(
   if (!trimmed || isServerlessDatabaseSpecId(trimmed)) {
     throw new Error('A dedicated specification is required.')
   }
-  return sdk.forProject(projectId).tablesDB.createMigration({
+  const projectSdk = sdk.forProject(projectId)
+
+  await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
+
+  const runProductMigration = async () => {
+    try {
+      return await startTablesDatabaseProductMigration(
+        projectSdk,
+        databaseId,
+        trimmed,
+      )
+    } catch (tablesMigrationError) {
+      const message =
+        tablesMigrationError instanceof Error
+          ? tablesMigrationError.message
+          : String(tablesMigrationError ?? '')
+      const alreadyExists =
+        message.toLowerCase().includes('migration record already exists') ||
+        message.toLowerCase().includes('already exists for this database')
+      if (alreadyExists) {
+        const migrationId =
+          parseTablesDatabaseMigrationIdFromError(tablesMigrationError)
+        if (migrationId) {
+          await deleteTablesDatabaseMigration(
+            projectId,
+            databaseId,
+            migrationId,
+          )
+        } else {
+          await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
+        }
+        return startTablesDatabaseProductMigration(
+          projectSdk,
+          databaseId,
+          trimmed,
+        )
+      }
+      throw tablesMigrationError
+    }
+  }
+
+  try {
+    return await runProductMigration()
+  } catch (tablesMigrationError) {
+    const routeMissing =
+      isAppwriteHttpStatus(tablesMigrationError, 404) ||
+      isHttpNotFoundError(tablesMigrationError)
+    if (!routeMissing) {
+      throw tablesMigrationError
+    }
+  }
+
+  // Cloud may expose shared→dedicated for TablesDB-backed compute on the MySQL
+  // engine migration route before (or instead of) tablesDB /migrations.
+  return projectSdk.mysql.createMigration({
     databaseId,
+    targetType: 'dedicated',
     specification: trimmed,
   })
+}
+
+/** True when TablesDB already runs on dedicated MySQL compute (not shared/serverless). */
+async function isTablesDatabaseOnDedicatedCompute(
+  projectId: string,
+  databaseId: string,
+): Promise<boolean> {
+  const engineDb = await fetchDedicatedDatabaseById(projectId, databaseId, {
+    type: 'engine',
+    engine: 'mysql',
+  })
+  if (!engineDb?.$id) return false
+  const spec = readDatabaseSpecification(engineDb.specification)
+  if (!spec || isServerlessDatabaseSpecId(spec)) return false
+  const status = coerceTrimmedString(engineDb.status).toLowerCase()
+  return status !== 'deleted' && status !== 'failed'
+}
+
+export function tablesDatabaseMigrationsQueryKey(
+  projectId: string,
+  databaseId: string,
+) {
+  return ['tablesdb-migrations', 'project', projectId, databaseId] as const
+}
+
+export async function fetchTablesDatabaseMigrations(
+  projectId: string,
+  databaseId: string,
+): Promise<Models.DatabaseMigration[]> {
+  if (!projectId || !databaseId) return []
+  try {
+    const response = await sdk
+      .forProject(projectId)
+      .tablesDB.listMigrations({ databaseId })
+    return response.migrations ?? []
+  } catch (error) {
+    if (isHttpNotFoundError(error)) return []
+    throw error
+  }
+}
+
+export function tablesDatabaseMigrationsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  return queryOptions({
+    queryKey: tablesDatabaseMigrationsQueryKey(projectId!, databaseId!),
+    queryFn: () => fetchTablesDatabaseMigrations(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId && dbKind === 'tablesdb',
+    staleTime: 10 * 1000,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: (query) => {
+      const migrations = query.state.data
+      const blocking = getBlockingTablesDatabaseMigration(migrations)
+      if (!blocking) return false
+      return hasTablesDatabaseMigrationCutover(blocking) ? 30_000 : 4000
+    },
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useActiveTablesDatabaseMigration(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    tablesDatabaseMigrationsQueryOptions(projectId, databaseId, dbKind),
+  )
+  const blockingMigration = getBlockingTablesDatabaseMigration(data)
+  return {
+    migration: blockingMigration,
+    blockingMigration,
+    migrations: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasActiveMigration: blockingMigration != null,
+  }
 }
 
 /**
@@ -1629,29 +1813,26 @@ async function updateProductDatabaseSpecificationViaUpdate(
 ): Promise<Models.Database> {
   const projectSdk = sdk.forProject(projectId)
   const trimmedName = name?.trim()
-  // `specification` is accepted by our project SDK update polyfill until the
-  // console package serializes it upstream.
-  const payload = {
-    databaseId,
-    specification,
-    ...(trimmedName ? { name: trimmedName } : {}),
-  }
 
   if (dbKind === 'documentsdb') {
     return projectSdk.documentsDB.update({
       databaseId,
       name: trimmedName || databaseId,
       specification,
-    } as never)
+    })
   }
   if (dbKind === 'vectorsdb') {
     return projectSdk.vectorsDB.update({
       databaseId,
       name: trimmedName || databaseId,
       specification,
-    } as never)
+    })
   }
-  return projectSdk.tablesDB.update(payload as never)
+  return projectSdk.tablesDB.update({
+    databaseId,
+    specification,
+    ...(trimmedName ? { name: trimmedName } : {}),
+  })
 }
 
 /**
@@ -1679,12 +1860,14 @@ export async function updateProductDatabaseSpecification(
     throw new Error('A dedicated specification is required.')
   }
 
-  const currentIsServerless =
-    !currentSpecification?.trim() ||
-    isServerlessDatabaseSpecId(currentSpecification)
-
-  if (dbKind === 'tablesdb' && currentIsServerless) {
-    return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+  if (dbKind === 'tablesdb') {
+    const onDedicated = await isTablesDatabaseOnDedicatedCompute(
+      projectId,
+      databaseId,
+    )
+    if (!onDedicated) {
+      return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+    }
   }
 
   return updateProductDatabaseSpecificationViaUpdate(
@@ -2048,11 +2231,7 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   // Seed routing so list cards never probe other product APIs by ID.
   for (const db of databases) {
     const api = db.api?.toLowerCase().trim()
-    if (
-      api === 'tablesdb' ||
-      api === 'documentsdb' ||
-      api === 'vectorsdb'
-    ) {
+    if (api === 'tablesdb' || api === 'documentsdb' || api === 'vectorsdb') {
       seedDatabaseProductRouteKind(projectId, db.$id, api)
     }
   }
@@ -2164,8 +2343,7 @@ export function dedicatedDatabaseByIdQueryOptions(
       databaseId,
       sourceKey,
     ],
-    queryFn: () =>
-      fetchDedicatedDatabaseById(projectId!, databaseId!, source!),
+    queryFn: () => fetchDedicatedDatabaseById(projectId!, databaseId!, source!),
     enabled:
       !!projectId &&
       !!databaseId &&
@@ -2466,6 +2644,33 @@ export async function fetchProjectTables(
     return { tables: [], total: 0 }
   }
 
+  try {
+    return await listProjectTables(
+      projectId,
+      databaseId,
+      dbKind,
+      page,
+      limit,
+      search,
+      order,
+      sortBy,
+    )
+  } catch {
+    return { tables: [], total: 0 }
+  }
+}
+
+/** Like `fetchProjectTables`, but rejects when the list request fails. */
+export async function listProjectTables(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  order: 'asc' | 'desc' = 'asc',
+  sortBy: TablesSortBy = '$createdAt',
+) {
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     ...buildAttributePrefixSearchQueries(['name', '$id'], search),
@@ -2477,45 +2682,31 @@ export async function fetchProjectTables(
   const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
-    try {
-      const response = await projectSdk.documentsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      return {
-        tables: response.collections ?? [],
-        total: response.total ?? 0,
-      }
-    } catch {
-      return { tables: [], total: 0 }
+    const response = await projectSdk.documentsDB.listCollections({
+      databaseId,
+      queries,
+    })
+    return {
+      tables: response.collections ?? [],
+      total: response.total ?? 0,
     }
   }
 
   if (kind === DatabaseType.Vectorsdb) {
-    try {
-      const response = await projectSdk.vectorsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      return {
-        tables: response.collections ?? [],
-        total: response.total ?? 0,
-      }
-    } catch {
-      return { tables: [], total: 0 }
-    }
-  }
-
-  let response: Models.TableList
-  try {
-    response = await projectSdk.tablesDB.listTables({
+    const response = await projectSdk.vectorsDB.listCollections({
       databaseId,
       queries,
     })
-  } catch {
-    response = { tables: [], total: 0 }
+    return {
+      tables: response.collections ?? [],
+      total: response.total ?? 0,
+    }
   }
 
+  const response = await projectSdk.tablesDB.listTables({
+    databaseId,
+    queries,
+  })
   return {
     tables: response.tables ?? [],
     total: response.total ?? 0,
@@ -2524,6 +2715,8 @@ export async function fetchProjectTables(
 
 /** Documents sampled per collection when inferring visualizer attribute lists. */
 const VISUALIZER_DOCUMENT_SAMPLE_SIZE = 25
+/** Tables per list request when loading every table for the visualizer. */
+const VISUALIZER_TABLES_PAGE_SIZE = 1000
 /** Max concurrent document-sample fetches while building visualizer columns. */
 const VISUALIZER_SAMPLE_CONCURRENCY = 10
 
@@ -2617,62 +2810,45 @@ export async function fetchAllProjectTablesForVisualizer(
     return { tables: [] }
   }
 
-  const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(1000),
-  ]
+  // Page until a short page: `total` is capped server-side, so it cannot end the loop.
+  // A failed page shows no tables rather than a diagram with some missing.
+  const listed: Array<Models.Table | Models.Collection> = []
+  try {
+    for (let page = 0; ; page++) {
+      const { tables } = await listProjectTables(
+        projectId,
+        databaseId,
+        dbKind,
+        page,
+        VISUALIZER_TABLES_PAGE_SIZE,
+        undefined,
+        'desc',
+      )
+      listed.push(...tables)
+      if (tables.length < VISUALIZER_TABLES_PAGE_SIZE) break
+    }
+  } catch {
+    return { tables: [] }
+  }
 
   const kind = resolveProjectDatabaseType(dbKind)
 
-  if (kind === DatabaseType.Documentsdb) {
+  if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
     try {
-      const response = await projectSdk.documentsDB.listCollections({
-        databaseId,
-        queries,
-      })
       const tables = await enrichCollectionsForVisualizer(
         projectId,
         databaseId,
-        response.collections ?? [],
-        DatabaseType.Documentsdb,
+        listed as Models.Collection[],
+        kind,
       )
       return { tables }
     } catch {
       return { tables: [] }
     }
-  }
-
-  if (kind === DatabaseType.Vectorsdb) {
-    try {
-      const response = await projectSdk.vectorsDB.listCollections({
-        databaseId,
-        queries,
-      })
-      const tables = await enrichCollectionsForVisualizer(
-        projectId,
-        databaseId,
-        response.collections ?? [],
-        DatabaseType.Vectorsdb,
-      )
-      return { tables }
-    } catch {
-      return { tables: [] }
-    }
-  }
-
-  let response: Models.TableList
-  try {
-    response = await projectSdk.tablesDB.listTables({
-      databaseId,
-      queries,
-    })
-  } catch {
-    response = { tables: [], total: 0 }
   }
 
   return {
-    tables: response.tables ?? [],
+    tables: listed as Models.Table[],
   }
 }
 
@@ -3103,50 +3279,59 @@ export async function fetchProjectTable(
     return null
   }
 
+  try {
+    return await getProjectTable(projectId, databaseId, dbKind, tableId)
+  } catch {
+    return null
+  }
+}
+
+/** Like `fetchProjectTable`, but rejects on any API error (404 included). */
+export async function getProjectTable(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  tableId: string,
+) {
   const projectSdk = sdk.forProject(projectId)
   const kind = resolveProjectDatabaseType(dbKind)
 
-  try {
-    let response: Record<string, unknown> | null = null
+  let response: Record<string, unknown> | null = null
 
-    if (kind === DatabaseType.Documentsdb) {
-      response = (await projectSdk.documentsDB.getCollection({
-        databaseId,
-        collectionId: tableId,
-      })) as unknown as Record<string, unknown>
-    } else if (kind === DatabaseType.Vectorsdb) {
-      response = (await projectSdk.vectorsDB.getCollection({
-        databaseId,
-        collectionId: tableId,
-      })) as unknown as Record<string, unknown>
-    } else {
-      response = (await projectSdk.tablesDB.getTable({
-        databaseId,
-        tableId,
-      })) as unknown as Record<string, unknown>
-    }
+  if (kind === DatabaseType.Documentsdb) {
+    response = (await projectSdk.documentsDB.getCollection({
+      databaseId,
+      collectionId: tableId,
+    })) as unknown as Record<string, unknown>
+  } else if (kind === DatabaseType.Vectorsdb) {
+    response = (await projectSdk.vectorsDB.getCollection({
+      databaseId,
+      collectionId: tableId,
+    })) as unknown as Record<string, unknown>
+  } else {
+    response = (await projectSdk.tablesDB.getTable({
+      databaseId,
+      tableId,
+    })) as unknown as Record<string, unknown>
+  }
 
-    const rowSecurity =
-      response.rowSecurity === true || response.documentSecurity === true
+  const rowSecurity =
+    response.rowSecurity === true || response.documentSecurity === true
 
-    return {
-      $id: response.$id as string,
-      name: (response.name as string) || 'Unnamed Table',
-      databaseId: databaseId,
-      enabled: response.enabled !== false,
-      rowSecurity,
-      $permissions: (response.$permissions as string[]) || [],
-      $createdAt:
-        (response.$createdAt as string) || new Date().toISOString(),
-      $updatedAt:
-        (response.$updatedAt as string) ||
-        (response.$createdAt as string) ||
-        new Date().toISOString(),
-      dimension:
-        typeof response.dimension === 'number' ? response.dimension : undefined,
-    }
-  } catch {
-    return null
+  return {
+    $id: response.$id as string,
+    name: (response.name as string) || 'Unnamed Table',
+    databaseId: databaseId,
+    enabled: response.enabled !== false,
+    rowSecurity,
+    $permissions: (response.$permissions as string[]) || [],
+    $createdAt: (response.$createdAt as string) || new Date().toISOString(),
+    $updatedAt:
+      (response.$updatedAt as string) ||
+      (response.$createdAt as string) ||
+      new Date().toISOString(),
+    dimension:
+      typeof response.dimension === 'number' ? response.dimension : undefined,
   }
 }
 
@@ -3201,11 +3386,11 @@ export async function deleteProjectTableRow(
 }
 
 /**
- * Appwrite returns "The document data is missing..." when `data` is an empty object.
- * Fill attribute keys from the collection schema (null / defaults / type empties) so
- * duplicate, create-with-empty-JSON, etc. still succeed. Skips relationship attributes.
+ * Appwrite rejects create when `data` is an empty object (`row_missing_data` / document equivalent).
+ * Fill column keys from the table schema (null / defaults / type empties) so duplicate and
+ * similar flows still succeed. Skips relationship attributes.
  */
-async function ensureDocumentOrVectorCreateDataPopulated(
+async function ensureCreateRowDataPopulated(
   projectId: string,
   databaseId: string,
   dbKind: DatabaseRouteKind,
@@ -3255,6 +3440,15 @@ async function ensureDocumentOrVectorCreateDataPopulated(
     }
   }
   return Object.keys(filled).length > 0 ? filled : payloadWithoutId
+}
+
+/** Tables with no user columns still need a non-empty payload (row drawer uses timestamps). */
+function ensureMinimumCreateRowPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  if (Object.keys(payload).length > 0) return payload
+  const now = new Date().toISOString()
+  return { $createdAt: now, $updatedAt: now }
 }
 
 /**
@@ -3310,14 +3504,16 @@ export async function createProjectTableRow(
   let payload = { ...data } as Record<string, unknown>
   if (payload.$id) delete payload.$id
 
+  payload = await ensureCreateRowDataPopulated(
+    projectId,
+    databaseId,
+    dbKind,
+    tableId,
+    payload,
+  )
+  payload = ensureMinimumCreateRowPayload(payload)
+
   if (kind === DatabaseType.Documentsdb) {
-    payload = await ensureDocumentOrVectorCreateDataPopulated(
-      projectId,
-      databaseId,
-      dbKind,
-      tableId,
-      payload,
-    )
     const created = await projectSdk.documentsDB.createDocument({
       databaseId,
       collectionId: tableId,
@@ -3329,13 +3525,6 @@ export async function createProjectTableRow(
   }
 
   if (kind === DatabaseType.Vectorsdb) {
-    payload = await ensureDocumentOrVectorCreateDataPopulated(
-      projectId,
-      databaseId,
-      dbKind,
-      tableId,
-      payload,
-    )
     const created = await projectSdk.vectorsDB.createDocument({
       databaseId,
       collectionId: tableId,
@@ -3452,8 +3641,7 @@ export async function createProjectTableRows(
       const rowsToInsert = rows.map((row) => {
         const rowRec = row as Record<string, unknown>
         const rowData = { ...rowRec }
-        const rowId =
-          typeof rowRec.$id === 'string' ? rowRec.$id : ID.unique()
+        const rowId = typeof rowRec.$id === 'string' ? rowRec.$id : ID.unique()
         if (rowData.$id) {
           delete rowData.$id
         }
@@ -3543,9 +3731,7 @@ export async function createProjectTableColumn(
     typeof data.xdefault === 'number' ? data.xdefault : undefined
   const boolDefault =
     typeof data.xdefault === 'boolean' ? data.xdefault : undefined
-  const elements = Array.isArray(data.elements)
-    ? data.elements.map(String)
-    : []
+  const elements = Array.isArray(data.elements) ? data.elements.map(String) : []
   const colKey =
     typeof data.key === 'string' ? data.key : String(data.key ?? '')
   if (!colKey) {
@@ -3766,24 +3952,20 @@ export async function updateProjectTableColumn(
   // Update column APIs require `xdefault` to be present. Pass `null` when there is
   // no default (SDK treats undefined as missing and throws).
   const stringDefault =
-    data.xdefault === undefined || data.xdefault === null || data.xdefault === ''
+    data.xdefault === undefined ||
+    data.xdefault === null ||
+    data.xdefault === ''
       ? null
       : String(data.xdefault)
   const numberDefault =
     typeof data.xdefault === 'number' || typeof data.xdefault === 'bigint'
       ? data.xdefault
       : null
-  const floatDefault =
-    typeof data.xdefault === 'number' ? data.xdefault : null
-  const boolDefault =
-    typeof data.xdefault === 'boolean' ? data.xdefault : null
+  const floatDefault = typeof data.xdefault === 'number' ? data.xdefault : null
+  const boolDefault = typeof data.xdefault === 'boolean' ? data.xdefault : null
   const spatialDefault =
-    data.xdefault === undefined || data.xdefault === null
-      ? null
-      : data.xdefault
-  const elements = Array.isArray(data.elements)
-    ? data.elements.map(String)
-    : []
+    data.xdefault === undefined || data.xdefault === null ? null : data.xdefault
+  const elements = Array.isArray(data.elements) ? data.elements.map(String) : []
   const formKey = typeof data.key === 'string' ? data.key.trim() : ''
   const explicitNewKey =
     typeof data.newKey === 'string' ? data.newKey.trim() : ''
@@ -4030,7 +4212,8 @@ export async function createProjectTableIndex(
   const raw = indexData as Record<string, unknown>
   const key = raw.key as string
   const type = raw.type
-  const columns = (raw.columns as string[]) || (raw.attributes as string[]) || []
+  const columns =
+    (raw.columns as string[]) || (raw.attributes as string[]) || []
   const orders = raw.orders as Array<string | null | undefined> | undefined
   const lengths = raw.lengths as number[] | undefined
 
@@ -4334,9 +4517,7 @@ export function consoleDatabasesQueryOptions(
 }
 
 function mapProjectDatabaseListItems(
-  databasesData:
-    | { databases?: Models.Database[]; total?: number }
-    | undefined,
+  databasesData: { databases?: Models.Database[]; total?: number } | undefined,
   limit: number,
 ) {
   const databases = (databasesData?.databases ?? []).map((db) => {
@@ -4530,13 +4711,7 @@ export function databaseQueryOptions(
   dbKind: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: [
-      'database',
-      'project',
-      projectId,
-      databaseId,
-      dbKind,
-    ],
+    queryKey: ['database', 'project', projectId, databaseId, dbKind],
     queryFn: () => fetchProjectDatabase(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -4909,13 +5084,7 @@ export function useProjectConsoleDatabases(
     error,
     refetch,
   } = useQuery(
-    consoleDatabasesQueryOptions(
-      projectId,
-      page,
-      limit,
-      search,
-      filterQueries,
-    ),
+    consoleDatabasesQueryOptions(projectId, page, limit, search, filterQueries),
   )
 
   const mapped = useMemo(
@@ -4962,6 +5131,22 @@ export function useProjectDatabase(
     error,
     refetch,
   }
+}
+
+export function useResolvedProductDatabaseLifecycleStatus(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
+) {
+  const { database } = useProjectDatabase(projectId, databaseId, dbKind)
+  const { databases: dedicatedDatabases } =
+    useProjectDedicatedDatabases(projectId)
+  return useMemo(() => {
+    const dedicatedStatus = dedicatedDatabases.find(
+      (db) => db.$id === databaseId,
+    )?.status
+    return resolveDatabaseLifecycleStatus(database?.status, dedicatedStatus)
+  }, [database?.status, databaseId, dedicatedDatabases])
 }
 
 /**
@@ -5334,9 +5519,7 @@ export function useProjectTable(
 /**
  * Hook to generate text embeddings via VectorsDB.
  */
-export function useCreateTextEmbeddings(
-  projectId: string | null | undefined,
-) {
+export function useCreateTextEmbeddings(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async ({
       texts,
@@ -5972,7 +6155,9 @@ async function stageRowEditTransactionOperations(
 
   const transactionSdk = getRowEditTransactionSdk(projectSdk, kind)
   if (typeof transactionSdk.createOperations !== 'function') {
-    throw new Error('Bulk transaction staging is not available in this environment')
+    throw new Error(
+      'Bulk transaction staging is not available in this environment',
+    )
   }
 
   await transactionSdk.createOperations({

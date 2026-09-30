@@ -246,10 +246,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Rate limits',
             href: '/docs/advanced/security/rate-limits',
           },
-          {
-            label: 'Dev keys',
-            href: '/docs/advanced/security/dev-keys',
-          },
         ],
       },
     ],
@@ -325,6 +321,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'SMS delivery',
             href: '/docs/advanced/self-hosting/configuration/sms',
+          },
+          {
+            label: 'Breached passwords',
+            href: '/docs/advanced/self-hosting/configuration/breached-passwords',
           },
           {
             label: 'Functions',
@@ -1116,6 +1116,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Concepts',
         items: [
           {
+            label: 'User photos',
+            href: '/docs/products/avatars/user-photos',
+          },
+          {
             label: 'User initials',
             href: '/docs/products/avatars/initials',
           },
@@ -1395,64 +1399,80 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/mysql/integrations/drivers',
           },
           {
+            label: 'Next.js',
+            href: '/docs/products/databases/mysql/integrations/nextjs',
+          },
+          {
             label: 'Drizzle',
             href: '/docs/products/databases/mysql/integrations/drizzle',
+          },
+          {
+            label: 'Kysely',
+            href: '/docs/products/databases/mysql/integrations/kysely',
           },
           {
             label: 'Prisma',
             href: '/docs/products/databases/mysql/integrations/prisma',
           },
           {
+            label: 'Better Auth',
+            href: '/docs/products/databases/mysql/integrations/better-auth',
+          },
+          {
             label: 'Auth.js',
             href: '/docs/products/databases/mysql/integrations/auth-js',
           },
           {
-            label: 'Better Auth',
-            href: '/docs/products/databases/mysql/integrations/better-auth',
+            label: 'Knex',
+            href: '/docs/products/databases/mysql/integrations/knex',
+          },
+          {
+            label: 'TypeORM',
+            href: '/docs/products/databases/mysql/integrations/typeorm',
+          },
+          {
+            label: 'Sequelize',
+            href: '/docs/products/databases/mysql/integrations/sequelize',
           },
           {
             label: 'Laravel',
             href: '/docs/products/databases/mysql/integrations/laravel',
           },
           {
-            label: 'Rails',
-            href: '/docs/products/databases/mysql/integrations/rails',
-          },
-          {
             label: 'Django',
             href: '/docs/products/databases/mysql/integrations/django',
           },
           {
-            label: 'FastAPI',
-            href: '/docs/products/databases/mysql/integrations/fastapi',
+            label: 'Rails',
+            href: '/docs/products/databases/mysql/integrations/rails',
           },
           {
             label: 'Spring Boot',
             href: '/docs/products/databases/mysql/integrations/spring-boot',
           },
           {
-            label: 'EF Core',
-            href: '/docs/products/databases/mysql/integrations/ef-core',
+            label: 'FastAPI',
+            href: '/docs/products/databases/mysql/integrations/fastapi',
           },
           {
             label: 'GORM',
             href: '/docs/products/databases/mysql/integrations/gorm',
           },
           {
-            label: 'Next.js',
-            href: '/docs/products/databases/mysql/integrations/nextjs',
+            label: 'EF Core',
+            href: '/docs/products/databases/mysql/integrations/ef-core',
           },
           {
-            label: 'dbt',
-            href: '/docs/products/databases/mysql/integrations/dbt',
+            label: 'Grafana',
+            href: '/docs/products/databases/mysql/integrations/grafana',
           },
           {
             label: 'Metabase',
             href: '/docs/products/databases/mysql/integrations/metabase',
           },
           {
-            label: 'Grafana',
-            href: '/docs/products/databases/mysql/integrations/grafana',
+            label: 'dbt',
+            href: '/docs/products/databases/mysql/integrations/dbt',
           },
           {
             label: 'Retool',
@@ -1573,64 +1593,80 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/postgresql/integrations/drivers',
           },
           {
+            label: 'Next.js',
+            href: '/docs/products/databases/postgresql/integrations/nextjs',
+          },
+          {
             label: 'Drizzle',
             href: '/docs/products/databases/postgresql/integrations/drizzle',
+          },
+          {
+            label: 'Kysely',
+            href: '/docs/products/databases/postgresql/integrations/kysely',
           },
           {
             label: 'Prisma',
             href: '/docs/products/databases/postgresql/integrations/prisma',
           },
           {
+            label: 'Better Auth',
+            href: '/docs/products/databases/postgresql/integrations/better-auth',
+          },
+          {
             label: 'Auth.js',
             href: '/docs/products/databases/postgresql/integrations/auth-js',
           },
           {
-            label: 'Better Auth',
-            href: '/docs/products/databases/postgresql/integrations/better-auth',
+            label: 'Knex',
+            href: '/docs/products/databases/postgresql/integrations/knex',
+          },
+          {
+            label: 'TypeORM',
+            href: '/docs/products/databases/postgresql/integrations/typeorm',
+          },
+          {
+            label: 'Sequelize',
+            href: '/docs/products/databases/postgresql/integrations/sequelize',
           },
           {
             label: 'Laravel',
             href: '/docs/products/databases/postgresql/integrations/laravel',
           },
           {
-            label: 'Rails',
-            href: '/docs/products/databases/postgresql/integrations/rails',
-          },
-          {
             label: 'Django',
             href: '/docs/products/databases/postgresql/integrations/django',
           },
           {
-            label: 'FastAPI',
-            href: '/docs/products/databases/postgresql/integrations/fastapi',
+            label: 'Rails',
+            href: '/docs/products/databases/postgresql/integrations/rails',
           },
           {
             label: 'Spring Boot',
             href: '/docs/products/databases/postgresql/integrations/spring-boot',
           },
           {
-            label: 'EF Core',
-            href: '/docs/products/databases/postgresql/integrations/ef-core',
+            label: 'FastAPI',
+            href: '/docs/products/databases/postgresql/integrations/fastapi',
           },
           {
             label: 'GORM',
             href: '/docs/products/databases/postgresql/integrations/gorm',
           },
           {
-            label: 'Next.js',
-            href: '/docs/products/databases/postgresql/integrations/nextjs',
+            label: 'EF Core',
+            href: '/docs/products/databases/postgresql/integrations/ef-core',
           },
           {
-            label: 'dbt',
-            href: '/docs/products/databases/postgresql/integrations/dbt',
+            label: 'Grafana',
+            href: '/docs/products/databases/postgresql/integrations/grafana',
           },
           {
             label: 'Metabase',
             href: '/docs/products/databases/postgresql/integrations/metabase',
           },
           {
-            label: 'Grafana',
-            href: '/docs/products/databases/postgresql/integrations/grafana',
+            label: 'dbt',
+            href: '/docs/products/databases/postgresql/integrations/dbt',
           },
           {
             label: 'Retool',
@@ -2508,6 +2544,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/tooling/ai/agents/claude-code',
           },
           {
+            label: 'ChatGPT',
+            href: '/docs/tooling/ai/agents/chatgpt',
+          },
+          {
             label: 'Codex',
             href: '/docs/tooling/ai/agents/codex',
           },
@@ -2565,6 +2605,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       {
         label: 'Guides',
         items: [
+          {
+            label: 'Backend for coding agents',
+            href: '/docs/tooling/ai/backend-for-agents',
+          },
           {
             label: 'AI in Functions',
             href: '/docs/tooling/ai/ai-in-functions',

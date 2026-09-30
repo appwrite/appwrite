@@ -4,7 +4,10 @@ import { View } from '@/components/pages/blog/View'
 import { getBlogPostsPage } from '@/lib/blog/content'
 import { getBlogIndexRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 
 const blogSearchSchema = z.object({
@@ -13,6 +16,7 @@ const blogSearchSchema = z.object({
 })
 
 export const Route = createFileRoute('/_marketing/blog/')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   validateSearch: blogSearchSchema,

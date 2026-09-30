@@ -5,7 +5,10 @@ import {
   headerAlertOutlineButtonClass,
   headerAlertTextButtonClass,
 } from '@/components/global/shared/HeaderAlertBar'
-import { getSingleRecognizedPlanUsageLimitLabel } from '@/lib/billing/billing-limits'
+import {
+  getPlanUsageLimitRecoveryCopy,
+  getSingleRecognizedPlanUsageLimitLabel,
+} from '@/lib/billing/billing-limits'
 import { useT } from '@/lib/i18n/translate'
 
 type OrganizationPlanLimitHeaderBannerProps = {
@@ -57,13 +60,11 @@ export function OrganizationPlanLimitHeaderBanner({
         <>
           {t('This organization has reached its plan limit for')}{' '}
           {t(resourceLabel)}
-          {t(
-            '. Upgrade your plan or wait until the end of the billing cycle to restore access.',
-          )}
+          {t(getPlanUsageLimitRecoveryCopy(billingLimits))}
         </>
       ) : (
         t(
-          'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.',
+          'This organization has reached its plan usage limit. API access to this project is suspended. Upgrade your plan or wait until the end of the billing cycle to restore service.',
         )
       )}
     </HeaderAlertBar>

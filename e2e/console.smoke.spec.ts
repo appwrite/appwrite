@@ -126,7 +126,7 @@ test.describe('console smoke (read-only)', () => {
     })
 
     const servicePaths = [
-      { name: 'overview', suffix: '' },
+      { name: 'overview', suffix: '/overview' },
       { name: 'auth', suffix: '/auth' },
       { name: 'databases', suffix: '/databases' },
       { name: 'storage', suffix: '/storage' },

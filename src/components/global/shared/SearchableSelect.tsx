@@ -69,6 +69,28 @@ export interface SearchableSelectProps {
   onOpenChange?: (open: boolean) => void
   /** Applied to the trigger button (e.g. for label `htmlFor`). */
   id?: string
+  /** Trigger label when `value` is not in the loaded `items` (paged lists). */
+  selectedName?: string
+}
+
+function focusSearchableSelectInput(content: HTMLElement) {
+  requestAnimationFrame(() => {
+    content
+      .querySelector<HTMLInputElement>('[data-slot="command-input"]')
+      ?.focus({ preventScroll: true })
+  })
+}
+
+/** cmdk listens on the command root; do not stop these keys on the input. */
+function isCommandListNavigationKey(key: string) {
+  return (
+    key === 'ArrowDown' ||
+    key === 'ArrowUp' ||
+    key === 'Home' ||
+    key === 'End' ||
+    key === 'Enter' ||
+    key === 'Escape'
+  )
 }
 
 function SearchableSelectItemContent({ item }: { item: SearchableSelectItem }) {
@@ -134,6 +156,7 @@ export function SearchableSelect({
   listFooter,
   onOpenChange,
   id,
+  selectedName,
 }: SearchableSelectProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -146,7 +169,7 @@ export function SearchableSelect({
     [items, footerItems],
   )
   const selectedItem = allItems.find((i) => i.value === value)
-  const selectedLabel = selectedItem?.label ?? ''
+  const selectedLabel = selectedItem?.label ?? selectedName ?? ''
   const displayText =
     value && selectedLabel
       ? selectedLabel
@@ -233,14 +256,34 @@ export function SearchableSelect({
         onCloseAutoFocus={(event) => {
           if (portalContainer) event.preventDefault()
         }}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          focusSearchableSelectInput(event.currentTarget as HTMLElement)
+        }}
+        onEscapeKeyDown={(event) => {
+          // Dialog listens on document capture; close the list without closing the modal.
+          event.stopPropagation()
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Tab') return
+          // Keep parent modal focus traps and scroll containers from handling list keys.
+          event.stopPropagation()
+        }}
       >
-        <Command shouldFilter={!onSearchChange} className="overflow-hidden">
+        <Command
+          shouldFilter={!onSearchChange}
+          loop
+          className="overflow-hidden"
+        >
           <div className="relative">
             <CommandInput
               placeholder={t(searchPlaceholder)}
               className={cn('h-9 text-[13px]', isFetching && 'pe-8')}
               onValueChange={onSearchChange}
-              onKeyDown={(event) => event.stopPropagation()}
+              onKeyDown={(event) => {
+                if (isCommandListNavigationKey(event.key)) return
+                event.stopPropagation()
+              }}
             />
             <div
               className={cn(
@@ -272,11 +315,12 @@ export function SearchableSelect({
                 {items.map((item) => (
                   <CommandItem
                     key={item.value}
-                    value={item.searchText ?? item.label}
+                    value={`${item.value} ${item.searchText ?? item.label}`}
                     className="text-[13px]"
                     onSelect={() => {
                       onValueChange(item.value)
                       setOpen(false)
+                      onSearchChange?.('')
                     }}
                   >
                     <SearchableSelectItemContent item={item} />
@@ -303,6 +347,7 @@ export function SearchableSelect({
                   onClick={() => {
                     onValueChange(item.value)
                     setOpen(false)
+                    onSearchChange?.('')
                   }}
                 >
                   <SearchableSelectItemContent item={item} />

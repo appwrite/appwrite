@@ -12,7 +12,8 @@ export function isValidAffiliateLinkId(linkId: string): boolean {
 
 /**
  * Backend invite URL that records the click, sets attribution, and sends users to signup.
- * Uses `getApiEndpoint()` so the target matches the active console API (env or debug override).
+ * Uses `getApiEndpoint()` so the target matches the active console API (runtime env,
+ * or the debug override when this helper runs in the browser).
  */
 export function buildAffiliateApiInviteUrl(linkId: string): string {
   const endpoint = getApiEndpoint().replace(/\/$/, '')

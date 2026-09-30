@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Check, ThumbsDown, ThumbsUp } from 'lucide-react'
-import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { submitDocsFeedback, type DocsFeedbackType } from '@/lib/feedback'
+import { GrowthError } from '@/lib/growth'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const FEEDBACK_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
@@ -23,12 +24,15 @@ export function DocsFeedback() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [showForm, setShowForm] = useState(false)
-  const [feedbackType, setFeedbackType] = useState<DocsFeedbackType | null>(null)
+  const [feedbackType, setFeedbackType] = useState<DocsFeedbackType | null>(
+    null,
+  )
   const [email, setEmail] = useState('')
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
 
   const accountEmail = account?.email?.trim() ?? ''
   const hasAccountEmail = accountEmail.length > 0
@@ -96,26 +100,22 @@ export function DocsFeedback() {
     setError(null)
 
     try {
-      const sent = await submitDocsFeedback({
+      await submitDocsFeedback({
         type: feedbackType,
         route: pathname,
         comment:
           comment.trim() ||
           (feedbackType === 'positive' ? 'Page was helpful' : ''),
         email: resolvedEmail,
-        userId: account?.$id,
       })
 
-      if (!sent) {
-        toast.error(
-          'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
-        )
-        return
-      }
-
       setSubmitted(true)
-    } catch {
-      setError('There was an error submitting your feedback. Please try again later.')
+    } catch (error) {
+      setError(
+        error instanceof GrowthError && error.isRateLimited
+          ? t(error.message)
+          : 'There was an error submitting your feedback. Please try again later.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -217,7 +217,9 @@ export function DocsFeedback() {
                     }
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={
-                      prefersReducedMotion ? undefined : { height: 0, opacity: 0 }
+                      prefersReducedMotion
+                        ? undefined
+                        : { height: 0, opacity: 0 }
                     }
                     transition={expandTransition}
                     className="overflow-hidden"

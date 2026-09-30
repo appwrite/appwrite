@@ -20,6 +20,7 @@ import {
   canAccessOrgDomains,
   canShowOrgApiKeysSettings,
   canShowGetStartedSection,
+  canShowAgentMcpConnectCta,
   canCreateDatabase,
   canSeeActivityNav,
 } from '@/lib/console-access-checks'
@@ -227,6 +228,17 @@ export async function canAccessOrganizationApiKeys(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowOrgApiKeysSettings(access, features)
+}
+
+/** Project coding-agent MCP page (same audience as Connect). */
+export async function canAccessProjectAgentConnect(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowAgentMcpConnectCta(access, features)
 }
 
 /** Onboarding checklist (same audience as sidebar Get started). */

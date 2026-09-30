@@ -6,9 +6,9 @@
  * stay responsive.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Loader2, Server } from 'lucide-react'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/popover'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   firewallResourcePickerFunctionsQueryOptions,
   firewallResourcePickerSitesQueryOptions,
@@ -96,9 +95,21 @@ export function FirewallResourceSelector({
   contentClassName,
 }: FirewallResourceSelectorProps) {
   const t = useT()
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
+  const [isPreparingOpen, setIsPreparingOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    if (!projectId) return
+    void queryClient.prefetchQuery(
+      firewallResourcePickerFunctionsQueryOptions(projectId),
+    )
+    void queryClient.prefetchQuery(
+      firewallResourcePickerSitesQueryOptions(projectId),
+    )
+  }, [projectId, queryClient])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
@@ -141,10 +152,8 @@ export function FirewallResourceSelector({
     placeholderData: keepPreviousData,
   })
 
-  const isLoadingList =
-    (functionsFetching && !functionsData) || (sitesFetching && !sitesData)
   const isSearching = !!debouncedSearch && (functionsFetching || sitesFetching)
-  const showSearchSpinner = isLoadingList || isSearching
+  const showSearchSpinner = isSearching
 
   const functionItems = useMemo(() => {
     const list = (functionsData?.functions ?? []).map((fn: Models.Function) => ({
@@ -206,8 +215,6 @@ export function FirewallResourceSelector({
 
   const showApi = matchesApiSearch(debouncedSearch)
   const currentValue = selectionValue(value)
-  const showListSkeleton =
-    isLoadingList && functionItems.length === 0 && siteItems.length === 0 && !showApi
 
   const functionsTotal = functionsData?.total ?? 0
   const sitesTotal = sitesData?.total ?? 0
@@ -279,8 +286,38 @@ export function FirewallResourceSelector({
     setOpen(false)
   }
 
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setOpen(false)
+        return
+      }
+      if (!projectId || disabled || isPreparingOpen) return
+
+      void (async () => {
+        setIsPreparingOpen(true)
+        try {
+          await Promise.all([
+            queryClient.ensureQueryData(
+              firewallResourcePickerFunctionsQueryOptions(projectId),
+            ),
+            queryClient.ensureQueryData(
+              firewallResourcePickerSitesQueryOptions(projectId),
+            ),
+          ])
+        } catch {
+          // Open anyway; lists stay empty if the prefetch failed.
+        } finally {
+          setIsPreparingOpen(false)
+        }
+        setOpen(true)
+      })()
+    },
+    [disabled, isPreparingOpen, projectId, queryClient],
+  )
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -288,7 +325,7 @@ export function FirewallResourceSelector({
           role="combobox"
           aria-expanded={open}
           aria-label={t('Firewall resource')}
-          disabled={disabled || !projectId}
+          disabled={disabled || !projectId || isPreparingOpen}
           className={cn(
             'h-9 w-full max-w-xs justify-between gap-2 text-[13px] font-normal sm:w-56 sm:max-w-none',
             triggerClassName,
@@ -298,7 +335,11 @@ export function FirewallResourceSelector({
             {triggerIcon}
             <span className="truncate">{triggerLabel}</span>
           </span>
-          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+          {isPreparingOpen ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin opacity-50" />
+          ) : (
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -326,92 +367,73 @@ export function FirewallResourceSelector({
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="min-h-[180px] max-h-[280px]">
-            {showListSkeleton ? (
-              <div className="space-y-0.5 p-1" aria-hidden>
-                {Array.from({ length: 6 }, (_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 rounded-sm px-2 py-1.5"
-                  >
-                    <Skeleton className="h-4 w-4 shrink-0 rounded-sm" />
-                    <Skeleton
-                      className="h-4 rounded-sm"
-                      style={{ width: `${55 + (index % 3) * 12}%` }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <>
-                <CommandEmpty>{t('No results found')}</CommandEmpty>
-                {showApi ? (
-                  <CommandGroup heading={t('Project')}>
+          <CommandList className="min-h-[180px] max-h-[280px] overflow-y-auto overscroll-contain">
+            <CommandEmpty>{t('No results found')}</CommandEmpty>
+            {showApi ? (
+              <CommandGroup heading={t('Project')}>
+                <CommandItem
+                  value={`${API_VALUE} API`}
+                  onSelect={() => handleSelect(API_VALUE)}
+                  className={cn(
+                    'gap-2',
+                    currentValue === API_VALUE && 'bg-accent/50',
+                  )}
+                >
+                  <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{t('API')}</span>
+                </CommandItem>
+              </CommandGroup>
+            ) : null}
+            {siteItems.length > 0 ? (
+              <CommandGroup heading={t('Sites')}>
+                {siteItems.map((item) => {
+                  const itemValue = `sites:${item.id}`
+                  return (
                     <CommandItem
-                      value={`${API_VALUE} API`}
-                      onSelect={() => handleSelect(API_VALUE)}
+                      key={itemValue}
+                      value={`${itemValue} ${item.label}`}
+                      onSelect={() => handleSelect(itemValue)}
                       className={cn(
                         'gap-2',
-                        currentValue === API_VALUE && 'bg-accent/50',
+                        currentValue === itemValue && 'bg-accent/50',
                       )}
                     >
-                      <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{t('API')}</span>
+                      <FrameworkIcon
+                        framework={item.framework}
+                        size="sm"
+                        className="h-4 w-4 shrink-0"
+                      />
+                      <span className="truncate">{item.label}</span>
                     </CommandItem>
-                  </CommandGroup>
-                ) : null}
-                {siteItems.length > 0 ? (
-                  <CommandGroup heading={t('Sites')}>
-                    {siteItems.map((item) => {
-                      const itemValue = `sites:${item.id}`
-                      return (
-                        <CommandItem
-                          key={itemValue}
-                          value={`${itemValue} ${item.label}`}
-                          onSelect={() => handleSelect(itemValue)}
-                          className={cn(
-                            'gap-2',
-                            currentValue === itemValue && 'bg-accent/50',
-                          )}
-                        >
-                          <FrameworkIcon
-                            framework={item.framework}
-                            size="sm"
-                            className="h-4 w-4 shrink-0"
-                          />
-                          <span className="truncate">{item.label}</span>
-                        </CommandItem>
-                      )
-                    })}
-                  </CommandGroup>
-                ) : null}
-                {functionItems.length > 0 ? (
-                  <CommandGroup heading={t('Functions')}>
-                    {functionItems.map((item) => {
-                      const itemValue = `functions:${item.id}`
-                      return (
-                        <CommandItem
-                          key={itemValue}
-                          value={`${itemValue} ${item.label}`}
-                          onSelect={() => handleSelect(itemValue)}
-                          className={cn(
-                            'gap-2',
-                            currentValue === itemValue && 'bg-accent/50',
-                          )}
-                        >
-                          <RuntimeIcon
-                            runtime={item.runtime ?? ''}
-                            size="sm"
-                            className="h-4 w-4 shrink-0 text-muted-foreground"
-                          />
-                          <span className="truncate">{item.label}</span>
-                        </CommandItem>
-                      )
-                    })}
-                  </CommandGroup>
-                ) : null}
-              </>
-            )}
+                  )
+                })}
+              </CommandGroup>
+            ) : null}
+            {functionItems.length > 0 ? (
+              <CommandGroup heading={t('Functions')}>
+                {functionItems.map((item) => {
+                  const itemValue = `functions:${item.id}`
+                  return (
+                    <CommandItem
+                      key={itemValue}
+                      value={`${itemValue} ${item.label}`}
+                      onSelect={() => handleSelect(itemValue)}
+                      className={cn(
+                        'gap-2',
+                        currentValue === itemValue && 'bg-accent/50',
+                      )}
+                    >
+                      <RuntimeIcon
+                        runtime={item.runtime ?? ''}
+                        size="sm"
+                        className="h-4 w-4 shrink-0 text-muted-foreground"
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            ) : null}
           </CommandList>
           {showTruncateHint ? (
             <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">

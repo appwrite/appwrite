@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { docsTocLinkClassName } from '@/lib/docs/nav-styles'
 import { DOCS_TOC_SECTION_TITLE_CLASS } from '@/lib/docs/prose-typography'
 import { cn } from '@/lib/utils'
+import {
+  BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS,
+  BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS,
+} from '@/lib/layout/app-header-height'
 import type { DocsTocItem } from '@/lib/docs/types'
 
 type BlogTocProps = {
@@ -10,9 +14,18 @@ type BlogTocProps = {
 
 export function BlogToc({ items }: BlogTocProps) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? '')
+  const [tocVisible, setTocVisible] = useState(false)
 
   useEffect(() => {
-    if (items.length === 0) return
+    const media = window.matchMedia('(min-width: 900px)')
+    const sync = () => setTocVisible(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (!tocVisible || items.length === 0) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -36,14 +49,15 @@ export function BlogToc({ items }: BlogTocProps) {
     }
 
     return () => observer.disconnect()
-  }, [items])
+  }, [items, tocVisible])
 
   return (
     <aside
       aria-hidden={items.length === 0 ? true : undefined}
       className={cn(
-        'sticky top-14 z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
-        'max-h-[calc(100dvh-5rem)]',
+        BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS,
+        BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS,
+        'z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
       )}
     >
       {items.length > 0 ? (

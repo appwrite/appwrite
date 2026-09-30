@@ -90,9 +90,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   }
   if (/^advisor\./.test(id)) return 'Advisor'
   if (/^proxy\./.test(id)) return 'Proxy'
-  if (/^organization\./.test(id) || /^devkeys\./.test(id)) {
-    return 'Organization'
-  }
+  if (/^organization\./.test(id)) return 'Organization'
   if (/^agent\./.test(id)) return 'Agent'
   return 'General'
 }
@@ -240,7 +238,7 @@ export function getScopeCategoryIcon(
     if (/^apps\./.test(id)) return Plug2
     if (/^advisor\./.test(id)) return ScanSearch
     if (/^proxy\./.test(id)) return Network
-    if (/^organization\./.test(id) || /^devkeys\./.test(id)) return Building2
+    if (/^organization\./.test(id)) return Building2
     if (/^agent\./.test(id)) return Bot
   }
   return MoreHorizontal

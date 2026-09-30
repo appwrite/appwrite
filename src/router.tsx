@@ -14,22 +14,51 @@ import {
   reportRouterCaughtError,
   reportUnhandledError,
 } from '@/lib/sentry/report-error'
+import {
+  getDefaultRouterPreload,
+  ROUTER_PRELOAD_DELAY_MS,
+} from '@/lib/router-preload'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
 
-// Create a new router instance
-export async function getRouter() {
+type RouteTreeModule = typeof import('./routeTree.gen')
+
+// Deduplicate concurrent routeTree.gen loads during Vite SSR program reload.
+// Without this, overlapping imports can resolve before exports are ready and
+// createRouter gets routeTree=undefined, which skips buildRouteTree() and
+// leaves flatRoutes unset ("flatRoutes is not iterable" on the first request).
+let routeTreeModulePromise: Promise<RouteTreeModule> | null = null
+let routerPromise: ReturnType<typeof buildRouter> | null = null
+
+function loadRouteTreeModule() {
+  if (!routeTreeModulePromise) {
+    routeTreeModulePromise = import('./routeTree.gen').then((mod) => {
+      if (!mod.routeTree) {
+        routeTreeModulePromise = null
+        throw new Error(
+          'routeTree.gen did not export routeTree. Restart the dev server if this persists.',
+        )
+      }
+      return mod
+    })
+  }
+  return routeTreeModulePromise
+}
+
+async function buildRouter() {
   const rqContext = TanstackQuery.getContext()
 
   // Dynamic import breaks routeTree.gen ↔ router circular dependency (Register
   // augmentation type-imports this module; static import can TDZ under SSR).
-  const { routeTree } = await import('./routeTree.gen')
+  const { routeTree } = await loadRouteTreeModule()
 
   const router = createRouter({
     routeTree,
     context: { ...rqContext },
-    defaultPreload: 'intent',
+    defaultPreload: getDefaultRouterPreload(),
+    // Touchstart used to start preload in ~50ms and steal the tap's next paint.
+    defaultPreloadDelay: ROUTER_PRELOAD_DELAY_MS,
     // Keep the previous page visible while loaders run. A finite pendingMs with
     // defaultPendingComponent: () => null blanks the outlet after 1s on slow
     // navigations (e.g. TablesDB table switches). Wizards that need a pending
@@ -75,9 +104,7 @@ export async function getRouter() {
       reportUnhandledError(event.reason, 'unhandledrejection')
     }
     const onWindowError = (event: ErrorEvent) => {
-      if (
-        tryReloadForStaleChunk(event.error ?? event.message, { event })
-      ) {
+      if (tryReloadForStaleChunk(event.error ?? event.message, { event })) {
         event.preventDefault()
         return
       }
@@ -106,4 +133,21 @@ export async function getRouter() {
   }
 
   return router
+}
+
+export async function getRouter() {
+  if (!routerPromise) {
+    routerPromise = buildRouter().catch((error) => {
+      routerPromise = null
+      throw error
+    })
+  }
+  return routerPromise
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    routeTreeModulePromise = null
+    routerPromise = null
+  })
 }

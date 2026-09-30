@@ -33,6 +33,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   useProjectDatabase,
+  useResolvedProductDatabaseLifecycleStatus,
   useProjectTables,
   useProjectCollectionAttributes,
   useProjectCollectionIndexes,
@@ -180,6 +181,9 @@ import {
   type WorkspaceProps,
 } from '../workspace-types'
 import { useT } from '@/lib/i18n/translate'
+import { useDatabaseRowsFullscreen } from '@/hooks/use-database-rows-fullscreen'
+import { DatabaseRowsFullscreenToggle } from '../_components/DatabaseRowsFullscreenToggle'
+import { DatabaseRowsFullscreenShell } from '../_components/DatabaseRowsFullscreenShell'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 const sidebarTableListScrollTopByKey = new Map<string, number>()
@@ -200,6 +204,10 @@ export function Workspace({
     | Record<string, unknown>
     | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
+  const canUseRowsFullscreen =
+    !isDatabaseLevelView && activeTab === 'rows' && tableId !== '-'
+  const { rowsFullscreen, toggleRowsFullscreen } =
+    useDatabaseRowsFullscreen(canUseRowsFullscreen)
   const { features } = useConsoleProfile()
   const showDesktopTableSidebar = useMediaMinWidth(1024)
 
@@ -222,9 +230,12 @@ export function Workspace({
     databaseId,
     DB_KIND,
   )
-  const provisioning = isDedicatedDatabaseProvisioning(
-    (database as { status?: string | null } | null)?.status,
+  const lifecycleStatus = useResolvedProductDatabaseLifecycleStatus(
+    projectId,
+    databaseId,
+    DB_KIND,
   )
+  const provisioning = isDedicatedDatabaseProvisioning(lifecycleStatus)
   const provisioningDisabledSections = provisioning
     ? {
         monitor: DEDICATED_DATABASE_PROVISIONING_RESTRICTED_MESSAGE,
@@ -254,6 +265,12 @@ export function Workspace({
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
   )
+
+  const effectiveTableId = tableId === '-' ? undefined : tableId
+  // Prefer the dedicated table query so the shell stays mounted when the table
+  // is not on the first page of dbTables (or while that list is still settling).
+  const { table: tableDataForStatus, isLoading: tableDetailLoading } =
+    useProjectTable(projectId, databaseId, DB_KIND, effectiveTableId)
 
   // Requested page query (drives fetch when user changes page)
   const { isFetching: sidebarTablesFetching } = useProjectTables(
@@ -307,8 +324,23 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
-  const selectedTable =
+  const selectedTableFromList =
     tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
+  const selectedTable = useMemo(() => {
+    if (tableId === '-') return undefined
+    if (selectedTableFromList) return selectedTableFromList
+    if (!tableDataForStatus) return undefined
+    // The detail query carries no counts, and nothing below reads them.
+    return {
+      $id: tableDataForStatus.$id,
+      name: tableDataForStatus.name,
+      databaseId,
+      rows: 0,
+      columns: 0,
+      indexes: 0,
+      enabled: tableDataForStatus.enabled,
+    }
+  }, [tableId, selectedTableFromList, tableDataForStatus, databaseId])
   // Only show loading if we don't have data yet (account for prefetched data)
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
@@ -658,7 +690,6 @@ export function Workspace({
     },
   })
 
-  const effectiveTableId = tableId === '-' ? undefined : tableId
   const { columns: tableColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
@@ -666,12 +697,6 @@ export function Workspace({
     effectiveTableId,
   )
   const { indexes: tableIndexes } = useProjectCollectionIndexes(
-    projectId,
-    databaseId,
-    DB_KIND,
-    effectiveTableId,
-  )
-  const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
     DB_KIND,
@@ -1003,7 +1028,7 @@ export function Workspace({
     )
   }
 
-  if (tableId !== '-' && !selectedTable) {
+  if (tableId !== '-' && !selectedTable && !tableDetailLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -1385,8 +1410,40 @@ export function Workspace({
     </div>
   )
 
+  const tableRowsSpreadsheet =
+    activeTab === 'rows' && selectedTable ? (
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <RowsSpreadsheet
+          key={selectedTable.$id}
+          table={selectedTable}
+          canWriteRows={!noCreateRowPermission}
+          canWriteTables={!noCreateTablePermission}
+          onRefetchReady={(refetchFn) => {
+            rowsRefetchRef.current = refetchFn
+          }}
+          onCreateRowReady={(openCreateDrawer) => {
+            openCreateRowDrawerRef.current = openCreateDrawer
+          }}
+          onRowsCountChange={handleRowsCountChange}
+          rowsUrlSearch={rowsUrlSearch}
+          rowsUrlPage={rowsUrlPage}
+          rowsUrlLimit={rowsUrlLimit}
+          rowsFilterQueries={rowsFilterQueries}
+          rowsFilterQueryString={rowsFilterQueryString}
+          rowsSortBy={rowsSortBy}
+          rowsSortOrder={rowsSortOrder}
+          onNavigateToRowsList={navigateToRowsList}
+        />
+      </div>
+    ) : null
+
   const tableViewMain = (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <DatabaseRowsFullscreenShell
+      active={rowsFullscreen}
+      onExit={toggleRowsFullscreen}
+      className="h-full min-w-0 flex-1"
+    >
+      {!rowsFullscreen ? (
       <ServiceHeader
         title={
           isDatabaseLevelView ? (
@@ -1397,12 +1454,16 @@ export function Workspace({
             )
           ) : (
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{selectedTable!.name}</span>
-              <CopyableId
-                id={selectedTable!.$id}
-                size="xs"
-                className="shrink-0"
-              />
+              <span className="truncate">
+                {selectedTable?.name ?? t('Loading...')}
+              </span>
+              {selectedTable ? (
+                <CopyableId
+                  id={selectedTable.$id}
+                  size="xs"
+                  className="shrink-0"
+                />
+              ) : null}
             </div>
           )
         }
@@ -1565,6 +1626,14 @@ export function Workspace({
         exportTooltip="Export CSV"
         exportDisabled={
           !isDatabaseLevelView && activeTab === 'rows' && !hasRows
+        }
+        afterRefreshButtons={
+          canUseRowsFullscreen ? (
+            <DatabaseRowsFullscreenToggle
+              active={rowsFullscreen}
+              onToggle={toggleRowsFullscreen}
+            />
+          ) : undefined
         }
         beforeCreateButtons={undefined}
         collapsible={!isDatabaseLevelView && isSpreadsheetLikeTableTab(activeTab)}
@@ -1747,13 +1816,14 @@ export function Workspace({
           </>
         }
       />
+      ) : null}
 
       <div
         className={cn(
           'flex-1 min-h-0',
           databaseTab === 'settings' && children
             ? 'flex flex-col overflow-hidden'
-            : activeTab === 'rows'
+            : rowsFullscreen || activeTab === 'rows'
               ? 'flex min-h-0 flex-col overflow-hidden'
               : 'overflow-y-auto',
         )}
@@ -1782,31 +1852,7 @@ export function Workspace({
           )
         ) : (
           <>
-            {activeTab === 'rows' && selectedTable ? (
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <RowsSpreadsheet
-                  key={selectedTable.$id}
-                  table={selectedTable}
-                  canWriteRows={!noCreateRowPermission}
-                  canWriteTables={!noCreateTablePermission}
-                  onRefetchReady={(refetchFn) => {
-                    rowsRefetchRef.current = refetchFn
-                  }}
-                  onCreateRowReady={(openCreateDrawer) => {
-                    openCreateRowDrawerRef.current = openCreateDrawer
-                  }}
-                  onRowsCountChange={handleRowsCountChange}
-                  rowsUrlSearch={rowsUrlSearch}
-                  rowsUrlPage={rowsUrlPage}
-                  rowsUrlLimit={rowsUrlLimit}
-                  rowsFilterQueries={rowsFilterQueries}
-                  rowsFilterQueryString={rowsFilterQueryString}
-                  rowsSortBy={rowsSortBy}
-                  rowsSortOrder={rowsSortOrder}
-                  onNavigateToRowsList={navigateToRowsList}
-                />
-              </div>
-            ) : null}
+            {tableRowsSpreadsheet}
             {selectedTable && activeTab === 'documents' && (
               <>
                 <DocumentsJsonSpreadsheet
@@ -1846,21 +1892,21 @@ export function Workspace({
                 }}
               />
             ) : null}
-            {activeTab === 'security' && (
-              <TableSecurity table={selectedTable!} />
-            )}
-            {activeTab === 'settings' && (
-              <TableSettings table={selectedTable!} />
-            )}
+            {activeTab === 'security' && selectedTable ? (
+              <TableSecurity table={selectedTable} />
+            ) : null}
+            {activeTab === 'settings' && selectedTable ? (
+              <TableSettings table={selectedTable} />
+            ) : null}
           </>
         )}
       </div>
-    </div>
+    </DatabaseRowsFullscreenShell>
   )
 
   return (
     <div className="@container flex h-full min-h-0 min-w-0">
-      {showDesktopTableSidebar ? (
+      {showDesktopTableSidebar && !rowsFullscreen ? (
         <TableViewResizableLayout sidebar={tableViewSidebar}>
           {tableViewMain}
         </TableViewResizableLayout>

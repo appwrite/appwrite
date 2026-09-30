@@ -178,10 +178,10 @@ For a look at what to avoid, [7 prompting mistakes you need to stop making right
 
 # Taking this further with Appwrite
 
-If you're building with AI assistants and using Appwrite as your backend, the [Appwrite MCP server](/docs/tooling/mcp) lets AI tools interact directly with your project. You can query tables, manage functions, and run operations through natural language inside tools like Claude Code, Cursor, or Windsurf.
+If you're building with AI assistants and using Appwrite as your backend, the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) lets AI tools interact directly with your project. You can query tables, manage functions, and run operations through natural language inside tools like Claude Code, Cursor, or Windsurf.
 
 This means the prompts you've refined for code generation can also drive your backend. Instead of switching context between your AI tool and the Appwrite console, the model can do it directly.
 
-- [Appwrite MCP server docs](/docs/tooling/mcp)
-- [Claude Code integration guide](/docs/tooling/ai/ai-dev-tools/claude-code)
+- [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+- [Claude Code integration guide](/docs/tooling/ai/agents/claude-code)
 - [7 prompting mistakes you need to stop making right now](/blog/post/7-prompting-mistakes-you-need-to-stop-making-right-now)

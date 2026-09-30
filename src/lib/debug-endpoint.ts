@@ -31,12 +31,12 @@ export const ENDPOINT_PRESETS: Record<
   },
   localhostCloud: {
     label: 'Local Cloud',
-    url: 'http://localhost/v1',
+    url: 'http://localhost:9601/v1',
     description: 'Local Cloud instance',
   },
   localhostCe: {
     label: 'Local CE',
-    url: 'http://localhost:9522/v1',
+    url: 'http://localhost:9520/v1',
     description: 'Local Community Edition instance',
   },
   oss: {

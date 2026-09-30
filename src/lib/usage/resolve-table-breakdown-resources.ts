@@ -12,7 +12,11 @@ import {
   fetchProjectTable,
   resolveProjectDatabaseType,
 } from '@/lib/react-query/hooks/databases'
-import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  buildLookupQueryBatches,
+  fetchLookupBatches,
+  normalizeIds,
+} from '@/lib/appwrite-id'
 
 export interface TableBreakdownResource {
   id: string
@@ -43,10 +47,10 @@ export function parseTableUsageResourceLabel(label: string): {
   return { tableId: trimmed }
 }
 
-export function normalizeTableBreakdownResourceLabels(labels: string[]): string[] {
-  return [
-    ...new Set(labels.filter((label) => typeof label === 'string' && label.trim())),
-  ].slice(0, USAGE_BREAKDOWN_DRAWER_LIMIT)
+export function normalizeTableBreakdownResourceLabels(
+  labels: string[],
+): string[] {
+  return normalizeIds(labels)
 }
 
 /** Resolve a database's product route kind via a single console lookup (no per-product probing). */
@@ -74,22 +78,13 @@ async function listTablesByIdsInDatabase(
   if (tableIds.length === 0) return []
 
   const projectSdk = sdk.forProject(projectId)
-  const buildIdQuery = (ids: string[]) =>
-    ids.length === 1
-      ? Query.equal('$id', ids[0])
-      : Query.or(ids.map((id) => Query.equal('$id', id)))
-  const buildNameQuery = (names: string[]) =>
-    names.length === 1
-      ? Query.equal('name', names[0])
-      : Query.or(names.map((name) => Query.equal('name', name)))
-
   const kind = resolveProjectDatabaseType(dbKind)
 
-  const listMatches = async (query: string[]) => {
+  const listBatch = async (queries: string[]) => {
     if (kind === DatabaseType.Documentsdb) {
       const response = await projectSdk.documentsDB.listCollections({
         databaseId,
-        queries: [...query, Query.limit(tableIds.length)],
+        queries,
       })
       return (response.collections ?? []).map((collection) => ({
         $id: collection.$id,
@@ -100,7 +95,7 @@ async function listTablesByIdsInDatabase(
     if (kind === DatabaseType.Vectorsdb) {
       const response = await projectSdk.vectorsDB.listCollections({
         databaseId,
-        queries: [...query, Query.limit(tableIds.length)],
+        queries,
       })
       return (response.collections ?? []).map((collection) => ({
         $id: collection.$id,
@@ -110,7 +105,7 @@ async function listTablesByIdsInDatabase(
 
     const response = await projectSdk.tablesDB.listTables({
       databaseId,
-      queries: [...query, Query.limit(tableIds.length)],
+      queries,
     })
 
     return (response.tables ?? []).map((table) => ({
@@ -119,25 +114,24 @@ async function listTablesByIdsInDatabase(
     }))
   }
 
-  const byId = await listMatches([buildIdQuery(tableIds)]).catch(() => [])
+  const listMatches = (attribute: '$id' | 'name', values: string[]) =>
+    fetchLookupBatches(buildLookupQueryBatches(attribute, values), listBatch)
+
+  const byId = await listMatches('$id', tableIds).catch(() => [])
   if (byId.length >= tableIds.length) {
     return byId
   }
 
   const matchedIds = new Set(byId.map((table) => table.$id))
   const unmatchedLabels = tableIds.filter((label) => {
-    return !byId.some(
-      (table) => table.$id === label || table.name === label,
-    )
+    return !byId.some((table) => table.$id === label || table.name === label)
   })
 
   if (unmatchedLabels.length === 0) {
     return byId
   }
 
-  const byName = await listMatches([buildNameQuery(unmatchedLabels)]).catch(
-    () => [],
-  )
+  const byName = await listMatches('name', unmatchedLabels).catch(() => [])
 
   const merged = [...byId]
   for (const table of byName) {

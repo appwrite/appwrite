@@ -27,6 +27,28 @@ export const heProductPagesDictionary: Record<string, string> = {
     'אימות כלול בכל פריסת Appwrite. התקנות self-hosted משתמשות באותם Auth APIs, SDKs, ספקי OAuth, מדיניות והתנהגות סשן כמו Appwrite Cloud. הגדירו שיטות אימות, כללי סיסמה ומדיניות אבטחה מהקונסולה באותו אופן.',
   'Auth overview': 'סקירת אימות',
   'Auth user delivery': 'משלוח למשתמשי אימות',
+  'AutoGravity does not crop this file. It returns a focal point that the preview crop should keep visible.':
+    'AutoGravity לא חותכת את הקובץ הזה. היא מחזירה נקודת מוקד שחיתוך ה-preview צריך להשאיר גלויה.',
+  'AutoGravity focal point': 'נקודת מוקד של AutoGravity',
+  'Automatic crop gravity': 'מוקד חיתוך אוטומטי',
+  'Face bounding box, if confidence is high': 'תיבת פנים, אם רמת הביטחון גבוהה',
+  'It asks AutoGravity to pick a crop focus. YuNet runs first and uses a face bounding box when confidence is high enough. Otherwise U²-Net saliency finds the strongest connected region and returns its weighted centroid as a normalized (x, y) point. The preview endpoint crops around that point. Fixed gravity values still work as before.':
+    'זה מבקש מ-AutoGravity לבחור מוקד חיתוך. YuNet רץ קודם ומשתמש בתיבת פנים כשהביטחון מספיק גבוה. אחרת סאליינס של U²-Net מוצא את האזור המחובר החזק ביותר ומחזיר את מרכז המשקל שלו כנקודה מנורמלת (x, y). ה-preview חותך סביב הנקודה הזו. ערכי gravity קבועים ממשיכים לעבוד כמו קודם.',
+  'Normalized focal point for the crop': 'נקודת מוקד מנורמלת לחיתוך',
+  'Pass gravity=auto on file preview and Appwrite picks a focal point from the image. YuNet looks for a face first. If none is confident enough, U²-Net saliency finds the strongest subject. The service returns a normalized (x, y) coordinate. Existing values like center and top-right stay unchanged.':
+    'העבירו gravity=auto ב-preview של הקובץ, ו-Appwrite בוחרת נקודת מוקד מהתמונה. YuNet מחפש פנים קודם. אם אין זיהוי מספיק בטוח, סאליינס של U²-Net מוצא את הנושא הבולט ביותר. השירות מחזיר קואורדינטה מנורמלת (x, y). ערכים קיימים כמו center ו-top-right נשארים ללא שינוי.',
+  'Saliency map, then strongest connected region': 'מפת סאליינס, ואז האזור המחובר החזק ביותר',
+  'Square crop using gravity=auto, subject kept in view': 'חיתוך ריבועי עם gravity=auto, הנושא נשאר בתמונה',
+  'Square crop using gravity=center, mostly empty field': 'חיתוך ריבועי עם gravity=center, בעיקר שדה ריק',
+  'The middle of the frame is empty grass.': 'אמצע הפריים הוא דשא ריק.',
+  'The same 400×400 request keeps the subject.': 'אותה בקשת 400×400 משאירה את הנושא.',
+  'Keeps the subject.': 'משאיר את הנושא.',
+  'Misses the subject.': 'מפספס את הנושא.',
+  'What does gravity=auto do on image previews?': 'מה gravity=auto עושה בתצוגות מקדימות של תמונות?',
+  'Wide source photograph with the subject on the left': 'צילום מקור רחב עם הנושא בצד שמאל',
+  'YuNet looks for a face, then U²-Net saliency. AutoGravity returns a normalized (x, y) point. The uploaded file is not cropped.':
+    'YuNet מחפש פנים, ואז סאליינס של U²-Net. AutoGravity מחזירה נקודה מנורמלת (x, y). הקובץ שהועלה לא נחתך.',
+  'YuNet, then U²-Net. File is not cropped.': 'YuNet, ואז U²-Net. הקובץ לא נחתך.',
   'Backup features depend on your plan and database engine. Cloud plans include backup options for supported engines.':
     'יכולות גיבוי תלויות בתוכנית ובמנוע מסד הנתונים. תוכניות Cloud כוללות אפשרויות גיבוי למנועים נתמכים.',
   'Branch URLs': 'כתובות Branch',
@@ -314,6 +336,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'השתמשו ב-Git ל-Builds אוטומטיים ב-push, ב-Appwrite CLI ב-CI, או בהעלאת tarball ידנית מהקונסולה. כל מסלול עובר דרך אותו צינור Build, לוגים, דומיינים והחזרות.',
   'Use the Appwrite CLI and Docker to run functions on localhost with hot reload. Test with production-style headers, impersonate users, and deploy when you are ready.':
     'השתמשו ב-Appwrite CLI ו-Docker להריץ פונקציות על localhost עם hot reload. בדקו עם headers בסגנון פרודקשן, התחזו למשתמשים ופרסו כשאתם מוכנים.',
+  'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate from a single upload. Pass gravity=auto and YuNet looks for a face first. If none is confident enough, U²-Net saliency returns a normalized (x, y) crop focus. Fixed gravity values still work.':
+    'השתמשו ב-preview endpoint לשינוי גודל, חיתוך, המרת פורמט, איכות, מסגרות וסיבוב מהעלאה אחת. העבירו gravity=auto ו-YuNet מחפש פנים קודם. אם אין זיהוי מספיק בטוח, סאליינס של U²-Net מחזיר מוקד חיתוך מנורמל (x, y). ערכי gravity קבועים ממשיכים לעבוד.',
   'Use the preview endpoint to resize, crop, convert format, set quality, add borders, and rotate images on demand. No pre-processing pipeline or duplicate files.':
     'השתמשו ב-Endpoint התצוגה המקדימה לשנות גודל, לחתוך, להמיר פורמט, להגדיר איכות, להוסיף מסגרות ולסובב תמונות לפי דרישה. בלי צינור עיבוד מוקדם או קבצים כפולים.',
   'Verify sessions from Next.js, Nuxt, SvelteKit, and other server-rendered apps. Issue session cookies from your backend with dedicated guides and tutorials.':
@@ -346,8 +370,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'כן. הפעילו דחיסת gzip או zstd לכל באקט מהגדרות. הדחיסה חלה על העלאות חדשות ועוזרת להפחית עלויות אחסון ורוחב פס. קבצים גדולים מ-20 MB מדלגים על דחיסה גם כשהיא מופעלת.',
   'Yes. Every function gets a generated domain and you can add custom domains on Appwrite Cloud. Pass x-appwrite-user-jwt to authenticate users and respect Auth permissions inside your function.':
     'כן. לכל פונקציה יש דומיין שנוצר אוטומטית ואפשר להוסיף דומיינים מותאמים ב-Appwrite Cloud. העבירו x-appwrite-user-jwt לאימות משתמשים ולכיבוד הרשאות אימות בתוך הפונקציה.',
-  'Yes. Functions receive a dynamic API key and run with project context. Configure scopes in Settings, then call Databases, Storage, Messaging, Auth, and other APIs from server SDKs inside your handler.':
-    'כן. פונקציות מקבלות מפתח API דינמי ורצות בהקשר פרויקט. הגדירו scopes בהגדרות, ואז קראו למסדי נתונים, אחסון, הודעות, אימות ו-APIs אחרים מ-server SDKs בתוך ה-handler.',
+  'Yes. Functions receive an ephemeral API key and run with project context. Configure scopes in Settings, then call Databases, Storage, Messaging, Auth, and other APIs from server SDKs inside your handler.':
+    'כן. פונקציות מקבלות מפתח API זמני ורצות בהקשר פרויקט. הגדירו scopes בהגדרות, ואז קראו למסדי נתונים, אחסון, הודעות, אימות ו-APIs אחרים מ-server SDKs בתוך ה-handler.',
   'Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user\'s first successful sign-in.':
     'כן. ייבאו משתמשים דרך הקונסולה או Users API עם Server SDK. לחשבונות אימייל וסיסמה, צרו משתמשים עם סיסמאות בטקסט רגיל או ייבאו hashes סיסמה קיימים כשהספק משתמש באלגוריתם נתמך: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5 או PHPass. סיסמאות חדשות נשמרות עם Argon2. Hashes שיובאו מאלגוריתמים אחרים משודרגים ל-Argon2 אחרי ההתחברות המוצלחת הראשונה של המשתמש.',
   'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and Firewall.':

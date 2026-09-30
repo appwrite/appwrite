@@ -28,6 +28,7 @@ import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 
 /** Same green as TrafficOverview requests / RuleImpactPreview matched series. */
 export const FIREWALL_IMPACT_MATCHED_COLOR = '#10b981'
@@ -43,6 +44,11 @@ export type FirewallImpactChartProps = {
   className?: string
   /** Empty-state copy when series has no points. */
   emptyLabel?: string
+  /**
+   * When true, scale the Y-axis to matched traffic and hide the total series.
+   * Use in compact preset previews so matched traffic is readable.
+   */
+  compactMatchedScale?: boolean
 }
 
 export function FirewallImpactChart({
@@ -52,6 +58,7 @@ export function FirewallImpactChart({
   height = OVERVIEW_CHART_HEIGHT,
   className,
   emptyLabel,
+  compactMatchedScale = false,
 }: FirewallImpactChartProps) {
   const t = useT()
   const gradientId = `firewall-impact-matched-${useId().replace(/:/g, '')}`
@@ -61,8 +68,16 @@ export function FirewallImpactChart({
     [series],
   )
   const chartAxisMax = useMemo(
-    () => series.reduce((max, point) => Math.max(max, point.total), 0),
-    [series],
+    () =>
+      series.reduce(
+        (max, point) =>
+          Math.max(
+            max,
+            compactMatchedScale ? point.matched : point.total,
+          ),
+        0,
+      ),
+    [compactMatchedScale, series],
   )
   const yAxisTickFormatter = useMemo(
     () => createCompactCountAxisTickFormatter(chartAxisMax),
@@ -80,6 +95,7 @@ export function FirewallImpactChart({
         <div className={overviewChartPanelChartFillClass}>
           {hasData ? (
             <ResponsiveContainer
+              className={USAGE_CHART_FADE_IN_CLASS_NAME}
               {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
               minHeight={height}
             >
@@ -148,17 +164,19 @@ export function FirewallImpactChart({
                     )
                   }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="total"
-                  name={t('Total traffic')}
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                  fill="transparent"
-                  dot={false}
-                  {...CHART_ANIMATION_DISABLED}
-                />
+                {!compactMatchedScale ? (
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    name={t('Total traffic')}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 4"
+                    fill="transparent"
+                    dot={false}
+                    {...CHART_ANIMATION_DISABLED}
+                  />
+                ) : null}
                 <Area
                   type="monotone"
                   dataKey="matched"

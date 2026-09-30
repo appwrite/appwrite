@@ -1,12 +1,6 @@
-import {
-  isAgentDocsEnabled,
-  isAgentDocsSlug,
-} from './agent-docs-feature'
+import { isAgentDocsEnabled, isAgentDocsSlug } from './agent-docs-feature'
 import { isDatabaseTypeDocsSlugHidden } from './database-docs-feature'
-import {
-  isDomainsDocsEnabled,
-  isDomainsDocsSlug,
-} from './domains-docs-feature'
+import { isDomainsDocsEnabled, isDomainsDocsSlug } from './domains-docs-feature'
 import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
@@ -16,10 +10,6 @@ import {
   isPartnersDocsSlug,
   shouldBlockPartnersDocs,
 } from './partners-docs-feature'
-import {
-  isStorageS3DocsEnabled,
-  isStorageS3DocsSlug,
-} from './storage-s3-docs-feature'
 
 /**
  * True when a docs slug must stay hidden for the active console profile.
@@ -37,7 +27,6 @@ export function isFeatureGatedDocsSlugHidden(
   }
   if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
   if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
-  if (isStorageS3DocsSlug(slug) && !isStorageS3DocsEnabled()) return true
   if (isDatabaseTypeDocsSlugHidden(slug)) return true
   return false
 }

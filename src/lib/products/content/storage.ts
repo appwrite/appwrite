@@ -33,6 +33,12 @@ export const storageProductContent: ProductPageContent = {
       links: [{ label: 'Image transformations', href: '/docs/products/storage/images' }],
     },
     {
+      question: 'What does gravity=auto do on image previews?',
+      answer:
+        'It asks AutoGravity to pick a crop focus. YuNet runs first and uses a face bounding box when confidence is high enough. Otherwise U²-Net saliency finds the strongest connected region and returns its weighted centroid as a normalized (x, y) point. The preview endpoint crops around that point. Fixed gravity values still work as before.',
+      links: [{ label: 'Image transformations', href: '/docs/products/storage/images' }],
+    },
+    {
       question: 'Is CDN delivery included with Storage?',
       answer:
         'Yes. Storage files and transformed previews are served through Appwrite CDN with 120+ edge locations. Transformed images are cached in your project region, so repeat requests skip re-processing before reaching the edge.',

@@ -511,14 +511,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     })
   }
 
-  // Get available tables for relationship columns
-  const availableTables = useMemo(() => {
-    return tables.map((table: unknown) => ({
-      $id: table.$id,
-      name: table.name,
-    }))
-  }, [tables])
-
   // Get columns for the active table (for index creation)
   const { columns: activeTableColumns } = useProjectTableColumns(
     projectId,
@@ -1939,7 +1931,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           onSubmit={async (data) => {
             await createColumnMutation.mutateAsync(data)
           }}
-          availableTables={availableTables}
+          projectId={projectId}
+          databaseId={databaseId}
+          currentTableId={activeTableId}
           existingColumns={
             nodes.find((n) => n.id === activeTableId)?.columns || []
           }

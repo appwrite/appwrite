@@ -8,9 +8,13 @@ import {
 import { resolveCategorySlug } from '@/lib/blog/category-slugs'
 import { getBlogCategoryRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 
 export const Route = createFileRoute('/_marketing/blog/categories/$category')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {

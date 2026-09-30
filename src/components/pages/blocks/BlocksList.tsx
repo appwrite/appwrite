@@ -39,7 +39,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
 
   const deleteMutation = useDeleteBlock()
 
-  const blocks: Models.Block[] = data?.blocks ?? []
+  const blocks: Models.ManagerBlock[] = data?.blocks ?? []
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase()
@@ -57,7 +57,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
     })
   }, [blocks, selectedTypes, onlyExpiring, onlyReadonly, search])
 
-  const handleDelete = (b: Models.Block) => {
+  const handleDelete = (b: Models.ManagerBlock) => {
     if (!projectId) return
     setPendingDelete({ resourceType: b.resourceType, resourceId: b.resourceId })
     deleteMutation.mutate(
@@ -226,7 +226,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
           <EmptyState
             icon={ShieldOff}
             title="No target selected"
-            description="Enter a project ID above and load to see its blocks."
+            description="Load a project in Look up to see its blocks."
             iconSize="md"
           />
         </div>

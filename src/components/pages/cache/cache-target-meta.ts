@@ -6,7 +6,6 @@ import {
   Layers,
   Lock,
   Radio,
-  ScrollText,
   Server,
   type LucideIcon,
 } from 'lucide-react'
@@ -100,19 +99,11 @@ export const CACHE_DATABASE_META: Record<CacheDatabase, CacheDatabaseMeta> = {
     description: "A project's own database.",
     takesProject: true,
   },
-  [CacheDatabase.Logs]: {
-    value: CacheDatabase.Logs,
-    label: 'Logs',
-    icon: ScrollText,
-    description: "A project's logs database.",
-    takesProject: true,
-  },
 }
 
 export const ORDERED_CACHE_DATABASES: CacheDatabase[] = [
   CacheDatabase.Console,
   CacheDatabase.Project,
-  CacheDatabase.Logs,
 ]
 
 export type RegionOption = {

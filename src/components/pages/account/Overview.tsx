@@ -43,6 +43,7 @@ import {
   Loader2,
   AlertTriangle,
   Download,
+  ShieldAlert,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -321,6 +322,10 @@ export function UpdateEmailSection() {
 
 export function UpdatePasswordSection() {
   const t = useT()
+  const { account } = useAuth()
+  // Result of the last breached-password check on the console account.
+  // Undefined or null means the password has never been checked.
+  const passwordPwned = (account as Models.User | undefined)?.passwordPwned
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const queryClient = useQueryClient()
@@ -367,24 +372,46 @@ export function UpdatePasswordSection() {
       className="rounded-xl border border-border bg-card/50 overflow-hidden"
     >
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Update password')}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Update password')}
+          </h3>
+          {passwordPwned === true && (
+            <Badge variant="error" className="text-[10px] shrink-0 gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              {t('breached')}
+            </Badge>
+          )}
+        </div>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
+          {passwordPwned === true && (
+            <p className="text-[13px] text-red-600 dark:text-red-400 mb-3">
+              {t(
+                'This password was found in a known data breach. Change it as soon as possible.',
+              )}
+            </p>
+          )}
           <p className="text-[13px] text-muted-foreground mb-3">
             {t(
               'Change your account password. Includes link to password recovery if forgotten.',
             )}
           </p>
+          {typeof passwordPwned !== 'boolean' && (
+            <p className="text-[13px] text-muted-foreground mb-3">
+              {t('Password not checked against known data breaches')}
+            </p>
+          )}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="old-password">{t('Old password')}</Label>
               <Input
                 id="old-password"
+                name="current-password"
                 type="password"
+                autoComplete="current-password"
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
@@ -397,7 +424,9 @@ export function UpdatePasswordSection() {
               <Label htmlFor="new-password">{t('New password')}</Label>
               <Input
                 id="new-password"
+                name="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -479,6 +508,7 @@ export function IdentitiesSection({
       cursor: 'cursor-ai.svg',
       gitlab: 'gitlab.svg',
       bitbucket: 'bitbucket.svg',
+      resend: 'resend.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -492,6 +522,7 @@ export function IdentitiesSection({
       cursor: 'Cursor',
       gitlab: 'GitLab',
       bitbucket: 'Bitbucket',
+      resend: 'Resend',
     }
     return nameMap[provider.toLowerCase()] || provider
   }

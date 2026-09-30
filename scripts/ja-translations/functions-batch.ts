@@ -133,8 +133,8 @@ export const jaFunctionsBatch: Record<string, string> = {
   'Runtime specification for your function': '関数のランタイム仕様',
   'Select a GitHub installation and repository to connect to this function':
     'この関数に接続する GitHub インストールとリポジトリを選択してください',
-  'Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.':
-    '関数のために一時的に生成される動的キーに付与するスコープを選択してください。必要な権限のみを許可することを推奨します。',
+  'Select scopes to grant the ephemeral key generated for your function. It is best practice to allow only necessary permissions.':
+    '関数のために生成される一時的なキーに付与するスコープを選択してください。必要な権限のみを許可することを推奨します。',
   'Select the runtime specification for your function':
     '関数のランタイム仕様を選択してください',
   'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.':

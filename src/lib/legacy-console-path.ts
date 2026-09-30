@@ -30,15 +30,23 @@ const TYPED_RESOURCE_PREFIXES = [
   'message',
   'platform',
   'key',
-  'devkey',
   'variable',
   'installation',
+  'domain',
 ] as const
 
 const TYPED_RESOURCE_RE = new RegExp(
   `^(${TYPED_RESOURCE_PREFIXES.join('|')})-(.+)$`,
   'i',
 )
+
+// Team invite emails and external sign-up links still point at the legacy auth
+// pages, which vibes renamed.
+const AUTH_PATHS = new Map([
+  ['invite', '/join'],
+  ['login', '/sign-in'],
+  ['register', '/sign-up'],
+])
 
 /**
  * Returns true when the pathname looks like a legacy console deep link that
@@ -59,14 +67,18 @@ export function isLegacyConsolePath(pathname: string): boolean {
 
 /**
  * Maps a legacy console pathname to its vibes equivalent.
- * Preserves path-only semantics; callers should re-attach `search` / hash.
+ * Returns a pathname only; callers should re-attach `search` / hash. `search`
+ * is read solely to pick the password recovery page.
  *
  * GitHub authorization comments used `/console/git/authorize-contributor`.
  * Stripping `/console` maps that to `/git/authorize-contributor` with the
  * original query string (`projectId`, `installationId`, `repositoryId`,
  * `providerPullRequestId`) intact.
  */
-export function rewriteLegacyConsolePath(pathname: string): string {
+export function rewriteLegacyConsolePath(
+  pathname: string,
+  search = '',
+): string {
   let path = pathname
   let wasConsolePrefixed = false
 
@@ -88,6 +100,21 @@ export function rewriteLegacyConsolePath(pathname: string): string {
     (path === '/education' || path.startsWith('/education/'))
   ) {
     return EDUCATION_JOIN_PATH
+  }
+
+  const authSegment = wasConsolePrefixed ? (path.split('/')[1] ?? '') : ''
+
+  // Recovery emails link `/console/recover` with `userId` and `secret`, which
+  // `/reset` requires; the bare path was the forgot-password form, now
+  // `/recovery`.
+  if (authSegment === 'recover') {
+    const params = new URLSearchParams(search)
+    return params.get('userId') && params.get('secret') ? '/reset' : '/recovery'
+  }
+
+  const authPath = AUTH_PATHS.get(authSegment)
+  if (authPath) {
+    return authPath
   }
 
   if (!path.startsWith('/')) {
@@ -112,6 +139,27 @@ export function rewriteLegacyConsolePath(pathname: string): string {
       continue
     }
 
+    // Billing emails link to the organization usage, plan and invoice pages;
+    // vibes folds all of them into billing settings.
+    if (
+      out[0] === 'organizations' &&
+      out.length === 2 &&
+      ['usage', 'change-plan', 'invoices'].includes(segment)
+    ) {
+      out.push('settings', 'billing')
+      break
+    }
+
+    // Platforms and API keys were tabs of the project overview; vibes serves
+    // them from the project root and calls platforms apps.
+    if (out[0] === 'projects' && out.length === 2 && segment === 'overview') {
+      continue
+    }
+    if (out[0] === 'projects' && out.length === 2 && segment === 'platforms') {
+      out.push('apps')
+      continue
+    }
+
     // Sites used `/deployments/deployment-{id}`; functions used a sibling
     // `/deployment-{id}` segment. Vibes always wants `/deployments/{id}`.
     const deploymentMatch = segment.match(/^deployment-(.+)$/i)
@@ -123,12 +171,35 @@ export function rewriteLegacyConsolePath(pathname: string): string {
       continue
     }
 
-    // Webhook pause emails deep-linked to a specific webhook; vibes only has
-    // the list page under settings/webhooks.
+    // Git installation callbacks returned to settings/git-installations; vibes
+    // renders git configuration on the settings page itself.
+    if (segment === 'git-installations' && out[out.length - 1] === 'settings') {
+      continue
+    }
+
+    // Webhook pause emails deep-linked to a specific webhook by its bare ID;
+    // vibes only has the list page under settings/webhooks.
     if (
-      segment.toLowerCase().startsWith('webhook-') &&
-      out[out.length - 1] === 'webhooks'
+      out[out.length - 1] === 'webhooks' &&
+      out[out.length - 2] === 'settings'
     ) {
+      continue
+    }
+
+    // Creation wizards lived under `create-function` and `create-site`, with
+    // templates at `create-function/template-{id}` and
+    // `create-site/templates/template-{id}`.
+    if (/^create-(function|site)$/i.test(segment)) {
+      out.push('create')
+      continue
+    }
+
+    const templateMatch = segment.match(/^template-(.+)$/i)
+    if (templateMatch && out.includes('create')) {
+      if (out[out.length - 1] === 'create') {
+        out.push('template')
+      }
+      out.push(templateMatch[1]!)
       continue
     }
 

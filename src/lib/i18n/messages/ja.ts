@@ -71,14 +71,12 @@ export const jaCatalog: EnCatalog = {
         accountId: 'アカウント ID',
         copyAccountId: 'アカウント ID をコピー',
         copied: 'コピーしました',
-        twoFactor: '2FA',
         active: '有効',
         inactive: '無効',
-        enabled: '有効',
-        disabled: '無効',
+        twoFactorEnabled: '2FA 有効',
+        twoFactorDisabled: '2FA 無効',
+        passwordBreached: 'パスワード漏洩あり',
         console: 'コンソール',
-        // Temporary: remove once the old console is retired
-        oldConsole: '旧コンソール',
         home: 'ホーム',
         docs: 'ドキュメント',
         changelog: '変更履歴',
@@ -220,6 +218,7 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.app.sidebar.items,
         overview: '概要',
         apps: 'アプリ',
+        agents: 'Agents',
         apiKeys: 'API キー',
         explorer: 'Explorer',
         auth: '認証',
@@ -433,7 +432,7 @@ export const jaCatalog: EnCatalog = {
           'ライブイベントを購読し、変更が起きた瞬間に反応できます。',
         mcpTitle: 'MCP',
         mcpDescription:
-          'MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
+          '1つのリモート MCP サーバー経由で AI エージェントを Appwrite プロジェクト、API、ドキュメントに接続。', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           '公式プロバイダーで Appwrite インフラストラクチャをコードとして管理。', // pragma: allowlist secret

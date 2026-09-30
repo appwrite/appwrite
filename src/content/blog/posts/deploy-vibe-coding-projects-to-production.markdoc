@@ -135,7 +135,7 @@ Each step is small. The combination is the difference between a launch that hold
 
 If you want to keep using your agent against the production project, scope the API key it uses. Avoid handing it a master key. The [Appwrite API MCP server](/docs/tooling/ai/mcp-servers) registers every service automatically, so the API key's scopes are what decide which resources the agent can actually touch. The [Docs MCP server](/docs/tooling/ai/mcp-servers) keeps the agent on current docs, which reduces the rate of generated code that calls methods that no longer exist.
 
-Editor plugins for [Claude Code](/docs/tooling/ai/ai-dev-tools/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) install the MCP servers, [Agent Skills](/docs/tooling/ai/skills), and SDK context in one step, which is the cheapest way to keep the post-launch loop working.
+Editor plugins for [Claude Code](/docs/tooling/ai/agents/claude-code) and [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) install the MCP servers, [Agent Skills](/docs/tooling/ai/skills), and SDK context in one step, which is the cheapest way to keep the post-launch loop working.
 
 # Shipping vibe-coded apps with Appwrite
 

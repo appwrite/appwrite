@@ -9,7 +9,7 @@ You can create a PostgreSQL database and run your first query in a few minutes.
 # Create a database {% #create %}
 
 {% info title="Available regions" %}
-Native databases are rolling out region by region, starting with Frankfurt (`fra`) and New York (`nyc`), and more regions are on the way. A database takes the region of the project that owns it and there is no per-database region selector, so create your project in a supported region before you start.
+Native databases are available in every [Appwrite Cloud region](/docs/products/network/regions). A database takes the region of the project that owns it and there is no per-database region selector, so create your project in the region closest to your users before you start.
 {% /info %}
 
 1. In your project, go to **Databases**.

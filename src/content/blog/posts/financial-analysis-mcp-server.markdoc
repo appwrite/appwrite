@@ -18,7 +18,7 @@ faqs:
   - question: "What does the financial analysis MCP server in this tutorial do?"
     answer: "It exposes controlled reporting operations as tools that an AI client can call. The server runs as an Appwrite Function and defines eight read-only tools over financial data in TablesDB, including portfolio summaries, account statements, spending by category, monthly cash flow, and transaction search. The AI client gets useful reports without unrestricted database access."
   - question: "How does the financial analysis function access Appwrite TablesDB?"
-    answer: "Appwrite passes a dynamic API key to each Function execution in the `x-appwrite-key` request header. The server uses that key with the supplied project endpoint and project ID. The demo limits the key to `databases.read`, `tables.read`, and `rows.read`, which allows reporting without granting write access."
+    answer: "Appwrite passes an ephemeral API key to each Function execution in the `x-appwrite-key` request header. The server uses that key with the supplied project endpoint and project ID. The demo limits the key to `databases.read`, `tables.read`, and `rows.read`, which allows reporting without granting write access."
   - question: "How should a financial MCP server handle multiple currencies?"
     answer: "Keep totals grouped by currency unless you have an explicit exchange-rate source and conversion policy. The demo reports USD, EUR, and GBP separately so it never adds unlike monetary values or implies a conversion rate that was not supplied."
   - question: "Can I use this MCP server with real financial data?"
@@ -38,7 +38,7 @@ The project uses two MCP servers with different responsibilities:
 - **Appwrite MCP server:** Connects your AI coding agent to Appwrite so it can create the TablesDB schema and seed test data.
 - **Your financial analysis MCP server:** Runs as an Appwrite Function and exposes only the reporting tools you define.
 
-The second server never needs a long-lived Appwrite API key. Appwrite Functions receive a dynamic API key for each execution, and its permissions are limited by the Function scopes you select. This lets the AI client request useful reports without receiving unrestricted database access.
+The second server never needs a long-lived Appwrite API key. Appwrite Functions receive an ephemeral API key for each execution, and its permissions are limited by the Function scopes you select. This lets the AI client request useful reports without receiving unrestricted database access.
 
 You will need an [Appwrite Cloud account](https://cloud.appwrite.io), an Appwrite project, a GitHub account, and an MCP-compatible client such as Claude Code, Cursor, or OpenAI Codex.
 
@@ -185,15 +185,15 @@ server = MCPServer(
 
 These instructions help the model choose and combine tools correctly, but each tool must still validate its own inputs.
 
-## Query TablesDB with the dynamic API key
+## Query TablesDB with the ephemeral API key
 
-Every tool needs a small request layer for the TablesDB REST API. Read the dynamic key from the MCP context and combine it with the endpoint and project ID supplied to the Function:
+Every tool needs a small request layer for the TablesDB REST API. Read the ephemeral key from the MCP context and combine it with the endpoint and project ID supplied to the Function:
 
 ```python
 def appwrite_headers(ctx: Context) -> dict[str, str]:
     api_key = (ctx.headers or {}).get("x-appwrite-key")
     if not api_key:
-        raise ValueError("No dynamic Appwrite API key was provided")
+        raise ValueError("No ephemeral Appwrite API key was provided")
 
     return {
         "X-Appwrite-Project": os.environ["APPWRITE_FUNCTION_PROJECT_ID"],
@@ -202,7 +202,7 @@ def appwrite_headers(ctx: Context) -> dict[str, str]:
     }
 ```
 
-The key can only use the read scopes configured on the Function. Even if a prompt asks a reporting tool to change a balance, Appwrite rejects the write because the Function has no row-write scope. See the [Functions development guide](/docs/products/functions/develop#dynamic-api-key) for details on dynamic keys.
+The key can only use the read scopes configured on the Function. Even if a prompt asks a reporting tool to change a balance, Appwrite rejects the write because the Function has no row-write scope. See the [Functions development guide](/docs/products/functions/develop#ephemeral-api-key) for details on ephemeral keys.
 
 ## Define narrow tools with useful descriptions
 

@@ -146,6 +146,30 @@ export function listTimezoneOptions(at: Date = new Date()): TimezoneOption[] {
     })
 }
 
+const OPTIONS_CACHE_BUCKET_MS = 15 * 60 * 1000
+const OPTIONS_CACHE_SIZE = 4
+const optionsCache = new Map<number, TimezoneOption[]>()
+
+/** Same output as listTimezoneOptions(at); keyed by 15-minute bucket (tzdata transitions fall on :00/:15/:30/:45 UTC). */
+export function listTimezoneOptionsCached(
+  at: Date = new Date(),
+): TimezoneOption[] {
+  const bucket = Math.floor(at.getTime() / OPTIONS_CACHE_BUCKET_MS)
+  const cached = optionsCache.get(bucket)
+  if (cached) {
+    optionsCache.delete(bucket)
+    optionsCache.set(bucket, cached)
+    return cached
+  }
+  const options = listTimezoneOptions(at)
+  optionsCache.set(bucket, options)
+  if (optionsCache.size > OPTIONS_CACHE_SIZE) {
+    const oldest = optionsCache.keys().next().value
+    if (oldest !== undefined) optionsCache.delete(oldest)
+  }
+  return options
+}
+
 export function timezoneMatchesQuery(
   option: TimezoneOption,
   query: string,

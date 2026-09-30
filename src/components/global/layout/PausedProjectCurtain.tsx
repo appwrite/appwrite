@@ -1,6 +1,7 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { PauseCircle, ArrowUpCircle, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FullScreenCurtain } from '@/components/global/shared/FullScreenCurtain'
 import { useT } from '@/lib/i18n/translate'
 import { useResumeProject } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
@@ -23,11 +24,13 @@ export function PausedProjectCurtain({
 }: PausedProjectCurtainProps) {
   const t = useT()
   const navigate = useNavigate()
+  const router = useRouter()
   const resumeMutation = useResumeProject(projectId)
 
   async function handleRestore() {
     try {
       await resumeMutation.mutateAsync()
+      await router.invalidate()
       onRestoreSuccess?.()
       toast.success(t('Project resumed successfully'))
       // Mutation invalidates project and all project-scoped queries. Navigate to overview
@@ -46,34 +49,14 @@ export function PausedProjectCurtain({
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <div className="mx-4 flex max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <PauseCircle className="size-9" />
-        </div>
-        <h1 className="text-[22px] font-semibold text-foreground">
-          {t('Project paused')}
-        </h1>
-        <p className="mt-3 text-[15px] text-muted-foreground">
-          {t(
-            'This project has been paused due to inactivity. Your data is safe and will remain intact.',
-          )}
-        </p>
-        <p className="mt-2 text-[14px] text-muted-foreground">
-          {t(
-            'Upgrade your plan to avoid pausing, or restore the project to continue using it now.',
-          )}
-        </p>
-
-        {resumeMutation.error && (
-          <p className="mt-4 text-[13px] text-destructive">
-            {resumeMutation.error instanceof Error
-              ? resumeMutation.error.message
-              : t('Failed to resume project.')}
-          </p>
-        )}
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
+    <FullScreenCurtain
+      icon={PauseCircle}
+      title={t('Project paused')}
+      description={t(
+        'This project has been paused due to inactivity. Your data is safe and will remain intact.',
+      )}
+      actions={
+        <>
           <Button asChild variant="brandCta" className="gap-1.5">
             <Link to="/upgrade" search={{ orgId: teamId }}>
               <ArrowUpCircle className="size-4" />
@@ -89,8 +72,9 @@ export function PausedProjectCurtain({
             <RotateCcw className="size-4" />
             {t('Restore project')}
           </Button>
-        </div>
-
+        </>
+      }
+      footer={
         <Button
           variant="ghost"
           className="mt-6 text-muted-foreground"
@@ -103,7 +87,21 @@ export function PausedProjectCurtain({
         >
           {t('Back to organization')}
         </Button>
-      </div>
-    </div>
+      }
+    >
+      <p className="mt-2 text-[14px] text-muted-foreground">
+        {t(
+          'Upgrade your plan to avoid pausing, or restore the project to continue using it now.',
+        )}
+      </p>
+
+      {resumeMutation.error && (
+        <p className="mt-4 text-[13px] text-destructive">
+          {resumeMutation.error instanceof Error
+            ? resumeMutation.error.message
+            : t('Failed to resume project.')}
+        </p>
+      )}
+    </FullScreenCurtain>
   )
 }

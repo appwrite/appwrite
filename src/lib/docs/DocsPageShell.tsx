@@ -12,7 +12,9 @@ import { DOCS_CONTAINER } from '@/lib/docs/docs-container'
 import { shouldResetDocsScrollOnPathChange } from '@/lib/docs/docs-scroll'
 import { isApiReferenceExplorerPath } from '@/lib/docs/references/is-api-reference-explorer-path'
 import { ApiReferenceUiPrefsProvider } from '@/lib/docs/references/ApiReferenceUiPrefsProvider'
-import { cn, resetConsoleShellDocumentScroll } from '@/lib/utils'
+import { useMarketingSiteLayoutProvided } from '@/lib/marketing/marketing-site-layout-context'
+import { cn } from '@/lib/utils'
+import { resetPageSurfaceScroll } from '@/lib/layout/marketing-document-scroll'
 
 type DocsPageShellProps = {
   children: ReactNode
@@ -20,14 +22,7 @@ type DocsPageShellProps = {
 
 function scrollDocsContentToTop() {
   if (typeof document === 'undefined') return
-
-  const main = document.getElementById('main-content')
-  if (main) {
-    main.scrollTo({ top: 0, behavior: 'instant' })
-    return
-  }
-
-  resetConsoleShellDocumentScroll()
+  resetPageSurfaceScroll('instant')
 }
 
 function DocsScrollToTop() {
@@ -50,10 +45,32 @@ function DocsScrollToTop() {
 }
 
 function DocsPageShellLayout({ children }: DocsPageShellProps) {
+  const nestedInMarketing = useMarketingSiteLayoutProvided()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const docsSearch = useDocsSearchContext()
   const { pathname } = useLocation()
   const isReferenceExplorer = isApiReferenceExplorerPath(pathname)
+
+  const article = (
+    <>
+      <DocsScrollToTop />
+      <div
+        className={cn(
+          isReferenceExplorer
+            ? 'flex h-full min-h-0 w-full min-w-0 flex-col'
+            : cn(DOCS_CONTAINER, 'min-w-0 w-full'),
+        )}
+      >
+        {children}
+      </div>
+    </>
+  )
+
+  if (nestedInMarketing) {
+    return (
+      <ApiReferenceUiPrefsProvider>{article}</ApiReferenceUiPrefsProvider>
+    )
+  }
 
   const layout = (
     <ConsoleLayout
@@ -79,16 +96,7 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
       showFooter={!isReferenceExplorer}
       footer={{ expanded: false }}
     >
-      <DocsScrollToTop />
-      <div
-        className={cn(
-          isReferenceExplorer
-            ? 'flex h-full min-h-0 w-full min-w-0 flex-col'
-            : cn(DOCS_CONTAINER, 'min-w-0 w-full'),
-        )}
-      >
-        {children}
-      </div>
+      {article}
     </ConsoleLayout>
   )
 
@@ -98,9 +106,8 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
 }
 
 export function DocsPageShell({ children }: DocsPageShellProps) {
-  return (
-    <DocsSearchProvider>
-      <DocsPageShellLayout>{children}</DocsPageShellLayout>
-    </DocsSearchProvider>
-  )
+  const nestedInMarketing = useMarketingSiteLayoutProvided()
+  const layout = <DocsPageShellLayout>{children}</DocsPageShellLayout>
+  if (nestedInMarketing) return layout
+  return <DocsSearchProvider>{layout}</DocsSearchProvider>
 }

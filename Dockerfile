@@ -1,8 +1,13 @@
-FROM oven/bun:1.4 AS base
+# Only the final stage runs on the target platform, so arm64 cross-builds
+# from an amd64 runner without emulating Bun.
+FROM --platform=$BUILDPLATFORM oven/bun:1.4 AS base
 
 WORKDIR /app
 COPY package.json package.json
 COPY bun.lock bun.lock
+# Bun applies patches/ (patchedDependencies) at install time, so it must be
+# present before both installs below.
+COPY patches patches
 
 FROM base AS build
 
@@ -36,9 +41,14 @@ RUN --mount=type=secret,id=sentry_auth_token \
 
 FROM base AS prod-deps
 
-RUN bun install --frozen-lockfile --production
+# Native optional dependencies (sharp, rolldown) must match the target arch.
+ARG TARGETARCH
+RUN bun install --frozen-lockfile --production --os=linux \
+    --cpu="$([ "${TARGETARCH}" = amd64 ] && echo x64 || echo "${TARGETARCH}")"
 
-FROM base AS final
+FROM oven/bun:1.4 AS final
+
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000

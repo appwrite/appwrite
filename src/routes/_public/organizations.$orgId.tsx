@@ -1,10 +1,6 @@
 import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
-import {
-  createFileRoute,
-  Outlet,
-  useMatches,
-  useLocation,
-} from '@tanstack/react-router'
+import { EducationPlanCurtain } from '@/components/global/layout/EducationPlanCurtain'
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationOverviewProjectsParamsFromUrl,
@@ -50,11 +46,8 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 })
 
 function OrganizationLayout() {
+  const { orgId } = Route.useParams()
   const matches = useMatches()
-  const location = useLocation()
-
-  // Use pathname for wizards only (matches can lag one frame on /upgrade).
-  const pathname = location.pathname
 
   // Check if we're on a domain detail route (should not have org header/tabs)
   const isDomainDetailRoute = matches.some(
@@ -93,7 +86,6 @@ function OrganizationLayout() {
     match.routeId.includes('/apps/$appId'),
   )
 
-  const isUpgradeWizardRoute = pathname === '/upgrade'
   // Agent has its own ConsoleLayout (console header + fixed chat chrome).
   const isAgentRoute = matches.some(
     (match) =>
@@ -107,14 +99,14 @@ function OrganizationLayout() {
     isOrgAppDetailRoute ||
     isSupportRoute ||
     isOrgDomainsWizardRoute ||
-    isUpgradeWizardRoute ||
     isAgentRoute
 
   return (
     <RequireAuth>
+      <EducationPlanCurtain orgId={orgId} />
       {renderOutletOnly ? (
-        // Domain detail, apps, marketplace detail, support, upgrade, domain
-        // wizards, and agent: outlet only (own ConsoleLayout / fullscreen chrome)
+        // Domain detail, apps, marketplace detail, support, domain wizards,
+        // and agent: outlet only (own ConsoleLayout / fullscreen chrome)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

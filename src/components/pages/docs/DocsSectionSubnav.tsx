@@ -161,7 +161,7 @@ export function DocsSectionSubnavPanel({
   return (
     <aside
       className={cn(
-        'relative z-10 hidden h-full shrink-0 flex-col overflow-hidden border-e border-border bg-background @[1024px]:flex',
+        'relative z-10 hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-e border-border bg-background @[1024px]:flex',
         SECONDARY_SIDEBAR_WIDTH_CLASS,
       )}
       aria-label={parent?.label ? `${parent.label} section navigation` : 'Section navigation'}

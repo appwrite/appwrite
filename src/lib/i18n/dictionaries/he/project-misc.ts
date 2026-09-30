@@ -271,6 +271,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Firewall
   Firewall: 'חומת אש',
+  'Open Firewall': 'פתיחת Firewall',
+  'Turn off sound': 'כיבוי שמע',
+  'Turn on sound': 'הפעלת שמע',
+  'Skip to console': 'דילוג לקונסול',
+  'Project rules that run before traffic reaches your API, Functions, or Sites.':
+    'כללי פרויקט שרצים לפני שהתעבורה מגיעה ל-API, לפונקציות או לאתרים שלכם.',
+  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
+    'חסמו, הגבילו קצב, הפנו או אתגרו בקשות לפני שהן מגיעות ל-API, לפונקציות או לאתרים שלכם.',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',
@@ -368,6 +376,126 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Passed: 'עברו',
   'Rate limited': 'הוגבלו בקצב',
   Redirected: 'הופנו',
+  'Rate limiting': 'הגבלת קצב',
+  'OTP abuse protection': 'הגנה מפני שימוש לרעה ב-OTP',
+  'Regional compliance': 'תאימות אזורית',
+  'Scraping prevention': 'מניעת scraping',
+  'Block API from countries': 'חסימת API ממדינות',
+  'Deny all project API traffic from selected countries.':
+    'דחיית כל תנועת ה-API של הפרויקט ממדינות שנבחרו.',
+  'Allow API only from countries': 'API רק ממדינות נבחרות',
+  'Deny project API traffic outside selected countries.':
+    'דחיית תנועת API של הפרויקט מחוץ למדינות שנבחרו.',
+  'Rate limit project API': 'הגבלת קצב API של הפרויקט',
+  'Cap total REST API requests per IP to slow bulk scraping.':
+    'הגבלת סך בקשות REST API לפי IP כדי להאט scraping בכמות גדולה.',
+  'Rate limit database API': 'הגבלת קצב API של מסדי נתונים',
+  'Cap TablesDB list and read traffic per IP to protect against data scraping.':
+    'הגבלת תנועת list/read ב-TablesDB לפי IP להגנה מפני scraping של נתונים.',
+  'Block hosting provider traffic': 'חסימת תנועה מספקי hosting',
+  'Deny API requests from hosting provider networks.':
+    'דחיית בקשות API מרשתות ספקי hosting.',
+  'Block datacenter connection traffic': 'חסימת תנועה מחיבור datacenter',
+  'Deny API requests from datacenter connection types.':
+    'דחיית בקשות API מסוגי חיבור datacenter.',
+  'Add-on required': 'נדרש תוסף',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
+    'הגדירו מכסת בקשות לפי IP לתנועת API תואמת. בדקו את תצוגת ההשפעה לפני הידוק מגבלות.',
+  'Created from a scraping prevention preset. Review traffic in the impact preview before tightening limits.':
+    'נוצר מתבנית מניעת scraping. בדקו תנועה בתצוגת ההשפעה לפני הידוק מגבלות.',
+  'Creates one deny rule. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    'יוצר כלל deny אחד. חוסם תנועה כשהמדינה לא ברשימת ההיתר. geo לא מזוהה מותר.',
+  'Creates one deny rule per country. Matching API requests receive a 403 response.':
+    'יוצר כלל deny אחד לכל מדינה. בקשות API תואמות מקבלות 403.',
+  'Block API': 'חסימת API',
+  'Enable the Premium Geo DB addon for this project to use connection and ISP conditions in firewall rules.':
+    'הפעילו את תוסף Premium Geo DB לפרויקט כדי להשתמש בתנאי connection ו-ISP בכללי Firewall.',
+  'Created from a scraping prevention preset. Requires Premium Geo DB.':
+    'נוצר מתבנית מניעת scraping. דורש Premium Geo DB.',
+  'Block network traffic': 'חסימת תנועת רשת',
+  'Last 24 hours of project API traffic that matches these conditions.':
+    'תנועת API של הפרויקט ב-24 השעות האחרונות שתואמת לתנאים האלה.',
+  'Last 24 hours. Combined estimate for every rule this preset will create.':
+    '24 השעות האחרונות. הערכה משולבת לכל כלל שתבנית זו תיצור.',
+  'Select options above to preview matched traffic.':
+    'בחרו אפשרויות למעלה כדי להציג תצוגה מקדימה של תנועה תואמת.',
+  'Preview is approximate when multiple rules will be created. Total impact may be higher.':
+    'התצוגה המקדימה משוערת כשנוצרים מספר כללים. ההשפעה הכוללת עשויה להיות גבוהה יותר.',
+  'This preset uses conditions that cannot be estimated from usage logs.':
+    'תבנית זו משתמשת בתנאים שלא ניתן להעריך מלוגי שימוש.',
+  'Too many conditions to estimate from usage logs for this preview.':
+    'יותר מדי תנאים להערכה מלוגי שימוש בתצוגה מקדימה זו.',
+  'Cap SMS OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP ב-SMS לפי כתובת IP.',
+  'Cap email OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP באימייל לפי כתובת IP.',
+  'Slow brute-force attempts on phone OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP בטלפון.',
+  'Slow brute-force attempts on email OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP באימייל.',
+  'Deny OTP traffic from selected countries.':
+    'דחיית תנועת OTP ממדינות שנבחרו.',
+  'Deny OTP traffic outside selected countries.':
+    'דחיית תנועת OTP מחוץ למדינות שנבחרו.',
+  'Rate limit phone OTP send': 'הגבלת קצב שליחת OTP בטלפון',
+  'Rate limit email OTP send': 'הגבלת קצב שליחת OTP באימייל',
+  'Rate limit phone OTP verification': 'הגבלת קצב אימות OTP בטלפון',
+  'Rate limit email OTP verification': 'הגבלת קצב אימות OTP באימייל',
+  'Block OTP from countries': 'חסימת OTP ממדינות',
+  'Allow OTP only from countries': 'OTP רק ממדינות נבחרות',
+  'Rate limit OTP': 'הגבלת קצב OTP',
+  'Set a per-IP request quota for matching OTP traffic. Review traffic after creating the rule.':
+    'הגדירו מכסת בקשות לפי IP לתנועת OTP תואמת. בדקו תנועה לאחר יצירת הכלל.',
+  'Request limit and interval must be greater than zero.':
+    'מגבלת הבקשות והמרווח חייבים להיות גדולים מאפס.',
+  Interval: 'מרווח',
+  'Maximum window is 24 hours.': 'חלון מקסימלי: 24 שעות.',
+  'Interval must be between 1 second and 24 hours.':
+    'המרווח חייב להיות בין שנייה אחת ל-24 שעות.',
+  'Created from an OTP protection preset. Adjust limits using the impact preview on future edits.':
+    'נוצר מתבנית הגנה על OTP. כוונו מגבלות בעזרת תצוגה מקדימה של ההשפעה בעריכות עתידיות.',
+  'Rate limit OTP send': 'הגבלת קצב שליחת OTP',
+  'Rate limit OTP verification': 'הגבלת קצב אימות OTP',
+  'Cap phone and email OTP token requests per IP address.':
+    'הגבלת בקשות טוקן OTP בטלפון ובאימייל לפי כתובת IP.',
+  'Slow brute-force attempts on phone and email OTP verification.':
+    'האטת ניסיונות brute-force באימות OTP בטלפון ובאימייל.',
+  'OTP send (phone and email)': 'שליחת OTP (טלפון ואימייל)',
+  'OTP verification (phone and email)': 'אימות OTP (טלפון ואימייל)',
+  'Select at least one channel (phone or email).':
+    'בחרו לפחות ערוץ אחד (טלפון או אימייל).',
+  'Select at least one OTP step (send or verification).':
+    'בחרו לפחות שלב OTP אחד (שליחה או אימות).',
+  'Cap phone and email OTP send and verification per IP address.':
+    'הגבלת שליחת OTP ואימות OTP בטלפון ובאימייל לפי כתובת IP.',
+  Steps: 'שלבים',
+  'OTP send': 'שליחת OTP',
+  'OTP verification': 'אימות OTP',
+  'Select at least one channel and step (phone, email, send, or verification).':
+    'בחרו לפחות ערוץ ושלב אחד (טלפון, אימייל, שליחה או אימות).',
+  'Select at least one OTP flow.': 'בחרו לפחות זרימת OTP אחת.',
+  'Select at least one country.': 'בחרו לפחות מדינה אחת.',
+  'Apply to': 'החלה על',
+  'Phone OTP send': 'שליחת OTP בטלפון',
+  'Email OTP send': 'שליחת OTP באימייל',
+  'Phone OTP verification': 'אימות OTP בטלפון',
+  'Email OTP verification': 'אימות OTP באימייל',
+  Countries: 'מדינות',
+  'Add a country': 'הוספת מדינה',
+  'Country OTP restriction': 'הגבלה גיאוגרפית של OTP',
+  'Creates one deny rule per selected flow. Denies traffic when the country is not in your allow list. Unresolved geo is allowed.':
+    'יוצר כלל deny אחד לכל זרימה שנבחרה. חוסם תנועה כשהמדינה לא ברשימת ההיתר. geo לא מזוהה מותר.',
+  'Last 24 hours of API traffic that would be denied because it is not from an allowed country.':
+    'תנועת API ב-24 השעות האחרונות שתיחסם כי היא לא ממדינה מותרת.',
+  'Last 24 hours of API traffic from selected countries that would be denied.':
+    'תנועת API ממדינות שנבחרו ב-24 השעות האחרונות שתיחסם.',
+  'Requests that would be denied': 'בקשות שייחסמו',
+  'Creates one deny rule per country and flow. Matching OTP requests receive a 403 response.':
+    'יוצר כלל דחייה אחד לכל מדינה וזרימה. בקשות OTP תואמות יקבלו תגובת 403.',
+  'Allow only selected countries': 'רק מדינות נבחרות',
+  'firewall rules created': 'כללי חומת אש נוצרו',
+  'Create rules': 'יצירת כללים',
   'Create firewall rule': 'יצירת כלל חומת אש',
   'Define a new rule to protect your project from malicious requests.':
     'הגדירו כלל חדש כדי להגן על הפרויקט שלכם מפני בקשות זדוניות.',
@@ -665,6 +793,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   project: 'פרויקט',
   activities: 'פעילויות',
   'No activities yet': 'אין עדיין פעילויות',
+  'Failed to load activity': 'טעינת הפעילות נכשלה',
+  "We couldn't retrieve activity logs. This might be a temporary issue. Please try again.":
+    'לא הצלחנו לאחזר את לוג הפעילות. ייתכן שזו תקלה זמנית. נסו שוב.',
   'Activity will appear here as you use your project':
     'פעילות תופיע כאן ככל שתשתמשו בפרויקט',
   'Activity log': 'יומן פעילות',
@@ -1294,12 +1425,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deployment docs': 'דוקומנטציית פריסות',
   Back: 'חזרה',
   'Only .tar.gz files are allowed.': 'מותרים רק קובצי ‎.tar.gz.',
-  'File size exceeds': 'גודל הקובץ חורג מ',
   'Deployment created successfully': 'הפריסה נוצרה בהצלחה',
   'Please select a .tar.gz file.': 'בחרו קובץ ‎.tar.gz.',
   'Create manual deployment': 'יצירת פריסה ידנית',
   'Upload a .tar.gz archive of your code. Maximum file size is':
     'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
+  'Upload a .tar.gz archive of your code.':
+    'העלו ארכיון ‎.tar.gz של הקוד שלכם.',
   'Drop a .tar.gz file here or click to browse':
     'גררו קובץ ‎.tar.gz לכאן או לחצו לעיון',
   'Uploading…': 'מעלה…',
@@ -1357,6 +1489,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': 'המשך ל-נסו',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'פתחו את סוכן הפיתוח שלכם ובקשו אחת מהבקשות האלה כדי לוודא ש-Appwrite MCP פועל.',
+  'Explore Appwrite': 'גלו את Appwrite',
+  'Open a product in this project and keep building with your agent.':
+    'פתחו מוצר בפרויקט הזה והמשיכו לבנות עם הסוכן שלכם.',
   'Use Appwrite MCP to list the databases in project {projectName}':
     'השתמשו ב-Appwrite MCP כדי להציג את מסדי הנתונים בפרויקט {projectName}',
   'Use Appwrite MCP to list the storage buckets in project {projectName}':
@@ -1369,12 +1504,55 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Install Appwrite MCP': 'התקנת Appwrite MCP',
   'Build with an agent': 'בנו עם סוכן',
   'Connect your coding agent': 'חיבור סוכן הפיתוח שלכם',
+  'Connect Appwrite with your agents': 'חברו את Appwrite לסוכנים שלכם',
+  'Choose your agent': 'בחרו סוכן',
+  'List databases, buckets, and users from your editor.':
+    'הציגו מסדי נתונים, באקטים ומשתמשים מהעורך.',
+  'Run approved actions without leaving your agent.':
+    'הריצו פעולות מאושרות בלי לעזוב את הסוכן.',
+  'Authorize once with OAuth. No API key in the prompt.':
+    'אשרו פעם אחת עם OAuth. בלי מפתח API בפרומפט.',
+  'Authorize Appwrite MCP': 'אישור Appwrite MCP',
+  'Install in your editor': 'התקנה בעורך',
+  'Ask your agent to list project resources':
+    'בקשו מהסוכן להציג את משאבי הפרויקט',
+  'Show details': 'הצגת פרטים',
+  'Hide details': 'הסתרת פרטים',
+  'Next: install MCP in your editor': 'השלב הבא: התקינו MCP בעורך',
   'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.':
     'התקינו את Appwrite MCP ב-Cursor, Claude Code, Codex או VS Code כדי שהסוכן שלכם יוכל לנהל את הפרויקט.',
+  'What you get': 'מה תקבלו',
+  'Why connect': 'למה להתחבר',
+  'Without MCP': 'בלי MCP',
+  'With MCP': 'עם MCP',
+  'The agent can explain Appwrite, but it cannot change this project.':
+    'הסוכן יכול להסביר את Appwrite, אבל הוא לא יכול לשנות את הפרויקט הזה.',
+  'The agent can list resources and run approved actions in this project.':
+    'הסוכן יכול להציג משאבים ולהריץ פעולות מאושרות בפרויקט הזה.',
+  'Recommended next step': 'השלב הבא המומלץ',
+  'To do': 'לביצוע',
+  'Coding agent': 'סוכן פיתוח',
+  'Pick an editor, install Appwrite MCP, then authorize with OAuth.':
+    'בחרו עורך, התקינו Appwrite MCP, ואז אשרו עם OAuth.',
+  'MCP is authorized. Finish install in your editor if you still need to.':
+    'MCP מאושר. השלימו את ההתקנה בעורך אם עדיין צריך.',
+  'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.':
+    'הדביקו את הפרומפט בכל סוכן פיתוח. הוא יעקוב אחר דף ההתקנה הציבורי כדי להתקין Appwrite MCP לפרויקט הזה.',
+  'Or install Appwrite MCP manually': 'או התקינו Appwrite MCP ידנית',
+  'Skip for this project': 'דילוג בפרויקט זה',
+  'Preferences are unavailable.': 'ההעדפות אינן זמינות.',
+  'Failed to update preferences': 'עדכון ההעדפות נכשל',
   'Install MCP': 'התקנת MCP',
   'Open MCP': 'פתיחת MCP',
   'Register where your app runs, add API credentials, and connect a coding agent with MCP.':
     'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API וחברו סוכן פיתוח עם MCP.',
+  'Register where your app runs, add API credentials, and install the CLI or MCP when you are ready.':
+    'רשמו היכן האפליקציה פועלת, הוסיפו פרטי גישה ל-API, והתקינו CLI או MCP כשאתם מוכנים.',
+  'Install the Appwrite CLI': 'התקנת Appwrite CLI',
+  'Use the CLI from your terminal to manage this project, deploy functions, and automate workflows.':
+    'השתמשו ב-CLI מהטרמינל כדי לנהל את הפרויקט, לפרוס פונקציות ולהריץ אוטומציה.',
+  'Install CLI': 'התקנת CLI',
+  'Open CLI': 'פתיחת CLI',
   "You've reached the limit of": 'הגעתם למגבלה של',
   'Approaching the limit for': 'מתקרבים למגבלה של',
   'Your plan': 'התוכנית שלכם',
@@ -1510,6 +1688,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Couldn't load executions": 'לא ניתן היה לטעון הרצות',
   "Couldn't load requests": 'לא ניתן היה לטעון בקשות',
   "Couldn't load storage": 'לא ניתן היה לטעון נתוני אחסון',
+  "Couldn't load firewall traffic": 'לא ניתן היה לטעון תעבורת Firewall',
+  "Couldn't load impact estimate": 'לא ניתן היה לטעון הערכת השפעה',
   Deployments: 'פריסות',
   Executions: 'הרצות',
   'Executions over time': 'הרצות לאורך זמן',
@@ -2381,8 +2561,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'בחרו יעדי משתמשים להודעה זו. לכל משתמש יכולים להיות מספר יעדים בכל ערוץ.',
   'Choose users using Add to target every matching channel target for each user.':
     "בחרו משתמשים באמצעות 'הוספה' כדי לשלוח לכל יעד ערוץ תואם של כל משתמש.",
-  'Choose when this message should be delivered. Time uses your local timezone.':
-    'בחרו מתי ההודעה תישלח. השעה לפי אזור הזמן המקומי שלכם.',
+  'Choose when this message should be delivered.': 'בחרו מתי ההודעה תישלח.',
   Color: 'צבע',
   Compose: 'כתיבה',
   'Confirm sending message': 'אישור שליחת הודעה',
@@ -2508,6 +2687,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.':
     'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
+  'Phone number with the leading + and country code, or an alphanumeric sender ID.':
+    'מספר טלפון עם סימן ה-+ וקידומת המדינה, או מזהה שולח אלפאנומרי.',
   'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
     'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
@@ -2576,6 +2757,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Resend.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
+  Sender: 'שולח',
   'Sender ID': 'מזהה שולח',
   'Sender Name': 'שם שולח',
   'Sender phone': 'טלפון שולח',
@@ -2630,6 +2812,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'שם הנושא',
   'Topic name updated successfully': 'שם הנושא עודכן בהצלחה',
   'Topic not found': 'הנושא לא נמצא',
+  'Subscriber not found': 'המנוי לא נמצא',
   'Topics group subscribers for email, SMS, or push.':
     'נושאים מקבצים מנויים לאימייל, SMS או Push.',
   'Type:': 'סוג:',
@@ -2673,6 +2856,89 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
+  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
+    'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
+  'Set up': 'הגדרה',
+  'Creates a sending-only API key for a verified domain.':
+    'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates a domain sending key for a verified domain.':
+    'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
+  'Creates a restricted API key with mail send access.':
+    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
+  'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
+  'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
+    'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
+  'Loading domains…': 'טוען דומיינים…',
+  'Failed to load domains from the email provider':
+    'טעינת הדומיינים מספק האימייל נכשלה',
+  'No verified domains': 'אין דומיינים מאומתים',
+  'Add and verify a sending domain, then check again.':
+    'הוסיפו ואמתו דומיין שליחה, ואז בדקו שוב.',
+  'Manage domains': 'ניהול דומיינים',
+  'Check again': 'בדיקה חוזרת',
+  'The credential is restricted to this domain and can only send email.':
+    'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
+  'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
+  'Enter a sender name.': 'הזינו שם שולח.',
+  'Enter a sender email on the selected domain.':
+    'הזינו אימייל שולח בדומיין שנבחר.',
+  'Authorization expired': 'ההרשאה פגה',
+  'Reconnect your provider account to continue.':
+    'חברו מחדש את חשבון הספק שלכם כדי להמשיך.',
+  'Failed to set up SMTP with the email provider':
+    'הגדרת ה-SMTP מול ספק האימייל נכשלה',
+  'Let Appwrite create the API key for a verified domain and fill these fields.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
+  'Generate API key': 'יצירת מפתח API',
+  'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
+  'Failed to create the API key with the email provider':
+    'יצירת מפתח ה-API מול ספק האימייל נכשלה',
+  'API key created and filled in below. Review and create the provider.':
+    'מפתח ה-API נוצר ומולא למטה. בדקו ויצרו את הספק.',
+  'One-click setup': 'הגדרה בקליק אחד',
+  'Notify me': 'עדכנו אותי',
+  'You will be notified': 'נודיע לכם',
+  "You'll no longer be notified about this provider.":
+    'לא נודיע לכם יותר על הספק הזה.',
+  'Failed to update notification preferences': 'עדכון העדפות ההתראות נכשל',
+  "You'll be notified when this provider is available.":
+    'נודיע לכם כשהספק הזה יהיה זמין.',
+  'Sending domain': 'דומיין שליחה',
+  Sender: 'שולח',
+  'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Mailgun': 'ניתוק Mailgun',
+  'Disconnect SendGrid': 'ניתוק SendGrid',
+  'Provider actions': 'פעולות ספק',
+  'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
+  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
+  'Creating credential and saving SMTP settings…':
+    'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
+  'Custom SMTP is enabled and your project now sends emails through this provider.':
+    'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
+  'Connect with Resend': 'התחברות עם Resend',
+  'Connect with Mailgun': 'התחברות עם Mailgun',
+  'Connect with SendGrid': 'התחברות עם SendGrid',
+  'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
+    'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
+  'Provider disconnected': 'הספק נותק',
+  'Failed to disconnect the provider': 'ניתוק הספק נכשל',
+  'Confirm setup': 'אישור ההגדרה',
+  'This browser has no record of starting this authorization, so we will not sign you in automatically.':
+    'לדפדפן הזה אין תיעוד של תחילת ההרשאה הזו, ולכן לא נחבר אתכם באופן אוטומטי.',
+  'Continuing signs you in to the Appwrite account that authorized this provider.':
+    'המשך יחבר אתכם לחשבון Appwrite שאישר את הספק הזה.',
+  'This authorization link was already used or has expired. Start the setup again from the console.':
+    'קישור ההרשאה הזה כבר נוצל או שפג תוקפו. התחילו את ההגדרה מחדש מהקונסולה.',
+  'Back to setup': 'חזרה להגדרה',
+  'Unable to finish setup': 'לא ניתן להשלים את ההגדרה',
+  'Finishing setup': 'משלים את ההגדרה',
+  'Restoring your session and returning to the setup.':
+    'משחזר את ההתחברות שלכם ומחזיר אתכם להגדרה.',
+  'This link is missing required parameters.':
+    'בקישור הזה חסרים פרמטרים נדרשים.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',
@@ -2800,4 +3066,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
+  'AI discovery': 'גילוי AI',
+  'Agent crawler breakdown is not available on this dataset yet':
+    'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
+  'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
+    'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
+
+  // Project environment switcher
+  Environments: 'סביבות',
+  Staging: 'Staging',
+  Development: 'פיתוח',
+  'Switch environment': 'החלפת סביבה',
+  'Environment switched': 'הסביבה הוחלפה',
+  'Create environment': 'יצירת סביבה',
+  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
 }

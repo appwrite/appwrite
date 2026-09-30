@@ -12,6 +12,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useChartLiveUpdateAnimation } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import {
   getUsageChartIntervalsForPlan,
   resolveUsageChartIntervalForRange,
@@ -50,6 +51,10 @@ import { useFirewallTrafficLiveTransitions } from '@/hooks/use-firewall-traffic-
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { FirewallChartLiveControls } from './_components/FirewallChartLiveControls'
 import { FirewallChartLiveIndicator } from './_components/FirewallChartLiveIndicator'
+import {
+  FIREWALL_TRAFFIC_FETCH_ERROR,
+  FirewallUsageChartError,
+} from './_components/FirewallUsageChartError'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
   FIREWALL_TRAFFIC_SERIES,
@@ -84,6 +89,7 @@ interface StatCardProps {
   decimals?: number
   suffix?: string
   formatValue?: (value: number) => string
+  unavailable?: boolean
 }
 
 function MetricChange({
@@ -118,6 +124,7 @@ function MetricTile({
   decimals,
   suffix,
   formatValue,
+  unavailable,
 }: StatCardProps) {
   return (
     <div className="min-w-0">
@@ -125,7 +132,7 @@ function MetricTile({
         <p className="min-w-0 truncate text-[12px] text-muted-foreground">
           {label}
         </p>
-        {subStats && subStats.length > 0 ? (
+        {subStats && subStats.length > 0 && !unavailable ? (
           <p className="shrink-0 text-end text-[11px] leading-tight text-muted-foreground">
             {subStats.map((sub, index) => {
               const formattedValue = sub.formatValue
@@ -166,14 +173,25 @@ function MetricTile({
         ) : null}
       </div>
       <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
-        <AnimatedCounter
-          value={value}
-          className="text-[20px] font-semibold text-foreground"
-          decimals={decimals}
-          suffix={suffix}
-          formatDisplay={formatValue}
-        />
-        <MetricChange change={change} trend={trend} />
+        {unavailable ? (
+          <span className="text-[20px] font-semibold text-muted-foreground">
+            -
+          </span>
+        ) : (
+          <>
+            <AnimatedCounter
+              value={value}
+              className={cn(
+                'text-[20px] font-semibold text-foreground',
+                USAGE_CHART_FADE_IN_CLASS_NAME,
+              )}
+              decimals={decimals}
+              suffix={suffix}
+              formatDisplay={formatValue}
+            />
+            <MetricChange change={change} trend={trend} />
+          </>
+        )}
       </div>
     </div>
   )
@@ -263,6 +281,8 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
   const {
     data: overview,
     refetch,
+    isError,
+    error,
   } = useProjectFirewallTrafficOverview(
     projectId,
     dateRange,
@@ -390,6 +410,15 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
     [seriesTotals],
   )
 
+  const [keepTrafficError, setKeepTrafficError] = useState(false)
+  if (overview) {
+    if (keepTrafficError) setKeepTrafficError(false)
+  } else if (isError && !keepTrafficError) {
+    setKeepTrafficError(true)
+  }
+  const hideMetricValues = !overview
+  const showTrafficError = !overview && (isError || keepTrafficError)
+
   const metrics: StatCardProps[] = [
     {
       label: t('Passed'),
@@ -453,26 +482,38 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
       <div className="flex flex-col-reverse gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <AnimatedCounter
-              value={totalRequests}
-              className="text-[24px] font-semibold text-foreground"
-            />
+            {hideMetricValues ? (
+              <span className="text-[24px] font-semibold text-muted-foreground">
+                -
+              </span>
+            ) : (
+              <AnimatedCounter
+                value={totalRequests}
+                className={cn(
+                  'text-[24px] font-semibold text-foreground',
+                  USAGE_CHART_FADE_IN_CLASS_NAME,
+                )}
+              />
+            )}
             <span className="text-[13px] text-muted-foreground">
               {t('requests')}
             </span>
-            <span
-              className={cn(
-                'text-[12px] font-medium tabular-nums',
-                requestsChange > 0 &&
-                  'text-emerald-600 dark:text-emerald-400',
-                requestsChange < 0 &&
-                  'text-amber-600 dark:text-amber-400',
-                requestsChange === 0 && 'text-muted-foreground',
-              )}
-            >
-              {requestsChange > 0 ? '+' : ''}
-              {requestsChange}% {t('vs previous period')}
-            </span>
+            {hideMetricValues ? null : (
+              <span
+                className={cn(
+                  'text-[12px] font-medium tabular-nums',
+                  USAGE_CHART_FADE_IN_CLASS_NAME,
+                  requestsChange > 0 &&
+                    'text-emerald-600 dark:text-emerald-400',
+                  requestsChange < 0 &&
+                    'text-amber-600 dark:text-amber-400',
+                  requestsChange === 0 && 'text-muted-foreground',
+                )}
+              >
+                {requestsChange > 0 ? '+' : ''}
+                {requestsChange}% {t('vs previous period')}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -542,8 +583,21 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
         </div>
 
         <ChartArea>
+          {showTrafficError ? (
+            <FirewallUsageChartError
+              error={error}
+              retentionDays={usageLogRetentionDays}
+              fallback={FIREWALL_TRAFFIC_FETCH_ERROR}
+              onRetry={() => void refetch()}
+            />
+          ) : (
           <div
-            className={cn(surfaceClassName, 'relative')}
+            key={overview ? 'data' : 'empty'}
+            className={cn(
+              surfaceClassName,
+              'relative',
+              overview && USAGE_CHART_FADE_IN_CLASS_NAME,
+            )}
             aria-label={
               canSelect
                 ? t('Drag on the chart to select a date range')
@@ -704,6 +758,7 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          )}
         </ChartArea>
       </div>
 
@@ -739,6 +794,7 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
                 decimals={metric.decimals}
                 suffix={metric.suffix}
                 formatValue={metric.formatValue}
+                unavailable={hideMetricValues}
               />
             </div>
           )

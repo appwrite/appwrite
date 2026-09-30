@@ -23,7 +23,7 @@ The provider will be saved to your project, but not enabled until you complete i
 {% /section %}
 {% section #configure-provider step=2 title="Configure provider" %}
 
-In the **Configure** step, you will need to provide details from your Resend dashboard to connect your Appwrite project.
+In the **Configure** step, you will need to provide details from your Resend dashboard to connect your Appwrite project. On Appwrite Cloud, you can let Appwrite create the API key for you with one-click setup, or fill in the fields by hand.
 
 {% only_dark %}
 ![Configure Resend provider](/images/docs/messaging/providers/resend/dark/configure-resend.avif)
@@ -31,6 +31,23 @@ In the **Configure** step, you will need to provide details from your Resend das
 {% only_light %}
 ![Configure Resend provider](/images/docs/messaging/providers/resend/configure-resend.avif)
 {% /only_light %}
+
+## One-click setup {% #one-click-setup %}
+
+On Appwrite Cloud, the **Configure** step opens with a **One-click setup** card above the form.
+
+1. Click **Connect with Resend** and authorize Appwrite in Resend. You are returned to this step with your Resend account connected.
+1. Select a verified **Domain**. Domains that are not yet verified in Resend are listed but can't be selected. If none are verified, add one in [Resend's domains page](https://resend.com/domains) and click **Check again**.
+1. Click **Generate API key**.
+
+Appwrite creates an API key in your Resend account named `Appwrite SMTP: <project name>`, with sending-only permission and restricted to the selected domain, and fills it into the **API key** field. It also fills any empty fields: the **Sender email** becomes `noreply@<domain>` unless the one you typed is already on that domain, the **Sender name** defaults to your project name, and the provider **Name** defaults to `One-click Resend sender`. Review the fields, then click **Create provider**.
+
+If you leave the wizard without creating the provider, Appwrite revokes the key it generated so it doesn't stay unused in your Resend account. Clicking **Generate API key** again replaces the key in the form and revokes the previous one.
+
+The Resend connection is shared with the [one-click SMTP setup](/docs/products/auth/message-templates#smtp-one-click-setup) in project settings. Connecting once covers both.
+
+## Configure manually {% #configure-manually %}
+
 You will need to provide the following information from your **Resend dashboard**.
 
 {% table %}

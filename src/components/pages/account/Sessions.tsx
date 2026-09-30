@@ -1,9 +1,13 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { sdk, getBaseEndpoint } from '@/lib/appwrite/sdk'
-import { useAccountSessions, fetchAccountSessions } from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  useAccountSessions,
+  fetchAccountSessions,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -278,7 +282,12 @@ export function AccountSessions({
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return sdk.forConsole.avatars.getFlag({
+      code: countryCode.toLowerCase() as Flag,
+      width: 20,
+      height: 20,
+      quality: 100,
+    })
   }
 
   if (hasResolvedData && sessions.length === 0) {
@@ -445,7 +454,7 @@ export function AccountSessions({
                         </code>
                       ) : (
                         <span className="text-[12px] text-muted-foreground/50">
-                           - 
+                          -
                         </span>
                       )}
                     </TableCell>

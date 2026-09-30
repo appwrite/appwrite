@@ -55,16 +55,27 @@ export function MarketingFaqSection({
                   <p>{t(item.answer)}</p>
                   {item.links?.length ? (
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                      {item.links.map((link) => (
-                        <Link
-                          key={link.href}
-                          to={link.href}
-                          className="inline-flex items-center gap-1 font-medium text-foreground transition-colors hover:text-muted-foreground"
-                        >
-                          {t(link.label)}
-                          <ArrowUpRight className="size-3" aria-hidden />
-                        </Link>
-                      ))}
+                      {item.links.map((link) => {
+                        const isAppRoute =
+                          link.href.startsWith('/') && !link.href.includes('.')
+                        const className =
+                          'inline-flex items-center gap-1 font-medium text-foreground transition-colors hover:text-muted-foreground'
+                        const label = (
+                          <>
+                            {t(link.label)}
+                            <ArrowUpRight className="size-3" aria-hidden />
+                          </>
+                        )
+                        return isAppRoute ? (
+                          <Link key={link.href} to={link.href} className={className}>
+                            {label}
+                          </Link>
+                        ) : (
+                          <a key={link.href} href={link.href} className={className}>
+                            {label}
+                          </a>
+                        )
+                      })}
                     </div>
                   ) : null}
                 </AccordionContent>

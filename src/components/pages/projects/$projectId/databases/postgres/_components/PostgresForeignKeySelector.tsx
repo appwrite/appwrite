@@ -219,6 +219,7 @@ export function PostgresForeignKeySelector({
             </Label>
             <SearchableSelect
               value={value.schema}
+              selectedName={value.schema}
               onValueChange={handleSchemaChange}
               items={schemaItems}
               placeholder={schemasLoading ? t('Loading schemas…') : t('Select schema')}
@@ -243,6 +244,7 @@ export function PostgresForeignKeySelector({
             </Label>
             <SearchableSelect
               value={value.table}
+              selectedName={value.table}
               onValueChange={handleTableChange}
               items={tableItems}
               placeholder={

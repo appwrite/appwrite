@@ -9,7 +9,6 @@ import {
   Account,
   Activities,
   Affiliates,
-  Agent,
   Apps,
   Assistant,
   Avatars,
@@ -17,6 +16,7 @@ import {
   Client,
   Console,
   Functions,
+  Growth,
   ImageFormat,
   Locale,
   Manager,
@@ -48,8 +48,8 @@ import {
   Webhooks,
   Notifications,
   Waf,
-  type Models,
 } from '@appwrite.io/console'
+import { Agent } from '@/lib/appwrite/agent'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -505,6 +505,31 @@ export function getSiteScreenshotFilePreviewUrl(
 }
 
 /**
+ * Public URL for a file shared with a file token. Built on a fresh client so
+ * the link carries none of the console session's state (admin mode,
+ * impersonation), and without the empty `impersonateuserid` the SDK appends.
+ */
+export function getFileTokenUrl(
+  endpoint: string,
+  projectId: string,
+  mode: 'preview' | 'view' | 'download',
+  params: { bucketId: string; fileId: string; token: string },
+): string {
+  const storage = new Storage(
+    new Client().setEndpoint(endpoint).setProject(projectId),
+  )
+  const url = new URL(
+    mode === 'preview'
+      ? storage.getFilePreview(params)
+      : mode === 'view'
+        ? storage.getFileView(params)
+        : storage.getFileDownload(params),
+  )
+  url.searchParams.delete('impersonateuserid')
+  return url.toString()
+}
+
+/**
  * Realtime for console-scoped channels on the project's regional API host
  * (project id `console`, same session as the main console client).
  */
@@ -517,90 +542,6 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 }
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
-const tablesDBForProject = new TablesDB(clientProject)
-const documentsDBForProject = new DocumentsDB(clientProject)
-const vectorsDBForProject = new VectorsDB(clientProject)
-
-/**
- * Upstream product `update()` only serializes name / enabled / replicas.
- * Dedicated compute tier changes need `specification` on the same product
- * update path. Extend our project SDK instances so call sites always use
- * `tablesDB.update` / `documentsDB.update` / `vectorsDB.update` (never a
- * raw REST `client.call` from feature code).
- */
-function installProductDatabaseUpdateSpecificationSupport(
-  service: TablesDB | DocumentsDB | VectorsDB,
-  pathPrefix: 'tablesdb' | 'documentsdb' | 'vectorsdb',
-) {
-  const originalUpdate = service.update.bind(service)
-  service.update = ((
-    paramsOrFirst: unknown,
-    ...rest: unknown[]
-  ): Promise<Models.Database> => {
-    const params =
-      paramsOrFirst &&
-      typeof paramsOrFirst === 'object' &&
-      !Array.isArray(paramsOrFirst)
-        ? (paramsOrFirst as Record<string, unknown>)
-        : {
-            databaseId: paramsOrFirst,
-            name: rest[0],
-            enabled: rest[1],
-            replicas: rest[2],
-          }
-
-    const specification =
-      typeof params.specification === 'string'
-        ? params.specification.trim()
-        : undefined
-    if (!specification) {
-      return originalUpdate(
-        paramsOrFirst as never,
-        ...(rest as never[]),
-      ) as Promise<Models.Database>
-    }
-
-    const databaseId = params.databaseId
-    if (typeof databaseId === 'undefined') {
-      return originalUpdate(
-        paramsOrFirst as never,
-        ...(rest as never[]),
-      ) as Promise<Models.Database>
-    }
-
-    const payload: Record<string, unknown> = { specification }
-    if (typeof params.name !== 'undefined') payload.name = params.name
-    if (typeof params.enabled !== 'undefined') payload.enabled = params.enabled
-    if (typeof params.replicas !== 'undefined') {
-      payload.replicas = params.replicas
-    }
-
-    const uri = new URL(
-      `${service.client.config.endpoint}/${pathPrefix}/${encodeURIComponent(String(databaseId))}`,
-    )
-    return service.client.call(
-      'put',
-      uri,
-      {
-        'X-Appwrite-Project': service.client.config.project,
-        'content-type': 'application/json',
-        accept: 'application/json',
-      },
-      payload,
-    ) as Promise<Models.Database>
-  }) as typeof service.update
-}
-
-installProductDatabaseUpdateSpecificationSupport(tablesDBForProject, 'tablesdb')
-installProductDatabaseUpdateSpecificationSupport(
-  documentsDBForProject,
-  'documentsdb',
-)
-installProductDatabaseUpdateSpecificationSupport(
-  vectorsDBForProject,
-  'vectorsdb',
-)
-
 const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
@@ -624,9 +565,9 @@ const sdkForProjectRaw = {
   proxy: new Proxy(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
-  tablesDB: tablesDBForProject,
-  documentsDB: documentsDBForProject,
-  vectorsDB: vectorsDBForProject,
+  tablesDB: new TablesDB(clientProject),
+  documentsDB: new DocumentsDB(clientProject),
+  vectorsDB: new VectorsDB(clientProject),
   waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),
@@ -667,6 +608,24 @@ export const sdk = {
       >,
       'forConsoleIn',
     ) as ReturnType<typeof createConsoleSdkRaw>
+  },
+
+  /**
+   * Growth service on a client that never sends cookies. Cloud serves
+   * `/growth/*` with `origin: *`, where browsers reject credentialed requests,
+   * so the console identity goes in `jwt` instead.
+   */
+  forGrowth(endpoint: string, jwt: string | null): Growth {
+    const growthClient = new Client()
+    growthClient
+      .setEndpoint(endpoint)
+      .setProject('console')
+      .setLocale(getActiveLanguage())
+      .setCredentials('omit')
+    if (jwt) {
+      growthClient.setJWT(jwt)
+    }
+    return new Growth(growthClient)
   },
 
   // Project SDK - for managing project-specific resources.

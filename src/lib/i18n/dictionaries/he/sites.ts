@@ -34,11 +34,18 @@ export const heSitesDictionary: Record<string, string> = {
   selected: 'נבחרו',
   Cancel: 'ביטול',
   Delete: 'מחיקה',
+  'Delete log': 'מחיקת לוג',
+  'Delete logs': 'מחיקת לוגים',
   'Delete Sites': 'מחיקת אתרים',
   'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק',
+  'Are you sure you want to delete this log? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק לוג זה? פעולה זו אינה ניתנת לביטול.',
   'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
   'Site deleted successfully': 'האתר נמחק בהצלחה',
   'Successfully deleted': 'נמחקו בהצלחה',
+  'Log deleted': 'הלוג נמחק',
+  'Failed to delete log': 'מחיקת הלוג נכשלה',
+  'Failed to delete logs': 'מחיקת הלוגים נכשלה',
   'Failed to delete sites': 'מחיקת האתרים נכשלה',
 
   // Deployments
@@ -142,6 +149,7 @@ export const heSitesDictionary: Record<string, string> = {
   'No logs yet': 'אין לוגים עדיין',
   'Logs will appear here when your site runs.':
     'לוגים יופיעו כאן כאשר האתר שלכם ירוץ.',
+  log: 'לוג',
   logs: 'לוגים',
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your site runs.':
@@ -437,7 +445,6 @@ export const heSitesDictionary: Record<string, string> = {
 
   // Create wizard: manual upload
   'Only .tar.gz files are supported': 'נתמכים רק קובצי .tar.gz',
-  'File size must be less than 100MB': 'גודל הקובץ חייב להיות קטן מ-100MB',
   'Please fill in all required fields and upload a file':
     'מלאו את כל שדות החובה והעלו קובץ',
   'Please enter a valid domain': 'הזינו דומיין תקין',
@@ -449,7 +456,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Upload a .tar.gz file containing your site source code':
     'העלו קובץ .tar.gz המכיל את קוד המקור של האתר שלכם',
   'Drop your file here or click to browse': 'גררו את הקובץ לכאן או לחצו לעיון',
-  'Only .tar.gz files up to 100MB': 'רק קובצי .tar.gz עד 100MB',
+  'Only .tar.gz files up to': 'רק קובצי .tar.gz עד',
+  'File is too large. Maximum size:': 'הקובץ גדול מדי. הגודל המרבי:',
   'Site name': 'שם האתר',
   'Site ID': 'מזהה אתר',
   'My awesome site': 'האתר המדהים שלי',
@@ -549,4 +557,18 @@ export const heSitesDictionary: Record<string, string> = {
   'Site URL is not available yet': 'כתובת האתר עדיין אינה זמינה',
   'Deployment successful!': 'הפריסה הצליחה!',
   'Your site is now live': 'האתר שלכם באוויר',
+
+  // Protected preview authorization
+  'Opening preview…': 'פותחים את התצוגה המקדימה…',
+  'Checking your access to this preview deployment.':
+    'בודקים את הרשאת הגישה שלכם לפריסת התצוגה המקדימה הזו.',
+  'Preview is private': 'התצוגה המקדימה פרטית',
+  "Your account isn't in the organization that owns this site. Ask an organization member to invite you.":
+    'החשבון שלכם אינו שייך לארגון שבבעלותו האתר. בקשו מחבר בארגון להזמין אתכם.',
+  'Invalid preview link': 'הקישור לתצוגה המקדימה אינו תקין',
+  'This link is missing or has a malformed preview address. Open the preview URL again to start over.':
+    'כתובת התצוגה המקדימה בקישור הזה חסרה או אינה תקינה. פתחו שוב את כתובת התצוגה המקדימה כדי להתחיל מחדש.',
+  "Couldn't open preview": 'לא ניתן היה לפתוח את התצוגה המקדימה',
+  'Something went wrong while checking your access to this preview. Try again in a moment.':
+    'משהו השתבש בבדיקת הגישה שלכם לתצוגה המקדימה הזו. נסו שוב בעוד רגע.',
 }

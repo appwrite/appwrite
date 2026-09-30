@@ -5,19 +5,30 @@ import {
   measureStickyOverlayBounds,
   type StickyOverlayBounds,
 } from '@/lib/layout/sticky-overlay-bounds'
+import { APP_HEADER_HEIGHT_VAR } from '@/lib/layout/app-header-height'
 import { findScrollParent } from '@/lib/utils'
+
+function readAppHeaderHeightPx(from: HTMLElement): number {
+  const parsed = Number.parseFloat(
+    getComputedStyle(from).getPropertyValue(APP_HEADER_HEIGHT_VAR),
+  )
+  return Number.isFinite(parsed) ? parsed : 0
+}
 
 type UseArticleStickyOverlayOptions = {
   sentinelRef: RefObject<HTMLElement | null>
   /** Measured for horizontal alignment; falls back to closest `article`. */
   contentAnchorRef?: RefObject<HTMLElement | null>
   resetKey?: unknown
+  /** Skip observers on viewports where the toolbar is not shown (mobile). */
+  enabled?: boolean
 }
 
 export function useArticleStickyOverlay({
   sentinelRef,
   contentAnchorRef,
   resetKey,
+  enabled = true,
 }: UseArticleStickyOverlayOptions) {
   const [pinned, setPinned] = useState(false)
   const [bounds, setBounds] = useState<StickyOverlayBounds | null>(null)
@@ -27,7 +38,7 @@ export function useArticleStickyOverlay({
     setBounds(null)
 
     const sentinel = sentinelRef.current
-    if (!sentinel) return
+    if (!enabled || !sentinel) return
 
     const updateOverlay = () => {
       const currentSentinel = sentinelRef.current
@@ -42,15 +53,17 @@ export function useArticleStickyOverlay({
         scrollRoot instanceof HTMLElement ? scrollRoot : document.getElementById('main-content')
 
       const shellTop = scrollContainer?.getBoundingClientRect().top ?? 0
+      const headerHeight = readAppHeaderHeightPx(currentSentinel)
+      const overlayTop = Math.max(headerHeight, shellTop)
       const sentinelTop = currentSentinel.getBoundingClientRect().top
-      const isPinned = sentinelTop <= shellTop + 1
+      const isPinned = sentinelTop <= overlayTop + 1
 
       setPinned(isPinned)
 
       if (isPinned && contentAnchor && scrollContainer) {
         const shellRect = scrollContainer.getBoundingClientRect()
         const contentRect = contentAnchor.getBoundingClientRect()
-        setBounds(measureStickyOverlayBounds(shellRect, contentRect, shellTop))
+        setBounds(measureStickyOverlayBounds(shellRect, contentRect, overlayTop))
       } else {
         setBounds(null)
       }
@@ -83,7 +96,7 @@ export function useArticleStickyOverlay({
       window.removeEventListener('scroll', updateOverlay)
       window.removeEventListener('resize', updateOverlay)
     }
-  }, [resetKey])
+  }, [resetKey, enabled])
 
   return { pinned, bounds }
 }

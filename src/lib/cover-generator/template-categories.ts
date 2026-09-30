@@ -80,6 +80,7 @@ export const COVER_TEMPLATE_CATEGORIES: CoverTemplateCategory[] = [
     description: 'Screenshots and 3D product visuals.',
     templateIds: [
       'screenshot',
+      'screenshot-two-line',
       'screenshot-side',
       'screenshot-angled',
       'cards-angled',

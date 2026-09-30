@@ -387,7 +387,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       ? [
           {
             label: footerCopy.links.status,
-            href: 'https://status.appwrite.online', // pragma: allowlist secret
+            href: 'https://appwrite.online', // pragma: allowlist secret
             external: true,
           },
         ]

@@ -193,11 +193,14 @@ export default defineConfig(async () => {
         '@appwrite.io/console',
         'json-bigint',
       ],
-      // Serve TanStack store packages as native ESM. Pre-bundling cached an older
-      // @tanstack/react-store without createAtom when router upgraded first.
+      // Serve TanStack store/router packages as native ESM. Pre-bundling cached an
+      // older @tanstack/react-store without createAtom when router upgraded first, and
+      // discovering @tanstack/router-core mid-session rewrites hashed React chunks.
       exclude: [
         '@tanstack/react-store',
         '@tanstack/store',
+        '@tanstack/router-core',
+        '@tanstack/history',
         'sharp',
         // Pre-bundling inlines nested @radix-ui copies and can load a second React
         // instance, breaking hooks (useState of null) in ScrollArea / Avatar.

@@ -73,9 +73,20 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('## Skills')
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
+    expect(body).toContain('/setup.md')
     expect(body).toContain('/blog.md')
     // Hub stays curated; it must not dump every docs page.
     expect(body.length).toBeLessThan(100_000)
+  })
+
+  test('setup.md serves MCP install instructions', async ({ request }) => {
+    const response = await request.get('/setup.md')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Set yourself up to work with Appwrite\n/)
+    expect(body).toContain('https://mcp.appwrite.io')
+    expect(body).toContain('/setup.md')
   })
 
   test('docs/llms.txt serves nested docs index', async ({ request }) => {
@@ -134,6 +145,21 @@ test.describe('markdown exports (read-only)', () => {
     const skillsBody = await skills.json()
     expect(Array.isArray(skillsBody.skills)).toBe(true)
     expect(skillsBody.skills.length).toBeGreaterThan(0)
+  })
+
+  test('well-known change-password redirects to account security', async ({
+    request,
+  }) => {
+    const response = await request.get('/.well-known/change-password', {
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(302)
+    expect(response.headers()['location']).toMatch(/\/account\/security/)
+
+    const reliability = await request.get(
+      '/.well-known/resource-that-should-not-exist-whose-status-code-should-not-be-200',
+    )
+    expect(reliability.status()).toBe(404)
   })
 
   test('robots.txt serves plain text with a tracked route', async ({ request }) => {

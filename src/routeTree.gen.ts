@@ -18,11 +18,13 @@ import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
+import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
@@ -32,6 +34,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
@@ -41,6 +44,7 @@ import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookie
 import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
 import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -48,7 +52,6 @@ import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privac
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
-import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
 import { Route as PublicAppRouteImport } from './routes/_public/app'
@@ -79,12 +82,12 @@ import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/c
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
-import { Route as ApiRERouteImport } from './routes/_api/r/e'
-import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
 import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
 import { Route as ApiReferencesApiNavCountsRouteImport } from './routes/_api/references-api/nav-counts'
 import { Route as ApiReferencesApiOpenApiSpecRouteImport } from './routes/_api/references-api/open-api-spec'
 import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/references-api/service'
+import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
+import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
@@ -112,11 +115,25 @@ import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.ind
 import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
 import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
 import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
+import { Route as PublicAuthPreviewRouteImport } from './routes/_public/auth.preview'
 import { Route as PublicDebugAuthorizeContributorPreviewRouteImport } from './routes/_public/debug.authorize-contributor-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
+import { Route as PublicDebugCommunityShareExamplesRouteImport } from './routes/_public/debug.community-share-examples'
+import { Route as PublicDebugEducationJoinPreviewRouteImport } from './routes/_public/debug.education-join-preview'
+import { Route as PublicDebugEducationPlanPreviewRouteImport } from './routes/_public/debug.education-plan-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
+import { Route as PublicDebugImpersonatePreviewRouteImport } from './routes/_public/debug.impersonate-preview'
+import { Route as PublicDebugJoinInvitePreviewRouteImport } from './routes/_public/debug.join-invite-preview'
+import { Route as PublicDebugMagicUrlPreviewRouteImport } from './routes/_public/debug.magic-url-preview'
+import { Route as PublicDebugMfaPreviewRouteImport } from './routes/_public/debug.mfa-preview'
 import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
+import { Route as PublicDebugOauth2RelayPreviewRouteImport } from './routes/_public/debug.oauth2-relay-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
+import { Route as PublicDebugRecoveryPreviewRouteImport } from './routes/_public/debug.recovery-preview'
+import { Route as PublicDebugResetPreviewRouteImport } from './routes/_public/debug.reset-preview'
+import { Route as PublicDebugSignInPreviewRouteImport } from './routes/_public/debug.sign-in-preview'
+import { Route as PublicDebugSignUpPreviewRouteImport } from './routes/_public/debug.sign-up-preview'
+import { Route as PublicDebugSitesAuthPreviewRouteImport } from './routes/_public/debug.sites-auth-preview'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicGitAuthorizeContributorRouteImport } from './routes/_public/git.authorize-contributor'
 import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/impersonate.index'
@@ -131,6 +148,7 @@ import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/gener
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
+import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
 import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
@@ -160,6 +178,7 @@ import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
+import { Route as PublicProjectsProjectIdAgentsRouteImport } from './routes/_public/projects.$projectId.agents'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
@@ -171,6 +190,7 @@ import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
+import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -472,6 +492,11 @@ const DocsDotmdRoute = DocsDotmdRouteImport.update({
   path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
+  id: '/for-agents.md',
+  path: '/for-agents.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -495,6 +520,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupDotmdRoute = SetupDotmdRouteImport.update({
+  id: '/setup.md',
+  path: '/setup.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -542,6 +572,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
   id: '/affiliates',
   path: '/affiliates',
@@ -587,6 +622,11 @@ const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
   path: '/enterprise',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
+  id: '/for-agents',
+  path: '/for-agents',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -623,11 +663,6 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -778,16 +813,6 @@ const ApiOgInitDotpngRoute = ApiOgInitDotpngRouteImport.update({
   path: '/og/init.png',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiRERoute = ApiRERouteImport.update({
-  id: '/_api/r/e',
-  path: '/r/e',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
-  id: '/_api/r/v.js',
-  path: '/r/v.js',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiReferencesApiModelRoute = ApiReferencesApiModelRouteImport.update({
   id: '/_api/references-api/model',
   path: '/references-api/model',
@@ -808,6 +833,16 @@ const ApiReferencesApiOpenApiSpecRoute =
 const ApiReferencesApiServiceRoute = ApiReferencesApiServiceRouteImport.update({
   id: '/_api/references-api/service',
   path: '/references-api/service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResendApiKeysRoute = ApiResendApiKeysRouteImport.update({
+  id: '/_api/resend/api-keys',
+  path: '/resend/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResendDomainsRoute = ApiResendDomainsRouteImport.update({
+  id: '/_api/resend/domains',
+  path: '/resend/domains',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
@@ -953,6 +988,11 @@ const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => PublicAgentRoute,
 } as any)
+const PublicAuthPreviewRoute = PublicAuthPreviewRouteImport.update({
+  id: '/auth/preview',
+  path: '/auth/preview',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicDebugAuthorizeContributorPreviewRoute =
   PublicDebugAuthorizeContributorPreviewRouteImport.update({
     id: '/debug/authorize-contributor-preview',
@@ -965,9 +1005,50 @@ const PublicDebugCodeEditorPreviewRoute =
     path: '/debug/code-editor-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugCommunityShareExamplesRoute =
+  PublicDebugCommunityShareExamplesRouteImport.update({
+    id: '/debug/community-share-examples',
+    path: '/debug/community-share-examples',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationJoinPreviewRoute =
+  PublicDebugEducationJoinPreviewRouteImport.update({
+    id: '/debug/education-join-preview',
+    path: '/debug/education-join-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugEducationPlanPreviewRoute =
+  PublicDebugEducationPlanPreviewRouteImport.update({
+    id: '/debug/education-plan-preview',
+    path: '/debug/education-plan-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
   id: '/debug/error-preview',
   path: '/debug/error-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugImpersonatePreviewRoute =
+  PublicDebugImpersonatePreviewRouteImport.update({
+    id: '/debug/impersonate-preview',
+    path: '/debug/impersonate-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugJoinInvitePreviewRoute =
+  PublicDebugJoinInvitePreviewRouteImport.update({
+    id: '/debug/join-invite-preview',
+    path: '/debug/join-invite-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMagicUrlPreviewRoute =
+  PublicDebugMagicUrlPreviewRouteImport.update({
+    id: '/debug/magic-url-preview',
+    path: '/debug/magic-url-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugMfaPreviewRoute = PublicDebugMfaPreviewRouteImport.update({
+  id: '/debug/mfa-preview',
+  path: '/debug/mfa-preview',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicDebugOauth2PreviewRoute =
@@ -976,10 +1057,45 @@ const PublicDebugOauth2PreviewRoute =
     path: '/debug/oauth2-preview',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugOauth2RelayPreviewRoute =
+  PublicDebugOauth2RelayPreviewRouteImport.update({
+    id: '/debug/oauth2-relay-preview',
+    path: '/debug/oauth2-relay-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
     path: '/debug/org-setup-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugRecoveryPreviewRoute =
+  PublicDebugRecoveryPreviewRouteImport.update({
+    id: '/debug/recovery-preview',
+    path: '/debug/recovery-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugResetPreviewRoute = PublicDebugResetPreviewRouteImport.update({
+  id: '/debug/reset-preview',
+  path: '/debug/reset-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicDebugSignInPreviewRoute =
+  PublicDebugSignInPreviewRouteImport.update({
+    id: '/debug/sign-in-preview',
+    path: '/debug/sign-in-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSignUpPreviewRoute =
+  PublicDebugSignUpPreviewRouteImport.update({
+    id: '/debug/sign-up-preview',
+    path: '/debug/sign-up-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugSitesAuthPreviewRoute =
+  PublicDebugSitesAuthPreviewRouteImport.update({
+    id: '/debug/sites-auth-preview',
+    path: '/debug/sites-auth-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugVerifyEmailPreviewRoute =
@@ -1057,6 +1173,12 @@ const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   path: '/init/ticket/$eventSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResendApiKeysApiKeyIdRoute =
+  ApiResendApiKeysApiKeyIdRouteImport.update({
+    id: '/$apiKeyId',
+    path: '/$apiKeyId',
+    getParentRoute: () => ApiResendApiKeysRoute,
+  } as any)
 const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
   id: '/agent/mcp/callback',
   path: '/agent/mcp/callback',
@@ -1226,6 +1348,12 @@ const PublicProjectsProjectIdAdvisorRoute =
     path: '/advisor',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdAgentsRoute =
+  PublicProjectsProjectIdAgentsRouteImport.update({
+    id: '/agents',
+    path: '/agents',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdAnalyticsRoute =
   PublicProjectsProjectIdAnalyticsRouteImport.update({
     id: '/analytics',
@@ -1290,6 +1418,12 @@ const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
     path: '/onboarding',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOverviewRoute =
+  PublicProjectsProjectIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeRoute =
@@ -3077,17 +3211,19 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
   )
 
 export interface FileRoutesByFullPath {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3106,6 +3242,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3143,12 +3280,12 @@ export interface FileRoutesByFullPath {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3170,11 +3307,25 @@ export interface FileRoutesByFullPath {
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3195,6 +3346,7 @@ export interface FileRoutesByFullPath {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3220,6 +3372,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -3231,6 +3384,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3496,15 +3650,17 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PublicIndexRoute
+  '/': typeof MarketingIndexRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3523,6 +3679,7 @@ export interface FileRoutesByTo {
   '/domains': typeof MarketingDomainsRoute
   '/education': typeof MarketingEducationRoute
   '/enterprise': typeof MarketingEnterpriseRoute
+  '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3558,12 +3715,12 @@ export interface FileRoutesByTo {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
-  '/r/e': typeof ApiRERoute
-  '/r/v.js': typeof ApiRVDotjsRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
   '/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
@@ -3583,11 +3740,25 @@ export interface FileRoutesByTo {
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/auth/preview': typeof PublicAuthPreviewRoute
   '/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3606,6 +3777,7 @@ export interface FileRoutesByTo {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -3627,12 +3799,14 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -3875,11 +4049,13 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/docs.md': typeof DocsDotmdRoute
+  '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
@@ -3898,6 +4074,7 @@ export interface FileRoutesById {
   '/_marketing/domains': typeof MarketingDomainsRoute
   '/_marketing/education': typeof MarketingEducationRoute
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -3926,7 +4103,7 @@ export interface FileRoutesById {
   '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/_public/': typeof PublicIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3936,12 +4113,12 @@ export interface FileRoutesById {
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
-  '/_api/r/e': typeof ApiRERoute
-  '/_api/r/v.js': typeof ApiRVDotjsRoute
   '/_api/references-api/model': typeof ApiReferencesApiModelRoute
   '/_api/references-api/nav-counts': typeof ApiReferencesApiNavCountsRoute
   '/_api/references-api/open-api-spec': typeof ApiReferencesApiOpenApiSpecRoute
   '/_api/references-api/service': typeof ApiReferencesApiServiceRoute
+  '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
+  '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/education/join': typeof AuthEducationJoinRoute
@@ -3963,11 +4140,25 @@ export interface FileRoutesById {
   '/_public/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/_public/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
   '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
+  '/_public/auth/preview': typeof PublicAuthPreviewRoute
   '/_public/debug/authorize-contributor-preview': typeof PublicDebugAuthorizeContributorPreviewRoute
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
+  '/_public/debug/community-share-examples': typeof PublicDebugCommunityShareExamplesRoute
+  '/_public/debug/education-join-preview': typeof PublicDebugEducationJoinPreviewRoute
+  '/_public/debug/education-plan-preview': typeof PublicDebugEducationPlanPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/impersonate-preview': typeof PublicDebugImpersonatePreviewRoute
+  '/_public/debug/join-invite-preview': typeof PublicDebugJoinInvitePreviewRoute
+  '/_public/debug/magic-url-preview': typeof PublicDebugMagicUrlPreviewRoute
+  '/_public/debug/mfa-preview': typeof PublicDebugMfaPreviewRoute
   '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
+  '/_public/debug/oauth2-relay-preview': typeof PublicDebugOauth2RelayPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/recovery-preview': typeof PublicDebugRecoveryPreviewRoute
+  '/_public/debug/reset-preview': typeof PublicDebugResetPreviewRoute
+  '/_public/debug/sign-in-preview': typeof PublicDebugSignInPreviewRoute
+  '/_public/debug/sign-up-preview': typeof PublicDebugSignUpPreviewRoute
+  '/_public/debug/sites-auth-preview': typeof PublicDebugSitesAuthPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/git/authorize-contributor': typeof PublicGitAuthorizeContributorRoute
   '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
@@ -3988,6 +4179,7 @@ export interface FileRoutesById {
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
@@ -4013,6 +4205,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
+  '/_public/projects/$projectId/agents': typeof PublicProjectsProjectIdAgentsRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -4024,6 +4217,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4297,11 +4491,13 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4320,6 +4516,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4357,12 +4554,12 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4384,11 +4581,25 @@ export interface FileRouteTypes {
     | '/agent/$agentId'
     | '/agent/automations'
     | '/agent/settings'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4409,6 +4620,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4434,6 +4646,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
@@ -4445,6 +4658,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4715,10 +4929,12 @@ export interface FileRouteTypes {
     | '/changelog.md'
     | '/discord'
     | '/docs.md'
+    | '/for-agents.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/hello'
     | '/join'
@@ -4737,6 +4953,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/education'
     | '/enterprise'
+    | '/for-agents'
     | '/home'
     | '/partners'
     | '/pricing'
@@ -4772,12 +4989,12 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
-    | '/r/e'
-    | '/r/v.js'
     | '/references-api/model'
     | '/references-api/nav-counts'
     | '/references-api/open-api-spec'
     | '/references-api/service'
+    | '/resend/api-keys'
+    | '/resend/domains'
     | '/sitemap/news.xml'
     | '/auth/magic-url'
     | '/education/join'
@@ -4797,11 +5014,25 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/account/sessions'
     | '/agent/$agentId'
+    | '/auth/preview'
     | '/debug/authorize-contributor-preview'
     | '/debug/code-editor-preview'
+    | '/debug/community-share-examples'
+    | '/debug/education-join-preview'
+    | '/debug/education-plan-preview'
     | '/debug/error-preview'
+    | '/debug/impersonate-preview'
+    | '/debug/join-invite-preview'
+    | '/debug/magic-url-preview'
+    | '/debug/mfa-preview'
     | '/debug/oauth2-preview'
+    | '/debug/oauth2-relay-preview'
     | '/debug/org-setup-preview'
+    | '/debug/recovery-preview'
+    | '/debug/reset-preview'
+    | '/debug/sign-in-preview'
+    | '/debug/sign-up-preview'
+    | '/debug/sites-auth-preview'
     | '/debug/verify-email-preview'
     | '/git/authorize-contributor'
     | '/impersonate/$userId'
@@ -4820,6 +5051,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
@@ -4841,12 +5073,14 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
+    | '/projects/$projectId/agents'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/projects/$projectId/overview'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5088,11 +5322,13 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/docs.md'
+    | '/for-agents.md'
     | '/generator'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/robots.txt'
+    | '/setup.md'
     | '/sitemap.xml'
     | '/_api/hello'
     | '/_auth/join'
@@ -5111,6 +5347,7 @@ export interface FileRouteTypes {
     | '/_marketing/domains'
     | '/_marketing/education'
     | '/_marketing/enterprise'
+    | '/_marketing/for-agents'
     | '/_marketing/home'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -5139,7 +5376,7 @@ export interface FileRouteTypes {
     | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/_public/'
+    | '/_marketing/'
     | '/docs/'
     | '/generator/'
     | '/_api/blog/rss.xml'
@@ -5149,12 +5386,12 @@ export interface FileRouteTypes {
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
-    | '/_api/r/e'
-    | '/_api/r/v.js'
     | '/_api/references-api/model'
     | '/_api/references-api/nav-counts'
     | '/_api/references-api/open-api-spec'
     | '/_api/references-api/service'
+    | '/_api/resend/api-keys'
+    | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
     | '/_auth/auth/magic-url'
     | '/_auth/education/join'
@@ -5176,11 +5413,25 @@ export interface FileRouteTypes {
     | '/_public/agent/$agentId'
     | '/_public/agent/automations'
     | '/_public/agent/settings'
+    | '/_public/auth/preview'
     | '/_public/debug/authorize-contributor-preview'
     | '/_public/debug/code-editor-preview'
+    | '/_public/debug/community-share-examples'
+    | '/_public/debug/education-join-preview'
+    | '/_public/debug/education-plan-preview'
     | '/_public/debug/error-preview'
+    | '/_public/debug/impersonate-preview'
+    | '/_public/debug/join-invite-preview'
+    | '/_public/debug/magic-url-preview'
+    | '/_public/debug/mfa-preview'
     | '/_public/debug/oauth2-preview'
+    | '/_public/debug/oauth2-relay-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/recovery-preview'
+    | '/_public/debug/reset-preview'
+    | '/_public/debug/sign-in-preview'
+    | '/_public/debug/sign-up-preview'
+    | '/_public/debug/sites-auth-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/git/authorize-contributor'
     | '/_public/impersonate/$userId'
@@ -5201,6 +5452,7 @@ export interface FileRouteTypes {
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
@@ -5226,6 +5478,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
+    | '/_public/projects/$projectId/agents'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
     | '/_public/projects/$projectId/apps'
@@ -5237,6 +5490,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
+    | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -5512,11 +5766,13 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   DocsDotmdRoute: typeof DocsDotmdRoute
+  ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
@@ -5532,12 +5788,12 @@ export interface RootRouteChildren {
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
-  ApiRERoute: typeof ApiRERoute
-  ApiRVDotjsRoute: typeof ApiRVDotjsRoute
   ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
   ApiReferencesApiNavCountsRoute: typeof ApiReferencesApiNavCountsRoute
   ApiReferencesApiOpenApiSpecRoute: typeof ApiReferencesApiOpenApiSpecRoute
   ApiReferencesApiServiceRoute: typeof ApiReferencesApiServiceRoute
+  ApiResendApiKeysRoute: typeof ApiResendApiKeysRouteWithChildren
+  ApiResendDomainsRoute: typeof ApiResendDomainsRoute
   ApiSitemapNewsDotxmlRoute: typeof ApiSitemapNewsDotxmlRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
@@ -5609,6 +5865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-agents.md': {
+      id: '/for-agents.md'
+      path: '/for-agents.md'
+      fullPath: '/for-agents.md'
+      preLoaderRoute: typeof ForAgentsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
@@ -5642,6 +5905,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup.md': {
+      id: '/setup.md'
+      path: '/setup.md'
+      fullPath: '/setup.md'
+      preLoaderRoute: typeof SetupDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -5707,6 +5977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/affiliates': {
       id: '/_marketing/affiliates'
       path: '/affiliates'
@@ -5770,6 +6047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingEnterpriseRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/for-agents': {
+      id: '/_marketing/for-agents'
+      path: '/for-agents'
+      fullPath: '/for-agents'
+      preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
@@ -5818,13 +6102,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
     }
     '/_public/account': {
       id: '/_public/account'
@@ -6036,20 +6313,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOgInitDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_api/r/e': {
-      id: '/_api/r/e'
-      path: '/r/e'
-      fullPath: '/r/e'
-      preLoaderRoute: typeof ApiRERouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_api/r/v.js': {
-      id: '/_api/r/v.js'
-      path: '/r/v.js'
-      fullPath: '/r/v.js'
-      preLoaderRoute: typeof ApiRVDotjsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_api/references-api/model': {
       id: '/_api/references-api/model'
       path: '/references-api/model'
@@ -6076,6 +6339,20 @@ declare module '@tanstack/react-router' {
       path: '/references-api/service'
       fullPath: '/references-api/service'
       preLoaderRoute: typeof ApiReferencesApiServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/api-keys': {
+      id: '/_api/resend/api-keys'
+      path: '/resend/api-keys'
+      fullPath: '/resend/api-keys'
+      preLoaderRoute: typeof ApiResendApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/domains': {
+      id: '/_api/resend/domains'
+      path: '/resend/domains'
+      fullPath: '/resend/domains'
+      preLoaderRoute: typeof ApiResendDomainsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/sitemap/news.xml': {
@@ -6267,6 +6544,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicAgentSettingsRouteImport
       parentRoute: typeof PublicAgentRoute
     }
+    '/_public/auth/preview': {
+      id: '/_public/auth/preview'
+      path: '/auth/preview'
+      fullPath: '/auth/preview'
+      preLoaderRoute: typeof PublicAuthPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/authorize-contributor-preview': {
       id: '/_public/debug/authorize-contributor-preview'
       path: '/debug/authorize-contributor-preview'
@@ -6281,11 +6565,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugCodeEditorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/community-share-examples': {
+      id: '/_public/debug/community-share-examples'
+      path: '/debug/community-share-examples'
+      fullPath: '/debug/community-share-examples'
+      preLoaderRoute: typeof PublicDebugCommunityShareExamplesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-join-preview': {
+      id: '/_public/debug/education-join-preview'
+      path: '/debug/education-join-preview'
+      fullPath: '/debug/education-join-preview'
+      preLoaderRoute: typeof PublicDebugEducationJoinPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/education-plan-preview': {
+      id: '/_public/debug/education-plan-preview'
+      path: '/debug/education-plan-preview'
+      fullPath: '/debug/education-plan-preview'
+      preLoaderRoute: typeof PublicDebugEducationPlanPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/error-preview': {
       id: '/_public/debug/error-preview'
       path: '/debug/error-preview'
       fullPath: '/debug/error-preview'
       preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/impersonate-preview': {
+      id: '/_public/debug/impersonate-preview'
+      path: '/debug/impersonate-preview'
+      fullPath: '/debug/impersonate-preview'
+      preLoaderRoute: typeof PublicDebugImpersonatePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/join-invite-preview': {
+      id: '/_public/debug/join-invite-preview'
+      path: '/debug/join-invite-preview'
+      fullPath: '/debug/join-invite-preview'
+      preLoaderRoute: typeof PublicDebugJoinInvitePreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/magic-url-preview': {
+      id: '/_public/debug/magic-url-preview'
+      path: '/debug/magic-url-preview'
+      fullPath: '/debug/magic-url-preview'
+      preLoaderRoute: typeof PublicDebugMagicUrlPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/mfa-preview': {
+      id: '/_public/debug/mfa-preview'
+      path: '/debug/mfa-preview'
+      fullPath: '/debug/mfa-preview'
+      preLoaderRoute: typeof PublicDebugMfaPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/oauth2-preview': {
@@ -6295,11 +6628,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/oauth2-relay-preview': {
+      id: '/_public/debug/oauth2-relay-preview'
+      path: '/debug/oauth2-relay-preview'
+      fullPath: '/debug/oauth2-relay-preview'
+      preLoaderRoute: typeof PublicDebugOauth2RelayPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
       fullPath: '/debug/org-setup-preview'
       preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/recovery-preview': {
+      id: '/_public/debug/recovery-preview'
+      path: '/debug/recovery-preview'
+      fullPath: '/debug/recovery-preview'
+      preLoaderRoute: typeof PublicDebugRecoveryPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/reset-preview': {
+      id: '/_public/debug/reset-preview'
+      path: '/debug/reset-preview'
+      fullPath: '/debug/reset-preview'
+      preLoaderRoute: typeof PublicDebugResetPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-in-preview': {
+      id: '/_public/debug/sign-in-preview'
+      path: '/debug/sign-in-preview'
+      fullPath: '/debug/sign-in-preview'
+      preLoaderRoute: typeof PublicDebugSignInPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sign-up-preview': {
+      id: '/_public/debug/sign-up-preview'
+      path: '/debug/sign-up-preview'
+      fullPath: '/debug/sign-up-preview'
+      preLoaderRoute: typeof PublicDebugSignUpPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/sites-auth-preview': {
+      id: '/_public/debug/sites-auth-preview'
+      path: '/debug/sites-auth-preview'
+      fullPath: '/debug/sites-auth-preview'
+      preLoaderRoute: typeof PublicDebugSitesAuthPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/verify-email-preview': {
@@ -6399,6 +6774,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/init/ticket/$eventSlug'
       preLoaderRoute: typeof ApiInitTicketEventSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_api/resend/api-keys/$apiKeyId': {
+      id: '/_api/resend/api-keys/$apiKeyId'
+      path: '/$apiKeyId'
+      fullPath: '/resend/api-keys/$apiKeyId'
+      preLoaderRoute: typeof ApiResendApiKeysApiKeyIdRouteImport
+      parentRoute: typeof ApiResendApiKeysRoute
     }
     '/_auth/agent/mcp/callback': {
       id: '/_auth/agent/mcp/callback'
@@ -6603,6 +6985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAdvisorRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/agents': {
+      id: '/_public/projects/$projectId/agents'
+      path: '/agents'
+      fullPath: '/projects/$projectId/agents'
+      preLoaderRoute: typeof PublicProjectsProjectIdAgentsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/analytics': {
       id: '/_public/projects/$projectId/analytics'
       path: '/analytics'
@@ -6678,6 +7067,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/projects/$projectId/onboarding'
       preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/overview': {
+      id: '/_public/projects/$projectId/overview'
+      path: '/overview'
+      fullPath: '/projects/$projectId/overview'
+      preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/realtime': {
@@ -8544,12 +8940,14 @@ interface MarketingRouteChildren {
   MarketingDomainsRoute: typeof MarketingDomainsRoute
   MarketingEducationRoute: typeof MarketingEducationRoute
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -8576,12 +8974,14 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingDomainsRoute: MarketingDomainsRoute,
   MarketingEducationRoute: MarketingEducationRoute,
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
@@ -10142,6 +10542,7 @@ const PublicProjectsProjectIdSitesCreateRouteWithChildren =
 interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAdvisorRoute: typeof PublicProjectsProjectIdAdvisorRoute
+  PublicProjectsProjectIdAgentsRoute: typeof PublicProjectsProjectIdAgentsRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
@@ -10153,6 +10554,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
+  PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -10168,6 +10570,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
   {
     PublicProjectsProjectIdActivityRoute: PublicProjectsProjectIdActivityRoute,
     PublicProjectsProjectIdAdvisorRoute: PublicProjectsProjectIdAdvisorRoute,
+    PublicProjectsProjectIdAgentsRoute: PublicProjectsProjectIdAgentsRoute,
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
@@ -10187,6 +10590,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
+    PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -10223,12 +10627,25 @@ interface PublicRouteChildren {
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
-  PublicIndexRoute: typeof PublicIndexRoute
+  PublicAuthPreviewRoute: typeof PublicAuthPreviewRoute
   PublicDebugAuthorizeContributorPreviewRoute: typeof PublicDebugAuthorizeContributorPreviewRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
+  PublicDebugCommunityShareExamplesRoute: typeof PublicDebugCommunityShareExamplesRoute
+  PublicDebugEducationJoinPreviewRoute: typeof PublicDebugEducationJoinPreviewRoute
+  PublicDebugEducationPlanPreviewRoute: typeof PublicDebugEducationPlanPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugImpersonatePreviewRoute: typeof PublicDebugImpersonatePreviewRoute
+  PublicDebugJoinInvitePreviewRoute: typeof PublicDebugJoinInvitePreviewRoute
+  PublicDebugMagicUrlPreviewRoute: typeof PublicDebugMagicUrlPreviewRoute
+  PublicDebugMfaPreviewRoute: typeof PublicDebugMfaPreviewRoute
   PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
+  PublicDebugOauth2RelayPreviewRoute: typeof PublicDebugOauth2RelayPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugRecoveryPreviewRoute: typeof PublicDebugRecoveryPreviewRoute
+  PublicDebugResetPreviewRoute: typeof PublicDebugResetPreviewRoute
+  PublicDebugSignInPreviewRoute: typeof PublicDebugSignInPreviewRoute
+  PublicDebugSignUpPreviewRoute: typeof PublicDebugSignUpPreviewRoute
+  PublicDebugSitesAuthPreviewRoute: typeof PublicDebugSitesAuthPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicGitAuthorizeContributorRoute: typeof PublicGitAuthorizeContributorRoute
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
@@ -10250,13 +10667,27 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
-  PublicIndexRoute: PublicIndexRoute,
+  PublicAuthPreviewRoute: PublicAuthPreviewRoute,
   PublicDebugAuthorizeContributorPreviewRoute:
     PublicDebugAuthorizeContributorPreviewRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
+  PublicDebugCommunityShareExamplesRoute:
+    PublicDebugCommunityShareExamplesRoute,
+  PublicDebugEducationJoinPreviewRoute: PublicDebugEducationJoinPreviewRoute,
+  PublicDebugEducationPlanPreviewRoute: PublicDebugEducationPlanPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugImpersonatePreviewRoute: PublicDebugImpersonatePreviewRoute,
+  PublicDebugJoinInvitePreviewRoute: PublicDebugJoinInvitePreviewRoute,
+  PublicDebugMagicUrlPreviewRoute: PublicDebugMagicUrlPreviewRoute,
+  PublicDebugMfaPreviewRoute: PublicDebugMfaPreviewRoute,
   PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
+  PublicDebugOauth2RelayPreviewRoute: PublicDebugOauth2RelayPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugRecoveryPreviewRoute: PublicDebugRecoveryPreviewRoute,
+  PublicDebugResetPreviewRoute: PublicDebugResetPreviewRoute,
+  PublicDebugSignInPreviewRoute: PublicDebugSignInPreviewRoute,
+  PublicDebugSignUpPreviewRoute: PublicDebugSignUpPreviewRoute,
+  PublicDebugSitesAuthPreviewRoute: PublicDebugSitesAuthPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicGitAuthorizeContributorRoute: PublicGitAuthorizeContributorRoute,
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
@@ -10321,6 +10752,17 @@ const ApiGeneratorCoverRouteChildren: ApiGeneratorCoverRouteChildren = {
 const ApiGeneratorCoverRouteWithChildren =
   ApiGeneratorCoverRoute._addFileChildren(ApiGeneratorCoverRouteChildren)
 
+interface ApiResendApiKeysRouteChildren {
+  ApiResendApiKeysApiKeyIdRoute: typeof ApiResendApiKeysApiKeyIdRoute
+}
+
+const ApiResendApiKeysRouteChildren: ApiResendApiKeysRouteChildren = {
+  ApiResendApiKeysApiKeyIdRoute: ApiResendApiKeysApiKeyIdRoute,
+}
+
+const ApiResendApiKeysRouteWithChildren =
+  ApiResendApiKeysRoute._addFileChildren(ApiResendApiKeysRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
@@ -10331,11 +10773,13 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   DocsDotmdRoute: DocsDotmdRoute,
+  ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
@@ -10351,12 +10795,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
-  ApiRERoute: ApiRERoute,
-  ApiRVDotjsRoute: ApiRVDotjsRoute,
   ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,
   ApiReferencesApiNavCountsRoute: ApiReferencesApiNavCountsRoute,
   ApiReferencesApiOpenApiSpecRoute: ApiReferencesApiOpenApiSpecRoute,
   ApiReferencesApiServiceRoute: ApiReferencesApiServiceRoute,
+  ApiResendApiKeysRoute: ApiResendApiKeysRouteWithChildren,
+  ApiResendDomainsRoute: ApiResendDomainsRoute,
   ApiSitemapNewsDotxmlRoute: ApiSitemapNewsDotxmlRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,

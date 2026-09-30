@@ -41,13 +41,20 @@ import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
+import {
+  OVERVIEW_CHART_HEIGHT,
+} from '../../overview/chart-panel'
 import { FirewallImpactChart } from './FirewallImpactChart'
+import {
+  FIREWALL_IMPACT_FETCH_ERROR,
+  FirewallUsageChartError,
+} from './FirewallUsageChartError'
+import { useT } from '@/lib/i18n/translate'
 import { FirewallActionActivityChart } from './FirewallActionActivityChart'
 import {
   RateLimitStrategyIllustration,
   type RateLimitIllustrationConfig,
 } from './RateLimitStrategyIllustration'
-import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
 
@@ -144,7 +151,7 @@ export function RuleImpactPreview({
   // matched traffic. Skip the fetch and show "Preview unavailable".
   const previewUnavailable = unestimableConditions > 0 || tooManyConditions
 
-  const { impact, isLoading, isFetching } = useFirewallRuleImpact(
+  const { impact, isLoading, isFetching, isError, error, refetch } = useFirewallRuleImpact(
     previewUnavailable ? null : projectId,
     debouncedConditions,
     resourceType,
@@ -192,13 +199,23 @@ export function RuleImpactPreview({
       ? getFirewallActionMetric(action)
       : undefined
   const activity = previewUnavailable ? undefined : impact?.activity
-  const showActivityPlaceholder =
-    previewUnavailable || (isLoading && !impact) || !activity
 
   const filledConditions = conditions.filter(
     (c) => c.value.trim().length > 0,
   ).length
-  const showSubtleLoading = !previewUnavailable && isFetching && !isLoading
+  const showSubtleLoading =
+    !previewUnavailable && !isError && isFetching && !isLoading
+  const hideImpactValues = previewUnavailable || !impact
+  const [keepImpactError, setKeepImpactError] = useState(false)
+  if (impact || previewUnavailable) {
+    if (keepImpactError) setKeepImpactError(false)
+  } else if (isError && !keepImpactError) {
+    setKeepImpactError(true)
+  }
+  const showImpactError =
+    !previewUnavailable && !impact && (isError || keepImpactError)
+  const showActivityPlaceholder =
+    previewUnavailable || showImpactError || !activity
 
   return (
     <div className="space-y-4">
@@ -263,7 +280,7 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Matched requests')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {previewUnavailable || (isLoading && !impact)
+                {hideImpactValues
                   ? '-'
                   : summary.matched.toLocaleString()}
               </p>
@@ -274,7 +291,7 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Share of traffic')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {previewUnavailable || (isLoading && !impact)
+                {hideImpactValues
                   ? '-'
                   : `${(summary.rate * 100).toFixed(1)}%`}
               </p>
@@ -334,21 +351,32 @@ export function RuleImpactPreview({
             showSubtleLoading && 'opacity-60',
           )}
         >
-          <FirewallImpactChart
-            series={series}
-            dateRange={dateRange}
-            chartInterval={chartInterval}
-            emptyLabel={
-              previewUnavailable
-                ? t('Preview unavailable')
-                : isLoading
-                  ? t('Loading...')
-                  : t('No traffic data for this period')
-            }
-          />
+          {showImpactError ? (
+            <div style={{ height: OVERVIEW_CHART_HEIGHT }}>
+              <FirewallUsageChartError
+                error={error}
+                retentionDays={usageLogRetentionDays}
+                fallback={FIREWALL_IMPACT_FETCH_ERROR}
+                onRetry={() => void refetch()}
+              />
+            </div>
+          ) : (
+            <FirewallImpactChart
+              series={series}
+              dateRange={dateRange}
+              chartInterval={chartInterval}
+              emptyLabel={
+                previewUnavailable
+                  ? t('Preview unavailable')
+                  : isLoading
+                    ? t('Loading...')
+                    : t('No traffic data for this period')
+              }
+            />
+          )}
         </div>
 
-        {activityConfig ? (
+        {activityConfig && !showImpactError ? (
           <div
             className={cn(
               'border-t border-border px-2 pb-2 pt-3 transition-opacity duration-200',

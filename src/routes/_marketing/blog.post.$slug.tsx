@@ -14,14 +14,19 @@ import {
   getBlogPostSchema,
 } from '@/lib/blog/seo'
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
+import { renderBlogPostBodies } from '@/lib/blog/render-blog-markdoc-html'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import {
+  MARKETING_PAGE_ROUTE_STATIC_DATA,
+  marketingRouteLifetime,
+} from '@/lib/marketing/route-static-data'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { NOINDEX_ROBOTS_META, NOINDEX_ROBOTS_HEADER } from '@/lib/seo/indexing'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 import { trackServerPageview } from '@/lib/server-analytics'
 
 export const Route = createFileRoute('/_marketing/blog/post/$slug')({
+  ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {
@@ -66,7 +71,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
       throw notFound()
     }
 
-    return { post }
+    return { post, ...(await renderBlogPostBodies(post)) }
   },
   head: ({ loaderData }) => {
     if (!loaderData?.post) return {}
@@ -137,8 +142,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
 })
 
 function BlogPostPage() {
-  const { post } = Route.useLoaderData()
+  const { post, contentHtml, faqs } = Route.useLoaderData()
 
-  return (<PostView post={post} />
-    )
+  return <PostView post={post} contentHtml={contentHtml} faqs={faqs} />
 }

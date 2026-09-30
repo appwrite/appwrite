@@ -7,6 +7,10 @@ import {
   useRef,
   ReactNode,
 } from 'react'
+import {
+  clearDebugDemoSession,
+  notifyDebugDemoSessionChange,
+} from '@/lib/debug-demos/session'
 import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 
 const DEBUG_MODE_OPEN_KEY = 'debug:modeOpen'
@@ -58,6 +62,8 @@ export function DebugModeProvider({ children }: DebugModeProviderProps) {
   const closeDebugMode = useCallback(() => {
     setIsDebugModeOpen(false)
     writeDebugModeOpen(false)
+    clearDebugDemoSession()
+    notifyDebugDemoSessionChange()
   }, [])
 
   useEffect(() => {

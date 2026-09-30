@@ -24,6 +24,15 @@ export const AuthEmailPolicyId = {
   DenyCorporateEmail: 'deny-corporate-email',
 } as const
 
+export type PasswordPwnedPolicy = {
+  /** Check passwords against known breaches and record the result on the user. */
+  enabled: boolean
+  /** Refuse a sign-in with a breached password until it is reset. */
+  sessions: boolean
+  /** Reject a breached password on sign-up or password change. */
+  users: boolean
+}
+
 export type ProjectAuthSecuritySnapshot = {
   authLimit: number
   authDuration: number
@@ -32,6 +41,8 @@ export type ProjectAuthSecuritySnapshot = {
   authPasswordStrength: PasswordStrengthPolicy
   authPasswordDictionary: boolean
   authPersonalDataCheck: boolean
+  /** Null when the server does not report a password-pwned policy. */
+  authPasswordPwned: PasswordPwnedPolicy | null
   authSessionAlerts: boolean
   authInvalidateSessions: boolean
   authDenyFreeEmail: boolean
@@ -63,6 +74,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authPasswordStrength: DEFAULT_PASSWORD_STRENGTH_POLICY,
   authPasswordDictionary: false,
   authPersonalDataCheck: false,
+  authPasswordPwned: null,
   authSessionAlerts: false,
   authInvalidateSessions: false,
   authDenyFreeEmail: false,
@@ -148,6 +160,7 @@ export function parseProjectAuthSecurity(
     policies,
     ProjectPolicyId.Passwordpersonaldata,
   )
+  const passwordPwned = policyById(policies, ProjectPolicyId.Passwordpwned)
   const sessionAlert = policyById(policies, ProjectPolicyId.Sessionalert)
   const sessionInvalidation = policyById(
     policies,
@@ -189,6 +202,15 @@ export function parseProjectAuthSecurity(
       passwordPersonalData && 'enabled' in passwordPersonalData
         ? (passwordPersonalData.enabled ?? false)
         : false,
+    // `sessions` only exists on the pwned policy, so it doubles as the type guard.
+    authPasswordPwned:
+      passwordPwned && 'sessions' in passwordPwned
+        ? {
+            enabled: passwordPwned.enabled ?? true,
+            sessions: passwordPwned.sessions ?? false,
+            users: passwordPwned.users ?? false,
+          }
+        : null,
     authSessionAlerts:
       sessionAlert && 'enabled' in sessionAlert
         ? (sessionAlert.enabled ?? false)

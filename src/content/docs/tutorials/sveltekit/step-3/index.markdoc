@@ -21,10 +21,10 @@ If this is your first time using Appwrite, create an account and create your fir
 Then, under **Add a platform**, add a **Web app**. The **Hostname** should be localhost. 
 
 {% only_dark %}
-![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/dark/add-platform-sveltekit.avif)
 {% /only_dark %}
 {% only_light %}
-![Add a platform](/images/docs/quick-starts/add-platform.avif)
+![Add a platform](/images/docs/quick-starts/add-platform-sveltekit.avif)
 {% /only_light %}
 
 You can skip optional steps.

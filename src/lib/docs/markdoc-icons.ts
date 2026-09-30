@@ -50,6 +50,7 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   aws: 'amazon.svg',
   azure: 'microsoft.svg',
   openai: 'chatgpt.svg',
+  chatgpt: 'chatgpt.svg',
   codex: 'codex.svg',
   gemini: 'google.svg',
   imagine: 'imagine.svg',

@@ -5,10 +5,19 @@
  */
 
 import { useMemo } from 'react'
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import {
+  persistVisitorCountryCode,
+  readMockLocaleCountryCookie,
+} from '@/lib/locale/visitor-country'
+import { readPrefetchedLocale } from '@/lib/locale/prefetch-locale'
+import { normalizeCountryCode } from '@/lib/pricing/start-plan'
 import { LONG_STALE_TIME } from './constants'
+
+export const VISITOR_COUNTRY_QUERY_KEY = ['visitor-country'] as const
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -53,9 +62,31 @@ export async function fetchContinents() {
  * Uses the console SDK locale service to get user's locale information.
  * @returns Locale information from the API
  */
-export async function fetchLocale() {
-  const response = await sdk.forConsole.locale.get()
+export async function fetchLocale(): Promise<Models.Locale> {
+  const prefetched = await readPrefetchedLocale()
+  const response = prefetched ?? (await sdk.forConsole.locale.get())
+  const mockCountry = readMockLocaleCountryCookie()
+  if (mockCountry) {
+    // The mocked country must not leak into the persisted real visitor country.
+    return maskLocaleCountry(response, mockCountry)
+  }
+  persistVisitorCountryCode(response.countryCode)
   return response
+}
+
+function maskLocaleCountry(
+  locale: Models.Locale,
+  countryCode: string,
+): Models.Locale {
+  let country = countryCode
+  try {
+    country =
+      new Intl.DisplayNames(['en'], { type: 'region' }).of(countryCode) ??
+      countryCode
+  } catch {
+    // Invalid region codes keep the ISO code as the name.
+  }
+  return { ...locale, countryCode, country }
 }
 
 // ============================================================================
@@ -151,7 +182,54 @@ export function localeQueryOptions() {
     queryKey: ['locale', 'console'],
     queryFn: fetchLocale,
     staleTime: LONG_STALE_TIME,
+    gcTime: LONG_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: typeof window !== 'undefined',
+    meta: { skipInitialLoader: true },
   })
+}
+
+async function fetchVisitorCountryCode(): Promise<string | null> {
+  const locale = await fetchLocale()
+  return normalizeCountryCode(locale.countryCode)
+}
+
+/**
+ * Client-only visitor country confirmed with locale.get(). CDN/cookie geo must
+ * not hydrate this key or pricing would paint the 3-plan grid first.
+ */
+export function visitorCountryQueryOptions() {
+  return queryOptions({
+    queryKey: VISITOR_COUNTRY_QUERY_KEY,
+    queryFn: fetchVisitorCountryCode,
+    staleTime: LONG_STALE_TIME,
+    gcTime: LONG_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: typeof window !== 'undefined',
+    meta: { skipInitialLoader: true },
+  })
+}
+
+export async function prefetchVisitorCountry(queryClient: QueryClient) {
+  // Do not seed from CDN/cookies on the server. That made pricing SSR "ready"
+  // with the 3-plan grid before locale.get() could correct Indian VPN geo.
+  if (typeof window === 'undefined') return
+
+  try {
+    const locale = await queryClient.ensureQueryData(localeQueryOptions())
+    queryClient.setQueryData(
+      VISITOR_COUNTRY_QUERY_KEY,
+      normalizeCountryCode(locale.countryCode),
+    )
+  } catch {
+    await queryClient
+      .ensureQueryData(visitorCountryQueryOptions())
+      .catch(() => {})
+  }
 }
 
 /**

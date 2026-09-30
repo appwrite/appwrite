@@ -61,14 +61,12 @@ export const enCatalog = {
         accountId: 'Account ID',
         copyAccountId: 'Copy account ID',
         copied: 'Copied!',
-        twoFactor: '2FA',
         active: 'Active',
         inactive: 'Inactive',
-        enabled: 'Enabled',
-        disabled: 'Disabled',
+        twoFactorEnabled: '2FA enabled',
+        twoFactorDisabled: '2FA disabled',
+        passwordBreached: 'Password breached',
         console: 'Console',
-        // Temporary: remove once the old console is retired
-        oldConsole: 'Old console',
         home: 'Home',
         docs: 'Docs',
         changelog: 'Changelog',
@@ -196,6 +194,7 @@ export const enCatalog = {
       items: {
         overview: 'Overview',
         apps: 'Apps',
+        agents: 'Agents',
         apiKeys: 'API Keys',
         explorer: 'Explorer',
         auth: 'Auth',
@@ -423,7 +422,7 @@ export const enCatalog = {
           'Subscribe to live events and react to changes as they happen.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'Connect AI agents to your Appwrite project, APIs, and docs through MCP servers.', // pragma: allowlist secret
+          'Connect AI agents to your Appwrite project, APIs, and docs through one remote MCP server.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'Manage Appwrite infrastructure as code with the official provider.', // pragma: allowlist secret

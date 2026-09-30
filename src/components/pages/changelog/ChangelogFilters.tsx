@@ -33,6 +33,7 @@ const TAG_LABELS: Record<ChangelogTag, string> = {
   security: 'Security',
   infrastructure: 'Infrastructure',
   integrations: 'Integrations',
+  programs: 'Programs',
 }
 
 const FILTER_GROUPS: {
@@ -49,7 +50,7 @@ const FILTER_GROUPS: {
   },
   {
     title: 'More',
-    tags: ['performance', 'security', 'infrastructure'],
+    tags: ['performance', 'security', 'infrastructure', 'programs'],
   },
 ]
 

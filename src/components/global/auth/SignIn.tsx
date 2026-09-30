@@ -19,7 +19,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
-import { Card } from '@/components/ui/card'
+import {
+  AuthFlowDescription,
+  AuthFlowIllustrationCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -98,6 +103,8 @@ const OAUTH_ACCORDION_STYLES = `
   display: flex;
   width: 100%;
   gap: 0.5rem;
+  container-type: inline-size;
+  container-name: oauth-login;
 }
 .oauth-login-row > * {
   flex: 0 1 2.25rem;
@@ -138,6 +145,17 @@ const OAUTH_ACCORDION_STYLES = `
   transition-duration: 240ms;
   transition-timing-function: ease;
   transition-delay: 320ms;
+}
+.oauth-login-label-short {
+  display: none;
+}
+@container oauth-login (max-width: 22rem) {
+  .oauth-login-label-full {
+    display: none;
+  }
+  .oauth-login-label-short {
+    display: inline;
+  }
 }
 .oauth-last-used {
   position: absolute;
@@ -191,6 +209,13 @@ const OAUTH_ACCORDION_STYLES = `
 }
 `
 
+function oauthProviderName(provider: OAuthLoginMethod, t: Translator) {
+  if (provider === 'google') return t('Google')
+  if (provider === 'gitlab') return t('GitLab')
+  if (provider === 'bitbucket') return t('Bitbucket')
+  return t('GitHub')
+}
+
 function oauthProviderLabel(
   provider: OAuthLoginMethod,
   mode: 'sign-in' | 'sign-up',
@@ -215,6 +240,8 @@ interface SignInProps {
   isLoading?: boolean
   oauthLoading?: OAuthLoginMethod | null
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
+  /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
+  preview?: boolean
 }
 
 export function SignIn({
@@ -224,6 +251,7 @@ export function SignIn({
   isLoading,
   oauthLoading,
   redirect,
+  preview = false,
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
@@ -294,6 +322,24 @@ export function SignIn({
   const formBusy = isLoading || isCreatingDemo
 
   const handleCreateDemoUser = async () => {
+    if (preview) {
+      form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
+      form.setValue('password', DEMO_USER_PASSWORD, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      if (mode === 'sign-up') {
+        form.setValue('name', DEMO_USER_NAME, { shouldDirty: true, shouldValidate: true })
+      }
+      setShowPassword(true)
+      toast.message(t('Preview only'), {
+        description: t(
+          'Demo credentials filled in. Submit does not sign in here.',
+        ),
+      })
+      return
+    }
+
     form.setValue('email', DEMO_USER_EMAIL, { shouldDirty: true, shouldValidate: true })
     form.setValue('password', DEMO_USER_PASSWORD, {
       shouldDirty: true,
@@ -304,8 +350,8 @@ export function SignIn({
     }
     setShowPassword(true)
 
-    toast.message('Creating demo user', {
-      description: `Email: ${DEMO_USER_EMAIL}. Password: ${DEMO_USER_PASSWORD}`,
+    toast.message(t('Creating demo user'), {
+      description: `${t('Email')}: ${DEMO_USER_EMAIL}. ${t('Password')}: ${DEMO_USER_PASSWORD}`,
     })
 
     setIsCreatingDemo(true)
@@ -319,7 +365,7 @@ export function SignIn({
         })
       } catch (error: unknown) {
         if (!isAccountAlreadyExistsError(error)) {
-          toast.error(getErrorMessage(error, 'Failed to create demo user'))
+          toast.error(getErrorMessage(error, t('Failed to create demo user')))
           return
         }
       }
@@ -338,25 +384,23 @@ export function SignIn({
   }
 
   return (
-    <Card className="overflow-hidden py-0">
-      <div className="grid md:grid-cols-2">
-        <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
-          <Form {...form}>
+    <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
+      <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
+                <AuthFlowTitle>
                   {mode === 'sign-in'
                     ? t('Welcome back')
                     : t('Create an account')}
-                </h1>
-                <p className="text-sm text-muted-foreground">
+                </AuthFlowTitle>
+                <AuthFlowDescription>
                   {mode === 'sign-in'
                     ? t('Login to your account')
                     : t('Enter your details to create a new account')}
-                </p>
+                </AuthFlowDescription>
               </div>
 
               {onOAuthLogin && (
@@ -365,6 +409,7 @@ export function SignIn({
                   <div className="oauth-login-row">
                     {OAUTH_PROVIDERS.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
+                      const shortLabel = oauthProviderName(id, t)
                       const isLastUsed =
                         mode === 'sign-in' && lastLoginMethod === id
                       const isExpanded = expandedOAuth === id
@@ -405,7 +450,12 @@ export function SignIn({
                             <span className="oauth-login-label">
                               <span>
                                 <span className="oauth-login-label-text">
-                                  {label}
+                                  <span className="oauth-login-label-short">
+                                    {shortLabel}
+                                  </span>
+                                  <span className="oauth-login-label-full">
+                                    {label}
+                                  </span>
                                 </span>
                               </span>
                             </span>
@@ -503,7 +553,7 @@ export function SignIn({
                       <FormMessage />
                       {mode === 'sign-in' && (
                         <Link
-                          to="/recovery"
+                          to={preview ? '/debug/recovery-preview' : '/recovery'}
                           search={
                             emailValue ? { email: emailValue } : undefined
                           }
@@ -523,23 +573,36 @@ export function SignIn({
                     {t('Last used')}
                   </span>
                 )}
-                <Button type="submit" className="w-full" disabled={formBusy}>
+                <Button
+                  type="submit"
+                  variant="brandCta"
+                  className="w-full"
+                  disabled={formBusy}
+                >
                   {mode === 'sign-in' ? t('Login') : t('Sign up')}
                 </Button>
               </div>
 
-              <p className="text-center text-sm text-muted-foreground">
+              <AuthFlowDescription className="text-center">
                 {mode === 'sign-in'
                   ? t("Don't have an account?")
                   : t('Already have an account?')}{' '}
                 <Link
-                  to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
-                  search={redirect ? { redirect } : undefined}
+                  to={
+                    preview
+                      ? mode === 'sign-in'
+                        ? '/debug/sign-up-preview'
+                        : '/debug/sign-in-preview'
+                      : mode === 'sign-in'
+                        ? '/sign-up'
+                        : '/sign-in'
+                  }
+                  search={!preview && redirect ? { redirect } : undefined}
                   className="link-neutral"
                 >
                   {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
                 </Link>
-              </p>
+              </AuthFlowDescription>
             </form>
           </Form>
           {isDebugModeOpen ? (
@@ -588,17 +651,6 @@ export function SignIn({
               </Button>
             </div>
           ) : null}
-        </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
-      </div>
-    </Card>
+    </AuthFlowIllustrationCard>
   )
 }

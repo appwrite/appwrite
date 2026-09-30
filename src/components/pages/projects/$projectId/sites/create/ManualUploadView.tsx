@@ -20,11 +20,16 @@ import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Upload, File, X, GitBranch, LayoutTemplate } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
+import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES } from '../../shared/CreateManualDeploymentModal'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
@@ -33,10 +38,28 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { validateVariables } from '@/lib/variables'
+import {
+  DEPLOYMENT_ARCHIVE_ACCEPT,
+  isDeploymentArchive,
+} from '@/lib/deployment-archive'
 
 export function ManualUploadView() {
   const t = useT()
   const { projectId } = useParams({ strict: false })
+  const { data: project } = useQuery(projectQueryOptions(projectId as string))
+  const { computeSizeLimit } = useConsoleVariables(project?.region)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const planSize = plan?.deploymentSize
+  // As on the server, a Cloud plan's deploymentSize replaces _APP_COMPUTE_SIZE_LIMIT
+  // and 0 means no limit. MAX_SAFE_INTEGER is the stand-in plan from a failed
+  // request, so the limit is unknown.
+  const maxFileSizeBytes = !getActiveProfileFeatures().billing
+    ? (computeSizeLimit ?? DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES)
+    : planSize !== undefined && planSize < Number.MAX_SAFE_INTEGER
+      ? planSize * 1_000_000
+      : undefined
+  // Floor, so the shown limit never exceeds what is enforced
+  const maxMb = Math.floor((maxFileSizeBytes ?? 0) / 1_000_000)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -100,14 +123,15 @@ export function ManualUploadView() {
     if (!files || files.length === 0) return
 
     const file = files[0]
-    if (!file.name.endsWith('.tar.gz') && !file.name.endsWith('.tgz')) {
+    if (!isDeploymentArchive(file)) {
       toast.error(t('Only .tar.gz files are supported'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
-    // Check file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error(t('File size must be less than 100MB'))
+    if (maxFileSizeBytes && file.size > maxFileSizeBytes) {
+      toast.error(`${t('File is too large. Maximum size:')} ${maxMb}MB`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
@@ -143,6 +167,12 @@ export function ManualUploadView() {
   const handleDeploy = async () => {
     if (!projectId || !siteName || !framework || !uploadFile) {
       toast.error(t('Please fill in all required fields and upload a file'))
+      return
+    }
+
+    // The limit may have loaded after the file was picked
+    if (maxFileSizeBytes && uploadFile.size > maxFileSizeBytes) {
+      toast.error(`${t('File is too large. Maximum size:')} ${maxMb}MB`)
       return
     }
 
@@ -334,32 +364,41 @@ export function ManualUploadView() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".tar.gz,.tgz"
+            accept={DEPLOYMENT_ARCHIVE_ACCEPT}
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
           />
 
           {!uploadFile ? (
-            <div
+            <button
+              type="button"
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               className={cn(
-                'flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-12 px-6 cursor-pointer transition-colors',
+                'flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed py-12 px-6 cursor-pointer transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                 isDragging
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-muted-foreground hover:bg-accent/50',
               )}
             >
-              <Upload className="h-8 w-8 text-muted-foreground mb-3" />
-              <p className="text-[13px] font-medium text-foreground">
-                {t('Drop your file here or click to browse')}
-              </p>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Only .tar.gz files up to 100MB')}
-              </p>
-            </div>
+              <span className="pointer-events-none flex flex-col items-center">
+                <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                <span className="text-[13px] font-medium text-foreground">
+                  {t('Drop your file here or click to browse')}
+                </span>
+                <span className="text-[12px] text-muted-foreground mt-1">
+                  {maxFileSizeBytes ? (
+                    <>
+                      {t('Only .tar.gz files up to')} {maxMb}MB
+                    </>
+                  ) : (
+                    t('Only .tar.gz files are supported')
+                  )}
+                </span>
+              </span>
+            </button>
           ) : (
             <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
@@ -376,8 +415,13 @@ export function ManualUploadView() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setUploadFile(null)}
+                onClick={() => {
+                  setUploadFile(null)
+                  if (fileInputRef.current) fileInputRef.current.value = ''
+                }}
+                aria-label={t('Remove file')}
                 className="h-8 w-8 p-0"
+                disabled={isDeploying}
               >
                 <X className="h-4 w-4" />
               </Button>

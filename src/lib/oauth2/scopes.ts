@@ -440,10 +440,6 @@ const ORGANIZATION_RESOURCE_COPY: Record<string, ResourceCopy> = {
     name: 'Partners keys (legacy)',
     desc: 'Legacy access to Partners keys, replaced by Partners keys.',
   },
-  devKeys: {
-    name: 'Development keys',
-    desc: 'Development keys used to bypass rate limits while building locally.',
-  },
   'organization.memberships': {
     name: 'Organization memberships',
     desc: 'Memberships that control who belongs to this organization and their roles.',

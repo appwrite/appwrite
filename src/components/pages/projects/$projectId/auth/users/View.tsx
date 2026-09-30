@@ -1,3 +1,4 @@
+import type { Flag } from '@appwrite.io/console'
 import { useState, useMemo, useEffect } from 'react'
 import {
   useParams,
@@ -9,7 +10,6 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import { formatPrefValue, formatPrefsForEditor } from '@/lib/prefs-value'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -31,6 +31,10 @@ import {
   Monitor,
   UserRound,
   ExternalLink,
+  Copy,
+  Check,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -39,6 +43,8 @@ import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -589,7 +595,11 @@ function OverviewTab({
       </div>
       <UpdateEmailSection user={user} projectId={projectId} userId={userId} />
       <UpdatePhoneSection user={user} projectId={projectId} userId={userId} />
-      <UpdatePasswordSection projectId={projectId} userId={userId} />
+      <UpdatePasswordSection
+        user={user}
+        projectId={projectId}
+        userId={userId}
+      />
       <UpdateLabelsSection user={user} projectId={projectId} userId={userId} />
       <div id="user-preferences">
         <UpdatePreferencesSection
@@ -739,6 +749,12 @@ function UserStatusCard({
               >
                 {t(statusBadge.label)}
               </Badge>
+              {user.passwordPwned === true && (
+                <Badge variant="error" className="text-[10px] shrink-0 gap-1">
+                  <ShieldAlert className="h-3 w-3" />
+                  {t('breached password')}
+                </Badge>
+              )}
             </div>
             <div className="space-y-1 text-[13px] text-muted-foreground">
               <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
@@ -860,7 +876,10 @@ function UserImpersonationCapabilityCard({
           {t(
             "When enabled, this user may use the Appwrite client SDK's impersonation support in your app: you designate which other project user a session should run as, and the SDK applies that context on outgoing requests so the API treats each call like it came from the impersonated user - permissions, data access, and limits follow that identity.", // pragma: allowlist secret
           )}{' '}
-          <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/impersonation">
+          <DocsRouteLink
+            className="link-neutral inline-flex items-center gap-1"
+            href="/docs/products/auth/impersonation"
+          >
             {t('Documentation')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
@@ -1147,11 +1166,45 @@ function UpdatePhoneSection({
   )
 }
 
+// Result of the last breached-password check. Null means never checked,
+// for example when the pwned policy is off or the user signs in with OAuth.
+function PasswordBreachStatus({
+  passwordPwned,
+}: {
+  passwordPwned: boolean | null | undefined
+}) {
+  const t = useT()
+
+  if (passwordPwned === true) {
+    return (
+      <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
+        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+        {t('Password found in a known data breach')}
+      </p>
+    )
+  }
+  if (passwordPwned === false) {
+    return (
+      <p className="flex items-center gap-1.5 text-[13px] text-green-600 dark:text-green-400 mt-2">
+        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+        {t('Password not found in known data breaches')}
+      </p>
+    )
+  }
+  return (
+    <p className="text-[13px] text-muted-foreground mt-2">
+      {t('Password not checked against known data breaches')}
+    </p>
+  )
+}
+
 // Update Password Section
 function UpdatePasswordSection({
+  user,
   projectId,
   userId,
 }: {
+  user: Models.User
   projectId: string
   userId: string
 }) {
@@ -1185,6 +1238,7 @@ function UpdatePasswordSection({
         <p className="text-[13px] text-muted-foreground mt-2">
           {t("Update the user's password.")}
         </p>
+        <PasswordBreachStatus passwordPwned={user.passwordPwned} />
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
@@ -1686,7 +1740,10 @@ function UpdateMFASection({
             {t(
               "Enhance the user's account security by requiring a second sign-in method.",
             )}{' '}
-            <DocsRouteLink className="link-neutral inline-flex items-center gap-1" href="/docs/products/auth/mfa">
+            <DocsRouteLink
+              className="link-neutral inline-flex items-center gap-1"
+              href="/docs/products/auth/mfa"
+            >
               {t('Documentation')}
               <ExternalLink className="h-3 w-3 shrink-0" />
             </DocsRouteLink>
@@ -1909,7 +1966,8 @@ function DeleteUserSection({
                   if (lastActivity) {
                     parts.push(
                       <>
-                        {t('Last activity:')} <DateTooltip date={lastActivity} />
+                        {t('Last activity:')}{' '}
+                        <DateTooltip date={lastActivity} />
                       </>,
                     )
                   }
@@ -2359,7 +2417,10 @@ function CreateUserMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   {t('Roles are used to manage access permissions.')}{' '}
-                  <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
+                  <DocsRouteLink
+                    className="link-neutral"
+                    href="/docs/advanced/platform/permissions"
+                  >
                     {t('Learn more about permissions')}
                   </DocsRouteLink>
                 </AlertDescription>
@@ -2376,10 +2437,7 @@ function CreateUserMembershipDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!teamId || isLoading}
-          >
+          <Button onClick={handleSubmit} disabled={!teamId || isLoading}>
             {t('Create')}
           </Button>
         </div>
@@ -2391,6 +2449,157 @@ function CreateUserMembershipDialog({
 // ============================================================================
 // IDENTITIES TAB
 // ============================================================================
+
+/**
+ * The provider's ID token is not on the SDK's Identity type yet, though the
+ * API returns it, so it is read by name rather than through the model.
+ */
+function readIdentityIdToken(identity: unknown): string {
+  const value = (identity as Record<string, unknown>)?.providerIdToken
+  return typeof value === 'string' ? value : ''
+}
+
+function IdTokenClaimRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 py-2.5">
+      <span className="text-[12px] text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-all font-mono text-[12px] text-foreground">
+        {value}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * An ID token is a credential and about a kilobyte long, so the table shows
+ * only whether one exists. The value itself lives behind a click, which also
+ * keeps it out of screenshots of the identities list.
+ */
+function IdentityIdTokenCell({ token }: { token: string }) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const claims = useMemo(
+    () => (open ? decodeIdTokenClaims(token) : null),
+    [open, token],
+  )
+
+  if (!token) {
+    return <span className="text-[13px] text-muted-foreground">&mdash;</span>
+  }
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(token)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const formatClaimDate = (date: Date | null) =>
+    date ? date.toLocaleString() : t('Not set')
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 gap-1.5 px-2 text-[12px] font-normal"
+        onClick={() => setOpen(true)}
+      >
+        <Key className="h-3 w-3" />
+        {t('View')}
+      </Button>
+
+      <BaseDrawer
+        open={open}
+        onOpenChange={setOpen}
+        title="Provider ID token"
+        description="The signed token this identity was created from, decoded for reference."
+        maxWidth="sm:max-w-lg"
+        disableAutoFocus
+      >
+        <div className="border-t border-border shrink-0" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-6 px-6 py-6">
+              <p className="text-[13px] text-muted-foreground">
+                {t(
+                  'The signed token the app obtained on device and sent to Appwrite to create this identity. Appwrite verified it at sign-in; it is decoded here for reference only.',
+                )}
+              </p>
+
+              {claims ? (
+                <div className="space-y-2">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Claims')}
+                  </h3>
+                  <div className="divide-y divide-border rounded-lg border border-border bg-muted/30 px-4 py-1">
+                    <IdTokenClaimRow
+                      label={t('Audience')}
+                      value={
+                        claims.audience.length > 0
+                          ? claims.audience.join(', ')
+                          : t('Not set')
+                      }
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issuer')}
+                      value={claims.issuer || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Subject')}
+                      value={claims.subject || t('Not set')}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Issued')}
+                      value={formatClaimDate(claims.issuedAt)}
+                    />
+                    <IdTokenClaimRow
+                      label={t('Expires')}
+                      value={formatClaimDate(claims.expiresAt)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[13px] text-muted-foreground">
+                  {t(
+                    'This token could not be decoded, so only the raw value is shown.',
+                  )}
+                </p>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[12px] font-semibold text-foreground">
+                    {t('Raw token')}
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-[12px]"
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copied ? t('Copied') : t('Copy')}
+                  </Button>
+                </div>
+                <code className="block rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-[11px] leading-relaxed break-all text-foreground">
+                  {token}
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </BaseDrawer>
+    </>
+  )
+}
 
 function IdentitiesTab({
   projectId,
@@ -2511,6 +2720,9 @@ function IdentitiesTab({
                   {t('Email')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('ID token')}
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Created')}
                 </TableHead>
               </TableRow>
@@ -2538,6 +2750,11 @@ function IdentitiesTab({
                   </TableCell>
                   <TableCell className="px-4 py-3 text-[13px]">
                     {identity.providerEmail || '-'}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <IdentityIdTokenCell
+                      token={readIdentityIdToken(identity)}
+                    />
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <DateTooltip
@@ -2784,7 +3001,8 @@ function CreateTargetDialog({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="provider-id" className="text-[12px]">
-                    {t('Provider ID')} <span className="text-destructive">*</span>
+                    {t('Provider ID')}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="provider-id"
@@ -2987,7 +3205,12 @@ function SessionsTab({
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return sdk.forConsole.avatars.getFlag({
+      code: countryCode.toLowerCase() as Flag,
+      width: 20,
+      height: 20,
+      quality: 100,
+    })
   }
 
   if (isLoading) {
@@ -3140,7 +3363,7 @@ function SessionsTab({
                       </code>
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">
-                         - 
+                        -
                       </span>
                     )}
                   </TableCell>

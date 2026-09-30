@@ -13,15 +13,30 @@ import { DedicatedDatabaseStatusHeaderAlert } from '@/components/pages/projects/
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
 import { useRedirectIfDedicatedDatabaseProvisioning } from '@/components/pages/projects/$projectId/databases/_components/useRedirectIfDedicatedDatabaseProvisioning'
 import {
+  resolveDatabaseLifecycleStatus,
+  shouldPollDatabaseLifecycleStatus,
+} from '@/lib/databases/dedicated-database-status'
+import { TablesDatabaseDedicatedMigrationBanner } from '@/components/pages/projects/$projectId/databases/_components/TablesDatabaseDedicatedMigrationBanner'
+import {
   databaseQueryOptions,
   dedicatedDatabasesQueryOptions,
+  invalidateDatabaseModel,
   productRouteKindQueryOptions,
   projectQueryOptions,
+  refetchProjectDatabaseLists,
   resolveProductRouteKindForDatabase,
   seedDatabaseProductRouteKind,
+  tablesDatabaseMigrationsQueryKey,
+  useActiveTablesDatabaseMigration,
   useProjectDatabase,
   useProjectDedicatedDatabases,
 } from '@/lib/react-query/hooks'
+import { useEffect, useMemo, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  hasTablesDatabaseMigrationCutover,
+  shouldShowTablesDatabaseMigrationBanner,
+} from '@/lib/databases/tables-database-migration'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId',
@@ -111,20 +126,22 @@ export const Route = createFileRoute(
           dbKind as DatabaseRouteKind,
         ),
       )
-      status = (database as { status?: string | null } | null)?.status
+        const productStatus = (database as { status?: string | null } | null)
+          ?.status
+        status = productStatus
     } catch {
       status = undefined
     }
-    if (!status) {
-      try {
-        const dedicated = await queryClient.ensureQueryData(
-          dedicatedDatabasesQueryOptions(projectId),
-        )
-        status = dedicated?.databases?.find((db) => db.$id === databaseId)
-          ?.status
-      } catch {
-        /* Restriction is best-effort; page still loads if status is unknown. */
-      }
+    try {
+      const dedicated = await queryClient.ensureQueryData(
+        dedicatedDatabasesQueryOptions(projectId),
+      )
+      const dedicatedStatus = dedicated?.databases?.find(
+        (db) => db.$id === databaseId,
+      )?.status
+      status = resolveDatabaseLifecycleStatus(status, dedicatedStatus)
+    } catch {
+      /* Restriction is best-effort; page still loads if status is unknown. */
     }
     throwRedirectIfDedicatedDatabaseProvisioning(status, location.pathname, {
       to: '/projects/$projectId/databases/$dbKind/$databaseId/',
@@ -148,10 +165,56 @@ function DatabaseKindLayout() {
   const dedicatedStatus = dedicatedDatabases.find(
     (db) => db.$id === databaseId,
   )?.status
-  const status =
-    (database as { status?: string | null } | null)?.status ??
-    dedicatedStatus ??
-    null
+  const status = useMemo(
+    () =>
+      resolveDatabaseLifecycleStatus(
+        (database as { status?: string | null } | null)?.status,
+        dedicatedStatus,
+      ),
+    [database, dedicatedStatus],
+  )
+
+  const pollIntervalMs = shouldPollDatabaseLifecycleStatus(status) ? 5000 : false
+
+  useQuery({
+    ...databaseQueryOptions(projectId, databaseId, routeKind),
+    refetchInterval: pollIntervalMs,
+  })
+  useQuery({
+    ...dedicatedDatabasesQueryOptions(projectId),
+    refetchInterval: pollIntervalMs,
+  })
+
+  const queryClient = useQueryClient()
+  const refreshedAfterCutoverRef = useRef(false)
+  const { migration: activeMigration } = useActiveTablesDatabaseMigration(
+    projectId,
+    databaseId,
+    routeKind,
+  )
+  const showMigrationBanner =
+    shouldShowTablesDatabaseMigrationBanner(activeMigration)
+
+  useEffect(() => {
+    if (!activeMigration || refreshedAfterCutoverRef.current) return
+    if (
+      !hasTablesDatabaseMigrationCutover(activeMigration) &&
+      activeMigration.phase?.toLowerCase() !== 'done'
+    ) {
+      return
+    }
+    refreshedAfterCutoverRef.current = true
+    invalidateDatabaseModel(projectId, databaseId)
+    void Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ['database', 'project', projectId, databaseId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: tablesDatabaseMigrationsQueryKey(projectId, databaseId),
+      }),
+      refetchProjectDatabaseLists(queryClient, projectId),
+    ])
+  }, [activeMigration, databaseId, projectId, queryClient])
 
   useRedirectIfDedicatedDatabaseProvisioning(
     status,
@@ -173,7 +236,15 @@ function DatabaseKindLayout() {
       status={status}
     >
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-        <DedicatedDatabaseStatusHeaderAlert status={status} />
+        {showMigrationBanner ? (
+          <TablesDatabaseDedicatedMigrationBanner
+            projectId={projectId}
+            databaseId={databaseId}
+            migration={activeMigration}
+          />
+        ) : (
+          <DedicatedDatabaseStatusHeaderAlert status={status} />
+        )}
         <div className="min-h-0 flex-1 overflow-hidden">
           <Outlet />
         </div>
