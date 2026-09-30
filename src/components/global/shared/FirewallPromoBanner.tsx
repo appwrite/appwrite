@@ -14,12 +14,10 @@ import {
 } from '@/components/ui/tooltip'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
-  FIREWALL_PROMO_BANNER_ENABLED,
   FIREWALL_PROMO_BANNER_ID,
-  isFirewallPromoOperatorEarlyAccess,
+  isFirewallPromoOperatorAudience,
   isFirewallPromoPath,
-  isFirewallPromoScheduleAndCloudVisible,
-  shouldMountFirewallPromoBanner,
+  isFirewallPromoVisible,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
 import { useT } from '@/lib/i18n/translate'
@@ -58,22 +56,17 @@ export function FirewallPromoBanner() {
   )
 
   const operatorAccount = account as OperatorAccount | undefined
-  const operatorEarlyAccess = isFirewallPromoOperatorEarlyAccess(operatorAccount)
+  const operatorAudience = isFirewallPromoOperatorAudience(operatorAccount)
   const onPromoPath = isFirewallPromoPath(location.pathname)
-  const publicAudience =
-    FIREWALL_PROMO_BANNER_ENABLED && isAuthenticated && onPromoPath
-  const operatorAudience =
-    operatorEarlyAccess && isAuthenticated && onPromoPath
 
   const eligible =
-    shouldMountFirewallPromoBanner({ preview, operatorEarlyAccess }) &&
-    isFirewallPromoScheduleAndCloudVisible({
+    isFirewallPromoVisible({
       preview,
       dismissed: dismissedFromPrefs,
-      operatorEarlyAccess,
+      operatorAudience,
     }) &&
     !isScreenshotModeActive &&
-    (preview || publicAudience || operatorAudience)
+    (preview || (operatorAudience && isAuthenticated && onPromoPath))
 
   useEffect(() => {
     if (!eligible) {
