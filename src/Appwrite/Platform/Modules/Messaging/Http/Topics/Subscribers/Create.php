@@ -9,6 +9,7 @@ use Appwrite\Role;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -62,10 +63,11 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('response')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response)
+    public function action(string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response, User $user)
     {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
@@ -84,25 +86,34 @@ class Create extends Action
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        // A session or JWT caller may only subscribe their own target. Admin console and API key
+        // callers act on behalf of the project and may subscribe any user's target.
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        if (!$isAPIKey && !$isPrivilegedUser && $target->getAttribute('userId') !== $user->getId()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $owner = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
+                Permission::read(Role::user($owner->getId())),
+                Permission::delete(Role::user($owner->getId())),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getSequence(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getSequence(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
+            'userId' => $owner->getId(),
+            'userInternalId' => $owner->getSequence(),
             'providerType' => $target->getAttribute('providerType'),
             'search' => implode(' ', [
                 $subscriberId,
                 $targetId,
-                $user->getId(),
+                $owner->getId(),
                 $target->getAttribute('providerType'),
             ]),
         ]);
@@ -135,7 +146,7 @@ class Create extends Action
 
         $subscriber
             ->setAttribute('target', $target)
-            ->setAttribute('userName', $user->getAttribute('name'));
+            ->setAttribute('userName', $owner->getAttribute('name'));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

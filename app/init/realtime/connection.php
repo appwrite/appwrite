@@ -130,6 +130,12 @@ return function (Container $container): void {
     $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
 
+        /* Add the console host, the console web app can live apart from the API host */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (!empty($consoleHostname)) {
+            $allowedHostnames[] = $consoleHostname;
+        }
+
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
         $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
 
