@@ -1700,6 +1700,90 @@ trait MessagingBase
         }
     }
 
+    public function testCreateSubscriberForeignTargetDenied(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $apiKey = $this->getProject()['apiKey'];
+
+        // A topic any signed-in user is allowed to subscribe to.
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'foreign-target-topic',
+            'subscribe' => [Role::users()->toString()],
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Sendgrid-foreign-target',
+            'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain.com',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // A victim user the caller does not own, plus an email target with a secret identifier.
+        $victim = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'victim-' . uniqid() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Victim',
+        ]);
+        $this->assertEquals(201, $victim['headers']['status-code']);
+
+        $victimIdentifier = 'victim-secret-' . uniqid() . '@mail.org';
+        $victimTarget = $this->client->call(Client::METHOD_POST, '/users/' . $victim['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $victimIdentifier,
+        ]);
+        $this->assertEquals(201, $victimTarget['headers']['status-code']);
+
+        // The caller attempts to bind the victim's target to the topic.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $victimTarget['body']['$id'],
+        ]);
+
+        if ($this->getSide() === 'client') {
+            // A session/JWT caller may only subscribe a target it owns. The refusal must not
+            // disclose the victim's identifier, and no subscriber may be created.
+            $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertStringNotContainsStringIgnoringCase($victimIdentifier, \json_encode($response['body']));
+
+            $subscribers = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ]);
+            $this->assertEquals(200, $subscribers['headers']['status-code']);
+            $this->assertEquals(0, $subscribers['body']['total']);
+        } else {
+            // Admin console and API key callers act for the project and may subscribe any target.
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals($victimTarget['body']['$id'], $response['body']['target']['$id']);
+        }
+    }
+
     public function testSubscriberTargetSubQuery()
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
