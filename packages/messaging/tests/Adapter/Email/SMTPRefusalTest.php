@@ -80,6 +80,43 @@ final class SMTPRefusalTest extends TestCase
             'The server closed the connection',
             false,
         ];
+        // What a client is left with after a 4xx to EHLO sends it back to
+        // HELO: a session that offers no login at all, with no code behind it.
+        yield 'no login offered' => [
+            ['220 smtp.example.test ESMTP', '250 mail.example.test'],
+            'No shared mechanism. The server offers: none',
+            false,
+        ];
+    }
+
+    public function testRecipientsRefusedTogetherDoNotShareOneVerdict(): void
+    {
+        $server = new ScriptedSmtpServer([
+            '220 smtp.improvmx.com ESMTP',
+            self::EHLO,
+            '235 2.7.0 Authentication successful',
+            '250 2.1.0 Ok',
+            '550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24',
+            '450 4.0.0 Not sending to temporarily bounced email, please try again later. - ImprovMX v2026.09.29',
+            '250 2.0.0 Ok',
+        ]);
+        $adapter = new SMTP(host: "127.0.0.1:{$server->port}", username: 'jane', password: 'secret', timeout: 2, timelimit: 2);
+
+        $result = $adapter->send(new Email(
+            to: [['email' => 'bounced@example.test', 'name' => 'A'], ['email' => 'later@example.test', 'name' => 'B']],
+            subject: 'Your code',
+            content: '123456',
+            fromName: 'Sender',
+            fromEmail: 'sender@example.test',
+        ));
+
+        $this->assertSame(0, $result['deliveredTo']);
+        $this->assertCount(2, $result['results']);
+        foreach ($result['results'] as $row) {
+            $this->assertSame('failure', $row['status']);
+            // Only one refusal came back, so neither can be called final.
+            $this->assertFalse($row['permanent']);
+        }
     }
 
     /**

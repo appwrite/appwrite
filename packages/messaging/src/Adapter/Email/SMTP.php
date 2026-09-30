@@ -11,7 +11,6 @@ use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Exception\AuthenticationException;
-use Utopia\SMTP\Exception\CapabilityException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
@@ -105,8 +104,12 @@ class SMTP extends EmailAdapter
                 $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
         } catch (TransactionException $exception) {
+            // The exception carries one reply. With several recipients the
+            // others may have been refused for a different reason, so only a
+            // lone recipient takes its verdict.
+            $permanent = \count($recipients) === 1 && $exception->isPermanent();
             foreach ($recipients as $email) {
-                $response->addResult($email, (string) $exception->reply, $exception->isPermanent());
+                $response->addResult($email, (string) $exception->reply, $permanent);
             }
 
             // A 421 during RCPT ends the session with the transaction.
@@ -198,14 +201,16 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $permanent);
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent);
     }
 
     /**
-     * Whether the server has refused in a way that sending the same message
-     * again, to the same server, cannot change: a 5xx reply, or a server that
-     * cannot carry this message at all. A connection that dropped or timed out,
-     * a 4xx and a reply out of protocol all say nothing about the next attempt.
+     * Whether the server said, with a 5xx reply, that sending the same message
+     * again cannot change its answer. Anything short of that reply is worth
+     * repeating: a connection that dropped or timed out, a 4xx, a reply out of
+     * protocol, and a login or capability failure no reply code stands behind.
+     * A 4xx to EHLO falls back to HELO, which advertises no mechanism and no
+     * extension, so even "nothing in common" can be gone on the next attempt.
      */
     private function permanent(SmtpException $exception): bool
     {
@@ -214,11 +219,7 @@ class SMTP extends EmailAdapter
         return match (true) {
             $exception instanceof TransactionException => $exception->isPermanent(),
             $exception instanceof NoHostAnswered => $exception->permanent,
-            // A refused AUTH carries the server's reply. Without one, no
-            // mechanism was shared or the challenges never ended, and the
-            // server will offer the same the next time.
-            $exception instanceof AuthenticationException => !$previous instanceof TransactionException || $previous->isPermanent(),
-            $exception instanceof CapabilityException => true,
+            $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
             default => false,
         };
     }
