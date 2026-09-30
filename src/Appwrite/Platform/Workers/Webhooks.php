@@ -110,6 +110,7 @@ class Webhooks extends Action
         }
 
         $rawUrl = $webhook->getAttribute('url');
+        $options = [];
 
         if (System::getEnv('_APP_ENV', 'development') === 'production') {
             $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
@@ -117,6 +118,11 @@ class Webhooks extends Action
             if (!$hostnameValidator->isValid($host)) {
                 return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
             }
+
+            // Reuse the addresses resolved above instead of resolving the host again
+            $scheme = \strtolower(\parse_url($rawUrl, PHP_URL_SCHEME) ?? '');
+            $port = \parse_url($rawUrl, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80);
+            $options[CURLOPT_RESOLVE] = $hostnameValidator->getResolve($port);
         }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
@@ -124,7 +130,7 @@ class Webhooks extends Action
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $client = (new Client(new CurlAdapter()))
+        $client = (new Client(new CurlAdapter(options: $options)))
             ->withTimeout(15)
             ->withConnectTimeout(15)
             ->withSslVerification($webhook->getAttribute('security', true));

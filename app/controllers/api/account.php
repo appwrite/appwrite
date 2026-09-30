@@ -74,6 +74,7 @@ use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -1019,6 +1020,7 @@ Http::post('/v1/account/sessions/email')
     ->label('abuse-reset', [201])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('duration', null, new Nullable(new Range(60, TOKEN_EXPIRATION_LOGIN_LONG)), 'Session length in seconds. Minimum is 60 seconds, and it cannot exceed the project maximum session length. Defaults to the project maximum session length.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1037,9 +1039,15 @@ Http::post('/v1/account/sessions/email')
     ->inject('cookieDomain')
     ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+    ->action(function (string $email, string $password, ?int $duration, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, PasswordPwned $pwnedPasswords) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
+
+        $maxDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
+        if ($duration !== null && $duration > $maxDuration) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Session duration cannot exceed the project maximum session length of {$maxDuration} seconds.");
+        }
+        $duration ??= $maxDuration;
 
         $profile = $dbForProject->findOne('users', [
             Query::equal('email', [$email]),
@@ -1059,7 +1067,6 @@ Http::post('/v1/account/sessions/email')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
         $geoRecord = $geo->get($request->getIP());

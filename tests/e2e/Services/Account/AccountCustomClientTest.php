@@ -1039,6 +1039,80 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateEmailPasswordSessionWithDuration(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $credentials = [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 300]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        // The client keeps the last Set-Cookie header, which is the main session cookie.
+        $setCookie = $session['headers']['set-cookie'];
+        $this->assertStringStartsWith('a_session_' . $projectId . '=', $setCookie);
+        $expires = '';
+        foreach (\explode(';', $setCookie) as $part) {
+            if (\str_starts_with(\strtolower(\trim($part)), 'expires=')) {
+                $expires = \substr(\trim($part), 8);
+            }
+        }
+        $this->assertNotEmpty($expires);
+        $cookieRemaining = \strtotime($expires) - \time();
+        $this->assertGreaterThan(240, $cookieRemaining);
+        $this->assertLessThanOrEqual(300, $cookieRemaining);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $headers + [
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($session['body']['$id'], $response['body']['$id']);
+
+        $remaining = (new \DateTime($response['body']['expire']))->getTimestamp() - \time();
+        $this->assertGreaterThan(240, $remaining);
+        $this->assertLessThanOrEqual(300, $remaining);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 30]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $policyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/session-duration', $policyHeaders);
+        $this->assertEquals(200, $policy['headers']['status-code']);
+        $originalMax = $policy['body']['duration'];
+
+        try {
+            $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => 3600]);
+            $this->assertEquals(200, $policy['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 7200]);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+            // Without a duration, the session falls back to the project maximum.
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $remaining = (new \DateTime($response['body']['expire']))->getTimestamp() - \time();
+            $this->assertGreaterThan(3540, $remaining);
+            $this->assertLessThanOrEqual(3600, $remaining);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => $originalMax]);
+        }
+    }
+
     // TODO Add tests for OAuth2 session creation
 
     public function testUpdateAccountName(): void

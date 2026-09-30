@@ -3,6 +3,8 @@
 namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
+use Utopia\Command;
+use Utopia\Console;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Gogs extends Gitea
@@ -366,11 +368,11 @@ class Gogs extends Gitea
             }
             file_put_contents($fullPath, $content);
 
-            $this->exec("git -C {$dir} add " . escapeshellarg($filepath));
-            $this->exec("git -C {$dir} commit -m " . escapeshellarg($message));
-            $this->exec("git -C {$dir} push origin " . escapeshellarg($branch));
+            $this->exec($this->git($dir)->argument('add')->argument('--')->argument($filepath));
+            $this->exec($this->git($dir)->argument('commit')->option('-m', $message));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($branch));
         } finally {
-            $this->exec("rm -rf {$dir}");
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return ['content' => ['path' => $filepath]];
@@ -389,10 +391,10 @@ class Gogs extends Gitea
         $dir = $this->gitClone($owner, $repositoryName, $oldBranchName);
 
         try {
-            $this->exec("git -C {$dir} checkout -b " . escapeshellarg($newBranchName));
-            $this->exec("git -C {$dir} push origin " . escapeshellarg($newBranchName));
+            $this->exec($this->git($dir)->argument('checkout')->flag('-b')->argument($newBranchName));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($newBranchName));
         } finally {
-            $this->exec("rm -rf {$dir}");
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return ['name' => $newBranchName];
@@ -405,38 +407,37 @@ class Gogs extends Gitea
     {
         $cloneUrl = str_replace('://', "://{$owner}:{$this->accessToken}@", $this->giteaUrl) . "/{$owner}/{$repositoryName}.git";
 
-        $dir = escapeshellarg(sys_get_temp_dir() . '/gogs-' . uniqid());
+        $dir = sys_get_temp_dir() . '/gogs-' . uniqid();
 
-        $branchArg = '';
+        $clone = new Command('git')->argument('clone')->option('--depth', '1');
         if ($branch !== '' && $branch !== '0') {
-            $branchArg = ' -b ' . escapeshellarg($branch);
+            $clone->option('-b', $branch);
         }
 
-        $this->exec("git clone --depth=1{$branchArg} " . escapeshellarg($cloneUrl) . " {$dir}");
-        $this->exec("git -C {$dir} config user.email 'gogs@test.local'");
-        $this->exec("git -C {$dir} config user.name 'Gogs Test'");
+        $this->exec($clone->argument($cloneUrl)->argument($dir));
+        $this->exec($this->git($dir)->argument('config')->argument('user.email')->argument('gogs@test.local'));
+        $this->exec($this->git($dir)->argument('config')->argument('user.name')->argument('Gogs Test'));
 
-        return trim($dir, "'\"");
+        return $dir;
     }
 
 
     /**
      * Execute a shell command and throw on failure.
      */
-    private function exec(string $command): string
+    private function exec(Command $command): string
     {
-        $output = [];
-        $exitCode = 0;
+        $stdout = '';
+        $stderr = '';
 
-        exec($command . ' 2>&1', $output, $exitCode);
-
-        $outputStr = implode("\n", $output);
+        $exitCode = Console::execute($command, '', $stdout, $stderr);
 
         if ($exitCode !== 0) {
-            throw new Exception("Command failed (exit {$exitCode}): {$command}\n{$outputStr}");
+            // The command itself is left out: the clone URL carries the access token
+            throw new Exception("Command failed (exit {$exitCode}): " . trim($stdout . "\n" . $stderr));
         }
 
-        return $outputStr;
+        return $stdout;
     }
 
     /**
@@ -465,15 +466,15 @@ class Gogs extends Gitea
         $dir = $this->gitClone($owner, $repositoryName);
 
         try {
-            $this->exec("git -C {$dir} fetch origin " . escapeshellarg($target));
+            $this->exec($this->git($dir)->argument('fetch')->argument('origin')->argument($target));
             if ($message !== '' && $message !== '0') {
-                $this->exec("git -C {$dir} tag -a " . escapeshellarg($tagName) . ' ' . escapeshellarg($target) . ' -m ' . escapeshellarg($message));
+                $this->exec($this->git($dir)->argument('tag')->flag('-a')->argument($tagName)->argument($target)->option('-m', $message));
             } else {
-                $this->exec("git -C {$dir} tag " . escapeshellarg($tagName) . ' ' . escapeshellarg($target));
+                $this->exec($this->git($dir)->argument('tag')->argument($tagName)->argument($target));
             }
-            $this->exec("git -C {$dir} push origin " . escapeshellarg($tagName));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($tagName));
         } finally {
-            $this->exec("rm -rf {$dir}");
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return [
