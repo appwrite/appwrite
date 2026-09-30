@@ -80,6 +80,7 @@ final class VideosCustomClientTest extends Scope
 
         $paths = [
             '/videos',
+            '/videos/codecs',
             '/videos/profiles',
             '/videos/someVideoId',
             '/videos/someVideoId/timeline',
@@ -245,6 +246,28 @@ final class VideosCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+
+        foreach ($response['body']['profiles'] as $profile) {
+            $this->assertEquals('h264', $profile['codec']);
+        }
+    }
+
+    public function testSessionCanReadCodecs(): void
+    {
+        $anonymous = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $guest = $this->client->call(Client::METHOD_GET, '/videos/codecs', $anonymous);
+        $this->assertEquals(401, $guest['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/codecs', $this->sessionHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['codecs']);
+        $this->assertEquals('h264', $response['body']['codecs'][0]['$id']);
+        $this->assertEqualsCanonicalizing(['hls', 'dash', 'cmaf'], $response['body']['codecs'][0]['outputs']);
     }
 
     /**

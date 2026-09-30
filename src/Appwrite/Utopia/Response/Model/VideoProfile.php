@@ -34,6 +34,13 @@ class VideoProfile extends Model
                 'default' => '',
                 'example' => '360p',
             ])
+            ->addRule('codec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video encode codec: one of `h264`, `hevc`, or `vp9`.',
+                'default' => 'h264',
+                'example' => 'h264',
+                'enum' => ['h264', 'hevc', 'vp9'],
+            ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Target video bitrate in kilobits per second.',

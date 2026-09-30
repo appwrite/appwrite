@@ -254,6 +254,7 @@ class Create extends Action
                 $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
                     '$id' => ID::unique(),
                     'name' => $profile['name'],
+                    'codec' => $profile['codec'] ?? 'h264',
                     'videoBitRate' => $profile['videoBitRate'],
                     'audioBitRate' => $profile['audioBitRate'],
                     'width' => $profile['width'],

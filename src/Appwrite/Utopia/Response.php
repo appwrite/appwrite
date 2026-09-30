@@ -152,6 +152,8 @@ class Response extends SwooleResponse
     // Videos
     public const MODEL_VIDEO = 'video';
     public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_VIDEO_CODEC = 'videoCodec';
+    public const MODEL_VIDEO_CODEC_LIST = 'videoCodecList';
     public const MODEL_VIDEO_PROFILE = 'videoProfile';
     public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
     public const MODEL_VIDEO_RENDITION = 'videoRendition';

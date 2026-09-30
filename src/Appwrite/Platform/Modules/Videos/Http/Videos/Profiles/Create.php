@@ -14,9 +14,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Create extends Base
 {
@@ -57,6 +59,7 @@ class Create extends Base
             ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
             ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
+            ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Video encode codec. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -71,6 +74,7 @@ class Create extends Base
         int $audioBitRate,
         int $width,
         int $height,
+        string $codec,
         Response $response,
         Database $dbForProject,
         User $user,
@@ -79,9 +83,12 @@ class Create extends Base
     ): void {
         $this->assertPrivilegedCaller($user, $authorization);
 
+        $codec = self::normalizeCodec($codec);
+
         $profile = $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
             '$id' => ID::unique(),
             'name' => $name,
+            'codec' => $codec,
             'videoBitRate' => $videoBitRate,
             'audioBitRate' => $audioBitRate,
             'width' => $width,

@@ -1601,6 +1601,16 @@ return [
         'description' => 'Video profile with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_CODEC_DISABLED => [
+        'name' => Exception::VIDEO_CODEC_DISABLED,
+        'description' => 'The requested video codec is not enabled on this instance.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED => [
+        'name' => Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED,
+        'description' => 'The requested output format is not supported for this video codec.',
+        'code' => 400,
+    ],
     Exception::VIDEO_RENDITION_NOT_FOUND => [
         'name' => Exception::VIDEO_RENDITION_NOT_FOUND,
         'description' => 'Video rendition with the requested ID could not be found.',

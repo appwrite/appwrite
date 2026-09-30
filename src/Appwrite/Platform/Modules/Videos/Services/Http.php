@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Videos\Services;
 
+use Appwrite\Platform\Modules\Videos\Http\Videos\Codecs\XList as ListCodecs;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Create as CreateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Delete as DeleteVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Get as GetVideo;
@@ -80,6 +81,7 @@ class Http extends Service
         $this->addAction(GetSubtitleSegment::getName(), new GetSubtitleSegment());
 
         // Profiles
+        $this->addAction(ListCodecs::getName(), new ListCodecs());
         $this->addAction(CreateProfile::getName(), new CreateProfile());
         $this->addAction(GetProfile::getName(), new GetProfile());
         $this->addAction(ListProfiles::getName(), new ListProfiles());

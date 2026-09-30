@@ -234,6 +234,7 @@ use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\VcsNamespace;
 use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoCodec;
 use Appwrite\Utopia\Response\Model\VideoProfile;
 use Appwrite\Utopia\Response\Model\VideoRendition;
 use Appwrite\Utopia\Response\Model\VideoSubtitle;
@@ -263,6 +264,7 @@ Response::setModel(new BaseList('Files List', Response::MODEL_FILE_LIST, 'files'
 Response::setModel(new BaseList('Buckets List', Response::MODEL_BUCKET_LIST, 'buckets', Response::MODEL_BUCKET));
 Response::setModel(new BaseList('Resource Tokens List', Response::MODEL_RESOURCE_TOKEN_LIST, 'tokens', Response::MODEL_RESOURCE_TOKEN));
 Response::setModel(new BaseList('Videos List', Response::MODEL_VIDEO_LIST, 'videos', Response::MODEL_VIDEO));
+Response::setModel(new BaseList('Video Codecs List', Response::MODEL_VIDEO_CODEC_LIST, 'codecs', Response::MODEL_VIDEO_CODEC));
 Response::setModel(new BaseList('Video Profiles List', Response::MODEL_VIDEO_PROFILE_LIST, 'profiles', Response::MODEL_VIDEO_PROFILE));
 Response::setModel(new BaseList('Video Renditions List', Response::MODEL_VIDEO_RENDITION_LIST, 'renditions', Response::MODEL_VIDEO_RENDITION));
 Response::setModel(new BaseList('Video Subtitles List', Response::MODEL_VIDEO_SUBTITLE_LIST, 'subtitles', Response::MODEL_VIDEO_SUBTITLE));
@@ -549,6 +551,7 @@ Response::setModel(new Report());
 
 // Videos
 Response::setModel(new Video());
+Response::setModel(new VideoCodec());
 Response::setModel(new VideoProfile());
 Response::setModel(new VideoRendition());
 Response::setModel(new VideoSubtitle());

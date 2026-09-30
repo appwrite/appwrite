@@ -95,6 +95,9 @@ class Create extends Base
 
         $this->assertSourceReady($video);
 
+        $codec = self::normalizeCodec($profile->getAttribute('codec'));
+        $this->assertCodecSupportsOutput($codec, $output);
+
         $existing = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('profileId', [$profile->getId()]),
@@ -126,6 +129,7 @@ class Create extends Base
                 'videoBitRate' => $videoBitRate,
                 'audioBitRate' => $audioBitRate,
                 'output' => $output,
+                'codec' => $codec,
                 'status' => self::STATUS_PENDING,
                 'progress' => '0',
             ])));

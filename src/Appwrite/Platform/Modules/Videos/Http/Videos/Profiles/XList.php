@@ -12,8 +12,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class XList extends Base
 {
@@ -47,6 +49,7 @@ class XList extends Base
                 ]
             ))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Only return profiles for this encode codec. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -55,11 +58,19 @@ class XList extends Base
 
     public function action(
         string $search,
+        string $codec,
         Response $response,
         Database $dbForProject,
         Authorization $authorization
     ): void {
-        $queries = [Query::limit(APP_LIMIT_SUBQUERY)];
+        $codec = self::normalizeCodec($codec);
+        $this->assertCodecEnabled($codec);
+
+        $queries = [
+            Query::equal('codec', [$codec]),
+            Query::orderAsc('height'),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ];
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);

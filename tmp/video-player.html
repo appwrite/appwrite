@@ -299,6 +299,12 @@
           Profile names
           <input id="profileNames" value="360p, 480p, 720p" />
         </label>
+        <label>
+          Codec
+          <select id="codec">
+            <option value="h264">H.264</option>
+          </select>
+        </label>
         <fieldset class="full" style="border:0;padding:0;margin:0">
           <legend class="muted" style="font-size:0.8rem;padding:0;margin-bottom:0.35rem">Encode outputs</legend>
           <div class="actions">
@@ -428,6 +434,7 @@
     const deleteVideoBtn = $('deleteVideoBtn');
     const stopBtn = $('stopBtn');
     const playbackSelect = $('playback');
+    const codecSelect = $('codec');
     const addSubtitleBtn = $('addSubtitleBtn');
     const subtitleInfo = $('subtitleInfo');
     const captionChip = $('captionChip');
@@ -452,6 +459,8 @@
     let spriteReady = false;
     let lastStatus = null; // last poll payload, so we can re-render after manifest loads
     let demoDefaults = null;
+    /** @type {Array<{ $id: string, name: string, outputs: string[] }>} */
+    let availableCodecs = [{ $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] }];
     const spriteBlobs = new Map();
     const spriteSizes = new Map();
     const THUMB_MAX_W = 160;
@@ -470,6 +479,9 @@
       $(key).value = fromUrl || (!skipSaved && saved[key]) || $(key).value || '';
     }
     playbackSelect.value = params.get('playback') || saved.playback || 'hls';
+    if (saved.codec) {
+      codecSelect.value = saved.codec;
+    }
     if (saved.encode) {
       $('encodeHls').checked = !!saved.encode.hls;
       $('encodeDash').checked = !!saved.encode.dash;
@@ -523,11 +535,75 @@
     }
 
     function encodeOutputs() {
+      const allowed = new Set(selectedCodecOutputs());
       const outs = [];
-      if ($('encodeHls').checked) outs.push('hls');
-      if ($('encodeDash').checked) outs.push('dash');
-      if ($('encodeCmaf').checked) outs.push('cmaf');
+      if ($('encodeHls').checked && allowed.has('hls')) outs.push('hls');
+      if ($('encodeDash').checked && allowed.has('dash')) outs.push('dash');
+      if ($('encodeCmaf').checked && allowed.has('cmaf')) outs.push('cmaf');
       return outs;
+    }
+
+    function selectedCodecId() {
+      return codecSelect.value || 'h264';
+    }
+
+    function selectedCodecOutputs() {
+      const id = selectedCodecId();
+      const row = availableCodecs.find((c) => c.$id === id);
+      return row?.outputs?.length ? row.outputs : ['hls', 'dash', 'cmaf'];
+    }
+
+    /** Enable encode checkboxes for the selected codec; fix illegal playback. */
+    function applyCodecOutputs() {
+      const allowed = selectedCodecOutputs();
+      const boxes = [
+        { el: $('encodeHls'), output: 'hls' },
+        { el: $('encodeDash'), output: 'dash' },
+        { el: $('encodeCmaf'), output: 'cmaf' },
+      ];
+      for (const { el, output } of boxes) {
+        const ok = allowed.includes(output);
+        el.disabled = !ok;
+        el.parentElement.style.opacity = ok ? '1' : '0.4';
+        if (!ok) el.checked = false;
+      }
+      if (!boxes.some(({ el }) => el.checked)) {
+        const first = boxes.find(({ output }) => allowed.includes(output));
+        if (first) first.el.checked = true;
+      }
+
+      const active = outputForMode();
+      if (!allowed.includes(active)) {
+        const fallback = allowed[0] || 'dash';
+        playbackSelect.value = modeForOutput(fallback);
+      }
+    }
+
+    function renderCodecOptions() {
+      const previous = selectedCodecId();
+      codecSelect.innerHTML = availableCodecs.map((c) => (
+        `<option value="${c.$id}">${c.name || c.$id}</option>`
+      )).join('');
+      const keep = availableCodecs.some((c) => c.$id === previous) ? previous : (availableCodecs[0]?.$id || 'h264');
+      codecSelect.value = keep;
+      applyCodecOutputs();
+    }
+
+    async function loadCodecs() {
+      try {
+        const list = await api('/videos/codecs');
+        const codecs = list.codecs || [];
+        if (codecs.length) {
+          availableCodecs = codecs.map((c) => ({
+            $id: c.$id,
+            name: c.name || c.$id,
+            outputs: Array.isArray(c.outputs) ? c.outputs : [],
+          }));
+        }
+      } catch (err) {
+        console.warn('load codecs failed', err);
+      }
+      renderCodecOptions();
     }
 
     function languageLabel(code) {
@@ -770,6 +846,7 @@
         videoId: $('videoId').value.trim(),
         bucketId: $('bucketId').value.trim(),
         playback: playbackMode(),
+        codec: selectedCodecId(),
         encode: {
           hls: $('encodeHls').checked,
           dash: $('encodeDash').checked,
@@ -891,6 +968,7 @@
       createBucketBtn.disabled = false;
       if (addSubtitleBtn) addSubtitleBtn.disabled = false;
       uploadInfo.textContent = 'ready';
+      await loadCodecs();
       persistConfig();
     }
 
@@ -1252,9 +1330,10 @@
 
         // Prefer the first encode output the user ticked, so Load/watch matches
         // what we just queued (avoids sitting on HLS while only CMAF was encoded).
-        const outputs = encodeOutputs();
+        const allowedOutputs = selectedCodecOutputs();
+        const outputs = encodeOutputs().filter((out) => allowedOutputs.includes(out));
         if (!outputs.length) {
-          throw new Error('pick at least one encode output (HLS / DASH / CMAF)');
+          throw new Error(`pick at least one encode output allowed for ${selectedCodecId()} (${allowedOutputs.join(', ') || 'none'})`);
         }
         const preferred = outputs[0];
         if (preferred === 'cmaf' && !playbackMode().startsWith('cmaf')) {
@@ -1279,7 +1358,8 @@
         resetProgressBars();
         uploadInfo.textContent = 'source ready · probe complete';
 
-        const profileList = await api('/videos/profiles');
+        const codec = selectedCodecId();
+        const profileList = await api(`/videos/profiles?codec=${encodeURIComponent(codec)}`);
         const profiles = profileList.profiles || [];
         const selected = profiles.filter((profile) =>
           wantedProfiles.includes(String(profile.name || '').toLowerCase())
@@ -1290,6 +1370,9 @@
         let queued = 0;
         for (const profile of selected) {
           for (const output of outputs) {
+            if (!allowedOutputs.includes(output)) {
+              throw new Error(`${codec} cannot package as ${output}`);
+            }
             jobs.push(apiPost(`/videos/${newVideoId}/renditions`, {
               profileId: profile.$id,
               output,
@@ -1305,7 +1388,7 @@
 
         uploadInfo.textContent = missing.length
           ? `created ${newVideoId} (ready, ${chunksTotal} chunks); missing profiles: ${missing.join(', ')}`
-          : `created ${newVideoId} · source ready · queued ${queued} renditions (${outputs.join(', ')})`;
+          : `created ${newVideoId} · ${codec} · source ready · queued ${queued} renditions (${outputs.join(', ')})`;
         // Pass the id explicitly so polling cannot race on a stale input value.
         startPolling(newVideoId);
       } catch (err) {
@@ -1425,7 +1508,12 @@
     }
 
     function readyRenditionsForPlayback(renditions, output = outputForMode()) {
-      return (renditions || []).filter((r) => r.output === output && r.status === 'ready');
+      const codec = selectedCodecId();
+      return (renditions || []).filter((r) =>
+        r.output === output
+        && r.status === 'ready'
+        && (r.codec || 'h264') === codec
+      );
     }
 
     /** Playback <select> value that can play a given rendition.output. */
@@ -1662,7 +1750,7 @@
 
         for (const r of sorted) {
           const progress = r.status === 'ready' ? '' : (r.progress ? `${r.progress}%` : '');
-          const matchesPlayback = r.output === activeOutput;
+          const matchesPlayback = r.output === activeOutput && (r.codec || 'h264') === selectedCodecId();
           const clickable = r.status === 'ready';
           let active = false;
           if (clickable && matchesPlayback) {
@@ -1683,7 +1771,7 @@
             : (matchesPlayback ? '' : ' · click to switch output');
           rows.push(`
             <div${attrs}>
-              <span>${r.output || '?'} · ${r.name || r.$id}${hint}</span>
+              <span>${r.codec || 'h264'} · ${r.output || '?'} · ${r.name || r.$id}${hint}</span>
               <span>${progress}</span>
               ${badge(r.status)}
               <button type="button" class="danger" data-action="delete-rendition" data-rendition="${r.$id}">Delete</button>
@@ -1862,14 +1950,20 @@
 
       const mode = playbackMode();
       const activeOutput = outputForMode(mode);
-      const readyForPlayback = renditions.filter((r) => r.output === activeOutput && r.status === 'ready');
+      const activeCodec = selectedCodecId();
+      const readyForPlayback = renditions.filter((r) =>
+        r.output === activeOutput
+        && r.status === 'ready'
+        && (r.codec || 'h264') === activeCodec
+      );
       const readyByOutput = {};
       for (const r of renditions) {
         if (r.status !== 'ready') continue;
+        if ((r.codec || 'h264') !== activeCodec) continue;
         readyByOutput[r.output] = (readyByOutput[r.output] || 0) + 1;
       }
       const readySummary = Object.entries(readyByOutput).map(([out, n]) => `${n} ${out}`).join(', ') || 'none ready';
-      pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · ${mode} · ${readyForPlayback.length} ready / ${renditions.length} total (${readySummary})`;
+      pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · ${activeCodec} · ${mode} · ${readyForPlayback.length} ready / ${renditions.length} total (${readySummary})`;
 
       const key = `${cfg.projectId}:${cfg.videoId}:${mode}`;
       if (readyForPlayback.length && playingKey !== key) {
@@ -2401,6 +2495,21 @@
         statusEl.textContent = `Switch error: ${err.message}`;
       }
     });
+
+    codecSelect.addEventListener('change', async () => {
+      applyCodecOutputs();
+      persistConfig();
+      if (!pollTimer) return;
+      destroyPlayer();
+      statusEl.textContent = `Switching to ${selectedCodecId()}…`;
+      try {
+        await pollOnce();
+      } catch (err) {
+        statusEl.textContent = `Codec switch error: ${err.message}`;
+      }
+    });
+
+    applyCodecOutputs();
   </script>
 </body>
 </html>

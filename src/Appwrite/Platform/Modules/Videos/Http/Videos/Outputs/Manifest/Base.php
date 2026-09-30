@@ -29,6 +29,9 @@ abstract class Base extends VideosAction
     /**
      * Ready renditions for this video and output, or throws when there are none.
      *
+     * Never mix codecs in one ABR playlist. Prefer h264 when present; otherwise
+     * serve the single remaining codec.
+     *
      * @return array<Document>
      */
     protected function getReadyRenditions(
@@ -48,7 +51,17 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        return $renditions;
+        $byCodec = [];
+        foreach ($renditions as $rendition) {
+            $codec = self::normalizeCodec($rendition->getAttribute('codec'));
+            $byCodec[$codec][] = $rendition;
+        }
+
+        if (isset($byCodec[self::CODEC_H264])) {
+            return $byCodec[self::CODEC_H264];
+        }
+
+        return \reset($byCodec) ?: [];
     }
 
     /**

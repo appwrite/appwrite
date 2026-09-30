@@ -4,6 +4,7 @@ return [
     [
 
         'name' => '360p',
+        'codec' => 'h264',
         'videoBitRate' => 890, //video BitRate in Kbps
         'audioBitRate' => 64, //audio BitRate in Kbps
         'width' =>  640, //width resolution in px
@@ -12,6 +13,7 @@ return [
     [
 
         'name' => '480p',
+        'codec' => 'h264',
         'videoBitRate' => 2100,
         'audioBitRate' => 64,
         'width' =>  854,
@@ -19,6 +21,7 @@ return [
     ],
     [
         'name' => '576p',
+        'codec' => 'h264',
         'videoBitRate' => 2538,
         'audioBitRate' => 128,
         'width' => 1024,
@@ -26,6 +29,7 @@ return [
     ],
     [
         'name' => '720p',
+        'codec' => 'h264',
         'videoBitRate' => 3551,
         'audioBitRate' => 128,
         'width' => 1280,
@@ -33,6 +37,7 @@ return [
     ],
     [
         'name' => '1080p',
+        'codec' => 'h264',
         'videoBitRate' => 4800,
         'audioBitRate' => 128,
         'width' => 1920,
@@ -40,6 +45,7 @@ return [
     ],
     [
         'name' => '2160p',
+        'codec' => 'h264',
         'videoBitRate' => 16000,
         'audioBitRate' => 356,
         'width' => 4096,

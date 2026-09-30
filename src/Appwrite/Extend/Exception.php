@@ -364,6 +364,8 @@ class Exception extends \Exception
     public const string VIDEO_SOURCE_IN_PROGRESS = 'video_source_in_progress';
     public const string VIDEO_TRACK_NOT_FOUND = 'video_track_not_found';
     public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
+    public const string VIDEO_CODEC_DISABLED = 'video_codec_disabled';
+    public const string VIDEO_CODEC_OUTPUT_UNSUPPORTED = 'video_codec_output_unsupported';
     public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';
     public const string VIDEO_RENDITION_ALREADY_EXISTS = 'video_rendition_already_exists';
     public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';

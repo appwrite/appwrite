@@ -48,6 +48,7 @@ Config::load('storage-mimes', __DIR__ . '/../config/storage/mimes.php', $configA
 Config::load('storage-inputs', __DIR__ . '/../config/storage/inputs.php', $configAdapter);
 Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php', $configAdapter);
 Config::load('videos-profiles', __DIR__ . '/../config/videos-profiles.php', $configAdapter);
+Config::load('videos-codecs', __DIR__ . '/../config/videos-codecs.php', $configAdapter);
 Config::load('specifications', __DIR__ . '/../config/specifications.php', $configAdapter);
 Config::load('templates-function', __DIR__ . '/../config/templates/function.php', $configAdapter);
 Config::load('templates-site', __DIR__ . '/../config/templates/site.php', $configAdapter);

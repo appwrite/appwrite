@@ -3312,6 +3312,19 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                // Snapshot of the profile codec at create time so playback does
+                // not follow a later profile edit.
+                '$id' => ID::custom('codec'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -3507,6 +3520,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('codec'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -3521,8 +3545,8 @@ return [
         'indexes' => [
             [
                 '$id' => ID::custom('_key_profile'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate'],
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec'],
                 'lengths' => [],
                 'orders' => [],
             ],

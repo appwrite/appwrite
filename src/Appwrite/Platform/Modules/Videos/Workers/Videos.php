@@ -34,6 +34,8 @@ use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\Video\Adapter\FFmpeg;
 use Utopia\Video\Encoder;
+use Utopia\Video\Format\HEVC;
+use Utopia\Video\Format\VP9;
 use Utopia\Video\Format\X264;
 use Utopia\Video\Info;
 use Utopia\Video\Output\Cmaf;
@@ -532,11 +534,26 @@ class Videos extends Action
                 . ' (' . $output . ')'
             );
 
-            $format = (new X264())
-                ->crf(22)
-                ->bframes(3)
-                ->keyframe(2.0)
-                ->params(['-dn', '-sn']);
+            $codec = Base::normalizeCodec(
+                $rendition->getAttribute('codec')
+                    ?: $profile->getAttribute('codec')
+            );
+
+            $format = match ($codec) {
+                Base::CODEC_HEVC => (new HEVC())
+                    ->crf(22)
+                    ->keyframe(2.0)
+                    ->params(['-dn', '-sn']),
+                Base::CODEC_VP9 => (new VP9())
+                    ->crf(32)
+                    ->keyframe(2.0)
+                    ->params(['-dn', '-sn']),
+                default => (new X264())
+                    ->crf(22)
+                    ->bframes(3)
+                    ->keyframe(2.0)
+                    ->params(['-dn', '-sn']),
+            };
 
             $target = match ($output) {
                 Base::OUTPUT_DASH => (new Dash())->template(false)->timeline(false)->segment(6)->manifests(false),

@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\View;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -28,6 +29,104 @@ abstract class Base extends UtopiaAction
 
     /** Outputs a rendition can be packaged into. */
     public const OUTPUTS = [self::OUTPUT_HLS, self::OUTPUT_DASH, self::OUTPUT_CMAF];
+
+    public const CODEC_H264 = 'h264';
+    public const CODEC_HEVC = 'hevc';
+    public const CODEC_VP9 = 'vp9';
+
+    /**
+     * Codec ids known to videos-codecs.php. Prefer reading the config at runtime;
+     * this list is the compile-time fallback for WhiteList defaults.
+     *
+     * @var list<string>
+     */
+    public const CODECS = [self::CODEC_H264, self::CODEC_HEVC, self::CODEC_VP9];
+
+    /**
+     * All codec ids declared in videos-codecs.php.
+     *
+     * @return list<string>
+     */
+    public static function codecIds(): array
+    {
+        $codecs = Config::getParam('videos-codecs', []);
+        if (!\is_array($codecs) || empty($codecs)) {
+            return self::CODECS;
+        }
+
+        return \array_values(\array_map('strval', \array_keys($codecs)));
+    }
+
+    /**
+     * Codec ids with enabled === true.
+     *
+     * @return list<string>
+     */
+    public static function enabledCodecs(): array
+    {
+        $enabled = [];
+        foreach (Config::getParam('videos-codecs', []) as $id => $codec) {
+            if (\is_array($codec) && ($codec['enabled'] ?? false) === true) {
+                $enabled[] = (string) $id;
+            }
+        }
+
+        return $enabled;
+    }
+
+    /**
+     * Packaging outputs a codec may be asked for on POST /renditions.
+     *
+     * @return list<string>
+     */
+    public static function codecOutputs(string $codec): array
+    {
+        $codecs = Config::getParam('videos-codecs', []);
+        $outputs = $codecs[$codec]['outputs'] ?? [];
+        if (!\is_array($outputs)) {
+            return [];
+        }
+
+        return \array_values(\array_map('strval', $outputs));
+    }
+
+    /**
+     * Whether $output is allowed for $codec per videos-codecs.php.
+     */
+    public static function codecSupportsOutput(string $codec, string $output): bool
+    {
+        return \in_array($output, self::codecOutputs($codec), true);
+    }
+
+    /**
+     * Normalize a stored codec; empty/missing becomes h264 for pre-migration rows.
+     */
+    public static function normalizeCodec(?string $codec): string
+    {
+        $codec = \strtolower(\trim((string) $codec));
+
+        return $codec === '' ? self::CODEC_H264 : $codec;
+    }
+
+    /**
+     * Reject browsing a ladder for a codec that is not enabled in config.
+     */
+    protected function assertCodecEnabled(string $codec): void
+    {
+        if (!\in_array($codec, self::enabledCodecs(), true)) {
+            throw new Exception(Exception::VIDEO_CODEC_DISABLED);
+        }
+    }
+
+    /**
+     * Reject packaging a codec into an output it cannot carry.
+     */
+    protected function assertCodecSupportsOutput(string $codec, string $output): void
+    {
+        if (!self::codecSupportsOutput($codec, $output)) {
+            throw new Exception(Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED);
+        }
+    }
 
     /**
      * Lifecycle of a rendition or subtitle, shared with the videos worker.

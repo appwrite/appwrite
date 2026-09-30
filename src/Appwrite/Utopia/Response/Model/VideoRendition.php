@@ -108,6 +108,13 @@ class VideoRendition extends Model
                 'default' => '',
                 'example' => 'hls',
             ])
+            ->addRule('codec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video encode codec snapshotted from the profile at create time: one of `h264`, `hevc`, or `vp9`.',
+                'default' => 'h264',
+                'example' => 'h264',
+                'enum' => ['h264', 'hevc', 'vp9'],
+            ])
         ;
     }
 
