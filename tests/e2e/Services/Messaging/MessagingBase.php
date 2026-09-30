@@ -504,7 +504,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['$id'],
         ]);
@@ -615,7 +615,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -718,7 +718,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -1024,10 +1024,13 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', \array_merge([
+        // Subscribe the target to the topic as a server (API key) call: the target belongs to the
+        // user created above, not to the caller, and only privileged callers may subscribe it.
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -1821,10 +1824,11 @@ trait MessagingBase
 
             $target = $targets[0];
 
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
                 'subscriberId' => $user['$id'],
                 'targetId' => $target['$id'],
             ]);
@@ -2716,7 +2720,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['$id'],
         ]);
@@ -2851,10 +2855,11 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -3123,10 +3128,11 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -3249,7 +3255,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -3426,7 +3432,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
