@@ -640,6 +640,18 @@ trait MigrationsBase
         $databaseId = $this->createSourceDatabase();
 
         try {
+            $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'tableId' => ID::unique(),
+                'name' => 'Scoped Key Table',
+            ]);
+
+            $this->assertSame(201, $table['headers']['status-code']);
+            $tableId = $table['body']['$id'];
+
             $result = $this->performMigrationSync([
                 'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
                 'endpoint' => $this->webEndpoint,
@@ -649,13 +661,14 @@ trait MigrationsBase
 
             $this->assertSame('completed', $result['status']);
 
-            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getDestinationProject()['$id'],
                 'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
             ]);
 
-            $this->assertSame(200, $response['headers']['status-code'], 'The source database was not copied with a source API key that can read it.');
+            $this->assertSame(200, $response['headers']['status-code'], 'The source table was not copied with a source API key that can read it.');
+            $this->assertSame('Scoped Key Table', $response['body']['name']);
         } finally {
             $this->deleteMigrationDatabases($databaseId);
         }
