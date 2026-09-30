@@ -303,7 +303,8 @@ final class WebhooksTest extends TestCase
         unset($payload['eventId']);
 
         $this->assertInstanceOf(\Throwable::class, $this->deliver($worker, $payload, 'pid-1', 0, $project, $database, $cache));
-        $this->assertNull($this->deliver($worker, $payload, 'pid-1', 1, $project, $database, $cache));
+        // Redis requeues it under a fresh pid, which must not change what it is called.
+        $this->assertNull($this->deliver($worker, $payload, 'pid-1-requeued', 1, $project, $database, $cache));
 
         $this->assertCount(1, $this->deliveryIds('/ok/healthy'));
         $down = $this->deliveryIds('/flaky/down');
