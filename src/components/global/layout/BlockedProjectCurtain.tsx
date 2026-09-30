@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, Mail, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FullScreenCurtain } from '@/components/global/shared/FullScreenCurtain'
 import { useT } from '@/lib/i18n/translate'
 import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
 import { PROJECT_BLOCKED_CURTAIN } from '@/lib/project-blocks'
@@ -23,19 +24,13 @@ export function BlockedProjectCurtain({
   const hasPremiumSupport = plan?.premiumSupport === true
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <div className="mx-4 flex max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-          <AlertTriangle className="size-9" aria-hidden />
-        </div>
-        <h1 className="text-[22px] font-semibold text-foreground">
-          {t(PROJECT_BLOCKED_CURTAIN.title)}
-        </h1>
-        <p className="mt-3 text-[15px] text-muted-foreground">
-          {t(PROJECT_BLOCKED_CURTAIN.message)}
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
+    <FullScreenCurtain
+      icon={AlertTriangle}
+      tone="destructive"
+      title={t(PROJECT_BLOCKED_CURTAIN.title)}
+      description={t(PROJECT_BLOCKED_CURTAIN.message)}
+      actions={
+        <>
           {hasPremiumSupport ? (
             <Button asChild variant="brandCta" className="gap-1.5">
               <Link
@@ -65,8 +60,8 @@ export function BlockedProjectCurtain({
           >
             {t('Back to organization')}
           </Button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    />
   )
 }

@@ -1315,7 +1315,19 @@ export const heAccountGlobalDictionary: Record<string, string> = {
 
   // Console account password breach check result
   breached: 'דלפה',
-  'no known breach': 'ללא דליפה ידועה',
   'This password was found in a known data breach. Change it as soon as possible.':
     'הסיסמה הזו נמצאה בדליפת מידע ידועה. שנו אותה בהקדם האפשרי.',
+
+  // Full-screen curtain for console accounts with a breached password
+  'Your password was found in a data breach': 'הסיסמה שלכם נמצאה בדליפת מידע',
+  'Your security is important to us. We continuously check console passwords against known data breaches, and yours was found in one, which means others may be able to sign in as you.':
+    'האבטחה שלכם חשובה לנו. אנחנו בודקים באופן שוטף את סיסמאות הקונסול מול דליפות מידע ידועות, והסיסמה שלכם נמצאה באחת מהן. המשמעות היא שאחרים עלולים להתחבר בשמכם.',
+  'Set a new password': 'הגדרת סיסמה חדשה',
+  "Pick a strong password you don't use anywhere else.":
+    'בחרו סיסמה חזקה שאינכם משתמשים בה בשום מקום אחר.',
+  'Turn on multi-factor authentication': 'הפעלת אימות רב-שלבי',
+  'Require a second verification step every time you sign in.':
+    'דרישת שלב אימות נוסף בכל התחברות.',
+  'Secure account': 'אבטחת החשבון',
+  'Remind me later': 'הזכירו לי מאוחר יותר',
 }

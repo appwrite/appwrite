@@ -46,6 +46,7 @@ import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
+import { PasswordBreachCurtain } from '@/components/global/shared/PasswordBreachCurtain'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
@@ -601,6 +602,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               <RootAppProviders>{children}</RootAppProviders>
                               <ClientOnly>
                                 <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                              <ClientOnly>
+                                <PasswordBreachCurtain />
                               </ClientOnly>
                               </ConsoleRightPaneProvider>
                             </ScreenshotModeProvider>
