@@ -2,7 +2,7 @@
 layout: post
 title: "How to build a multi-tenant SaaS app with Appwrite Teams"
 description: Step-by-step tutorial for building a multi-tenant SaaS app with Appwrite Teams for tenant isolation and DocumentsDB for schemaless data, using a real forms app.
-date: 2026-09-11
+date: 2026-10-01
 cover: /images/blog/multi-tenant-app-appwrite-teams-documentsdb/cover.avif
 timeToRead: 15
 author: aditya-oberai
@@ -13,28 +13,28 @@ faqs:
   - question: "How do you implement multi-tenancy with Appwrite Teams?"
     answer: "Create one [Appwrite Team](/docs/products/auth/teams) per tenant, then grant every tenant resource to `Role.team(teamId)` instead of to individual users. Make all dashboard requests with a client bound to the signed-in user's session, so Appwrite's permission engine refuses any request that touches another tenant's data. Application code never needs to filter by tenant ID."
   - question: "Should each tenant get its own collection or its own database in Appwrite?"
-    answer: "Formwrite gives each tenant its own collections inside one shared DocumentsDB database. A collection carries its own permissions, so it is a complete isolation boundary, and it costs nothing extra to create. A database per tenant works too but means paying for and managing one database per customer."
+    answer: "Formwrite gives each tenant its own collections inside one shared DocumentsDB database. A collection carries its own permissions, so it is a complete isolation boundary on its own. Give each tenant its own database when tenants need dedicated compute, for example so one large customer's load never slows down the rest, or so that customer's database can be resized and replicated independently."
   - question: "Why use DocumentsDB instead of TablesDB for a forms app?"
     answer: "A form definition is a list of fields whose shape depends on the field type, and each submission is a set of answers keyed by those fields. That structure changes with every form, so it does not fit fixed columns. [DocumentsDB](/docs/products/databases/documentsdb) stores the form and its submissions as JSON documents and still supports permissions, indexes, queries, and cursor pagination."
   - question: "When should a multi-tenant Appwrite app use an API key instead of the user's session?"
-    answer: "Only for operations Appwrite cannot authorize on the user's behalf: sending one-time codes, creating collections and buckets when a tenant signs up, accepting anonymous form submissions, and adding members by email. Every API key call must be addressed by the tenant's team ID, and the caller's role must be checked in application code first because the key bypasses permissions. On Appwrite Sites the key itself is the dynamic API key Appwrite mints for each request, so the deployment stores no long-lived secret."
+    answer: "Only for operations Appwrite cannot authorize on the user's behalf: sending one-time codes, creating collections and buckets when a tenant signs up, accepting anonymous form submissions, and adding members by email. Every API key call must be addressed by the tenant's team ID, and the caller's role must be checked in application code first because the key bypasses permissions. On Appwrite Sites the key is the ephemeral API key Appwrite mints for each request, so the deployment stores no long-lived secret."
   - question: "Do you need to store an Appwrite API key when you deploy an SSR app to Appwrite Sites?"
-    answer: "No. [Appwrite Sites](/docs/products/sites/develop#dynamic-api-key) generates a dynamic API key for every server-side request and delivers it on the `x-appwrite-key` header, with the scopes configured on the site. Read the header and pass it to `setKey`. The header exists only while Appwrite serves the site, so no API key has to be created or stored."
+    answer: "No. [Appwrite Sites](/docs/products/sites/develop#ephemeral-api-key) generates an ephemeral API key for every server-side request and delivers it on the `x-appwrite-key` header, limited to the scopes granted to the site. Read the header and pass it to `setKey`. Appwrite sends the header only when it serves the site, so nobody has to create or store an API key."
   - question: "How do team roles map to permissions in Appwrite?"
     answer: "Team roles are strings you choose when creating a team or membership. `Role.team(teamId)` grants access to every member, and `Role.team(teamId, 'editor')` grants access only to members holding that role. Formwrite uses `owner`, `editor`, and `viewer`, and sets collection permissions so viewers can read while only owners and editors can create, update, or delete forms."
   - question: "How do you verify a user belongs to a tenant in a server-rendered Appwrite app?"
     answer: "Call `teams.get` with a client bound to the user's session. Appwrite only returns the team to its members, so a non-member gets an error you can turn into a 404. To read the member's roles, list their memberships with an API key and pick the one matching the team ID."
 ---
 
-Every multi-tenant SaaS product has the same scary bug waiting in it. Somewhere in the codebase there is a query that forgot the `WHERE tenant_id = ?` clause, and one customer sees another customer's data. The usual defence is discipline: a tenant column on every table, middleware that injects the filter, code review that catches the misses. It works until it does not.
+Every multi-tenant SaaS product has the same bug waiting in it. Somewhere in the codebase a query forgets the `WHERE tenant_id = ?` clause, and one customer sees another customer's data. The usual defense is discipline. Every table gets a tenant column, middleware injects the filter, and code review catches the misses. That holds up until one new query ships without the filter.
 
-I wanted to see what happens when the database refuses cross-tenant requests instead of the application remembering to filter them. So I built [Formwrite](https://formwrite.appwrite.network), a multi-tenant forms builder in the style of Typeform or Google Forms, where every workspace is an [Appwrite Team](https://appwrite.io/docs/products/auth/teams), every workspace's data lives in its own [DocumentsDB](https://appwrite.io/docs/products/databases/documentsdb) collections, and no application code ever filters by tenant. The app is live, the [source is on GitHub](https://github.com/adityaoberai/formwrite), and this post walks through how it is put together.
+The alternative is to let Appwrite refuse cross-tenant requests, so the application never has to remember a filter. [Formwrite](https://formwrite.appwrite.network) is built that way. It is a multi-tenant forms builder in the style of Typeform or Google Forms. Every workspace is an [Appwrite Team](https://appwrite.io/docs/products/auth/teams), each workspace's data lives in its own [DocumentsDB](https://appwrite.io/docs/products/databases/documentsdb) collections, and no application code filters by tenant. The app is live and the [source is on GitHub](https://github.com/adityaoberai/formwrite).
 
 # Multi-tenancy with Appwrite Teams in one paragraph
 
 A tenant is a team. When a user creates a workspace, the app creates an Appwrite Team with that user as its `owner`, then provisions a forms collection, a submissions collection, and a storage bucket whose permissions are granted to `Role.team(teamId)` and nothing else. Every dashboard request runs through an Appwrite client bound to the signed-in user's session, so Appwrite's permission engine decides what that user can read or change. A session from one workspace that touches another workspace's collection gets a 401 from Appwrite, not an empty result from a forgotten filter.
 
-The rest of this post is the detail: how the two Appwrite clients are set up, how provisioning and role checks work, and why a document database was the right fit for the data.
+The sections below cover how the two Appwrite clients are set up, how provisioning and role checks work, and why a document database fits the data.
 
 # What Formwrite does
 
@@ -58,9 +58,9 @@ You need an [Appwrite Cloud](https://cloud.appwrite.io) project with three thing
 
 **Email OTP.** In the project's **Auth** settings, enable the **Email OTP** sign-in method. Formwrite uses no other auth method.
 
-**A DocumentsDB database.** On the **Databases** page, create a database, choose **DocumentsDB** as the type, and pick a compute specification. Give it the ID `formwrite`. Every tenant's collections will live inside this one database.
+**A DocumentsDB database.** On the **Databases** page, click **Create database**, choose **DocumentsDB** as the type, and select a tier. Give it the ID `formwrite`. Every tenant's collections will live inside this one database.
 
-**Scopes for the server.** The server needs these scopes: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, the `documentsdb` scopes for databases, collections, documents, and indexes, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. They are granted to the site itself once the app is deployed on [Appwrite Sites](https://appwrite.io/docs/products/sites), which then hands the server a dynamic API key carrying those scopes on every request. I cover that near the end of the post. No API key is created anywhere in this tutorial.
+**Scopes for the server.** The server needs these scopes: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, the `documentsdb` scopes for databases, collections, documents, and indexes, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. You grant them to the site itself once the app runs on [Appwrite Sites](https://appwrite.io/docs/products/sites), and Sites then hands the server an ephemeral API key carrying those scopes on every request. The [deployment section](#deploy-to-appwrite-sites) covers both steps. You never create an API key in this tutorial.
 
 # Project setup
 
@@ -99,12 +99,12 @@ function baseClient(): Client {
         .setProject(env.APPWRITE_PROJECT_ID);
 }
 
-const DYNAMIC_KEY_HEADER = 'x-appwrite-key';
+const EPHEMERAL_KEY_HEADER = 'x-appwrite-key';
 
-// Appwrite Sites sends a dynamic API key with every SSR request
+// Appwrite Sites sends an ephemeral API key with every SSR request
 function apiKeyFor(request: Request): string {
-    const key = request.headers.get(DYNAMIC_KEY_HEADER);
-    if (!key) throw new Error(`Missing ${DYNAMIC_KEY_HEADER} header: this app expects to run on Appwrite Sites`);
+    const key = request.headers.get(EPHEMERAL_KEY_HEADER);
+    if (!key) throw new Error(`Missing ${EPHEMERAL_KEY_HEADER} header: this app expects to run on Appwrite Sites`);
     return key;
 }
 
@@ -133,9 +133,11 @@ export type AdminServices = ReturnType<typeof createAdminClient>;
 export type SessionServices = ReturnType<typeof createSessionClient>;
 ```
 
-The admin client takes the request because that is where its key comes from. On Appwrite Sites, every server-side request carries a [dynamic API key](https://appwrite.io/docs/products/sites/develop#dynamic-api-key) on the `x-appwrite-key` header, minted for that request with the scopes configured on the site. The header exists only while Appwrite serves the site, so the factory throws without it rather than reaching for a stored secret, and no route ever handles the key directly. The Formwrite repository adds an environment-variable fallback for running outside Sites, which this tutorial does not need.
+The admin client takes the request because that is where its key comes from. On Appwrite Sites, every server-side request carries an [ephemeral API key](https://appwrite.io/docs/products/sites/develop#ephemeral-api-key) on the `x-appwrite-key` header, minted for that request with the scopes granted to the site. The factory throws without the header instead of reaching for a stored secret, and no route handles the key directly.
 
-The rule for the rest of the codebase is simple. Anything a user does in the dashboard goes through the session client. The admin client is reserved for the handful of operations Appwrite cannot authorize on a user's behalf, and I will call those out as they come up. Appwrite's own [SSR guide](https://appwrite.io/docs/products/auth/server-side-rendering) describes this same split.
+The header only exists when Appwrite serves the site, so `npm run dev` renders the pages but cannot sign anyone in. That is why the project goes on Appwrite Sites [right after the session hook](#deploy-to-appwrite-sites), before any feature code. The Formwrite repository adds an environment-variable fallback for local development.
+
+Anything a user does in the dashboard goes through the session client. The admin client handles only the operations Appwrite cannot authorize on a user's behalf, and each section below points them out. Appwrite's own [SSR guide](https://appwrite.io/docs/products/auth/server-side-rendering) describes the same split.
 
 ## Attaching the session to every request
 
@@ -175,6 +177,18 @@ export function requireUser(event: RequestEvent) {
     return { user, appwrite };
 }
 ```
+
+# Deploying to Appwrite Sites without a stored API key {% #deploy-to-appwrite-sites %}
+
+Every step after this one starts with a signed-in user, and signing in needs the admin client's key, so deploy the project to Appwrite Sites now. [Create a site from your Git repository](https://appwrite.io/docs/products/sites/deploy-from-git) in the Console so every push redeploys it. The `.env` file stays out of Git, so add `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, and `APPWRITE_DATABASE_ID` as [site environment variables](https://appwrite.io/docs/products/sites/environment-variables) with the same values.
+
+The site stores no API key variable. Appwrite Sites generates an [ephemeral API key](https://appwrite.io/docs/products/sites/develop#ephemeral-api-key) for every SSR request and delivers it on the `x-appwrite-key` header. The key carries only the scopes granted to the site and expires shortly after the site's timeout, so there is nothing long-lived to leak, rotate, or forget in a variable list. Form actions and API routes get one too, so every admin-client call in the sections below receives its key the same way.
+
+A new site starts with no scopes. You grant them in the same Console you used for the database and the auth method. Open the site, go to the **Settings** tab, open the **Build** section, and in the **Scopes** card select the scopes listed in the prerequisites: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, `documentsdb.read`, `documentsdb.write`, `documentsdb.collections.read`, `documentsdb.collections.write`, `documentsdb.documents.read`, `documentsdb.documents.write`, `documentsdb.indexes.read`, `documentsdb.indexes.write`, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. Click **Update**, and the next request to the site carries a key with exactly those scopes.
+
+Grant only what the admin client needs. A missing scope shows up as a 401 on the first call that uses it, so sign-in fails right away without `sessions.write`. That is easier to spot than a key that can do everything.
+
+If you are migrating a site that already stores an API key variable, deploy the code that reads the header first, then delete the variable once that deployment is live.
 
 # Signing in with email OTP
 
@@ -220,9 +234,9 @@ export const actions: Actions = {
 
 From here on, every request carries a session, and `hooks.server.ts` builds a session client for it.
 
-# Modelling a tenant as a team
+# Modeling a tenant as a team
 
-This is the core of the post. A workspace in Formwrite is an Appwrite Team plus three resources whose IDs are derived from the team ID:
+A workspace in Formwrite is an Appwrite Team plus three resources whose IDs derive from the team ID:
 
 | Resource | ID | Read | Create, update, delete |
 | --- | --- | --- | --- |
@@ -242,7 +256,7 @@ export const bucketId = (teamId: string) => teamId;
 
 Creating a workspace is a two-step operation, and the split between clients matters.
 
-The team is created with the **session** client, because the user who creates a team through their own session becomes its `owner` automatically. The collections and bucket are then created with the **admin** client, because creating collections and buckets is a server operation. If any step fails, everything is rolled back so a half-provisioned tenant never exists.
+The team is created with the **session** client, because the user who creates a team through their own session becomes its `owner` automatically. The collections and bucket are then created with the **admin** client, because creating collections and buckets is a server operation. If any step fails, the function tears down what it created, so a half-provisioned tenant never exists.
 
 ```ts
 import { DocumentsDBIndexType, ID, Permission, Role } from 'node-appwrite';
@@ -311,11 +325,9 @@ export async function provisionWorkspace(
 }
 ```
 
-Three details in the permissions are worth pausing on.
+`Role.team(teamId)` with no role grants access to every member, whatever their role. `Role.team(teamId, 'editor')` grants access only to members who hold that role. Viewers are members with no extra grants, so they can read and nothing else. Appwrite's [permissions reference](https://appwrite.io/docs/advanced/security/permissions) covers the full set of roles.
 
-`Role.team(teamId)` with no role grants access to every member, whatever their role. `Role.team(teamId, 'editor')` grants access only to members who hold that role. Viewers are simply members with no extra grants, so they can read and nothing else. Appwrite's [permissions reference](https://appwrite.io/docs/advanced/security/permissions) covers the full set of roles.
-
-`documentSecurity: false` means permissions are set once, at the collection level, and apply to every document. There is no per-document permission list to get wrong when a form is created. Since the collection itself belongs to a single tenant, collection-level permissions are exactly the right granularity.
+`documentSecurity: false` means permissions are set once, at the collection level, and apply to every document. There is no per-document permission list to get wrong when a form is created. Each collection belongs to a single tenant, so collection-level permissions are as fine-grained as the app needs.
 
 The submissions collection grants no `create` or `update` to anyone. Respondents are anonymous, so the server writes their submissions with the API key. Members can read and delete, and that is all.
 
@@ -325,9 +337,9 @@ The submissions collection grants no `create` or `update` to anyone. Respondents
 
 The alternative design is one `forms` collection for all tenants, each document tagged with a `teamId`, and document-level permissions granting `Role.team(teamId)` on each one. Appwrite's [multi-tenancy guide](https://appwrite.io/docs/products/auth/multi-tenancy) shows that pattern and it works well.
 
-I chose a collection per tenant for two reasons. First, the isolation boundary is a resource Appwrite manages rather than a field the app has to set correctly on every write. A bug in the app cannot put a form in the wrong tenant because the collection ID comes from the URL and the permissions came from provisioning. Second, deleting a tenant is a `deleteCollection` call rather than a paginated sweep of documents.
+Formwrite uses a collection per tenant for two reasons. First, the isolation boundary is a resource Appwrite manages rather than a field the app has to set correctly on every write. A bug in the app cannot put a form in the wrong tenant because the collection ID comes from the URL and the permissions came from provisioning. Second, deleting a tenant is a `deleteCollection` call rather than a paginated sweep of documents.
 
-Why not a database per tenant? A [DocumentsDB database](https://appwrite.io/docs/products/databases/documentsdb/databases) runs on its own compute specification, so a database per workspace would mean paying for and managing one database per customer. A collection has its own permissions but no cost of its own, so all tenants share one database and each gets its own collections.
+A database per tenant goes one step further. A [DocumentsDB database](https://appwrite.io/docs/products/databases/documentsdb/databases) can run on [dedicated compute](https://appwrite.io/docs/products/databases#shared-and-dedicated) that you resize and replicate on its own, so one large customer's traffic never competes with anyone else's. Choose it when some tenants are far larger than the rest, or when a customer needs its data on infrastructure it does not share. Formwrite's workspaces are small and similar in size, and a collection already carries its own permissions, so all tenants share one database and each gets its own collections.
 
 ## Resolving the current workspace
 
@@ -380,9 +392,7 @@ The `canEdit` and `canManage` flags only decide what buttons to render. They are
 
 # Where DocumentsDB fits
 
-Now the second question: why a document database?
-
-Look at what a form actually is. It has a title, a status, a theme, and a list of fields. Each field has a type, and the type decides what else it carries. A dropdown has `options`. A rating has `max`. A section has neither and never collects an answer. Thirteen field types, each with a different shape, all in one ordered list.
+A form has a title, a status, a theme, and a list of fields. Each field has a type, and the type decides what else it carries. A dropdown has `options`. A rating has `max`. A section has neither and never collects an answer. Thirteen field types, each with a different shape, all in one ordered list.
 
 ```ts
 export interface FormField {
@@ -421,7 +431,7 @@ export interface SubmissionData {
 
 In a relational schema this becomes a `forms` table, a `fields` table with a nullable column for every type-specific property, a `submissions` table, and an `answers` table with one row per field per submission and a polymorphic value column. Reading one form with its responses is four joins. Adding a field type is a migration.
 
-In DocumentsDB the form is one document and the submission is one document. The `fields` array and the `answers` map are stored as the JSON the app already works with. When I added the `theme` object and later the `status` triage field to submissions, existing documents simply did not have them, and the code treats a missing value as the default. There was nothing to migrate.
+In DocumentsDB the form is one document and the submission is one document. The `fields` array and the `answers` map are stored as the JSON the app already works with. Formwrite gained the `theme` object on forms and the `status` triage field on submissions partway through development. Older documents do not have them, and the code treats a missing value as the default, so nothing needed a migration.
 
 ![Appwrite Console database visualizer showing the forms and submissions collections for one workspace](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/database-visualizer.avif)
 
@@ -489,7 +499,7 @@ const page = await appwrite.db.listDocuments<SubmissionDocument>({
 
 # Accepting anonymous submissions
 
-Public form pages live at `/f/[team]/[formId]`. Respondents have no session, so this is the third place the admin client appears, and it is the one that needs the most care. The API key bypasses permissions, so the app has to be the one guaranteeing that a request for one tenant cannot touch another.
+Public form pages live at `/f/[team]/[formId]`. Respondents have no session, so the admin client does every read and write on these pages, and this is the path that needs the most care. The API key bypasses permissions, so the app has to guarantee that a request for one tenant cannot touch another.
 
 The guarantee comes from addressing. The form is always loaded from `formsCollection(teamId)` using both IDs from the URL, and the request is passed along so the admin client can pick up its key. A form ID on its own never resolves to anything, so guessing a form ID from another workspace returns a 404 from the wrong collection.
 
@@ -506,7 +516,7 @@ async function loadPublishedForm(request: Request, teamId: string, formId: strin
 }
 ```
 
-The submission action validates the posted answers against that form's field definitions, uploads any files into the tenant's bucket, and writes one submission document into the tenant's submissions collection. If the document write fails, the uploaded files are deleted so nothing is orphaned.
+The submission action validates the posted answers against that form's field definitions, uploads any files into the tenant's bucket, and writes one submission document into the tenant's submissions collection. If the document write fails, the action deletes the uploaded files so nothing is orphaned.
 
 ```ts
 const submission: SubmissionData = {
@@ -529,7 +539,7 @@ The submissions collection grants `read` to team members, so once the document e
 
 Formwrite has three roles, and the enforcement for each is split between Appwrite and the app.
 
-**Appwrite enforces the data permissions.** Viewers can read forms and responses. Editors and owners can create, update, and delete forms, and delete responses. Every one of these is a collection or bucket permission checked by Appwrite on the session client. The app does not check the role before these calls.
+**Appwrite enforces the data permissions.** Viewers can read forms and responses. Editors and owners can create, update, and delete forms, and delete responses. Every one of these is a collection or bucket permission that Appwrite checks on the session client. The app does not check the role before these calls.
 
 **Appwrite enforces team management.** Only owners can rename a team, change a member's roles, or remove a member. These run on the session client and Appwrite rejects them for non-owners.
 
@@ -582,7 +592,7 @@ Owners add members by email from the workspace settings page. Formwrite uses the
 
 ![Formwrite workspace settings showing an owner, an editor, and a viewer, plus the add member form](/images/blog/multi-tenant-app-appwrite-teams-documentsdb/workspace-members.avif)
 
-Because the membership is created with the API key, the action has to prove the caller is an owner first. The same `loadWorkspace` check from the triage action does that, and the accepted role is constrained so an owner cannot be minted through this path.
+Because the membership is created with the API key, the action has to prove the caller is an owner first. The same `loadWorkspace` check from the triage action does that, and the action accepts only `editor` or `viewer`, so this path can never create another owner.
 
 ```ts
 invite: async (event) => {
@@ -609,19 +619,9 @@ invite: async (event) => {
 
 If you would rather have an accept step, use the client-side invite flow through the session client instead, and Appwrite will send the invitation email for you.
 
-# Deploying to Appwrite Sites without a stored API key
-
-Formwrite runs on [Appwrite Sites](https://appwrite.io/docs/products/sites) as a server-rendered SvelteKit app, and the deployment stores no API key variable at all. Appwrite Sites generates a [dynamic API key](https://appwrite.io/docs/products/sites/develop#dynamic-api-key) for every SSR request and delivers it on the `x-appwrite-key` header. The key carries only the scopes granted to the site and expires shortly after the request's timeout, so there is nothing long-lived to leak, rotate, or forget in a variable list. Every request Appwrite routes to the site gets one, including form actions and the logo endpoint, so all six admin-client paths receive their key the same way.
-
-The scopes live on the site rather than on a key, and they are set in the same Console you used for the database and the auth method. Open the site, go to the **Settings** tab, open the **Build** section, and in the **Scopes** card select the scopes listed in the prerequisites: `sessions.write`, `users.read`, `users.write`, `teams.read`, `teams.write`, `documentsdb.read`, `documentsdb.write`, `documentsdb.collections.read`, `documentsdb.collections.write`, `documentsdb.documents.read`, `documentsdb.documents.write`, `documentsdb.indexes.read`, `documentsdb.indexes.write`, `buckets.read`, `buckets.write`, `files.read`, and `files.write`. Click **Update** and the next request to the site carries a key with exactly those scopes.
-
-Grant exactly what the admin client needs and nothing more. A dynamic key with `documentsdb.write` but no `users.write` fails loudly on the first sign-in, which is much easier to notice than a key that can do everything.
-
-If you are migrating a site that already stores an API key variable, deploy the code that reads the header first, then delete the variable once that deployment is live. After that, the only key in the project is the one Appwrite makes and discards per request.
-
 # Verifying isolation
 
-A tenancy model is only as good as its tests. The repository includes an end-to-end script that mints two test users, drives every route as a browser would, and then checks the boundaries:
+The Formwrite repository includes an end-to-end script that mints two test users, drives every route as a browser would, and then checks the boundaries:
 
 - A non-member requesting `/app/<teamId>` gets a 404
 - A non-member requesting a tenant's responses or files gets a 404
@@ -634,8 +634,6 @@ The first two checks are the ones that matter most, and neither depends on any f
 
 # Trade-offs in this design
 
-Nothing here is free, so here is what I would flag before copying the model.
-
 Provisioning is a multi-step operation, and each step can fail independently. The rollback in `provisionWorkspace` and the tolerant `destroyWorkspace` exist because of this. If you add a fourth resource per tenant, add it to both.
 
 Every admin-client code path is a place where isolation depends on the developer. There are exactly six such paths in Formwrite, and each takes `teamId` from the URL and uses it to build the collection or bucket ID. Keep that list short and keep it in one file.
@@ -644,7 +642,7 @@ Collection-per-tenant makes cross-tenant analytics harder. If you ever need "tot
 
 # Building your own multi-tenant app on Appwrite
 
-The pieces that made Formwrite work are all general. One team per tenant, resources granted to `Role.team`, a session client for every user action, and an admin client used only where Appwrite cannot act on the user's behalf, with the tenant ID always taken from the request and checked against membership first. On Appwrite Sites that admin client runs on a dynamic API key that arrives with each request, so the deployment stores no secret at all. DocumentsDB fits wherever the data's shape is decided by the user rather than by you, which describes forms, surveys, CMS content, and most user-generated structures.
+The pieces that made Formwrite work are all general. One team per tenant, resources granted to `Role.team`, a session client for every user action, and an admin client only where Appwrite cannot act on the user's behalf. The admin client always takes the tenant ID from the request and checks membership first. On Appwrite Sites that admin client runs on an ephemeral API key that arrives with each request, so the deployment stores no secret at all. DocumentsDB fits wherever your users decide the shape of the data rather than you, which describes forms, surveys, CMS content, and most user-generated structures.
 
 Try the live app at [formwrite.appwrite.network](https://formwrite.appwrite.network) and read the full source, including the builder, theming, and the end-to-end isolation test, in the [Formwrite repository](https://github.com/adityaoberai/formwrite). To build your own, start with these docs:
 
@@ -652,5 +650,5 @@ Try the live app at [formwrite.appwrite.network](https://formwrite.appwrite.netw
 - [Teams and roles](https://appwrite.io/docs/products/auth/teams)
 - [DocumentsDB collections and permissions](https://appwrite.io/docs/products/databases/documentsdb/collections)
 - [Server-side rendering with Appwrite Auth](https://appwrite.io/docs/products/auth/server-side-rendering)
-- [Dynamic API keys in Appwrite Sites](https://appwrite.io/docs/products/sites/develop#dynamic-api-key)
+- [Ephemeral API keys in Appwrite Sites](https://appwrite.io/docs/products/sites/develop#ephemeral-api-key)
 - [Create an Appwrite Cloud project](https://cloud.appwrite.io)

@@ -204,51 +204,7 @@ async function generateAnnouncingBitbucketSupportCover(
   await writeAvifFromPng(outputDir, png)
 }
 
-/**
- * Screenshot template with the Formwrite landing page. The screenshot ships as
- * `formwrite-landing.avif` (encoded from `formwrite-landing-source.png` when present).
- */
-async function generateMultiTenantAppwriteTeamsCover(outputDir: string): Promise<void> {
-  mkdirSync(outputDir, { recursive: true })
-  // Inline screenshots first; the landing shot is re-encoded at full size below.
-  await convertScreenshotSources(outputDir)
-  const { existsSync, readFileSync } = await import('node:fs')
-  const sourcePng = join(outputDir, 'formwrite-landing-source.png')
-  const shotAvif = join(outputDir, 'formwrite-landing.avif')
-  if (existsSync(sourcePng)) {
-    const avif = await sharp(sourcePng)
-      .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
-      .toBuffer()
-    writeFileSync(shotAvif, avif)
-    console.log(`Wrote formwrite-landing.avif (${avif.length} bytes)`)
-  }
-  if (!(await exists(shotAvif))) {
-    throw new Error(`Missing screenshot: ${shotAvif}`)
-  }
-  const screenshot = `data:image/avif;base64,${readFileSync(shotAvif).toString('base64')}`
-
-  const { width, height } = resolveCoverSizePresetKey('blog')
-  const data: CoverRenderData = {
-    template: 'screenshot',
-    theme: 'dark',
-    format: 'png',
-    width,
-    height,
-    title: 'Multi-tenant SaaS with Appwrite Teams',
-    subtitle: 'How Formwrite isolates every workspace with Teams and stores form data in DocumentsDB',
-    screenshot,
-    zoom: 1,
-    focusX: 0,
-    focusY: 0,
-    frameWidthPercent: 82,
-    frameHeightPercent: 100,
-  }
-  const png = await renderCoverImage(data)
-  await writeAvifFromPng(outputDir, png)
-}
-
 const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
-  'multi-tenant-app-appwrite-teams-documentsdb': generateMultiTenantAppwriteTeamsCover,
   'announcing-console-terminal': convertCoverSourceToAvif,
   'announcing-appwrite-explorer': generateAnnouncingAppwriteExplorerCover,
   'announcing-appwrite-domains': convertCoverSourceToAvif,
