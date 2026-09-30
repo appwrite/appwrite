@@ -320,13 +320,17 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
+        // The cookies set when the flow started go to the Appwrite hops,
+        // as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         // Provider consent, callback and redirect are three separate hops, each
         // answering with the location of the next one.
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
-        foreach (\range(1, 3) as $ignored) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        foreach (\range(1, 3) as $hop) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 1 ? [] : ['cookie' => $startCookies], followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 

@@ -1451,13 +1451,25 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
+        // The provider echoes the state back untouched, so on its own it proves nothing about who
+        // started the flow. The nonce also goes into a cookie only this browser holds, and the
+        // callback accepts the state only when the two match. Host-only, because the callback
+        // lands on this host; an hour covers signing in at the provider. A browser can have
+        // several flows open at once (two tabs, the session and the token flow), so the cookie
+        // keeps the newest few nonces rather than only the last one.
+        $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
+
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => false,
+            'nonce' => $nonce,
         ], $scopes);
 
         $response
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($oauth2->getLoginURL());
@@ -1669,6 +1681,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if (!$providerEnabled) {
             $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        }
+
+        // The state comes back through the provider unchanged, so it says nothing about which
+        // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
+        // only that browser holds it, and no other site can read or set it. The cookie is not
+        // rewritten here: two callbacks finishing together would race on it, and replaying an
+        // authorization code is refused by the provider (RFC 6749 §4.1.2).
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
+        $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
+            $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
         }
 
         if (!empty($error)) {
@@ -2363,15 +2386,22 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
+        // Same browser binding as createOAuth2Session: the callback is shared.
+        $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
+
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,
+            'nonce' => $nonce,
         ], $scopes);
 
         $loginURL = $oauth2->getLoginURL();
 
         $response
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($loginURL);
