@@ -114,18 +114,7 @@ Slack reported that, without changing any prompts, Sonnet 5.5 did better than So
 
 Sonnet 5.5 is half the price of Opus 5.5 on input, output, and cache writes, with identical cache read pricing.
 
-# How Claude Sonnet 5.5 effort levels affect cost and speed
-
-Effort level is the main lever for balancing cost and speed against quality.
-
-| Setting        | Where it is the default                  | Behavior                                           | Best for                        |
-| -------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------- |
-| Low and medium | Claude Code and the Claude apps (medium) | Answers faster and uses fewer tokens               | Routine work and fast iteration |
-| High and above | Claude Platform (high)                   | Reasons longer and checks its work more thoroughly | Harder, multi-step tasks        |
-
-If you call Sonnet 5.5 through the API, remember that the platform default is high, not medium. For high-volume agent steps, set effort explicitly rather than inheriting the default.
-
-## Claude Sonnet 5.5 safety, alignment, and safeguards
+# Claude Sonnet 5.5 safety, alignment, and safeguards
 
 **Claude Sonnet 5.5 matches or improves on Sonnet 5 on most measures of alignment, misuse resistance, and honesty.** Anthropic's automated behavioral audit tests Claude across roughly 1,850 scenarios, and found no evidence that Sonnet 5.5 pursues goals that conflict with the user's intentions. Opus 5.5 still performs slightly better overall.
 
