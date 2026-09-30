@@ -141,12 +141,19 @@ Before switching production traffic, check these:
 
 **Use Claude Sonnet 5.5 for well-scoped work and Opus 5.5 for open-ended work that needs sustained judgment.**
 
-| Use Claude Sonnet 5.5 when                                           | Use Claude Opus 5.5 when                             |
-| -------------------------------------------------------------------- | ---------------------------------------------------- |
-| The task is clearly defined, like a bug fix or a feature with a spec | The task is open-ended and requires careful judgment |
-| You need fast iteration and low latency                              | Quality matters more than turnaround time            |
-| You run high-volume agent steps at low or medium effort              | You run long, sprawling migrations or audits         |
-| You are producing documents, slides, or UI polish                    | You need the strongest results on complex reasoning  |
+## Use Claude Sonnet 5.5 when
+
+* The task is clearly defined, like a bug fix or a feature with a spec.
+* You need fast iteration and lower latency.
+* You run high-volume agent steps at low or medium effort.
+* You are producing documents, slides, or UI polish.
+
+## Use Claude Opus 5.5 when
+
+* The task is open-ended and requires careful judgment.
+* Quality matters more than turnaround time.
+* You run long, complex migrations or audits.
+* You need the strongest results on complex reasoning.
 
 The simplest pattern is to route by task: send routine agent steps to Sonnet 5.5 at medium effort, and escalate to Opus 5.5 only when a step genuinely needs it.
 
