@@ -242,6 +242,9 @@ async function mockAppwriteApi(
     if (apiPath === '/organizations' || apiPath === '/teams')
       return json(200, { total: 0, teams: [] })
     if (apiPath === '/console/variables') return json(200, {})
+    if (apiPath === '/health/version') return json(200, { version: '1.8.0' })
+    if (apiPath === '/locale/codes')
+      return json(200, { total: 0, localeCodes: [] })
 
     return json(404, {
       message: 'Not found',
