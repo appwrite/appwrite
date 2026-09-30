@@ -1325,7 +1325,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Origins must use https://, or http:// on localhost.':
     'מקורות חייבים להשתמש ב-https://, או ב-http:// ב-localhost.',
   'Origins cannot include credentials.':
-    'מקורות אינם יכולים לכלול פרטי התחברות.',
+    'מקורות אינם יכולים לכלול פרטי גישה.',
   'Origins cannot include a path, query or fragment.':
     'מקורות אינם יכולים לכלול נתיב, שאילתה או מקטע.',
   'Origins must be on the relying party ID or one of its subdomains.':
