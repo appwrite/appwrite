@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Build a permission-aware AI copilot with Appwrite Functions"
-description: Build a CRM copilot that acts as the signed-in user. An Appwrite Function receives the caller's JWT, so every tool call follows the same row permissions and teams as the user's own requests.
+description: Build a CRM copilot that acts as the signed-in user. An Appwrite Function receives the caller's JWT, so every tool call gets the same row permissions and team roles as the user's own requests.
 date: 2026-09-30
 cover: /images/blog/build-a-permission-aware-ai-copilot/cover.avif
 timeToRead: 12
@@ -22,7 +22,7 @@ When an in-app AI assistant reads data with an API key, it can read every row in
 
 This tutorial builds Scout, the assistant inside Cairn, a CRM for B2B sales and customer success teams. Scout runs in an Appwrite Function as the signed-in user, and it works with the records that the user can access:
 
-- It briefs you on an account before a call, from the notes, contacts, and deals that you can read.
+- It briefs the user on an account before a call, from the notes, contacts, and deals that the user can read.
 - It logs notes and creates follow-up tasks.
 - It moves a deal to another stage when you ask.
 
@@ -38,15 +38,15 @@ Scout has three parts.
 
 **The web app starts Scout with the user's session.** When a user sends a message to Scout, the web app uses the Appwrite Web SDK to create an asynchronous execution of the `copilot` function. The request carries the session of that user.
 
-**The `copilot` function acts as the caller.** For every execution that a signed-in user starts, Appwrite creates a JSON Web Token (JWT), a short-lived token that identifies the user. The function builds its Appwrite client from that JWT and uses no other credential. GPT-6 Luna, called through OpenRouter, decides which tools to call, and every tool reads or writes rows with the permissions of the user.
+**The `copilot` function acts as the caller.** For every execution that a signed-in user starts, Appwrite creates a JSON Web Token (JWT), a short-lived token that identifies the user. The function builds its Appwrite client from that JWT and uses no other credential. GPT-6 Luna, called through OpenRouter, decides which tools to call, and every tool reads or writes rows with the user's permissions.
 
 **Realtime shows the run as it happens.** The function writes one row for the run and one row for each tool call. The web app subscribes to those rows and shows each step in the Scout panel, then the answer.
 
-# Permissions compared with API keys
+# User JWTs compared with API keys
 
 Server code can reach the data of a project in two ways. The first way is an API key. A key has scopes, such as `rows.read`, and a request with a key skips row permissions: it can read every row in every table that its scopes cover. The key that Appwrite gives each execution in the `x-appwrite-key` header works the same way. The second way is a JWT. A request with the JWT of a user acts as that user, so Appwrite applies the same row permissions and team roles as for the user's own requests from the browser.
 
-With an API key, Scout could read Leadership notes and the private notes of every user. A prompt could tell the model to leave them out, but the model could still ask for them, and nothing would stop the request. With the JWT of the user, Appwrite decides what each tool call returns:
+With an API key, Scout could read the notes that only the Leadership team may see and the private notes of every user. A prompt could tell the model to leave them out, but the model could still ask for them, and nothing would stop the request. With the user's JWT, Appwrite decides what each tool call returns:
 
 | | API key | JWT of the user |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ With an API key, Scout could read Leadership notes and the private notes of ever
 | Result of a read for a row outside the user's access | Appwrite returns the row | Appwrite answers `404`, the same as for a missing row |
 | Result of a change that the user is not allowed to make | Appwrite applies the change | Appwrite rejects it with `401` |
 
-The `copilot` function also has no scopes, so the key that Appwrite gives each execution cannot read anything. The JWT is the only way the function can reach data, and no line of Scout's code checks permissions.
+No line of Scout's code checks permissions. The function sends every request with the user's JWT, and Appwrite applies the user's permissions to each request.
 
 # Model the data with teams and row permissions
 
@@ -70,9 +70,15 @@ A team in Appwrite Auth is a group of users, and each membership can have roles,
 - **Lumina Analytics** (`workspace`) holds every employee. Its members read accounts, contacts, and the notes that are shared with the company.
 - **Sales** (`sales`) holds the account executives with the `rep` role and the head of sales with the `manager` role. Its members read deals, and managers can update every deal.
 - **Customer Success** (`success`) holds the customer success managers.
-- **Leadership** (`leadership`) reads Leadership notes and confidential accounts.
+- **Leadership** (`leadership`): its members read Leadership notes and confidential accounts.
 
-The demo users are Maya Chen and Tom Becker, account executives with the `rep` role in Sales; Daniel Okafor, the head of sales, a `manager` in Sales and a member of Leadership; and Priya Raman, a customer success manager. All four are also in Lumina Analytics. That team exists because a user can only put roles they hold into row permissions, so every user can share a note with the whole company through it.
+The demo has four users, and all four are in Lumina Analytics:
+
+- Maya Chen and Tom Becker are account executives with the `rep` role in Sales.
+- Daniel Okafor is the head of sales, a `manager` in Sales, and a member of Leadership.
+- Priya Raman is a customer success manager.
+
+A user can put only their own teams and roles into row permissions. Every user is in Lumina Analytics, so every user can share a note with the whole company through `team:workspace`.
 
 ## Row security on every table
 
@@ -80,13 +86,13 @@ The demo users are Maya Chen and Tom Becker, account executives with the `rep` r
 
 Cairn stores its data in TablesDB, the Appwrite database with tables, rows, and columns. Every table has table permissions. When row security is on, each row can also have its own permissions, and a user can access a row if the table or the row gives them access. Creating a row always needs a table permission.
 
-All Cairn tables have row security on. The only table permission is `create` for the Lumina Analytics team, on the tables that users write to: `notes`, `tasks`, `threads`, `runs`, and `steps`. The `accounts`, `contacts`, and `deals` tables have no table permissions, so every read comes from the permissions of each row. Accounts are readable by the whole company, deals by Sales, and a confidential account and its deal by Leadership only. `scripts/schema.ts` in the companion repository defines every column and index.
+All Cairn tables have row security on. The only table permission is `create` for the Lumina Analytics team, on the tables that users write to: `notes`, `tasks`, `threads`, `runs`, and `steps`. The `accounts`, `contacts`, and `deals` tables have no table permissions, so every read comes from the permissions of each row. The whole company can read accounts, and Sales can read deals. Only Leadership can read a confidential account and its deal. `scripts/schema.ts` in the companion repository defines every column and index.
 
 ## Row permissions for each note
 
 ![The Update row sheet for a Leadership note with read access for the Leadership team and update and delete access for Daniel Okafor](/images/blog/build-a-permission-aware-ai-copilot/console-note-permissions.avif)
 
-A note is shared with the company, private to its author, or shared with Leadership. To see the permissions of a row in the Console, open the table, select the three-dot button at the end of the row, select **Update**, and open the **Permissions** tab. The `notes` table has no visibility column: the app reads the visibility of a note from the `$permissions` of the row, so the badge always shows what Appwrite enforces.
+A note is shared with the company, private to its author, or shared with Leadership. The `notes` table has no visibility column. The app reads the visibility of a note from the row's `$permissions`, so the visibility badge on each note always matches what Appwrite enforces. To see the permissions of a row in the Console, open the table and select the three-dot button at the end of the row. Select **Update**, then open the **Permissions** tab.
 
 The `notePermissions` function builds those permissions. Scout uses it when it adds a note, and the web app has the same function for notes that users add themselves:
 
@@ -172,13 +178,13 @@ appwrite login
 appwrite push functions
 ```
 
-## Execute access for Lumina Analytics
+## Check who can execute the function
 
 ![The Security tab of the copilot function with the Lumina Analytics team as the only role that can execute it](/images/blog/build-a-permission-aware-ai-copilot/console-function-execute.avif)
 
 Open the `copilot` function in the Console and go to **Security**. The **Permissions** card lists who can execute the function: only the Lumina Analytics team. A signed-in user outside the team and a visitor without a session both get a `401` error, so nobody outside the company can start a model request.
 
-## An execution key without scopes
+## Check the execution key scopes
 
 ![The Scopes card of the copilot function with 0 scopes selected in every group](/images/blog/build-a-permission-aware-ai-copilot/console-function-scopes.avif)
 
@@ -192,7 +198,7 @@ Go to **Variables** and add `OPENROUTER_API_KEY` with your OpenRouter API key. M
 
 # Write the copilot function
 
-The function is JavaScript and lives in `functions/copilot/src`. `main.js` checks the input, records the run, and starts the tool loop, and the other files hold the client, the run log, the tools, the error handling, and the prompt.
+The function is JavaScript and lives in `functions/copilot/src`. `main.js` checks the input, records the run, and starts the tool loop. The other files hold the client, the run log, the tools, the error handling, and the prompt.
 
 ## Create a client from the caller's JWT
 
@@ -230,11 +236,11 @@ const client = userClient(req);
 if (!client) return res.json({ error: 'Sign in to use Scout.' }, 401);
 ```
 
-With the same client, the function reads the profile and the teams of the user for the system prompt. The thread of the conversation is a row that only its creator can read, so reading it is also an ownership check.
+With the same client, the function reads the user's profile and teams for the system prompt. The thread of the conversation is a row that only its creator can read, so reading it is also an ownership check.
 
 ## Record each run and step as the user
 
-The function records each run in the `runs` table. The ID of the run row is the execution ID, which the function reads from the `x-appwrite-execution-id` header as `runId`. The web app gets the same ID from `createExecution`, so it can match the run row to the execution. The `createRow` call also works as a claim: if a row with that ID exists, the function stops and does not do the work twice:
+The function records each run in the `runs` table. The ID of the run row is the execution ID, which the function reads from the `x-appwrite-execution-id` header as `runId`. The web app gets the same ID from `createExecution`, so it can match the run row to the execution. If Appwrite delivers the same execution twice, the second `createRow` call fails because a row with that ID exists, and the function stops without doing the work again:
 
 ```javascript
 // The execution ID is the run ID. If the row already exists, this
@@ -259,7 +265,7 @@ Before each tool call, the run log writes a step row with the status `running`. 
 
 ## Give Scout tools that use the same permissions
 
-Scout has nine tools, and each one makes TablesDB calls with the client of the user:
+Scout has nine tools, and each one makes TablesDB calls with the user's client:
 
 - `search_records` finds accounts and contacts with a fulltext search.
 - `list_accounts`, `get_account`, `list_deals`, `list_notes`, and `list_tasks` read the CRM.
@@ -323,7 +329,7 @@ async run({ dealId, stage, closeDate, nextStep }, { tablesDB, me }) {
 },
 ```
 
-When Maya asks Scout to move a deal that Tom owns, `updateRow` fails with a `401 user_unauthorized` error. The tool returns `not_allowed` with the name of the owner from the row that Maya can read. When Maya asks for a note for Leadership only, `create_note` puts `read("team:leadership")` into the permissions of the row. Maya is not in Leadership, so Appwrite rejects the row, and Scout tells her that she cannot share notes with that team.
+When Maya asks Scout to move a deal that Tom owns, `updateRow` fails with a `401 user_unauthorized` error. The tool returns `not_allowed` with the owner's name, which it takes from the deal row that it read before the update. When Maya asks for a note for Leadership only, `create_note` puts `read("team:leadership")` into the permissions of the row. Maya is not in Leadership, so Appwrite rejects the row, and Scout tells her that she cannot share notes with that team.
 
 ## Turn permission errors into answers
 
@@ -359,7 +365,7 @@ export function toToolResult(err) {
 }
 ```
 
-A `404` tells the model nothing about records outside the access of the user. The function never forwards the message of a `401` error, because for a rejected permission Appwrite lists the roles of the user in it. The system prompt tells the model to say that the user does not have permission when a tool returns `not_allowed`. It has no rule about who can see what.
+A `404` tells the model nothing about records outside the user's access. The function never forwards the message of a `401` error, because Appwrite lists the user's roles in the message for a rejected permission. The system prompt tells the model to say that the user does not have permission when a tool returns `not_allowed`. It has no rule about who can see what.
 
 ## Run the tool loop
 
@@ -416,7 +422,7 @@ export async function runAgent({ openrouter, messages, toolbox, runLog, startedA
 
 # Execution time limits and JWT lifetime
 
-Appwrite stops waiting for a synchronous execution after 30 seconds, whatever the function timeout is. A Scout run makes several model requests and several Appwrite calls, and the first run after a deployment also waits for the runtime to start. An asynchronous execution runs up to the function timeout, 180 seconds for `copilot`. Appwrite does not store the response body of an asynchronous execution, so the function writes its results to rows, and the web app follows those rows through Realtime.
+Scout runs as an asynchronous execution, because one Scout run can take longer than a synchronous execution allows. Appwrite stops waiting for a synchronous execution after 30 seconds, whatever the function timeout is. A Scout run makes several model requests and several Appwrite calls, and the first run after a deployment also waits for the runtime to start. An asynchronous execution runs up to the function timeout, 180 seconds for `copilot`. Appwrite does not store the response body of an asynchronous execution, so the function writes its results to rows, and the web app follows those rows through Realtime.
 
 The JWT in the execution expires 60 seconds after the function timeout, counted from when Appwrite creates the execution. For `copilot`, that is 240 seconds. The loop limits keep a run inside that window: no new model request starts after 110 seconds, and each model request times out after 30 seconds with one retry.
 
@@ -455,7 +461,7 @@ The body holds the thread ID, the prompt, and the time zone of the browser, so S
 
 ## Follow the run with Realtime
 
-Realtime sends changes to the browser over a WebSocket. A subscription names channels, such as the rows of one table, and Appwrite delivers a row event only to users who can read the row. The `subscribeToScout` function subscribes to the `runs` and `steps` rows and to the executions of the user:
+Realtime sends changes to the browser over a WebSocket. A subscription names channels, such as the rows of one table, and Appwrite delivers a row event only to users who can read the row. The `subscribeToScout` function subscribes to the `runs` and `steps` rows and to the user's executions:
 
 ```typescript
 const rows = (tableId: TableId) => Channel.tablesdb(DATABASE_ID).table(tableId).row();
@@ -486,7 +492,7 @@ export function subscribeToScout(handlers: {
 }
 ```
 
-The subscription has no filters. The function writes run and step rows as the user, and an execution belongs to the user who created it, so Appwrite delivers these events to that user only. The `executions` channel covers a run that stops early: when an execution completes or fails and its run row still has the status `running`, the panel marks the run as interrupted.
+The `executions` channel covers a run that stops early: when an execution completes or fails and its run row still has the status `running`, the panel marks the run as interrupted.
 
 # Start the Cairn web app
 
@@ -514,7 +520,7 @@ When the run completes, the answer appears with its **Sources**. The briefing dr
 
 ![Maya Chen asks what pricing flexibility the team has on Alder Freight, and Scout answers from the notes she can read](/images/blog/build-a-permission-aware-ai-copilot/scout-pricing-maya.avif)
 
-As Maya, ask "What pricing flexibility do we have on Alder Freight?". Scout answers from the notes that Maya can read, including the 8 percent limit from her private note. The answer does not mention a discount approval, because Maya cannot read one.
+As Maya, ask "What pricing flexibility do we have on Alder Freight?". Scout answers from the notes that Maya can read, including the 8 percent discount limit from her private note. The answer does not mention a discount approval, because Maya cannot read one.
 
 ![Daniel Okafor asks the same question, and Scout cites the Leadership note that approves up to 12 percent off list for a two-year term](/images/blog/build-a-permission-aware-ai-copilot/scout-pricing-daniel.avif)
 
