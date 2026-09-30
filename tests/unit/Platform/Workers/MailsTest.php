@@ -8,11 +8,14 @@ use Appwrite\Platform\Workers\Mails;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Tests\Support\ScriptedSmtpServer;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Telemetry\Adapter\None;
 
@@ -75,6 +78,8 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
+    private const string EHLO = "250-mail.example.test\r\n250-AUTH PLAIN LOGIN\r\n250 8BITMIME";
+
     public function testLegacyMailPayloadIsSentByMailsWorker(): void
     {
         $adapter = new SpyMailAdapter();
@@ -164,6 +169,126 @@ final class MailsTest extends TestCase
         $this->runMailWorker($adapter, recipient: 'john@example.test');
 
         $this->assertSame(1, $adapter->sendCount);
+    }
+
+    public function testAProjectSmtpThatRefusedTheLoginEndsTheMessageAtTheFirstAttempt(): void
+    {
+        // The reply MailerSend sent 714 times in a week to one project's stale credentials.
+        $server = new ScriptedSmtpServer(['220 smtp.mailersend.net ESMTP', self::EHLO, '535 Authentication failed.']);
+
+        $failure = $this->sendThroughProjectSmtp($server->port);
+
+        $this->assertInstanceOf(PermanentFailure::class, $failure);
+        $this->assertSame(401, $failure->getCode());
+        $this->assertSame("Error sending mail: No SMTP host answered: 127.0.0.1:{$server->port} (Authentication failed: 535 Authentication failed.)", $failure->getMessage());
+        $this->assertContains('AUTH PLAIN ' . \base64_encode("\0jane\0secret"), $server->commands());
+    }
+
+    public function testAProjectSmtpThatRefusedTheRecipientEndsTheMessageAtTheFirstAttempt(): void
+    {
+        $server = new ScriptedSmtpServer([
+            '220 smtp.improvmx.com ESMTP',
+            self::EHLO,
+            '235 2.7.0 Authentication successful',
+            '250 2.1.0 Ok',
+            '550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24',
+            '250 2.0.0 Ok',
+        ]);
+
+        $failure = $this->sendThroughProjectSmtp($server->port);
+
+        $this->assertInstanceOf(PermanentFailure::class, $failure);
+        $this->assertSame('Error sending mail: 550 5.2.1 Not sending to previously bounced email - ImprovMX v2026.09.24', $failure->getMessage());
+    }
+
+    public function testAProjectSmtpThatCannotCheckTheLoginForNowIsRetried(): void
+    {
+        $server = new ScriptedSmtpServer(['220 smtp.protonmail.ch ESMTP', self::EHLO, '454 4.7.0 Temporary authentication failure: Connection lost to authentication server']);
+
+        $failure = $this->sendThroughProjectSmtp($server->port);
+
+        $this->assertInstanceOf(\Exception::class, $failure);
+        $this->assertNotInstanceOf(PermanentFailure::class, $failure);
+        $this->assertSame(401, $failure->getCode());
+        $this->assertStringContainsString('454 4.7.0 Temporary authentication failure', $failure->getMessage());
+    }
+
+    public function testAProjectSmtpNobodyAnswersOnIsRetried(): void
+    {
+        $failure = $this->sendThroughProjectSmtp(ScriptedSmtpServer::closedPort());
+
+        $this->assertInstanceOf(\Exception::class, $failure);
+        $this->assertNotInstanceOf(PermanentFailure::class, $failure);
+        $this->assertStringStartsWith('Error sending mail: No SMTP host answered: ', $failure->getMessage());
+    }
+
+    public function testAppwritesOwnSmtpRefusingTheLoginIsRetried(): void
+    {
+        // The same refusal from the provider Appwrite sends through is an
+        // incident on our side, not something the project can fix.
+        $server = new ScriptedSmtpServer(['220 smtp.mailersend.net ESMTP', self::EHLO, '535 Authentication failed.']);
+        $adapter = new SMTP(host: "127.0.0.1:{$server->port}", username: 'jane', password: 'secret', timeout: 2, timelimit: 2);
+
+        $registry = new Registry();
+        $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
+
+        $failure = $this->send([], $registry);
+
+        $this->assertInstanceOf(\Exception::class, $failure);
+        $this->assertNotInstanceOf(PermanentFailure::class, $failure);
+        $this->assertSame(500, $failure->getCode());
+        $this->assertStringContainsString('535 Authentication failed.', $failure->getMessage());
+        $this->assertContains('AUTH PLAIN ' . \base64_encode("\0jane\0secret"), $server->commands());
+    }
+
+    private function sendThroughProjectSmtp(int $port): ?\Throwable
+    {
+        return $this->send([
+            'host' => '127.0.0.1',
+            'port' => $port,
+            'username' => 'jane',
+            'password' => 'secret',
+            'secure' => '',
+            'senderEmail' => 'sender@example.test',
+            'senderName' => 'Sender',
+        ], new Registry());
+    }
+
+    /**
+     * @param array<string, mixed> $smtp
+     */
+    private function send(array $smtp, Registry $registry): ?\Throwable
+    {
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=smtp.appwrite.test');
+
+        try {
+            (new Mails())->action(
+                new Message([
+                    'pid' => 'pid',
+                    'queue' => 'v1-mails',
+                    'timestamp' => \time(),
+                    'payload' => [
+                        'smtp' => $smtp,
+                        'recipient' => 'jane@example.test',
+                        'name' => 'Jane',
+                        'subject' => 'Your code',
+                        'body' => '123456',
+                        'bodyTemplate' => '',
+                        'variables' => [],
+                    ],
+                ]),
+                new Document(['$id' => 'project-x']),
+                $registry,
+                new None(),
+            );
+        } catch (\Throwable $failure) {
+            return $failure;
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        return null;
     }
 
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
