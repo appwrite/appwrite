@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Event\Event;
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
@@ -75,6 +76,63 @@ trait WebhooksBase
     }
 
     // Tests for all auth scenarios
+
+    public function testRedeliveryRetriesOnlyTheWebhookThatFailed(): void
+    {
+        // Test for SUCCESS: an event that one webhook accepted and another failed is retried
+        // for the failed one only, under a delivery id of its own.
+        $userId = ID::unique();
+        $event = "users.{$userId}.create";
+
+        $healthy = $this->createWebhook(ID::unique(), 'Healthy', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+        $this->assertSame(201, $healthy['headers']['status-code']);
+        $healthyId = $healthy['body']['$id'];
+
+        // Nothing listens on this port, so the first delivery fails to connect.
+        $failing = $this->createWebhook(ID::unique(), 'Failing', [$event], true, 'http://request-catcher-webhook:5001/', false, null, null);
+        $this->assertSame(201, $failing['headers']['status-code']);
+        $failingId = $failing['body']['$id'];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'email' => $userId . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $this->assertEventually(function () use ($failingId) {
+            $this->assertGreaterThanOrEqual(1, $this->getWebhook($failingId)['body']['attempts']);
+        }, 15000, 500);
+        $this->assertEventually(function () use ($healthyId) {
+            $this->assertCount(1, $this->webhookDeliveries($healthyId));
+        }, 15000, 500);
+
+        // The endpoint recovers. The broker parks the failed event until it is retried.
+        $moved = $this->updateWebhook($failingId, 'Failing', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+        $this->assertSame(200, $moved['headers']['status-code']);
+
+        $this->assertEventually(function () use ($failingId) {
+            $this->retryFailedWebhooks();
+            $this->assertCount(1, $this->webhookDeliveries($failingId));
+        }, 30000, 1000);
+
+        $healthyDeliveries = $this->webhookDeliveries($healthyId);
+        $failingDeliveries = $this->webhookDeliveries($failingId);
+        $this->assertCount(1, $healthyDeliveries, 'The retry sent the event again to the webhook that had accepted it');
+        $this->assertSame(0, $this->getWebhook($failingId)['body']['attempts'], 'A delivered retry clears the failure count');
+
+        $healthyDeliveryId = $healthyDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+        $failingDeliveryId = $failingDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+        $this->assertNotEmpty($healthyDeliveryId);
+        $this->assertNotEmpty($failingDeliveryId);
+        $this->assertNotSame($healthyDeliveryId, $failingDeliveryId);
+
+        $this->deleteWebhook($healthyId);
+        $this->deleteWebhook($failingId);
+    }
 
     public function testCreateWebhook(): void
     {
@@ -2382,6 +2440,31 @@ trait WebhooksBase
     /**
      * @param array<string>|null $queries
      */
+    /**
+     * Every request the webhook request catcher received from one webhook.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function webhookDeliveries(string $webhookId): array
+    {
+        $response = @\file_get_contents('http://request-catcher-webhook:5000/__find_request__?' . \http_build_query([
+            'header_X-Appwrite-Webhook-Id' => $webhookId,
+        ]));
+        $requests = \is_string($response) ? \json_decode($response, true) : [];
+
+        return \array_map($this->decodeRequestData(...), \is_array($requests) ? $requests : []);
+    }
+
+    /**
+     * Run what an operator runs to retry the webhooks the broker parked as failed.
+     */
+    protected function retryFailedWebhooks(): void
+    {
+        // Without --limit the task retries nothing: it reads the missing limit as 0.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::WEBHOOK_QUEUE_NAME) . ' --limit=1000 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
+    }
+
     protected function listWebhooks(?array $queries, ?bool $total): mixed
     {
         $webhooks = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([

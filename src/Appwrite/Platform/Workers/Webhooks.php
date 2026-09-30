@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Redelivery;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
@@ -28,11 +29,6 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
-
-    // How long a partially failed event remembers which webhooks already have it. Outlasts every
-    // broker retry. A message redriven from the dead letters starts again at attempt 0, so it
-    // re-sends to every webhook, under the same delivery id.
-    private const DELIVERED_TTL = 60 * 60 * 24 * 7;
 
     public static function getName(): string
     {
@@ -83,11 +79,11 @@ class Webhooks extends Action
 
         Span::add('project.id', $project->getId());
 
-        // Messages published before the publisher named its events carry no eventId. Name
-        // them by their payload instead of their pid: the Redis broker requeues a retry under
-        // a fresh pid, while the payload is carried through unchanged.
-        $eventId = $payload['eventId'] ?? \md5((string) \json_encode($payload));
-        $redelivery = $message->getAttempts() > 0;
+        // A redelivery retries only the webhooks that failed. When the record of the others
+        // cannot be read they are sent to again: a receiver can drop a repeat by its delivery
+        // id, while a skipped delivery is lost. A message redriven from the dead letters starts
+        // again at attempt 0, so it re-sends to every webhook, under the same delivery id.
+        $redelivery = new Redelivery($cache, 'webhooks', $message, handledWhenUnknown: false);
 
         $errors = [];
         $delivered = [];
@@ -99,19 +95,16 @@ class Webhooks extends Action
                 continue;
             }
 
-            // Same on every attempt for this event and this webhook, and on no other pair.
-            $deliveryId = \md5($eventId . ':' . $webhook->getId());
-
-            if ($redelivery && $this->wasDelivered($cache, $deliveryId)) {
+            if ($redelivery->wasHandled($webhook->getId())) {
                 Span::add('webhooks.skipped_delivered', $webhook->getId());
                 continue;
             }
 
-            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $deliveryId);
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $redelivery->id($webhook->getId()));
             if ($error !== null) {
                 $errors[] = $error;
             } else {
-                $delivered[] = $deliveryId;
+                $delivered[] = $webhook->getId();
             }
         }
 
@@ -119,39 +112,13 @@ class Webhooks extends Action
             return;
         }
 
-        // The throw below asks the broker to deliver this event again, and the redelivery runs
-        // this whole loop. Record the webhooks that already accepted it, so that run retries only
-        // the ones that failed. Written only on a partial failure, the one case that needs it.
-        foreach ($delivered as $deliveryId) {
-            // Without the record the retry re-sends to this webhook as well, under the same
-            // delivery id header a receiver can dedupe on. Not a reason to fail the others.
-            try {
-                if ($cache->save('webhook-delivered:' . $deliveryId, '1', ttl: self::DELIVERED_TTL) === false) {
-                    Span::add('webhooks.delivered_record_failed', 'cache refused the write');
-                }
-            } catch (\Throwable $th) {
-                Span::add('webhooks.delivered_record_failed', $th->getMessage());
-            }
-        }
+        // The throw below asks the broker to deliver this event again. Record the webhooks that
+        // already accepted it, so the redelivery retries only the ones that failed. A webhook
+        // whose record is lost gets the event again under the same delivery id, which is no
+        // reason to hold back the retry the others need.
+        $redelivery->record($delivered);
 
         throw new Exception(\implode(" / \n\n", $errors));
-    }
-
-    /**
-     * Whether an earlier delivery of this message already reached the webhook.
-     *
-     * An unreadable cache answers no: re-sending under the same delivery id is recoverable
-     * for the receiver, while a skipped delivery is lost.
-     */
-    private function wasDelivered(Cache $cache, string $deliveryId): bool
-    {
-        try {
-            return $cache->load('webhook-delivered:' . $deliveryId, self::DELIVERED_TTL) !== false;
-        } catch (\Throwable $th) {
-            Span::add('webhooks.delivered_lookup_failed', $th->getMessage());
-
-            return false;
-        }
     }
 
     /**
