@@ -2845,16 +2845,16 @@
         },
         {
             "name": "utopia-php/async",
-            "version": "0.1.1",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/async.git",
-                "reference": "3ee4fc3d505113d0d6050f35f5bf85e706866a22"
+                "reference": "c7925a2ad7cf0fceebb3f93200c95a269126f692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/async/zipball/3ee4fc3d505113d0d6050f35f5bf85e706866a22",
-                "reference": "3ee4fc3d505113d0d6050f35f5bf85e706866a22",
+                "url": "https://api.github.com/repos/utopia-php/async/zipball/c7925a2ad7cf0fceebb3f93200c95a269126f692",
+                "reference": "c7925a2ad7cf0fceebb3f93200c95a269126f692",
                 "shasum": ""
             },
             "require": {
@@ -2901,9 +2901,9 @@
             "description": "High-performance concurrent + parallel library with Promise and Parallel execution support for PHP.",
             "support": {
                 "issues": "https://github.com/utopia-php/async/issues",
-                "source": "https://github.com/utopia-php/async/tree/0.1.1"
+                "source": "https://github.com/utopia-php/async/tree/0.2.0"
             },
-            "time": "2026-06-08T05:10:34+00:00"
+            "time": "2026-09-29T14:07:22+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2958,12 +2958,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a1642eaad59c4c5cf97d2cd4f0e76976e17f4448"
+                "reference": "c2b70904c2a6d754adc7bfcdd897fffdfe1017df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1642eaad59c4c5cf97d2cd4f0e76976e17f4448",
-                "reference": "a1642eaad59c4c5cf97d2cd4f0e76976e17f4448",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c2b70904c2a6d754adc7bfcdd897fffdfe1017df",
+                "reference": "c2b70904c2a6d754adc7bfcdd897fffdfe1017df",
                 "shasum": ""
             },
             "require": {
@@ -2972,7 +2972,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.5",
-                "utopia-php/async": "^0.1",
+                "utopia-php/async": "^0.2",
                 "utopia-php/cache": "^4.0 || ^5.0",
                 "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "1.*",
@@ -3025,7 +3025,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-09-29T12:43:34+00:00"
+            "time": "2026-09-30T10:16:03+00:00"
         },
         {
             "name": "utopia-php/migration",
