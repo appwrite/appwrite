@@ -51,6 +51,11 @@ class Builds extends Action
         return 'builds';
     }
 
+    public static function archiveCommand(string $archive, string $directory): string
+    {
+        return 'tar --exclude code.tar.gz -czf ' . \escapeshellarg($archive) . ' -C ' . \escapeshellarg($directory) . ' .';
+    }
+
     /**
      * @throws Exception
      */
@@ -338,8 +343,8 @@ class Builds extends Action
                         $tmpTemplateDirectory .= '/';
                     }
 
-                    $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
-                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                    $tarParamDirectory = $tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory);
+                    Console::execute(self::archiveCommand($tmpPathFile, $tarParamDirectory), '', $stdout, $stderr);
 
                     $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                     $result = $localDevice->transfer($tmpPathFile, $source, $device);
@@ -507,7 +512,7 @@ class Builds extends Action
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
                 $tarParamDirectory = '/tmp/builds/' . $deploymentId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
-                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                Console::execute(self::archiveCommand($tmpPathFile, $tarParamDirectory), '', $stdout, $stderr);
 
                 $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $source, $device);
