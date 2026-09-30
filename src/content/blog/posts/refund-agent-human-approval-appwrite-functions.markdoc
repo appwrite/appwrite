@@ -150,8 +150,6 @@ The `request_photos` Storage bucket lets any signed-in user upload a file and gi
 
 ![The Executions settings of the refund-agent function in the Appwrite Console with three events: refund_requests row create, approvals row update, and replies row create](/images/blog/refund-agent-human-approval-appwrite-functions/console-agent-events.avif)
 
-![The Scopes card of the refund-agent function in the Appwrite Console with one Auth scope, two Databases scopes, one Functions scope, and one Storage scope selected](/images/blog/refund-agent-human-approval-appwrite-functions/console-agent-scopes.avif)
-
 `refund-agent` uses the Node.js 22 runtime. Four of its settings matter for the agent:
 
 - **Permissions** on the **Security** tab are empty, so no user can execute the agent. Only its events and the delayed executions that it creates start it.
