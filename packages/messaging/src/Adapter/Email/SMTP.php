@@ -3,15 +3,19 @@
 namespace Utopia\Messaging\Adapter\Email;
 
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
+use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
 use Utopia\SMTP\Transport\Native;
 
@@ -77,7 +81,7 @@ class SMTP extends EmailAdapter
             $client = $this->keepAlive ? $this->client() : $this->dial();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
             }
 
             return $response->toArray();
@@ -98,18 +102,18 @@ class SMTP extends EmailAdapter
             }
 
             foreach ($result->rejected as $email => $reply) {
-                $response->addResult($email, (string) $reply);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
         } catch (TransactionException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, (string) $exception->reply);
+                $response->addResult($email, (string) $exception->reply, $exception->isPermanent());
             }
 
             // A 421 during RCPT ends the session with the transaction.
             $keep = $keep && is_finite($client->idle());
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
             }
 
             $keep = false;
@@ -167,6 +171,7 @@ class SMTP extends EmailAdapter
         );
 
         $failures = [];
+        $permanent = true;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
             $client = new Client(
@@ -183,6 +188,9 @@ class SMTP extends EmailAdapter
                 $client->capabilities();
             } catch (SmtpException $exception) {
                 $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                // One host that may answer differently later is reason enough
+                // to try the whole list again.
+                $permanent = $permanent && $this->permanent($exception);
 
                 continue;
             }
@@ -190,9 +198,29 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new \Utopia\SMTP\Exception\ConnectionException(
-            'No SMTP host answered: ' . implode('; ', $failures),
-        );
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $permanent);
+    }
+
+    /**
+     * Whether the server has refused in a way that sending the same message
+     * again, to the same server, cannot change: a 5xx reply, or a server that
+     * cannot carry this message at all. A connection that dropped or timed out,
+     * a 4xx and a reply out of protocol all say nothing about the next attempt.
+     */
+    private function permanent(SmtpException $exception): bool
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->isPermanent(),
+            $exception instanceof NoHostAnswered => $exception->permanent,
+            // A refused AUTH carries the server's reply. Without one, no
+            // mechanism was shared or the challenges never ended, and the
+            // server will offer the same the next time.
+            $exception instanceof AuthenticationException => !$previous instanceof TransactionException || $previous->isPermanent(),
+            $exception instanceof CapabilityException => true,
+            default => false,
+        };
     }
 
     private function reusable(Client $client): bool
