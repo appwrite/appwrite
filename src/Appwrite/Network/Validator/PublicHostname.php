@@ -96,7 +96,7 @@ class PublicHostname extends Validator
 
         // IP literals are checked directly, no DNS round-trip.
         if (\filter_var($hostname, FILTER_VALIDATE_IP) !== false) {
-            if (!self::isPublicIp($hostname)) {
+            if (!static::isPublicIp($hostname)) {
                 $this->reason = "Address {$hostname} is in a private or reserved range.";
                 return false;
             }
@@ -111,7 +111,7 @@ class PublicHostname extends Validator
         }
 
         foreach ($addresses as $ip) {
-            if (!self::isPublicIp($ip)) {
+            if (!static::isPublicIp($ip)) {
                 $this->reason = "Hostname {$hostname} resolves to private or reserved address {$ip}.";
                 return false;
             }
