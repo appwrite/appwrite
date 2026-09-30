@@ -1059,9 +1059,14 @@ final class AccountCustomClientTest extends Scope
         // The client keeps the last Set-Cookie header, which is the main session cookie.
         $setCookie = $session['headers']['set-cookie'];
         $this->assertStringStartsWith('a_session_' . $projectId . '=', $setCookie);
-        $this->assertMatchesRegularExpression('/expires=([^;]+)/i', $setCookie);
-        \preg_match('/expires=([^;]+)/i', $setCookie, $matches);
-        $cookieRemaining = \strtotime($matches[1]) - \time();
+        $expires = '';
+        foreach (\explode(';', $setCookie) as $part) {
+            if (\str_starts_with(\strtolower(\trim($part)), 'expires=')) {
+                $expires = \substr(\trim($part), 8);
+            }
+        }
+        $this->assertNotEmpty($expires);
+        $cookieRemaining = \strtotime($expires) - \time();
         $this->assertGreaterThan(240, $cookieRemaining);
         $this->assertLessThanOrEqual(300, $cookieRemaining);
 
