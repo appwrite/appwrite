@@ -1249,6 +1249,51 @@ trait WebhooksBase
         $this->deleteWebhook($webhookId);
     }
 
+    public function testUpdateWebhookClearsAuthPasswordWhenTlsVerificationDisabled(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Downgrade Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            true,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Same URL, but turning off certificate verification must not keep a credential the key cannot read.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Downgrade Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'downgrade@localhost.test',
+            'password' => 'password',
+            'name' => 'Downgrade User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $this->assertSame('', $this->getDeliveryAuthorization($webhookId, $user['body']['$id']));
+
+        $this->deleteWebhook($webhookId);
+    }
+
     private function getDeliveryAuthorization(string $webhookId, string $userId): string
     {
         $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
