@@ -290,6 +290,9 @@ Http::init()
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+            // On the console project, $team is the organization the route itself acts on (see the
+            // team resource), which is what lets its membership roles become the bare
+            // owner/developer/admin roles below.
             $teamId = $team->getId();
             $adminRoles = [];
             $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;

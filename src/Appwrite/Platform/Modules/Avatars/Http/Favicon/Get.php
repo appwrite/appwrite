@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -27,7 +28,6 @@ use Utopia\Psr7\Header;
 use Utopia\Psr7\Method as RequestMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
-use Utopia\Validator\URL;
 
 class Get extends Action
 {
@@ -67,7 +67,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE
             ))
-            ->param('url', '', new URL(self::ALLOWED_SCHEMES), 'Website URL which you want to fetch the favicon from.')
+            ->param('url', '', new PublicURL(), 'Website URL which you want to fetch the favicon from.')
             ->inject('response')
             ->callback($this->action(...));
     }

@@ -1373,6 +1373,11 @@ return [
         'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
         'code' => 404,
     ],
+    Exception::MIGRATION_SOURCE_UNAUTHORIZED => [
+        'name' => Exception::MIGRATION_SOURCE_UNAUTHORIZED,
+        'description' => 'The source API key cannot read the requested resources of the source project. Verify the projectId, the API key, and that the key has read scopes for every resource you are migrating.',
+        'code' => 401,
+    ],
     Exception::MIGRATION_SOURCE_TYPE_INVALID => [
         'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
         'description' => 'The migration source type is invalid. Use one of the supported source types.',

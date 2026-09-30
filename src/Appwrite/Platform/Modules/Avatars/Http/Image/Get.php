@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Image;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,14 +13,12 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Domains\Domain;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Method as RequestMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Validator\Range;
-use Utopia\Validator\URL;
 
 class Get extends Action
 {
@@ -57,7 +55,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE
             ))
-            ->param('url', '', new URL(['http', 'https']), 'Image URL which you want to crop.')
+            ->param('url', '', new PublicURL(), 'Image URL which you want to crop.')
             ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000. Defaults to 400.', true)
             ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
             ->inject('response')
@@ -72,21 +70,6 @@ class Get extends Action
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
-        $host = \parse_url($url, PHP_URL_HOST) ?? '';
-
-        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
-        if (!$isIpLiteral) {
-            $domain = new Domain($host);
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-            }
-        }
-
-        $hostnameValidator = new PublicHostname();
-        if (!$hostnameValidator->isValid($host)) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
         }
 
         try {
