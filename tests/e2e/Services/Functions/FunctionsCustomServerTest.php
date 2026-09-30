@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Async\Exceptions\Critical;
@@ -2582,6 +2583,85 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
         }, 5000, 500);
+    }
+
+    public function testEventExecutionIsNotRunAgainAfterTheExecutorFailed(): void
+    {
+        // Test for SUCCESS: once the executor has been called, its failure is recorded on the
+        // execution and the event is not retried: whether the function ran cannot be told from
+        // the worker, and a retry would run it a second time under a new execution.
+        $userId = ID::unique();
+        $functionId = $this->setupDeployedFunction('Event subscriber', 'basic', ['events' => ["users.{$userId}.create"]]);
+
+        try {
+            // The executor goes away while the event is delivered: the worker's call to it fails.
+            $this->setExecutorRunning(false);
+            try {
+                $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'userId' => $userId,
+                    'email' => $userId . '@localhost.test',
+                    'password' => 'password',
+                ]);
+                $this->assertSame(201, $user['headers']['status-code']);
+
+                $this->assertEventually(function () use ($functionId) {
+                    $this->assertSame(['failed'], $this->executionStatuses($functionId));
+                }, 30000, 1000);
+            } finally {
+                $this->setExecutorRunning(true);
+            }
+
+            // Whatever the broker parked as failed is now run again, with the executor back.
+            $this->retryFailedFunctions();
+            $settled = \microtime(true) + 15;
+            while (\microtime(true) < $settled) {
+                $this->assertSame(['failed'], $this->executionStatuses($functionId), 'The retry ran the function a second time');
+                \usleep(1000000);
+            }
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
+    /**
+     * Stop or start the executor container, and wait until a started one reports healthy.
+     */
+    private function setExecutorRunning(bool $running): void
+    {
+        \exec('docker ' . ($running ? 'start' : 'stop') . ' exc1 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
+
+        if ($running) {
+            $this->assertEventually(function () {
+                $this->assertSame('healthy', \trim((string) \shell_exec("docker inspect -f '{{.State.Health.Status}}' exc1 2>/dev/null")));
+            }, 120000, 1000);
+        }
+    }
+
+    /**
+     * @return list<string> The status of every execution of the function, oldest first.
+     */
+    private function executionStatuses(string $functionId): array
+    {
+        $executions = $this->listExecutions($functionId, [
+            'queries' => [Query::orderAsc('$createdAt')->toString()],
+        ]);
+        $this->assertSame(200, $executions['headers']['status-code']);
+
+        return \array_column($executions['body']['executions'], 'status');
+    }
+
+    /**
+     * Run what an operator runs to retry the functions jobs the broker parked as failed.
+     */
+    private function retryFailedFunctions(): void
+    {
+        // Without --limit the task retries nothing: it reads the missing limit as 0.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::FUNCTIONS_QUEUE_NAME) . ' --limit=1000 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
     }
 
     public function testExecutionTimeout()

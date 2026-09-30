@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Redelivery;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -32,10 +33,6 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
-    // How long a partially failed event remembers which subscribers it already handled. Outlasts
-    // every broker retry of the message.
-    private const HANDLED_TTL = 60 * 60 * 24 * 7;
-
     /** @var callable(string, int, callable): mixed */
     private $locks;
 
@@ -169,13 +166,10 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
-            // A retry re-runs this whole fan-out, so a subscriber must not be run twice: running
-            // user code again is worse than not running it. Each subscriber this message has
-            // handled is recorded when the message fails, and a redelivery skips it. Messages
-            // published before events were named are named by their payload, which a Redis
-            // requeue keeps while it changes the pid.
-            $eventId = $functionMessage->eventId ?: \md5((string) \json_encode($payload));
-            $redelivery = $message->getAttempts() > 0;
+            // A retry re-runs this whole fan-out, so a redelivery skips the subscribers an earlier
+            // delivery handled. When that record cannot be read the subscriber is skipped too:
+            // running user code a second time is worse than missing one run of the event.
+            $redelivery = new Redelivery($cache, 'functions', $message, handledWhenUnknown: true);
             $handled = [];
             $failure = null;
             $limit = 100;
@@ -205,8 +199,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    $handledKey = 'function-event-handled:' . \md5($eventId . ':' . $function->getId());
-                    if ($redelivery && $this->wasHandled($cache, $handledKey)) {
+                    if ($redelivery->wasHandled($function->getId())) {
                         Span::add('event.subscriber.skipped_handled', $function->getId());
                         continue;
                     }
@@ -249,7 +242,7 @@ class Functions extends Action
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
                         );
-                        $handled[] = $handledKey;
+                        $handled[] = $function->getId();
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
                         $failure ??= $th;
@@ -265,17 +258,9 @@ class Functions extends Action
             // Every subscriber has been tried. Record the ones handled before asking the broker
             // for the retry the failed ones need. If a record cannot be written, the retry would
             // run that subscriber again, so the failure is recorded instead of retried.
-            foreach ($handled as $handledKey) {
-                try {
-                    $saved = $cache->save($handledKey, '1', ttl: self::HANDLED_TTL) !== false;
-                } catch (\Throwable $th) {
-                    $saved = false;
-                    Span::add('event.handled_record.error', $th->getMessage());
-                }
-                if (!$saved) {
-                    Span::add('event.subscriber.failure', $failure->getMessage());
-                    return;
-                }
+            if (!$redelivery->record($handled)) {
+                Span::add('event.subscriber.failure', $failure->getMessage());
+                return;
             }
 
             throw $failure;
@@ -870,23 +855,6 @@ class Functions extends Action
         if (!empty($error)) {
             Span::add('execution.error', 'Function execution failed: ' . $error);
             Span::add('execution.error.code', $errorCode);
-        }
-    }
-
-    /**
-     * Whether an earlier delivery of this message already handled the subscriber.
-     *
-     * An unreadable cache answers yes: skipping loses one run of the event, while
-     * answering no could run the user's function twice.
-     */
-    private function wasHandled(Cache $cache, string $key): bool
-    {
-        try {
-            return $cache->load($key, self::HANDLED_TTL) !== false;
-        } catch (\Throwable $th) {
-            Span::add('event.handled_lookup.error', $th->getMessage());
-
-            return true;
         }
     }
 }
