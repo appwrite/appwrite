@@ -2913,7 +2913,8 @@ trait MigrationsBase
         $this->assertTrue($foundWebhook['enabled']);
         $this->assertTrue($foundWebhook['tls']);
         $this->assertEquals('hook-user', $foundWebhook['authUsername']);
-        $this->assertEquals('hook-pass', $foundWebhook['authPassword']);
+        // authPassword is write-only, so the source API cannot hand it to the migration and the
+        // destination cannot show it; the username is the only credential that carries over.
         // secret is regenerated on the destination because the SDK strips it from list
         // responses on read — same caveat as api keys.
         if (!empty($sourceWebhook['secret'])) {

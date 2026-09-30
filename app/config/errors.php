@@ -387,6 +387,11 @@ return [
         'description' => 'The provided ID token is invalid, expired, or failed verification.',
         'code' => 401,
     ],
+    Exception::USER_OAUTH2_STATE_INVALID => [
+        'name' => Exception::USER_OAUTH2_STATE_INVALID,
+        'description' => 'The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again.',
+        'code' => 401,
+    ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',

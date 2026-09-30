@@ -545,16 +545,22 @@ Http::init()
         }
 
         // Step 12: Validate MFA requirements
-        $mfaEnabled = $rolesSource->getAttribute('mfa', false);
-        $hasVerifiedEmail = $rolesSource->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $rolesSource->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($rolesSource)?->getAttribute('verified') ?? false;
+        // $session belongs to $user, who stays the impersonator while impersonating, so the
+        // impersonator's MFA applies and the target's is never asked of them.
+        $mfaEnabled = $user->getAttribute('mfa', false);
+        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         // Step 13: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
-            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
+            // Impersonating needs a session to count the impersonator's factors on.
+            if (
+                (! $impersonatorUser->isEmpty() && ! $session)
+                || ($session && \count($session->getAttribute('factors', [])) < $minimumFactors)
+            ) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
