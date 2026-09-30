@@ -368,9 +368,9 @@ class Gogs extends Gitea
             }
             file_put_contents($fullPath, $content);
 
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('add')->argument('--')->argument($filepath));
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('commit')->option('-m', $message));
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('push')->argument('origin')->argument($branch));
+            $this->exec($this->git($dir)->argument('add')->argument('--')->argument($filepath));
+            $this->exec($this->git($dir)->argument('commit')->option('-m', $message));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($branch));
         } finally {
             $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
         }
@@ -391,8 +391,8 @@ class Gogs extends Gitea
         $dir = $this->gitClone($owner, $repositoryName, $oldBranchName);
 
         try {
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('checkout')->flag('-b')->argument($newBranchName));
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('push')->argument('origin')->argument($newBranchName));
+            $this->exec($this->git($dir)->argument('checkout')->flag('-b')->argument($newBranchName));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($newBranchName));
         } finally {
             $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
         }
@@ -415,8 +415,8 @@ class Gogs extends Gitea
         }
 
         $this->exec($clone->argument($cloneUrl)->argument($dir));
-        $this->exec((new Command('git'))->option('-C', $dir)->argument('config')->argument('user.email')->argument('gogs@test.local'));
-        $this->exec((new Command('git'))->option('-C', $dir)->argument('config')->argument('user.name')->argument('Gogs Test'));
+        $this->exec($this->git($dir)->argument('config')->argument('user.email')->argument('gogs@test.local'));
+        $this->exec($this->git($dir)->argument('config')->argument('user.name')->argument('Gogs Test'));
 
         return $dir;
     }
@@ -466,13 +466,13 @@ class Gogs extends Gitea
         $dir = $this->gitClone($owner, $repositoryName);
 
         try {
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('fetch')->argument('origin')->argument($target));
+            $this->exec($this->git($dir)->argument('fetch')->argument('origin')->argument($target));
             if ($message !== '' && $message !== '0') {
-                $this->exec((new Command('git'))->option('-C', $dir)->argument('tag')->flag('-a')->argument($tagName)->argument($target)->option('-m', $message));
+                $this->exec($this->git($dir)->argument('tag')->flag('-a')->argument($tagName)->argument($target)->option('-m', $message));
             } else {
-                $this->exec((new Command('git'))->option('-C', $dir)->argument('tag')->argument($tagName)->argument($target));
+                $this->exec($this->git($dir)->argument('tag')->argument($tagName)->argument($target));
             }
-            $this->exec((new Command('git'))->option('-C', $dir)->argument('push')->argument('origin')->argument($tagName));
+            $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($tagName));
         } finally {
             $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
         }

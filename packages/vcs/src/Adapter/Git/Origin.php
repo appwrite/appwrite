@@ -1981,18 +1981,17 @@ class Origin extends Git
 
         $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
-        $git = fn (): Command => (new Command('git'))->option('-C', $directory);
 
         try {
-            $this->execute($git()->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
 
             // Base the commit on the branch tip when there is one; a missing
             // target branch grows from the default branch, and an empty
             // repository starts from scratch
-            $hasBase = $this->tryExecute($git()->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $targetBranch))
-                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($git()->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $defaultBranch)));
+            $hasBase = $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $targetBranch))
+                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $defaultBranch)));
             if ($hasBase) {
-                $this->execute($git()->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
+                $this->execute($this->git($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
             }
 
             $absolute = $directory . '/' . $relative;
@@ -2016,10 +2015,10 @@ class Origin extends Git
                 throw new Exception("Failed to write {$filepath}");
             }
 
-            $this->execute($git()->argument('add')->argument('--')->argument($relative), 'Staging the file');
-            $this->execute($git()->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
-            $commitHash = trim($this->execute($git()->argument('rev-parse')->argument('HEAD'), 'Reading the commit hash'));
-            $this->execute($git()->argument('push')->flag('-q')->argument($remote)->argument('HEAD:refs/heads/' . $targetBranch), 'Pushing the commit');
+            $this->execute($this->git($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
+            $this->execute($this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
+            $commitHash = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('HEAD'), 'Reading the commit hash'));
+            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('HEAD:refs/heads/' . $targetBranch), 'Pushing the commit');
 
             return [
                 'path' => $relative,
@@ -2043,13 +2042,12 @@ class Origin extends Git
     {
         $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
-        $git = fn (): Command => (new Command('git'))->option('-C', $directory);
 
         try {
-            $this->execute($git()->argument('init')->flag('-q'), 'Initializing the working repository');
-            $this->execute($git()->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $oldBranchName), "Fetching branch {$oldBranchName}");
-            $sha = trim($this->execute($git()->argument('rev-parse')->argument('FETCH_HEAD'), 'Reading the branch tip'));
-            $this->execute($git()->argument('push')->flag('-q')->argument($remote)->argument('FETCH_HEAD:refs/heads/' . $newBranchName), "Creating branch {$newBranchName}");
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $oldBranchName), "Fetching branch {$oldBranchName}");
+            $sha = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('FETCH_HEAD'), 'Reading the branch tip'));
+            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('FETCH_HEAD:refs/heads/' . $newBranchName), "Creating branch {$newBranchName}");
 
             return [
                 'name' => $newBranchName,
@@ -2073,25 +2071,24 @@ class Origin extends Git
     {
         $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
-        $git = fn (): Command => (new Command('git'))->option('-C', $directory);
 
         try {
-            $this->execute($git()->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
 
             // Prefer fetching the target object directly; fall back to every
             // branch head for servers that refuse fetch-by-SHA
-            if (!$this->tryExecute($git()->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument($target))) {
-                $this->execute($git()->argument('fetch')->flag('-q')->argument($remote)->argument('refs/heads/*:refs/remotes/origin/*'), "Fetching commit {$target}");
+            if (!$this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument($target))) {
+                $this->execute($this->git($directory)->argument('fetch')->flag('-q')->argument($remote)->argument('refs/heads/*:refs/remotes/origin/*'), "Fetching commit {$target}");
             }
 
             if ($message !== '' && $message !== '0') {
                 $this->execute(
-                    $git()->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('tag')->flag('-a')->argument($tagName)->option('-m', $message)->argument($target),
+                    $this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('tag')->flag('-a')->argument($tagName)->option('-m', $message)->argument($target),
                     "Creating tag {$tagName}",
                 );
-                $this->execute($git()->argument('push')->flag('-q')->argument($remote)->argument('refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('refs/tags/' . $tagName), "Pushing tag {$tagName}");
             } else {
-                $this->execute($git()->argument('push')->flag('-q')->argument($remote)->argument($target . ':refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument($target . ':refs/tags/' . $tagName), "Pushing tag {$tagName}");
             }
 
             return [

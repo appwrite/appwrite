@@ -177,23 +177,7 @@ class DiffCheck
      */
     protected function generateDiff(string $basePath, string $targetPath, Options $options): array
     {
-        $diff = function (bool $quiet) use ($basePath, $targetPath, $options): Command {
-            $command = (new Command('git'))->argument('diff');
-            if ($quiet) {
-                $command->flag('--quiet');
-            }
-            $command->flag('--no-index');
-            if ($options->getIgnoreAllSpace()) {
-                $command->flag('--ignore-all-space');
-            }
-            if ($options->getIgnoreBlankLines()) {
-                $command->flag('--ignore-blank-lines');
-            }
-
-            return $command->argument('--')->argument($basePath)->argument($targetPath);
-        };
-
-        $result = $this->runCommand($diff(true));
+        $result = $this->runCommand($this->diffCommand($basePath, $targetPath, $options, quiet: true));
 
         if (! in_array($result['code'], [0, 1], true)) {
             throw new \RuntimeException('Failed to generate diff: '.implode("\n", $result['output']));
@@ -210,7 +194,7 @@ class DiffCheck
         $maxLines = $options->getMaxDiffLines();
         $captureLines = $maxLines + 1;
         $outputResult = $this->runCommand(Command::pipe(
-            $diff(false),
+            $this->diffCommand($basePath, $targetPath, $options, quiet: false),
             (new Command('head'))->option('-n', $captureLines),
         ));
 
@@ -340,6 +324,23 @@ class DiffCheck
         }
 
         return $path;
+    }
+
+    protected function diffCommand(string $basePath, string $targetPath, Options $options, bool $quiet): Command
+    {
+        $command = (new Command('git'))->argument('diff');
+        if ($quiet) {
+            $command->flag('--quiet');
+        }
+        $command->flag('--no-index');
+        if ($options->getIgnoreAllSpace()) {
+            $command->flag('--ignore-all-space');
+        }
+        if ($options->getIgnoreBlankLines()) {
+            $command->flag('--ignore-blank-lines');
+        }
+
+        return $command->argument('--')->argument($basePath)->argument($targetPath);
     }
 
     /**

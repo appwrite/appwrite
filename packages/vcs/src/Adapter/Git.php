@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\VCS\Adapter;
 
 use Exception;
+use InvalidArgumentException;
 use Utopia\Cache\Cache;
 use Utopia\Command;
 use Utopia\VCS\Adapter;
@@ -307,9 +308,9 @@ abstract class Git extends Adapter
         }
 
         // A leading dash would reach git as an option instead of a ref
-        $ref = fn (string $value): bool => !str_starts_with($value, '-');
-
-        $git = fn (): Command => (new Command('git'))->option('-C', $directory);
+        if (str_starts_with($version, '-')) {
+            throw new InvalidArgumentException("Invalid clone version: {$version}");
+        }
 
         $checkout = match ($versionType) {
             self::CLONE_TYPE_BRANCH => (new Command('sh'))
@@ -317,14 +318,14 @@ abstract class Git extends Adapter
                 ->argument('if git -C "$1" ls-remote --exit-code --heads origin "$2"; then git -C "$1" pull --depth=1 origin "$2" && git -C "$1" checkout "$2"; else git -C "$1" checkout -b "$2"; fi')
                 ->argument('sh')
                 ->argument($directory)
-                ->argument($version, $ref),
+                ->argument($version),
             self::CLONE_TYPE_COMMIT => Command::and(
-                $git()->argument('fetch')->option('--depth', '1')->argument('origin')->argument($version, $ref),
-                $git()->argument('checkout')->argument($version, $ref),
+                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument($version),
+                $this->git($directory)->argument('checkout')->argument($version),
             ),
             self::CLONE_TYPE_TAG => Command::and(
-                $git()->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
-                $git()->argument('checkout')->argument('FETCH_HEAD'),
+                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
+                $this->git($directory)->argument('checkout')->argument('FETCH_HEAD'),
             ),
             default => throw new Exception("Unsupported clone type: {$versionType}"),
         };
@@ -332,19 +333,27 @@ abstract class Git extends Adapter
         return Command::and(
             (new Command('mkdir'))->flag('-p')->argument($directory),
             (new Command('git'))->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
-            $git()->argument('init'),
-            $git()->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
-            $git()->argument('config')->argument('core.sparseCheckout')->argument('true'),
+            $this->git($directory)->argument('init'),
+            $this->git($directory)->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
+            $this->git($directory)->argument('config')->argument('core.sparseCheckout')->argument('true'),
             Command::appendStdout(
                 (new Command('printf'))->argument('%s\n')->argument($rootDirectory),
                 $directory . '/.git/info/sparse-checkout',
             ),
             // Disable fetching of refs we don't need
-            $git()->argument('config')->flag('--add')->argument('remote.origin.fetch')->argument('+refs/heads/*:refs/remotes/origin/*'),
+            $this->git($directory)->argument('config')->flag('--add')->argument('remote.origin.fetch')->argument('+refs/heads/*:refs/remotes/origin/*'),
             // Disable fetching of tags
-            $git()->argument('config')->argument('remote.origin.tagopt')->argument('--no-tags'),
+            $this->git($directory)->argument('config')->argument('remote.origin.tagopt')->argument('--no-tags'),
             $checkout,
         );
+    }
+
+    /**
+     * git, run against the repository in $directory
+     */
+    protected function git(string $directory): Command
+    {
+        return (new Command('git'))->option('-C', $directory);
     }
 
     /**
