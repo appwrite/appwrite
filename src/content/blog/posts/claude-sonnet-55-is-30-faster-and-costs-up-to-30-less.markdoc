@@ -76,8 +76,6 @@ The more useful view is score against cost per task. As effort goes up, models w
 * On [Terminal-Bench](https://www.tbench.ai/), which measures multi-step professional tasks in a command-line interface, Sonnet 5.5 at medium effort far exceeds Sonnet 5's best score for less than a tenth of the cost.
 * Sonnet 5.5 complements Opus 5.5 best at lower effort settings. At higher settings, it can perform comparably to Opus 5.5 at a similar cost.
 
-At higher effort settings, Sonnet 5.5 can approach Opus 5.5 in both performance and cost. Low and medium effort settings show the clearest cost advantages over Sonnet 5.
-
 # Claude Sonnet 5.5 for coding and agentic development
 
 **Coding is where the jump from Sonnet 5 to Sonnet 5.5 is most noticeable.** At high effort on FrontierCode, Sonnet 5.5 scores 10 points higher than Sonnet 5 at the same setting, at about one fifteenth of the cost per task. On CursorBench, which tests models on tasks from real Cursor coding sessions, its best score is within about two points of Opus 5.5.
@@ -89,7 +87,7 @@ Early testers pointed to two behaviors:
 
 Epic Games reported that Sonnet 5.5 cleared the quality bar they would expect from a higher-tier model, handling tens of thousands of lines of gameplay system architecture and multi-hour tasks with less prescriptive prompting. For agent loops, batched tool calls are the detail to watch: fewer steps per task means fewer round trips and less context to pay for.
 
-## Claude Sonnet 5.5 for knowledge work, documents, and design
+# Claude Sonnet 5.5 for knowledge work, documents, and design
 
 **Claude Sonnet 5.5 scores 1844 on GDPval-AA, nearly level with Opus 5.5 and about 400 points above Sonnet 5.** GDPval-AA, run by [Artificial Analysis](https://artificialanalysis.ai/), tests models on real-world tasks across 44 occupations and nine major industries. Sonnet 5.5 is also close to Opus 5.5 on computer use and chart recognition, and clearly outperforms Sonnet 5 and GPT-6 Sol on long-horizon knowledge work.
 
