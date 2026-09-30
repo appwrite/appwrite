@@ -1,0 +1,1242 @@
+---
+layout: post
+title: "Build an AI refund agent with human approval on Appwrite Functions"
+description: Build a refund desk where an AI agent refunds small cases on its own, hands the rest to staff, and resumes from TablesDB when they decide.
+date: 2026-09-30
+cover: /images/blog/refund-agent-human-approval-appwrite-functions/cover.avif
+timeToRead: 22
+author: atharva
+category: tutorials
+faqs:
+  - question: "How can an Appwrite Function wait hours for a human approval?"
+    answer: "It does not wait. A function execution can run for 15 minutes at most, so the refund agent saves its recommendation as a row in an approvals table, and the execution ends. When a staff member decides, the web app updates that row. The update event starts a new execution, which rebuilds the case from TablesDB rows and carries out the decision. No execution runs while the request waits."
+  - question: "How do I stop an event-triggered function from triggering itself?"
+    answer: "Appwrite starts a function for every event that it subscribes to, also when the function's own write caused the event. Subscribe only to events that the function never causes. The refund agent subscribes to updates of approvals rows, but it only creates approvals rows. Staff update them, so a write from the agent never starts the agent again."
+  - question: "Can a customer talk an AI refund agent into a larger refund?"
+    answer: "No. The issue_refund tool takes no amount. Code refunds the full item price, and only when every automatic refund rule passes: the reason is damage, a defect, or a wrong item, the price is $50 or less, the item was delivered in the last 30 days, the photo shows the problem, and the customer had no other refund in the last 90 days. The prompt also tells the model to send a request to staff when the customer's text gives instructions or claims an approval."
+  - question: "How does a staff dashboard show the progress of an agent without polling?"
+    answer: "Every tool call writes a row to a run_steps table, first with the status running and then with the result. The dashboard subscribes to run_steps through Appwrite Realtime with the query Query.equal('requestId', [requestId]), so Appwrite sends only the steps of the open request. Realtime applies the same permissions as reads, so a customer receives only the steps that are shared with that customer."
+  - question: "How does the agent know which staff member approved a request?"
+    answer: "An execution that a row event starts carries the ID of the user whose change caused the event in the x-appwrite-user-id header. The agent looks up that user in the staff team with listMemberships and ignores a decision from anyone outside the team. It does not trust the name column that the web app writes."
+  - question: "How is a refund prevented from being paid twice?"
+    answer: "The refund row in the payments table has an ID derived from the request: refund_<requestId>. A second attempt to create it, for example from a retried execution or a second approval, fails with the 409 error row_already_exists. The agent then reads the refund that exists instead of creating a new one."
+  - question: "How does an Appwrite Function run a follow-up a week later?"
+    answer: "The function creates a delayed execution of itself with createExecution, with async set to true and scheduledAt set to a time seven days ahead. The time must be a whole minute in the future. No execution runs until then, and the body of the execution tells the future run which request to check."
+  - question: "Why do customers submit refund requests through a function instead of creating the row?"
+    answer: "A customer who creates the row from the browser chooses every column, including the amount and the status. When a client creates a row without explicit permissions, Appwrite also gives the creator update and delete permissions. The intake function checks the order, computes the amount, and creates the row with read access only."
+---
+
+A small online store gets refund requests every day. Many are routine, such as a glass carafe that arrived cracked. Others need a person to look at them: an expensive grinder, a customer who had a refund last month, or a photo that does not show any damage. An AI agent can close the routine requests and prepare the others for staff. For the others, the agent has to wait for a person, sometimes until the next day.
+
+This tutorial builds Pourhaven Refund Desk for a fictional store that sells coffee brewing gear. Customers ask for a refund from their order page and add a photo. A refund agent on Appwrite Functions investigates each request with GPT-6 Luna:
+
+- It refunds small, clear requests on its own: $50 or less, delivered in the last 30 days, a photo of the problem, and no other refund in 90 days.
+- It sends every other request to the support team as an approval card with a recommendation, findings, and concerns.
+- It carries out the staff member's decision: a refund, a return code, a question to the customer, or a decline.
+- It checks a week after a return code whether the item came back, and then refunds it or reminds the customer.
+
+An Appwrite Function execution can run for 15 minutes at most, and a staff decision can take a day. The refund agent does not wait inside an execution. It saves the case in TablesDB, and the execution ends. The staff decision updates a row, and that update starts a new execution. A staff desk shows every step of the agent live through Appwrite Realtime.
+
+{% info title="Companion repository" %}
+The complete project lives at [appwrite-community/refund-desk-agent](https://github.com/appwrite-community/refund-desk-agent). It contains both functions, the web app with the customer pages and the staff desk, and the scripts that create the Appwrite resources and the demo data.
+{% /info %}
+
+# Refund desk architecture
+
+![Diagram of two refund-agent runs. A new refund request starts run 1, which calls its tools and ends with an approvals row. Hours later, a staff update to that row starts run 2, which issues the refund or schedules a return check. Realtime sends every step to the staff desk and the customer page.](/images/blog/refund-agent-human-approval-appwrite-functions/lifecycle-diagram.avif)
+
+The refund desk has two functions and a web app.
+
+**The `intake` function accepts requests.** The web app calls it when a customer submits a refund request or answers a question. The function checks that the order belongs to the customer, locks the photo, and creates the row.
+
+**The `refund-agent` function does the work.** Appwrite starts it for three row events: a new refund request, a staff decision, and a customer answer. It also runs for the return checks that it schedules. Each execution of `refund-agent` is one run. A run loads the case from TablesDB, does its part of the job, and ends.
+
+**The web app has two parts.** Customers use the Pourhaven Support pages to ask for refunds and follow their requests. Staff use the desk to watch the agent and decide on approvals.
+
+Seven tables in one TablesDB database hold all the data:
+
+- `orders` holds the store's orders: items, prices, delivery dates, and the card that paid.
+- `payments` is a mock payment ledger, with one charge row per order and one refund row per refund.
+- `policies` holds the refund policy, one row per section. The agent and the customers read the same text.
+- `refund_requests` holds one row per request, with its status.
+- `run_steps` holds the timeline: one row for each tool call, action, and message.
+- `approvals` holds the agent's recommendations and the staff decisions.
+- `replies` holds customers' answers to questions from staff.
+
+# How the agent waits for a decision
+
+Appwrite emits an event when a row is created, updated, or deleted. A function can subscribe to events, and Appwrite then starts an asynchronous execution of the function for each matching event. The event name contains the database, the table, and the type of change. `refund-agent` subscribes to three events:
+
+- `tablesdb.refund_desk.tables.refund_requests.rows.*.create` starts the review of a new request.
+- `tablesdb.refund_desk.tables.approvals.rows.*.update` carries out a staff decision.
+- `tablesdb.refund_desk.tables.replies.rows.*.create` reviews a customer's answer to a question.
+
+When a request needs a person, the agent creates an `approvals` row, and the execution ends. No execution runs while the request waits. When a staff member decides, the web app updates that row, and Appwrite starts a new execution for the update event. The new run reads the request, the approval, and the customer's answers from TablesDB, so it needs nothing from the first run.
+
+Event subscriptions need one precaution. Appwrite starts a function for a matching event also when the function's own write caused the event. The [events documentation](/docs/products/functions/execute#events) warns that this can cause infinite recursion. The refund agent writes to four tables, and none of its writes matches its own events:
+
+- The agent creates `approvals` rows and never updates them. Only staff update approvals.
+- The agent never creates `refund_requests` or `replies` rows. Only the `intake` function creates them.
+
+A unit test in the companion repository scans the source of `refund-agent` for row writes. The test fails when a write would cause an event that starts the agent.
+
+# Create the project and API key
+
+![The Create API key panel in the Appwrite Console with scopes selected in the Auth, Databases, Functions, Storage, and Project groups](/images/blog/refund-agent-human-approval-appwrite-functions/console-api-key-scopes.avif)
+
+The companion repository creates the Appwrite resources with a script that uses the Appwrite server SDK. The script needs a project and an API key.
+
+1. In the [Appwrite Console](https://appwrite.io/console), create a project.
+2. Open **Settings** and copy the **Project ID** and the **API Endpoint**.
+3. Open **API Keys** and select **Create API key**.
+4. Enter the name `Refund desk setup`.
+5. Under **Scopes**, select these scopes:
+   - **Auth:** `users.write`, `teams.read`, and `teams.write`.
+   - **Databases:** `databases.write`, `tables.write`, `columns.read`, `columns.write`, `indexes.read`, `indexes.write`, `rows.read`, and `rows.write`.
+   - **Functions:** `functions.read`, `functions.write`, `executions.read`, and `executions.write`.
+   - **Storage:** `buckets.write`, `files.read`, `files.write`, and `tokens.write`.
+   - **Project:** `platforms.read` and `platforms.write`.
+6. Select **Create API key** and copy the key.
+
+Only the scripts use this key. The functions do not need it, because Appwrite gives each execution its own API key in the `x-appwrite-key` header. That key has only the scopes that are set on the function. The web app uses no key.
+
+# Create the Appwrite resources
+
+The scripts need Node.js 22 or later and pnpm. Clone the companion repository and install the dependencies. The repository is a pnpm workspace:
+
+```bash
+git clone https://github.com/appwrite-community/refund-desk-agent.git
+cd refund-desk-agent
+pnpm install
+cp .env.example .env
+```
+
+Open `.env` and set these values:
+
+- `APPWRITE_ENDPOINT` and `APPWRITE_PROJECT_ID`: the API endpoint and the project ID from the project settings.
+- `APPWRITE_API_KEY`: the `Refund desk setup` API key.
+- `OPENROUTER_API_KEY`: an [OpenRouter](https://openrouter.ai) API key. The agent calls GPT-6 Luna through OpenRouter.
+
+Then create the resources and add the demo data:
+
+```bash
+pnpm provision
+pnpm seed
+```
+
+`pnpm provision` creates the resources from `scripts/schema.ts`: the `refund_desk` database, the seven tables with their columns and indexes, the `request_photos` bucket, the `staff` team, and a web platform for `localhost`. Then it creates both functions, stores their variables, and deploys them. You can run `pnpm provision` again after a change. It keeps the resources that exist, adds the missing ones, and updates and deploys both functions again.
+
+`pnpm seed` creates two staff members, eight customers with their orders and card charges, the refund policy, and nine resolved requests. The README of the repository lists the demo accounts.
+
+## Request, approval, and timeline tables
+
+TablesDB stores data as rows in tables, and each table defines typed columns. Three tables carry the agent's work. The `refund_requests` table holds one row per request. Appwrite gives every row a `$sequence` number in the order of creation, and the web app shows each request as 1000 plus that number, for example #1082.
+
+| Column | Type | Required | Purpose |
+| --- | --- | --- | --- |
+| `orderId`, `orderNumber` | varchar(36), varchar(16) | yes | The order that contains the item |
+| `customerId`, `customerName` | varchar(36), varchar(128) | yes | The customer who asked |
+| `itemSku`, `itemName` | varchar(32), varchar(128) | yes | The item to refund |
+| `amountCents` | integer | yes | The refund amount in cents, computed by `intake` |
+| `reason` | enum: damaged, defective, wrong_item, changed_mind | yes | The reason that the customer selected |
+| `details` | varchar(1000) | yes | The customer's description of the problem |
+| `photoId`, `photoToken` | varchar(36), varchar(512) | no | The photo in Storage and the file token that shows it |
+| `status` | enum: submitted, working, needs_approval, needs_customer, awaiting_return, refunded, declined, closed | yes | The stage of the request |
+| `pendingApprovalId` | varchar(36) | no | The approval that staff must decide on |
+| `question` | varchar(500) | no | The open question to the customer |
+| `refundId` | varchar(36) | no | The refund row in `payments` |
+| `returnCode`, `returnStatus`, `returnReceivedAt` | varchar(16), enum: awaiting, received, datetime | no | The return, when the item must come back first |
+| `returnCheckAt`, `returnChecks` | datetime, integer | no | The next return check and the number of checks so far |
+
+A unique index on `orderId` and `itemSku` allows one request per item. The customer can read this row, so it holds no notes that are only for staff.
+
+The `approvals` table holds the agent's recommendation and, after a staff member decides, the decision:
+
+| Column | Type | Required | Purpose |
+| --- | --- | --- | --- |
+| `requestId` | varchar(36) | yes | The request |
+| `recommendation` | enum: refund, refund_after_return, decline, ask_customer, manual_review | yes | What the agent recommends |
+| `amountCents` | integer | yes | The proposed refund |
+| `findings` | varchar(240), array | no | Facts that support the recommendation |
+| `concerns` | varchar(240), array | no | Problems, starting with the automatic refund rules that failed |
+| `reasoning` | varchar(2000) | yes | A short explanation for staff |
+| `draftQuestion` | varchar(500) | no | A question for the customer, when the agent recommends one |
+| `requireReturn` | boolean | yes | Whether the item must come back before the refund |
+| `decision` | enum: approve, decline, ask_customer | no | Empty until a staff member decides |
+| `staffNote` | varchar(1000) | no | The question to send, or the reason for a decline |
+| `decidedBy`, `decidedByName`, `decidedAt` | varchar(36), varchar(128), datetime | no | The staff member who decided and when, for display |
+
+The `run_steps` table is the timeline that staff and customers watch:
+
+| Column | Type | Required | Purpose |
+| --- | --- | --- | --- |
+| `requestId` | varchar(36) | yes | The request |
+| `runId` | varchar(36) | yes | The ID of the execution that wrote the step |
+| `kind` | enum: trigger, tool, action, message, error, finish | yes | The type of step |
+| `actor`, `actorName` | enum: agent, staff, customer, system, varchar(128) | yes | Who acted: the agent, a staff member, the customer, or the store |
+| `title` | varchar(160) | yes | What happened, for example "Looked up order PH-20388" |
+| `detail` | varchar(2000) | no | The result or the message |
+| `tool` | varchar(32) | no | The tool name, for tool steps |
+| `status` | enum: running, succeeded, failed | yes | The state of the step |
+| `durationMs` | integer | no | How long a tool call took |
+| `visibility` | enum: staff, customer | yes | Who can see the step |
+
+## Table permissions
+
+![The Security tab of the approvals table in the Appwrite Console with the Staff team granted Read and Update, and row level security turned off](/images/blog/refund-agent-human-approval-appwrite-functions/console-approvals-permissions.avif)
+
+Appwrite checks permissions on every read and write from a client. A table grants permissions to roles, for example to every member of a team. When row security is on, each row can also grant permissions, and a user can read a row when the table or the row allows it. The refund desk uses both levels. The table gives the staff team access to every row, and each row that belongs to a customer gives that customer read access:
+
+| Table | Staff team | Customer | Row security |
+| --- | --- | --- | --- |
+| `orders` | Read | Read own rows | On |
+| `payments` | Read | Read own rows | On |
+| `policies` | Read | Read (any visitor, also signed out) | Off |
+| `refund_requests` | Read, update | Read own rows | On |
+| `run_steps` | Read | Read rows shared with the customer | On |
+| `approvals` | Read, update | None | Off |
+| `replies` | Read | Read own rows | On |
+
+To see a table's permissions in the Console, open the table and go to the **Security** tab. The **Row level security (RLS)** setting on the same tab turns row security on or off.
+
+Customers write to no table. The functions create the requests, steps, approvals, answers, and refunds. The web app updates rows in two places only: a staff decision on `approvals`, and the "received" mark for a returned item on `refund_requests`. Only the staff team has update permission on these two tables.
+
+## The staff team
+
+![The members of the Staff team in the Appwrite Console: Maya Okafor with the lead role and Daniel Reyes with the support role](/images/blog/refund-agent-human-approval-appwrite-functions/console-staff-team.avif)
+
+A team is a group of users in a project. A permission for `Role.team('staff')` applies to every member of the `staff` team, so the staff permissions on the tables cover the whole support team. The seed script adds Maya Okafor with the `lead` role and Daniel Reyes with the `support` role. A membership that a server creates with an API key is confirmed at once, without an invitation email. To see the members in the Console, open **Auth** > **Teams** > **Staff**.
+
+## The photo bucket
+
+A Storage bucket holds files and sets the permissions and limits for them. The `request_photos` bucket lets any signed-in user upload a file and gives the staff team read access to every file. File security is on, so each file also carries its own permissions. The bucket accepts JPEG, PNG, and WebP files up to 5 MB, with encryption and antivirus turned on.
+
+## The refund-agent function
+
+![The Executions settings of the refund-agent function in the Appwrite Console with three events: refund_requests row create, approvals row update, and replies row create](/images/blog/refund-agent-human-approval-appwrite-functions/console-agent-events.avif)
+
+![The Scopes card of the refund-agent function in the Appwrite Console with one Auth scope, two Databases scopes, one Functions scope, and one Storage scope selected](/images/blog/refund-agent-human-approval-appwrite-functions/console-agent-scopes.avif)
+
+`refund-agent` uses the Node.js 22 runtime. Four of its settings matter for the agent:
+
+- **Permissions** on the **Security** tab are empty, so no user can execute the agent. Only its events and the delayed executions that it creates start it.
+- **Events** under **Settings** > **Executions** are the three row events.
+- **Scopes** on the same page are `rows.read`, `rows.write`, `files.read`, `teams.read`, and `executions.write`. The API key of each execution has only these scopes.
+- **Timeout** under **Settings** > **Runtime** is 300 seconds. The agent stops its own review after 150 seconds and hands the request to staff, so a slow run ends before Appwrite stops the execution.
+
+![The Variables tab of the refund-agent function with OPENROUTER_API_KEY marked as secret and four plain variables](/images/blog/refund-agent-human-approval-appwrite-functions/console-agent-variables.avif)
+
+Function variables are environment variables that Appwrite passes to the function. The **Variables** tab of `refund-agent` holds the values that `pnpm provision` copied from `.env`. `OPENROUTER_API_KEY` is a secret variable, so the Console hides its value. The other four variables have defaults:
+
+- `OPENROUTER_MODEL` is the model, `openai/gpt-6-luna` by default.
+- `AUTO_REFUND_LIMIT_CENTS` is the highest price that the agent refunds without a person, 5000 ($50.00) by default.
+- `REFUND_WINDOW_DAYS` is the number of days after delivery in which automatic refunds are possible, 30 by default.
+- `RETURN_CHECK_DELAY_MINUTES` is the time between a return code and each return check, 10080 (seven days) by default.
+
+Appwrite applies changed variables on the next deployment, and `pnpm provision` deploys both functions again.
+
+The `intake` function has the scopes `rows.read`, `rows.write`, `files.read`, `files.write`, and `tokens.write`. Every signed-in user can execute it, and its timeout is 15 seconds.
+
+# Accept refund requests with the intake function
+
+A customer who creates a `refund_requests` row from the browser chooses every column, including the amount and the status. When a client creates a row without explicit permissions, Appwrite also gives the creator read, update, and delete permissions, so the customer could change the request later. For these reasons, customers call the `intake` function, and the function creates the row.
+
+The web app uploads the photo first, without file permissions. `src/lib/appwrite.ts` in the web app creates one `Client` with the endpoint and the project ID and exports the services:
+
+```ts
+/** Uploads a photo. Without explicit permissions, only the uploader can read it until intake locks it. */
+export const uploadPhoto = (file: File, onProgress?: (progress: UploadProgress) => void): Promise<Models.File> =>
+  storage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file, onProgress });
+```
+
+`callIntake` creates a synchronous execution of `intake` with a path and a JSON body. It reads the status code and the body of the function's response:
+
+```ts
+/**
+ * Customers never write refund rows directly. They call the intake function,
+ * which checks the order, locks the photo, and writes the row for them.
+ */
+async function callIntake<T>(path: string, body: object): Promise<T> {
+  const execution = await functions.createExecution({
+    functionId: INTAKE_FUNCTION_ID,
+    xpath: path,
+    method: ExecutionMethod.POST,
+    body: JSON.stringify(body),
+  });
+  const response = parseJson(execution.responseBody);
+  if (execution.responseStatusCode >= 200 && execution.responseStatusCode < 300) return response as T;
+
+  const { error, message, ...details } = response as { error?: string; message?: string };
+  throw new IntakeError(
+    execution.responseStatusCode,
+    error ?? 'internal_error',
+    message ?? 'Something went wrong. Try again.',
+    details,
+  );
+}
+```
+
+The function reads the caller from the `x-appwrite-user-id` header, which Appwrite sets when a signed-in user creates the execution. Its Appwrite client uses the API key of the execution from the `x-appwrite-key` header. The function has two routes: `POST /requests` creates a request, and `POST /requests/<requestId>/replies` saves an answer to a question:
+
+```javascript
+// Customers never write refund rows themselves: a row a user creates grants
+// that user update and delete permissions by default. This function checks the
+// order, locks the photo, and writes the row with read-only access instead.
+export default async ({ req, res, error }) => {
+  const userId = req.headers['x-appwrite-user-id'];
+  if (!userId) return res.json({ error: 'unauthorized', message: 'Sign in to continue.' }, 401);
+
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
+  const services = {
+    tablesDB: new TablesDB(client),
+    storage: new Storage(client),
+    tokens: new Tokens(client),
+  };
+
+  try {
+    const body = parseBody(req.bodyText);
+    if (req.method === 'POST' && req.path === '/requests') {
+      return res.json(await createRequest(services, userId, body), 201);
+    }
+    const replyRoute = req.path.match(/^\/requests\/([^/]+)\/replies$/);
+    if (req.method === 'POST' && replyRoute) {
+      return res.json(await createReply(services, userId, replyRoute[1], body), 201);
+    }
+    return res.json({ error: 'not_found', message: 'Unknown route.' }, 404);
+  } catch (err) {
+    if (err instanceof HttpError) {
+      return res.json({ error: err.code, message: err.message, ...err.extra }, err.status);
+    }
+    error(`Intake failed: ${err.code ?? ''} ${err.type ?? ''} ${err.message}`);
+    return res.json({ error: 'internal_error', message: 'Something went wrong. Try again.' }, 500);
+  }
+};
+```
+
+`createRequest` checks that the order belongs to the caller and was delivered, and it computes the amount from the order. Then it creates the row with one permission: read access for the customer. The staff team reads the row through the table permissions:
+
+```javascript
+async function createRequest({ tablesDB, storage, tokens }, userId, body) {
+  const input = validateRequest(body);
+
+  const order = await getRowOrNull(tablesDB, TABLES.orders, input.orderId);
+  if (!order) throw new HttpError(404, 'order_not_found', 'We could not find that order.');
+  if (order.customerId !== userId) throw new HttpError(403, 'not_your_order', 'This order belongs to another account.');
+  if (order.status !== 'delivered') throw new HttpError(409, 'not_delivered', 'This order has not been delivered yet.');
+
+  const item = JSON.parse(order.items).find((line) => line.sku === input.itemSku);
+  if (!item) throw new HttpError(404, 'item_not_found', 'That item is not part of this order.');
+
+  // Check before locking the photo, so a repeat request leaves the new upload alone.
+  await rejectExistingRequest(tablesDB, order.$id, item.sku);
+  const photo = input.photoId ? await lockPhoto({ storage, tokens }, userId, input.photoId) : null;
+
+  try {
+    const request = await tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.requests,
+      rowId: ID.unique(),
+      data: {
+        orderId: order.$id,
+        orderNumber: order.number,
+        customerId: userId,
+        customerName: order.customerName,
+        itemSku: item.sku,
+        itemName: item.name,
+        amountCents: item.unitPriceCents * item.quantity,
+        reason: input.reason,
+        details: input.details,
+        photoId: photo?.photoId ?? null,
+        photoToken: photo?.photoToken ?? null,
+        status: 'submitted',
+      },
+      // Read-only for the customer. The staff team reads every row through the
+      // table permissions.
+      permissions: [Permission.read(Role.user(userId))],
+    });
+    return { requestId: request.$id, number: requestNumber(request) };
+  } catch (err) {
+    // The unique index on (orderId, itemSku) allows one request per item, even
+    // when two submissions arrive at the same moment.
+    if (err.code === 409 && err.type === 'row_unique_constraint_violation') {
+      await rejectExistingRequest(tablesDB, order.$id, item.sku);
+    }
+    throw err;
+  }
+}
+```
+
+Two submissions for the same item can arrive at the same moment, and both can pass the check for an existing request. The unique index on `orderId` and `itemSku` rejects the second row with a `409` error of the type `row_unique_constraint_violation`. The function then answers with the request that exists.
+
+The customer uploaded the photo, so the customer has read, update, and delete permissions on the file. `lockPhoto` replaces them with read access only, so the customer cannot delete the evidence after the agent inspected it. Then it creates a file token, which the web app uses to show the photo:
+
+```javascript
+/**
+ * The customer uploaded the photo, so they hold read, update, and delete on it.
+ * Replace that with read only, so the evidence stays, and create a file token
+ * that the web app uses to show the photo.
+ */
+async function lockPhoto({ storage, tokens }, userId, fileId) {
+  const owner = Permission.read(Role.user(userId));
+  const file = await storage.getFile({ bucketId: BUCKET_ID, fileId }).catch((err) => {
+    if (err.code === 404) return null;
+    throw err;
+  });
+  if (!file || !file.$permissions.includes(owner)) {
+    throw new HttpError(404, 'photo_not_found', 'Upload the photo again.');
+  }
+
+  await storage.updateFile({ bucketId: BUCKET_ID, fileId, permissions: [owner] });
+  const token = await tokens.createFileToken({
+    bucketId: BUCKET_ID,
+    fileId,
+    expire: new Date(Date.now() + PHOTO_TOKEN_DAYS * DAY_MS).toISOString(),
+  });
+  return { photoId: fileId, photoToken: token.secret };
+}
+```
+
+# Write the refund agent
+
+The `refund-agent` function has one file per job in `src/jobs/`: a new request, a staff decision, a customer answer, and a return check. The helpers in `src/lib/` hold the tools, the refund rules, the model client, and the timeline.
+
+## Route events to jobs
+
+Appwrite tells the function how the execution started. The `x-appwrite-trigger` header is `event` for a row event and `schedule` for a delayed execution. For a row event, the `x-appwrite-event` header holds the event name, which includes the table and the row ID. `routeExecution` maps each event to a job. A delayed execution carries the JSON body that the agent wrote when it scheduled the execution:
+
+```javascript
+const ROW_EVENT = /^tablesdb\.[^.]+\.tables\.([^.]+)\.rows\.(.+)\.(create|update)$/;
+
+const EVENT_JOBS = {
+  'refund_requests.create': 'intake',
+  'approvals.update': 'decision',
+  'replies.create': 'reply',
+};
+
+/**
+ * Picks the job for an execution: row events carry the event name in
+ * `x-appwrite-event`, and delayed executions carry a JSON body this function
+ * wrote itself. Anything else returns null.
+ */
+export function routeExecution(headers, bodyText) {
+  const trigger = headers['x-appwrite-trigger'];
+
+  if (trigger === 'event') {
+    const match = ROW_EVENT.exec(headers['x-appwrite-event'] ?? '');
+    const job = match && EVENT_JOBS[`${match[1]}.${match[3]}`];
+    return job ? { job, rowId: match[2] } : null;
+  }
+
+  if (trigger === 'schedule') {
+    let body;
+    try {
+      body = JSON.parse(bodyText || '{}');
+    } catch {
+      return null;
+    }
+    if (body.type === 'return_check' && typeof body.requestId === 'string' && Number.isInteger(body.attempt)) {
+      return { job: 'return_check', requestId: body.requestId, attempt: body.attempt };
+    }
+  }
+
+  return null;
+}
+```
+
+The entry point in `src/main.js` calls the job that `routeExecution` returns and ends with an empty response. No caller reads the response of an event execution.
+
+## Claim each trigger once
+
+Each job first checks that the row is in the state that the job expects. For example, the decision job stops when the approval has no decision or the request no longer waits for it. Two executions can still start for one trigger, for example when two staff members approve the same request at the same moment.
+
+Row IDs are unique in a table. When a row with the same ID exists, `createRow` fails with a `409` error of the type `row_already_exists`. The first write of every run is its trigger step in `run_steps`, with an ID derived from the trigger:
+
+- `req_<requestId>` for a new request.
+- `apr_<approvalId>` for a decision.
+- `rep_<approvalId>` for an answer to the question from that approval.
+- `chk_<requestId>_<attempt>` for a return check.
+
+The run that writes the step first owns the trigger, and any other run stops:
+
+```javascript
+/**
+ * Claims a trigger and opens a run. The first write of every run is its trigger
+ * step, saved under an ID derived from the trigger (for example
+ * `req_<requestId>`). If an execution for the same trigger already wrote it,
+ * Appwrite answers 409 and this run stops, so each trigger is handled once.
+ */
+export async function startRun(ctx, request, trigger) {
+  const run = new Run(ctx, request);
+  try {
+    await run.add({
+      rowId: trigger.claimId,
+      kind: 'trigger',
+      actor: trigger.actor,
+      actorName: trigger.actorName,
+      title: trigger.title,
+      detail: trigger.detail,
+      visibility: trigger.visibility,
+    });
+    return run;
+  } catch (err) {
+    if (err.code === 409 && err.type === 'row_already_exists') {
+      ctx.log(`${trigger.claimId} is already handled by another execution.`);
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Runs `work` once per trigger. The request shows as `working` while the run
+ * lasts. If the run throws before it hands the request on, a person gets it.
+ */
+export async function runOnce(ctx, request, trigger, work) {
+  const run = await startRun(ctx, request, trigger);
+  if (!run) return;
+  await setStatus(ctx, request, 'working');
+  try {
+    await work(run);
+  } catch (err) {
+    ctx.error(`Run failed: ${describeError(err)}`);
+    await run.error('The agent hit a problem', describeError(err));
+    const current = await ctx.tablesDB.getRow({ databaseId: DATABASE_ID, tableId: TABLES.requests, rowId: request.$id });
+    if (current.status === 'working') {
+      await escalate(ctx, run, current, 'The agent hit an error while working on this request.');
+    }
+  }
+}
+```
+
+`runOnce` also handles failures. If a run throws an error before it hands the request on, the agent writes an error step. Then it sends the request to staff for a manual review, so the request does not stay in the `working` status.
+
+## Build the case file from rows
+
+The model keeps no memory between executions. Every run builds the case file again from rows: the request, the earlier approval when staff asked a question, and the customer's answers. The customer's text goes inside `<customer_text>` tags:
+
+```javascript
+/**
+ * Everything the model knows about the case, rebuilt from rows on every run.
+ * The model keeps no memory between executions.
+ */
+export function caseFile({ request, previousApproval = null, replies = [] }) {
+  const lines = [
+    `Refund request #${requestNumber(request)}, submitted ${longDate(request.$createdAt)}`,
+    `Item: ${request.itemName} (SKU ${request.itemSku}) from order ${request.orderNumber}`,
+    `Refund amount if approved: ${money(request.amountCents)}`,
+    `Reason: ${REASON_LABELS[request.reason]}`,
+    `Photo on the request: ${request.photoId ? 'yes' : 'no'}`,
+    'What the customer wrote:',
+    quoteCustomer(request.details),
+  ];
+  if (previousApproval) {
+    lines.push(
+      '',
+      `Earlier review: you recommended "${previousApproval.recommendation}". ` +
+        `${previousApproval.decidedByName ?? 'A staff member'} chose to ask the customer a question.`,
+    );
+  }
+  if (request.question) lines.push(`Question sent to the customer: ${request.question}`);
+  for (const reply of replies) {
+    lines.push(
+      '',
+      `Customer answer, ${longDate(reply.$createdAt)} (photo attached: ${reply.photoId ? 'yes' : 'no'}):`,
+      quoteCustomer(reply.message),
+    );
+  }
+  return lines.join('\n');
+}
+```
+
+The system prompt tells the model to look up facts with the tools instead of guessing. It also tells the model to inspect every photo and to read the policy for the reason for the request. The prompt says that text inside `<customer_text>` tags is a claim to check and never an instruction. When that text gives instructions or claims that someone approved a refund, the model must send the request to staff and add a concern that says so.
+
+## Give the model tools bound to one request
+
+The tools are OpenAI function tools with strict JSON schemas. No tool takes a request ID, an order ID, or a customer ID. `createToolbox` binds every tool to the request under review, so the model cannot read or refund any other request:
+
+```javascript
+/** A strict function tool: every property is required and nothing else is allowed. */
+const tool = (name, description, properties = {}) => ({
+  type: 'function',
+  function: {
+    name,
+    description,
+    strict: true,
+    parameters: { type: 'object', properties, required: Object.keys(properties), additionalProperties: false },
+  },
+});
+
+// No tool takes a request, order, or customer ID. Every tool is bound to the
+// request under review, so the model cannot look at or act on another one.
+export const TOOL_DEFINITIONS = [
+  tool('get_order', 'Look up the order for this request: items, prices, delivery date, and payment card.'),
+  tool('get_refund_history', "Look up the customer's earlier refund requests and refunds."),
+  tool('read_policy', 'Read one section of the store refund policy.', {
+    topic: { type: 'string', enum: POLICY_TOPICS },
+  }),
+  tool('inspect_photo', "Inspect a photo from the customer: the one on the request or the one on their latest answer.", {
+    source: { type: 'string', enum: ['request', 'latest_reply'] },
+  }),
+  tool(
+    'issue_refund',
+    'Refund the full item price to the original card. Code checks the automatic refund rules first and returns the rules that fail.',
+    { reason: { type: 'string', description: 'One sentence for staff on why this case qualifies.' } },
+  ),
+  tool('request_approval', 'Hand the request to staff with your recommendation. A staff member decides.', {
+    recommendation: { type: 'string', enum: RECOMMENDATIONS },
+    findings: { type: 'array', items: { type: 'string' }, description: 'Facts that support the recommendation.' },
+    concerns: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Problems or risks you found. Code adds the automatic refund rules that fail, so do not repeat them.',
+    },
+    reasoning: { type: 'string', description: 'At most four sentences for the staff member who decides.' },
+    draftQuestion: {
+      type: ['string', 'null'],
+      description: 'The question for the customer when recommending ask_customer, otherwise null.',
+    },
+  }),
+];
+```
+
+- `get_order` returns the items, the prices, the delivery date, and the card of the order.
+- `get_refund_history` counts the customer's refunds in the last 90 days and the last 12 months, and lists the earlier requests.
+- `read_policy` reads one section of the policy from the `policies` table.
+- `inspect_photo` inspects the photo on the request or on the latest answer.
+- `issue_refund` refunds the item when the rules allow it.
+- `request_approval` hands the request to staff.
+
+Each tool call writes a `run_steps` row with the status `running` before the tool starts. When the call ends, the step gets the result, a detail line, and the duration. When a tool fails, the error goes back to the model as JSON, and the model can try again or continue.
+
+## Inspect the photo with a vision call
+
+A tool result is text, so the tool loop cannot give the photo itself to the model. `inspect_photo` makes a separate call to the model with the image. It reads the file from Storage with `getFileView`, which returns the bytes, and sends them as a data URL. A JSON schema fixes the shape of the answer: a description, a verdict in `supportsClaim` (`yes`, `no`, or `unclear`), and an explanation.
+
+```javascript
+/**
+ * A separate vision call with a fixed answer shape. Tool results are text, so
+ * the photo cannot go back to the agent as a tool result. This call reads the
+ * file from Storage and returns a verdict the refund rules can check.
+ */
+export async function inspectPhoto(ctx, { fileId, itemName, reason, customerText }) {
+  const file = await ctx.storage.getFile({ bucketId: BUCKET_ID, fileId });
+  const bytes = await ctx.storage.getFileView({ bucketId: BUCKET_ID, fileId });
+  const dataUrl = `data:${file.mimeType};base64,${Buffer.from(bytes).toString('base64')}`;
+
+  const inspection = await structuredOutput(ctx.openai, ctx.config.model, {
+    name: 'photo_inspection',
+    schema: PHOTO_SCHEMA,
+    messages: [
+      { role: 'system', content: PHOTO_PROMPT },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: photoQuestion({ itemName, reason, customerText }) },
+          { type: 'image_url', image_url: { url: dataUrl, detail: 'high' } },
+        ],
+      },
+    ],
+  });
+  if (!VERDICTS.includes(inspection.supportsClaim) || typeof inspection.description !== 'string') {
+    throw new Error('The photo inspection returned an unexpected answer.');
+  }
+  return inspection;
+}
+```
+
+The run keeps the verdict, and the refund rules check it. The model cannot claim that a photo shows damage without an inspection in the same run.
+
+## Enforce the refund rules in code
+
+The model decides which tool to call, but code decides whether money moves. `checkAutoRefund` returns every rule that fails, each with a sentence that staff can read:
+
+```javascript
+const AUTO_REFUND_REASONS = ['damaged', 'defective', 'wrong_item'];
+
+/**
+ * The rules for refunding without a person. The model can ask for an automatic
+ * refund, but only this code decides whether money moves. Returns the rules that
+ * fail, each with a sentence staff (and the model) can read. An empty list
+ * means the request qualifies.
+ */
+export function checkAutoRefund({ job, request, order, history, inspection, config, now = Date.now() }) {
+  const failures = [];
+  const fail = (rule, message) => failures.push({ rule, message });
+
+  if (job !== 'intake') {
+    fail('first_review', 'Staff already reviewed this request, so a person makes the decision.');
+  }
+
+  if (!AUTO_REFUND_REASONS.includes(request.reason)) {
+    fail('reason', 'Change-of-mind refunds need the item back first.');
+  }
+
+  if (request.amountCents > config.autoRefundLimitCents) {
+    fail('limit', `${money(request.amountCents)} is above the ${money(config.autoRefundLimitCents)} automatic refund limit.`);
+  }
+
+  if (!order.deliveredAt) {
+    fail('window', 'The order has no delivery date.');
+  } else {
+    const days = daysSince(order.deliveredAt, now);
+    if (days > config.refundWindowDays) {
+      fail('window', `Delivered ${days} days ago, outside the ${config.refundWindowDays}-day window for automatic refunds.`);
+    }
+  }
+
+  if (AUTO_REFUND_REASONS.includes(request.reason)) {
+    if (!request.photoId) fail('photo', 'The request has no photo.');
+    else if (!inspection) fail('photo', 'The photo was not inspected in this review.');
+    else if (inspection.supportsClaim !== 'yes') {
+      fail('photo', 'The photo does not clearly show the problem the customer describes.');
+    }
+  }
+
+  if (history.refundsLast90Days > 0) {
+    const count = history.refundsLast90Days;
+    fail('history', `The customer had ${count} ${count === 1 ? 'refund' : 'refunds'} in the last 90 days.`);
+  }
+
+  return failures;
+}
+```
+
+`issue_refund` takes only a reason for staff. It has no amount parameter, so the customer's text cannot change the amount. The handler runs the rules. When a rule fails, it returns the failed rules and tells the model to call `request_approval`. Only the first run of a request has this tool, because after staff are involved, a person makes every decision:
+
+```javascript
+if (canRefund) {
+  handlers.issue_refund = ({ reason }) =>
+    run.tool('issue_refund', 'Checking the automatic refund rules', async () => {
+      const failures = await failedRules();
+      if (failures.length > 0) {
+        return {
+          result: {
+            ok: false,
+            failedRules: failures,
+            next: 'Call request_approval. Staff see these failed rules as concerns already, so do not repeat them in concerns.',
+          },
+          title: 'Automatic refund blocked',
+          detail: failures.map((failure) => failure.message).join(' '),
+        };
+      }
+      const refund = await completeRefund(ctx, run, request, await order(), request.amountCents);
+      outcome = { status: 'refunded', reference: refund.reference };
+      return {
+        result: { ok: true, reference: refund.reference },
+        title: 'All automatic refund rules passed',
+        detail: reason,
+      };
+    });
+}
+```
+
+`issueRefund` writes the refund to the `payments` table. The row ID is `refund_<requestId>`, so a second attempt fails with `row_already_exists`. The function then reads the refund that exists instead of paying twice:
+
+```javascript
+/**
+ * Writes the refund to the payments ledger. The row ID is derived from the
+ * request, so a second attempt (a retry, a duplicate event, or a second
+ * approval) fails with 409 instead of paying twice.
+ */
+export async function issueRefund(ctx, request, order, amountCents) {
+  const refundId = `refund_${request.$id}`;
+  try {
+    return await ctx.tablesDB.createRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.payments,
+      rowId: refundId,
+      data: {
+        kind: 'refund',
+        orderId: order.$id,
+        requestId: request.$id,
+        customerId: request.customerId,
+        amountCents,
+        cardBrand: order.cardBrand,
+        cardLast4: order.cardLast4,
+        reference: `re_${randomCode(14)}`,
+      },
+      permissions: [Permission.read(Role.user(request.customerId))],
+    });
+  } catch (err) {
+    if (err.code === 409 && err.type === 'row_already_exists') {
+      ctx.log(`${refundId} already exists, so the refund was issued before.`);
+      return ctx.tablesDB.getRow({ databaseId: DATABASE_ID, tableId: TABLES.payments, rowId: refundId });
+    }
+    throw err;
+  }
+}
+```
+
+## Run the tool loop
+
+OpenRouter uses the API shape of OpenAI Chat Completions, so the OpenAI SDK works with the OpenRouter base URL:
+
+```javascript
+/** OpenRouter speaks the OpenAI Chat Completions API, so the OpenAI SDK works with a different base URL. */
+export function createModelClient(config) {
+  return new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: config.openRouterApiKey,
+    timeout: 45_000,
+    maxRetries: 1,
+  });
+}
+```
+
+`runToolLoop` sends the prompt, the case file, and the tool definitions to the model. With `tool_choice: 'required'`, the model must call a tool in every round. The loop runs the tool calls in order and sends the results back. It stops when `issue_refund` or `request_approval` succeeds, after eight rounds, or after 150 seconds. When the loop stops without a result, the agent hands the request to staff for a manual review:
+
+```javascript
+/**
+ * The tool loop. `tool_choice: 'required'` makes the model call a tool in every
+ * round, so the loop ends only when a finishing tool succeeds (the toolbox then
+ * reports an outcome), the rounds run out, or the time budget is spent.
+ */
+export async function runToolLoop({ openai, model, messages, toolbox, maxRounds = MAX_ROUNDS, timeBudgetMs = TIME_BUDGET_MS }) {
+  const deadline = Date.now() + timeBudgetMs;
+  for (let round = 1; round <= maxRounds; round++) {
+    if (Date.now() > deadline) return { stopReason: 'The review ran out of time.' };
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      tools: toolbox.definitions,
+      tool_choice: 'required',
+    });
+    const message = completion.choices[0]?.message;
+    const calls = message?.tool_calls ?? [];
+    if (calls.length === 0) return { stopReason: 'The model answered without choosing a next step.' };
+
+    messages.push(message);
+    // Several calls in one answer run one after another, so the timeline stays in order.
+    for (const call of calls) {
+      const result = await toolbox.call(call.function?.name, call.function?.arguments);
+      messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
+      if (toolbox.outcome) return { outcome: toolbox.outcome };
+    }
+  }
+  return { stopReason: `The model did not reach a decision in ${maxRounds} rounds.` };
+}
+```
+
+## Hand the request to staff
+
+The `request_approval` handler checks that the agent inspected every photo in the case. Then it puts the failed automatic refund rules first in the concerns, before the model's concerns. `requestApproval` creates the `approvals` row and tells the customer that a person is reviewing the request. After that, the execution ends:
+
+```javascript
+/**
+ * Hands the request to staff. The agent only ever creates approvals rows. Staff
+ * update them, and that update event starts the next execution. If the agent
+ * updated approvals too, its own writes would trigger it again.
+ */
+export async function requestApproval(ctx, run, request, proposal) {
+  const approvalId = await createApproval(ctx, request, proposal);
+  await run.tellCustomer(
+    'A person is reviewing your request',
+    'A member of our support team is reviewing your request and will reply within one business day.',
+  );
+  return approvalId;
+}
+
+/** Puts the same recommendation back in front of staff, as a new approvals row. */
+export function reopenApproval(ctx, request, approval) {
+  return createApproval(ctx, request, approval);
+}
+
+async function createApproval(ctx, request, proposal) {
+  const approvalId = ID.unique();
+
+  // The request moves first, so a fast decision always finds it waiting for this approval.
+  await ctx.tablesDB.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.requests,
+    rowId: request.$id,
+    data: { status: 'needs_approval', pendingApprovalId: approvalId },
+  });
+  await ctx.tablesDB.createRow({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.approvals,
+    rowId: approvalId,
+    data: {
+      requestId: request.$id,
+      recommendation: proposal.recommendation,
+      amountCents: request.amountCents,
+      findings: clean(proposal.findings).slice(0, MAX_POINTS),
+      concerns: clean(proposal.concerns).slice(0, MAX_POINTS),
+      reasoning: truncate(proposal.reasoning, 2000),
+      draftQuestion: proposal.draftQuestion ? truncate(proposal.draftQuestion, 500) : null,
+      requireReturn: proposal.recommendation === 'refund_after_return',
+    },
+  });
+  return approvalId;
+}
+```
+
+The request moves to `needs_approval` before the approval row exists. The desk shows the approval card only after the row exists, so a fast click from a staff member always finds the request ready for the decision.
+
+## Resume the run after a decision
+
+When a staff member decides, the update event on the `approvals` row starts `decisionJob`. The execution has no state from earlier runs. It reads the approval and the request, and it stops when the request no longer waits for this approval:
+
+```javascript
+/**
+ * A staff member decided on an approval. This execution started from the
+ * approvals row update, hours after the run that created it. Everything it
+ * needs comes from TablesDB. Code carries out the decision; the model only
+ * writes the decline message.
+ */
+export async function decisionJob(ctx, { rowId }) {
+  const approval = await findRow(ctx, TABLES.approvals, rowId);
+  if (!approval?.decision) {
+    ctx.log(`Approval ${rowId} has no decision yet. Nothing to do.`);
+    return;
+  }
+  const request = await findRow(ctx, TABLES.requests, approval.requestId);
+  if (request?.status !== 'needs_approval' || request.pendingApprovalId !== approval.$id) {
+    ctx.log(`Request ${approval.requestId} is not waiting for approval ${approval.$id}. Nothing to do.`);
+    return;
+  }
+
+  // ...
+}
+```
+
+The web app writes the name of the staff member to `decidedByName`, but any staff member can edit that column. The agent identifies the staff member from the event instead. For an execution that a row event starts, `x-appwrite-user-id` is the ID of the user whose change caused the event. `identifyStaff` checks that this user is a confirmed member of the `staff` team. An update with an API key has no user, and only a server can hold the key, so the agent accepts it:
+
+```javascript
+/**
+ * The staff member is the user whose update fired the event
+ * (`x-appwrite-user-id`). Check the staff team instead of trusting the
+ * decidedBy column, which any staff member can write.
+ */
+async function identifyStaff(ctx, approval) {
+  // An update made with an API key has no user.
+  if (!ctx.userId) return { name: approval.decidedByName || 'API key' };
+
+  const { memberships } = await ctx.teams.listMemberships({
+    teamId: STAFF_TEAM_ID,
+    queries: [Query.equal('userId', [ctx.userId])],
+  });
+  const membership = memberships.find((member) => member.userId === ctx.userId && member.confirm);
+  return membership ? { name: membership.userName } : null;
+}
+```
+
+When the check fails, the agent ignores the decision and creates a new approvals row with the same recommendation, so the request goes back to the queue. When the check passes, `carryOut` runs the decision. Code carries out each decision, and the model only writes the text of a decline:
+
+```javascript
+async function carryOut(ctx, run, request, approval) {
+  switch (approval.decision) {
+    case 'approve': {
+      if (approval.requireReturn) {
+        await startReturn(ctx, run, request);
+        return 'awaiting_return';
+      }
+      // Staff can edit the approvals row, so never refund more than the item cost.
+      const amountCents = Math.min(approval.amountCents, request.amountCents);
+      if (amountCents < 1) throw new Error('The approved amount is $0.00.');
+      const order = await ctx.tablesDB.getRow({ databaseId: DATABASE_ID, tableId: TABLES.orders, rowId: request.orderId });
+      await completeRefund(ctx, run, request, order, amountCents, { from: 'store' });
+      return 'refunded';
+    }
+
+    case 'ask_customer': {
+      const question = truncate(approval.staffNote?.trim() || approval.draftQuestion?.trim(), 500);
+      if (!question) throw new Error('The decision has no question for the customer.');
+      await ctx.tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.requests,
+        rowId: request.$id,
+        data: { status: 'needs_customer', question, pendingApprovalId: null },
+      });
+      await run.tellCustomer('Question from Pourhaven', question, { from: 'store' });
+      return 'needs_customer';
+    }
+
+    case 'decline': {
+      const message = await run.tool('write_message', 'Writing the message to the customer', async () => ({
+        result: await declineMessage(ctx, request, approval.staffNote),
+        title: 'Wrote the message to the customer',
+      }));
+      await ctx.tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.requests,
+        rowId: request.$id,
+        data: { status: 'declined', pendingApprovalId: null },
+      });
+      await run.tellCustomer('Request declined', message, { from: 'store' });
+      return 'declined';
+    }
+
+    default:
+      throw new Error(`Unknown decision ${approval.decision}.`);
+  }
+}
+```
+
+`Math.min` caps the refund at the item price, also when someone edits `amountCents` on the approval. For a decline, the `write_message` step turns the staff note into a short message for the customer, with a template as the fallback.
+
+An answer from the customer resumes the agent the same way. The create event on the `replies` table starts `replyJob`, which claims `rep_<approvalId>` for the approval where staff asked the question. Two quick answers to one question therefore start one review. The run investigates again with the question and the answers in the case file, inspects the photo in the answer, and ends with a new approval. This run has no `issue_refund` tool.
+
+## Schedule the return check
+
+An expensive item can need a return before the refund. When a staff member approves with **Require return first**, `startReturn` creates a return code and schedules the first return check with a delayed execution. A delayed execution is an asynchronous execution with a `scheduledAt` time. Appwrite runs it once at that time, and no execution runs before then:
+
+```javascript
+/** The next whole minute at least `minutes` from now. Delayed executions need whole minutes. */
+export function checkTime(minutes, now = Date.now()) {
+  const minute = 60 * 1000;
+  return new Date(Math.ceil((now + Math.max(minutes, 1) * minute) / minute) * minute);
+}
+
+/**
+ * Queues a return check as a delayed execution of this same function. Nothing
+ * runs in the meantime. The body tells the future execution what to do.
+ */
+export function scheduleReturnCheck(ctx, request, attempt, at) {
+  return ctx.functions.createExecution({
+    functionId: process.env.APPWRITE_FUNCTION_ID,
+    async: true,
+    scheduledAt: at.toISOString(),
+    body: JSON.stringify({ type: 'return_check', requestId: request.$id, attempt }),
+  });
+}
+```
+
+The time must be a whole minute in the future, so `checkTime` rounds up to the next minute. The body of the execution tells the future run which request to check and which attempt it is. `refund-agent` can create executions of itself, although no user can execute it, because its API key has the `executions.write` scope.
+
+`startReturn` schedules the check before it updates the request. The check runs a minute later at the earliest, so it finds the request updated. If the scheduling fails, the request stays unchanged, and the run hands it to staff.
+
+The return check job does not use the model. If a staff member marked the item as received, the job refunds the item. After the first missed check, it reminds the customer and schedules a second check seven days later. After the second missed check, it closes the request.
+
+# Show the agent's work in the staff desk
+
+![The Pourhaven desk with a request in the Agent working queue. The Activity timeline shows finished tool steps and the photo inspection that is still running.](/images/blog/refund-agent-human-approval-appwrite-functions/app-desk-agent-working.avif)
+
+The desk shows the queues on the left, the request list in the middle, and the open request with its approval card and its timeline on the right. After sign-in, the web app calls `teams.list()`, which returns only the teams of the signed-in user. A member of the `staff` team goes to the desk, and any other user goes to the customer pages. This check only selects the screen. The permissions protect the data, so a customer who opens the desk URL receives no rows of other customers.
+
+Appwrite Realtime sends changes to subscribed clients over a WebSocket. A subscription names one or more channels, for example all rows of a table. It can also add queries, which Appwrite checks on the server before it sends an event. The desk subscribes once to `run_steps`, `approvals`, and `replies`, with a query for the open request:
+
+```ts
+/**
+ * Streams the open request's timeline, approvals, and replies on the desk.
+ * One subscription covers the three tables; Appwrite filters events on the
+ * server with the requestId query. Opening another request swaps the query on
+ * the same subscription instead of subscribing again.
+ */
+export function useCaseRealtime(requestId: string) {
+  const queryClient = useQueryClient();
+  const subscription = useRef<Promise<RealtimeSubscription> | null>(null);
+  const subscribedTo = useRef(requestId);
+
+  useEffect(() => {
+    const pending = realtime.subscribe(
+      [table(TABLES.steps).row(), table(TABLES.approvals).row(), table(TABLES.replies).row()],
+      (event: RealtimeResponseEvent<Models.Row & { requestId: string }>) => {
+        const change = rowChange(event);
+        if (!change) return;
+        const key = { run_steps: 'steps', approvals: 'approvals', replies: 'replies' }[change.table];
+        if (!key) return;
+        queryClient.setQueryData<Models.Row[]>([key, change.row.requestId], (rows) =>
+          upsert(rows, change, key === 'approvals' ? newestFirst : byCreation),
+        );
+      },
+      caseQueries(subscribedTo.current),
+    );
+    subscription.current = pending;
+    return () => void pending.then((active) => active.unsubscribe());
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (subscribedTo.current === requestId) return;
+    subscribedTo.current = requestId;
+    void subscription.current?.then((active) => active.update({ queries: caseQueries(requestId) }));
+  }, [requestId]);
+}
+```
+
+`table(id)` builds the channel with `Channel.tablesdb('refund_desk').table(id)`, and `caseQueries` returns `[Query.equal('requestId', [requestId])]`. When a staff member opens another request, `update` swaps the query on the open subscription instead of subscribing again. Each tool step arrives as two events: a create event when the step starts and an update event with the result. The desk shows the running step and then its result.
+
+A decision is one `updateRow` call on the approval. The update event starts the next `refund-agent` execution:
+
+```ts
+/**
+ * Records a staff decision. This update is the event that starts the next
+ * refund-agent execution, which reads the decision back from this row.
+ */
+export function decide(approval: Approval, viewer: Viewer, input: DecisionInput) {
+  return tablesDB.updateRow<Approval>({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.approvals,
+    rowId: approval.$id,
+    data: {
+      decision: input.decision,
+      requireReturn: input.requireReturn,
+      staffNote: input.staffNote,
+      decidedBy: viewer.user.$id,
+      decidedByName: viewer.user.name,
+      decidedAt: new Date().toISOString(),
+    },
+  });
+}
+```
+
+# Keep customers updated
+
+The customer request page shows the status of the request and a list of updates. The updates are the `run_steps` rows with `visibility` set to `customer`. When the agent creates such a step, it adds read access for the customer to the row:
+
+```javascript
+/** Creates a step. Customer-visible steps also get read access for the customer. */
+async add({ rowId = ID.unique(), visibility = 'staff', ...step }) {
+  const row = await this.ctx.tablesDB.createRow({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.steps,
+    rowId,
+    data: {
+      requestId: this.request.$id,
+      runId: this.ctx.executionId,
+      actor: 'agent',
+      actorName: AGENT_NAME,
+      status: 'succeeded',
+      visibility,
+      ...step,
+      title: truncate(step.title, 160),
+      detail: truncate(step.detail ?? null, 2000),
+    },
+    permissions: visibility === 'customer' ? [Permission.read(Role.user(this.request.customerId))] : [],
+  });
+  return row;
+}
+```
+
+Realtime applies the same permissions as reads. The customer page subscribes to the request row and to `run_steps` with the same `requestId` query. Appwrite sends only the steps that the customer can read, so tool steps and staff names never reach the customer:
+
+```ts
+/** Streams one request and its customer-visible updates on the customer's request page. */
+export function useCustomerRequestRealtime(requestId: string) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const request = realtime.subscribe(
+      table(TABLES.requests).row(requestId),
+      (event: RealtimeResponseEvent<RefundRequest>) => {
+        const change = rowChange(event);
+        if (change) applyRequestChange(queryClient, change);
+      },
+    );
+    const steps = realtime.subscribe(
+      table(TABLES.steps).row(),
+      (event: RealtimeResponseEvent<Models.Row>) => {
+        const change = rowChange(event);
+        if (change) queryClient.setQueryData<Models.Row[]>(['steps', requestId], (rows) => upsert(rows, change));
+      },
+      caseQueries(requestId),
+    );
+    return () => {
+      void request.then((subscription) => subscription.unsubscribe());
+      void steps.then((subscription) => subscription.unsubscribe());
+    };
+  }, [queryClient, requestId]);
+}
+```
+
+The page also shows the customer's photo. An `<img>` tag loads the file URL without the SDK, so the request carries a session only when the browser sends the Appwrite session cookie. When the Appwrite endpoint and the app are on different domains, the browser can block that cookie as a third-party cookie. A file token avoids this problem. A file token is a secret that gives access to one file, and `intake` creates one for each photo. `getFileView` with the token returns a URL that works in an `<img>` tag:
+
+```ts
+/**
+ * Request photos are private. The intake function creates a file token, and the
+ * token URL works in an <img> tag without a session cookie.
+ */
+export const photoUrl = (fileId: string, token: string) => storage.getFileView({ bucketId: BUCKET_ID, fileId, token });
+```
+
+# Run the refund desk
+
+Copy `apps/web/.env.example` to `apps/web/.env` and set `VITE_APPWRITE_ENDPOINT` and `VITE_APPWRITE_PROJECT_ID`. Then start the web app:
+
+```bash
+pnpm dev
+```
+
+Open `http://localhost:5173`. The demo accounts are in the README of the repository, and the photos for each case are in `scripts/photos/`.
+
+## Send a request to staff
+
+![The Pourhaven desk with the kettle request open. The approval card recommends a refund of $129.00 with its findings and one concern about the automatic refund limit, next to the customer's photo and the timeline of run 1, which waits for staff.](/images/blog/refund-agent-human-approval-appwrite-functions/app-desk-approval.avif)
+
+1. Sign in as Priya Raman.
+2. On **Orders**, find the gooseneck kettle from order PH-20388 and select **Request a refund**.
+3. Select **Arrived damaged** and describe the dented spout.
+4. Add `kettle-dented-spout.jpg` and select **Submit request**.
+5. In a private window, sign in as Maya Okafor and open the **Needs approval** queue.
+
+The kettle costs $129.00, which is above the $50.00 limit. The automatic refund rules block the refund, and the agent recommends a refund to staff. The approval card shows the recommendation, the findings, the concern from the failed rule, and the reasoning. The **Activity** timeline shows run 1 and a live counter for the time that the request has waited for staff.
+
+## Refund a small request automatically
+
+![The Request a refund form for the glass carafe with the reason Arrived damaged, a short description, the photo of the cracked carafe, and a summary with the refund amount of $34.00](/images/blog/refund-agent-human-approval-appwrite-functions/app-refund-form.avif)
+
+1. As Priya, go back to **Orders**.
+2. Find the glass carafe from order PH-20417 and select **Request a refund**.
+3. Select **Arrived damaged**, describe the crack, and add `carafe-cracked.jpg`.
+4. Select **Submit request**.
+
+The carafe costs $34.00, was delivered five days ago, and the photo shows the crack. Every rule passes, so the agent refunds the carafe in the first run:
+
+![The customer request page for the carafe with the status Refunded, the refund of $34.00 to the Visa card, the payment reference, and the updates from the refund agent](/images/blog/refund-agent-human-approval-appwrite-functions/app-customer-refunded.avif)
+
+The history rule passes because the kettle request is not refunded yet. If Maya approves the kettle first, the carafe goes to staff with a concern about the earlier refund.
+
+## Approve a request
+
+![The kettle request after the approval. The timeline shows run 1, a note that the request waited for staff while no execution ran, and run 2, which issued the refund.](/images/blog/refund-agent-human-approval-appwrite-functions/app-desk-after-approval.avif)
+
+1. As Maya, open the kettle request and select **Approve refund**.
+2. Select **Approve** to confirm.
+
+The update to the approvals row starts run 2, which refunds $129.00. The gap between the two runs in the timeline is the wait for staff. No execution ran during that gap.
+
+## Ask the customer a question
+
+![The customer request page for the scale with a question from Pourhaven about new batteries and a form to answer with an optional photo](/images/blog/refund-agent-human-approval-appwrite-functions/app-customer-question.avif)
+
+1. Sign in as Lucas Moreau.
+2. Request a refund for the digital brew scale with the reason **Stopped working** and the photo `scale-blank-display.jpg`.
+3. As Maya, open the request. The agent recommends a question for the customer, for example whether new batteries help.
+4. Select **Ask customer**, keep or change the question, and select **Send question**.
+
+Lucas sees the question on the request page. As Lucas, answer that new batteries did not help, add `scale-new-batteries.jpg`, and select **Send answer**. The answer starts a new run. That run inspects the new photo and sends a new recommendation to the desk.
+
+## Require a return before the refund
+
+![The customer request page for the grinder with the return code, the date of the return check, and the address to ship the item to](/images/blog/refund-agent-human-approval-appwrite-functions/app-customer-return.avif)
+
+1. Sign in as Aiko Tanaka.
+2. Request a refund for the conical burr grinder with the reason **Arrived damaged** and the photo `grinder-hopper-cracked.jpg`.
+3. As Maya, open the request. The grinder costs $249.00, and the policy says that items above $150 come back first, so the agent recommends a refund after a return.
+4. Make sure that **Require return first** is on, and select **Approve refund**.
+5. Select **Approve** to confirm.
+
+The customer page shows the return code and the date of the return check. To see the check, open `refund-agent` in the Console and go to **Executions**:
+
+![The Executions tab of the refund-agent function in the Appwrite Console with event executions and one scheduled execution seven days ahead](/images/blog/refund-agent-human-approval-appwrite-functions/console-scheduled-execution.avif)
+
+The return check is a scheduled execution seven days ahead. When the grinder arrives, a staff member opens the request in the **Returns** queue and selects **Mark as received**. The check then refunds the grinder. To watch the checks run sooner, set `RETURN_CHECK_DELAY_MINUTES=2` in `.env` and run `pnpm provision` again.
+
+Run `pnpm reset` to delete the requests that the demo accounts created, and try the flows again.
+
+# Connect a payment provider
+
+The `payments` table stands in for a payment provider. `issueRefund` is the only function that moves money, so it is the only function to change. Call the refund API of the provider there, and pass `refund_<requestId>` as the idempotency key, so a retry cannot refund twice at the provider either. Keep the `payments` row as the record that the request page and the refund history read.
+
+The approval pattern also works for other agents that must stop for a person. The agent saves its recommendation as a row that only people update, and the update event starts the next execution.
+
+# Resources
+
+- [Function executions, events, and delayed executions](/docs/products/functions/execute)
+- [Events](/docs/apis/events)
+- [Realtime queries](/docs/apis/realtime/queries)
+- [TablesDB permissions](/docs/products/databases/tablesdb/permissions)
+- [Team invites and server-side memberships](/docs/products/auth/team-invites)
+- [File tokens](/docs/products/storage/file-tokens)
+- [Join the Appwrite Discord](https://appwrite.io/discord)
