@@ -190,6 +190,29 @@ trait MigrationsBase
         return $migrationResult;
     }
 
+    public function performMigrationExpectingFailure(array $body): array
+    {
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], $body);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+
+        $migrationResult = [];
+
+        $this->assertEventually(function () use ($migration, &$migrationResult) {
+            $migrationResult = $this->getMigrationStatus($migration['body']['$id']);
+
+            $this->assertSame('finished', $migrationResult['stage']);
+        }, 60_000, 1_000);
+
+        $this->assertSame('failed', $migrationResult['status'], 'Migration unexpectedly succeeded: ' . json_encode($migrationResult, JSON_PRETTY_PRINT));
+
+        return $migrationResult;
+    }
+
     /**
      * Get migration status by ID (without creating a new migration)
      *
@@ -574,6 +597,119 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+    }
+
+    public function testAppwriteMigrationRejectsForeignSourceApiKey(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+
+        try {
+            $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getDestinationProject()['apiKey'],
+            ]);
+
+            $this->assertDestinationDatabaseMissing($databaseId);
+        } finally {
+            $this->deleteMigrationDatabases($databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationRejectsSourceApiKeyWithoutTableScope(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+
+        try {
+            $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read']),
+            ]);
+
+            $this->assertDestinationDatabaseMissing($databaseId);
+        } finally {
+            $this->deleteMigrationDatabases($databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationAcceptsSourceApiKeyWithReadScopes(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+
+        try {
+            $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'tableId' => ID::unique(),
+                'name' => 'Scoped Key Table',
+            ]);
+
+            $this->assertSame(201, $table['headers']['status-code']);
+            $tableId = $table['body']['$id'];
+
+            $result = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'tables.read']),
+            ]);
+
+            $this->assertSame('completed', $result['status']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code'], 'The source table was not copied with a source API key that can read it.');
+            $this->assertSame('Scoped Key Table', $response['body']['name']);
+        } finally {
+            $this->deleteMigrationDatabases($databaseId);
+        }
+    }
+
+    private function createSourceDatabase(): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Foreign Key Regression',
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    private function assertDestinationDatabaseMissing(string $databaseId): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertSame(404, $response['headers']['status-code'], 'The source database was copied without a source API key that can read it.');
+    }
+
+    private function deleteMigrationDatabases(string $databaseId): void
+    {
+        foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
+            $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ]);
+        }
     }
 
     public function testAppwriteMigrationDatabasesTable(): void
