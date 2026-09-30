@@ -2,6 +2,7 @@
 
 namespace Appwrite\Databases;
 
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -50,7 +51,7 @@ final readonly class CursorLookup
 
         $joins = $this->joins($queries);
         $after = $cursor->getMethod() === Method::CursorAfter;
-        $orders = $this->orders($queries, $joins, $after);
+        $orders = $this->orders($collection, $queries, $joins, $after);
         $orders = $this->tieBreaks($joins, $orders, $after);
 
         $rows = [];
@@ -91,7 +92,7 @@ final readonly class CursorLookup
      * @param array<string, Query> $joins
      * @return array<string, list<Query>>
      */
-    private function orders(array $queries, array $joins, bool $after): array
+    private function orders(string $collection, array $queries, array $joins, bool $after): array
     {
         $orders = [];
         foreach ($queries as $query) {
@@ -101,6 +102,10 @@ final readonly class CursorLookup
             }
 
             [$alias, $attribute] = $this->reference($query->getAttribute(), Query::DEFAULT_ALIAS);
+            if ($alias === Query::DEFAULT_ALIAS) {
+                $alias = $this->owner($collection, $attribute, $joins);
+            }
+
             if (!isset($joins[$alias])) {
                 continue;
             }
@@ -111,6 +116,41 @@ final readonly class CursorLookup
         }
 
         return $orders;
+    }
+
+    /**
+     * The alias a bare order name reads from: the only join whose collection declares it, when the listed collection
+     * does not, as the library resolves it.
+     *
+     * @param array<string, Query> $joins
+     */
+    private function owner(string $collection, string $attribute, array $joins): string
+    {
+        if ($joins === [] || \str_starts_with($attribute, '$') || $this->declares($collection, $attribute, true)) {
+            return Query::DEFAULT_ALIAS;
+        }
+
+        $owners = [];
+        foreach ($joins as $alias => $join) {
+            if ($this->declares($join->getAttribute(), $attribute, false)) {
+                $owners[] = $alias;
+            }
+        }
+
+        return \count($owners) === 1 ? $owners[0] : Query::DEFAULT_ALIAS;
+    }
+
+    private function declares(string $collection, string $attribute, bool $relationships): bool
+    {
+        /** @var array<Document> $attributes */
+        $attributes = $this->database->getCollection($collection)->getAttribute('attributes', []);
+        foreach ($attributes as $declared) {
+            if ($declared->getId() === $attribute && ($relationships || !Attribute::isRelationship($declared))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

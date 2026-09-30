@@ -244,6 +244,20 @@ final class CursorLookupTest extends TestCase
         $this->assertSame([['bob', 'b-only']], $rows, 'a row the join did not match is a page boundary with null joined values');
     }
 
+    public function testCursorOrderedByABareJoinedNamePagesAsTheListDoes(): void
+    {
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->customer($store, 'bob', readable: true);
+        $this->order($store, 'a-first', 'alice', 10, readable: true);
+        $this->order($store, 'a-second', 'alice', 25, readable: true);
+        $this->order($store, 'b-only', 'bob', 15, readable: true);
+
+        $rows = $this->pageRows($store, [Query::orderAsc('amount')], Query::cursorAfter('bob'));
+
+        $this->assertSame([['alice', 'a-second']], $rows, 'a bare order name only the joined collection declares reads the joined row');
+    }
+
     public function testCursorOnAJoinOfTheJoinedIdNeedsNoJoinedRow(): void
     {
         $store = $this->store();
