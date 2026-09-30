@@ -155,9 +155,9 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_expire\" from {$id}: {$th->getMessage()}");
                     }
                     try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'data');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passkey');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"data\" in collection {$id}: {$th->getMessage()}");
+                        Console::warning("Failed to create attribute \"passkey\" in collection {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

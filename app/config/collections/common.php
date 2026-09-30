@@ -812,7 +812,8 @@ return [
                 'array' => false,
                 'filters' => ['datetime'],
             ], [
-                '$id' => ID::custom('data'),
+                // JSON is fine here: only read by ID once, then deleted, never queried
+                '$id' => ID::custom('passkey'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,

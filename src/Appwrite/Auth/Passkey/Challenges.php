@@ -35,7 +35,7 @@ class Challenges
             'userInternalId' => $user?->getSequence(),
             'type' => $type,
             'expire' => DateTime::addSeconds(new \DateTime(), Ceremony::TIMEOUT),
-            'data' => [
+            'passkey' => [
                 'version' => self::VERSION,
                 'relyingParty' => $ceremony->relyingParty->getFingerprint(),
                 'binding' => $binding,
@@ -53,16 +53,16 @@ class Challenges
     public function consume(string $challengeId, string $type, Ceremony $ceremony, ?Document $user = null, array $binding = []): string
     {
         $challenge = $this->authorization->skip(fn () => $this->dbForProject->getDocument('challenges', $challengeId));
-        $data = $challenge->getAttribute('data', []);
+        $passkey = $challenge->getAttribute('passkey', []);
 
         if (
             $challenge->isEmpty()
             || $challenge->getAttribute('type') !== $type
             || $challenge->getAttribute('userInternalId') !== $user?->getSequence()
             || $challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())
-            || ($data['version'] ?? null) !== self::VERSION
-            || ($data['binding'] ?? null) !== $binding
-            || ($data['relyingParty'] ?? null) !== $ceremony->relyingParty->getFingerprint()
+            || ($passkey['version'] ?? null) !== self::VERSION
+            || ($passkey['binding'] ?? null) !== $binding
+            || ($passkey['relyingParty'] ?? null) !== $ceremony->relyingParty->getFingerprint()
         ) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
@@ -71,6 +71,6 @@ class Challenges
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        return $data['state'];
+        return $passkey['state'];
     }
 }
