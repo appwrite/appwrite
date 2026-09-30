@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "multi-tenant-app-appwrite-teams-documentsdb",
+    "href": "/blog/post/multi-tenant-app-appwrite-teams-documentsdb",
+    "title": "How to build a multi-tenant SaaS app with Appwrite Teams",
+    "description": "Step-by-step tutorial for building a multi-tenant SaaS app with Appwrite Teams for tenant isolation and DocumentsDB for schemaless data, using a real forms app.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 15,
+    "author": "aditya-oberai",
+    "category": "tutorials",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/multi-tenant-app-appwrite-teams-documentsdb/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "ai-agent-live-collaborator-appwrite-presences",
     "href": "/blog/post/ai-agent-live-collaborator-appwrite-presences",
     "title": "Build an AI agent that collaborates live with Appwrite Presences and Realtime",
