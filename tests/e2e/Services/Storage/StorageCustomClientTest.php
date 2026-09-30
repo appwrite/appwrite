@@ -1637,7 +1637,7 @@ final class StorageCustomClientTest extends Scope
         $ownerId = $this->getUser()['$id'];
         $chunkSize = 5 * 1024 * 1024;
         $totalSize = $chunkSize + 1;
-        $firstBody = 'resume-chunk';
+        $firstBody = \str_repeat('a', $chunkSize);
         $nextBody = 'x';
         $firstRange = 'bytes 0-' . (\strlen($firstBody) - 1) . '/' . $totalSize;
         $nextRange = 'bytes ' . $chunkSize . '-' . $chunkSize . '/' . $totalSize;
