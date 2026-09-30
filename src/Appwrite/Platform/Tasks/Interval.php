@@ -148,8 +148,10 @@ class Interval extends Action
      *
      * Issuance is asynchronous. The first job often runs while the certificate
      * is still pending, and nothing else would come back to attach it to the
-     * TLS configuration once it is issued. Rules touched in the last minute are
-     * left alone so a tick does not queue the same hostname twice.
+     * TLS configuration once it is issued. DNS already passed when the rule
+     * entered this status, so the follow-up does not run that check again.
+     * Rules touched in the last minute are left alone so a tick does not queue
+     * the same hostname twice.
      */
     private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
@@ -187,6 +189,7 @@ class Interval extends Action
                         'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                     ]),
                     action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                    skipDomainValidation: true,
                 ));
                 $processed++;
             } catch (\Throwable) {
