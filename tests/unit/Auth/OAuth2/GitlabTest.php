@@ -17,76 +17,71 @@ final class GitlabTest extends TestCase
 
         \parse_str((string) \parse_url($gitlab->getLoginURL(), PHP_URL_QUERY), $query);
 
-        $this->assertSame('read_user openid email', $query['scope']);
+        $this->assertSame('openid email', $query['scope']);
     }
 
-    public function testOpenIdVerifiedPrimaryEmailIsVerified(): void
+    public function testOpenIdUserInfoSuppliesTheProfile(): void
     {
-        $gitlab = $this->createGitlab(
-            [
-                'id' => 7,
-                'email' => 'rest@example.com',
-                'confirmed_at' => null,
-            ],
-            [
-                'email' => 'owner@example.com',
-                'email_verified' => true,
-            ],
-        );
+        $gitlab = $this->createGitlab([
+            'sub' => '7',
+            'email' => 'owner@example.com',
+            'email_verified' => true,
+            'name' => 'Owner',
+            'preferred_username' => 'owner',
+            'picture' => 'https://gitlab.example/avatar.png',
+        ]);
 
+        $this->assertSame('7', $gitlab->getUserID('token'));
         $this->assertSame('owner@example.com', $gitlab->getUserEmail('token'));
         $this->assertTrue($gitlab->isEmailVerified('token'));
+        $this->assertSame('Owner', $gitlab->getUserName('token'));
+        $this->assertSame('owner', $gitlab->getUserSlug('token'));
+        $this->assertSame('https://gitlab.example/avatar.png', $gitlab->getUserPhoto('token'));
     }
 
     public function testOpenIdUnverifiedPrimaryEmailIsNotVerified(): void
     {
-        $gitlab = $this->createGitlab(
-            [
-                'id' => 7,
-                'email' => 'owner@example.com',
-                'confirmed_at' => '2024-01-01T00:00:00.000Z',
-            ],
-            [
-                'email' => 'owner@example.com',
-                'email_verified' => false,
-            ],
-        );
+        $gitlab = $this->createGitlab([
+            'sub' => '7',
+            'email' => 'owner@example.com',
+            'email_verified' => false,
+        ]);
 
         $this->assertSame('owner@example.com', $gitlab->getUserEmail('token'));
         $this->assertFalse($gitlab->isEmailVerified('token'));
     }
 
-    public function testProfileConfirmationWithoutOpenIdIsNotVerified(): void
+    public function testProfileFallbackIsNotVerified(): void
     {
-        $gitlab = $this->createGitlab(
-            [
-                'id' => 7,
-                'email' => 'owner@example.com',
-                'confirmed_at' => '2024-01-01T00:00:00.000Z',
-            ],
-            [],
-            failUserInfo: true,
-        );
+        $gitlab = $this->createGitlab([], [
+            'id' => 7,
+            'email' => 'owner@example.com',
+            'confirmed_at' => '2024-01-01T00:00:00.000Z',
+            'username' => 'owner',
+        ], failUserInfo: true);
 
+        $this->assertSame('7', $gitlab->getUserID('token'));
+        $this->assertSame('owner', $gitlab->getUserSlug('token'));
         $this->assertSame('owner@example.com', $gitlab->getUserEmail('token'));
         $this->assertFalse($gitlab->isEmailVerified('token'));
     }
 
     /**
-     * @param array<string, mixed> $user
      * @param array<string, mixed> $userInfo
+     * @param array<string, mixed> $profile
      */
-    private function createGitlab(array $user, array $userInfo, bool $failUserInfo = false): Gitlab&MockObject
+    private function createGitlab(array $userInfo, array $profile = [], bool $failUserInfo = false): Gitlab&MockObject
     {
         $gitlab = $this->getMockBuilder(Gitlab::class)
             ->setConstructorArgs(['client-id', 'client-secret', 'https://example.com/callback'])
             ->onlyMethods(['request'])
             ->getMock();
 
+        $calls = $failUserInfo ? 2 : 1;
         $gitlab
-            ->expects($this->exactly(2))
+            ->expects($this->exactly($calls))
             ->method('request')
-            ->willReturnCallback(function (string $method, string $url, array $headers = []) use ($user, $userInfo, $failUserInfo): string {
+            ->willReturnCallback(function (string $method, string $url, array $headers = []) use ($userInfo, $profile, $failUserInfo): string {
                 $this->assertSame('GET', $method);
 
                 if (\str_contains($url, '/oauth/userinfo')) {
@@ -101,7 +96,7 @@ final class GitlabTest extends TestCase
                 if (\str_contains($url, '/api/v4/user?')) {
                     $this->assertStringContainsString('access_token=token', $url);
 
-                    return \json_encode($user, JSON_THROW_ON_ERROR);
+                    return \json_encode($profile, JSON_THROW_ON_ERROR);
                 }
 
                 $this->fail('Unexpected GitLab request: ' . $url);

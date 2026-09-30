@@ -23,23 +23,17 @@ class Gitlab extends OAuth2
     protected array $user = [];
 
     /**
-     * @var bool
-     */
-    protected bool $userLoaded = false;
-
-    /**
      * @var array
      */
     protected array $tokens = [];
 
     /**
-     * read_user loads the profile from /api/v4/user. openid and email load the
-     * primary address and email_verified from /oauth/userinfo.
+     * openid and email load the primary address and email_verified from
+     * /oauth/userinfo, along with the id, name, username, and avatar.
      *
      * @var array
      */
     protected array $scopes = [
-        'read_user',
         'openid',
         'email',
     ];
@@ -241,27 +235,68 @@ class Gitlab extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
-        if ($this->userLoaded) {
+        if (!empty($this->user)) {
             return $this->user;
         }
 
-        $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
-            'access_token' => $accessToken,
-        ]));
-        $decoded = \json_decode($user, true);
-        $this->user = \is_array($decoded) ? $decoded : [];
-
         $info = $this->userInfo($accessToken);
-        $email = $info['email'] ?? null;
-        if (\is_string($email) && $email !== '') {
-            $this->user['email'] = $email;
+        $sub = $info['sub'] ?? null;
+        if ($sub !== null && $sub !== '') {
+            $email = \is_string($info['email'] ?? null) ? $info['email'] : '';
+            $username = '';
+            if (\is_string($info['preferred_username'] ?? null) && $info['preferred_username'] !== '') {
+                $username = $info['preferred_username'];
+            } elseif (\is_string($info['nickname'] ?? null)) {
+                $username = $info['nickname'];
+            }
+
+            $this->user = [
+                'id' => (string) $sub,
+                'email' => $email,
+                'email_verified' => \filter_var($info['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN) && $email !== '',
+                'name' => \is_string($info['name'] ?? null) ? $info['name'] : '',
+                'username' => $username,
+                'avatar_url' => \is_string($info['picture'] ?? null) ? $info['picture'] : '',
+            ];
+
+            return $this->user;
         }
 
-        $verified = \filter_var($info['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $this->user['email_verified'] = $verified && \is_string($email) && $email !== '';
-        $this->userLoaded = true;
+        // Tokens issued before the openid scope cannot call userinfo. The
+        // profile still supplies the id for those connections. Its confirmed_at
+        // flag is not a verification.
+        $this->user = $this->profile($accessToken);
 
         return $this->user;
+    }
+
+    /**
+     * Profile used when OpenID userinfo is unavailable. The address is left
+     * unverified.
+     *
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    private function profile(string $accessToken): array
+    {
+        try {
+            $response = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
+                'access_token' => $accessToken,
+            ]));
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $profile = \json_decode($response, true);
+        if (!\is_array($profile) || !isset($profile['id']) || $profile['id'] === '') {
+            return [];
+        }
+
+        $profile['id'] = (string) $profile['id'];
+        $profile['email_verified'] = false;
+
+        return $profile;
     }
 
     /**
