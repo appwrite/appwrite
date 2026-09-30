@@ -267,16 +267,7 @@ class Create extends Action
         $createdInRequest = false;
 
         $mergeUploadMetadata = function (array $stored, array $current): array {
-            $uploaderId = $stored[self::UPLOADER_ID] ?? null;
             $merged = \array_merge($stored, $current);
-
-            // The uploader is fixed when the file is created. A later chunk
-            // must not replace it by merging request metadata over the top.
-            if (\is_string($uploaderId)) {
-                $merged[self::UPLOADER_ID] = $uploaderId;
-            } else {
-                unset($merged[self::UPLOADER_ID]);
-            }
 
             if (isset($stored['parts']) || isset($current['parts'])) {
                 $parts = $stored['parts'] ?? [];
@@ -295,10 +286,6 @@ class Create extends Action
         $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
-                if ($file->getAttribute('bucketId') !== $bucket->getId()) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-                }
-
                 $chunks = $file->getAttribute('chunksTotal', 1);
                 $uploaded = $file->getAttribute('chunksUploaded', 0);
                 $metadata = $file->getAttribute('metadata', []);
@@ -361,12 +348,9 @@ class Create extends Action
             $uploaded = 0;
 
             if (!$file->isEmpty()) {
-                if ($file->getAttribute('bucketId') !== $bucket->getId()) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-                }
-
                 $chunks = $file->getAttribute('chunksTotal', 1);
                 $uploaded = $file->getAttribute('chunksUploaded', 0);
+                $metadata = $mergeUploadMetadata($file->getAttribute('metadata', []), $metadata);
 
                 if ($uploaded === $chunks && empty($contentRange)) {
                     throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
@@ -388,8 +372,6 @@ class Create extends Action
 
                     return;
                 }
-
-                $metadata = $mergeUploadMetadata($file->getAttribute('metadata', []), $metadata);
             }
 
             if (empty($chunksUploaded)) {
@@ -654,11 +636,10 @@ class Create extends Action
             return;
         }
 
-        $metadata = $file->getAttribute('metadata', []);
-        $uploaderId = \is_array($metadata) ? ($metadata[self::UPLOADER_ID] ?? '') : '';
+        $uploaderId = $file->getAttribute('metadata', [])[self::UPLOADER_ID] ?? '';
         // Guests have no user id. An empty value is not ownership, or every
         // guest could resume every other guest's upload.
-        if (\is_string($uploaderId) && $uploaderId !== '' && $uploaderId === $user->getId()) {
+        if ($uploaderId !== '' && $uploaderId === $user->getId()) {
             return;
         }
 
