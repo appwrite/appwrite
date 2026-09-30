@@ -661,7 +661,7 @@ The customer page shows the return code and the date of the return check. To see
 
 ![The Executions tab of the refund-agent function in the Appwrite Console with event executions and one scheduled execution seven days ahead](/images/blog/refund-agent-human-approval-appwrite-functions/console-scheduled-execution.avif)
 
-The return check is a scheduled execution seven days ahead. To watch the checks run sooner, set `RETURN_CHECK_DELAY_MINUTES=2` in `.env` and run `pnpm provision` again. Run `pnpm reset` to delete the requests that the demo accounts created.
+The return check is a scheduled execution seven days ahead. When the grinder arrives, a staff member opens the request in the **Returns** queue and selects **Mark as received**, and the check then refunds the grinder. To watch the checks run sooner, set `RETURN_CHECK_DELAY_MINUTES=2` in `.env` and run `pnpm provision` again. Run `pnpm reset` to delete the requests that the demo accounts created.
 
 # Connect a payment provider
 
