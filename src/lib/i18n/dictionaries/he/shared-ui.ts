@@ -966,6 +966,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Update your account password': 'עדכון סיסמת החשבון שלכם',
   'Security · Multi-factor authentication': 'אבטחה · אימות רב-שלבי',
   'Enable MFA with TOTP, email or SMS': 'הפעלת MFA עם TOTP, אימייל או SMS',
+  'Security · Passkeys': 'אבטחה · מפתחות גישה',
+  'Sign in with a fingerprint, face or device PIN':
+    'התחברות עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר',
 
   // Command center: theme and help entries
   'Switch the console to light mode': 'החלפת הקונסולה למצב בהיר',

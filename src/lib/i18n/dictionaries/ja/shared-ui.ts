@@ -628,6 +628,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Security · Multi-factor authentication': 'セキュリティ · 多要素認証',
   'Enable MFA with TOTP, email or SMS':
     'TOTP、メール、または SMS で MFA を有効化',
+  'Security · Passkeys': 'セキュリティ · パスキー',
+  'Sign in with a fingerprint, face or device PIN':
+    '指紋、顔認証、またはデバイスの PIN でサインイン',
   // Command center: theme and help entries
   'Switch the console to light mode': 'コンソールをライトモードに切り替え',
   'Switch the console to dark mode': 'コンソールをダークモードに切り替え',
