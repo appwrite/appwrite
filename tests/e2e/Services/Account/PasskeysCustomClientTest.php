@@ -515,15 +515,14 @@ final class PasskeysCustomClientTest extends Scope
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
 
-        // Pending registrations do not lock the RP ID
+        // A registration in progress locks it too: it could complete right after the change
         $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
             'rpId' => 'example.com',
             'origins' => ['https://example.com'],
         ]);
-        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(400, $response['headers']['status-code']);
 
-        $this->configurePasskeys($project);
         $this->registerPasskey($project, $session);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [

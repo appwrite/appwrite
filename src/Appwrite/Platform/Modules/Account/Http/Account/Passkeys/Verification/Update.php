@@ -35,7 +35,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/account/passkeys/:passkeyId/verification')
             ->desc('Update passkey verification')
-            ->groups(['api', 'account'])
+            ->groups(['api', 'account', 'recentSession'])
             ->label('scope', 'account')
             ->label('audits.event', 'passkey.create')
             ->label('audits.resource', 'user/{user.$id}')

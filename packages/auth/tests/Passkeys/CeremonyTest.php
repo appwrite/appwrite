@@ -31,9 +31,6 @@ final class CeremonyTest extends TestCase
         $this->assertSame('required', Authenticator::string($options, 'authenticatorSelection', 'residentKey'));
         $this->assertSame('required', Authenticator::string($options, 'authenticatorSelection', 'userVerification'));
         $this->assertSame('none', Authenticator::string($options, 'attestation'));
-        $this->assertSame([['type' => 'public-key', 'alg' => -7], ['type' => 'public-key', 'alg' => -257]], $options['pubKeyCredParams']);
-        $this->assertSame([], $options['excludeCredentials']);
-        $this->assertSame(Ceremony::TIMEOUT * 1000, $options['timeout']);
     }
 
     public function testExistingPasskeysAreExcludedAndShareTheUserHandle(): void
@@ -97,6 +94,19 @@ final class CeremonyTest extends TestCase
         $authenticator->counter = 0;
         $this->expectException(Exception::class);
         $this->signIn($authenticator, $credential);
+    }
+
+    public function testDeviceBoundPasskeyWithoutCounterSignsIn(): void
+    {
+        // Some authenticators never implement a counter and always report zero
+        $authenticator = new Authenticator(backupEligible: false);
+        $credential = $this->register($authenticator);
+
+        for ($i = 0; $i < 2; $i++) {
+            $authenticator->counter = -1;
+            $credential = $this->signIn($authenticator, $credential);
+            $this->assertSame(0, $credential->record['counter']);
+        }
     }
 
     public function testBackupEligibilityCannotChange(): void

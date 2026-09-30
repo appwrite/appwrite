@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Passkeys\Origin;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -104,14 +105,18 @@ class Update extends Action
         }
         $normalized = \array_values(\array_unique($normalized));
 
-        // Passkeys are bound to the RP ID they were created for, so changing it would strand them
+        // Passkeys are bound to the RP ID they were created for, so changing it would strand them. Registrations
+        // still inside their ceremony window count too: one could complete right after this check.
         if ($current !== '' && $rpId !== $current) {
-            $passkey = $authorization->skip(fn () => $dbForProject->findOne('authenticators', [
-                Query::equal('type', [Ceremony::TYPE]),
-                Query::equal('verified', [true]),
-            ]));
-            if (!$passkey->isEmpty()) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The relying party ID cannot change while users have passkeys registered.');
+            $inFlight = DateTime::addSeconds(new \DateTime(), -Ceremony::TIMEOUT);
+            foreach ([Query::equal('verified', [true]), Query::greaterThan('$createdAt', $inFlight)] as $query) {
+                $passkey = $authorization->skip(fn () => $dbForProject->findOne('authenticators', [
+                    Query::equal('type', [Ceremony::TYPE]),
+                    $query,
+                ]));
+                if (!$passkey->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The relying party ID cannot change while users have passkeys registered or being registered.');
+                }
             }
         }
 
