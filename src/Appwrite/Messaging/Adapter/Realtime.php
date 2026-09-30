@@ -975,6 +975,12 @@ class Realtime extends MessagingAdapter
                         $channels[] = 'videos.' . $parts[1] . '.' . $parts[2] . '.' . $parts[3];
                     }
                 }
+                // Console subscribers listen on `console` and scope by `projects.{projectId}`,
+                // like deployments and executions.
+                $channels[] = 'console';
+                if ($project !== null && !$project->isEmpty()) {
+                    $channels[] = 'projects.' . $project->getId();
+                }
                 // Renditions and subtitles inherit the source file's permissions, which the
                 // publisher stamps onto the payload before it reaches Realtime.
                 $roles = $payload->getRead();

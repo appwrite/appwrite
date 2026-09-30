@@ -134,6 +134,8 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
+                $project,
                 $videoMessage
             ),
             VideoAction::Encode => $this->encode(
@@ -258,6 +260,8 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
+        Realtime $queueForRealtime,
+        Document $project,
         VideoMessage $videoMessage
     ): void {
         $subtitle = $videoMessage->subtitle;
@@ -274,6 +278,7 @@ class Videos extends Action
             $video = $videoMessage->video;
         }
         $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
+        $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
 
         try {
             $subtitle = $dbForProject->updateDocument(
@@ -283,6 +288,7 @@ class Videos extends Action
                     'status' => Base::STATUS_STARTED,
                 ])
             );
+            $this->notifySubtitle($queueForRealtime, $project, $subtitle, $permissions);
 
             $file = $this->resolveFile(
                 $dbForProject,
@@ -311,15 +317,17 @@ class Videos extends Action
                 }
             }
 
-            $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $subtitlePath);
+            $subtitle = $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $subtitlePath);
+            $this->notifySubtitle($queueForRealtime, $project, $subtitle, $permissions);
         } catch (\Throwable $th) {
-            $dbForProject->updateDocument(
+            $subtitle = $dbForProject->updateDocument(
                 'videos_subtitles',
                 $subtitle->getId(),
                 new Document([
                     'status' => Base::STATUS_ERROR,
                 ])
             );
+            $this->notifySubtitle($queueForRealtime, $project, $subtitle, $permissions);
 
             throw $th;
         } finally {
@@ -1536,6 +1544,32 @@ class Videos extends Action
             ->setEvent('videos.[videoId].renditions.[renditionId].' . $action)
             ->setParam('videoId', $rendition->getAttribute('videoId', ''))
             ->setParam('renditionId', $rendition->getId())
+            ->setPayload($payload)
+            ->trigger();
+    }
+
+    /**
+     * Publishes a subtitle status change. Subtitle rows carry no ACL either; see notify().
+     *
+     * @param array<string> $permissions
+     */
+    private function notifySubtitle(
+        Realtime $queueForRealtime,
+        Document $project,
+        Document $subtitle,
+        array $permissions
+    ): void {
+        $payload = $subtitle->getArrayCopy();
+        if (empty($payload['$permissions'])) {
+            $payload['$permissions'] = $permissions;
+        }
+
+        $queueForRealtime
+            ->setProject($project)
+            ->setSubscribers(['console', $project->getId()])
+            ->setEvent('videos.[videoId].subtitles.[subtitleId].update')
+            ->setParam('videoId', $subtitle->getAttribute('videoId', ''))
+            ->setParam('subtitleId', $subtitle->getId())
             ->setPayload($payload)
             ->trigger();
     }
