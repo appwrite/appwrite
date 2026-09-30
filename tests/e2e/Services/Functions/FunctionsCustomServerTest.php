@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Appwrite\Tests\Retry;
@@ -682,6 +683,49 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 120000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $code = $this->packageFunction('basic');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2934,6 +2978,58 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    /**
+     * A function domain resolves to the console, and clients send their own project's
+     * user JWT there for the function to read. That JWT authenticates nobody at the
+     * console, but it must not stop the request from reaching the function.
+     */
+    public function testFunctionsDomainServesRequestCarryingAnotherProjectsJwt(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Domain with foreign JWT',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['any'],
+        ]);
+        $domain = $this->setupFunctionDomain($functionId);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('cookies'),
+            'activate' => true,
+        ]);
+
+        $otherProject = $this->getProject(true);
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'foreign-jwt-' . ID::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $this->cleanupFunction($functionId);
     }
