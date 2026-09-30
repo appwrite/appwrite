@@ -21,6 +21,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -461,7 +462,7 @@ readonly class Deployments
         // manual uploads keep theirs. On S3 the sidecar uploads it before
         // build.sh starts; locally the worker can only stage it on the builds
         // volume, which the build can write too (see the Jobs worker).
-        $stage = '';
+        $stage = null;
         if ($source !== null) {
             $sourceArtifacts[] = new ArchiveArtifact(id: 'sourceArchive', in: 'source', out: 'source-root.tar.gz', compression: ArchiveCompression::Gzip, depends: isset($source['clone']) ? 'source' : 'extract');
             $sourceArtifacts[] = new StatArtifact(id: 'sourceSize', in: 'source-root.tar.gz', depends: 'sourceArchive');
@@ -469,7 +470,14 @@ readonly class Deployments
             $sourceDevice = getDevice(($isSite ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
             if ($sourceDevice->getType() === DeviceType::Local) {
                 $staged = static::stagedSourcePath(static::device($projectId), $deploymentId);
-                $stage = 'mkdir -p ' . \escapeshellarg(\dirname($staged)) . ' && cp /mnt/code/source-root.tar.gz ' . \escapeshellarg($staged) . '; ';
+                // Staging is best effort: the build runs even when it fails
+                $stage = Command::group(Command::or(
+                    Command::group(Command::and(
+                        (new Command('mkdir'))->flag('-p')->argument(\dirname($staged)),
+                        (new Command('cp'))->argument('/mnt/code/source-root.tar.gz')->argument($staged),
+                    )),
+                    new Command('true'),
+                ));
             } else {
                 $sourceArtifacts[] = new UploadArtifact(id: 'sourceUpload', in: 'source-root.tar.gz', out: static::objectUrl($sourceDevice, static::sourcePath($projectId, $resource->getCollection(), $deploymentId)), depends: 'sourceArchive');
             }
@@ -484,7 +492,12 @@ readonly class Deployments
         // back post-job so the Jobs worker can run adapter detection.
         $manifestArtifacts = $isSite ? [new ReadArtifact(id: 'manifest', in: 'manifest.json', format: ReadFormat::Json, depends: 'job')] : [];
 
+        // build.sh runs its first argument as the build command; an empty one is left out
+        $build = new Command('/usr/local/server/helpers/build.sh');
         $command = self::command($resource, $deployment);
+        if ($command !== '') {
+            $build->argument($command);
+        }
         $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
             'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
@@ -500,7 +513,7 @@ readonly class Deployments
         return [
             'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => $stage . '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => ($stage === null ? $build : Command::and($stage, $build))->toString(),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
