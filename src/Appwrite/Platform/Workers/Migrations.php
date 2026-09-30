@@ -12,7 +12,6 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
-use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -341,22 +340,22 @@ class Migrations extends Action
             return;
         }
 
-        $tablesDB = new TablesDB(
-            (new Client())
-                ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
-                ->setProject($projectId)
-                ->setKey($key)
-        );
+        $client = (new Client())
+            ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+            ->setProject($projectId)
+            ->setKey($key);
+
+        $probe = self::SCOPE_PROBE_ID;
 
         try {
-            $tablesDB->list();
+            $client->call(Client::METHOD_GET, '/tablesdb');
 
             if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
-                $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables"));
             }
 
             if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
-                $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+                $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables/{$probe}/rows"));
             }
         } catch (AppwriteException $error) {
             throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
