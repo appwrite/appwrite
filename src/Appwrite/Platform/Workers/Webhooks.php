@@ -29,8 +29,9 @@ class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
-    // How long a partially failed event remembers which webhooks already have it. Covers every
-    // broker retry, and the 7 days a dead-lettered message is kept for a redrive.
+    // How long a partially failed event remembers which webhooks already have it. Outlasts every
+    // broker retry. A message redriven from the dead letters starts again at attempt 0, so it
+    // re-sends to every webhook, under the same delivery id.
     private const DELIVERED_TTL = 60 * 60 * 24 * 7;
 
     public static function getName(): string
