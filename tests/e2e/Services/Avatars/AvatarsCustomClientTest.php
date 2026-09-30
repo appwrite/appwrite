@@ -320,13 +320,17 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
+        // The cookies set when the flow started go to the Appwrite hops,
+        // as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         // Provider consent, callback and redirect are three separate hops, each
         // answering with the location of the next one.
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
-        foreach (\range(1, 3) as $ignored) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        foreach (\range(1, 3) as $hop) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 1 ? [] : ['cookie' => $startCookies], followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 
@@ -392,6 +396,308 @@ final class AvatarsCustomClientTest extends Scope
                 ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
                 "Pixel at {$x},{$y} is not the OAuth2 provider photo — the avatar chain fell through to another provider."
             );
+        }
+    }
+
+    public function testUpdatePhoto(): void
+    {
+        $headers = $this->createPhotoUser();
+
+        /**
+         * Test for SUCCESS — the uploaded photo wins the provider chain
+         */
+        $red = $this->createImage('#FF0000', 'png');
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — the account doesn't expose photo records
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertArrayNotHasKey('photoId', $account['body']);
+        $this->assertArrayNotHasKey('photoSize', $account['body']);
+
+        /**
+         * Test for SUCCESS — a replacement is served right away
+         */
+        $blue = $this->createImage('#0000FF', 'png');
+        $response = $this->uploadPhoto($headers, $blue, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($blue, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — JPEG is served, within its lossy compression
+         */
+        $green = $this->createImage('#00FF00', 'jpeg');
+        $response = $this->uploadPhoto($headers, $green, 'photo.jpg');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($green, $this->getPhoto($headers), tolerance: 8);
+
+        /**
+         * Test for SUCCESS — WebP is served
+         */
+        $yellow = $this->createImage('#FFFF00', 'webp');
+        $response = $this->uploadPhoto($headers, $yellow, 'photo.webp');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($yellow, $this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoInvalid(): void
+    {
+        $headers = $this->createPhotoUser();
+        $png = $this->createImage('#FF0000', 'png');
+
+        /**
+         * Test for FAILURE — no file
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — unsupported extension
+         */
+        $response = $this->uploadPhoto($headers, 'not an image', 'notes.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — GIF isn't supported, by extension or by content
+         */
+        $gif = $this->createImage('#FF0000', 'gif');
+        $response = $this->uploadPhoto($headers, $gif, 'photo.gif');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        $response = $this->uploadPhoto($headers, $gif, 'photo.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — an SVG renamed to .png is rejected by its content
+         */
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#FF0000"/></svg>';
+        $response = $this->uploadPhoto($headers, $svg, 'photo.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — image over the 5MB limit
+         */
+        $response = $this->uploadPhoto($headers, $this->createNoiseImage(1400, 1400), 'large.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_FILE_SIZE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — chunked uploads aren't supported
+         */
+        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
+            'content-range' => 'bytes 0-' . (\strlen($png) - 1) . '/' . \strlen($png),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — none of the failures became the photo
+         */
+        $this->assertPhotoInitials($this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoLarge(): void
+    {
+        $headers = $this->createPhotoUser();
+
+        /**
+         * Test for SUCCESS — an image just under the limit is served in full
+         */
+        $large = $this->createNoiseImage(1200, 1200);
+
+        $this->assertLessThan(5 * 1024 * 1024, \strlen($large));
+
+        $response = $this->uploadPhoto($headers, $large, 'large.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($large, $this->getPhoto($headers));
+    }
+
+    public function testDeletePhoto(): void
+    {
+        $headers = $this->createPhotoUser();
+        $red = $this->createImage('#FF0000', 'png');
+
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting falls back to the default chain
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting again is a no-op
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — a photo can be set again after deletion
+         */
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+    }
+
+    /**
+     * A user of its own, so a photo never leaks into tests that expect the default chain.
+     *
+     * @return array<string, string>
+     */
+    private function createPhotoUser(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = \uniqid('photo-', true) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'User Name',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
+    /**
+     * Random pixels don't compress, so the PNG size follows the dimensions.
+     */
+    private function createNoiseImage(int $width, int $height): string
+    {
+        $image = new \Imagick();
+        $image->newImage($width, $height, '#808080');
+        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+        $image->setImageDepth(8);
+        $image->setImageFormat('png24');
+
+        return $image->getImageBlob();
+    }
+
+    private function createImage(string $color, string $format): string
+    {
+        $image = new \Imagick();
+        $image->newImage(64, 64, $color);
+        $image->setImageFormat($format);
+        $image->setImageCompressionQuality(100);
+
+        if ($format === 'webp') {
+            $image->setOption('webp:lossless', 'true');
+        }
+
+        return $image->getImageBlob();
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $extra
+     * @return array<string, mixed>
+     */
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ], $extra), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getPhoto(array $headers): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body'];
+    }
+
+    /**
+     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
+     */
+    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
+    {
+        $expectedImage = new \Imagick();
+        $expectedImage->readImageBlob($expected);
+        $actualImage = new \Imagick();
+        $actualImage->readImageBlob($actual);
+
+        $width = $expectedImage->getImageWidth();
+        $height = $expectedImage->getImageHeight();
+
+        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
+
+        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
+            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
+            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
+
+            foreach (['r', 'g', 'b'] as $channel) {
+                $this->assertLessThanOrEqual(
+                    $tolerance,
+                    \abs($expectedColor[$channel] - $actualColor[$channel]),
+                    "Pixel at {$x},{$y} differs from the uploaded photo."
+                );
+            }
         }
     }
 }

@@ -5,9 +5,11 @@ namespace Appwrite\Deployment;
 use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
+use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\ArchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
@@ -16,6 +18,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -165,6 +168,8 @@ readonly class Deployments
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        $deployment->setAttribute('providerRootDirectory', $rootDirectory);
+
         if ($vcs->supportsRepositoryArchives()) {
             return $this->createFromUrl(
                 $resource,
@@ -259,6 +264,16 @@ readonly class Deployments
     public function cancel(string $deploymentId): void
     {
         $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
+
+        // A canceled build never completes, so the Jobs worker never moves or
+        // clears its staged source (see payload()). Unlinking follows symlinked
+        // parent directories the build could plant, so clean up only inside
+        // the builds tree.
+        $device = static::device($this->project->getId());
+        $staged = static::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
     }
 
     /**
@@ -388,8 +403,7 @@ readonly class Deployments
         //    strip.
         //  - git clone ($source with clone): a provider without archive
         //    downloads; the sidecar clones over Git HTTPS and checks the tree
-        //    out directly, so there is no archive to unarchive — or to stat,
-        //    which is why this path reports no sourceSize.
+        //    out directly, so there is no archive to unarchive.
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
         if (isset($source['clone'])) {
@@ -402,11 +416,6 @@ readonly class Deployments
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
-                // Appwrite never sees the remote source (the sidecar fetches it),
-                // so unlike the uploaded-tarball path it can't size it. Stat the
-                // downloaded archive so the orchestrator reports its byte size in
-                // an artifact callback, which the worker records as sourceSize.
-                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'source'),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by
@@ -425,6 +434,32 @@ readonly class Deployments
             ];
         }
 
+        // Only the sidecar ever sees a remote source, so pack the root
+        // directory it builds, flat like an uploaded tarball, and keep it where
+        // manual uploads keep theirs. On S3 the sidecar uploads it before
+        // build.sh starts; locally the worker can only stage it on the builds
+        // volume, which the build can write too (see the Jobs worker).
+        $stage = null;
+        if ($source !== null) {
+            $sourceArtifacts[] = new ArchiveArtifact(id: 'sourceArchive', in: 'source', out: 'source-root.tar.gz', compression: ArchiveCompression::Gzip, depends: isset($source['clone']) ? 'source' : 'extract');
+            $sourceArtifacts[] = new StatArtifact(id: 'sourceSize', in: 'source-root.tar.gz', depends: 'sourceArchive');
+
+            $sourceDevice = getDevice(($isSite ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
+            if ($sourceDevice->getType() === DeviceType::Local) {
+                $staged = static::stagedSourcePath(static::device($projectId), $deploymentId);
+                // Staging is best effort: the build runs even when it fails
+                $stage = Command::group(Command::or(
+                    Command::group(Command::and(
+                        (new Command('mkdir'))->flag('-p')->argument(\dirname($staged)),
+                        (new Command('cp'))->argument('/mnt/code/source-root.tar.gz')->argument($staged),
+                    )),
+                    new Command('true'),
+                ));
+            } else {
+                $sourceArtifacts[] = new UploadArtifact(id: 'sourceUpload', in: 'source-root.tar.gz', out: static::objectUrl($sourceDevice, static::sourcePath($projectId, $resource->getCollection(), $deploymentId)), depends: 'sourceArchive');
+            }
+        }
+
         // Where output + cache land is a swappable strategy (see storage()) —
         // the default mounts the shared builds volume; nothing else here cares
         // which strategy is active.
@@ -434,7 +469,12 @@ readonly class Deployments
         // back post-job so the Jobs worker can run adapter detection.
         $manifestArtifacts = $isSite ? [new ReadArtifact(id: 'manifest', in: 'manifest.json', format: ReadFormat::Json, depends: 'job')] : [];
 
+        // build.sh runs its first argument as the build command; an empty one is left out
+        $build = new Command('/usr/local/server/helpers/build.sh');
         $command = self::command($resource, $deployment);
+        if ($command !== '') {
+            $build->argument($command);
+        }
         $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
             'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
@@ -450,7 +490,7 @@ readonly class Deployments
         return [
             'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => ($stage === null ? $build : Command::and($stage, $build))->toString(),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
@@ -500,6 +540,25 @@ readonly class Deployments
     public static function buildPath(string $projectId, string $deploymentId): string
     {
         return static::device($projectId)->getPath("{$deploymentId}/" . static::artifact());
+    }
+
+    /**
+     * Where a remote-source deployment keeps the source it was built from: on
+     * the resource's own device, like a manual upload's tarball. The Jobs
+     * worker sets it as sourcePath once the file is there.
+     */
+    public static function sourcePath(string $projectId, string $resourceType, string $deploymentId): string
+    {
+        return getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}")->getPath("{$deploymentId}.gz");
+    }
+
+    /**
+     * Where the build worker leaves that source on the local device: the
+     * builds volume, the only one it mounts.
+     */
+    public static function stagedSourcePath(Device $deviceForBuilds, string $deploymentId): string
+    {
+        return $deviceForBuilds->getPath("{$deploymentId}/source.tar.gz");
     }
 
     /**

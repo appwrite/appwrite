@@ -13,6 +13,7 @@ use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
 
@@ -161,15 +162,48 @@ final class FactoryTest extends TestCase
         $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
     }
 
+    public function testFromProviderForBrowserPrefersBrowserEndpoint(): void
+    {
+        $entry = [
+            'adapter' => Gitea::class,
+            'browserEndpoint' => 'https://git.example.com',
+            'variables' => ['endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_ENDPOINT']],
+        ];
+        $factory = new Factory($this->cache(), ['gitea' => $entry]);
+
+        \putenv('_APP_VCS_TEST_ENDPOINT=http://gitea:3000');
+
+        // The server reaches Gitea on the internal host; a browser cannot
+        $this->assertSame('http://gitea:3000/owner', $factory->fromProvider('gitea')->getOrganizationUrl('owner'));
+        $this->assertSame('https://git.example.com/owner', $factory->fromProviderForBrowser('gitea')->getOrganizationUrl('owner'));
+    }
+
+    public function testFromProviderForBrowserFallsBackToTheApiEndpoint(): void
+    {
+        $entry = [
+            'adapter' => GitLab::class,
+            'endpoint' => 'https://gitlab.example.com',
+            'variables' => [],
+        ];
+        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+
+        $this->assertSame('https://gitlab.example.com/owner', $factory->fromProviderForBrowser('gitlab')->getOrganizationUrl('owner'));
+    }
+
     public function testGetWebhookSecret(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $entry = [
+            'adapter' => GitHub::class,
+            'variables' => [
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
+            ],
+        ];
+        $factory = new Factory($this->cache(), ['github' => $entry]);
 
         $this->assertSame('', $factory->getWebhookSecret('github'));
 
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET=hunter2');
+        \putenv('_APP_VCS_TEST_TOKEN=hunter2');
         $this->assertSame('hunter2', $factory->getWebhookSecret('github'));
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET');
     }
 
     protected function cache(): Cache
@@ -191,7 +225,7 @@ final class FactoryTest extends TestCase
                 'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
                 'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
                 'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
-                'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
             ],
         ];
     }

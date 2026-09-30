@@ -415,6 +415,10 @@ return [
         'description' => 'Access to use Avatars service',
         'category' => 'Other',
     ],
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
+        'category' => 'Other',
+    ],
     'health.read' => [
         'description' => 'Access to use Health service',
         'category' => 'Other',

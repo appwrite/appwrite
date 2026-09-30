@@ -6,7 +6,14 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Exception\TimeoutException;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -154,5 +161,173 @@ final class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp('100.127.255.255'));
         $this->assertTrue(PublicHostname::isPublicIp('100.128.0.0'));
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
+    }
+
+    public function testResolveSendsRequestToCheckedAddresses(): void
+    {
+        $listener = $this->listen('127.0.0.1');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname();
+
+        $this->assertTrue($validator->isValid('pinned.invalid'));
+        $request = $this->capture($listener, "http://pinned.invalid:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: pinned.invalid:{$port}\r\n", $request);
+    }
+
+    public function testResolveSendsRequestToCheckedIpv6Address(): void
+    {
+        $listener = $this->listen('[::1]');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname();
+
+        $this->assertTrue($validator->isValid('pinned6.invalid'));
+        $request = $this->capture($listener, "http://pinned6.invalid:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: pinned6.invalid:{$port}\r\n", $request);
+    }
+
+    public function testResolveKeepsTrailingDot(): void
+    {
+        $listener = $this->listen('127.0.0.1');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname();
+
+        $this->assertTrue($validator->isValid('Pinned.INVALID.'));
+        $request = $this->capture($listener, "http://pinned.invalid.:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: pinned.invalid.:{$port}\r\n", $request);
+    }
+
+    public function testResolveIsEmptyForIpLiterals(): void
+    {
+        $validator = new PublicHostname();
+
+        $this->assertTrue($validator->isValid('8.8.8.8'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
+    public function testResolveResetsAfterRejection(): void
+    {
+        $validator = new LoopbackHostname();
+
+        $this->assertTrue($validator->isValid('pinned.invalid'));
+        $this->assertFalse($validator->isValid('missing.invalid'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvesHostnameInsideCoroutine(): void
+    {
+        $validator = new PublicHostname();
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
+        $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvingInsideCoroutineRetainsNoMemoryPerLookup(): void
+    {
+        $validator = new PublicHostname();
+        $lookups = 200;
+        $growth = null;
+
+        $this->inHookedCoroutine(function () use ($validator, $lookups, &$growth): void {
+            $validator->isValid('localhost');
+            \gc_collect_cycles();
+            $before = \memory_get_usage();
+
+            for ($i = 0; $i < $lookups; $i++) {
+                $validator->isValid('localhost');
+            }
+
+            \gc_collect_cycles();
+            $growth = \memory_get_usage() - $before;
+        });
+
+        // The hooked dns_get_record() retained ~140 KiB per lookup.
+        $this->assertLessThan(4 * 1024, $growth / $lookups);
+    }
+
+    private function inHookedCoroutine(callable $callback): void
+    {
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run($callback);
+    }
+
+    /**
+     * Listens on a free port and never answers.
+     *
+     * @return resource
+     */
+    private function listen(string $address)
+    {
+        $listener = @\stream_socket_server("tcp://{$address}:0");
+
+        if ($listener === false) {
+            $this->markTestSkipped("Cannot listen on {$address}.");
+        }
+
+        return $listener;
+    }
+
+    /**
+     * @param resource $listener
+     */
+    private function port($listener): int
+    {
+        $name = (string) \stream_socket_get_name($listener, false);
+
+        return (int) \substr($name, \strrpos($name, ':') + 1);
+    }
+
+    /**
+     * Sends a GET through the curl adapter with the given CURLOPT_RESOLVE
+     * entries and returns the raw request that reached the listener.
+     *
+     * @param resource $listener
+     * @param array<string> $resolve
+     */
+    private function capture($listener, string $url, array $resolve): string
+    {
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_RESOLVE => $resolve])))->withTimeout(0.25);
+
+        try {
+            $client->sendRequest((new RequestFactory())->createRequest(Method::GET, $url));
+        } catch (TimeoutException) {
+            // The listener never answers
+        }
+
+        $connection = @\stream_socket_accept($listener, 1);
+        $this->assertNotFalse($connection, "No request reached the listener for {$url}.");
+        \stream_set_timeout($connection, 1);
+
+        return (string) \fread($connection, 8192);
+    }
+}
+
+/**
+ * Resolves test hostnames to loopback and accepts every address, so requests
+ * land on a local listener instead of leaving the machine.
+ */
+class LoopbackHostname extends PublicHostname
+{
+    public static function resolve(string $hostname): array
+    {
+        return match ($hostname) {
+            'pinned.invalid', 'pinned.invalid.' => ['127.0.0.1', '::1'],
+            'pinned6.invalid' => ['::1'],
+            default => [],
+        };
+    }
+
+    public static function isPublicIp(string $ip): bool
+    {
+        return true;
     }
 }

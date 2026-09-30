@@ -1039,6 +1039,80 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateEmailPasswordSessionWithDuration(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $credentials = [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 300]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        // The client keeps the last Set-Cookie header, which is the main session cookie.
+        $setCookie = $session['headers']['set-cookie'];
+        $this->assertStringStartsWith('a_session_' . $projectId . '=', $setCookie);
+        $expires = '';
+        foreach (\explode(';', $setCookie) as $part) {
+            if (\str_starts_with(\strtolower(\trim($part)), 'expires=')) {
+                $expires = \substr(\trim($part), 8);
+            }
+        }
+        $this->assertNotEmpty($expires);
+        $cookieRemaining = \strtotime($expires) - \time();
+        $this->assertGreaterThan(240, $cookieRemaining);
+        $this->assertLessThanOrEqual(300, $cookieRemaining);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $headers + [
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($session['body']['$id'], $response['body']['$id']);
+
+        $remaining = (new \DateTime($response['body']['expire']))->getTimestamp() - \time();
+        $this->assertGreaterThan(240, $remaining);
+        $this->assertLessThanOrEqual(300, $remaining);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 30]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $policyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/session-duration', $policyHeaders);
+        $this->assertEquals(200, $policy['headers']['status-code']);
+        $originalMax = $policy['body']['duration'];
+
+        try {
+            $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => 3600]);
+            $this->assertEquals(200, $policy['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 7200]);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+            // Without a duration, the session falls back to the project maximum.
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $remaining = (new \DateTime($response['body']['expire']))->getTimestamp() - \time();
+            $this->assertGreaterThan(3540, $remaining);
+            $this->assertLessThanOrEqual(3600, $remaining);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => $originalMax]);
+        }
+    }
+
     // TODO Add tests for OAuth2 session creation
 
     public function testUpdateAccountName(): void
@@ -1810,6 +1884,126 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testDeleteAccountSessionsKeepCurrent(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        [$sessionA, $sessionB, $sessionC] = $this->withExtraSessions($data, 2);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ], [
+            'current' => false,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-fallback-cookies', $response['headers']);
+
+        foreach ([$sessionA, $sessionB] as $deleted) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $deleted['secret'],
+            ]);
+
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }
+
+        $cookieC = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', $cookieC);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $cookieC);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionC['id'], $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+    }
+
+    public function testDeleteAccountSessionsKeepCurrentWithJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        [$sessionA, $sessionB, $sessionC] = $this->withExtraSessions($data, 2);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionC['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $jwtHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $response['body']['jwt'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', $jwtHeaders, [
+            'current' => false,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        foreach ([$sessionA, $sessionB] as $deleted) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $deleted['secret'],
+            ]);
+
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }
+
+        // The JWT is backed by session C, so it only keeps working if C survived.
+        $response = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $jwtHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionC['id'], $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+    }
+
+    private function withExtraSessions(array $data, int $count): array
+    {
+        $sessions = [['id' => $data['sessionId'], 'secret' => $data['session']]];
+
+        for ($i = 0; $i < $count; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $data['email'],
+                'password' => $data['password'],
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $sessions[] = [
+                'id' => $response['body']['$id'],
+                'secret' => $response['cookies']['a_session_' . $this->getProject()['$id']],
+            ];
+        }
+
+        return $sessions;
+    }
+
     public function testCreateAccountRecovery(): void
     {
         $data = $this->setupAccountWithVerifiedEmail();
@@ -2157,6 +2351,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
@@ -2164,12 +2361,12 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -2217,6 +2414,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
@@ -2224,12 +2424,12 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
@@ -2404,6 +2604,9 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
@@ -2411,11 +2614,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://127.0.0.1/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
 
@@ -2475,6 +2678,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
@@ -2482,11 +2688,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
 
@@ -2535,7 +2741,10 @@ final class AccountCustomClientTest extends Scope
      * app's success URL. The headers (a session cookie) ride along on every
      * hop, like a browser would send them. Returns the final redirect response.
      */
-    private function followMockOAuth2Flow(string $path, array $headers = []): array
+    private function followMockOAuth2Flow(string $path, array $headers = [], array $params = [
+        'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+        'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+    ]): array
     {
         $projectId = $this->getProject()['$id'];
 
@@ -2543,12 +2752,14 @@ final class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $headers), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ], followRedirects: false);
+        ], $headers), $params, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The cookies set when the flow started join the headers on the Appwrite hops,
+        // as a browser would send them; the provider never sees them.
+        $appwriteHeaders = $headers;
+        $appwriteHeaders['cookie'] = \trim(($headers['cookie'] ?? '') . '; ' . \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])), '; ');
 
         // Provider consent, Appwrite callback, Appwrite redirect: follow each
         // Location as given rather than asserting the internal routes.
@@ -2556,7 +2767,7 @@ final class AccountCustomClientTest extends Scope
         $oauthClient->setEndpoint('');
 
         for ($hop = 0; $hop < 3; $hop++) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 
@@ -2655,6 +2866,254 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $secondCookieHeader));
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateOAuth2SessionRejectsCallbackFromAnotherBrowser(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // One browser holds an email and password session for an account with no identities.
+        $email = \uniqid() . 'user@localhost.test';
+        $password = 'password';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $signedInUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $signedInSessionId = $response['body']['$id'];
+        $signedInCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
+
+        // Another browser starts a flow and stops at the provider's redirect back to Appwrite,
+        // so that URL, code and state included, can be opened elsewhere.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['cookies']);
+        $starterNonceCookieHeader = ['cookie' => \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']))];
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $callbackUrl = $response['headers']['location'];
+
+        // The signed-in browser opens that URL. A top-level navigation sends its session
+        // cookie, but it never held the nonce cookie of the flow it is completing.
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $signedInCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $signedInCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $error = \json_decode($failureParams['error'], true);
+        $this->assertEquals('user_oauth2_state_invalid', $error['type']);
+        $this->assertEquals(401, $error['code']);
+
+        // A state written by hand, with no nonce at all, fares no better.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', array_merge([
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader), [
+            'code' => 'abcdef',
+            'state' => \json_encode([
+                'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+                'token' => false,
+            ]),
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $error = \json_decode($failureParams['error'], true);
+        $this->assertEquals('user_oauth2_state_invalid', $error['type']);
+
+        // The signed-in browser keeps the session it had and gained no identity.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($signedInSessionId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        // The browser that started the flow completes it, and the provider identity lands on
+        // its own account, not the signed-in one.
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $starterNonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $starterNonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $starterCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $starterCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEquals($signedInUserId, $response['body']['$id']);
+        $this->assertEquals('useroauth@localhost.test', $response['body']['email']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        // A client with a cookie jar that follows the redirects like a browser gets the cookie
+        // back on the callback host by itself and completes the flow with no hand-carried header.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+    }
+
+    public function testCreateOAuth2SessionKeepsConcurrentFlows(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Two flows start in the same browser, say two tabs; the second start sends back what the first one set.
+        $first = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $first['headers']['status-code']);
+
+        $second = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($first['cookies']), $first['cookies'])),
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $second['headers']['status-code']);
+        $nonceCookieHeader = ['cookie' => \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($second['cookies']), $second['cookies']))];
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        // The first flow completes although it is not the one started last.
+        $response = $oauthClient->call(Client::METHOD_GET, $first['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+        // The second flow completes as well.
+        $response = $oauthClient->call(Client::METHOD_GET, $second['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
     }
 
     public function testCreateOidcOAuth2Token(): void
@@ -3326,6 +3785,18 @@ final class AccountCustomClientTest extends Scope
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 
+        // Fetch initial avatar photo before session update
+        $initialPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+        $this->assertEquals(200, $initialPhotoResponse['headers']['status-code']);
+        $initialPhoto = $initialPhotoResponse['body'];
+
         sleep(3);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
@@ -3336,9 +3807,23 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+
+        // Verify that updateSession refetched the photo and the served avatar content changed
+        $refreshedPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ], [
+            'width' => 64,
+            'height' => 64,
+        ]);
+
+        $this->assertEquals(200, $refreshedPhotoResponse['headers']['status-code']);
+        $this->assertEquals('image/png', $refreshedPhotoResponse['headers']['content-type']);
+        $this->assertNotEquals($initialPhoto, $refreshedPhotoResponse['body']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
@@ -3417,9 +3902,52 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
-     * Default OAuth failure relay pages need `project` so native apps can deep-link via
-     * appwrite-callback-{project}://. Without it the UI shows "Missing redirect URL"
-     * instead of the real OAuth error.
+     * The default OAuth success URL redirects straight to appwrite-callback-{project}://,
+     * carrying the session the native SDKs store.
+     */
+    public function testOAuthDefaultSuccessRedirectsToApp(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Omit success and failure so Appwrite uses the default relay URLs
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/' . $provider, params: []);
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
+
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
+
+        // Native SDKs store the handoff as their session cookie
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => ($query['key'] ?? '') . '=' . ($query['secret'] ?? ''),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    /**
+     * The default OAuth failure URL redirects straight to appwrite-callback-{project}://,
+     * carrying `project` and the real OAuth error.
      */
     public function testOAuthDefaultFailureRedirectIncludesProject(): void
     {
@@ -3456,11 +3984,15 @@ final class AccountCustomClientTest extends Scope
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
         $this->assertNotEmpty($mockQuery['state'] ?? null);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         // Simulate provider returning an error (same path as a real OAuth denial)
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
+            'cookie' => $startCookies,
         ], [
             'error' => 'access_denied',
             'error_description' => 'The user denied the request',
@@ -3472,16 +4004,16 @@ final class AccountCustomClientTest extends Scope
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
         $location = $response['headers']['location'];
-        $path = \parse_url($location, PHP_URL_PATH);
-        $query = [];
-        \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
+        $this->assertStringStartsWith('appwrite-callback-' . $projectId . '://?', $location);
 
-        $this->assertEquals('/auth/oauth2/failure', $path);
+        // parse_url() rejects a scheme with no host, so read the query directly
+        $query = [];
+        \parse_str(\explode('?', $location, 2)[1], $query);
         $this->assertEquals($projectId, $query['project'] ?? null);
         $this->assertNotEmpty($query['error'] ?? null);
 
@@ -3530,10 +4062,14 @@ final class AccountCustomClientTest extends Scope
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
         $this->assertNotEmpty($mockQuery['state'] ?? null);
 
+        // The cookies set when the flow started go to the Appwrite hops, as a browser would send them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
+            'cookie' => $startCookies,
         ], [
             'error' => 'access_denied',
             'error_description' => 'The user denied the request',
@@ -3544,7 +4080,7 @@ final class AccountCustomClientTest extends Scope
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -3556,6 +4092,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertArrayNotHasKey('project', $query);
         $this->assertNotEmpty($query['error'] ?? null);
+        $this->assertStringContainsString('access_denied', (string) \json_decode($query['error'], true)['message']);
     }
 
     public function testOAuthVerifiedEmailCanLinkToExistingAccount(): void
@@ -3992,6 +4529,60 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Existing user ID with a different phone -> SHOULD FAIL with 409, not 500
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'phone' => '+123456780',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
+    }
+
+    public function testCreateEmailTokenWithExistingUserId(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'token-conflict@localhost.test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'email' => uniqid() . 'other@localhost.test',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'email' => uniqid() . 'other@localhost.test',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_already_exists', $response['body']['type']);
     }
 
     public function testCreateSessionWithPhone(): void
@@ -4799,6 +5390,92 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
+
+        $targetId = $response['body']['$id'];
+
+        $other = $this->client->call(Client::METHOD_POST, '/users/' . $this->getUser()['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'push',
+            'identifier' => 'test-identifier-taken',
+        ]);
+
+        $this->assertEquals(201, $other['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'test-identifier-taken',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('user_target_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $identifiers = \array_column(\array_filter($response['body']['targets'], fn ($target) => $target['$id'] === $targetId), 'identifier');
+        $this->assertSame(['test-identifier-updated'], $identifiers);
+    }
+
+    public function testCreatePushTargetReplacesRotatedToken(): void
+    {
+        // A rotated token must replace the session's target rather than stack a second live
+        // token onto the same device.
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-before-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $targetId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-after-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($targetId, $response['body']['$id']);
+        $this->assertEquals(false, $response['body']['expired']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $identifiers = \array_column($response['body']['targets'], 'identifier');
+        $this->assertContains('test-identifier-after-rotation', $identifiers);
+        $this->assertNotContains('test-identifier-before-rotation', $identifiers);
+
+        // Re-registering an unchanged token resolves to the same target instead of colliding with it
+        // on the unique identifier index.
+        $response = $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'identifier' => 'test-identifier-after-rotation',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($targetId, $response['body']['$id']);
     }
 
     public function testMFARecoveryCodeChallenge(): void
@@ -5076,6 +5753,11 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        // The server accepts only the current time step. Leave a five-second
+        // margin for the enrollment request instead of sending an expiring code.
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
         $enrollmentOtp = $totp->now();
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
@@ -5279,6 +5961,223 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($data['id'], $account['body']['$id']);
+    }
+
+    protected function createJWTHeaders(string $session): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $response['body']['jwt'],
+        ];
+    }
+
+    protected function createSessionCookie(string $email, string $password): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'id' => $response['body']['$id'],
+            'secret' => $response['cookies']['a_session_' . $projectId],
+            'headers' => [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+            ],
+        ];
+    }
+
+    public function testMFARecencyCheckUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+
+        $cookieAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $headers);
+        $this->assertEquals(401, $cookieAttempt['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $cookieAttempt['body']['type']);
+
+        $jwtAttempt = $this->client->call(Client::METHOD_PATCH, '/account/mfa/recovery-codes', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(401, $jwtAttempt['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $jwtAttempt['body']['type']);
+    }
+
+    public function testMFAFactorCountUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+
+        // Issued before MFA is enabled, since session B could not create a JWT afterwards
+        $jwtHeaders = $this->createJWTHeaders($sessionB['secret']);
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, ['mfa' => true]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        $cookieAttempt = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
+        $this->assertEquals(401, $cookieAttempt['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $cookieAttempt['body']['type']);
+
+        $jwtAttempt = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(401, $jwtAttempt['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $jwtAttempt['body']['type']);
+    }
+
+    public function testGetSessionCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['sessionId'], $response['body']['$id']);
+    }
+
+    public function testUpdateSessionCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['sessionId'], $response['body']['$id']);
+    }
+
+    public function testDeleteSessionCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $checkA = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]);
+        $this->assertEquals(401, $checkA['headers']['status-code']);
+
+        $checkB = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
+        $this->assertEquals(200, $checkB['headers']['status-code']);
+    }
+
+    public function testListSessionsCurrentUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $this->createJWTHeaders($data['session']));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        $current = [];
+        foreach ($response['body']['sessions'] as $session) {
+            $current[$session['$id']] = $session['current'];
+        }
+
+        $this->assertTrue($current[$data['sessionId']]);
+        $this->assertFalse($current[$sessionB['id']]);
+    }
+
+    public function testUpdatePasswordInvalidatesOtherSessionsUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $this->updateProjectinvalidateSessionsProperty(true);
+
+        $sessionB = $this->createSessionCookie($data['email'], $data['password']);
+        $jwtHeaders = $this->createJWTHeaders($data['session']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $jwtHeaders, [
+            'password' => 'new-password',
+            'oldPassword' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $checkB = $this->client->call(Client::METHOD_GET, '/account', $sessionB['headers']);
+        $this->assertEquals(401, $checkB['headers']['status-code']);
+
+        $checkJWT = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $checkJWT['headers']['status-code']);
+    }
+
+    public function testCreatePushTargetReplacesRotatedTokenUnderJWT(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $jwtHeaders = $this->createJWTHeaders($data['session']);
+
+        $first = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
+            'targetId' => ID::unique(),
+            'identifier' => 'jwt-identifier-before-rotation-' . $data['id'],
+        ]);
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        $second = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
+            'targetId' => ID::unique(),
+            'identifier' => 'jwt-identifier-after-rotation-' . $data['id'],
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $this->assertEquals($first['body']['$id'], $second['body']['$id']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $jwtHeaders);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        $identifiers = \array_column($account['body']['targets'], 'identifier');
+        $this->assertContains('jwt-identifier-after-rotation-' . $data['id'], $identifiers);
+        $this->assertNotContains('jwt-identifier-before-rotation-' . $data['id'], $identifiers);
     }
 
     public function testRefreshEmailPasswordSession(): void
@@ -5905,7 +6804,8 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('project_provider_unsupported', $response['body']['type']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('provider', (string) $response['body']['message']);
     }
 
     /**
@@ -6357,6 +7257,236 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('user_email_already_verified', $response['body']['type']);
+    }
+
+    public function testCreateRecoveryOTP(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('otp-recovery-') . '@localhost.test';
+        $password = 'password';
+        $name = 'OTP Recovery User';
+
+        $created = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['phrase']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for SUCCESS with phrase
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'phrase' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['phrase']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $phrase = $response['body']['phrase'];
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
+        $this->assertNotEmpty($lastEmail);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
+
+        /**
+         * Test for SUCCESS - unknown email does not reveal account existence
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => 'notfound-' . uniqid() . '@localhost.test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+
+        /**
+         * Test for FAILURE - invalid email
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => 'notanemail',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateRecoveryOTP(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('otp-recovery-reset-') . '@localhost.test';
+        $password = 'password';
+        $name = 'OTP Recovery Reset User';
+
+        $created = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $userId = $created['body']['$id'];
+
+        $tokenResponse = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $tokenResponse['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail);
+        $this->assertNotEmpty($lastEmail['subject']);
+        $this->assertNotEmpty($lastEmail['text']);
+
+        preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
+        $otp = $matches[0][0] ?? '';
+        $this->assertNotEmpty($otp);
+
+        /**
+         * Test for FAILURE - wrong secret against active token
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp === '000000' ? '111111' : '000000',
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - OTP is rejected by the link based endpoint
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $sessionResponse = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(201, $sessionResponse['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - OTP is single use
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $userId,
+            'secret' => $otp,
+            'password' => 'another-password-otp',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - wrong userId
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::custom('doesnotexist'),
+            'secret' => $otp,
+            'password' => 'new-password-otp',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void

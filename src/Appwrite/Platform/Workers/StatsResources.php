@@ -137,6 +137,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->bucketGauges($project, $dbForProject));
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
+        array_push($gauges, ...$this->photoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -274,6 +275,21 @@ class StatsResources extends Action
         array_push($gauges, ...$this->computeGauges($project, $dbForProject, RESOURCE_TYPE_SITES, 'sites', 'site', 'sites'));
 
         return $gauges;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function photoGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $storage = (int) $dbForProject->sum('users', 'photoSize');
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure photos for {$project->getId()}: " . $th->getMessage());
+            return [];
+        }
+
+        return [
+            ['metric' => METRIC_AVATARS_STORAGE, 'value' => $storage, 'service' => '', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+        ];
     }
 
     /**

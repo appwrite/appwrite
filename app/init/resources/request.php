@@ -3,6 +3,10 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
+use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
@@ -49,6 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
@@ -521,8 +526,19 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
+            // Every project shares the signing key, and a user ID can be chosen at
+            // signup, so a token is only good for the project that minted it. Tokens
+            // minted before the projectId claim existed are accepted only when bound
+            // to a session, whose ID the server generated and no other project holds.
+            // An unbound token authenticates nobody rather than failing the request:
+            // a function domain resolves to the console, and clients send their
+            // project's JWT there for the function to read.
+            $jwtProjectId = $payload['projectId'] ?? '';
+            $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
+            $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : ! empty($payload['sessionId']);
+
             $jwtUserId = $payload['userId'] ?? '';
-            if (! empty($jwtUserId)) {
+            if ($bound && ! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -642,13 +658,28 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
         if ($user->isEmpty()) {
             return;
         }
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        if (! $sessionId && ! empty($authJWT)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException) {
+                return;
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
 
         if (! $sessionId) {
             return;
@@ -661,7 +692,24 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken']);
+    }, ['user', 'store', 'proofForToken', 'request']);
+
+    $context->set('pwnedPasswords', function (Cache $cache) {
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
+
+        return match ($dsn->getScheme()) {
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
+                : new PasswordPwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
+        };
+    }, ['cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -910,8 +958,17 @@ return function (Container $context): void {
          * - 'admin' => Request from the Console on non-console projects
          */
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        // Request bodies can carry their own 'mode' key
+        if (! \is_string($mode)) {
+            $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+        }
 
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        // GitLab webhook bodies carry a 'project' object, not a project ID
+        if (! \is_string($projectId)) {
+            $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        }
+
         if ($projectId !== '' && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
@@ -955,7 +1012,9 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (! empty($orgHeader)) {
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
                 return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }

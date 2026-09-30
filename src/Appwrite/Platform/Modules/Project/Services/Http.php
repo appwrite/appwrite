@@ -61,6 +61,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
@@ -91,6 +92,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPwned\Update as UpdatePasswordPwnedPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
@@ -184,6 +186,7 @@ class Http extends Service
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
         $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
+        $this->addAction(UpdatePasswordPwnedPolicy::getName(), new UpdatePasswordPwnedPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());
         $this->addAction(UpdateSessionInvalidationPolicy::getName(), new UpdateSessionInvalidationPolicy());
@@ -215,6 +218,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Yandex::getName(), new UpdateOAuth2Yandex());
         $this->addAction(UpdateOAuth2X::getName(), new UpdateOAuth2X());
         $this->addAction(UpdateOAuth2WordPress::getName(), new UpdateOAuth2WordPress());
+        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
         $this->addAction(UpdateOAuth2Twitch::getName(), new UpdateOAuth2Twitch());
         $this->addAction(UpdateOAuth2Stripe::getName(), new UpdateOAuth2Stripe());
         $this->addAction(UpdateOAuth2Spotify::getName(), new UpdateOAuth2Spotify());

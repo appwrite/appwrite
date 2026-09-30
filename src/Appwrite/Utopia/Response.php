@@ -272,6 +272,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -312,6 +313,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
     public const MODEL_OAUTH2_X = 'oAuth2X';
     public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_WEBFLOW = 'oAuth2Webflow';
     public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
     public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
     public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
