@@ -17,6 +17,7 @@ import {
   subscribeToDebugOverrides,
 } from '@/lib/debug-overrides'
 import type { OrgSetupPreviewPhase } from '@/routes/_public/debug.org-setup-preview'
+import { EDUCATION_PLAN_PREVIEW_VIEWS } from '@/lib/debug-demos/education-plan-preview'
 
 const VERIFY_EMAIL_STATUSES = ['pending', 'confirming'] as const
 const GIT_CONTRIBUTOR_STATUSES = ['awaiting', 'success', 'error'] as const
@@ -281,6 +282,37 @@ export function DebugDemoNavigatorOptions({
               </OptionChip>
             ),
           )}
+        </OptionButtonRow>
+      </OptionsSection>
+    )
+  }
+
+  if (pathname === '/debug/education-plan-preview') {
+    const view = params.get('view') ?? 'reminder'
+    return (
+      <OptionsSection label="Education plan curtain">
+        <OptionButtonRow>
+          {EDUCATION_PLAN_PREVIEW_VIEWS.map((value) => (
+            <OptionChip
+              key={value}
+              active={view === value}
+              onClick={() =>
+                navigate({
+                  to: '/debug/education-plan-preview',
+                  search: { view: value },
+                  replace: true,
+                })
+              }
+            >
+              {value === 'reminder'
+                ? '35 days left'
+                : value === 'last-day'
+                  ? '1 day left'
+                  : value === 'ended'
+                    ? 'Disabled'
+                    : 'Disabled, no other orgs'}
+            </OptionChip>
+          ))}
         </OptionButtonRow>
       </OptionsSection>
     )

@@ -20,6 +20,7 @@ export type ChangelogTag =
   | 'security'
   | 'infrastructure'
   | 'integrations'
+  | 'programs'
 
 export type ChangelogFrontmatter = {
   title: string

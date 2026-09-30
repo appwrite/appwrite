@@ -103,6 +103,8 @@ const OAUTH_ACCORDION_STYLES = `
   display: flex;
   width: 100%;
   gap: 0.5rem;
+  container-type: inline-size;
+  container-name: oauth-login;
 }
 .oauth-login-row > * {
   flex: 0 1 2.25rem;
@@ -143,6 +145,17 @@ const OAUTH_ACCORDION_STYLES = `
   transition-duration: 240ms;
   transition-timing-function: ease;
   transition-delay: 320ms;
+}
+.oauth-login-label-short {
+  display: none;
+}
+@container oauth-login (max-width: 22rem) {
+  .oauth-login-label-full {
+    display: none;
+  }
+  .oauth-login-label-short {
+    display: inline;
+  }
 }
 .oauth-last-used {
   position: absolute;
@@ -195,6 +208,13 @@ const OAUTH_ACCORDION_STYLES = `
   }
 }
 `
+
+function oauthProviderName(provider: OAuthLoginMethod, t: Translator) {
+  if (provider === 'google') return t('Google')
+  if (provider === 'gitlab') return t('GitLab')
+  if (provider === 'bitbucket') return t('Bitbucket')
+  return t('GitHub')
+}
 
 function oauthProviderLabel(
   provider: OAuthLoginMethod,
@@ -389,6 +409,7 @@ export function SignIn({
                   <div className="oauth-login-row">
                     {OAUTH_PROVIDERS.map(({ id, Icon }) => {
                       const label = oauthProviderLabel(id, mode, t)
+                      const shortLabel = oauthProviderName(id, t)
                       const isLastUsed =
                         mode === 'sign-in' && lastLoginMethod === id
                       const isExpanded = expandedOAuth === id
@@ -429,7 +450,12 @@ export function SignIn({
                             <span className="oauth-login-label">
                               <span>
                                 <span className="oauth-login-label-text">
-                                  {label}
+                                  <span className="oauth-login-label-short">
+                                    {shortLabel}
+                                  </span>
+                                  <span className="oauth-login-label-full">
+                                    {label}
+                                  </span>
                                 </span>
                               </span>
                             </span>
