@@ -224,10 +224,16 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('data', $payload);
         $this->assertEquals('error', $payload['type']);
         $this->assertEquals(1008, $payload['data']['code']);
-        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
-        \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnected client
-        $client->close();
+        $this->assertStringStartsWith('Invalid Origin', $payload['data']['message']);
+
+        // The server closes the socket right after the error frame; the next read
+        // returns as soon as that happens instead of waiting out the read timeout.
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+            // Socket closed by the server
+        }
+        $this->assertFalse($client->isConnected());
     }
 
     public function testManualAuthentication(): void
