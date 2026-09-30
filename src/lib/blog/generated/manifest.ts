@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "ai-agent-live-collaborator-appwrite-presences",
+    "href": "/blog/post/ai-agent-live-collaborator-appwrite-presences",
+    "title": "Build an AI agent that collaborates live with Appwrite Presences and Realtime",
+    "description": "Build Weft, a planning board where an AI agent works next to your team. Presences show what the agent is doing, Realtime delivers each change to every screen, and one Appwrite Function runs the agent.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-agent-live-collaborator-appwrite-presences/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-breached-password-detection",
     "href": "/blog/post/announcing-breached-password-detection",
     "title": "Announcing breached password detection for Appwrite Auth",
