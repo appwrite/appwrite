@@ -175,7 +175,7 @@ Sonnet 5.5's strengths are speed, low cost per task, and reliable work on scoped
 
 [Appwrite](/) is an open source backend that covers all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for hosting the frontend. The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles the [Appwrite MCP servers](/docs/tooling/ai/mcp-servers) and SDK-specific [Appwrite Skills](/docs/tooling/ai/skills) into a single install, so your Sonnet 5.5 agent writes real SDK calls against a backend that already exists. The [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) covers setup, and there is a full walkthrough on [adding a backend to apps built with Claude Code](/blog/post/backend-for-claude-code-apps).
 
-Sonnet 5.5's batched tool calls pair well with this setup. Fewer round trips per task means fewer repeated reads of MCP tool definitions and docs context, and $0.20 cache reads keep the repeated context cheap. [Create a free Appwrite project](https://cloud.appwrite.io/), install the Claude Code plugin, and point `claude-sonnet-5-5` at it to go from generated code to a working backend in one session.
+Sonnet 5.5's batched tool calls pair well with this setup. Fewer round trips per task means fewer repeated reads of MCP tool definitions and docs context, and $0.20 cache reads keep the repeated context cheap. [Create a free Appwrite project](https://appwrite.io/), install the Claude Code plugin, and point `claude-sonnet-5-5` at it to go from generated code to a working backend in one session.
 
 # Resources
 
