@@ -3225,6 +3225,121 @@ trait UsersBase
     }
 
     /**
+     * Test that an impersonator with incomplete MFA cannot skip it by naming a target without MFA
+     */
+    public function testImpersonationRequiresImpersonatorFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $suffix = ID::unique();
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'factors-impersonator-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Factors Impersonator',
+        ]);
+        $this->assertEquals(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'factors-target-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Factors Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+        $this->assertEquals(200, $patch['headers']['status-code']);
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/verification', $headers, ['emailVerification' => true]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/mfa', $headers, ['mfa' => true]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        // A server-created session carries a single factor.
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders);
+        $this->assertEquals(401, $account['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $account['body']['type']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($sessionHeaders, [
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+        $this->assertEquals('user_more_factors_required', $account['body']['type']);
+    }
+
+    /**
+     * Test that the target's MFA is not asked of an impersonator whose own session is complete
+     */
+    public function testImpersonationIgnoresTargetFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $suffix = ID::unique();
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'target-factors-impersonator-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Target Factors Impersonator',
+        ]);
+        $this->assertEquals(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'target-factors-target-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Target Factors Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+        $this->assertEquals(200, $patch['headers']['status-code']);
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/verification', $headers, ['emailVerification' => true]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/mfa', $headers, ['mfa' => true]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ]);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($targetId, $account['body']['$id']);
+        $this->assertEquals($impersonatorId, $account['body']['impersonatorUserId']);
+    }
+
+    /**
      * Test that the implicit users.read grant an impersonator gets does not reach another
      * user's MFA recovery codes
      */
