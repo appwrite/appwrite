@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { Check, KeyRound, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, Fingerprint, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -230,7 +230,7 @@ export function PasskeysSection() {
                       </form>
                     ) : (
                       <span className="flex items-center gap-2 text-[13px] font-medium text-foreground">
-                        <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <Fingerprint className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate">
                           {passkey.name || t('Passkey')}
                         </span>
@@ -325,7 +325,7 @@ export function PasskeysSection() {
             )}
             {passkeyToDelete ? (
               <span className="mt-3 flex items-center gap-2 font-medium text-foreground">
-                <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <Fingerprint className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="truncate">
                   {passkeyToDelete.name || t('Passkey')}
                 </span>

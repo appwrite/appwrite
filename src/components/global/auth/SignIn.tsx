@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react'
+import { Bug, Eye, EyeOff, Fingerprint, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -214,6 +214,19 @@ function oauthProviderLabel(
   return t('Login with GitHub')
 }
 
+function AuthSeparator({ label }: { label: string }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-card px-2 text-muted-foreground">{label}</span>
+      </div>
+    </div>
+  )
+}
+
 interface SignInProps {
   mode?: 'sign-in' | 'sign-up'
   onSubmit: (data: FormValues, options?: SignInSubmitOptions) => void
@@ -404,7 +417,7 @@ export function SignIn({
 
           {(onOAuthLogin || showPasskey) && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {onOAuthLogin && (
                   <>
                     <style>{OAUTH_ACCORDION_STYLES}</style>
@@ -464,6 +477,9 @@ export function SignIn({
                     </div>
                   </>
                 )}
+                {onOAuthLogin && showPasskey && (
+                  <AuthSeparator label={t('Or')} />
+                )}
                 {showPasskey && (
                   <div className="relative">
                     {lastLoginMethod === 'passkey' && (
@@ -483,7 +499,7 @@ export function SignIn({
                       {passkeyLoading ? (
                         <Loader2 className="size-4 animate-spin" />
                       ) : (
-                        <KeyRound className="size-4" />
+                        <Fingerprint className="size-4" />
                       )}
                       {t('Sign in with a passkey')}
                     </Button>
@@ -491,16 +507,7 @@ export function SignIn({
                 )}
               </div>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    {t('Or continue with')}
-                  </span>
-                </div>
-              </div>
+              <AuthSeparator label={t('Or continue with')} />
             </>
           )}
 
