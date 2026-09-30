@@ -15,7 +15,9 @@ on:
   push:
     branches:
       - main
-      - 1.9.x
+      # Every release branch, so the nightly channel always has green commits to
+      # resolve on the active line without anyone remembering to add it here.
+      - '*.x'
   workflow_dispatch:
     inputs:
       response_format:
