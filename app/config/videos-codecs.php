@@ -3,9 +3,9 @@
 /**
  * Video encode codecs available to profiles and renditions.
  *
- * `enabled` controls whether GET /videos/codecs lists the codec (and whether
- * GET /videos/profiles?codec=… may browse its ladder). Create still accepts
- * every key so e2e can encode disabled codecs before they ship in the console.
+ * `enabled` controls whether a codec may be listed, used to create a profile,
+ * or encoded into a rendition. Disabled keys stay in this file so their
+ * packaging rules remain defined until they ship.
  *
  * `outputs` is the packaging a codec may be asked for on POST /renditions.
  * VP9 is DASH-only (utopia-php/video Format\VP9).

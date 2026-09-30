@@ -96,6 +96,7 @@ class Create extends Base
         $this->assertSourceReady($video);
 
         $codec = self::normalizeCodec($profile->getAttribute('codec'));
+        $this->assertCodecEnabled($codec);
         $this->assertCodecSupportsOutput($codec, $output);
 
         $existing = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [

@@ -109,7 +109,7 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Reject browsing a ladder for a codec that is not enabled in config.
+     * Reject a codec that is not enabled in config.
      */
     protected function assertCodecEnabled(string $codec): void
     {

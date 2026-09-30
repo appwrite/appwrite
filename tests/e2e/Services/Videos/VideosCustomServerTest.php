@@ -210,42 +210,20 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $omit['headers']['status-code']);
         $this->assertEquals('h264', $omit['body']['codec']);
 
-        // Same geometry as seeded 360p, different codec — unique index allows both.
-        $hevc = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
-            'name' => 'codec-hevc-360',
-            'videoBitRate' => 890,
-            'audioBitRate' => 64,
-            'width' => 640,
-            'height' => 360,
-            'codec' => 'hevc',
-        ]);
-        $this->assertEquals(201, $hevc['headers']['status-code'], \json_encode($hevc['body']));
-        $this->assertEquals('hevc', $hevc['body']['codec']);
-
-        $vp9 = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
-            'name' => 'codec-vp9-360',
-            'videoBitRate' => 890,
-            'audioBitRate' => 64,
-            'width' => 640,
-            'height' => 360,
-            'codec' => 'vp9',
-        ]);
-        $this->assertEquals(201, $vp9['headers']['status-code'], \json_encode($vp9['body']));
-        $this->assertEquals('vp9', $vp9['body']['codec']);
-
-        $av1 = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
-            'name' => 'codec-av1',
-            'videoBitRate' => 900,
-            'audioBitRate' => 64,
-            'width' => 644,
-            'height' => 364,
-            'codec' => 'av1',
-        ]);
-        $this->assertEquals(400, $av1['headers']['status-code']);
-
-        foreach ([$omit['body']['$id'], $hevc['body']['$id'], $vp9['body']['$id']] as $id) {
-            $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $id, $this->headers());
+        foreach (['hevc', 'vp9', 'av1'] as $codec) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+                'name' => 'codec-' . $codec . '-' . \uniqid(),
+                'videoBitRate' => 890,
+                'audioBitRate' => 64,
+                'width' => 640,
+                'height' => 360,
+                'codec' => $codec,
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code'], $codec);
+            $this->assertEquals('general_argument_invalid', $response['body']['type'], $codec);
         }
+
+        $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $omit['body']['$id'], $this->headers());
     }
 
     // ------------------------------------------------------------------ videos
@@ -801,176 +779,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(202, $retry['headers']['status-code']);
         $this->assertEquals('pending', $retry['body']['status']);
         $this->assertNotSame($firstId, $retry['body']['$id']);
-    }
-
-    /**
-     * Codec × output acceptance before encode: every packaging allowed by
-     * videos-codecs.php queues; VP9 refuses HLS/CMAF. Keeps three jobs for
-     * testEncodeAllCodecs and deletes the rest so this method does not wait.
-     *
-     * @return array{videoId: string, h264Hls: string, hevcHls: string, vp9Dash: string}
-     */
-    public function testCreateRenditionCodecOutputMatrix(): array
-    {
-        $ready = $this->createReadyVideo();
-        $videoId = $ready['$id'];
-        $h264 = $this->seededProfile('360p');
-
-        $hevc = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
-            'name' => 'matrix-hevc-360',
-            'videoBitRate' => 890,
-            'audioBitRate' => 64,
-            'width' => 640,
-            'height' => 360,
-            'codec' => 'hevc',
-        ]);
-        $this->assertEquals(201, $hevc['headers']['status-code'], \json_encode($hevc['body']));
-
-        $vp9 = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
-            'name' => 'matrix-vp9-360',
-            'videoBitRate' => 890,
-            'audioBitRate' => 64,
-            'width' => 640,
-            'height' => 360,
-            'codec' => 'vp9',
-        ]);
-        $this->assertEquals(201, $vp9['headers']['status-code'], \json_encode($vp9['body']));
-
-        $profiles = [
-            'h264' => $h264['$id'],
-            'hevc' => $hevc['body']['$id'],
-            'vp9' => $vp9['body']['$id'],
-        ];
-
-        $keep = [
-            'h264' => 'hls',
-            'hevc' => 'hls',
-            'vp9' => 'dash',
-        ];
-        $kept = [];
-
-        $accepted = [
-            ['h264', 'hls'],
-            ['h264', 'dash'],
-            ['h264', 'cmaf'],
-            ['hevc', 'hls'],
-            ['hevc', 'dash'],
-            ['hevc', 'cmaf'],
-            ['vp9', 'dash'],
-        ];
-
-        $before = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $baselineTotal = $before['body']['total'];
-
-        foreach ($accepted as [$codec, $output]) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-                'profileId' => $profiles[$codec],
-                'output' => $output,
-            ]);
-            $this->assertEquals(202, $response['headers']['status-code'], "$codec/$output");
-            $this->assertEquals('pending', $response['body']['status']);
-            $this->assertEquals($codec, $response['body']['codec']);
-            $this->assertEquals($output, $response['body']['output']);
-
-            if (($keep[$codec] ?? null) === $output) {
-                $kept[$codec] = $response['body']['$id'];
-            } else {
-                $delete = $this->client->call(
-                    Client::METHOD_DELETE,
-                    '/videos/' . $videoId . '/renditions/' . $response['body']['$id'],
-                    $this->headers()
-                );
-                $this->assertEquals(204, $delete['headers']['status-code'], "cleanup $codec/$output");
-            }
-        }
-
-        foreach ([['vp9', 'hls'], ['vp9', 'cmaf']] as [$codec, $output]) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-                'profileId' => $profiles[$codec],
-                'output' => $output,
-            ]);
-            $this->assertEquals(400, $response['headers']['status-code'], "$codec/$output");
-            $this->assertEquals('video_codec_output_unsupported', $response['body']['type']);
-        }
-
-        $afterReject = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
-        $this->assertEquals(200, $afterReject['headers']['status-code']);
-        // Three kept + any that finished uploading before delete; at minimum total unchanged by rejects.
-        $this->assertSame($baselineTotal + 3, $afterReject['body']['total']);
-
-        $this->assertArrayHasKey('h264', $kept);
-        $this->assertArrayHasKey('hevc', $kept);
-        $this->assertArrayHasKey('vp9', $kept);
-
-        return [
-            'videoId' => $videoId,
-            'h264Hls' => $kept['h264'],
-            'hevcHls' => $kept['hevc'],
-            'vp9Dash' => $kept['vp9'],
-        ];
-    }
-
-    /**
-     * Encode h264 HLS, hevc HLS, and vp9 DASH; mixed HLS master stays h264-only.
-     *
-     * @param array{videoId: string, h264Hls: string, hevcHls: string, vp9Dash: string} $jobs
-     */
-    #[Depends('testCreateRenditionCodecOutputMatrix')]
-    public function testEncodeAllCodecs(array $jobs): void
-    {
-        $videoId = $jobs['videoId'];
-
-        $h264 = $this->waitForRenditionTerminalState($videoId, $jobs['h264Hls']);
-        $this->assertEquals('ready', $h264['status'], 'h264 HLS encode failed');
-        $this->assertEquals('h264', $h264['codec']);
-
-        $hevc = $this->waitForRenditionTerminalState($videoId, $jobs['hevcHls']);
-        $this->assertEquals('ready', $hevc['status'], 'hevc HLS encode failed');
-        $this->assertEquals('hevc', $hevc['codec']);
-
-        $vp9 = $this->waitForRenditionTerminalState($videoId, $jobs['vp9Dash']);
-        $this->assertEquals('ready', $vp9['status'], 'vp9 DASH encode failed');
-        $this->assertEquals('vp9', $vp9['codec']);
-
-        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
-        $this->assertEquals(200, $master['headers']['status-code']);
-        $masterBody = (string) $master['body'];
-        $this->assertStringContainsString($jobs['h264Hls'], $masterBody);
-        $this->assertStringNotContainsString($jobs['hevcHls'], $masterBody);
-        $this->assertStringContainsString('avc1', $masterBody);
-
-        $hevcPlaylist = $this->client->call(
-            Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/hls/renditions/' . $jobs['hevcHls'] . '/streams/0/playlist.m3u8',
-            $this->headers()
-        );
-        $this->assertEquals(200, $hevcPlaylist['headers']['status-code']);
-
-        // Drop h264 so the same-codec master prefers hevc and exposes CODECS=hvc1.
-        $deleteH264 = $this->client->call(
-            Client::METHOD_DELETE,
-            '/videos/' . $videoId . '/renditions/' . $jobs['h264Hls'],
-            $this->headers()
-        );
-        $this->assertEquals(204, $deleteH264['headers']['status-code']);
-
-        $hevcMaster = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
-        $this->assertEquals(200, $hevcMaster['headers']['status-code']);
-        $hevcMasterBody = (string) $hevcMaster['body'];
-        $this->assertStringContainsString($jobs['hevcHls'], $hevcMasterBody);
-        $this->assertTrue(
-            \str_contains($hevcMasterBody, 'hvc1') || \str_contains($hevcMasterBody, 'hev1'),
-            'HEVC HLS master missing hvc1/hev1 CODECS'
-        );
-
-        $mpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', $this->headers());
-        $this->assertEquals(200, $mpd['headers']['status-code']);
-        $mpdBody = \strtolower((string) $mpd['body']);
-        $this->assertTrue(
-            \str_contains($mpdBody, 'vp9') || \str_contains($mpdBody, 'vp09'),
-            'DASH MPD missing vp9/vp09 codec'
-        );
     }
 
     /**

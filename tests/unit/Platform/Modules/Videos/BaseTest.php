@@ -221,6 +221,15 @@ final class BaseTest extends TestCase
         ];
     }
 
+    public function testEnabledCodecsOmitsDisabled(): void
+    {
+        $this->assertSame([Base::CODEC_H264], Base::enabledCodecs());
+        $this->assertEqualsCanonicalizing(
+            [Base::CODEC_H264, Base::CODEC_HEVC, Base::CODEC_VP9],
+            Base::codecIds()
+        );
+    }
+
     public function testNormalizeCodecDefaultsEmptyToH264(): void
     {
         $this->assertSame(Base::CODEC_H264, Base::normalizeCodec(null));
