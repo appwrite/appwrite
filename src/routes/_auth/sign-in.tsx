@@ -15,7 +15,10 @@ import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { setLastLoginMethod, type OAuthLoginMethod } from '@/lib/utils/auth-storage'
+import {
+  setLastLoginMethod,
+  type OAuthLoginMethod,
+} from '@/lib/utils/auth-storage'
 import {
   CONSOLE_OAUTH_PROVIDERS,
   OAUTH_LOGIN_ERROR,
@@ -155,18 +158,12 @@ function SignInPage() {
         if (requiresConsoleEmailVerification(account)) {
           navigate({
             to: '/verify-email',
-            search: search.redirect
-              ? { redirect: search.redirect }
-              : undefined,
+            search: search.redirect ? { redirect: search.redirect } : undefined,
           })
           return
         }
 
-        await prefetchPostAuthDestination(
-          queryClient,
-          account,
-          search.redirect,
-        )
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
         await router.invalidate()
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
