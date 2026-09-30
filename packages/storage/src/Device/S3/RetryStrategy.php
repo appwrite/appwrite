@@ -9,18 +9,24 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Decorator\Retry\Strategy;
+use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DnsException;
+use Utopia\Client\Exception\TimeoutException;
+use Utopia\Client\Exception\TlsException;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
 
 /**
- * Retry strategy for transient S3 rate-limiting errors (e.g. SlowDown,
- * ServiceUnavailable), for use with the `utopia-php/client` Retry decorator.
+ * Retry strategy for transient S3 failures, for use with the
+ * `utopia-php/client` Retry decorator.
  *
- * The XML body is parsed first so that specific S3 error codes are detected
- * regardless of HTTP status: a 503/429 carrying a parseable but non-transient
- * error code is not retried, while unparseable 429/503 responses fall back to
- * status-code detection.
- *
- * Waits use exponential backoff with full jitter so a fleet throttled at the
- * same moment does not retry in lockstep.
+ * A rejected request (throttled, or never sent) is always retried. One that may
+ * have been applied (internal error, dropped or timed-out connection) is only
+ * retried when replaying it is harmless: not a POST other than
+ * CompleteMultipartUpload, and not a conditional write, whose condition the
+ * first attempt may already have changed. The XML error code wins over the HTTP
+ * status. Waits use exponential backoff with full jitter, or a numeric
+ * Retry-After.
  * @see \Utopia\Storage\Tests\Device\S3\RetryStrategyTest
  */
 final readonly class RetryStrategy implements Strategy
@@ -28,12 +34,26 @@ final readonly class RetryStrategy implements Strategy
     /**
      * @var array<int, string>
      */
-    private const array TRANSIENT_ERROR_CODES = ['SlowDown', 'ServiceUnavailable', 'Throttling', 'RequestThrottled'];
+    private const array REJECTED_ERROR_CODES = ['SlowDown', 'ServiceUnavailable', 'Throttling', 'RequestThrottled'];
+
+    /**
+     * @var array<int, string>
+     */
+    private const array UNKNOWN_ERROR_CODES = ['InternalError'];
 
     /**
      * @var array<int, int>
      */
-    private const array TRANSIENT_STATUS_CODES = [429, 503];
+    private const array REJECTED_STATUS_CODES = [429, 503];
+
+    /**
+     * @var array<int, int>
+     */
+    private const array UNKNOWN_STATUS_CODES = [500, 502, 504];
+
+    private const string REJECTED = 'rejected';
+
+    private const string UNKNOWN = 'unknown';
 
     private Closure $randomizer;
 
@@ -54,37 +74,84 @@ final readonly class RetryStrategy implements Strategy
 
     public function delay(RequestInterface $request, int $attempt, ?ResponseInterface $response, ?ClientExceptionInterface $error): ?float
     {
-        if ($attempt > $this->retries || ! $response instanceof ResponseInterface) {
+        if ($attempt > $this->retries) {
             return null;
         }
 
-        if (! $this->isTransient($response)) {
+        $outcome = $response instanceof ResponseInterface
+            ? $this->classifyResponse($response)
+            : $this->classifyError($error);
+
+        if ($outcome === null || ($outcome === self::UNKNOWN && ! $this->isReplayable($request))) {
             return null;
         }
 
-        return ($this->randomizer)() * min($this->maxDelay, $this->delay * 2 ** ($attempt - 1));
+        return $this->retryAfter($response) ?? ($this->randomizer)() * min($this->maxDelay, $this->delay * 2 ** ($attempt - 1));
     }
 
-    private function isTransient(ResponseInterface $response): bool
+    private function classifyResponse(ResponseInterface $response): ?string
     {
         $body = (string) $response->getBody();
 
         $trimmed = ltrim($body);
         if (str_starts_with($trimmed, '<?xml') || str_starts_with($trimmed, '<Error')) {
             $xml = @simplexml_load_string($body, \SimpleXMLElement::class, LIBXML_NONET | LIBXML_NOCDATA);
-            if ($xml !== false) {
-                $code = (string) ($xml->Code ?? '');
-                if (\in_array($code, self::TRANSIENT_ERROR_CODES, true)) {
-                    return true;
-                }
-                // Successfully parsed XML with a non-transient error code — do not retry.
-                if ($code !== '') {
-                    return false;
-                }
+            $code = $xml === false ? '' : (string) ($xml->Code ?? '');
+            if ($code !== '') {
+                return match (true) {
+                    \in_array($code, self::REJECTED_ERROR_CODES, true) => self::REJECTED,
+                    \in_array($code, self::UNKNOWN_ERROR_CODES, true) => self::UNKNOWN,
+                    default => null,
+                };
             }
         }
 
-        // Fall back to HTTP status code for responses that cannot be parsed as XML.
-        return \in_array($response->getStatusCode(), self::TRANSIENT_STATUS_CODES, true);
+        return match (true) {
+            \in_array($response->getStatusCode(), self::REJECTED_STATUS_CODES, true) => self::REJECTED,
+            \in_array($response->getStatusCode(), self::UNKNOWN_STATUS_CODES, true) => self::UNKNOWN,
+            default => null,
+        };
+    }
+
+    private function classifyError(?ClientExceptionInterface $error): ?string
+    {
+        // Nothing was sent: cURL and Swoole report a refused connection differently.
+        $refused = [\CURLE_COULDNT_CONNECT, \defined('SOCKET_ECONNREFUSED') ? \SOCKET_ECONNREFUSED : 111];
+        if ($error instanceof DnsException || ($error instanceof ConnectionException && \in_array($error->getCode(), $refused, true))) {
+            return self::REJECTED;
+        }
+
+        if ($error instanceof TlsException) {
+            return null;
+        }
+
+        return $error instanceof ConnectionException || $error instanceof TimeoutException ? self::UNKNOWN : null;
+    }
+
+    private function isReplayable(RequestInterface $request): bool
+    {
+        if ($request->getMethod() === Method::PUT) {
+            return ! $request->hasHeader(Header::IF_MATCH) && ! $request->hasHeader(Header::IF_NONE_MATCH);
+        }
+
+        if ($request->getMethod() !== Method::POST) {
+            return true;
+        }
+
+        // Of the POSTs, only CompleteMultipartUpload is safe: a landed completion leaves the object in place.
+        parse_str($request->getUri()->getQuery(), $query);
+
+        return \array_key_exists('uploadId', $query);
+    }
+
+    private function retryAfter(?ResponseInterface $response): ?float
+    {
+        $value = $response?->getHeaderLine(Header::RETRY_AFTER) ?? '';
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return min($this->maxDelay, max(0.0, (float) $value));
     }
 }

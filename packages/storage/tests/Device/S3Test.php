@@ -12,6 +12,7 @@ use Psr\Http\Message\StreamInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Exception\NetworkException;
+use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Request;
@@ -395,6 +396,79 @@ final class S3Test extends TestCase
         $this->assertCount(4, $client->requests);
     }
 
+    private function internalIncident(): Response
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>';
+
+        return new Response(500, body: new Stream($body))->withHeader('content-type', 'application/xml');
+    }
+
+    public function testMultipartUploadSurvivesInternalErrors(): void
+    {
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'))->withHeader('content-type', 'application/xml'),
+            new Response(200)->withHeader('etag', '"etag-1"'),
+            $this->internalIncident(),
+            new Response(200)->withHeader('etag', '"etag-2"'),
+            $this->internalIncident(),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><CompleteMultipartUploadResult><ETag>"etag-final"</ETag></CompleteMultipartUploadResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+        $device = $this->device($client);
+
+        $metadata = [];
+        $device->prepare('/root/archive.tar.gz', 'application/gzip', 2, $metadata);
+        $device->upload(new Stream('first'), '/root/archive.tar.gz', 'application/gzip', 1, 2, $metadata);
+
+        // The last chunk completes the upload.
+        $this->assertSame(2, $device->upload(new Stream('second'), '/root/archive.tar.gz', 'application/gzip', 2, 2, $metadata));
+        $this->assertCount(6, $client->requests);
+        $this->assertSame('second', (string) $client->requests[3]->getBody());
+    }
+
+    public function testConditionalWriteIsNotReplayedAfterAnInternalError(): void
+    {
+        // The first attempt may have written the object, so a replay would fail its own If-None-Match.
+        $client = new ScriptedClient([$this->internalIncident()]);
+
+        try {
+            $this->device($client)->create('/root/file.txt', new Stream('Hello World'), 'text/plain');
+            self::fail('Expected the internal error to surface');
+        } catch (RemoteException $e) {
+            $this->assertSame('InternalError', $e->errorCode);
+        }
+
+        $this->assertCount(1, $client->requests);
+    }
+
+    public function testTimedOutPartIsReplayed(): void
+    {
+        $client = new ScriptedClient([
+            new TimeoutException(new Request('PUT', Uri::parse('https://s3.example.com/root/file.txt')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+            new Response(200)->withHeader('etag', '"abc"'),
+        ]);
+
+        $this->assertSame('abc', $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain'));
+        $this->assertCount(2, $client->requests);
+        $this->assertSame('Hello World', (string) $client->requests[1]->getBody());
+    }
+
+    public function testTimedOutMultipartCreationIsNotReplayed(): void
+    {
+        $client = new ScriptedClient([
+            new TimeoutException(new Request('POST', Uri::parse('https://s3.example.com/root/file.txt')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+        ]);
+
+        $metadata = [];
+        try {
+            $this->device($client)->prepare('/root/file.txt', 'text/plain', 2, $metadata);
+            self::fail('Expected the timeout to surface');
+        } catch (TransportException) {
+        }
+
+        $this->assertCount(1, $client->requests);
+        $this->assertArrayNotHasKey('uploadId', $metadata);
+    }
+
     public function testNoSuchKeyBecomesNotFoundException(): void
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>';
@@ -485,6 +559,37 @@ final class S3Test extends TestCase
         $ranges = array_column($s3->amzHeadersByOperation['s3:uploadPartCopy'], 'x-amz-copy-source-range');
         $this->assertSame(['bytes=0-5368709119', 'bytes=5368709120-6442450943'], $ranges);
         $this->assertStringContainsString('etag-2', $s3->completedBody);
+    }
+
+    /**
+     * Nothing tells a copy whose replayed completion finds the upload gone apart from
+     * one that was aborted, so it is reported as failed: repeating a copy is safe,
+     * while a false success would let move() delete its source.
+     */
+    public function testLargeCopyWithAnUnprovenCompletionFails(): void
+    {
+        $xml = static fn (string $body): Response => new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('content-length', '6442450944'),
+            $xml('<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'),
+            $xml('<CopyPartResult><ETag>"etag-1"</ETag></CopyPartResult>'),
+            $xml('<CopyPartResult><ETag>"etag-2"</ETag></CopyPartResult>'),
+            new TimeoutException(new Request('POST', Uri::parse('https://s3.example.com/root/b.bin')), 'Operation timed out', \CURLE_OPERATION_TIMEDOUT),
+            new Response(404, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchUpload</Code><Message>The specified upload does not exist.</Message></Error>')),
+            new Response(204),
+        ]);
+        $device = new S3(
+            root: '/root',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            client: new Retry($client, new RetryStrategy(delay: 0.0)),
+            bucket: 'my-bucket',
+        );
+
+        $this->expectException(NotFoundException::class);
+        $device->copy('/root/a.bin', '/root/b.bin');
     }
 
     public function testCopyWithoutBucketFallsBackToStreaming(): void

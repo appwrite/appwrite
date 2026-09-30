@@ -28,7 +28,7 @@ return [
             'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
-            'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
+            'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
         ],
     ],
     'gitea' => [
@@ -45,8 +45,6 @@ return [
             'endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_ENDPOINT'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_SECRET'],
-            // Unlike GitHub's legacy optional secret, Gitea webhooks must
-            // always have a shared secret because Appwrite creates them directly.
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_WEBHOOK_SECRET'],
         ],
     ],
