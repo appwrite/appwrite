@@ -53,6 +53,7 @@ trait WebhooksBase
         ]);
         $this->assertEquals(200, $row['headers']['status-code']);
 
+        $deliveryIds = [];
         foreach ($webhooks as $prefix => $webhookId) {
             foreach (['create' => 'created', 'update' => 'updated'] as $action => $value) {
                 $event = "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}";
@@ -63,9 +64,13 @@ trait WebhooksBase
                 });
                 $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
                 $this->assertSame($value, $delivery['data']['value']);
+                $this->assertNotEmpty($delivery['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '');
+                $deliveryIds[] = $delivery['headers']['X-Appwrite-Webhook-Delivery-Id'];
             }
             $this->deleteWebhook($webhookId);
         }
+        // Two events, each to two webhooks: every delivery is told apart from the other three.
+        $this->assertCount(4, \array_unique($deliveryIds));
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
     }
 

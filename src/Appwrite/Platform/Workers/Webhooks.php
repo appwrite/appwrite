@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
@@ -27,6 +28,10 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
+
+    // How long a partially failed event remembers which webhooks already have it. Covers every
+    // broker retry, and the 7 days a dead-lettered message is kept for a redrive.
+    private const DELIVERED_TTL = 60 * 60 * 24 * 7;
 
     public static function getName(): string
     {
@@ -47,6 +52,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -58,10 +64,11 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param Cache $cache
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Cache $cache): void
     {
         $payload = $message->getPayload();
 
@@ -75,18 +82,71 @@ class Webhooks extends Action
 
         Span::add('project.id', $project->getId());
 
+        // Messages published before the publisher named its events carry no eventId. Their
+        // pid is stable across a NATS redelivery, which is the only retry those can still get.
+        $eventId = $payload['eventId'] ?? $message->getPid();
+        $redelivery = $message->getAttempts() > 0;
+
         $errors = [];
+        $delivered = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan);
-                if ($error !== null) {
-                    $errors[] = $error;
-                }
+            if ($webhook->getAttribute('enabled') !== true) {
+                continue;
+            }
+            if (!array_intersect($webhook->getAttribute('events', []), $events)) {
+                continue;
+            }
+
+            // Same on every attempt for this event and this webhook, and on no other pair.
+            $deliveryId = \md5($eventId . ':' . $webhook->getId());
+
+            if ($redelivery && $this->wasDelivered($cache, $deliveryId)) {
+                Span::add('webhooks.skipped_delivered', $webhook->getId());
+                continue;
+            }
+
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $deliveryId);
+            if ($error !== null) {
+                $errors[] = $error;
+            } else {
+                $delivered[] = $deliveryId;
             }
         }
 
-        if (!empty($errors)) {
-            throw new Exception(\implode(" / \n\n", $errors));
+        if (empty($errors)) {
+            return;
+        }
+
+        // The throw below asks the broker to deliver this event again, and the redelivery runs
+        // this whole loop. Record the webhooks that already accepted it, so that run retries only
+        // the ones that failed. Written only on a partial failure, the one case that needs it.
+        foreach ($delivered as $deliveryId) {
+            try {
+                $cache->save('webhook-delivered:' . $deliveryId, '1', ttl: self::DELIVERED_TTL);
+            } catch (\Throwable $th) {
+                // Without the record the retry re-sends to this webhook as well, under the same
+                // delivery id header a receiver can dedupe on. Not a reason to fail the others.
+                Span::add('webhooks.delivered_record_failed', $th->getMessage());
+            }
+        }
+
+        throw new Exception(\implode(" / \n\n", $errors));
+    }
+
+    /**
+     * Whether an earlier delivery of this message already reached the webhook.
+     *
+     * An unreadable cache answers no: re-sending under the same delivery id is recoverable
+     * for the receiver, while a skipped delivery is lost.
+     */
+    private function wasDelivered(Cache $cache, string $deliveryId): bool
+    {
+        try {
+            return $cache->load('webhook-delivered:' . $deliveryId, self::DELIVERED_TTL) !== false;
+        } catch (\Throwable $th) {
+            Span::add('webhooks.delivered_lookup_failed', $th->getMessage());
+
+            return false;
         }
     }
 
@@ -101,14 +161,11 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, string $deliveryId): ?string
     {
-        if ($webhook->getAttribute('enabled') !== true) {
-            return null;
-        }
-
         $rawUrl = $webhook->getAttribute('url');
 
         if (System::getEnv('_APP_ENV', 'development') === 'production') {
@@ -151,6 +208,7 @@ class Webhooks extends Action
                         System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
                     ),
                     'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
+                    'X-' . APP_NAME . '-Webhook-Delivery-Id' => $deliveryId,
                     'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
                     'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
                     'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
