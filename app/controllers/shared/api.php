@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Onboarding\Stages;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -31,6 +32,7 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -1295,11 +1297,6 @@ Http::shutdown()
             }
         }
 
-        $byMethod = $project->getAttribute('onboarding', []);
-        if (! \is_array($byMethod)) {
-            $byMethod = [];
-        }
-
         $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
             ? match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
@@ -1311,43 +1308,10 @@ Http::shutdown()
             ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
             : ACTOR_TYPE_GUEST);
 
-        $now = DateTime::now();
-        $dirty = false;
-        foreach (\array_keys($methods) as $method) {
-            $row = $byMethod[$method] ?? null;
-            $status = \is_array($row) ? ($row['status'] ?? null) : null;
-            // Skipped stages still upgrade to completed once the user actually performs the action.
-            if ($status === ONBOARDING_STATUS_COMPLETED) {
-                continue;
-            }
-            $byMethod[$method] = [
-                'status' => ONBOARDING_STATUS_COMPLETED,
-                'at' => $now,
-                'actorType' => $actorType,
-            ];
-            $dirty = true;
-        }
-
-        if (! $dirty) {
-            return;
-        }
-
         try {
-            // last write overwriting the other's stage on multiple request
-            // onboarding is not a native array attribute, it is a string with json filter.
-            // we do not have a query operator for array merge keys
-            $lock->tryWithKey(
-                'lock:platform:' . $project->getSequence() . ':onboarding',
-                // updateDocument never uses cache, so skip the subqueries.
-                fn () => $authorization->skip(fn () => $dbForPlatform->skipFilters(
-                    fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                        'onboarding' => $byMethod,
-                    ])),
-                    APP_PROJECTS_SUBQUERIES
-                )),
-                target: 'projects',
-            );
-        } catch (\Throwable) {
+            (new Stages($dbForPlatform, $authorization, $lock))->complete($project, \array_keys($methods), $actorType);
+        } catch (\Throwable $error) {
             // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
+            Console::warning('Failed to record onboarding stages for project ' . $project->getId() . ': ' . $error->getMessage());
         }
     });
