@@ -199,8 +199,8 @@ class Decrement extends Action
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
-        } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+        } catch (TypeException $e) {
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" cannot be decremented: ' . $e->getMessage());
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
