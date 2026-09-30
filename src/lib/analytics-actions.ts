@@ -227,17 +227,13 @@ export const ANALYTICS_ACTIONS = {
     'Native OAuth Promo Banner Open Settings Clicked',
   'native-oauth-promo-banner-learn-more':
     'Native OAuth Promo Banner Learn More Clicked',
-  'firewall-promo-banner-learn-more':
-    'Firewall Promo Banner Learn More Clicked',
-  'firewall-promo-banner-open-firewall':
-    'Firewall Promo Banner Open Firewall Clicked',
-  'firewall-promo-banner-skip': 'Firewall Promo Banner Skip Clicked',
-  'firewall-promo-banner-sound': 'Firewall Promo Banner Sound Toggled',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
   'upload-file': 'Upload File Clicked',
   'create-function': 'Create Function Clicked',
+  'functions-always-on-contact-sales':
+    'Functions Always On Contact Sales Clicked',
   'create-execution': 'Create Execution Clicked',
   'create-site': 'Create Site Clicked',
   'create-deployment': 'Create Deployment Clicked',

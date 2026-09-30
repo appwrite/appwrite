@@ -21,12 +21,3 @@ export function isOperatorAccount(
 ): boolean {
   return account?.impersonator === true || !!account?.impersonatorUserId
 }
-
-/** Console account may start impersonation (operator flag, not while impersonating). */
-export function canImpersonateConsoleUsers(
-  account: OperatorAccount | null | undefined,
-): boolean {
-  return (
-    account?.impersonator === true && !account?.impersonatorUserId
-  )
-}

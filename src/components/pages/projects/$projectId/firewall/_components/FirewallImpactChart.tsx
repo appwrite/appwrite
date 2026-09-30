@@ -28,6 +28,7 @@ import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 
 /** Same green as TrafficOverview requests / RuleImpactPreview matched series. */
 export const FIREWALL_IMPACT_MATCHED_COLOR = '#10b981'
@@ -94,6 +95,7 @@ export function FirewallImpactChart({
         <div className={overviewChartPanelChartFillClass}>
           {hasData ? (
             <ResponsiveContainer
+              className={USAGE_CHART_FADE_IN_CLASS_NAME}
               {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
               minHeight={height}
             >

@@ -7,6 +7,7 @@ const envSchema = z
       .string()
       .min(1, 'VITE_APPWRITE_ENDPOINT is required'),
     E2E_TEST_SESSION_SECRET: z.string().min(1).optional(),
+    E2E_FALLBACK_COOKIES: z.string().min(1).optional(),
     E2E_TEST_EMAIL: z.string().email().optional(),
     E2E_TEST_PASSWORD: z.string().min(1).optional(),
     /**
@@ -18,12 +19,12 @@ const envSchema = z
     E2E_PROJECT_ID: z.string().min(1).optional(),
   })
   .superRefine((value, ctx) => {
-    if (!value.E2E_TEST_SESSION_SECRET) {
+    if (!value.E2E_TEST_SESSION_SECRET && !value.E2E_FALLBACK_COOKIES) {
       if (!value.E2E_TEST_EMAIL) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            'E2E_TEST_EMAIL is required when E2E_TEST_SESSION_SECRET is not set',
+            'E2E_TEST_EMAIL is required when E2E_TEST_SESSION_SECRET or E2E_FALLBACK_COOKIES is not set',
           path: ['E2E_TEST_EMAIL'],
         })
       }
@@ -32,7 +33,7 @@ const envSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            'E2E_TEST_PASSWORD is required when E2E_TEST_SESSION_SECRET is not set',
+            'E2E_TEST_PASSWORD is required when E2E_TEST_SESSION_SECRET or E2E_FALLBACK_COOKIES is not set',
           path: ['E2E_TEST_PASSWORD'],
         })
       }
