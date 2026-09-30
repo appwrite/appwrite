@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { usageChartRefreshingClassName } from '@/lib/usage/usage-chart-loading'
+import {
+  USAGE_CHART_FADE_IN_CLASS_NAME,
+  usageChartRefreshingClassName,
+} from '@/lib/usage/usage-chart-loading'
 
 type UsageChartRefreshingOverlayProps = {
   isRefreshing: boolean
@@ -8,7 +11,7 @@ type UsageChartRefreshingOverlayProps = {
   children: ReactNode
 }
 
-/** Wraps chart content with a soft opacity fade while data refetches. */
+/** Fades chart content in on mount and dims it while data refetches. */
 export function UsageChartRefreshingOverlay({
   isRefreshing,
   className,
@@ -18,6 +21,7 @@ export function UsageChartRefreshingOverlay({
     <div
       className={cn(
         'relative h-full w-full',
+        USAGE_CHART_FADE_IN_CLASS_NAME,
         usageChartRefreshingClassName(isRefreshing),
         className,
       )}

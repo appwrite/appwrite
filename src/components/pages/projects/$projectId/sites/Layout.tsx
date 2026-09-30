@@ -12,9 +12,6 @@ import {
 } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { useTerraformResourceOnMount } from '@/lib/react-query/hooks/terraform'
-import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import type { Models } from '@appwrite.io/console'
 import {
   useProjectSite,
@@ -351,20 +348,6 @@ function SiteLayoutContent() {
 
   const isLogsTabLayout = activeTab === 'logs'
 
-  const terraformResource = getTerraformResourcePath('site', siteId ?? '')
-  const isTerraformManaged = !!useTerraformResourceOnMount(
-    projectId,
-    terraformResource,
-  )
-  // Logs are data, not configuration Terraform manages.
-  const terraformAlert =
-    isTerraformManaged && activeTab !== 'logs' ? (
-    <TerraformResourceAlert
-      projectId={projectId}
-      resource={terraformResource}
-    />
-  ) : undefined
-
   const buildingAlert = isBuilding ? (
     <div className="border-b border-border bg-blue-500/5">
       <div
@@ -523,9 +506,8 @@ function SiteLayoutContent() {
             }
             beforeCreateButtons={undefined}
             contentAfterBorder={
-              terraformAlert || buildingAlert || configAlert ? (
+              buildingAlert || configAlert ? (
                 <div>
-                  {terraformAlert}
                   {buildingAlert}
                   {configAlert}
                 </div>

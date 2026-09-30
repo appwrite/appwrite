@@ -11,6 +11,8 @@ import { RealtimeMessagesChart } from './charts/MessagesChart'
 import { RealtimeChannelsChart } from './charts/ChannelsChart'
 import { useRealtimeStats } from '@/lib/react-query/hooks/realtime'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 
 interface RealtimeOverviewProps {
   projectId: string | null | undefined
@@ -85,7 +87,12 @@ export function RealtimeOverviewKPIs({ projectId }: RealtimeOverviewProps) {
           ))}
         </div>
       ) : kpis ? (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div
+          className={cn(
+            'grid gap-4 sm:grid-cols-3',
+            USAGE_CHART_FADE_IN_CLASS_NAME,
+          )}
+        >
           {kpis.map((kpi) => (
             <StatsCard
               key={kpi.title}
@@ -144,7 +151,7 @@ export function RealtimeOverviewControlsAndCharts({
           ))}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={cn('space-y-6', USAGE_CHART_FADE_IN_CLASS_NAME)}>
           {/* Concurrency Chart */}
           <RealtimeConcurrencyChart
             data={stats?.concurrencyData || []}
