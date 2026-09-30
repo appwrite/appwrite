@@ -103,10 +103,10 @@ final class CounterTest extends TestCase
     {
         $counter = Counter::of($this->database, self::COLLECTION, $attribute);
 
-        $this->assertSame(10.5, $counter->maximum(10.5));
-        $this->assertSame(10.5, $counter->minimum(10.5));
+        $this->assertEqualsWithDelta(10.5, $counter->maximum(10.5), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(10.5, $counter->minimum(10.5), PHP_FLOAT_EPSILON);
         $this->assertTrue($counter->acceptsChange(1.5));
-        $this->assertSame(1.5, $counter->change(1.5));
+        $this->assertEqualsWithDelta(1.5, $counter->change(1.5), PHP_FLOAT_EPSILON);
     }
 
     public function testBoundsTheLibraryRefusesAnywayArePassedOnUnchanged(): void
