@@ -1785,4 +1785,130 @@ final class StorageCustomClientTest extends Scope
         }
     }
 
+    /**
+     * A guest has no user id. Content-Range still has to create the file in
+     * that first request. A later request from an unrelated guest must not
+     * continue it.
+     */
+    public function testCreateFileChunkedAsGuest(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Guest chunked upload',
+            'fileSecurity' => true,
+            'encryption' => false,
+            'compression' => 'none',
+            'antivirus' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $guestHeaders = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1;
+        $singleBody = 'guest-single';
+        $firstBody = 'guest-first';
+        $singleFileId = '';
+        $partialFileId = '';
+
+        $upload = function (string $range, string $body, ?string $resumeId = null, ?array $permissions = null) use ($bucketId, $guestHeaders): array {
+            $headers = $guestHeaders;
+            $headers['content-range'] = $range;
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            $params = [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'guest.txt'),
+            ];
+            if ($permissions !== null) {
+                $params['permissions'] = $permissions;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', $headers, $params);
+        };
+
+        try {
+            /**
+             * Test for SUCCESS
+             * Single-chunk Content-Range from a guest.
+             */
+            $single = $upload(
+                'bytes 0-' . (\strlen($singleBody) - 1) . '/' . \strlen($singleBody),
+                $singleBody,
+            );
+            $this->assertEquals(201, $single['headers']['status-code'], $single['body']['message'] ?? '');
+            $singleFileId = $single['body']['$id'];
+            $this->assertEquals(1, $single['body']['chunksTotal']);
+            $this->assertEquals(1, $single['body']['chunksUploaded']);
+            $this->assertEquals([], $single['body']['$permissions']);
+
+            /**
+             * Test for SUCCESS
+             * First chunk of a larger upload from a guest.
+             */
+            $partial = $upload(
+                'bytes 0-' . (\strlen($firstBody) - 1) . '/' . $totalSize,
+                $firstBody,
+            );
+            $this->assertEquals(201, $partial['headers']['status-code'], $partial['body']['message'] ?? '');
+            $partialFileId = $partial['body']['$id'];
+            $this->assertEquals(2, $partial['body']['chunksTotal']);
+            $this->assertEquals(1, $partial['body']['chunksUploaded']);
+            $this->assertEquals([], $partial['body']['$permissions']);
+
+            /**
+             * Test for FAILURE
+             * Another guest must not resume that incomplete upload.
+             */
+            $hijack = $upload(
+                'bytes ' . $chunkSize . '-' . $chunkSize . '/' . $totalSize,
+                'x',
+                $partialFileId,
+                [Permission::read(Role::any())],
+            );
+            $this->assertEquals(401, $hijack['headers']['status-code']);
+            $this->assertEquals('user_unauthorized', $hijack['body']['type']);
+
+            $stored = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $partialFileId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $stored['headers']['status-code']);
+            $this->assertEquals(1, $stored['body']['chunksUploaded']);
+            $this->assertEquals([], $stored['body']['$permissions']);
+        } finally {
+            foreach ([$singleFileId, $partialFileId] as $fileId) {
+                if ($fileId === '') {
+                    continue;
+                }
+
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+        }
+    }
+
 }

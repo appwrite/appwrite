@@ -262,6 +262,9 @@ class Create extends Action
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         $completed = false;
+        // True when prepareUpload created the pending document in this request.
+        // Finalize still sees that document, but it is not a resume.
+        $createdInRequest = false;
 
         $mergeUploadMetadata = function (array $stored, array $current): array {
             $uploaderId = $stored[self::UPLOADER_ID] ?? null;
@@ -289,7 +292,7 @@ class Create extends Action
             return $merged;
         };
 
-        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
                 if ($file->getAttribute('bucketId') !== $bucket->getId()) {
@@ -343,6 +346,7 @@ class Create extends Action
 
                     try {
                         $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                        $createdInRequest = true;
                     } catch (DuplicateException) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     } catch (NotFoundException) {
@@ -352,7 +356,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -368,7 +372,12 @@ class Create extends Action
                     throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                 }
 
-                $this->assertResumeAllowed($bucket, $file, $authorization, $user);
+                // The document was created earlier in this request. Checking it
+                // again would reject a guest, whose user id is empty, after the
+                // chunk has already been transferred.
+                if (!$createdInRequest) {
+                    $this->assertResumeAllowed($bucket, $file, $authorization, $user);
+                }
 
                 if ($uploaded === $chunks) {
                     $queueForEvents->reset();
@@ -523,10 +532,10 @@ class Create extends Action
                 } else {
                     /**
                      * Skip authorization in updateDocument.
-                     * The uploader may not hold update permission while the last chunk
-                     * is still arriving. assertResumeAllowed() already required this
-                     * caller to be that user, or to hold bucket or file update permission.
-                     * Permissions set on the first chunk stay as they are.
+                     * This request either created the file or already passed
+                     * assertResumeAllowed(). The uploader, including a guest, may
+                     * not hold update permission. Permissions from the first chunk
+                     * stay as they are.
                      */
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
                         'signature' => $fileHash,
@@ -547,9 +556,9 @@ class Create extends Action
             } else {
                 /**
                  * Skip authorization in updateDocument.
-                 * The uploader may not hold update permission while later chunks
-                 * are still arriving. assertResumeAllowed() already required this
-                 * caller to be that user, or to hold bucket or file update permission.
+                 * This request either created the file or already passed
+                 * assertResumeAllowed(). The uploader, including a guest, may
+                 * not hold update permission.
                  */
                 try {
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
@@ -647,6 +656,8 @@ class Create extends Action
 
         $metadata = $file->getAttribute('metadata', []);
         $uploaderId = \is_array($metadata) ? ($metadata[self::UPLOADER_ID] ?? '') : '';
+        // Guests have no user id. An empty value is not ownership, or every
+        // guest could resume every other guest's upload.
         if (\is_string($uploaderId) && $uploaderId !== '' && $uploaderId === $user->getId()) {
             return;
         }
@@ -660,6 +671,8 @@ class Create extends Action
      */
     private function withUploader(array $metadata, User $user): array
     {
+        // Guests are stored as an empty id. Resume does not treat that as a
+        // match; the request that created the file is recognized separately.
         $metadata[self::UPLOADER_ID] = $user->getId();
 
         return $metadata;
