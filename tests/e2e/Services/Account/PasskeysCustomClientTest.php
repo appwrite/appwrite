@@ -606,6 +606,58 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(201, $codes['headers']['status-code']);
     }
 
+    public function testPasskeyIsNeverLockedOutByMfa(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        $authenticator = $this->registerPasskey($project, $session);
+
+        // MFA on, no TOTP, and every other second factor disabled by policy
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $this->getServerHeaders($project), [
+            'totp' => false,
+            'email' => false,
+            'phone' => false,
+            'custom' => false,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['$id'] . '/mfa', $this->getServerHeaders($project), [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        // A password session cannot finish MFA here: no second factor is available to it
+        $password = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->getGuestHeaders($project), [
+            'email' => $user['email'],
+            'password' => 'password',
+        ]);
+        $passwordHeaders = $this->getSessionHeaders($project, $password['cookies']['a_session_' . $project['$id']]);
+        $this->assertSame('user_more_factors_required', $this->client->call(Client::METHOD_GET, '/account', $passwordHeaders)['body']['type']);
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $passwordHeaders, ['factor' => 'email']);
+        $this->assertSame(501, $challenge['headers']['status-code']);
+
+        // The passkey still gets in, without any challenge
+        $token = $this->signIn($project, $authenticator);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $signedIn = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $this->getGuestHeaders($project), [
+            'userId' => $token['body']['userId'],
+            'secret' => $token['body']['secret'],
+        ]);
+        $this->assertSame(201, $signedIn['headers']['status-code']);
+        $headers = $this->getSessionHeaders($project, $signedIn['cookies']['a_session_' . $project['$id']]);
+
+        $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/account', $headers)['headers']['status-code']);
+
+        // MFA-protected and recent-sign-in actions work too, so the user can recover access
+        $codes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+        $this->assertSame(201, $codes['headers']['status-code']);
+        $another = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers);
+        $this->assertSame(201, $another['headers']['status-code']);
+
+        // Signing in with the passkey again restores a fresh session at any time
+        $this->assertSame(201, $this->signIn($project, $authenticator)['headers']['status-code']);
+    }
+
     public function testUnverifiedUsersCannotRegister(): void
     {
         $project = $this->getProject(true);
