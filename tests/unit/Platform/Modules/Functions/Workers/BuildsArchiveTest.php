@@ -37,15 +37,33 @@ final class BuildsArchiveTest extends TestCase
         $archive = $this->root . '/code.tar.gz';
         $stdout = '';
         $stderr = '';
-        $listing = '';
         $exit = Console::execute(Builds::archiveCommand($archive, $directory), '', $stdout, $stderr);
 
         $this->assertSame(0, $exit, 'tar failed: ' . $stderr);
 
-        Console::execute('tar -tzf ' . \escapeshellarg($archive), '', $listing, $stderr);
-        $entries = \array_values(\array_filter(\explode("\n", $listing)));
+        $extracted = $this->root . '/extracted';
+        \mkdir($extracted);
+        $exit = Console::execute('tar -xzf ' . \escapeshellarg($archive) . ' -C ' . \escapeshellarg($extracted), '', $stdout, $stderr);
 
-        $this->assertSame(['./', './index.js'], $entries);
+        $this->assertSame(0, $exit, 'extract failed: ' . $stderr);
+        $this->assertSame(['index.js' => 'export default () => {};'], $this->readFiles($extracted));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function readFiles(string $directory): array
+    {
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS));
+
+        foreach ($iterator as $file) {
+            $files[\substr($file->getPathname(), \strlen($directory) + 1)] = \file_get_contents($file->getPathname());
+        }
+
+        \ksort($files);
+
+        return $files;
     }
 
     public static function directoryNameProvider(): \Iterator
