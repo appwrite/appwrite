@@ -1108,6 +1108,9 @@ abstract class Base extends TestCase
 
             $this->vcsAdapter->createTag(static::$owner, $repositoryName, 'v1.0.0', $commitHash, 'Release v1.0.0');
 
+            // Move the branch past the tag, so checking out the branch instead fails
+            $this->vcsAdapter->createFile(static::$owner, $repositoryName, 'CHANGELOG.md', '# After Tag');
+
             $command = $this->vcsAdapter->generateCloneCommand(
                 static::$owner,
                 $repositoryName,
@@ -1121,6 +1124,7 @@ abstract class Base extends TestCase
             exec($command . ' 2>&1', $output, $exitCode);
             $this->assertSame(0, $exitCode, implode("\n", $output));
             $this->assertFileExists($directory . '/README.md');
+            $this->assertFileDoesNotExist($directory . '/CHANGELOG.md');
         } finally {
             $this->discardRepositories($repositoryName);
             if (is_dir($directory)) {
