@@ -28,9 +28,6 @@ class Gitlab extends OAuth2
     protected array $tokens = [];
 
     /**
-     * openid and email load the primary address and email_verified from
-     * /oauth/userinfo, along with the id, name, username, and avatar.
-     *
      * @var array
      */
     protected array $scopes = [
@@ -116,8 +113,8 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['sub'])) {
+            return (string) $user['sub'];
         }
 
         return '';
@@ -136,9 +133,6 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Verified only when OpenID userinfo says the primary address is verified.
-     * The profile confirmed_at flag is not used.
-     *
      * @link https://docs.gitlab.com/integration/openid_connect_provider/
      *
      * @param string $accessToken
@@ -161,7 +155,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['avatar_url'] ?? '';
+        return $user['picture'] ?? '';
     }
 
     /**
@@ -185,7 +179,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['username'] ?? '';
+        return $user['preferred_username'] ?? $user['nickname'] ?? '';
     }
 
     /**
@@ -235,94 +229,16 @@ class Gitlab extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
-        if (!empty($this->user)) {
-            return $this->user;
-        }
-
-        $info = $this->userInfo($accessToken);
-        $sub = $info['sub'] ?? null;
-        if ($sub !== null && $sub !== '') {
-            $email = \is_string($info['email'] ?? null) ? $info['email'] : '';
-            $username = '';
-            if (\is_string($info['preferred_username'] ?? null) && $info['preferred_username'] !== '') {
-                $username = $info['preferred_username'];
-            } elseif (\is_string($info['nickname'] ?? null)) {
-                $username = $info['nickname'];
-            }
-
-            $this->user = [
-                'id' => (string) $sub,
-                'email' => $email,
-                'email_verified' => \filter_var($info['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN) && $email !== '',
-                'name' => \is_string($info['name'] ?? null) ? $info['name'] : '',
-                'username' => $username,
-                'avatar_url' => \is_string($info['picture'] ?? null) ? $info['picture'] : '',
-            ];
-
-            return $this->user;
-        }
-
-        // Tokens issued before the openid scope cannot call userinfo. The
-        // profile still supplies the id for those connections. Its confirmed_at
-        // flag is not a verification.
-        $this->user = $this->profile($accessToken);
-
-        return $this->user;
-    }
-
-    /**
-     * Profile used when OpenID userinfo is unavailable. The address is left
-     * unverified.
-     *
-     * @param string $accessToken
-     *
-     * @return array
-     */
-    private function profile(string $accessToken): array
-    {
-        try {
-            $response = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
-                'access_token' => $accessToken,
-            ]));
-        } catch (\Throwable) {
-            return [];
-        }
-
-        $profile = \json_decode($response, true);
-        if (!\is_array($profile) || !isset($profile['id']) || $profile['id'] === '') {
-            return [];
-        }
-
-        $profile['id'] = (string) $profile['id'];
-        $profile['email_verified'] = false;
-
-        return $profile;
-    }
-
-    /**
-     * OpenID userinfo for the primary address. With the email scope, email is
-     * the primary address and email_verified is that address's confirmation.
-     * A failed call leaves the address unverified.
-     *
-     * @param string $accessToken
-     *
-     * @return array
-     */
-    private function userInfo(string $accessToken): array
-    {
-        try {
-            $response = $this->request(
+        if (empty($this->user)) {
+            $user = $this->request(
                 'GET',
                 $this->getEndpoint() . '/oauth/userinfo',
                 ['Authorization: Bearer ' . $accessToken],
             );
-        } catch (\Throwable) {
-            return [];
+            $this->user = \json_decode($user, true) ?? [];
         }
 
-        $info = \json_decode($response, true);
-
-        return \is_array($info) ? $info : [];
+        return $this->user;
     }
 
     /**
