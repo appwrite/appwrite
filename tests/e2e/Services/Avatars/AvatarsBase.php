@@ -204,7 +204,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://cloud.appwrite.io/images/github.png',
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -216,7 +216,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://cloud.appwrite.io/images/github.png',
                 'width' => 200,
                 'height' => 200,
             ]);
@@ -230,7 +230,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://cloud.appwrite.io/images/github.png',
                 'width' => 300,
                 'height' => 300,
                 'quality' => 30,
@@ -247,7 +247,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/unknown.png',
+            'url' => 'https://cloud.appwrite.io/images/unknown.png',
             'width' => 300,
             'height' => 300,
             'quality' => 30,
@@ -258,7 +258,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.avif',
+            'url' => 'https://cloud.appwrite.io/images/github.png',
             'width' => 2001,
             'height' => 300,
             'quality' => 30,
@@ -1305,15 +1305,10 @@ trait AvatarsBase
 
     public function testGetScreenshotComparison(): array
     {
-        /**
-         * Test screenshot comparison with stable domain (example.com)
-         * This test captures a screenshot of example.com and compares it
-         * against a reference image to ensure consistent rendering.
-         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com',
+            'url' => 'http://screenshot.webapp.com',
             'width' => 800,
             'height' => 600,
         ]);
@@ -1322,10 +1317,8 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        // Compare with reference screenshot
-        $referencePath = \realpath(__DIR__ . '/../../../resources/avatars');
-        $referenceScreenshot = $referencePath . '/screenshot-example-com.png';
-        $this->assertFileExists($referenceScreenshot, 'Reference example.com screenshot not found');
+        $referenceScreenshot = \realpath(__DIR__ . '/../../../resources/avatars') . '/screenshot.png';
+        $this->assertFileExists($referenceScreenshot, 'Reference screenshot not found');
         $this->assertSamePixels($referenceScreenshot, $response['body']);
 
         return [];
