@@ -4298,6 +4298,113 @@ trait TransactionsBase
         $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
     }
 
+    public function testStagedIncrementRefusesAFractionalValueAndBoundsAFractionalMaxAtItsWholePart(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $keyHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'StagedFractionalBoundDB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'StagedFractionalBoundCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer', null), $keyHeaders, [
+                'key' => 'counter',
+                'required' => false,
+                'default' => 0,
+            ]);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+            $this->getRecordIdParam() => 'meter',
+            'data' => ['counter' => 8],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, 'meter');
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $fractional = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
+                'transactionId' => $transactionId,
+                'value' => 1.5,
+            ]);
+            $this->assertSame(400, $fractional['headers']['status-code'], 'a fractional change value on an integer is refused when it is staged');
+            $this->assertSame('general_argument_invalid', $fractional['body']['type']);
+
+            $fractionalOperation = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => [[
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'decrement',
+                    $this->getRecordIdParam() => 'meter',
+                    'data' => [
+                        $this->getSchemaParam() => 'counter',
+                        'value' => 1.5,
+                    ],
+                ]],
+            ]);
+            $this->assertSame(400, $fractionalOperation['headers']['status-code'], 'a fractional change value on an integer is refused when it is staged as an operation');
+            $this->assertSame('general_argument_invalid', $fractionalOperation['body']['type']);
+        }
+
+        $staged = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
+            'transactionId' => $transactionId,
+            'value' => 2,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(200, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(200, $commit['headers']['status-code'], 'a staged fractional max on an integer admits the integers up to its whole part');
+
+        $committed = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(10, $committed['body']['counter']);
+
+        $pastMax = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $pastMax['headers']['status-code']);
+
+        $stagedPastMax = $this->client->call(Client::METHOD_PATCH, $url . '/counter/increment', $headers, [
+            'transactionId' => $pastMax['body']['$id'],
+            'value' => 1,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(200, $stagedPastMax['headers']['status-code']);
+
+        $refused = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($pastMax['body']['$id']), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(400, $refused['headers']['status-code'], 'a staged increment past the whole part of the max is refused at commit');
+
+        $unchanged = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(10, $unchanged['body']['counter']);
+    }
+
     /**
      * Test bulk update operations in transaction
      */

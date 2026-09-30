@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
@@ -230,6 +231,14 @@ class Create extends Action
                             }
                         }
                     }
+                }
+            }
+
+            if (\in_array($operation['action'], ['increment', 'decrement'], true)) {
+                $data = $operation['data'];
+                $attribute = $data[$this->getAttributeKey()] ?? '';
+                if (\is_string($attribute)) {
+                    Counter::from($collection, $attribute)->assertChange($data['value'] ?? 1, $operation['action'], $this->getAttributeKey(), $attribute);
                 }
             }
 

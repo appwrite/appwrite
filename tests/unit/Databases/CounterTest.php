@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Databases;
 
 use Appwrite\Databases\Counter;
+use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -142,6 +143,55 @@ final class CounterTest extends TestCase
         $this->assertSame(2, $counter->change(2.0));
         $this->assertSame(2, $counter->change(2));
         $this->assertSame('2', $counter->change('2'));
+    }
+
+    /**
+     * @return iterable<string, array{string, int|float}>
+     */
+    public static function metadataAttributes(): iterable
+    {
+        yield 'integer' => ['count', 10];
+        yield 'big integer as stored' => ['big', 10];
+        yield 'double' => ['ratio', 10.5];
+        yield 'integer array' => ['scores', 10.5];
+        yield 'undeclared' => ['missing', 10.5];
+    }
+
+    #[DataProvider('metadataAttributes')]
+    public function testCollectionMetadataDeclaresTheSameIntegerAttributes(string $attribute, int|float $maximum): void
+    {
+        $collection = new Document([
+            '$id' => 'metadata',
+            'attributes' => [
+                new Document(['key' => 'count', 'type' => ColumnType::Integer->value]),
+                new Document(['key' => 'big', 'type' => 'bigint']),
+                new Document(['key' => 'ratio', 'type' => ColumnType::Double->value]),
+                new Document(['key' => 'scores', 'type' => ColumnType::Integer->value, 'array' => true]),
+            ],
+        ]);
+
+        $this->assertSame($maximum, Counter::from($collection, $attribute)->maximum(10.5));
+    }
+
+    public function testAFractionalChangeValueOnAnIntegerIsRefusedAsAnInvalidArgument(): void
+    {
+        $counter = Counter::of($this->database, self::COLLECTION, 'count');
+
+        try {
+            $counter->assertChange(1.5, 'increment', 'column', 'count');
+            $this->fail('a fractional change value on an integer must be refused');
+        } catch (Exception $exception) {
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $exception->getType());
+            $this->assertSame('Value must be a whole number to increment the integer column "count".', $exception->getMessage());
+        }
+    }
+
+    public function testAcceptedChangeValuesPassTheAssertion(): void
+    {
+        Counter::of($this->database, self::COLLECTION, 'count')->assertChange(2, 'decrement', 'attribute', 'count');
+        Counter::of($this->database, self::COLLECTION, 'ratio')->assertChange(1.5, 'increment', 'attribute', 'ratio');
+
+        $this->addToAssertionCount(2);
     }
 
     public function testAFractionalMaximumOnAnIntegerBoundsTheIncrementAtItsWholePart(): void

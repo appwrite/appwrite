@@ -2,8 +2,10 @@
 
 namespace Appwrite\Databases;
 
+use Appwrite\Extend\Exception;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\BigInt;
 
 /**
@@ -11,7 +13,8 @@ use Utopia\Database\Validator\BigInt;
  *
  * On an integer attribute a fractional bound admits exactly the integers its whole part towards the allowed side
  * admits, so the maximum is rounded down and the minimum up, and a whole-number change value is passed as the
- * integer it is. Bounds and change values of any other attribute are passed as they are.
+ * integer it is. A fractional change value on an integer attribute is refused. Bounds and change values of any
+ * other attribute are passed as they are.
  */
 final readonly class Counter
 {
@@ -26,6 +29,25 @@ final readonly class Counter
         foreach ($definition->attributes as $declared) {
             if ($declared->key === $attribute) {
                 return new self(!$declared->array && Attribute::isIntegerType($declared->type));
+            }
+        }
+
+        return new self(false);
+    }
+
+    /**
+     * From the attribute definitions of Appwrite's collection metadata document, for an operation that is staged
+     * before the library reads the collection.
+     */
+    public static function from(Document $collection, string $attribute): self
+    {
+        /** @var array<Document> $attributes */
+        $attributes = $collection->getAttribute('attributes', []);
+        foreach ($attributes as $declared) {
+            if ($declared->getAttribute('key') === $attribute) {
+                $type = $declared->getAttribute('type', '');
+
+                return new self(!$declared->getAttribute('array', false) && \is_string($type) && Attribute::isIntegerType($type));
             }
         }
 
@@ -53,6 +75,19 @@ final readonly class Counter
         }
 
         return \is_finite($value) && \floor($value) === $value;
+    }
+
+    /**
+     * @param string $action The operation, increment or decrement.
+     * @param string $kind What the API calls the attribute, attribute or column.
+     *
+     * @throws Exception
+     */
+    public function assertChange(int|float|string $value, string $action, string $kind, string $attribute): void
+    {
+        if (!$this->acceptsChange($value)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a whole number to ' . $action . ' the integer ' . $kind . ' "' . $attribute . '".');
+        }
     }
 
     public function change(int|float|string $value): int|float|string

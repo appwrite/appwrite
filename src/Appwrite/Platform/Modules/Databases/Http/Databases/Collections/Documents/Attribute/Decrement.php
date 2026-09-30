@@ -109,6 +109,9 @@ class Decrement extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $counter = Counter::from($collection, $attribute);
+        $counter->assertChange($value, 'decrement', $this->getAttributeKey(), $attribute);
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -179,11 +182,6 @@ class Decrement extends Action
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         try {
-            $counter = Counter::of($dbForDatabases, $collectionTableId, $attribute);
-            if (!$counter->acceptsChange($value)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a whole number to decrement the integer ' . $this->getAttributeKey() . ' "' . $attribute . '".');
-            }
-
             $document = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionTableId,
                 id: $documentId,
