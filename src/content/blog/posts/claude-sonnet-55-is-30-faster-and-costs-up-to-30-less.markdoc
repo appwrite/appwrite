@@ -183,5 +183,5 @@ Sonnet 5.5's batched tool calls pair well with this setup. Fewer round trips per
 * [Claude Code integration guide](/docs/tooling/ai/agents/claude-code)
 * [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
 * [Appwrite Skills docs](/docs/tooling/ai/skills)
-* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Create a free Appwrite project](https://appwrite.io/)
 * [Join the Appwrite Discord](https://appwrite.io/discord)
