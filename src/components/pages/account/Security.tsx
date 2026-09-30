@@ -10,6 +10,7 @@ import {
   MFASection,
   UpdatePasswordSection,
 } from './Overview'
+import { PasskeysSection } from './Passkeys'
 
 export type AccountSecurityInitialData = {
   identities?: Awaited<ReturnType<typeof fetchAccountIdentities>>
@@ -56,8 +57,30 @@ export function AccountSecurity({
       })
     }
 
+    if (features.accountPasskeys) {
+      items.push({
+        id: 'passkeys',
+        search: {
+          title: 'Passkeys',
+          keywords: [
+            'passkey',
+            'webauthn',
+            'fingerprint',
+            'face id',
+            'biometric',
+          ],
+        },
+        node: <PasskeysSection />,
+      })
+    }
+
     return items
-  }, [features.accountIdentities, features.accountMfa, initialData?.identities])
+  }, [
+    features.accountIdentities,
+    features.accountMfa,
+    features.accountPasskeys,
+    initialData?.identities,
+  ])
 
   return <SettingsCardsList cards={cards} />
 }
