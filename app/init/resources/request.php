@@ -496,14 +496,14 @@ return function (Container $context): void {
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
         $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
-        // Impersonation needs the operator to have completed their own MFA. Once the target is
-        // swapped in, the operator's session no longer resolves, so the factor check in the
-        // shared API hook would be skipped. Leaving the operator in place lets it reject them.
-        if (
-            !$user->isEmpty()
-            && $user->getAttribute('impersonator', false)
-            && !$user->sessionNeedsMoreFactors($user->sessionVerify($store->getProperty('secret', ''), $proofForToken) ?: $jwtSessionId)
-        ) {
+        if (!$user->isEmpty() && $user->getAttribute('impersonator', false) && (!empty($impersonateUserId) || !empty($impersonateEmail) || !empty($impersonatePhone))) {
+            // The target has no session of the impersonator's to count factors on, so the
+            // impersonator's own session must have completed MFA before switching.
+            $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken) ?: $jwtSessionId;
+            if (empty($sessionId) || $user->sessionNeedsMoreFactors($sessionId)) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+            }
+
             $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
             $targetUser = null;
             if (!empty($impersonateUserId)) {
