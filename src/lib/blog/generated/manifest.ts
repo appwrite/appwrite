@@ -3,22 +3,6 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
-    "slug": "sunsetting-appwrite-education-program",
-    "href": "/blog/post/sunsetting-appwrite-education-program",
-    "title": "Sunsetting the Appwrite Education program",
-    "description": "Appwrite is sunsetting the Education program on November 1st, 2026. Learn why we made that call, what changes, and how to transition.",
-    "date": "2026-11-04",
-    "lastUpdated": "2026-11-04",
-    "timeToRead": 7,
-    "author": "eldad-fux",
-    "category": "announcement, product",
-    "featured": false,
-    "unlisted": true,
-    "draft": true,
-    "cover": "/images/blog/sunsetting-appwrite-education-program/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "ai-agent-live-collaborator-appwrite-presences",
     "href": "/blog/post/ai-agent-live-collaborator-appwrite-presences",
     "title": "Build an AI agent that collaborates live with Appwrite Presences and Realtime",
