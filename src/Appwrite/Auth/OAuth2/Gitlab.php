@@ -33,10 +33,15 @@ class Gitlab extends OAuth2
     protected array $tokens = [];
 
     /**
+     * read_user loads the profile from /api/v4/user. openid and email load the
+     * primary address and email_verified from /oauth/userinfo.
+     *
      * @var array
      */
     protected array $scopes = [
-        'read_user'
+        'read_user',
+        'openid',
+        'email',
     ];
 
     /**
@@ -137,10 +142,10 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * The profile email is the primary address. confirmed_at is that address's
-     * confirmation. Other addresses on the account are ignored.
+     * Verified only when OpenID userinfo says the primary address is verified.
+     * The profile confirmed_at flag is not used.
      *
-     * @link https://docs.gitlab.com/api/users/#get-the-current-user
+     * @link https://docs.gitlab.com/integration/openid_connect_provider/
      *
      * @param string $accessToken
      *
@@ -150,7 +155,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return ($user['email'] ?? '') !== '' && !empty($user['confirmed_at']);
+        return ($user['email_verified'] ?? false) === true;
     }
 
     /**
@@ -245,9 +250,44 @@ class Gitlab extends OAuth2
         ]));
         $decoded = \json_decode($user, true);
         $this->user = \is_array($decoded) ? $decoded : [];
+
+        $info = $this->userInfo($accessToken);
+        $email = $info['email'] ?? null;
+        if (\is_string($email) && $email !== '') {
+            $this->user['email'] = $email;
+        }
+
+        $verified = \filter_var($info['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $this->user['email_verified'] = $verified && \is_string($email) && $email !== '';
         $this->userLoaded = true;
 
         return $this->user;
+    }
+
+    /**
+     * OpenID userinfo for the primary address. With the email scope, email is
+     * the primary address and email_verified is that address's confirmation.
+     * A failed call leaves the address unverified.
+     *
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    private function userInfo(string $accessToken): array
+    {
+        try {
+            $response = $this->request(
+                'GET',
+                $this->getEndpoint() . '/oauth/userinfo',
+                ['Authorization: Bearer ' . $accessToken],
+            );
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $info = \json_decode($response, true);
+
+        return \is_array($info) ? $info : [];
     }
 
     /**
