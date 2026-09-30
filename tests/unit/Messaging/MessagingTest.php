@@ -668,7 +668,6 @@ final class MessagingTest extends TestCase
 
         $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
         $realtime->connections[1]['authorization'] = 'authorization';
-        $realtime->connections[1]['impersonatedUserId'] = null;
         $realtime->connections[1]['sessionId'] = 'session';
 
         // A later subscribe on the same connection unions its channels and must not
@@ -676,14 +675,41 @@ final class MessagingTest extends TestCase
         $realtime->subscribe('1', 1, 'sub-2', [$role], ['files'], [], 'A');
 
         $this->assertSame('authorization', $realtime->connections[1]['authorization']);
-        $this->assertArrayHasKey('impersonatedUserId', $realtime->connections[1]);
-        $this->assertNull($realtime->connections[1]['impersonatedUserId']);
         $this->assertSame('session', $realtime->connections[1]['sessionId']);
         $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
 
         // A full unsubscribe forgets the connection entirely.
         $realtime->unsubscribe(1);
         $this->assertArrayNotHasKey(1, $realtime->connections);
+    }
+
+    public function testGetUserConnectionsIncludesConnectionsWithoutSubscriptions(): void
+    {
+        $realtime = new Realtime();
+        $roleA = Role::user(ID::custom('A'))->toString();
+        $roleB = Role::user(ID::custom('B'))->toString();
+
+        // A subscribes in project 1; opens a second connection there with no channels
+        // (message mode); and has a third connection in project 2.
+        $realtime->subscribe('1', 1, 'sub-1', [$roleA], ['documents'], [], 'A');
+        $realtime->subscribe('1', 2, '', [$roleA], [], [], 'A');
+        $realtime->subscribe('2', 3, 'sub-3', [$roleA], ['documents'], [], 'A');
+        // B in project 1, and a guest.
+        $realtime->subscribe('1', 4, 'sub-4', [$roleB], ['documents'], [], 'B');
+        $realtime->subscribe('1', 5, 'sub-5', [Role::guests()->toString()], ['documents'], [], '');
+
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getUserConnections('1', 'A'));
+        $this->assertSame([3], $realtime->getUserConnections('2', 'A'));
+        $this->assertSame([4], $realtime->getUserConnections('1', 'B'));
+        $this->assertSame([], $realtime->getUserConnections('1', ''));
+
+        // Dropping the last subscription keeps the connection, and so its user.
+        $realtime->unsubscribeSubscription(1, 'sub-1');
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getUserConnections('1', 'A'));
+
+        // Closing forgets it.
+        $realtime->unsubscribe(1);
+        $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
     }
 
     public function testFromPayloadPermissions(): void

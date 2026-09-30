@@ -995,6 +995,28 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client, "users.{$userId}.sessions.{$session['id']}.delete");
 
         /**
+         * Test for SUCCESS - a connection without subscriptions ends with its session too
+         */
+        $session = $createSession();
+        $client = $this->getWebsocket([], ['origin' => 'http://localhost', 'cookie' => $session['cookie']]);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertEquals([], $response['data']['channels']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $session['id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session['cookie'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
+
+        /**
          * Test for SUCCESS - the user is blocked
          */
         $session = $createSession();

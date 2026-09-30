@@ -79,11 +79,11 @@ trait RealtimeBase
         while ($client->isConnected() && \count($frames) < $maxFrames) {
             try {
                 $frame = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
             } catch (ConnectionException) {
                 // Socket closed by the server
                 break;
-            } catch (TimeoutException) {
-                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
             }
 
             $frames[] = \is_array($frame) ? $frame : ['raw' => $frame];

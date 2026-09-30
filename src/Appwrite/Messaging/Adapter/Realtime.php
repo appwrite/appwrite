@@ -158,7 +158,7 @@ class Realtime extends MessagingAdapter
         ];
 
         // Recorded once by the connection handler; every later (re)subscribe keeps it.
-        foreach (['authorization', 'impersonatedUserId', 'sessionId'] as $key) {
+        foreach (['authorization', 'sessionId'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -417,6 +417,28 @@ class Realtime extends MessagingAdapter
             && array_key_exists($role, $this->subscriptions[$projectId])
             && array_key_exists($channel, $this->subscriptions[$projectId][$role])
             && !empty($this->subscriptions[$projectId][$role][$channel]);
+    }
+
+    /**
+     * Connection IDs of every connection a user holds in a project, whether or not
+     * it currently subscribes to anything.
+     *
+     * @return array<int, mixed>
+     */
+    public function getUserConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId && ($connection['userId'] ?? '') === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
     }
 
     /**

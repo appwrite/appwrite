@@ -607,14 +607,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $projectId = $event['project'];
                     $userId = $event['userId'];
 
-                    if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
-                        $connections = [];
-                        foreach ($realtime->subscriptions[$projectId]['user:' . $userId] as $byConnection) {
-                            foreach (\array_keys($byConnection) as $connectionId) {
-                                $connections[$connectionId] = true;
-                            }
-                        }
+                    // From connection state rather than the subscription tree: a connection
+                    // opened without channels, or that dropped its last subscription, still
+                    // holds its roles and can subscribe again later.
+                    $connections = $realtime->getUserConnections($projectId, $userId);
 
+                    if (!empty($connections)) {
                         $consoleDatabase = getConsoleDB();
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
@@ -623,7 +621,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
                         $roles = $user->getRoles($database->getAuthorization());
 
-                        foreach (\array_keys($connections) as $connection) {
+                        foreach ($connections as $connection) {
                             $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
 
                             // The HTTP API re-checks these on every request; a connection
@@ -643,6 +641,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
+                            $presences = $realtime->connections[$connection]['presences'] ?? [];
                             $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
                             $meta = $realtime->getSubscriptionMetadata($connection);
@@ -679,6 +678,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $realtime->connections[$connection]['authorization'] = $authorization;
                                 $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
                                 $realtime->connections[$connection]['sessionId'] = $sessionId;
+                                // Owned presences must survive too, or closing the socket later
+                                // would leave their rows behind until they expire.
+                                $realtime->connections[$connection]['presences'] = $presences;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
