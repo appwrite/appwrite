@@ -212,6 +212,63 @@ final class CursorLookupTest extends TestCase
         $this->assertNull($this->orderValue($cursor, 'ord.amount'), 'without a row the caller can read the order value is null, as it is in the list');
     }
 
+    public function testCursorOnAOneToManyJoinPagesBehindTheDocumentsLastJoinedRow(): void
+    {
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->customer($store, 'bob', readable: true);
+        $this->order($store, 'a-first', 'alice', 10, readable: true);
+        $this->order($store, 'a-second', 'alice', 25, readable: true);
+        $this->order($store, 'b-only', 'bob', 15, readable: true);
+
+        $after = $this->pageRows($store, [], Query::cursorAfter('alice'));
+        $this->assertSame([['bob', 'b-only']], $after, 'the page after a document starts behind every row the list pairs with it');
+
+        $before = $this->pageRows($store, [], Query::cursorBefore('bob'));
+        $this->assertSame([['alice', 'a-first'], ['alice', 'a-second']], $before, 'the page before a document ends ahead of its first row');
+    }
+
+    public function testCursorOrderedByAJoinedAttributeWithoutAReadableRowPagesAsTheListDoes(): void
+    {
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->customer($store, 'bob', readable: true);
+        $this->order($store, 'a-hidden', 'alice', 35, readable: false);
+        $this->order($store, 'b-only', 'bob', 15, readable: true);
+
+        $rows = $this->pageRows($store, [
+            Query::leftJoin(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString(),
+            Query::orderAsc('ord.amount'),
+        ], Query::cursorAfter('alice'), join: false);
+
+        $this->assertSame([['bob', 'b-only']], $rows, 'a row the join did not match is a page boundary with null joined values');
+    }
+
+    public function testCursorOnAJoinOfTheJoinedIdNeedsNoJoinedRow(): void
+    {
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->order($store, 'a-first', 'alice', 10, readable: true);
+        $this->order($store, 'a-second', 'alice', 25, readable: true);
+        $this->reads = [];
+
+        $parsed = Query::parseQueries([
+            Query::join(self::CUSTOMERS, 'customerId', '$id', '=', 'cus')->toString(),
+            Query::cursorAfter('a-first')->toString(),
+        ]);
+        $cursor = Query::getCursorQueries($parsed, false)[0];
+        $document = (new CursorLookup($store, $this->authorization))->resolve(self::ORDERS, $cursor, $parsed);
+
+        $this->assertFalse($document->offsetExists('cus.$id'), 'a join on the joined $id pairs one row, so the list adds no tie on it');
+        $this->assertNotContains(['collection' => self::CUSTOMERS, 'authorized' => true], $this->reads, 'no joined row is read for a join the cursor carries nothing of');
+
+        $cursor->setValue($document);
+        $this->assertSame(['a-second'], \array_map(
+            static fn (Document $row): string => $row->getId(),
+            $store->find(self::ORDERS, $parsed),
+        ));
+    }
+
     /**
      * @param list<string> $queries
      */
@@ -237,6 +294,29 @@ final class CursorLookupTest extends TestCase
             ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
             $cursor->toString(),
         ], $store, self::CUSTOMERS);
+    }
+
+    /**
+     * Pages a list of customers with the cursor the lookup resolves, as the list route does, and returns each row as
+     * its customer and joined order ids.
+     *
+     * @param list<Query|string> $queries
+     * @return list<array{0: string, 1: mixed}>
+     */
+    private function pageRows(Database $store, array $queries, Query $cursor, bool $join = true): array
+    {
+        $parsed = Query::parseQueries([
+            ...($join ? [Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString()] : []),
+            ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
+            $cursor->toString(),
+        ]);
+        $resolved = Query::getCursorQueries($parsed, false)[0];
+        $resolved->setValue((new CursorLookup($store, $this->authorization))->resolve(self::CUSTOMERS, $resolved, $parsed));
+
+        return \array_map(
+            static fn (Document $row): array => [$row->getId(), $row->getAttribute('ord.$id')],
+            $store->find(self::CUSTOMERS, $parsed),
+        );
     }
 
     /**

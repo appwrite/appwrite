@@ -17,7 +17,8 @@ use Utopia\Query\Query as BaseQuery;
  * An order on a joined attribute takes its value from the joined rows the caller can read, read the way listing
  * that collection directly reads them, so a page boundary never depends on a row the list hides. When several
  * such rows pair with the document, the page after it starts behind the last of them in the list's order and the
- * page before it ends ahead of the first.
+ * page before it ends ahead of the first. A join that can pair several rows with the document is ordered by its
+ * joined `$id` after the list's own orders, so the cursor carries that row's `$id` as well.
  */
 final readonly class CursorLookup
 {
@@ -48,7 +49,9 @@ final readonly class CursorLookup
         }
 
         $joins = $this->joins($queries);
-        $orders = $this->orders($queries, $joins, $cursor->getMethod() === Method::CursorAfter);
+        $after = $cursor->getMethod() === Method::CursorAfter;
+        $orders = $this->orders($queries, $joins, $after);
+        $orders = $this->tieBreaks($joins, $orders, $after);
 
         $rows = [];
         foreach ($this->required($joins, $orders) as $alias => $join) {
@@ -108,6 +111,51 @@ final readonly class CursorLookup
         }
 
         return $orders;
+    }
+
+    /**
+     * Each join that can pair several rows with one document, ordered by its joined `$id` behind the list's orders
+     * on it, as the library orders a joined read, unless the list already orders it by `$id` or `$sequence`.
+     *
+     * @param array<string, Query> $joins
+     * @param array<string, list<Query>> $orders
+     * @return array<string, list<Query>>
+     */
+    private function tieBreaks(array $joins, array $orders, bool $after): array
+    {
+        foreach ($joins as $alias => $join) {
+            if ($this->pairsAtMostOneRow($join, $alias)) {
+                continue;
+            }
+
+            foreach ($orders[$alias] ?? [] as $order) {
+                if (\in_array($order->getAttribute(), ['$id', '$sequence'], true)) {
+                    continue 2;
+                }
+            }
+
+            $orders[$alias][] = $after ? Query::orderDesc('$id') : Query::orderAsc('$id');
+        }
+
+        return $orders;
+    }
+
+    /**
+     * An inner or left join whose condition compares the joined `$id` with `=` pairs each document with at most one
+     * joined row.
+     */
+    private function pairsAtMostOneRow(Query $join, string $alias): bool
+    {
+        if (!\in_array($join->getMethod(), [Method::Join, Method::LeftJoin], true) || $join->isNestedJoin()) {
+            return false;
+        }
+
+        [$left, $operator, $right] = \array_pad($join->getValues(), 3, null);
+        if ($operator !== '=' || !\is_string($left) || !\is_string($right)) {
+            return false;
+        }
+
+        return \in_array($right, ['$id', $alias . '.$id'], true) && !\str_starts_with($left, $alias . '.');
     }
 
     /**
@@ -286,20 +334,17 @@ final readonly class CursorLookup
     }
 
     /**
-     * The row's order values, which the library encodes as it does the cursor document's own attributes.
+     * The row's order values, which the library encodes as it does the cursor document's own attributes. Without a
+     * row every value is null, as it is in the list.
      *
      * @param list<Query> $orders
      * @return array<string, mixed>
      */
     private function values(Document $row, array $orders): array
     {
-        if ($row->isEmpty()) {
-            return [];
-        }
-
         $result = [];
         foreach ($orders as $order) {
-            $result[$order->getAttribute()] = $row->getAttribute($order->getAttribute());
+            $result[$order->getAttribute()] = $row->isEmpty() ? null : $row->getAttribute($order->getAttribute());
         }
 
         return $result;
