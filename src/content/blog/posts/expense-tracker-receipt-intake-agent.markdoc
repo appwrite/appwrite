@@ -93,6 +93,8 @@ TablesDB is the Appwrite database for structured data in tables, rows, and colum
 
 ![The create database wizard in the Appwrite Console with TablesDB selected and the name Outlay](/images/blog/expense-tracker-receipt-intake-agent/console-create-database.avif)
 
+To see what the script created, open **Databases** > **Outlay**. The sidebar lists the four tables. Select a table to see its columns on the **Columns** tab, with the type, size, and required setting of each column, and its indexes on the **Indexes** tab.
+
 ![The Columns tab of the expenses table in the Appwrite Console](/images/blog/expense-tracker-receipt-intake-agent/console-expenses-columns.avif)
 
 The database has four tables:
