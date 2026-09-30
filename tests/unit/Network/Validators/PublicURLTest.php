@@ -42,6 +42,17 @@ final class PublicURLTest extends TestCase
         yield 'ipv4-mapped' => ['http://[::ffff:127.0.0.1]/', 'private or reserved'];
     }
 
+    public function testResolveIsEmptyForIpLiteralsAndRejections(): void
+    {
+        $validator = new PublicURL();
+
+        $this->assertTrue($validator->isValid('https://1.1.1.1/'));
+        $this->assertSame([], $validator->getResolve());
+
+        $this->assertFalse($validator->isValid('http://127.0.0.1/'));
+        $this->assertSame([], $validator->getResolve());
+    }
+
     public function testDescriptionResetsBetweenCalls(): void
     {
         $validator = new PublicURL();

@@ -158,6 +158,46 @@ final class PublicHostnameTest extends TestCase
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
     }
 
+    public function testResolvePinsCheckedAddresses(): void
+    {
+        $validator = new FixedHostname();
+
+        $this->assertTrue($validator->isValid('example.com'));
+        $this->assertSame(
+            ['example.com:443:93.184.215.14,[2606:2800:21f:cb07:6820:80da:af6b:ac2d]'],
+            $validator->getResolve(443)
+        );
+    }
+
+    public function testResolveKeepsTrailingDot(): void
+    {
+        // curl only applies an entry whose host matches the URL exactly, trailing dot included
+        $validator = new FixedHostname();
+
+        $this->assertTrue($validator->isValid('Example.COM.'));
+        $this->assertSame(
+            ['example.com.:80:93.184.215.14,[2606:2800:21f:cb07:6820:80da:af6b:ac2d]'],
+            $validator->getResolve(80)
+        );
+    }
+
+    public function testResolveIsEmptyForIpLiterals(): void
+    {
+        $validator = new FixedHostname();
+
+        $this->assertTrue($validator->isValid('8.8.8.8'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
+    public function testResolveResetsAfterRejection(): void
+    {
+        $validator = new FixedHostname();
+
+        $this->assertTrue($validator->isValid('example.com'));
+        $this->assertFalse($validator->isValid('mixed.example.com'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
     #[RunInSeparateProcess]
     public function testResolvesHostnameInsideCoroutine(): void
     {
@@ -200,5 +240,20 @@ final class PublicHostnameTest extends TestCase
     {
         Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
         Coroutine\run($callback);
+    }
+}
+
+/**
+ * Resolves from a fixed table instead of DNS.
+ */
+class FixedHostname extends PublicHostname
+{
+    public static function resolve(string $hostname): array
+    {
+        return match ($hostname) {
+            'example.com', 'example.com.' => ['93.184.215.14', '2606:2800:21f:cb07:6820:80da:af6b:ac2d'],
+            'mixed.example.com' => ['93.184.215.14', '127.0.0.1'],
+            default => [],
+        };
     }
 }

@@ -208,9 +208,10 @@ class Get extends Action
     }
 
     /**
+     * @return array<string> CURLOPT_RESOLVE entries for the host's resolved addresses
      * @throws Exception
      */
-    protected static function assertSafeUrl(string $url): void
+    protected static function assertSafeUrl(string $url): array
     {
         $parts = \parse_url($url);
         if (!\is_array($parts)) {
@@ -244,6 +245,8 @@ class Get extends Action
         if (!$validator->isValid($host)) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
         }
+
+        return $validator->getResolve($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
     }
 
     /**
@@ -252,13 +255,15 @@ class Get extends Action
     protected function safeFetch(string $url, string $userAgent, ?ClientInterface $client = null): ResponseInterface
     {
         // Redirects are followed here, one hop at a time, so every target passes assertSafeUrl()
-        $client ??= (new Client(new CurlAdapter()))->withTimeout(15);
         $requestFactory = new RequestFactory();
 
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
-            self::assertSafeUrl($url);
+            $resolve = self::assertSafeUrl($url);
 
-            $response = $client->sendRequest(
+            // Reuse the addresses resolved above instead of resolving the host again
+            $hopClient = $client ?? (new Client(new CurlAdapter(options: [CURLOPT_RESOLVE => $resolve])))->withTimeout(15);
+
+            $response = $hopClient->sendRequest(
                 $requestFactory
                     ->createRequest(RequestMethod::GET, $url)
                     ->withHeader(Header::USER_AGENT, $userAgent),
