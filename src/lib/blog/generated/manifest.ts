@@ -3,6 +3,19 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "expense-tracker-receipt-intake-agent",
+    "href": "/blog/post/expense-tracker-receipt-intake-agent",
+    "title": "Build an expense tracker with an AI receipt intake agent",
+    "description": "Upload a receipt, and an Appwrite Function reads it with GPT-6 Luna, files the expense in TablesDB, and sends unclear fields to a review queue.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/expense-tracker-receipt-intake-agent/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-breached-password-detection",
     "href": "/blog/post/announcing-breached-password-detection",
     "title": "Announcing breached password detection for Appwrite Auth",
