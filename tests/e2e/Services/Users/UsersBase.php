@@ -3283,6 +3283,24 @@ trait UsersBase
         ]));
         $this->assertEquals(401, $account['headers']['status-code']);
         $this->assertEquals('user_more_factors_required', $account['body']['type']);
+
+        // A JWT bound to the incomplete session, and one bound to no session, are refused too.
+        $jwts = [
+            $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/jwts', $headers, ['sessionId' => $session['body']['$id']]),
+            $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/jwts', $headers, ['sessionId' => ID::unique()]),
+        ];
+        foreach ($jwts as $jwt) {
+            $this->assertEquals(201, $jwt['headers']['status-code']);
+
+            $account = $this->client->call(Client::METHOD_GET, '/account', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-jwt' => $jwt['body']['jwt'],
+                'x-appwrite-impersonate-user-id' => $targetId,
+            ]);
+            $this->assertEquals(401, $account['headers']['status-code']);
+            $this->assertEquals('user_more_factors_required', $account['body']['type']);
+        }
     }
 
     /**

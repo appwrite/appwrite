@@ -545,9 +545,13 @@ Http::init()
 
         // Step 12: Handle Multi-Factor Authentication
         // $session belongs to $user, who stays the impersonator while impersonating, so the
-        // impersonator's MFA applies and the target's is never asked of them.
+        // impersonator's MFA applies and the target's is never asked of them. Impersonating
+        // needs a session to count factors on.
         if (! in_array('mfa', $route->getGroups())) {
-            if ($session && $user->sessionNeedsMoreFactors($session->getId())) {
+            if (
+                (! $impersonatorUser->isEmpty() && ! $session)
+                || ($session && $user->sessionNeedsMoreFactors($session->getId()))
+            ) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
