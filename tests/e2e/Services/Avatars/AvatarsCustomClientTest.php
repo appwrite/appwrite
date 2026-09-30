@@ -320,13 +320,17 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
+        // The nonce cookie set when the flow started rides along on every hop,
+        // as a browser would send it.
+        $nonceCookie = 'a_oauth2_' . $this->getProject()['$id'] . '=' . $response['cookies']['a_oauth2_' . $this->getProject()['$id']];
+
         // Provider consent, callback and redirect are three separate hops, each
         // answering with the location of the next one.
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
         foreach (\range(1, 3) as $ignored) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 
