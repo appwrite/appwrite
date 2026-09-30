@@ -22,7 +22,15 @@ import {
   Smartphone,
   UserPlus,
   Lock,
+  Settings,
+  type LucideIcon,
 } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -32,11 +40,29 @@ interface AuthSettingsProps {
   projectId: string
 }
 
-const AUTH_METHODS = [
+type AuthMethodPolicy = {
+  to:
+    | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/emails'
+    | '/projects/$projectId/auth/policies/memberships'
+    | '/projects/$projectId/auth/policies/passkeys'
+  label: string
+}
+
+const AUTH_METHODS: ReadonlyArray<{
+  key: string
+  label: string
+  icon: LucideIcon
+  policy?: AuthMethodPolicy
+}> = [
   {
     key: ProjectAuthMethodId.Emailpassword,
     label: 'Email/Password',
     icon: Mail,
+    policy: {
+      to: '/projects/$projectId/auth/policies/passwords',
+      label: 'Password policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Phone,
@@ -47,11 +73,19 @@ const AUTH_METHODS = [
     key: ProjectAuthMethodId.Magicurl,
     label: 'Magic URL',
     icon: Key,
+    policy: {
+      to: '/projects/$projectId/auth/policies/emails',
+      label: 'Email policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Emailotp,
     label: 'Email OTP',
     icon: Mail,
+    policy: {
+      to: '/projects/$projectId/auth/policies/emails',
+      label: 'Email policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Anonymous,
@@ -62,6 +96,10 @@ const AUTH_METHODS = [
     key: ProjectAuthMethodId.Invites,
     label: 'Team Invites',
     icon: UserPlus,
+    policy: {
+      to: '/projects/$projectId/auth/policies/memberships',
+      label: 'Membership policies',
+    },
   },
   {
     key: ProjectAuthMethodId.Jwt,
@@ -72,8 +110,12 @@ const AUTH_METHODS = [
     key: PasskeyAuthMethodId,
     label: 'Passkey',
     icon: Fingerprint,
+    policy: {
+      to: '/projects/$projectId/auth/policies/passkeys',
+      label: 'Passkey policies',
+    },
   },
-] as const
+]
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const t = useT()
@@ -206,6 +248,31 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                       >
                         {t(method.label)}
                       </Label>
+                      {method.policy && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link
+                                to={method.policy.to}
+                                params={{ projectId }}
+                                aria-label={t(method.policy.label)}
+                                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                <Settings className="h-3.5 w-3.5" />
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">
+                                {needsPasskeySetup
+                                  ? t(
+                                      'Set a relying party ID and origins in passkey policies to enable.',
+                                    )
+                                  : t(method.policy.label)}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isUpdating && (
@@ -221,19 +288,6 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                       />
                     </div>
                   </div>
-                  {needsPasskeySetup && (
-                    <p className="mt-2 text-[12px] text-muted-foreground">
-                      {t('Set a relying party ID and origins in')}{' '}
-                      <Link
-                        to="/projects/$projectId/auth/policies/passkeys"
-                        params={{ projectId }}
-                        className="link-neutral"
-                      >
-                        {t('passkey policies')}
-                      </Link>{' '}
-                      {t('to enable.')}
-                    </p>
-                  )}
                 </div>
               )
             })}

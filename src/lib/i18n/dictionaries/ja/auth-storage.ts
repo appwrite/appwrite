@@ -1606,7 +1606,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'オリジンは Relying Party ID またはそのサブドメイン上にある必要があります。',
   'Updated passkey settings.': 'パスキー設定を更新しました。',
   'Failed to update passkey settings': 'パスキー設定の更新に失敗しました',
-  'Set a relying party ID and origins in': '有効にするには、',
-  'passkey policies': 'パスキーポリシー',
-  'to enable.': 'で Relying Party ID とオリジンを設定してください。',
+  'Set a relying party ID and origins in passkey policies to enable.':
+    '有効にするには、パスキーポリシーで Relying Party ID とオリジンを設定してください。',
+  'Passkey policies': 'パスキーポリシー',
+  'Membership policies': 'メンバーシップポリシー',
 }

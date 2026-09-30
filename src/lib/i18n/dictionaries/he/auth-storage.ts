@@ -1570,7 +1570,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'מקורות חייבים להיות על מזהה הצד המסתמך או על אחד מתת-הדומיינים שלו.',
   'Updated passkey settings.': 'הגדרות מפתחות הגישה עודכנו.',
   'Failed to update passkey settings': 'עדכון הגדרות מפתחות הגישה נכשל',
-  'Set a relying party ID and origins in': 'הגדירו מזהה צד מסתמך ומקורות ב',
-  'passkey policies': 'מדיניות מפתחות הגישה',
-  'to enable.': 'כדי להפעיל.',
+  'Set a relying party ID and origins in passkey policies to enable.':
+    'כדי להפעיל, הגדירו מזהה צד מסתמך ומקורות במדיניות מפתחות הגישה.',
+  'Passkey policies': 'מדיניות מפתחות גישה',
+  'Membership policies': 'מדיניות חברות בצוותים',
 }
