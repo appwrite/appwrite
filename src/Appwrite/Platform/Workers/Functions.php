@@ -163,17 +163,26 @@ class Functions extends Action
 
         if (!empty($events)) {
             $failure = null;
+            $ran = false;
             $limit = 100;
             $sum = 100;
             $offset = 0;
             while ($sum >= $limit) {
-                $functions = $dbForProject->find('functions', [
-                    Query::select(['$id', 'events']), // Skip variables subqueries
-                    Query::contains('events', $events),
-                    Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('$sequence'),
-                ]);
+                try {
+                    $functions = $dbForProject->find('functions', [
+                        Query::select(['$id', 'events']), // Skip variables subqueries
+                        Query::contains('events', $events),
+                        Query::limit($limit),
+                        Query::offset($offset),
+                        Query::orderAsc('$sequence'),
+                    ]);
+                } catch (\Throwable $th) {
+                    if (!$ran) {
+                        throw $th;
+                    }
+                    $failure ??= $th;
+                    break;
+                }
 
                 $sum = \count($functions);
                 $offset = $offset + $limit;
@@ -185,20 +194,20 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
-                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
-                        continue;
-                    }
-
-                    /**
-                     * get variables subqueries cached
-                     */
-                    $function = $dbForProject->getDocument('functions', $function->getId());
-
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
-
                     try {
-                        $this->execute(
+                        if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                            Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                            continue;
+                        }
+
+                        /**
+                         * get variables subqueries cached
+                         */
+                        $function = $dbForProject->getDocument('functions', $function->getId());
+
+                        Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                        $ran = $this->execute(
                             dbForProject: $dbForProject,
                             queueForWebhooks: $queueForWebhooks,
                             publisherForFunctions: $publisherForFunctions,
@@ -222,7 +231,7 @@ class Functions extends Action
                             event: $events[0],
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
-                        );
+                        ) || $ran;
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
                         $failure ??= $th;
@@ -231,9 +240,16 @@ class Functions extends Action
                 }
             }
 
-            // Process every subscriber before preserving the failed job for retries.
+            // Process every subscriber before preserving the failed job for
+            // retries. A retry re-runs every subscriber of the event, so it is
+            // only safe while none of them has reached the executor; once one
+            // has, the failed subscribers are recorded instead of re-running
+            // the ones that succeeded.
             if ($failure !== null) {
-                throw $failure;
+                if (!$ran) {
+                    throw $failure;
+                }
+                Span::add('event.subscriber.failure', $failure->getMessage());
             }
 
             return;
@@ -498,7 +514,8 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
-     * @return void
+     * @return bool Whether the executor was called, and so the function may have run.
+     * @throws \Throwable Only before the executor is called, where a retry cannot run the function twice.
      */
     private function execute(
         Database $dbForProject,
@@ -521,7 +538,7 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
-    ): void {
+    ): bool {
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
@@ -539,19 +556,19 @@ class Functions extends Action
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return;
+            return false;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return;
+            return false;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return;
+            return false;
         }
 
         /** Check if  runtime is supported */
@@ -776,46 +793,59 @@ class Functions extends Action
             ));
         }
 
-        $executionModel = new Execution();
-        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
-        $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+        // The executor has been called, so the function may have run. Nothing
+        // from here on may throw: a throw fails the message, and a broker that
+        // redelivers runs the function again, under a new execution when the
+        // message carries no execution ID. The notifications are best-effort.
+        // Webhook and realtime triggers swallow their own publish errors;
+        // the functions publish does not, so it goes last.
+        try {
+            $executionModel = new Execution();
+            $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
+            $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
 
-        $queueForEvents
-            ->setProject($project)
-            ->setUser($user)
-            ->setEvent('functions.[functionId].executions.[executionId].update')
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setPayload($realtimeExecution);
+            $queueForEvents
+                ->setProject($project)
+                ->setUser($user)
+                ->setEvent('functions.[functionId].executions.[executionId].update')
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $execution->getId())
+                ->setPayload($realtimeExecution);
 
-        /** Trigger Webhook */
-        $queueForWebhooks
-            ->from($queueForEvents)
-            ->trigger();
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
 
-        /** Trigger Functions */
-        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-            event: $queueForEvents->getEvent(),
-            params: $queueForEvents->getParams(),
-            project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
-            userId: $queueForEvents->getUserId(),
-            payload: $queueForEvents->getPayload(),
-            platform: $queueForEvents->getPlatform(),
-        ));
+            /** Trigger Realtime Events */
+            $queueForRealtime
+                ->setSubscribers(['console', $project->getId()])
+                ->from($queueForEvents)
+                ->trigger();
 
-        /** Trigger Realtime Events */
-        $queueForRealtime
-            ->setSubscribers(['console', $project->getId()])
-            ->from($queueForEvents)
-            ->trigger();
-
-        if (!empty($error)) {
-            throw new AppwriteException(
-                AppwriteException::GENERAL_SERVER_ERROR,
-                'Function execution failed: ' . $error,
-                $errorCode
-            );
+            /** Trigger Functions */
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $queueForEvents->getEvent(),
+                params: $queueForEvents->getParams(),
+                project: $queueForEvents->getProject(),
+                user: $queueForEvents->getUser(),
+                userId: $queueForEvents->getUserId(),
+                payload: $queueForEvents->getPayload(),
+                platform: $queueForEvents->getPlatform(),
+            ));
+        } catch (\Throwable $th) {
+            Span::add('execution.notify.error', $th->getMessage());
+            Console::error('Failed to publish the update of execution ' . $execution->getId() . ': ' . $th->getMessage());
         }
+
+        // The failure is on the execution record (status failed, errors), and
+        // it is not rethrown: whether the function ran before the executor
+        // failed (a timeout, a response cut off) cannot be told from here.
+        if (!empty($error)) {
+            Span::add('execution.error', 'Function execution failed: ' . $error);
+            Span::add('execution.error.code', $errorCode);
+        }
+
+        return true;
     }
 }
