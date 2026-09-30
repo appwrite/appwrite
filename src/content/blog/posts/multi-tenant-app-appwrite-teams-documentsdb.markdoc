@@ -64,12 +64,19 @@ You need an [Appwrite Cloud](https://cloud.appwrite.io) project with three thing
 
 # Project setup
 
-Create a SvelteKit project with TypeScript and install the Node server SDK:
+Create a SvelteKit project with TypeScript, then install the Node server SDK and SvelteKit's Node adapter:
 
 ```bash
 npx sv create formwrite
 cd formwrite
 npm i node-appwrite
+npm i -D @sveltejs/adapter-node
+```
+
+`sv create` sets up the project with `adapter-auto`, which can't build the Node server that Appwrite Sites runs for [SSR](https://appwrite.io/docs/products/sites/rendering/ssr). In `svelte.config.js`, change the adapter import and leave the rest of the file as it is:
+
+```js
+import adapter from '@sveltejs/adapter-node';
 ```
 
 Add a `.env` file at the root of the project:
