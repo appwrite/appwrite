@@ -3022,16 +3022,14 @@ final class AccountCustomClientTest extends Scope
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $firstRedirect = $response['headers']['location'];
 
-        $response = $oauthClient->call(Client::METHOD_GET, $firstRedirect, $nonceCookieHeader, followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $nonceCookieHeader, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
         $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
-        $nonceCookieHeader = ['cookie' => $nonceCookieKey . '=' . $response['cookies'][$nonceCookieKey]];
 
-        // The second flow completes with what the browser holds after the first one.
+        // The second flow completes as well.
         $response = $oauthClient->call(Client::METHOD_GET, $second['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
@@ -3044,17 +3042,6 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
-
-        // Completing the first flow consumed it: the same callback does not work again.
-        $response = $oauthClient->call(Client::METHOD_GET, $firstRedirect, $nonceCookieHeader, followRedirects: false);
-
-        $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
-        $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies']);
-
-        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
-        $error = \json_decode($failureParams['error'], true);
-        $this->assertEquals('user_oauth2_state_invalid', $error['type']);
     }
 
     public function testCreateOidcOAuth2Token(): void

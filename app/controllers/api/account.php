@@ -1685,17 +1685,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // The state comes back through the provider unchanged, so it says nothing about which
         // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
-        // only that browser holds it, and no other site can read or set it.
-        $nonces = \array_values(\array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId()))));
+        // only that browser holds it, and no other site can read or set it. The cookie is not
+        // rewritten here: two callbacks finishing together would race on it, and replaying an
+        // authorization code is refused by the provider (RFC 6749 §4.1.2).
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
-        $others = \array_values(\array_filter($nonces, fn (string $held) => !\hash_equals($held, $stateNonce)));
-        if (\count($others) === \count($nonces)) {
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
             $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
         }
-
-        // Consumed, so a callback URL from this flow does not work a second time; flows the
-        // browser still has open keep theirs.
-        $response->addCookie('a_oauth2_' . $project->getId(), \implode(',', $others), empty($others) ? \time() - 3600 : \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX);
 
         if (!empty($error)) {
             $message = 'The ' . $providerName . ' OAuth2 provider returned an error: ' . $error;
