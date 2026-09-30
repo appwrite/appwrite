@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Client\Tests\Adapter;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -278,6 +279,50 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    public function testItAllowsRedirectHopsUpToACustomLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/5');
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('hopped', (string) $response->getBody());
+        });
+    }
+
+    public function testItRejectsRedirectHopsOverACustomLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/6');
+
+            $this->expectException(ProtocolException::class);
+
+            $this->send($client, $request);
+        });
+    }
+
+    public function testItRejectsAnyRedirectWithAZeroHopLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 0);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/1');
+
+            $this->expectException(ProtocolException::class);
+
+            $this->send($client, $request);
+        });
+    }
+
+    public function testItRejectsANegativeRedirectHopLimit(): void
+    {
+        $this->expectException(ValueError::class);
+
+        $this->createAdapter()->withFollowRedirects(maxHops: -1);
+    }
+
     public function testItKeepsAuthorizationOnSameOriginRedirects(): void
     {
         Http::serve(function (int $port): void {
@@ -355,6 +400,45 @@ abstract class AdapterContract extends TestCase
             $this->assertSame(200, $response->getStatusCode());
             $this->assertSame("chunk0\nchunk1\nchunk2\nchunk3\nchunk4\n", $received);
             $this->assertGreaterThan(1, $chunks, 'Redirected non-GET responses must reach the sink incrementally.');
+            $this->assertSame('', (string) $response->getBody());
+        });
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function bodyPreservingRedirects(): array
+    {
+        return [
+            'temporary' => ['/redirect-307-body'],
+            'permanent' => ['/redirect-308-body'],
+        ];
+    }
+
+    #[DataProvider('bodyPreservingRedirects')]
+    public function testItResendsTheRequestBodyAcrossABodyPreservingRedirect(string $path): void
+    {
+        Http::serve(function (int $port) use ($path): void {
+            $body = json_encode(['url' => 'https://appwrite.io', 'width' => 1280], JSON_THROW_ON_ERROR);
+            $request = new Request\Factory()->body(Method::POST, 'http://127.0.0.1:' . $port . $path, $body, ContentType::JSON);
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame(\strlen($body) . ':' . hash('sha256', $body), (string) $response->getBody());
+        });
+    }
+
+    public function testItSendsARawBodyWithoutAContentTypeItDidNotSet(): void
+    {
+        Http::serve(function (int $port): void {
+            $request = new Request\Factory()
+                ->createRequest(Method::POST, 'http://127.0.0.1:' . $port . '/content-type')
+                ->withBody(new Stream\Factory()->createStream('raw'));
+
+            $response = $this->send($this->createAdapter(), $request);
+
             $this->assertSame('', (string) $response->getBody());
         });
     }

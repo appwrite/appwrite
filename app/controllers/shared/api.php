@@ -211,10 +211,11 @@ Http::init()
                     $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
+                // SDKs send display names such as "Go" or "Node.js"; the allowlist is lowercase.
                 $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeaderLine('x-sdk-name', 'UNKNOWN');
+                $sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
 
-                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+                if ($sdk !== '' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
 
                     if (! in_array($sdk, $sdks)) {
@@ -289,6 +290,9 @@ Http::init()
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+            // On the console project, $team is the organization the route itself acts on (see the
+            // team resource), which is what lets its membership roles become the bare
+            // owner/developer/admin roles below.
             $teamId = $team->getId();
             $adminRoles = [];
             $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
@@ -342,9 +346,18 @@ Http::init()
         $scopes = \array_unique($scopes);
 
         // Intentional: impersonators get users.read so they can discover a target user
-        // before impersonation starts, and keep that access while impersonating.
+        // before impersonation starts, and keep that access while impersonating. Discovery
+        // is all it covers -- listing users and reading one user document -- because
+        // users.read also reaches another user's MFA recovery codes and challenge secrets,
+        // which are enough to pass that user's second factor. An impersonator holds the
+        // flag on their own account, not a role on the project, so they get the browse
+        // they need and nothing that reads someone else's credentials.
+        $isUserDiscovery = $request->getMethod() === Request::METHOD_GET
+            && \in_array($route->getPath(), ['/v1/users', '/v1/users/:userId'], true);
+
         if (
-            !$user->isEmpty()
+            $isUserDiscovery
+            && !$user->isEmpty()
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
@@ -462,6 +475,21 @@ Http::init()
         if (! empty($method)) {
             $namespace = \strtolower($method->getNamespace());
 
+            // Impersonation shows the target's account without letting the impersonator change
+            // it, so account writes are refused. The `impersonation` label decides per route:
+            // 'allow' for a write aimed at the impersonator's own session rather than the
+            // target's account -- their JWT, their MFA challenge, deleting their own session --
+            // and 'deny' to refuse a route on any method, which is how a GET of the target's
+            // recovery codes stays closed.
+            if (! $impersonatorUser->isEmpty()) {
+                $impersonation = $route->getLabel('impersonation', null);
+                $isAccountWrite = $namespace === 'account' && $request->getMethod() !== Request::METHOD_GET;
+
+                if ($impersonation === 'deny' || ($isAccountWrite && $impersonation !== 'allow')) {
+                    throw new Exception(Exception::USER_IMPERSONATION_READ_ONLY);
+                }
+            }
+
             // DocumentsDB runs only on MongoDB and VectorsDB only on PostgreSQL, while an
             // installation deploys just the engine backing the platform, so neither is on
             // until an operator provisions that engine and says so. Closed to everyone --
@@ -517,16 +545,22 @@ Http::init()
         }
 
         // Step 12: Validate MFA requirements
-        $mfaEnabled = $rolesSource->getAttribute('mfa', false);
-        $hasVerifiedEmail = $rolesSource->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $rolesSource->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($rolesSource)?->getAttribute('verified') ?? false;
+        // $session belongs to $user, who stays the impersonator while impersonating, so the
+        // impersonator's MFA applies and the target's is never asked of them.
+        $mfaEnabled = $user->getAttribute('mfa', false);
+        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         // Step 13: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
-            if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
+            // Impersonating needs a session to count the impersonator's factors on.
+            if (
+                (! $impersonatorUser->isEmpty() && ! $session)
+                || ($session && \count($session->getAttribute('factors', [])) < $minimumFactors)
+            ) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
         }
@@ -1277,7 +1311,8 @@ Http::shutdown()
         foreach (\array_keys($methods) as $method) {
             $row = $byMethod[$method] ?? null;
             $status = \is_array($row) ? ($row['status'] ?? null) : null;
-            if ($status === ONBOARDING_STATUS_COMPLETED || $status === ONBOARDING_STATUS_SKIPPED) {
+            // Skipped stages still upgrade to completed once the user actually performs the action.
+            if ($status === ONBOARDING_STATUS_COMPLETED) {
                 continue;
             }
             $byMethod[$method] = [

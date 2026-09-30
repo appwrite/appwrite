@@ -110,6 +110,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
     public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
+    public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
@@ -120,6 +121,7 @@ class Exception extends \Exception
     public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
     public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
     public const string USER_JWT_CREATION_DENIED = 'user_jwt_creation_denied';
+    public const string USER_IMPERSONATION_READ_ONLY = 'user_impersonation_read_only';
     public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
@@ -369,6 +371,7 @@ class Exception extends \Exception
     public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
     public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
     public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_UNAUTHORIZED = 'migration_source_unauthorized';
     public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
     public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 

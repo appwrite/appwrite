@@ -1,0 +1,36 @@
+{
+    "name": "utopia-php/di",
+    "description": "A simple and lite library for managing dependency injections",
+    "type": "library",
+    "keywords": [
+        "php",
+        "di",
+        "dependency-injection",
+        "container",
+        "psr-11",
+        "utopia"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2",
+        "psr/container": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\DI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DI\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.2"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
+    }
+}

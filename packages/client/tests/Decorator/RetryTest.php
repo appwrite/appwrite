@@ -13,6 +13,7 @@ use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Decorator\Retry\Backoff;
 use Utopia\Client\Exception\InvalidUriException;
 use Utopia\Client\Exception\NetworkException;
+use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -231,7 +232,7 @@ final class QueueAdapter implements Adapter
         return $this;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         return $this;
     }

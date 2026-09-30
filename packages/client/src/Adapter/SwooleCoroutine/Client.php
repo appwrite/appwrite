@@ -69,6 +69,8 @@ class Client implements Adapter
 
     private bool $followRedirects = false;
 
+    private int $maxHops = Redirect::MAX_HOPS;
+
     /**
      * Buffered requests reuse one client and streamed requests another: a
      * write callback, once set on a Swoole client, stays with it, and setting
@@ -172,10 +174,15 @@ class Client implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
+        if ($maxHops < 0) {
+            throw new ValueError('Redirect hop limit must be greater than or equal to zero.');
+        }
+
         $clone = clone $this;
         $clone->followRedirects = $enabled;
+        $clone->maxHops = $maxHops;
 
         return $clone;
     }
@@ -227,14 +234,14 @@ class Client implements Adapter
 
             $current = $request;
 
-            for ($redirects = 0; $redirects <= Redirect::MAX_HOPS; $redirects++) {
+            for ($redirects = 0; $redirects <= $this->maxHops; $redirects++) {
                 $response = $this->exchange($current, $sink, suppressRedirectBody: true);
 
                 if (!Redirect::isRedirect($response)) {
                     return $response;
                 }
 
-                if ($redirects === Redirect::MAX_HOPS) {
+                if ($redirects === $this->maxHops) {
                     throw new ProtocolException($request, 'Too many redirects.');
                 }
 

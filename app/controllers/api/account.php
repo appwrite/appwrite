@@ -598,22 +598,23 @@ Http::get('/v1/account/sessions')
         contentType: ContentType::JSON,
     ))
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so none of
+        // the target's sessions is marked current.
+        $currentId = $current?->getId();
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
-            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('current', $currentId === $session->getId());
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
             $sessions[$key] = $session;
@@ -647,6 +648,7 @@ Http::delete('/v1/account/sessions')
         contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
+    ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -658,7 +660,13 @@ Http::delete('/v1/account/sessions')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('session')
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession) {
+
+        // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
+        if (!$current && $callingSession === null) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -666,9 +674,14 @@ Http::delete('/v1/account/sessions')
 
         foreach ($sessions as $session) {
             /** @var Document $session */
+            if (!$current && $session->getId() === $callingSession->getId()) {
+                continue;
+            }
+
             $dbForProject->deleteDocument('sessions', $session->getId());
 
-            if (!$domainVerification) {
+            // Clears the caller's fallback cookie, so only when its own session goes too.
+            if (!$domainVerification && $current) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
             }
 
@@ -730,15 +743,17 @@ Http::get('/v1/account/sessions/:sessionId')
     ))
     ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('locale')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (?string $sessionId, Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
-        $sessions = $user->getAttribute('sessions', []);
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
 
         foreach ($sessions as $session) {
@@ -747,7 +762,7 @@ Http::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
+                    ->setAttribute('current', $session->getId() === $current?->getId())
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', $session->getAttribute('secret', ''))
                 ;
@@ -764,6 +779,7 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
+    ->label('impersonation', 'allow')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -795,11 +811,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('session')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -814,13 +831,13 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             unset($sessions[$key]);
 
-            $session->setAttribute('current', false);
+            $session->setAttribute('current', $session->getId() === $current?->getId());
+
+            if ($session->getAttribute('current')) {
+                $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+            }
 
             if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
-                $session
-                    ->setAttribute('current', true)
-                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
-
                 if (!$domainVerification) {
                     $response->addHeader('X-Fallback-Cookies', \json_encode([]));
                 }
@@ -879,12 +896,11 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store, ProofsToken $proofForToken) {
+    ->inject('session')
+    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current) {
 
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $current?->getId()
             : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
@@ -1435,13 +1451,25 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
+        // The provider echoes the state back untouched, so on its own it proves nothing about who
+        // started the flow. The nonce also goes into a cookie only this browser holds, and the
+        // callback accepts the state only when the two match. Host-only, because the callback
+        // lands on this host; an hour covers signing in at the provider. A browser can have
+        // several flows open at once (two tabs, the session and the token flow), so the cookie
+        // keeps the newest few nonces rather than only the last one.
+        $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
+
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => false,
+            'nonce' => $nonce,
         ], $scopes);
 
         $response
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($oauth2->getLoginURL());
@@ -1621,15 +1649,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$redirectValidator->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
-        // The default relays live on the console host; the same path on any other allowed host is a customer page
+        // The default relays live on the console host; the same path on any other allowed host is a customer page.
+        // Native apps skip the relay: its JavaScript redirect into the app is late or dropped on slow in-app browsers.
         $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        $nativeCallback = ['scheme' => 'appwrite-callback-' . $project->getId()];
 
         $failure = [];
         if (!empty($state['failure'])) {
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
@@ -1638,10 +1668,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'type' => $exception->getType(),
                     'code' => !\is_null($code) ? $code : $exception->getCode(),
                 ]);
-                // Mirror success path: default OAuth failure relay needs project to deep-link
-                // back into the native app via appwrite-callback-{project}://
                 if ($failure['host'] === $consoleHostname && $failure['path'] === $oauthDefaultFailure) {
                     $query['project'] = $project->getId();
+                    $failure = $nativeCallback;
                 }
                 $failure['query'] = URLParser::unparseQuery($query);
                 $response->redirect(URLParser::unparse($failure), 301);
@@ -1652,6 +1681,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if (!$providerEnabled) {
             $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        }
+
+        // The state comes back through the provider unchanged, so it says nothing about which
+        // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
+        // only that browser holds it, and no other site can read or set it. The cookie is not
+        // rewritten here: two callbacks finishing together would race on it, and replaying an
+        // authorization code is refused by the provider (RFC 6749 §4.1.2).
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
+        $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
+            $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
         }
 
         if (!empty($error)) {
@@ -2228,6 +2268,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $query['domain'] = $cookieDomain;
                 $query['key'] = $store->getKey();
                 $query['secret'] = $encoded;
+                $state['success'] = $nativeCallback;
             }
 
             $response
@@ -2345,15 +2386,22 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             $failure = $redirectBase . $oauthDefaultFailure;
         }
 
+        // Same browser binding as createOAuth2Session: the callback is shared.
+        $nonce = \bin2hex(\random_bytes(16));
+        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
+        $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
+
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,
+            'nonce' => $nonce,
         ], $scopes);
 
         $loginURL = $oauth2->getLoginURL();
 
         $response
+            ->addCookie('a_oauth2_' . $project->getId(), \implode(',', $nonces), \time() + 3600, '/', null, ('https' === $protocol), true, Response::COOKIE_SAMESITE_LAX)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($loginURL);
@@ -3358,6 +3406,7 @@ Http::post('/v1/account/jwts')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
     ->label('auth.type', 'jwt')
+    ->label('impersonation', 'allow')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'tokens',
@@ -3381,7 +3430,9 @@ Http::post('/v1/account/jwts')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->inject('project')
+    ->inject('mode')
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
@@ -3398,6 +3449,8 @@ Http::post('/v1/account/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document([
                 'jwt' => $jwt->encode([
+                    // In admin mode the session is a console session, whatever project is being managed.
+                    'projectId' => $mode === APP_MODE_ADMIN ? 'console' : $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $sessionId,
                 ])
@@ -3423,10 +3476,10 @@ Http::get('/v1/account/prefs')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('targetUser')
+    ->action(function (Response $response, Document $targetUser) {
 
-        $prefs = $user->getAttribute('prefs', []);
+        $prefs = $targetUser->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -3501,11 +3554,10 @@ Http::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->inject('store')
     ->inject('proofForPassword')
-    ->inject('proofForToken')
     ->inject('pwnedPasswords')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, PasswordPwned $pwnedPasswords) {
+    ->inject('session')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3555,13 +3607,11 @@ Http::patch('/v1/account/password')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
-
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate && !empty($current)) {
+        if ($invalidate && $current !== null) {
             foreach ($sessions as $session) {
                 /** @var Document $session */
-                if ($session->getId() !== $current) {
+                if ($session->getId() !== $current->getId()) {
                     $dbForProject->deleteDocument('sessions', $session->getId());
                 }
             }
@@ -5256,10 +5306,9 @@ Http::post('/v1/account/targets/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('store')
-    ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('session')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization, ?Document $current) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -5275,8 +5324,7 @@ Http::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
-        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $session = $dbForProject->getDocument('sessions', $current?->getId() ?? '');
         $name = "{$device['deviceBrand']} {$device['deviceModel']}";
 
         // A session is one device install holding one push token per provider. Re-registering a rotated
@@ -5509,9 +5557,9 @@ Http::get('/v1/account/identities')
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, User $targetUser, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5519,7 +5567,7 @@ Http::get('/v1/account/identities')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+        $queries[] = Query::equal('userInternalId', [$targetUser->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);

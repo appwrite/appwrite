@@ -56,9 +56,9 @@ abstract class Decorator implements Adapter
         return $this->wrap($this->adapter->withConnectionReuse($enabled));
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
-        return $this->wrap($this->adapter->withFollowRedirects($enabled));
+        return $this->wrap($this->adapter->withFollowRedirects($enabled, $maxHops));
     }
 
     /**

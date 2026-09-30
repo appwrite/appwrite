@@ -85,10 +85,10 @@ final class Client implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         $clone = clone $this;
-        $clone->adapter = $this->adapter->withFollowRedirects($enabled);
+        $clone->adapter = $this->adapter->withFollowRedirects($enabled, $maxHops);
 
         return $clone;
     }

@@ -1,0 +1,127 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
+
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Avatars\Http\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
+use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
+
+class Delete extends Action
+{
+    use HTTP;
+
+    private const MAX_UPDATE_ATTEMPTS = 5;
+
+    public static function getName(): string
+    {
+        return 'deletePhoto';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpPath('/v1/avatars/photo')
+            ->desc('Delete photo')
+            ->groups(['api', 'avatars'])
+            ->label('scope', 'avatars.write')
+            ->label('event', 'users.[userId].update.avatar')
+            ->label('audits.event', 'user.update')
+            ->label('audits.resource', 'user/{user.$id}')
+            ->label('audits.userId', '{user.$id}')
+            ->label('usage.resource', 'user/{user.$id}')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('sdk', new Method(
+                namespace: 'avatars',
+                group: null,
+                name: 'deletePhoto',
+                description: <<<'EOT'
+                Delete the custom profile photo of the currently authenticated user. Photo resolution falls back to the usual sources: OAuth2 identity photos, Gravatar, Libravatar, initials, and the static placeholder.
+                EOT,
+                auth: [AuthType::SESSION, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::NONE
+            ))
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('user')
+            ->inject('queueForEvents')
+            ->inject('deviceForFiles')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        Response $response,
+        Database $dbForProject,
+        User $user,
+        Event $queueForEvents,
+        Device $deviceForFiles,
+    ): void {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        $photoId = $user->getAttribute('photoId', '');
+
+        if ($photoId === '') {
+            $queueForEvents->reset();
+            $response->noContent();
+
+            return;
+        }
+
+        // The file goes before the attributes, so a failure at either step is retried by calling again
+        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $user->getId() . '/' . $photoId);
+
+        if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
+        }
+
+        // A concurrent upload may have replaced the photo since it was read, so it's only cleared while it's still this one
+        $current = $user;
+        $attempts = 0;
+
+        while ($current->getAttribute('photoId', '') === $photoId) {
+            try {
+                $dbForProject->withRequestTimestamp(
+                    new \DateTime($current->getUpdatedAt()),
+                    fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'photoId' => '',
+                        'photoSize' => 0,
+                    ]))
+                );
+
+                break;
+            } catch (ConflictException) {
+                if (++$attempts >= self::MAX_UPDATE_ATTEMPTS) {
+                    throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, 'Photo was changed by another request, please try again');
+                }
+
+                $current = $dbForProject->getDocument('users', $user->getId());
+            }
+        }
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->noContent();
+    }
+}

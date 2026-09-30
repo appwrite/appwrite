@@ -1,0 +1,30 @@
+{
+    "name": "utopia-php/dsn",
+    "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "dsn"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\DSN\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\DSN\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "require": {
+        "php": ">=8.0"
+    }
+}
