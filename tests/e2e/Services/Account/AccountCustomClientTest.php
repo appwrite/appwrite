@@ -3925,11 +3925,15 @@ final class AccountCustomClientTest extends Scope
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
         $this->assertNotEmpty($mockQuery['state'] ?? null);
 
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it.
+        $nonceCookie = 'a_oauth2_' . $projectId . '=' . $response['cookies']['a_oauth2_' . $projectId];
+
         // Simulate provider returning an error (same path as a real OAuth denial)
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
+            'cookie' => $nonceCookie,
         ], [
             'error' => 'access_denied',
             'error_description' => 'The user denied the request',
@@ -3941,7 +3945,7 @@ final class AccountCustomClientTest extends Scope
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -3999,10 +4003,14 @@ final class AccountCustomClientTest extends Scope
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
         $this->assertNotEmpty($mockQuery['state'] ?? null);
 
+        // The nonce cookie set when the flow started goes to the Appwrite hops, as a browser would send it.
+        $nonceCookie = 'a_oauth2_' . $projectId . '=' . $response['cookies']['a_oauth2_' . $projectId];
+
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
+            'cookie' => $nonceCookie,
         ], [
             'error' => 'access_denied',
             'error_description' => 'The user denied the request',
@@ -4013,7 +4021,7 @@ final class AccountCustomClientTest extends Scope
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $nonceCookie], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
@@ -4025,6 +4033,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertArrayNotHasKey('project', $query);
         $this->assertNotEmpty($query['error'] ?? null);
+        $this->assertStringContainsString('access_denied', (string) \json_decode($query['error'], true)['message']);
     }
 
     public function testOAuthVerifiedEmailCanLinkToExistingAccount(): void
