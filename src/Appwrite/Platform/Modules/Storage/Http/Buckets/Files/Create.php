@@ -328,7 +328,7 @@ class Create extends Action
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => 0,
                         'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $this->withUploader($metadata, $user),
+                        'metadata' => \array_merge($metadata, [self::UPLOADER_ID => $user->getId()]),
                     ]);
 
                     try {
@@ -501,7 +501,7 @@ class Create extends Action
                         'openSSLTag' => $openSSLTag,
                         'openSSLIV' => $openSSLIV,
                         'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $this->withUploader($metadata, $user),
+                        'metadata' => \array_merge($metadata, [self::UPLOADER_ID => $user->getId()]),
                     ]);
 
                     try {
@@ -644,18 +644,5 @@ class Create extends Action
         }
 
         throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-    }
-
-    /**
-     * @param array<string, mixed> $metadata
-     * @return array<string, mixed>
-     */
-    private function withUploader(array $metadata, User $user): array
-    {
-        // Guests are stored as an empty id. Resume does not treat that as a
-        // match; the request that created the file is recognized separately.
-        $metadata[self::UPLOADER_ID] = $user->getId();
-
-        return $metadata;
     }
 }
