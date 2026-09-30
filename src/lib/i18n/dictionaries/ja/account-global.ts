@@ -1335,8 +1335,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'ブラウザーでパスキーを使用できませんでした。もう一度お試しください。',
   'For your security, sign in again before changing your passkeys.':
     'セキュリティのため、パスキーを変更する前にもう一度サインインしてください。',
-  'Verify your email address before adding a passkey.':
-    'パスキーを追加する前にメールアドレスを確認してください。',
   'You can add up to 10 passkeys. Remove one to add another.':
     'パスキーは最大 10 個まで追加できます。追加するには 1 つ削除してください。',
   'This passkey is already added to your account.':

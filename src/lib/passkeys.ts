@@ -220,8 +220,6 @@ export function passkeyErrorMessage(
         return t(
           'For your security, sign in again before changing your passkeys.',
         )
-      case 'user_passkey_unavailable':
-        return t('Verify your email address before adding a passkey.')
       case 'user_passkey_limit_exceeded':
         return t('You can add up to 10 passkeys. Remove one to add another.')
       case 'user_passkey_already_exists':

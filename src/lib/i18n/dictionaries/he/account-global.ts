@@ -1338,8 +1338,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הדפדפן שלכם לא הצליח להשתמש במפתח גישה. נסו שוב.',
   'For your security, sign in again before changing your passkeys.':
     'לביטחונכם, התחברו מחדש לפני שינוי מפתחות הגישה.',
-  'Verify your email address before adding a passkey.':
-    'אמתו את כתובת האימייל שלכם לפני הוספת מפתח גישה.',
   'You can add up to 10 passkeys. Remove one to add another.':
     'ניתן להוסיף עד 10 מפתחות גישה. הסירו אחד כדי להוסיף אחר.',
   'This passkey is already added to your account.':
