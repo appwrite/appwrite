@@ -12,6 +12,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use WebSocket\ConnectionException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -187,6 +188,46 @@ final class RealtimeConsoleClientTest extends Scope
         }, 120000, 500);
 
         return $data;
+    }
+
+    public function testConnectionPlatform(): void
+    {
+        $session = $this->getRoot()['session'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://appwrite.unknown',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $payload = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
+        \usleep(250000); // 250ms
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
+        $client->close();
     }
 
     public function testManualAuthentication(): void
