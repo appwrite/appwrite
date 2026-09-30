@@ -167,6 +167,50 @@ final class DatabasesTest extends TestCase
     }
 
     #[DataProvider('tables')]
+    public function testConnectRefusesAJwtMintedForAnotherProject(bool $sharedTables): void
+    {
+        $this->boot($sharedTables);
+        $user = $this->createUser();
+
+        $credential = $this->encodeJwt([
+            'userId' => $user->getId(),
+            'sessionId' => '',
+            'projectId' => 'project-2',
+        ]);
+
+        $this->assertSame([], $this->connect(self::JWT, $credential), 'CONNECT must refuse a JWT minted for another project');
+    }
+
+    #[DataProvider('tables')]
+    public function testConnectRefusesASessionlessJwtWithoutAProject(bool $sharedTables): void
+    {
+        $this->boot($sharedTables);
+        $user = $this->createUser();
+
+        $credential = $this->encodeJwt([
+            'userId' => $user->getId(),
+            'sessionId' => '',
+        ]);
+
+        $this->assertSame([], $this->connect(self::JWT, $credential), 'CONNECT must refuse a JWT bound to neither a project nor a session');
+    }
+
+    #[DataProvider('tables')]
+    public function testConnectAcceptsAJwtWithoutAProjectThatNamesASession(bool $sharedTables): void
+    {
+        $this->boot($sharedTables);
+        $user = $this->createUser();
+        [$sessionId] = $this->createSession($user);
+
+        $credential = $this->encodeJwt([
+            'userId' => $user->getId(),
+            'sessionId' => $sessionId,
+        ]);
+
+        $this->assertSame($this->identity($user), $this->connect(self::JWT, $credential), 'CONNECT must accept a JWT minted before the projectId claim when it names a live session');
+    }
+
+    #[DataProvider('tables')]
     public function testSubscribeRefusesAUserBlockedAfterItConnected(bool $sharedTables): void
     {
         $this->boot($sharedTables);
@@ -256,10 +300,19 @@ final class DatabasesTest extends TestCase
 
     private function createJwt(Document $user): string
     {
-        return (new JWT(self::KEY, 'HS256', 3600, 0))->encode([
+        return $this->encodeJwt([
             'userId' => $user->getId(),
             'sessionId' => '',
+            'projectId' => $this->project->getId(),
         ]);
+    }
+
+    /**
+     * @param array<string, string> $payload
+     */
+    private function encodeJwt(array $payload): string
+    {
+        return (new JWT(self::KEY, 'HS256', 3600, 0))->encode($payload);
     }
 
     /**
