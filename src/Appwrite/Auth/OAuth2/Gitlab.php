@@ -31,6 +31,7 @@ class Gitlab extends OAuth2
      * @var array
      */
     protected array $scopes = [
+        'read_user',
         'openid',
         'email',
     ];
