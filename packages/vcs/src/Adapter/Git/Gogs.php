@@ -372,7 +372,7 @@ class Gogs extends Gitea
             $this->exec($this->git($dir)->argument('commit')->option('-m', $message));
             $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($branch));
         } finally {
-            $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return ['content' => ['path' => $filepath]];
@@ -394,7 +394,7 @@ class Gogs extends Gitea
             $this->exec($this->git($dir)->argument('checkout')->flag('-b')->argument($newBranchName));
             $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($newBranchName));
         } finally {
-            $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return ['name' => $newBranchName];
@@ -409,7 +409,7 @@ class Gogs extends Gitea
 
         $dir = sys_get_temp_dir() . '/gogs-' . uniqid();
 
-        $clone = (new Command('git'))->argument('clone')->option('--depth', '1');
+        $clone = new Command('git')->argument('clone')->option('--depth', '1');
         if ($branch !== '' && $branch !== '0') {
             $clone->option('-b', $branch);
         }
@@ -474,7 +474,7 @@ class Gogs extends Gitea
             }
             $this->exec($this->git($dir)->argument('push')->argument('origin')->argument($tagName));
         } finally {
-            $this->exec((new Command('rm'))->flag('-rf')->argument($dir));
+            $this->exec(new Command('rm')->flag('-rf')->argument($dir));
         }
 
         return [

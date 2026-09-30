@@ -313,7 +313,7 @@ abstract class Git extends Adapter
         }
 
         $checkout = match ($versionType) {
-            self::CLONE_TYPE_BRANCH => (new Command('sh'))
+            self::CLONE_TYPE_BRANCH => new Command('sh')
                 ->flag('-c')
                 ->argument('if git -C "$1" ls-remote --exit-code --heads origin "$2"; then git -C "$1" pull --depth=1 origin "$2" && git -C "$1" checkout "$2"; else git -C "$1" checkout -b "$2"; fi')
                 ->argument('sh')
@@ -331,13 +331,13 @@ abstract class Git extends Adapter
         };
 
         return Command::and(
-            (new Command('mkdir'))->flag('-p')->argument($directory),
-            (new Command('git'))->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
+            new Command('mkdir')->flag('-p')->argument($directory),
+            new Command('git')->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
             $this->git($directory)->argument('init'),
             $this->git($directory)->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
             $this->git($directory)->argument('config')->argument('core.sparseCheckout')->argument('true'),
             Command::appendStdout(
-                (new Command('printf'))->argument('%s\n')->argument($rootDirectory),
+                new Command('printf')->argument('%s\n')->argument($rootDirectory),
                 $directory . '/.git/info/sparse-checkout',
             ),
             // Disable fetching of refs we don't need
@@ -353,7 +353,7 @@ abstract class Git extends Adapter
      */
     protected function git(string $directory): Command
     {
-        return (new Command('git'))->option('-C', $directory);
+        return new Command('git')->option('-C', $directory);
     }
 
     /**

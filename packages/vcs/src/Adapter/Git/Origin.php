@@ -2116,7 +2116,7 @@ class Origin extends Git
         if (is_dir($directory)) {
             $stdout = '';
             $stderr = '';
-            Console::execute((new Command('rm'))->flag('-rf')->argument($directory), '', $stdout, $stderr);
+            Console::execute(new Command('rm')->flag('-rf')->argument($directory), '', $stdout, $stderr);
         }
     }
 

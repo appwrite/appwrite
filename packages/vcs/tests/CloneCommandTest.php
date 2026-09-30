@@ -55,10 +55,10 @@ final class CloneCommandTest extends TestCase
             file_put_contents($file, $content);
         }
 
-        $this->execute((new Command('git'))->argument('init')->flag('-q')->option('-b', 'main')->argument($source));
-        $this->execute((new Command('git'))->option('-C', $source)->argument('add')->argument('.'));
-        $this->execute((new Command('git'))->option('-C', $source)->option('-c', 'user.name=Test')->option('-c', 'user.email=test@example.com')->argument('commit')->flag('-q')->option('-m', 'Initial'));
-        $this->execute((new Command('git'))->argument('clone')->flag('-q')->flag('--bare')->argument($source)->argument($this->repository));
+        $this->execute(new Command('git')->argument('init')->flag('-q')->option('-b', 'main')->argument($source));
+        $this->execute(new Command('git')->option('-C', $source)->argument('add')->argument('.'));
+        $this->execute(new Command('git')->option('-C', $source)->option('-c', 'user.name=Test')->option('-c', 'user.email=test@example.com')->argument('commit')->flag('-q')->option('-m', 'Initial'));
+        $this->execute(new Command('git')->argument('clone')->flag('-q')->flag('--bare')->argument($source)->argument($this->repository));
 
         // Anything the hostile name managed to run would land here
         $cwd = getcwd();
@@ -70,7 +70,7 @@ final class CloneCommandTest extends TestCase
     {
         chdir($this->cwd);
         putenv('GIT_CONFIG_GLOBAL');
-        $this->execute((new Command('rm'))->flag('-rf')->argument($this->workspace));
+        $this->execute(new Command('rm')->flag('-rf')->argument($this->workspace));
     }
 
     #[DataProvider('rootDirectories')]
