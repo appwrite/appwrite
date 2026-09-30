@@ -1199,19 +1199,71 @@ trait WebhooksBase
         $this->assertSame(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
 
-        $this->assertEventually(function () use ($userId) {
-            $delivery = $this->getLastRequest(function (array $request) use ($userId) {
-                $this->assertStringContainsString(
-                    "users.{$userId}.create",
-                    $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
-                );
-            });
-
-            $headers = \array_change_key_case($delivery['headers'], CASE_LOWER);
-            $this->assertSame('Basic ' . \base64_encode('hook-user:hook-password'), $headers['authorization'] ?? '');
-        }, 15000, 500);
+        $this->assertSame('Basic ' . \base64_encode('hook-user:hook-password'), $this->getDeliveryAuthorization($webhookId, $userId));
 
         $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookClearsAuthPasswordWhenUrlChanges(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Redirect Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // A key that cannot read the password must not be able to send it to a new endpoint.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Redirect Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/redirected',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'redirect@localhost.test',
+            'password' => 'password',
+            'name' => 'Redirect User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $this->assertSame('', $this->getDeliveryAuthorization($webhookId, $user['body']['$id']));
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    private function getDeliveryAuthorization(string $webhookId, string $userId): string
+    {
+        $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
+            'header_X-Appwrite-Webhook-Id' => $webhookId,
+        ], maxAttempts: 30, probe: function (array $request) use ($userId) {
+            $this->assertStringContainsString(
+                "users.{$userId}.create",
+                $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+            );
+        });
+        $this->assertNotEmpty($delivery, 'Missing webhook delivery for ' . $webhookId);
+
+        $headers = \array_change_key_case($delivery['headers'], CASE_LOWER);
+
+        return $headers['authorization'] ?? '';
     }
 
     // URL validation tests
@@ -2067,7 +2119,7 @@ trait WebhooksBase
         // Values should be correct
         $this->assertEquals(true, $webhook['body']['security']);
         $this->assertEquals('olduser', $webhook['body']['httpUser']);
-        $this->assertEquals('oldpass', $webhook['body']['httpPass']);
+        $this->assertSame('', $webhook['body']['httpPass']);
         $this->assertNotEmpty($webhook['body']['signatureKey']);
         $this->assertSame(128, \strlen($webhook['body']['signatureKey']));
 
@@ -2122,7 +2174,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $updated['body']['security']);
         $this->assertEquals('updateduser', $updated['body']['httpUser']);
-        $this->assertEquals('updatedpass', $updated['body']['httpPass']);
+        $this->assertSame('', $updated['body']['httpPass']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -2168,7 +2220,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $get['body']['security']);
         $this->assertEquals('getuser', $get['body']['httpUser']);
-        $this->assertEquals('getpass', $get['body']['httpPass']);
+        $this->assertSame('', $get['body']['httpPass']);
         $this->assertEmpty($get['body']['signatureKey']);
 
         // Cleanup
@@ -2224,7 +2276,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $item['security']);
         $this->assertEquals('listuser', $item['httpUser']);
-        $this->assertEquals('listpass', $item['httpPass']);
+        $this->assertSame('', $item['httpPass']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
