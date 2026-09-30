@@ -555,19 +555,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame('user_passkey_limit_exceeded', $response['body']['type']);
     }
 
-    public function testAnonymousUsersCannotRegister(): void
-    {
-        $project = $this->getProject(true);
-        $this->configurePasskeys($project);
-
-        $anonymous = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', $this->getGuestHeaders($project));
-        $this->assertSame(201, $anonymous['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $anonymous['cookies']['a_session_' . $project['$id']]));
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('user_passkey_unavailable', $response['body']['type']);
-    }
-
     public function testPasskeySatisfiesMfa(): void
     {
         $project = $this->getProject(true);
@@ -658,17 +645,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(201, $this->signIn($project, $authenticator)['headers']['status-code']);
     }
 
-    public function testUnverifiedUsersCannotRegister(): void
-    {
-        $project = $this->getProject(true);
-        $this->configurePasskeys($project);
-        [, $session] = $this->createUserWithSession($project, verified: false);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('user_passkey_unavailable', $response['body']['type']);
-    }
-
     public function testAdminDeletePasskey(): void
     {
         $project = $this->getProject(true);
@@ -699,6 +675,37 @@ final class PasskeysCustomClientTest extends Scope
         $passkeys = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
         $this->assertSame(0, $passkeys['body']['total']);
         $this->assertSame(401, $this->signIn($project, $authenticator)['headers']['status-code']);
+    }
+
+    public function testPasskeyOnlyAccount(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+
+        // An anonymous account has no email, phone or password
+        $anonymous = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', $this->getGuestHeaders($project));
+        $this->assertSame(201, $anonymous['headers']['status-code']);
+        $userId = $anonymous['body']['userId'];
+        $authenticator = $this->registerPasskey($project, $anonymous['cookies']['a_session_' . $project['$id']]);
+
+        $token = $this->signIn($project, $authenticator);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertSame($userId, $token['body']['userId']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $this->getGuestHeaders($project), [
+            'userId' => $token['body']['userId'],
+            'secret' => $token['body']['secret'],
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $this->getSessionHeaders($project, $session['cookies']['a_session_' . $project['$id']]));
+        $this->assertSame(200, $account['headers']['status-code']);
+        $this->assertSame($userId, $account['body']['$id']);
+        $this->assertSame('', $account['body']['email']);
+
+        // Unverified email accounts can register too
+        [, $unverified] = $this->createUserWithSession($project, verified: false);
+        $this->registerPasskey($project, $unverified);
     }
 
     public function testDeletedUserCannotSignIn(): void

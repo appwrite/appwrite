@@ -342,11 +342,6 @@ return [
         'description' => 'The passkey credential could not be verified. Please restart the ceremony and try again.',
         'code' => 401,
     ],
-    Exception::USER_PASSKEY_UNAVAILABLE => [
-        'name' => Exception::USER_PASSKEY_UNAVAILABLE,
-        'description' => 'Passkeys require a verified email address or phone number on the account to fall back on.',
-        'code' => 400,
-    ],
     Exception::USER_RECOVERY_CODES_NOT_FOUND => [
         'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
         'description' => 'Recovery codes could not be found on the current user.',

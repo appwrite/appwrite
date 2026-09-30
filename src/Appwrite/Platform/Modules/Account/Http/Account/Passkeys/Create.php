@@ -45,7 +45,7 @@ class Create extends Action
                 group: 'passkeys',
                 name: 'createPasskey',
                 description: <<<EOT
-                Start registering a passkey for the currently logged in user. The account needs a verified email or phone number, and the session must have signed in or completed an MFA challenge within the last 10 minutes. Pass the returned `publicKey` options to `navigator.credentials.create()`, then complete the registration with [Update passkey verification](/docs/references/cloud/client-web/account#updatePasskeyVerification). The passkey stays pending until verified, and the challenge expires after 5 minutes.
+                Start registering a passkey for the currently logged in user. The session must have signed in or completed an MFA challenge within the last 10 minutes. Pass the returned `publicKey` options to `navigator.credentials.create()`, then complete the registration with [Update passkey verification](/docs/references/cloud/client-web/account#updatePasskeyVerification). The passkey stays pending until verified, and the challenge expires after 5 minutes.
                 EOT,
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -82,13 +82,8 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
         }
 
-        // A passkey must never be the only way into an account
-        $email = $user->getAttribute('emailVerification') ? $user->getAttribute('email', '') : '';
-        $phone = $user->getAttribute('phoneVerification') ? $user->getAttribute('phone', '') : '';
-        $userName = $email ?: $phone;
-        if ($userName === '') {
-            throw new Exception(Exception::USER_PASSKEY_UNAVAILABLE);
-        }
+        // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone
+        $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: $user->getAttribute('name') ?: $user->getId();
 
         $passkeys = $this->getPasskeys($user, $dbForProject);
         if (\count($passkeys) >= APP_LIMIT_USER_PASSKEYS) {

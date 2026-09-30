@@ -109,7 +109,6 @@ class Exception extends \Exception
     public const string USER_PASSKEY_ALREADY_EXISTS = 'user_passkey_already_exists';
     public const string USER_PASSKEY_LIMIT_EXCEEDED = 'user_passkey_limit_exceeded';
     public const string USER_PASSKEY_INVALID = 'user_passkey_invalid';
-    public const string USER_PASSKEY_UNAVAILABLE = 'user_passkey_unavailable';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
     public const string USER_RECOVERY_CODES_NOT_FOUND = 'user_recovery_codes_not_found';
     public const string USER_CHALLENGE_REQUIRED = 'user_challenge_required';
