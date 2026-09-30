@@ -307,8 +307,9 @@ abstract class Git extends Adapter
             $rootDirectory = '*';
         }
 
-        // A leading dash would reach git as an option instead of a ref
-        if (str_starts_with($version, '-')) {
+        // A leading dash would reach git as an option instead of a ref; a tag
+        // travels as refs/tags/<name>, so any name is safe there
+        if ($versionType !== self::CLONE_TYPE_TAG && str_starts_with($version, '-')) {
             throw new InvalidArgumentException("Invalid clone version: {$version}");
         }
 

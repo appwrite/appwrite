@@ -30,6 +30,8 @@ final class CloneCommandTest extends TestCase
 
     private string $cwd;
 
+    private string|false $gitConfigGlobal;
+
     protected function setUp(): void
     {
         $this->workspace = sys_get_temp_dir() . '/utopia-vcs-clone-' . uniqid();
@@ -38,6 +40,7 @@ final class CloneCommandTest extends TestCase
         $source = $this->workspace . '/source';
 
         // The clone command sets init.defaultBranch globally; keep that off the host
+        $this->gitConfigGlobal = getenv('GIT_CONFIG_GLOBAL');
         putenv('GIT_CONFIG_GLOBAL=' . $this->workspace . '/gitconfig');
 
         $files = [
@@ -69,7 +72,7 @@ final class CloneCommandTest extends TestCase
     protected function tearDown(): void
     {
         chdir($this->cwd);
-        putenv('GIT_CONFIG_GLOBAL');
+        putenv($this->gitConfigGlobal === false ? 'GIT_CONFIG_GLOBAL' : 'GIT_CONFIG_GLOBAL=' . $this->gitConfigGlobal);
         $this->execute(new Command('rm')->flag('-rf')->argument($this->workspace));
     }
 
@@ -113,11 +116,21 @@ final class CloneCommandTest extends TestCase
         $this->assertFileDoesNotExist($this->directory . '/pwned');
     }
 
-    private function clone(string $rootDirectory): int
+    public function testCloneChecksOutATagStartingWithADash(): void
+    {
+        // git tag refuses the name, but it is a valid ref a provider can hold
+        $this->execute(new Command('git')->option('-C', $this->repository)->argument('update-ref')->argument('refs/tags/-release')->argument('main'));
+
+        $this->assertSame(0, $this->clone('', '-release', Git::CLONE_TYPE_TAG));
+
+        $this->assertFileExists($this->directory . '/README.md');
+    }
+
+    private function clone(string $rootDirectory, string $version = 'main', string $versionType = Git::CLONE_TYPE_BRANCH): int
     {
         $adapter = new LocalGit($this->repository);
 
-        return $this->execute($adapter->generateCloneCommand('owner', 'repository', 'main', Git::CLONE_TYPE_BRANCH, $this->directory, $rootDirectory));
+        return $this->execute($adapter->generateCloneCommand('owner', 'repository', $version, $versionType, $this->directory, $rootDirectory));
     }
 
     private function execute(Command $command): int
