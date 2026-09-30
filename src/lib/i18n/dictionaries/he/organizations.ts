@@ -97,10 +97,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'All projects': 'כל הפרויקטים',
   'Per project': 'לפי פרויקט',
   'Project access': 'גישה לפרויקטים',
-  'Projects': 'פרויקטים',
-  'projects': 'פרויקטים',
+  Projects: 'פרויקטים',
+  projects: 'פרויקטים',
   'Add project': 'הוספת פרויקט',
-  'Add at least one project to grant access.': 'יש להוסיף לפחות פרויקט אחד כדי להעניק גישה.',
+  'Add at least one project to grant access.':
+    'יש להוסיף לפחות פרויקט אחד כדי להעניק גישה.',
   'Remove project': 'הסרת פרויקט',
   'Specific projects': 'פרויקטים מסוימים',
   'All resources except team management and billing writes.':
@@ -122,7 +123,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'App status': 'סטטוס האפליקציה',
   'App settings': 'הגדרות אפליקציה',
   'App settings sections': 'מקטעי הגדרות אפליקציה',
-  'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
   'Apply coupon': 'החלת קופון',
   'Approaching member limit': 'מתקרבים למגבלת החברים',
@@ -162,7 +164,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Auto renewal': 'חידוש אוטומטי',
   'Auto renewal has been disabled': 'החידוש האוטומטי הושבת',
   'Auto renewal has been enabled': 'החידוש האוטומטי הופעל',
-  'Auto renewal is available for domains registered with Appwrite.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Auto renewal is available for domains registered with Appwrite.':
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
@@ -247,7 +250,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Close: 'סגירה',
   Code: 'קוד',
   Collapse: 'כיווץ',
-  'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.':
     'אספו טוקני Appwrite והתחמקו מברקים. משחק מיני של סיבולת לסשנים של דיבוג.', // pragma: allowlist secret
   'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.':
     'אספו טוקנים והתחמקו מברקים. השתמשו ברווח, ב-↑ או בלחיצה כדי לקפוץ.',
@@ -364,7 +368,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Deleting organization': 'מוחק ארגון',
   'Deleting projects': 'מוחק פרויקטים',
   'Deleting resources': 'מוחק משאבים',
-  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.':
     'תארו את הבעיה או השאלה שלכם בפירוט. כללו הקשר רלוונטי (למשל פרויקט, גרסת SDK, הודעות שגיאה) כדי שנוכל לעזור מהר יותר.',
   Description: 'תיאור',
   Details: 'פרטים',
@@ -440,7 +445,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
     'הזינו את שם הדומיין המלא שלכם לקבלת הצעת מחיר.',
-  'Enterprise': 'אנטרפרייז',
+  Enterprise: 'אנטרפרייז',
   'Estimate, subject to change based on usage':
     'הערכה, עשויה להשתנות בהתאם לשימוש',
   'Usage-based estimate; updates may take up to 4 hours.':
@@ -563,7 +568,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כיצד משתמשים יכולים לקבל עזרה בנוגע לאפליקציה שלכם במהלך תהליך ההסכמה של OAuth2.',
   'Image URLs': 'כתובות תמונות',
   'Image uploaded': 'התמונה הועלתה',
-  'Images': 'תמונות',
+  Images: 'תמונות',
   'Images uploaded': 'התמונות הועלו',
   'Add image': 'הוספת תמונה',
   'Remove image': 'הסרת תמונה',
@@ -658,8 +663,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Max size:': 'גודל מרבי:',
   Member: 'חבר',
   'Member limit reached': 'הגעתם למגבלת החברים',
-  'Member limit reached for your plan.':
-    'הגעתם למגבלת החברים בתוכנית שלכם.',
+  'Member limit reached for your plan.': 'הגעתם למגבלת החברים בתוכנית שלכם.',
   'Member removed successfully': 'החבר הוסר בהצלחה',
   Members: 'חברים',
   'Members who are not part of the destination organization must be invited to gain access to this domain.':
@@ -1172,7 +1176,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Update the nameservers of your domain':
     'עדכנו את שרתי השמות של הדומיין שלכם',
   'Update the role for': 'עדכון התפקיד של',
-  "Update your domain's nameservers to point to Appwrite": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Update your domain's nameservers to point to Appwrite":
     'עדכנו את שרתי השמות של הדומיין שלכם כך שיצביעו על Appwrite', // pragma: allowlist secret
   "Update your organization's display name. This will be visible to all organization members.":
     'עדכנו את שם התצוגה של הארגון שלכם. הוא יהיה גלוי לכל חברי הארגון.',
@@ -1198,13 +1203,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Use as primary': 'הגדרה כראשי',
   'Use existing address': 'שימוש בכתובת קיימת',
   'Use existing card': 'שימוש בכרטיס קיים',
-  'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.':
     'השתמשו במזהה הזה בעת אינטגרציה עם Appwrite API, webhooks או ערכות SDK. גם התמיכה עשויה לבקש את המזהה הזה בעת טיפול בבעיות.', // pragma: allowlist secret
   'Use this address': 'שימוש בכתובת הזו',
   'Used for registry contact and invoicing.':
     'משמש כפרטי הקשר במרשם ולהנפקת חשבוניות.',
-  'Used in the public listing URL':
-    'משמש בכתובת הציבורית של דף האפליקציה',
+  'Used in the public listing URL': 'משמש בכתובת הציבורית של דף האפליקציה',
   Value: 'ערך',
   Verified: 'מאומת',
   Verify: 'אימות',
@@ -1215,7 +1220,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'View members': 'צפייה בחברים',
   'View project': 'צפייה בפרויקט',
   'View recap': 'צפייה בסיכום',
-  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.':
     'עדיין לא הצלחנו לאשר שרתי שמות של Appwrite עבור הדומיין הזה. שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו אצל הרשם שהשרתים למטה מוגדרים, המתינו מעט, ונסו שוב.', // pragma: allowlist secret
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
     'לא הצלחנו לטעון הצעת מחיר לדומיין הזה. עדיין אפשר להמשיך, הסכום לתשלום מאושר בעת השלמת התשלום.',
@@ -1248,10 +1254,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אין לכם קרדיטים. ניתן להשתמש בקרדיטים לקיזוז החיובים החודשיים שלכם.',
   "You don't have permission to create projects.":
     'אין לכם הרשאה ליצור פרויקטים.',
-  "You don't have permission to invite members.":
-    'אין לכם הרשאה להזמין חברים.',
-  "You don't have permission to manage members.":
-    'אין לכם הרשאה לנהל חברים.',
+  "You don't have permission to invite members.": 'אין לכם הרשאה להזמין חברים.',
+  "You don't have permission to manage members.": 'אין לכם הרשאה לנהל חברים.',
   'You have': 'יש לכם',
   'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',
@@ -1364,7 +1368,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'to invite more members.': 'כדי להזמין חברים נוספים.',
   'to keep': 'לשמירה',
   'to keep.': 'לשמירה.',
-  'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.':
     'כך שיצביעו על Appwrite. הפצת שינויי DNS עשויה לקחת עד 48 שעות.', // pragma: allowlist secret
   'to register another domain.': 'כדי לרשום דומיין נוסף.',
   'to transfer another domain.': 'כדי להעביר דומיין נוסף.',
@@ -1445,7 +1450,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
   'Finish deleting project resources that exceed the selected plan.':
     'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
-  'Checking whether the plan can be changed...': 'בודקים אם אפשר לשנות את התוכנית...',
+  'Checking whether the plan can be changed...':
+    'בודקים אם אפשר לשנות את התוכנית...',
   'This plan change is unavailable. Please contact support.':
     'לא ניתן לבצע את שינוי התוכנית הזה. פנו לתמיכה.',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
@@ -1492,11 +1498,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'for this project.': 'עבור הפרויקט הזה.',
   'Some project resources could not be loaded. Reload and try again.':
     'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
-  'Addons not available on the selected plan': 'תוספים שאינם זמינים בתוכנית שנבחרה',
+  'Addons not available on the selected plan':
+    'תוספים שאינם זמינים בתוכנית שנבחרה',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
   'They are removed immediately.': 'הם יוסרו מיד.',
-  'What changes in the projects you are keeping': 'מה משתנה בפרויקטים שאתם שומרים',
+  'What changes in the projects you are keeping':
+    'מה משתנה בפרויקטים שאתם שומרים',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
   'Backups stop running': 'הגיבויים מפסיקים לפעול',
@@ -1505,7 +1513,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
-  'The following is deleted as soon as you confirm.': 'הפריטים הבאים יימחקו מיד עם האישור.',
+  'The following is deleted as soon as you confirm.':
+    'הפריטים הבאים יימחקו מיד עם האישור.',
   'Deleted data cannot be recovered.': 'לא ניתן לשחזר נתונים שנמחקו.',
   'Could not load which backup policies stop running when your plan changes.':
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
@@ -1514,29 +1523,25 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Choose a new plan': 'בחירת תוכנית חדשה',
   'Plans could not be loaded. Refresh and try again.':
     'לא ניתן לטעון את התוכניות. רעננו ונסו שוב.',
-  'Appwrite is leaving the GitHub Student Developer Pack':
-    'Appwrite עוזבת את GitHub Student Developer Pack',
-  'The Education plan ends on November 1, 2026.':
-    'תוכנית Education מסתיימת ב-1 בנובמבר 2026.',
-  'Many of you used it to learn, finish coursework, and ship your first projects on Appwrite Cloud. That is exactly what we hoped for, and we are grateful to the GitHub team for making it possible.':
-    'רבים מכם השתמשו בה כדי ללמוד, להשלים עבודות ולהשיק את הפרויקטים הראשונים שלכם על Appwrite Cloud. זה בדיוק מה שקיווינו לו, ואנחנו מודים לצוות GitHub שאפשר את זה.',
-  'The plan also became the main path for abuse on Appwrite Cloud, and we can no longer keep it open. If you followed the terms, we are sorry this affects you.':
-    'התוכנית הפכה גם לנתיב המרכזי לשימוש לרעה ב-Appwrite Cloud, ואנחנו לא יכולים להשאיר אותה פתוחה. אם פעלתם לפי התנאים, אנחנו מצטערים שזה משפיע עליכם.',
-  'Nothing changes until November 1.': 'עד ה-1 בנובמבר שום דבר לא משתנה.',
-  'Your projects stay where they are. When you are ready, pick the plan that fits what you are building next.':
-    'הפרויקטים נשארים במקום. כשתהיו מוכנים, בחרו את התוכנית שמתאימה למה שתבנו בהמשך.',
-  'Read the full announcement': 'קריאת ההודעה המלאה',
-  'Many of you used the Education plan to learn and build your first projects on Appwrite Cloud. Closing it was a hard call, and we are grateful to the GitHub team for making it possible.':
-    'רבים מכם השתמשו בתוכנית Education כדי ללמוד ולבנות את הפרויקטים הראשונים שלכם על Appwrite Cloud. ההחלטה לסגור אותה לא הייתה קלה, ואנחנו מודים לצוות GitHub שאפשר אותה.',
-  'Choose a plan to keep this organization.':
-    'בחרו תוכנית כדי להמשיך עם הארגון.',
-  'Your projects are exactly where you left them.':
-    'הפרויקטים נמצאים בדיוק איפה שהשארתם אותם.',
+  'day left': 'יום נותר',
+  'days left': 'ימים נותרו',
   'Production resources for the projects you want to keep.':
     'משאבי פרודקשן לפרויקטים שאתם רוצים להמשיך.',
   'Daily backups, email support, and more': 'גיבוי יומי, תמיכה באימייל ועוד',
-  'day left before November 1': 'יום נותר עד ה-1 בנובמבר',
-  'days left before November 1': 'ימים נותרו עד ה-1 בנובמבר',
-  'Remind me later': 'תזכורת מאוחר יותר',
-  'The Education plan has ended': 'תוכנית Education הסתיימה',
+  'Congratulations on graduating from the Appwrite Education program!':
+    'מזל טוב על הסיום של Appwrite Education program!',
+  'You are about to graduate from the Appwrite Education program!':
+    'אתם עומדים לסיים את Appwrite Education program!',
+  'We hope it helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'אנחנו מקווים שהתוכנית עזרה לכם ללמוד, לבנות ולהוציא לפועל את הפרויקטים הראשונים שלכם על Appwrite Cloud.',
+  'We hope it has helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'אנחנו מקווים שהתוכנית עוזרת לכם ללמוד, לבנות ולהוציא לפועל את הפרויקטים הראשונים שלכם על Appwrite Cloud.',
+  'Your organization is now disabled until you choose a new plan.':
+    'הארגון שלכם מושבת עכשיו עד שתבחרו תוכנית חדשה.',
+  'Your projects and data are still here for now, but they will be deleted if you don’t choose a plan.':
+    'הפרויקטים והנתונים שלכם עדיין כאן בינתיים, אבל הם יימחקו אם לא תבחרו תוכנית.',
+  'Choose a new plan to keep your projects and data.':
+    'בחרו תוכנית חדשה כדי לשמור על הפרויקטים והנתונים שלכם.',
+  'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
+    'כשתוכנית Education תסתיים, הארגון שלכם יושבת והפרויקטים שבו יימחקו בהמשך. בחרו תוכנית עכשיו והכול יישאר בדיוק איפה שהשארתם.',
 }

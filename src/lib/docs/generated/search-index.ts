@@ -6,7 +6,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/billing",
     "title": "Billing",
     "description": "Understand Appwrite's plans, add-ons, service level agreements, and billing policies.",
-    "excerpt": "Learn how to manage billing for your organization, find the plan that best suits your needs, explore optional add-ons, and understand Appwrite's service level agreements and billing policies. The Appwrite Education program ends on **November 1st, 2026**. Existing Education organizations will transition to the Free, Pro, or self-hosted options. See Education billing and the announcement. Manage billing Configure your organization's plan, payment methods, and spending controls. Manage your plan, billing periods, payment methods, budget caps, and invoices. Plans Learn which…",
+    "excerpt": "Learn how to manage billing for your organization, find the plan that best suits your needs, explore optional add-ons, and understand Appwrite's service level agreements and billing policies. Manage billing Configure your organization's plan, payment methods, and spending controls. Manage your plan, billing periods, payment methods, budget caps, and invoices. Plans Learn which plan best suits your organization. Learn about Appwrite Free plan. Free plan for hobby projects and learners. Learn about Appwrite Pro, for growing organizations that need to…",
     "breadcrumbs": [
       "Billing",
       "Getting started",
@@ -47,17 +47,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "advanced/billing/education",
-    "title": "Education",
-    "description": "Learn about the Appwrite Education program for GitHub Student Developer Pack members, its sunset date, and transition options.",
-    "excerpt": "The Appwrite Education program ends on **November 1st, 2026**. New enrollments will close before that date, and existing Education organizations will move off the program. Read the announcement for details and next steps. The Appwrite Education program gave verified GitHub Student Developer Pack members access to Appwrite Cloud with Pro-level resources for coursework and learning projects. Program status **Effective November 1st, 2026**, Appwrite is sunsetting the Education program. After that date: - New sign-ups through the Education program will no…",
-    "breadcrumbs": [
-      "Billing",
-      "Plans",
-      "Education"
-    ]
-  },
-  {
     "slug": "advanced/billing/embeddings",
     "title": "Text Embeddings",
     "description": "Learn how Appwrite meters and bills text embedding tokens, and what each plan includes per model.",
@@ -94,7 +83,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/billing/free",
     "title": "Free",
     "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
-    "excerpt": "The Appwrite Education program ends on **November 1st, 2026**. Students on the Education plan will transition to the Free plan, Pro, or self-hosted Appwrite. See Education billing and the announcement. Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different…",
+    "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…",
     "breadcrumbs": [
       "Billing",
       "Plans",

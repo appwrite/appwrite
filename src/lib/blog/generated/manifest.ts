@@ -14,6 +14,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcement, product",
     "featured": false,
     "unlisted": true,
+    "draft": true,
     "cover": "/images/blog/sunsetting-appwrite-education-program/cover.avif",
     "hasCover": true
   },

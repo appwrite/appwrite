@@ -9,6 +9,7 @@ author: eldad-fux
 category: announcement, product
 featured: false
 unlisted: true
+draft: true
 faqs:
   - question: "When does the Appwrite Education program end?"
     answer: "The Education program ends on **November 1st, 2026**. New enrollments through the GitHub Student Developer Pack will close before that date, and existing Education plan organizations will move off the program on November 1st."

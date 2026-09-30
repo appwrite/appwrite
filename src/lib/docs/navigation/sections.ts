@@ -47,10 +47,6 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Open source',
             href: '/docs/advanced/billing/oss',
           },
-          {
-            label: 'Education',
-            href: '/docs/advanced/billing/education',
-          },
         ],
       },
       {
@@ -1481,7 +1477,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -1675,7 +1671,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          }
+          },
         ],
       },
     ],

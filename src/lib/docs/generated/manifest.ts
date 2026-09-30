@@ -31,13 +31,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "advanced/billing/education",
-    "title": "Education",
-    "description": "Learn about the Appwrite Education program for GitHub Student Developer Pack members, its sunset date, and transition options.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
     "slug": "advanced/billing/embeddings",
     "title": "Text Embeddings",
     "description": "Learn how Appwrite meters and bills text embedding tokens, and what each plan includes per model.",

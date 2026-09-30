@@ -47,6 +47,19 @@ export function isStartPlanRef(
   return (plan?.name ?? '').trim().toLowerCase() === 'start'
 }
 
+/**
+ * English label for Pro's badge in a plan picker. Next to Start, Pro is the
+ * better deal rather than the pick, matching the pricing page's four-plan grid.
+ */
+export function getProPlanBadgeLabelForPlans(
+  plans: Iterable<[string, PlanIdentity | null | undefined]>,
+): 'Best value' | 'Recommended' {
+  for (const [planId, plan] of plans) {
+    if (isStartPlanRef(planId, plan)) return 'Best value'
+  }
+  return 'Recommended'
+}
+
 type LocationGatedPlan = PlanIdentity & {
   eligibleCountries?: string[]
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Copy, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,11 @@ import {
   setDebugOverride,
   subscribeToDebugOverrides,
 } from '@/lib/debug-overrides'
-import { localeQueryOptions } from '@/lib/react-query/hooks/locale'
+import {
+  localeQueryOptions,
+  VISITOR_COUNTRY_QUERY_KEY,
+} from '@/lib/react-query/hooks/locale'
+import { billingPlansQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   isStartPlanEligibleCountry,
   normalizeCountryCode,
@@ -48,7 +52,8 @@ function LocaleRow({
       : value === null || value === undefined || value === ''
         ? 'Missing'
         : String(value)
-  const canCopy = !loading && value !== null && value !== undefined && value !== ''
+  const canCopy =
+    !loading && value !== null && value !== undefined && value !== ''
 
   return (
     <div className="flex items-start justify-between gap-3 text-[11px]">
@@ -87,11 +92,22 @@ export function DebugMenuLocalePanel() {
   const [customCountry, setCustomCountry] = useState(
     () => overrides.mockLocaleCountry ?? '',
   )
-  const { data, isFetching, isError, error, refetch } = useQuery(
-    localeQueryOptions(),
-  )
+  const { data, isFetching, isError, error, refetch } =
+    useQuery(localeQueryOptions())
 
   useEffect(() => subscribeToDebugOverrides(setOverrides), [])
+
+  const queryClient = useQueryClient()
+  const applyMockCountry = (countryCode: string | null) => {
+    setDebugOverride('mockLocaleCountry', countryCode)
+    for (const queryKey of [
+      localeQueryOptions().queryKey,
+      VISITOR_COUNTRY_QUERY_KEY,
+      billingPlansQueryOptions().queryKey,
+    ]) {
+      void queryClient.refetchQueries({ queryKey })
+    }
+  }
 
   const mockCountry = overrides.mockLocaleCountry
   const liveCountry = normalizeCountryCode(data?.countryCode)
@@ -101,14 +117,16 @@ export function DebugMenuLocalePanel() {
   return (
     <div className="space-y-3 px-1 py-1" aria-label="Locale">
       <div className="space-y-2 rounded-lg px-3 py-2.5">
-        <p className="text-[13px] font-medium text-foreground">Visitor locale</p>
+        <p className="text-[13px] font-medium text-foreground">
+          Visitor locale
+        </p>
         <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
           Live values come from{' '}
           <code className="rounded bg-muted/60 px-1 py-0.5 text-[10px]">
             locale.get()
           </code>
-          . Mock country overrides Start plan eligibility without changing the
-          API response.
+          . Mock country masks the country in that response and adds the Start
+          plan to the plans list when the mocked country is eligible.
         </p>
       </div>
 
@@ -173,7 +191,7 @@ export function DebugMenuLocalePanel() {
                 key={preset.label}
                 type="button"
                 onClick={() => {
-                  setDebugOverride('mockLocaleCountry', preset.code)
+                  applyMockCountry(preset.code)
                   setCustomCountry(preset.code ?? '')
                 }}
                 className={cn(
@@ -199,11 +217,11 @@ export function DebugMenuLocalePanel() {
             event.preventDefault()
             const normalized = normalizeCountryCode(customCountry)
             if (!normalized) {
-              setDebugOverride('mockLocaleCountry', null)
+              applyMockCountry(null)
               setCustomCountry('')
               return
             }
-            setDebugOverride('mockLocaleCountry', normalized)
+            applyMockCountry(normalized)
             setCustomCountry(normalized)
           }}
         >
