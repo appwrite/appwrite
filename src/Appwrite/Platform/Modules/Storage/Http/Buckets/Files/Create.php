@@ -56,6 +56,12 @@ class Create extends Action
      */
     private const LOCK_TTL = 600;
 
+    /**
+     * Metadata key recording which user started a chunked upload.
+     * Not part of the public file model.
+     */
+    private const UPLOADER_ID = 'uploaderId';
+
     public static function getName()
     {
         return 'createFile';
@@ -258,7 +264,16 @@ class Create extends Action
         $completed = false;
 
         $mergeUploadMetadata = function (array $stored, array $current): array {
+            $uploaderId = $stored[self::UPLOADER_ID] ?? null;
             $merged = \array_merge($stored, $current);
+
+            // The uploader is fixed when the file is created. A later chunk
+            // must not replace it by merging request metadata over the top.
+            if (\is_string($uploaderId)) {
+                $merged[self::UPLOADER_ID] = $uploaderId;
+            } else {
+                unset($merged[self::UPLOADER_ID]);
+            }
 
             if (isset($stored['parts']) || isset($current['parts'])) {
                 $parts = $stored['parts'] ?? [];
@@ -274,18 +289,24 @@ class Create extends Action
             return $merged;
         };
 
-        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
+                if ($file->getAttribute('bucketId') !== $bucket->getId()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
                 $chunks = $file->getAttribute('chunksTotal', 1);
                 $uploaded = $file->getAttribute('chunksUploaded', 0);
                 $metadata = $file->getAttribute('metadata', []);
 
-                if ($uploaded === $chunks) {
-                    if (empty($contentRange)) {
-                        throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                    }
+                if ($uploaded === $chunks && empty($contentRange)) {
+                    throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                }
 
+                $this->assertResumeAllowed($bucket, $file, $authorization, $user);
+
+                if ($uploaded === $chunks) {
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
                         ->dynamic($file, Response::MODEL_FILE);
@@ -317,7 +338,7 @@ class Create extends Action
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => 0,
                         'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $metadata,
+                        'metadata' => $this->withUploader($metadata, $user),
                     ]);
 
                     try {
@@ -331,20 +352,25 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
             if (!$file->isEmpty()) {
+                if ($file->getAttribute('bucketId') !== $bucket->getId()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
                 $chunks = $file->getAttribute('chunksTotal', 1);
                 $uploaded = $file->getAttribute('chunksUploaded', 0);
-                $metadata = $mergeUploadMetadata($file->getAttribute('metadata', []), $metadata);
+
+                if ($uploaded === $chunks && empty($contentRange)) {
+                    throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                }
+
+                $this->assertResumeAllowed($bucket, $file, $authorization, $user);
 
                 if ($uploaded === $chunks) {
-                    if (empty($contentRange)) {
-                        throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
-                    }
-
                     $queueForEvents->reset();
 
                     $response
@@ -353,6 +379,8 @@ class Create extends Action
 
                     return;
                 }
+
+                $metadata = $mergeUploadMetadata($file->getAttribute('metadata', []), $metadata);
             }
 
             if (empty($chunksUploaded)) {
@@ -482,7 +510,7 @@ class Create extends Action
                         'openSSLTag' => $openSSLTag,
                         'openSSLIV' => $openSSLIV,
                         'search' => implode(' ', [$fileId, $fileName]),
-                        'metadata' => $metadata,
+                        'metadata' => $this->withUploader($metadata, $user),
                     ]);
 
                     try {
@@ -495,12 +523,12 @@ class Create extends Action
                 } else {
                     /**
                      * Skip authorization in updateDocument.
-                     * Without this, the file creation will fail when user doesn't have update permission.
-                     * However as with chunk upload even if we are updating, we are essentially creating a file
-                     * adding it's new chunk so we rely on the create-permission check performed earlier.
+                     * The uploader may not hold update permission while the last chunk
+                     * is still arriving. assertResumeAllowed() already required this
+                     * caller to be that user, or to hold bucket or file update permission.
+                     * Permissions set on the first chunk stay as they are.
                      */
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
-                        '$permissions' => $permissions,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
                         'sizeActual' => $sizeActual,
@@ -519,9 +547,9 @@ class Create extends Action
             } else {
                 /**
                  * Skip authorization in updateDocument.
-                 * Without this, the file creation will fail when user doesn't have update permission.
-                 * However as with chunk upload even if we are updating, we are essentially creating a file
-                 * adding it's new chunk so we rely on the create-permission check performed earlier.
+                 * The uploader may not hold update permission while later chunks
+                 * are still arriving. assertResumeAllowed() already required this
+                 * caller to be that user, or to hold bucket or file update permission.
                  */
                 try {
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
@@ -598,5 +626,42 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
+    }
+
+    /**
+     * Chunked resume loads the file with authorization skipped, because the
+     * user who started the upload may not hold update permission yet.
+     * Continue only when the caller may update the file (bucket update, or
+     * file update when file security is on) or is the user who started it.
+     */
+    private function assertResumeAllowed(Document $bucket, Document $file, Authorization $authorization, User $user): void
+    {
+        if ($authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()))) {
+            return;
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        if ($fileSecurity && $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()))) {
+            return;
+        }
+
+        $metadata = $file->getAttribute('metadata', []);
+        $uploaderId = \is_array($metadata) ? ($metadata[self::UPLOADER_ID] ?? '') : '';
+        if (\is_string($uploaderId) && $uploaderId !== '' && $uploaderId === $user->getId()) {
+            return;
+        }
+
+        throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>
+     */
+    private function withUploader(array $metadata, User $user): array
+    {
+        $metadata[self::UPLOADER_ID] = $user->getId();
+
+        return $metadata;
     }
 }
