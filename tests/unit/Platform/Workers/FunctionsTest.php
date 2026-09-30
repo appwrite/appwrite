@@ -18,6 +18,8 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
 use Utopia\Bus\Listener;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -264,8 +266,34 @@ final class FunctionsTest extends TestCase
     public function testEventIsNotRedeliveredToSubscribersThatAlreadyRan(): void
     {
         $executor = new CountingExecutor(fn () => ['statusCode' => 200, 'headers' => [], 'logs' => '', 'errors' => '']);
+        $reads = 0;
+        $flaky = function () use (&$reads): Document {
+            if ($reads++ === 0) {
+                throw new \PDOException('MySQL server has gone away');
+            }
+            return $this->deployment('function-b');
+        };
 
         $attempts = $this->deliver(
+            $this->event(),
+            $executor,
+            $this->database([
+                'function-a' => $this->deployment('function-a'),
+                'function-b' => $flaky,
+            ]),
+            new MockPublisher(),
+            new CountingRealtime(),
+        );
+
+        $this->assertSame(2, $attempts, 'The subscriber that failed must get its retry');
+        $this->assertSame(2, $executor->calls, 'Each subscriber runs once: function-a on the first delivery, function-b on the retry');
+    }
+
+    public function testASubscriberThatKeepsFailingDoesNotRunTheOthersAgain(): void
+    {
+        $executor = new CountingExecutor(fn () => ['statusCode' => 200, 'headers' => [], 'logs' => '', 'errors' => '']);
+
+        $this->deliver(
             $this->event(),
             $executor,
             $this->database([
@@ -276,8 +304,7 @@ final class FunctionsTest extends TestCase
             new CountingRealtime(),
         );
 
-        $this->assertSame(1, $attempts);
-        $this->assertSame(1, $executor->calls, 'A redelivery ran function-a again');
+        $this->assertSame(1, $executor->calls, 'Every redelivery ran function-a again');
     }
 
     public function testEventIsRetriedWhileNoSubscriberHasRun(): void
@@ -352,6 +379,7 @@ final class FunctionsTest extends TestCase
             }))
             ->setResolver(fn (string $name) => throw new \LogicException("Unexpected injection: {$name}"));
 
+        $cache = new Cache(new MemoryCache());
         $maxDeliver = 5;
         for ($attempt = 1; $attempt <= $maxDeliver; $attempt++) {
             $message = new Message([
@@ -359,7 +387,7 @@ final class FunctionsTest extends TestCase
                 'queue' => 'v1-functions',
                 'timestamp' => \time(),
                 'payload' => $functionMessage->toArray(),
-                'attempts' => $attempt,
+                'attempts' => $attempt - 1,
             ]);
 
             try {
@@ -376,6 +404,7 @@ final class FunctionsTest extends TestCase
                     executor: $executor,
                     getIsResourceBlocked: fn () => false,
                     locks: fn (string $key, int $ttl, callable $callback) => $callback(),
+                    cache: $cache,
                 );
 
                 return $attempt;

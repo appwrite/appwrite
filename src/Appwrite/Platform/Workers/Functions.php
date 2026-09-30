@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -31,6 +32,10 @@ use Utopia\System\System;
 
 class Functions extends Action
 {
+    // How long a partially failed event remembers which subscribers it already handled. Outlasts
+    // every broker retry of the message.
+    private const HANDLED_TTL = 60 * 60 * 24 * 7;
+
     /** @var callable(string, int, callable): mixed */
     private $locks;
 
@@ -59,6 +64,7 @@ class Functions extends Action
             ->inject('executor')
             ->inject('getIsResourceBlocked')
             ->inject('locks')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -74,7 +80,8 @@ class Functions extends Action
         Bus $bus,
         Executor $executor,
         callable $getIsResourceBlocked,
-        callable $locks
+        callable $locks,
+        Cache $cache
     ): void {
         $this->locks = $locks;
 
@@ -162,8 +169,15 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
+            // A retry re-runs this whole fan-out, so a subscriber must not be run twice: running
+            // user code again is worse than not running it. Each subscriber this message has
+            // handled is recorded when the message fails, and a redelivery skips it. Messages
+            // published before events were named are named by their payload, which a Redis
+            // requeue keeps while it changes the pid.
+            $eventId = $functionMessage->eventId ?: \md5((string) \json_encode($payload));
+            $redelivery = $message->getAttempts() > 0;
+            $handled = [];
             $failure = null;
-            $ran = false;
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -177,9 +191,6 @@ class Functions extends Action
                         Query::orderAsc('$sequence'),
                     ]);
                 } catch (\Throwable $th) {
-                    if (!$ran) {
-                        throw $th;
-                    }
                     $failure ??= $th;
                     break;
                 }
@@ -191,6 +202,12 @@ class Functions extends Action
 
                 foreach ($functions as $function) {
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
+                        continue;
+                    }
+
+                    $handledKey = 'function-event-handled:' . \md5($eventId . ':' . $function->getId());
+                    if ($redelivery && $this->wasHandled($cache, $handledKey)) {
+                        Span::add('event.subscriber.skipped_handled', $function->getId());
                         continue;
                     }
 
@@ -207,7 +224,7 @@ class Functions extends Action
 
                         Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                        $ran = $this->execute(
+                        $this->execute(
                             dbForProject: $dbForProject,
                             queueForWebhooks: $queueForWebhooks,
                             publisherForFunctions: $publisherForFunctions,
@@ -231,7 +248,8 @@ class Functions extends Action
                             event: $events[0],
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
-                        ) || $ran;
+                        );
+                        $handled[] = $handledKey;
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
                         $failure ??= $th;
@@ -240,19 +258,27 @@ class Functions extends Action
                 }
             }
 
-            // Process every subscriber before preserving the failed job for
-            // retries. A retry re-runs every subscriber of the event, so it is
-            // only safe while none of them has reached the executor; once one
-            // has, the failed subscribers are recorded instead of re-running
-            // the ones that succeeded.
-            if ($failure !== null) {
-                if (!$ran) {
-                    throw $failure;
-                }
-                Span::add('event.subscriber.failure', $failure->getMessage());
+            if ($failure === null) {
+                return;
             }
 
-            return;
+            // Every subscriber has been tried. Record the ones handled before asking the broker
+            // for the retry the failed ones need. If a record cannot be written, the retry would
+            // run that subscriber again, so the failure is recorded instead of retried.
+            foreach ($handled as $handledKey) {
+                try {
+                    $saved = $cache->save($handledKey, '1', ttl: self::HANDLED_TTL) !== false;
+                } catch (\Throwable $th) {
+                    $saved = false;
+                    Span::add('event.handled_record.error', $th->getMessage());
+                }
+                if (!$saved) {
+                    Span::add('event.subscriber.failure', $failure->getMessage());
+                    return;
+                }
+            }
+
+            throw $failure;
         }
 
         if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
@@ -514,7 +540,7 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
-     * @return bool Whether the executor was called, and so the function may have run.
+     * @return void
      * @throws \Throwable Only before the executor is called, where a retry cannot run the function twice.
      */
     private function execute(
@@ -538,7 +564,7 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
-    ): bool {
+    ): void {
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
@@ -556,19 +582,19 @@ class Functions extends Action
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return false;
+            return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return false;
+            return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
-            return false;
+            return;
         }
 
         /** Check if  runtime is supported */
@@ -845,7 +871,22 @@ class Functions extends Action
             Span::add('execution.error', 'Function execution failed: ' . $error);
             Span::add('execution.error.code', $errorCode);
         }
+    }
 
-        return true;
+    /**
+     * Whether an earlier delivery of this message already handled the subscriber.
+     *
+     * An unreadable cache answers yes: skipping loses one run of the event, while
+     * answering no could run the user's function twice.
+     */
+    private function wasHandled(Cache $cache, string $key): bool
+    {
+        try {
+            return $cache->load($key, self::HANDLED_TTL) !== false;
+        } catch (\Throwable $th) {
+            Span::add('event.handled_lookup.error', $th->getMessage());
+
+            return true;
+        }
     }
 }
