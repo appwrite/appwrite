@@ -28,7 +28,7 @@ faqs:
       several coding and agentic benchmarks while keeping the same per-token
       pricing.
 ---
-Claude Sonnet 5.5 is the second model in Anthropic's Claude 5.5 family, and the headline is about running costs more than raw capability. It generates output more than 30% faster than Claude Sonnet 5 and costs up to 30% less per task, at the same per-token price. Anthropic [announced Claude Sonnet 5.5](https://www.anthropic.com/claude-sonnet-5-5) on September 28, 2026. You call it through the Claude API with the model id `claude-sonnet-5-5`.
+Claude Sonnet 5.5 is the second model in Anthropic's Claude 5.5 family. Anthropic [announced Claude Sonnet 5.5](https://www.anthropic.com/claude-sonnet-5-5) on September 28, 2026, and says it generates output more than 30% faster than Claude Sonnet 5 while costing up to 30% less per task at the same per-token price. These figures come from Anthropic's own testing, and real-world speed improvements can vary by workload and usage.
 
 For teams running agents at volume, that matters more than any single benchmark. Fewer tokens and less time per task lower your bill and your latency together. Here is what shipped, how Claude Sonnet 5.5 compares with Sonnet 5 and Opus 5.5, and what it means if you build agentic apps on Appwrite.
 
