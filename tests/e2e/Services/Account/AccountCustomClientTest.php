@@ -1056,6 +1056,15 @@ final class AccountCustomClientTest extends Scope
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 300]);
         $this->assertEquals(201, $session['headers']['status-code']);
 
+        // The client keeps the last Set-Cookie header, which is the main session cookie.
+        $setCookie = $session['headers']['set-cookie'];
+        $this->assertStringStartsWith('a_session_' . $projectId . '=', $setCookie);
+        $this->assertMatchesRegularExpression('/expires=([^;]+)/i', $setCookie);
+        \preg_match('/expires=([^;]+)/i', $setCookie, $matches);
+        $cookieRemaining = \strtotime($matches[1]) - \time();
+        $this->assertGreaterThan(240, $cookieRemaining);
+        $this->assertLessThanOrEqual(300, $cookieRemaining);
+
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', $headers + [
             'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
         ]);
@@ -1080,10 +1089,10 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $policy['headers']['status-code']);
         $originalMax = $policy['body']['duration'];
 
-        $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => 3600]);
-        $this->assertEquals(200, $policy['headers']['status-code']);
-
         try {
+            $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $policyHeaders, ['duration' => 3600]);
+            $this->assertEquals(200, $policy['headers']['status-code']);
+
             $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, $credentials + ['duration' => 7200]);
             $this->assertEquals(400, $response['headers']['status-code']);
             $this->assertEquals('general_argument_invalid', $response['body']['type']);
