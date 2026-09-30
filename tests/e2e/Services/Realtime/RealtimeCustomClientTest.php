@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -825,7 +826,13 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $client->close();
+        // The recovery above ended every session of this user, including the one
+        // this connection was opened with, so the server closes it right after
+        // delivering that event.
+        $frames = $this->receiveUntilClosed($client);
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
 
         /**
          * The password change and password-recovery completion above invalidate
@@ -850,6 +857,181 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['email'] = 'torsten@appwrite.io';
         self::$user[$projectId]['session'] = $refreshedSession['cookies']['a_session_' . $projectId];
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
+    }
+
+    public function testConnectionEndsWithSession(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $apiKey = $this->getProject()['apiKey'];
+        $email = uniqid() . 'lifecycle@localhost.test';
+        $password = 'password';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $userId = $account['body']['$id'];
+
+        $createSession = function () use ($projectId, $email, $password): array {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            return [
+                'id' => $response['body']['$id'],
+                'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+            ];
+        };
+
+        $connect = function (array $headers) use ($userId): WebSocketClient {
+            $client = $this->getWebsocket(['account'], array_merge(['origin' => 'http://localhost'], $headers));
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertEquals($userId, $response['data']['user']['$id']);
+
+            return $client;
+        };
+
+        // The connection is told what ended its access, then closed.
+        $assertClosed = function (WebSocketClient $client, string $event): void {
+            $frames = $this->receiveUntilClosed($client);
+            $events = \array_merge(...\array_map(fn (array $frame) => $frame['data']['events'] ?? [], $frames));
+            $this->assertContains($event, $events);
+            $last = \end($frames);
+            $this->assertEquals('error', $last['type'] ?? null);
+            $this->assertEquals(401, $last['data']['code'] ?? null);
+        };
+
+        /**
+         * Test for SUCCESS - another session of the user ends, this connection stays
+         */
+        $session = $createSession();
+        $other = $createSession();
+        $client = $connect(['cookie' => $session['cookie']]);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $other['id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session['cookie'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $event = $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$userId}.sessions.{$other['id']}.delete", $message['data']['events'] ?? [], true));
+        $this->assertEquals('event', $event['type']);
+
+        $client->send(\json_encode(['type' => 'ping']));
+        $this->assertEquals('pong', json_decode($client->receive(), true)['type']);
+
+        /**
+         * Test for SUCCESS - the session this connection was opened with ends
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $session['id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session['cookie'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.sessions.{$session['id']}.delete");
+
+        /**
+         * Test for SUCCESS - ended through the Users API
+         */
+        $session = $createSession();
+        $client = $connect(['cookie' => $session['cookie']]);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions/' . $session['id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.sessions.{$session['id']}.delete");
+
+        /**
+         * Test for SUCCESS - every session ended at once
+         */
+        $session = $createSession();
+        $client = $connect(['cookie' => $session['cookie']]);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.sessions.delete");
+
+        /**
+         * Test for SUCCESS - a JWT follows the session it was minted from
+         */
+        $session = $createSession();
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session['cookie'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $client = $connect(['x-appwrite-jwt' => $response['body']['jwt']]);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $session['id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session['cookie'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.sessions.{$session['id']}.delete");
+
+        /**
+         * Test for SUCCESS - the user is blocked
+         */
+        $session = $createSession();
+        $client = $connect(['cookie' => $session['cookie']]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'status' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.update.status");
+
+        /**
+         * Test for SUCCESS - the user is deleted
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'status' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $client = $connect(['cookie' => $session['cookie']]);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $assertClosed($client, "users.{$userId}.delete");
     }
 
     public function testChannelDatabase()

@@ -159,16 +159,16 @@ return function (Container $container): void {
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
     }, ['platform', 'request', 'project', 'authorization']);
 
-    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
-        $mode = $getMode($request, $project);
-        $store = new Store();
+    $container->set('proofForToken', function (): Token {
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        $authorization->setDefaultStatus(true);
+        return $proofForToken;
+    }, []);
 
-        $dbForPlatform = $getDbForPlatform($authorization);
-        $dbForProject = $getDbForProject($project, $authorization);
+    $container->set('store', function (Request $request, Document $project, Document $console) use ($getMode): Store {
+        $mode = $getMode($request, $project);
+        $store = new Store();
 
         $store->setKey('a_session_' . $project->getId());
         if ($mode === APP_MODE_ADMIN) {
@@ -194,6 +194,17 @@ return function (Container $container): void {
             $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
             $store->decode((\is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : '');
         }
+
+        return $store;
+    }, ['request', 'project', 'console']);
+
+    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
+        $mode = $getMode($request, $project);
+
+        $authorization->setDefaultStatus(true);
+
+        $dbForPlatform = $getDbForPlatform($authorization);
+        $dbForProject = $getDbForProject($project, $authorization);
 
         $user = null;
         if ($mode === APP_MODE_ADMIN) {
@@ -294,7 +305,44 @@ return function (Container $container): void {
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
-    }, ['request', 'project', 'console', 'authorization']);
+    }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken']);
+
+    $container->set('session', function (Request $request, User $user, Store $store, Token $proofForToken): ?Document {
+        if ($user->isEmpty()) {
+            return null;
+        }
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        if (!$sessionId && !empty($authJWT)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException) {
+                return null;
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
+
+        if (!$sessionId) {
+            return null;
+        }
+
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            /** @var Document $session */
+            if ($session->getId() === $sessionId) {
+                return $session;
+            }
+        }
+
+        return null;
+    }, ['request', 'user', 'store', 'proofForToken']);
 
     $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {

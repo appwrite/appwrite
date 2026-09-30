@@ -49,6 +49,7 @@ class Realtime extends MessagingAdapter
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
+     *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
@@ -156,8 +157,11 @@ class Realtime extends MessagingAdapter
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
-        if (\array_key_exists('authorization', $existing)) {
-            $entry['authorization'] = $existing['authorization'];
+        // Recorded once by the connection handler; every later (re)subscribe keeps it.
+        foreach (['authorization', 'impersonatedUserId', 'sessionId'] as $key) {
+            if (\array_key_exists($key, $existing)) {
+                $entry[$key] = $existing[$key];
+            }
         }
 
         $this->connections[$identifier] = $entry;
@@ -824,6 +828,10 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                // Roles come from the user document (verification, labels, status,
+                // sessions), so the user's open connections re-resolve on every
+                // change to it, as they already do for memberships.
+                $permissionsChanged = true;
                 break;
             case 'rules':
             case 'migrations':

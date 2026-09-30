@@ -586,6 +586,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry) {
                 $event = json_decode($payload, true);
+                $closing = [];
 
                 $eventTimestamp = $event['data']['timestamp'] ?? null;
                 if (\is_string($eventTimestamp)) {
@@ -623,6 +624,22 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $roles = $user->getRoles($database->getAuthorization());
 
                         foreach (\array_keys($connections) as $connection) {
+                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+
+                            // The HTTP API re-checks these on every request; a connection
+                            // only gets here, so this is where it learns that its user is
+                            // gone or blocked, or that the session it was opened with has
+                            // ended. It keeps its roles for this one event and is closed
+                            // once that has been delivered.
+                            if (
+                                $user->isEmpty()
+                                || $user->getAttribute('status') === false
+                                || ($sessionId !== null && !$user->sessionActive($sessionId))
+                            ) {
+                                $closing[] = $connection;
+                                continue;
+                            }
+
                             $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
@@ -661,6 +678,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             if ($authorization !== null && isset($realtime->connections[$connection])) {
                                 $realtime->connections[$connection]['authorization'] = $authorization;
                                 $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
+                                $realtime->connections[$connection]['sessionId'] = $sessionId;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -753,6 +771,25 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         ], $projectId);
                     }
 
+                }
+
+                // Delivered above with the roles they held until now, so the client sees
+                // the event that ended its access before the socket goes: the same answer
+                // the HTTP API gives that session's next request.
+                if (!empty($closing)) {
+                    $unauthorized = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+                    $closingPayloadJson = json_encode([
+                        'type' => 'error',
+                        'data' => [
+                            'code' => $unauthorized->getCode(),
+                            'message' => $unauthorized->getMessage(),
+                        ],
+                    ]);
+
+                    foreach ($closing as $connection) {
+                        $server->send([$connection], $closingPayloadJson);
+                        $server->close($connection, $unauthorized->getCode());
+                    }
                 }
 
                 // Console live event tail: runs for EVERY firehose event, regardless of
@@ -877,6 +914,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $user = $connectionContainer->get('user'); /** @var User $user */
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
+        $session = $connectionContainer->get('session'); /** @var ?Document $session */
         if (!$impersonatorUser->isEmpty()) {
             getConsoleDB()->setMetadata('user', $targetUser->getId());
             getProjectDB($project)->setMetadata('user', $targetUser->getId());
@@ -937,6 +975,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $roles = $targetUser->getRoles($authorization);
 
+        // The session this connection was opened with. An impersonated connection runs
+        // on the impersonator's session, which is not one of the target user's.
+        $sessionId = $impersonatorUser->isEmpty() ? $session?->getId() : null;
+
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
         $channelCount = \count($channels);
 
@@ -982,6 +1024,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
             $realtime->connections[$connection]['authorization'] = $authorization;
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
+            $realtime->connections[$connection]['sessionId'] = $sessionId;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             triggerStats([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
@@ -1043,6 +1086,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->connections[$connection]['authorization'] = $authorization;
         $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
+        $realtime->connections[$connection]['sessionId'] = $sessionId;
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);

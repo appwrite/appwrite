@@ -640,6 +640,52 @@ final class MessagingTest extends TestCase
         $this->assertArrayHasKey(1, $realtime->getSubscribers($bEvent));
     }
 
+    public function testFromPayloadUserEventsChangePermissions(): void
+    {
+        // Everything that shapes a user's roles lives on the user document, so any
+        // change to it must re-resolve that user's open connections.
+        foreach ([
+            'users.A.update.status',
+            'users.A.update.labels',
+            'users.A.sessions.S.delete',
+            'users.A.sessions.delete',
+            'users.A.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => ID::custom('A')]),
+            );
+
+            $this->assertTrue($result['permissionsChanged'], $event);
+            $this->assertSame([Role::user(ID::custom('A'))->toString()], $result['roles'], $event);
+        }
+    }
+
+    public function testSubscribeKeepsConnectionAuthorizationState(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(ID::custom('A'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
+        $realtime->connections[1]['authorization'] = 'authorization';
+        $realtime->connections[1]['impersonatedUserId'] = null;
+        $realtime->connections[1]['sessionId'] = 'session';
+
+        // A later subscribe on the same connection unions its channels and must not
+        // drop what the connection handler recorded about how it was opened.
+        $realtime->subscribe('1', 1, 'sub-2', [$role], ['files'], [], 'A');
+
+        $this->assertSame('authorization', $realtime->connections[1]['authorization']);
+        $this->assertArrayHasKey('impersonatedUserId', $realtime->connections[1]);
+        $this->assertNull($realtime->connections[1]['impersonatedUserId']);
+        $this->assertSame('session', $realtime->connections[1]['sessionId']);
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
+
+        // A full unsubscribe forgets the connection entirely.
+        $realtime->unsubscribe(1);
+        $this->assertArrayNotHasKey(1, $realtime->connections);
+    }
+
     public function testFromPayloadPermissions(): void
     {
         /**
