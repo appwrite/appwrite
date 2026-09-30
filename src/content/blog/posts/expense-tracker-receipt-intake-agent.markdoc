@@ -47,47 +47,61 @@ A receipt goes through four stages between the upload and a filed expense.
 
 To follow along, you need an Appwrite project, an [OpenRouter](https://openrouter.ai) API key, Node.js 22 or later, and pnpm.
 
-# Create the receipts bucket
+# Create the Appwrite resources
 
-A Storage bucket holds files and sets the rules for them: who can upload and read files, the maximum file size, and the allowed file types. In the [Appwrite Console](https://appwrite.io/console), open your project, go to **Storage**, and select **Create bucket**. Name the bucket `Receipts`, set the **Bucket ID** to `receipts`, and select **Create**.
+The companion repository creates the receipts bucket, the database, and the four tables with every column, index, and permission in one script. Clone the repository and install the dependencies:
+
+```bash
+git clone https://github.com/appwrite-community/outlay-receipt-agent.git
+cd outlay-receipt-agent
+pnpm install
+```
+
+In the [Appwrite Console](https://appwrite.io/console), open your project, go to **API Keys**, and create a key with these scopes: `databases.write`, `tables.write`, `columns.read`, `columns.write`, `indexes.write`, `buckets.write`, `files.write`, `rows.read`, `rows.write`, `tokens.write`, `users.read`, and `users.write`. Only the scripts use this key. Copy `.env.example` to `.env` and fill in the API endpoint, the project ID, the API key, and a password for the demo users. Then create the resources, and add six months of demo data if you want it:
+
+```bash
+pnpm provision
+pnpm seed
+```
+
+The rest of this section shows in the Console what `pnpm provision` created, and why each setting matters.
+
+## The receipts bucket
+
+A Storage bucket holds files and sets the rules for them: who can upload and read files, the maximum file size, and the allowed file types. Outlay keeps every receipt in one private bucket with the ID `receipts`.
 
 ![Receipts bucket settings in the Appwrite Console with a 10 MB maximum file size and the allowed file extensions jpg, jpeg, png, webp, and pdf](/images/blog/expense-tracker-receipt-intake-agent/console-bucket-limits.avif)
 
-Open the **Settings** tab of the bucket. Change these four settings, and select **Update** on each card:
-
-- **Maximum file size**: 10 MB.
-- **Allowed file extensions**: `jpg`, `jpeg`, `png`, `webp`, and `pdf`. The model reads these types, so the bucket rejects others, such as HEIC photos, before the agent runs.
-- **Encryption**: enabled.
-- **Image transformations**: disabled. The app shows the original file of each receipt.
+Open **Storage** > **Receipts** > **Settings**. The bucket accepts files up to 10 MB with the extensions `jpg`, `jpeg`, `png`, `webp`, and `pdf`. The model reads these types, so the bucket rejects others, such as HEIC photos, before the agent runs.
 
 ![Receipts bucket settings with encryption enabled and image transformations disabled](/images/blog/expense-tracker-receipt-intake-agent/console-bucket-encryption.avif)
 
+Encryption is on, and image transformations are off, because the app shows the original file of each receipt.
+
 ![The Security tab of the Receipts bucket with the Create permission for all users and file level security turned on](/images/blog/expense-tracker-receipt-intake-agent/console-bucket-security.avif)
 
-Open the **Security** tab. Under **Permissions**, select **Add role**, choose **All users**, and select only the **Create** checkbox. Select **Update**. Then turn on **File level security** and select **Update** again. The bucket lets every signed-in user upload files but gives nobody read access. When the app uploads a file without permissions, Appwrite gives the uploader read, update, and delete permission on that file, and nobody else gets access.
+On the **Security** tab, the bucket grants **Create** to **All users**, and **File level security** is on. Every signed-in user can upload files, but the bucket gives nobody read access. When the app uploads a file without permissions, Appwrite gives the uploader read, update, and delete permission on that file, and nobody else gets access.
 
-# Create the database and tables
+## The database and tables
 
-TablesDB is the Appwrite database for structured data in tables, rows, and columns.
+TablesDB is the Appwrite database for structured data in tables, rows, and columns. The script creates a TablesDB database with the ID `outlay`.
 
 ![The create database wizard in the Appwrite Console with TablesDB selected and the name Outlay](/images/blog/expense-tracker-receipt-intake-agent/console-create-database.avif)
 
-Open **Databases** and select **Create database**. Choose **TablesDB**, name it `Outlay`, and set the **Database ID** to `outlay`. Select your preferred tier, and select **Create database**. Then create four tables with **Create table**, using the same text for the name and the table ID: `expenses`, `line_items`, `review_flags`, and `activity`.
-
 ![The Columns tab of the expenses table in the Appwrite Console](/images/blog/expense-tracker-receipt-intake-agent/console-expenses-columns.avif)
 
-The tables hold these rows:
+The database has four tables:
 
-- **`expenses`** has one row per upload, and the row ID is the ID of the receipt file. It stores the owner, a `status` (`processing`, `needs_review`, `ready`, `failed`, or `rejected`), the file name and type, the extracted values (`merchant`, `spentOn`, `totalMinor`, `taxMinor`, `currency`, `category`, `paymentMethod`), the agent's one-sentence summary, the number of open review flags, and the `viewToken` that the app uses to show the receipt. Money is stored as integers in minor units, so sums and comparisons are exact.
+- **`expenses`** has one row per upload, and the row ID is the ID of the receipt file. It stores the owner, a `status` (`processing`, `needs_review`, `ready`, `failed`, or `rejected`), the file name and type, the extracted values (`merchant`, `spentOn`, `totalMinor`, `taxMinor`, `currency`, `category`, `paymentMethod`), the agent's one-sentence summary, the number of open review flags, and the `viewToken` that the app uses to show the receipt. Money is stored as integers in minor units, so sums and comparisons are exact. A fulltext index on `merchant` serves the merchant lookup.
 - **`line_items`** holds the lines of each receipt, with a position, a description, and an amount.
 - **`review_flags`** holds one row for each field that needs a person, with the reason that the review screen shows and how the user resolved it.
 - **`activity`** is the timeline of each expense, with the steps of the agent and the actions of the user.
 
-The `scripts/schema.ts` file in the companion repository lists every column and index, and `pnpm provision` creates the bucket, the database, the tables, and the indexes for you. `expenses` needs a fulltext index on `merchant` for the merchant lookup.
+`scripts/schema.ts` in the companion repository lists every column and index.
 
 ![The Security tab of the expenses table with row level security turned on and no table permissions](/images/blog/expense-tracker-receipt-intake-agent/console-expenses-security.avif)
 
-Open the **Security** tab of each table, turn on **Row level security (RLS)**, and select **Update**. With row level security on, a user can access a row when the row or the table gives them permission. Leave the table permissions of `expenses`, `line_items`, and `review_flags` empty, so each user sees only their own rows. The `activity` table needs one table permission: **Create** for **All users**, because the app writes the actions of the user, such as "You confirmed the total", into the same timeline.
+Every table has **Row level security (RLS)** turned on, so a user can access a row when the row or the table gives them permission. `expenses`, `line_items`, and `review_flags` have no table permissions, so each user sees only their own rows. The `activity` table grants **Create** to **All users**, because the app writes the actions of the user, such as "You confirmed the total", into the same timeline as the steps of the agent.
 
 # Write the intake-agent function
 
@@ -223,7 +237,8 @@ function documentPart({ name, mimeType, url }) {
 OpenRouter uses the same API shape as OpenAI Chat Completions, so the OpenAI SDK works with the OpenRouter base URL. With `tool_choice: 'required'`, every answer is a tool call. A lookup runs and its result goes back to the model, and a terminal tool with valid arguments ends the loop:
 
 ```javascript
-for (let round = 1; round <= MAX_ROUNDS; round++) {
+let rounds = MAX_ROUNDS;
+for (let round = 1; round <= rounds; round++) {
   const completion = await openai.chat.completions.create({
     model: modelId(),
     messages,
@@ -250,7 +265,11 @@ for (let round = 1; round <= MAX_ROUNDS; round++) {
 
     let result;
     if (!valid) result = { error: `The arguments do not match the ${name} schema. Call it again.` };
-    else if (TERMINAL_TOOLS.has(name)) result = { error: `Read the lookup results first, then call ${name} again.` };
+    else if (TERMINAL_TOOLS.has(name)) {
+      result = { error: `Read the lookup results first, then call ${name} again.` };
+      // The model needs one more call to repeat it, even on the last round.
+      if (round === MAX_ROUNDS) rounds = MAX_ROUNDS + 1;
+    }
     else if (lookups[name]) result = await lookups[name](args);
     else result = { error: `There is no tool named ${name}.` };
     messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
@@ -260,7 +279,7 @@ for (let round = 1; round <= MAX_ROUNDS; round++) {
 throw new FilingError('The agent could not finish filing this document.');
 ```
 
-The model can ask for several tools in one answer. A `submit_expense` that arrives together with a lookup has not seen the lookup's result yet, so the loop sends the lookup result and asks the model to submit again. The loop stops after five model calls.
+The model can ask for several tools in one answer. A `submit_expense` that arrives together with a lookup has not seen the lookup's result yet, so the loop sends the lookup result and asks the model to submit again. The loop stops after five model calls, with one extra call when the fifth one deferred a submission.
 
 ## Decide what needs review
 
@@ -408,14 +427,13 @@ async function inTransaction(stage: (transactionId: string) => Promise<void>): P
 
 # Try Outlay
 
-On the **Overview** page of the project, select **Add app** in the **Apps** section, choose **Web**, and enter `localhost` as the **Hostname**. Copy `apps/web/.env.example` to `apps/web/.env` and fill in the endpoint and the project ID. Then install the dependencies and start the app from the root of the companion repository:
+On the **Overview** page of the project, select **Add app** in the **Apps** section, choose **Web**, and enter `localhost` as the **Hostname**. Copy `apps/web/.env.example` to `apps/web/.env` and fill in the endpoint and the project ID. Then start the app from the root of the companion repository:
 
 ```bash
-pnpm install
 pnpm dev
 ```
 
-The app runs at `http://localhost:5173`. To start with six months of history, run `pnpm seed`, which creates two demo users, Nora and Theo, with expenses and receipt files.
+The app runs at `http://localhost:5173`. If you ran `pnpm seed`, sign in as Nora or Theo, two demo users with six months of expenses and receipt files.
 
 ![The Outlay overview with September spending, two expenses to review, spending by month, spending by category, and recent activity of the agent](/images/blog/expense-tracker-receipt-intake-agent/app-overview.avif)
 
