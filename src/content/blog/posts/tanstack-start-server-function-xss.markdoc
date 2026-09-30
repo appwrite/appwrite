@@ -8,7 +8,7 @@ timeToRead: 7
 author: torsten-dittmann
 category: security
 featured: false
-unlisted: true
+unlisted: false
 faqs:
   - question: "What is CVE-2026-102989?"
     answer: "CVE-2026-102989 ([GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8)) is an unauthenticated reflected XSS in TanStack Start server-function response handling, rated critical with a CVSS score of 9.3. A crafted link to a `/_serverFn/` URL can make an affected app return attacker-controlled HTML from its own origin, so anyone who opens the link runs the attacker's JavaScript in your app."
