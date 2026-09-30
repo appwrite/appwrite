@@ -57,10 +57,15 @@ cd outlay-receipt-agent
 pnpm install
 ```
 
-In the [Appwrite Console](https://appwrite.io/console), open your project, go to **API Keys**, and create a key with these scopes: `databases.write`, `tables.write`, `columns.read`, `columns.write`, `indexes.write`, `buckets.write`, `files.write`, `rows.read`, `rows.write`, `tokens.write`, `users.read`, and `users.write`. Only the scripts use this key. Copy `.env.example` to `.env` and fill in the API endpoint, the project ID, the API key, and a password for the demo users. Then create the resources, and add six months of demo data if you want it:
+In the [Appwrite Console](https://appwrite.io/console), open your project, go to **API Keys**, and create a key with these scopes: `databases.write`, `tables.write`, `columns.read`, `columns.write`, `indexes.write`, `buckets.write`, `files.write`, `rows.read`, `rows.write`, `tokens.write`, `users.read`, and `users.write`. Only the scripts use this key. Copy `.env.example` to `.env` and fill in the API endpoint, the project ID, the API key, and a password for the demo users. Then create the resources:
 
 ```bash
 pnpm provision
+```
+
+To add six months of demo data, also run:
+
+```bash
 pnpm seed
 ```
 
