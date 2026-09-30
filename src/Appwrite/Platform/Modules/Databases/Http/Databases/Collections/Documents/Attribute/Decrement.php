@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -175,13 +176,20 @@ class Decrement extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
         try {
+            $counter = Counter::of($dbForDatabases, $collectionTableId, $attribute);
+            if (!$counter->acceptsChange($value)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Value must be a whole number to decrement the integer ' . $this->getAttributeKey() . ' "' . $attribute . '".');
+            }
+
             $document = $dbForDatabases->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                collection: $collectionTableId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $value,
-                min: $min
+                value: $counter->change($value),
+                min: $counter->minimum($min)
             );
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);

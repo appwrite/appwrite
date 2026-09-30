@@ -9565,6 +9565,77 @@ trait DatabasesBase
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
+    public function testIncrementAndDecrementBoundAFractionalLimitOnAnIntegerAtItsWholePart(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'FractionalBoundDatabase',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'FractionalBoundCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+                'key' => 'count',
+                'required' => true,
+            ]);
+            $this->waitForAttribute($databaseId, $collectionId, 'count');
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['count' => 8],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 2,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], 'a fractional max on an integer admits the integers up to its whole part');
+        $this->assertSame(10, $increased['body']['count']);
+
+        $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(400, $pastMax['headers']['status-code'], 'an increment past the whole part of the max is refused');
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 7,
+            'min' => 2.5,
+        ]);
+        $this->assertSame(200, $decreased['headers']['status-code'], 'a fractional min on an integer admits the integers down to its whole part above it');
+        $this->assertSame(3, $decreased['body']['count']);
+
+        $pastMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 1,
+            'min' => 2.5,
+        ]);
+        $this->assertSame(400, $pastMin['headers']['status-code'], 'a decrement past the whole part of the min is refused');
+
+        $stored = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertSame(3, $stored['body']['count']);
+    }
+
     public function testDecrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [

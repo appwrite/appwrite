@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -779,25 +780,26 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $counter = Counter::of($dbForProject, $collectionId, $attribute);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                max: $counter->maximum($data['max'] ?? null)
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                max: $data['max'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                max: $counter->maximum($data['max'] ?? null)
             );
         });
     }
@@ -825,25 +827,26 @@ class Update extends Action
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
         $attribute = $this->getAttributeNameFromData($data);
+        $counter = Counter::of($dbForProject, $collectionId, $attribute);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                min: $counter->minimum($data['min'] ?? null)
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute, $counter) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
-                value: $data['value'] ?? 1,
-                min: $data['min'] ?? null
+                value: $counter->change($data['value'] ?? 1),
+                min: $counter->minimum($data['min'] ?? null)
             );
         });
     }
