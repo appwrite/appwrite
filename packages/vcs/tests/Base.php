@@ -228,7 +228,37 @@ abstract class Base extends TestCase
     {
         $command = $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', Git::CLONE_TYPE_BRANCH, '/tmp/clone', $rootDirectory);
 
-        $this->assertStringContainsString(escapeshellarg($pattern), $command);
+        $this->assertStringContainsString(escapeshellarg($pattern), $command->toString());
+    }
+
+    public function testGenerateCloneCommandQuotesTheRootDirectory(): void
+    {
+        $rootDirectory = "src\t--checkpoint=1\t--checkpoint-action=exec=\$(id) ; id";
+
+        $command = $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', Git::CLONE_TYPE_BRANCH, '/tmp/clone', $rootDirectory);
+
+        $this->assertStringContainsString(escapeshellarg($rootDirectory), $command->toString());
+    }
+
+    #[DataProvider('cloneTypes')]
+    public function testGenerateCloneCommandRejectsAnOptionAsTheVersion(string $versionType): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->vcsAdapter->generateCloneCommand('owner', 'repo', '--upload-pack=id', $versionType, '/tmp/clone', '');
+    }
+
+    public static function cloneTypes(): \Iterator
+    {
+        yield 'branch' => [Git::CLONE_TYPE_BRANCH];
+        yield 'commit' => [Git::CLONE_TYPE_COMMIT];
+    }
+
+    public function testGenerateCloneCommandRejectsAnUnknownCloneType(): void
+    {
+        $this->expectException(Exception::class);
+
+        $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', 'unknown', '/tmp/clone', '');
     }
 
     /**

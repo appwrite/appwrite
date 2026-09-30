@@ -3,6 +3,7 @@
 namespace Utopia\VCS;
 
 use Exception;
+use Utopia\Command;
 
 abstract class Adapter
 {
@@ -176,7 +177,7 @@ abstract class Adapter
     /**
      * Generates a clone command using app access token
      */
-    abstract public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): string;
+    abstract public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): Command;
 
     /**
      * Validates a webhook payload signature.

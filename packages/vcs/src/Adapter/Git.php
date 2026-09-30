@@ -6,6 +6,7 @@ namespace Utopia\VCS\Adapter;
 
 use Exception;
 use Utopia\Cache\Cache;
+use Utopia\Command;
 use Utopia\VCS\Adapter;
 
 abstract class Git extends Adapter
@@ -291,6 +292,60 @@ abstract class Git extends Adapter
      * @return array<mixed> List of commit statuses
      */
     abstract public function getCommitStatuses(string $owner, string $repositoryName, string $commitHash): array;
+
+    /**
+     * Sparse, shallow clone of one ref into $directory, checking out only
+     * $rootDirectory. Every value reaches git as its own argument; the one
+     * shell script, the branch fallback, is constant and reads its values
+     * from positional parameters.
+     */
+    protected function cloneCommand(string $cloneUrl, string $version, string $versionType, string $directory, string $rootDirectory): Command
+    {
+        $rootDirectory = $this->normalizeRepositoryPath($rootDirectory);
+        if ($rootDirectory === '') {
+            $rootDirectory = '*';
+        }
+
+        // A leading dash would reach git as an option instead of a ref
+        $ref = fn (string $value): bool => !str_starts_with($value, '-');
+
+        $git = fn (): Command => (new Command('git'))->option('-C', $directory);
+
+        $checkout = match ($versionType) {
+            self::CLONE_TYPE_BRANCH => (new Command('sh'))
+                ->flag('-c')
+                ->argument('if git -C "$1" ls-remote --exit-code --heads origin "$2"; then git -C "$1" pull --depth=1 origin "$2" && git -C "$1" checkout "$2"; else git -C "$1" checkout -b "$2"; fi')
+                ->argument('sh')
+                ->argument($directory)
+                ->argument($version, $ref),
+            self::CLONE_TYPE_COMMIT => Command::and(
+                $git()->argument('fetch')->option('--depth', '1')->argument('origin')->argument($version, $ref),
+                $git()->argument('checkout')->argument($version, $ref),
+            ),
+            self::CLONE_TYPE_TAG => Command::and(
+                $git()->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
+                $git()->argument('checkout')->argument('FETCH_HEAD'),
+            ),
+            default => throw new Exception("Unsupported clone type: {$versionType}"),
+        };
+
+        return Command::and(
+            (new Command('mkdir'))->flag('-p')->argument($directory),
+            (new Command('git'))->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
+            $git()->argument('init'),
+            $git()->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
+            $git()->argument('config')->argument('core.sparseCheckout')->argument('true'),
+            Command::appendStdout(
+                (new Command('printf'))->argument('%s\n')->argument($rootDirectory),
+                $directory . '/.git/info/sparse-checkout',
+            ),
+            // Disable fetching of refs we don't need
+            $git()->argument('config')->flag('--add')->argument('remote.origin.fetch')->argument('+refs/heads/*:refs/remotes/origin/*'),
+            // Disable fetching of tags
+            $git()->argument('config')->argument('remote.origin.tagopt')->argument('--no-tags'),
+            $checkout,
+        );
+    }
 
     /**
      * Resolve the path sentinels a caller may pass - '', '.', './', 'src//' -
