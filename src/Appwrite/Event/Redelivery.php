@@ -16,6 +16,11 @@ use Utopia\Span\Span;
  * failing it, and ask on the redelivery. The record is written only when the
  * message fails and read only on a redelivery, so a message that succeeds
  * never touches the cache.
+ *
+ * Only a message that names its event (an `eventId` in the payload) is tracked.
+ * One published before its publisher named events has nothing that survives a
+ * Redis requeue except its payload, and two distinct events can carry the same
+ * payload, so it is handled the way it always was: no record, no skip.
  */
 final class Redelivery
 {
@@ -24,7 +29,9 @@ final class Redelivery
      */
     public const TTL = 60 * 60 * 24 * 7;
 
-    private readonly string $eventId;
+    private readonly ?string $eventId;
+
+    private readonly string $pid;
 
     private readonly bool $redelivered;
 
@@ -40,24 +47,21 @@ final class Redelivery
         Message $message,
         private readonly bool $handledWhenUnknown,
     ) {
-        $payload = $message->getPayload();
-
-        // A message published before its publisher named events is named by its
-        // payload rather than its pid: the Redis broker requeues a retry under a
-        // fresh pid, while the payload is carried through unchanged.
-        $eventId = $payload['eventId'] ?? '';
-        $this->eventId = \is_string($eventId) && $eventId !== ''
-            ? $eventId
-            : \md5((string) \json_encode($payload));
+        $eventId = $message->getPayload()['eventId'] ?? null;
+        $this->eventId = \is_string($eventId) && $eventId !== '' ? $eventId : null;
+        $this->pid = $message->getPid();
         $this->redelivered = $message->getAttempts() > 0;
     }
 
     /**
      * The same on every delivery of this event to this target, and different for any other pair.
+     *
+     * An untracked message is named by its pid, which keeps distinct events apart but changes
+     * when the Redis broker requeues it.
      */
     public function id(string $target): string
     {
-        return \md5($this->eventId . ':' . $target);
+        return \md5(($this->eventId ?? 'pid:' . $this->pid) . ':' . $target);
     }
 
     /**
@@ -65,7 +69,7 @@ final class Redelivery
      */
     public function wasHandled(string $target): bool
     {
-        if (!$this->redelivered) {
+        if (!$this->redelivered || $this->eventId === null) {
             return false;
         }
 
@@ -87,6 +91,16 @@ final class Redelivery
      */
     public function record(array $targets): bool
     {
+        if ($targets === []) {
+            return true;
+        }
+
+        if ($this->eventId === null) {
+            Span::add('redelivery.record.skipped', 'message carries no eventId');
+
+            return false;
+        }
+
         $recorded = true;
 
         foreach ($targets as $target) {
