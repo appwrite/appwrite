@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -74,6 +75,39 @@ final class CertificatesDomainValidationTest extends TestCase
         $writes = $this->generate($certificates, skipDomainValidation: false);
 
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+    }
+
+    public function testAnIssuedCertificateIsVerifiedOnceItIsReady(): void
+    {
+        // A Fastly subscription that is already issued does not need renewal, but
+        // the hostname is not safe to call verified until the provider reports
+        // it ready. Ready includes the TLS activation.
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(false);
+        $certificates->method('isInstantGeneration')->willReturn(false);
+        $certificates->method('getCertificateStatus')->willReturn(Status::ISSUED);
+        $certificates->expects($this->once())->method('issueCertificate')->willReturn('2027-01-02 00:00:00.000');
+
+        $writes = $this->generate($certificates, skipDomainValidation: true);
+
+        $this->assertSame(RULE_STATUS_VERIFIED, $writes['rules']['status']);
+        $this->assertSame('2027-01-02 00:00:00.000', $writes['certificates']['renewDate']);
+    }
+
+    public function testActivationFailureLeavesTheRuleRetryable(): void
+    {
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(false);
+        $certificates->method('isInstantGeneration')->willReturn(false);
+        $certificates->method('getCertificateStatus')->willThrowException(new \RuntimeException(
+            'Failed to activate Fastly TLS certificate for ' . self::DOMAIN . ' with status 400: TLS configuration not found',
+        ));
+        $certificates->expects($this->never())->method('issueCertificate');
+
+        $writes = $this->generate($certificates, skipDomainValidation: true);
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+        $this->assertSame(1, $writes['certificates']['attempts']);
     }
 
     /**

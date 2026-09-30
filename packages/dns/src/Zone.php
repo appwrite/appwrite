@@ -12,13 +12,18 @@ final readonly class Zone
     public string $name;
 
     /**
+     * @var list<Record>
+     */
+    public array $records;
+
+    /**
      * @param string $name The zone domain name (usually apex)
      * @param list<Record> $records DNS records in this zone (excluding SOA)
      * @param Record $soa The SOA record for this zone
      */
     public function __construct(
         string $name,
-        public array $records,
+        array $records,
         public Record $soa,
     ) {
         if ($soa->type !== Record::TYPE_SOA) {
@@ -43,6 +48,39 @@ final readonly class Zone
                 );
             }
         }
+
+        // A managed apex CAA is stored as "@" and absolutized to the zone name.
+        // The same CAA copied again under the apex FQDN is a second document with
+        // the same rdata. Fastly Certainly treats those two identical issue
+        // records as a conflict and refuses to issue. Publish the first copy only.
+        $this->records = self::withoutDuplicateCaa($records);
+    }
+
+    /**
+     * @param list<Record> $records
+     * @return list<Record>
+     */
+    private static function withoutDuplicateCaa(array $records): array
+    {
+        $published = [];
+        $seen = [];
+
+        foreach ($records as $record) {
+            if ($record->type !== Record::TYPE_CAA) {
+                $published[] = $record;
+                continue;
+            }
+
+            $key = json_encode([$record->name, $record->class, $record->rdata], JSON_THROW_ON_ERROR);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $published[] = $record;
+        }
+
+        return $published;
     }
 
     /**

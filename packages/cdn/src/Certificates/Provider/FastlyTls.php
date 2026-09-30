@@ -44,6 +44,14 @@ class FastlyTls implements Provider
             $subscription = $this->retrySubscription($subscription['resource']['id']);
         }
 
+        $state = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
+        if ($state === Status::ISSUED || $state === Status::RENEWING) {
+            // A subscription can be issued without a TLS activation. The edge then
+            // keeps serving the shared default certificate and browsers report a
+            // SAN mismatch. Activation is what attaches this certificate.
+            $this->ensureActivated($subscription, $domain);
+        }
+
         return $this->extractRenewDate($subscription);
     }
 
@@ -66,8 +74,13 @@ class FastlyTls implements Provider
         $status = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
         // An issued certificate needs nothing from the domain owner, whatever
-        // an authorization left over from an earlier order still says.
+        // an authorization left over from an earlier order still says. It does
+        // need a TLS activation, or the hostname keeps the default certificate.
         if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
+            if ($status === Status::ISSUED) {
+                $this->ensureActivated($subscription, $domain);
+            }
+
             return $status;
         }
 
@@ -76,6 +89,10 @@ class FastlyTls implements Provider
         // subscription state alone cannot tell waiting from progress.
         $authorizations = $this->findAuthorizations($subscription, $domain);
         if ($status !== Status::FAILED && !$this->isBlocked($authorizations)) {
+            if ($status === Status::RENEWING) {
+                $this->ensureActivated($subscription, $domain);
+            }
+
             return $status;
         }
 
@@ -414,6 +431,184 @@ class FastlyTls implements Provider
         $included = $result['response']['included'] ?? [];
 
         return ['resource' => $data, 'included' => \is_array($included) ? array_values(array_filter($included, is_array(...))) : []];
+    }
+
+    /**
+     * Make sure every hostname on an issued subscription terminates TLS with
+     * that certificate on the configured TLS configuration.
+     *
+     * Fastly does not always create this activation when the subscription is
+     * created, including for a multi-SAN certificate that covers both the apex
+     * and www. A missing activation leaves the hostname on the shared default
+     * certificate. A failure here is thrown so the domain stays retryable
+     * instead of being reported as issued.
+     *
+     * No TLS configuration means Fastly domain management owns the hostname, and
+     * there is no activation to create.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     */
+    private function ensureActivated(array $subscription, string $domain): void
+    {
+        if ($this->tlsConfigurationId === '') {
+            return;
+        }
+
+        $certificateId = $this->issuedCertificateId($subscription, $domain);
+
+        foreach ($this->hostnames($subscription, $domain) as $hostname) {
+            if ($this->activationExists($certificateId, $hostname)) {
+                continue;
+            }
+
+            $this->createActivation($certificateId, $hostname);
+        }
+    }
+
+    /**
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     */
+    private function issuedCertificateId(array $subscription, string $domain): string
+    {
+        $ids = [];
+        $relationship = $subscription['resource']['relationships']['tls_certificates']['data'] ?? [];
+        if (\is_array($relationship)) {
+            foreach ($relationship as $reference) {
+                if (\is_array($reference) && \is_string($reference['id'] ?? null) && $reference['id'] !== '') {
+                    $ids[] = $reference['id'];
+                }
+            }
+        }
+
+        if ($ids === []) {
+            throw new \RuntimeException("Fastly TLS subscription for {$domain} is issued but has no certificate to activate.");
+        }
+
+        $bestId = null;
+        $bestExpiry = null;
+        foreach ($subscription['included'] as $included) {
+            if (($included['type'] ?? null) !== 'tls_certificate' || !\in_array($included['id'] ?? null, $ids, true)) {
+                continue;
+            }
+
+            $notAfter = $included['attributes']['not_after'] ?? null;
+            $expiry = \is_string($notAfter) ? strtotime($notAfter) : false;
+            if ($expiry === false) {
+                continue;
+            }
+
+            if ($bestExpiry === null || $expiry > $bestExpiry) {
+                $bestExpiry = $expiry;
+                $bestId = $included['id'];
+            }
+        }
+
+        if (\is_string($bestId) && $bestId !== '') {
+            return $bestId;
+        }
+
+        return $ids[\array_key_last($ids)];
+    }
+
+    /**
+     * Hostnames the certificate covers. The subscription's domains come first;
+     * the hostname being checked is always included, so an apex lookup still
+     * activates www when both are on the certificate, and the reverse.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * @return list<string>
+     */
+    private function hostnames(array $subscription, string $domain): array
+    {
+        $names = [];
+        $seen = [];
+        $add = static function (string $name) use (&$names, &$seen): void {
+            $key = strtolower($name);
+            if ($key === '' || isset($seen[$key])) {
+                return;
+            }
+
+            $seen[$key] = true;
+            $names[] = $name;
+        };
+
+        $relationship = $subscription['resource']['relationships']['tls_domains']['data'] ?? [];
+        if (\is_array($relationship)) {
+            foreach ($relationship as $reference) {
+                if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
+                    $add($reference['id']);
+                }
+            }
+        }
+
+        $add($domain);
+
+        return $names;
+    }
+
+    private function activationExists(string $certificateId, string $hostname): bool
+    {
+        $query = http_build_query([
+            'filter[tls_certificate.id]' => $certificateId,
+            'filter[tls_configuration.id]' => $this->tlsConfigurationId,
+            'filter[tls_domain.id]' => $hostname,
+            'page[size]' => 1,
+        ]);
+
+        $result = $this->request('GET', '/tls/activations?' . $query);
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to fetch Fastly TLS activations', $result));
+        }
+
+        if (!\is_array($result['response'])) {
+            throw new \RuntimeException('Fastly TLS activations response was not valid JSON.');
+        }
+
+        $data = $result['response']['data'] ?? null;
+        if (!\is_array($data)) {
+            throw new \RuntimeException('Fastly TLS activations response was missing its data list.');
+        }
+
+        return $data !== [];
+    }
+
+    private function createActivation(string $certificateId, string $hostname): void
+    {
+        $result = $this->request('POST', '/tls/activations', [
+            'data' => [
+                'type' => 'tls_activation',
+                'relationships' => [
+                    'tls_certificate' => [
+                        'data' => [
+                            'type' => 'tls_certificate',
+                            'id' => $certificateId,
+                        ],
+                    ],
+                    'tls_configuration' => [
+                        'data' => [
+                            'type' => 'tls_configuration',
+                            'id' => $this->tlsConfigurationId,
+                        ],
+                    ],
+                    'tls_domain' => [
+                        'data' => [
+                            'type' => 'tls_domain',
+                            'id' => $hostname,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        // A concurrent check can create the same activation between the lookup and this call.
+        if ($result['statusCode'] === 409) {
+            return;
+        }
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to activate Fastly TLS certificate for ' . $hostname, $result));
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -323,9 +324,20 @@ class Certificates extends Action
                     $this->validateDomain($rule, $domain, $validationDomain);
                 }
 
-                // If certificate exists already, double-check expiry date. Skip if job is forced
+                // If certificate exists already, double-check expiry date. Skip if job is forced.
+                // A delayed provider can already hold an issued certificate that still needs a
+                // TLS activation before the hostname is safe to call verified.
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    Console::info("Skipping, renew isn't required");
+                    if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+                        Console::info("Skipping, renew isn't required");
+                        return;
+                    }
+
+                    if ($this->finishWhenReady($certificates, $rule, $certificate, $domain->get(), $domainType, $logs)) {
+                        return;
+                    }
+
+                    Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
                     return;
                 }
             }
@@ -337,6 +349,11 @@ class Certificates extends Action
             $date = \date('H:i:s');
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+                $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
+            } elseif ($this->isReady($certificates->getCertificateStatus($domain->get(), $domainType))) {
+                // Delayed providers return here once issuance and TLS activation have both finished.
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
@@ -381,6 +398,48 @@ class Certificates extends Action
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
+    }
+
+    /**
+     * Mark a delayed certificate verified once the provider reports it issued.
+     *
+     * Issued includes the TLS activation. A provider that cannot activate throws,
+     * and the caller records a retryable failure instead of verified. A certificate
+     * that is still pending stays on generating.
+     */
+    private function finishWhenReady(
+        Provider $certificates,
+        Document $rule,
+        Document $certificate,
+        string $domain,
+        ?string $domainType,
+        string &$logs,
+    ): bool {
+        if (!$this->isReady($certificates->getCertificateStatus($domain, $domainType))) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+            $certificate->setAttribute('logs', $logs);
+
+            return false;
+        }
+
+        $renewDate = $certificates->issueCertificate(ID::unique(), $domain, $domainType);
+        $date = \date('H:i:s');
+        $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+        $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+        $certificate->setAttribute('logs', $logs);
+        $certificate->setAttributes([
+            'attempts' => 0,
+            'issueDate' => $certificate->getAttribute('issueDate') ?? DateTime::now(),
+            'renewDate' => $renewDate ?? $certificate->getAttribute('renewDate') ?? DateTime::now(),
+        ]);
+
+        return true;
+    }
+
+    private function isReady(string $status): bool
+    {
+        return $status === Status::ISSUED || $status === Status::RENEWING;
     }
 
     /**

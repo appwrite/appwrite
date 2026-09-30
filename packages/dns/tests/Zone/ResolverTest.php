@@ -47,6 +47,29 @@ final class ResolverTest extends TestCase
         $this->assertTrue($response->header->authoritative);
     }
 
+    public function testLookupAnswersOneCaaWhenTheApexRecordIsDuplicated(): void
+    {
+        $soa = new Record(
+            'caudit.com',
+            Record::TYPE_SOA,
+            ttl: 3600,
+            rdata: 'ns1.caudit.com hostmaster.caudit.com 1 7200 3600 1209600 300',
+        );
+        $zone = new Zone('caudit.com', [
+            new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "certainly.com"'),
+            new Record('caudit.com', Record::TYPE_CAA, ttl: 300, rdata: '0 issue "certainly.com"'),
+            new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "letsencrypt.org"'),
+        ], $soa);
+
+        $response = Resolver::lookup(Message::query(new Question('caudit.com', Record::TYPE_CAA)), $zone);
+
+        $this->assertSame(Message::RCODE_NOERROR, $response->header->responseCode);
+        $this->assertCount(2, $response->answers);
+        $values = array_map(static fn (Record $record): string => $record->rdata, $response->answers);
+        sort($values);
+        $this->assertSame(['0 issue "certainly.com"', '0 issue "letsencrypt.org"'], $values);
+    }
+
     public function testLookupReturnsExactTypeMatch(): void
     {
         $soa = new Record(

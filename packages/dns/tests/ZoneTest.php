@@ -127,4 +127,37 @@ final class ZoneTest extends TestCase
         $this->assertInstanceOf(Zone::class, $zone);
         $this->assertCount(2, $zone->records);
     }
+
+    public function testLockedAndUnlockedIdenticalApexCaaPublishOnce(): void
+    {
+        // The managed record is the locked "@" CAA. An unlocked copy stored under
+        // the apex FQDN absolutizes to the same name and the same rdata. Certainly
+        // stops issuance when both are published.
+        $managed = new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "certainly.com"');
+        $copy = new Record('caudit.com', Record::TYPE_CAA, ttl: 300, rdata: '0 issue "certainly.com"');
+        $otherIssuer = new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "letsencrypt.org"');
+        $www = new Record('www.caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "certainly.com"');
+
+        $zone = new Zone('caudit.com', [$managed, $copy, $otherIssuer, $www], $this->soa('caudit.com'));
+
+        $apex = array_values(array_filter(
+            $zone->records,
+            static fn (Record $record): bool => $record->name === 'caudit.com' && $record->type === Record::TYPE_CAA,
+        ));
+
+        $this->assertCount(2, $apex);
+        $this->assertSame($managed, $apex[0]);
+        $this->assertSame('0 issue "letsencrypt.org"', $apex[1]->rdata);
+        $this->assertCount(3, $zone->records);
+    }
+
+    private function soa(string $name): Record
+    {
+        return new Record(
+            $name,
+            Record::TYPE_SOA,
+            ttl: 3600,
+            rdata: "ns1.{$name} hostmaster.{$name} 1 7200 3600 1209600 300",
+        );
+    }
 }
