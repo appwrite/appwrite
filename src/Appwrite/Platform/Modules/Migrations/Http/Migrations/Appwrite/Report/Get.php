@@ -66,6 +66,7 @@ class Get extends Action
     ): void {
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+            $appwrite->setResolver((new Endpoint())->resolve(...));
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

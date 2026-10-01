@@ -270,6 +270,23 @@ trait MigrationsBase
         $this->assertEquals(0, $webhookCounts['error']);
     }
 
+    public function testGetAppwriteReport(): void
+    {
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+        $this->assertIsInt($report['body'][Resource::TYPE_USER]);
+    }
+
     public function testAppwriteMigrationRejectsPrivateEndpoints(): void
     {
         $headers = [
