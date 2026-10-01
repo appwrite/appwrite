@@ -14,6 +14,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as U
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Create as CreatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Delete as DeletePasskey;
+use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Get as GetPasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Update as UpdatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
@@ -42,6 +43,7 @@ class Http extends Service
             ->addAction(CreatePasskey::getName(), new CreatePasskey())
             ->addAction(UpdatePasskeyVerification::getName(), new UpdatePasskeyVerification())
             ->addAction(ListPasskeys::getName(), new ListPasskeys())
+            ->addAction(GetPasskey::getName(), new GetPasskey())
             ->addAction(DeletePasskey::getName(), new DeletePasskey())
             ->addAction(UpdatePasskey::getName(), new UpdatePasskey())
             ->addAction(CreatePasskeyToken::getName(), new CreatePasskeyToken())

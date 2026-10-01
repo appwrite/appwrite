@@ -24,6 +24,7 @@ use Appwrite\Platform\Modules\Users\Http\Users\MFA\RecoveryCodes\Update as Updat
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\Update as UpdateMFA;
 use Appwrite\Platform\Modules\Users\Http\Users\Name\Update as UpdateName;
 use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\Delete as DeletePasskey;
+use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\Get as GetPasskey;
 use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\XList as ListPasskeys;
 use Appwrite\Platform\Modules\Users\Http\Users\Password\Update as UpdatePassword;
 use Appwrite\Platform\Modules\Users\Http\Users\Phone\Update as UpdatePhone;
@@ -118,6 +119,7 @@ class Http extends Service
         $this->addAction(UpdateRecoveryCodes::getName(), new UpdateRecoveryCodes());
         $this->addAction(DeleteAuthenticator::getName(), new DeleteAuthenticator());
         $this->addAction(ListPasskeys::getName(), new ListPasskeys());
+        $this->addAction(GetPasskey::getName(), new GetPasskey());
         $this->addAction(DeletePasskey::getName(), new DeletePasskey());
     }
 }
