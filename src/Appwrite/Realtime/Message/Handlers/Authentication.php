@@ -108,6 +108,9 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['authorization'] = $authorization;
             $realtime->connections[$connectionId]['impersonatedUserId'] = $impersonatedUserId;
             $realtime->connections[$connectionId]['sessionId'] = $sessionId;
+            $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
+            // Now authenticated by this session, not by any JWT it was opened with.
+            $realtime->connections[$connectionId]['jwtExpire'] = null;
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

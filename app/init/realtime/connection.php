@@ -320,8 +320,14 @@ return function (Container $container): void {
 
             try {
                 $payload = $jwt->decode($authJWT);
-            } catch (JWTException) {
-                return null;
+            } catch (JWTException $error) {
+                // The user resource verified this token, but it can expire before this
+                // second decode. The signature is checked before expiry, so its claims
+                // still hold; the connection is closed for the expiry at its first send.
+                if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                    return null;
+                }
+                $payload = $jwt->decode($authJWT, false);
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
@@ -343,6 +349,32 @@ return function (Container $container): void {
 
         return null;
     }, ['request', 'user', 'store', 'proofForToken']);
+
+    // A connection holds no token to present again, so it ends when the JWT it was
+    // opened with expires, as an HTTP request with that JWT would then fail.
+    $container->set('jwtExpire', function (Request $request, User $user): ?int {
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        if ($user->isEmpty() || empty($authJWT)) {
+            return null;
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            // Expired since the user resource verified it: keep that expiry, which
+            // closes the connection at its first send, rather than dropping it.
+            if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                return null;
+            }
+            $payload = $jwt->decode($authJWT, false);
+        }
+
+        $expire = $payload['exp'] ?? null;
+
+        return \is_int($expire) ? $expire : null;
+    }, ['request', 'user']);
 
     $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
@@ -383,6 +415,16 @@ return function (Container $container): void {
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
             'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            // The project whose users hold this impersonator, so events about them can
+            // reach the connections they opened. The `user` resource loads them from the
+            // platform database in admin mode, on the console project, and for an account
+            // key on any project; it throws when a key and a session are both sent, so a
+            // user alongside both key headers came from the key.
+            'projectId' => (
+                $mode === APP_MODE_ADMIN
+                || $project->getId() === 'console'
+                || (!empty($request->getHeaderLine('x-appwrite-key', '')) && !empty($request->getHeaderLine('x-appwrite-user', '')))
+            ) ? 'console' : $project->getId(),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
 

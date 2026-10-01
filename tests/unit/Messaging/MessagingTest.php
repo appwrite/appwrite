@@ -647,6 +647,14 @@ final class MessagingTest extends TestCase
         foreach ([
             'users.A.update.status',
             'users.A.update.labels',
+            'users.A.update.email',
+            'users.A.update.phone',
+            'users.A.update.password',
+            'users.A.update.verification',
+            'users.A.verification.V.update',
+            'users.A.recovery.R.update',
+            'users.A.sessions.S.create',
+            'users.A.sessions.S.update',
             'users.A.sessions.S.delete',
             'users.A.sessions.delete',
             'users.A.delete',
@@ -661,6 +669,34 @@ final class MessagingTest extends TestCase
         }
     }
 
+    public function testFromPayloadUserEventsWithoutAccessChange(): void
+    {
+        // These neither shape roles nor end a session, so open connections are left alone.
+        foreach ([
+            'users.A.create',
+            'users.A.update.prefs',
+            'users.A.update.name',
+            'users.A.update.avatar',
+            'users.A.update.mfa',
+            'users.A.update.mfa.recovery-codes',
+            'users.A.create.mfa.recovery-codes',
+            'users.A.delete.mfa',
+            'users.A.recovery.R.create',
+            'users.A.verification.V.create',
+            'users.A.targets.T.create',
+            'users.A.tokens.T.create',
+            'users.A.challenges.C.create',
+            'users.A.identities.I.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => ID::custom('A')]),
+            );
+
+            $this->assertFalse($result['permissionsChanged'], $event);
+        }
+    }
+
     public function testSubscribeKeepsConnectionAuthorizationState(): void
     {
         $realtime = new Realtime();
@@ -669,6 +705,10 @@ final class MessagingTest extends TestCase
         $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
         $realtime->connections[1]['authorization'] = 'authorization';
         $realtime->connections[1]['sessionId'] = 'session';
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'];
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->connections[1]['jwtExpire'] = 50;
 
         // A later subscribe on the same connection unions its channels and must not
         // drop what the connection handler recorded about how it was opened.
@@ -676,11 +716,40 @@ final class MessagingTest extends TestCase
 
         $this->assertSame('authorization', $realtime->connections[1]['authorization']);
         $this->assertSame('session', $realtime->connections[1]['sessionId']);
+        $this->assertSame('A', $realtime->connections[1]['impersonatedUserId']);
+        $this->assertSame(['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'], $realtime->connections[1]['impersonator']);
+        $this->assertSame(100, $realtime->connections[1]['expire']);
+        $this->assertSame(50, $realtime->connections[1]['jwtExpire']);
         $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
 
         // A full unsubscribe forgets the connection entirely.
         $realtime->unsubscribe(1);
         $this->assertArrayNotHasKey(1, $realtime->connections);
+    }
+
+    public function testIsExpired(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(ID::custom('A'))->toString();
+
+        // 1: session only. 2: session and a JWT that ends sooner. 3: neither (guest).
+        $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->subscribe('1', 2, 'sub-2', [$role], ['documents'], [], 'A');
+        $realtime->connections[2]['expire'] = 100;
+        $realtime->connections[2]['jwtExpire'] = 50;
+        $realtime->subscribe('1', 3, 'sub-3', [Role::guests()->toString()], ['documents']);
+
+        $this->assertFalse($realtime->isExpired(1, 49));
+        $this->assertFalse($realtime->isExpired(2, 49));
+
+        // The JWT has expired; the session behind it has not.
+        $this->assertFalse($realtime->isExpired(1, 50));
+        $this->assertTrue($realtime->isExpired(2, 50));
+
+        $this->assertTrue($realtime->isExpired(1, 100));
+        $this->assertFalse($realtime->isExpired(3, \PHP_INT_MAX));
+        $this->assertFalse($realtime->isExpired(4, \PHP_INT_MAX));
     }
 
     public function testGetUserConnectionsIncludesConnectionsWithoutSubscriptions(): void
@@ -710,6 +779,35 @@ final class MessagingTest extends TestCase
         // Closing forgets it.
         $realtime->unsubscribe(1);
         $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
+    }
+
+    public function testGetImpersonatorConnections(): void
+    {
+        $realtime = new Realtime();
+        $roleA = Role::user(ID::custom('A'))->toString();
+
+        // Console user C impersonates A in projects 1 and 2; A also connects directly.
+        $realtime->subscribe('1', 1, 'sub-1', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's1'];
+        $realtime->subscribe('2', 2, 'sub-2', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[2]['impersonatedUserId'] = 'A';
+        $realtime->connections[2]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's2'];
+        $realtime->subscribe('1', 3, 'sub-3', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[3]['impersonator'] = null;
+
+        // C's own events reach both impersonated connections, across projects.
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
+        // A project user with the same ID is someone else.
+        $this->assertSame([], $realtime->getImpersonatorConnections('1', 'C'));
+        $this->assertSame([], $realtime->getImpersonatorConnections('console', ''));
+
+        // A's own events still reach every connection carrying A, impersonated or not.
+        $this->assertEqualsCanonicalizing([1, 3], $realtime->getUserConnections('1', 'A'));
+
+        // A later subscribe on an impersonated connection keeps the binding.
+        $realtime->subscribe('1', 1, 'sub-1b', [$roleA], ['files'], []);
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
     }
 
     public function testFromPayloadPermissions(): void
