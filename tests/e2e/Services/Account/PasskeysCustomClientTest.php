@@ -624,6 +624,58 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame('general_cursor_not_found', $response['body']['type']);
     }
 
+    public function testGetPasskey(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        [$other, $otherSession] = $this->createUserWithSession($project);
+        $this->registerPasskey($project, $session);
+        $this->registerPasskey($project, $otherSession);
+        $headers = $this->getSessionHeaders($project, $session);
+
+        $list = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers);
+        $passkeyId = $list['body']['passkeys'][0]['$id'];
+        $foreign = $this->client->call(Client::METHOD_GET, '/account/passkeys', $this->getSessionHeaders($project, $otherSession));
+        $foreignId = $foreign['body']['passkeys'][0]['$id'];
+        $pending = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers);
+        $this->assertSame(201, $pending['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($list['body']['passkeys'][0], $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys/' . $passkeyId, $this->getServerHeaders($project));
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($passkeyId, $response['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$foreignId, $pending['body']['passkeyId'], 'unknown'] as $id) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $id, $headers);
+            $this->assertSame(404, $response['headers']['status-code']);
+            $this->assertSame('user_passkey_not_found', $response['body']['type']);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $this->getGuestHeaders($project));
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $other['$id'] . '/passkeys/' . $passkeyId, $this->getServerHeaders($project));
+        $this->assertSame(404, $response['headers']['status-code']);
+        $this->assertSame('user_passkey_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/unknown/passkeys/' . $passkeyId, $this->getServerHeaders($project));
+        $this->assertSame(404, $response['headers']['status-code']);
+        $this->assertSame('user_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys/' . $passkeyId, $this->getGuestHeaders($project));
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
     public function testPasskeySatisfiesMfa(): void
     {
         $project = $this->getProject(true);
