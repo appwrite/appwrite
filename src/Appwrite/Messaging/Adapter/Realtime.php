@@ -42,6 +42,35 @@ class Realtime extends MessagingAdapter
         'presences'
     ];
 
+    // User events, after `users.{userId}`, that neither shape the user's roles nor
+    // end a session, so fromPayload() does not re-resolve the user's open connections
+    // for them. `*` stands for one ID segment. Anything not listed re-resolves, so a
+    // new user event is safe by default.
+    //
+    // `update.password` and `recovery.*.update` stay out: with `invalidateSessions`
+    // they delete sessions without emitting `sessions.*.delete`. `update.email` and
+    // `update.phone` stay out: they reset verification, which changes roles.
+    private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
+        'create',
+        'update.name',
+        'update.prefs',
+        'update.avatar',
+        'update.mfa',
+        'update.mfa.recovery-codes',
+        'create.mfa.recovery-codes',
+        'delete.mfa',
+        'sessions.*.create',
+        'sessions.*.update',
+        'recovery.*.create',
+        'verification.*.create',
+        'targets.*.create',
+        'targets.*.update',
+        'targets.*.delete',
+        'tokens.*.create',
+        'challenges.*.create',
+        'identities.*.delete',
+    ];
+
     /**
      * Connection Tree
      *
@@ -876,9 +905,23 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 // Roles come from the user document (verification, labels, status,
-                // sessions), so the user's open connections re-resolve on every
-                // change to it, as they already do for memberships.
+                // sessions), so the user's open connections re-resolve when it changes,
+                // as they already do for memberships.
                 $permissionsChanged = true;
+                $suffix = \array_slice($parts, 2);
+                foreach (self::USER_EVENTS_WITHOUT_ACCESS_CHANGE as $pattern) {
+                    $segments = \explode('.', $pattern);
+                    if (\count($segments) !== \count($suffix)) {
+                        continue;
+                    }
+                    foreach ($segments as $i => $segment) {
+                        if ($segment !== '*' && $segment !== $suffix[$i]) {
+                            continue 2;
+                        }
+                    }
+                    $permissionsChanged = false;
+                    break;
+                }
                 break;
             case 'rules':
             case 'migrations':

@@ -647,6 +647,12 @@ final class MessagingTest extends TestCase
         foreach ([
             'users.A.update.status',
             'users.A.update.labels',
+            'users.A.update.email',
+            'users.A.update.phone',
+            'users.A.update.password',
+            'users.A.update.verification',
+            'users.A.verification.V.update',
+            'users.A.recovery.R.update',
             'users.A.sessions.S.delete',
             'users.A.sessions.delete',
             'users.A.delete',
@@ -658,6 +664,36 @@ final class MessagingTest extends TestCase
 
             $this->assertTrue($result['permissionsChanged'], $event);
             $this->assertSame([Role::user(ID::custom('A'))->toString()], $result['roles'], $event);
+        }
+    }
+
+    public function testFromPayloadUserEventsWithoutAccessChange(): void
+    {
+        // These neither shape roles nor end a session, so open connections are left alone.
+        foreach ([
+            'users.A.create',
+            'users.A.update.prefs',
+            'users.A.update.name',
+            'users.A.update.avatar',
+            'users.A.update.mfa',
+            'users.A.update.mfa.recovery-codes',
+            'users.A.create.mfa.recovery-codes',
+            'users.A.delete.mfa',
+            'users.A.sessions.S.create',
+            'users.A.sessions.S.update',
+            'users.A.recovery.R.create',
+            'users.A.verification.V.create',
+            'users.A.targets.T.create',
+            'users.A.tokens.T.create',
+            'users.A.challenges.C.create',
+            'users.A.identities.I.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => ID::custom('A')]),
+            );
+
+            $this->assertFalse($result['permissionsChanged'], $event);
         }
     }
 
