@@ -17,9 +17,8 @@ use Utopia\Validator;
  * Distinct from Utopia\Validator\Hostname, which only checks string format
  * and an optional allow-list and does not touch DNS.
  *
- * Known limitation: there is a TOCTOU window between this DNS lookup and the
- * subsequent HTTP fetch. To fully prevent DNS rebinding the caller must pin
- * curl to a verified IP via CURLOPT_RESOLVE.
+ * Callers that go on to fetch the host reuse the resolved addresses through
+ * getResolve() instead of resolving it a second time.
  */
 class PublicHostname extends Validator
 {
@@ -58,6 +57,13 @@ class PublicHostname extends Validator
 
     private string $reason = '';
 
+    private string $hostname = '';
+
+    /**
+     * @var array<string>
+     */
+    private array $addresses = [];
+
     public function getDescription(): string
     {
         return $this->reason !== ''
@@ -78,6 +84,8 @@ class PublicHostname extends Validator
     public function isValid(mixed $value): bool
     {
         $this->reason = '';
+        $this->hostname = '';
+        $this->addresses = [];
 
         if (!\is_string($value) || $value === '') {
             $this->reason = 'Hostname is empty.';
@@ -88,14 +96,14 @@ class PublicHostname extends Validator
 
         // IP literals are checked directly, no DNS round-trip.
         if (\filter_var($hostname, FILTER_VALIDATE_IP) !== false) {
-            if (!self::isPublicIp($hostname)) {
+            if (!static::isPublicIp($hostname)) {
                 $this->reason = "Address {$hostname} is in a private or reserved range.";
                 return false;
             }
             return true;
         }
 
-        $addresses = self::resolve($hostname);
+        $addresses = static::resolve($hostname);
 
         if (empty($addresses)) {
             $this->reason = "Hostname {$hostname} does not resolve.";
@@ -103,13 +111,37 @@ class PublicHostname extends Validator
         }
 
         foreach ($addresses as $ip) {
-            if (!self::isPublicIp($ip)) {
+            if (!static::isPublicIp($ip)) {
                 $this->reason = "Hostname {$hostname} resolves to private or reserved address {$ip}.";
                 return false;
             }
         }
 
+        $this->hostname = $hostname;
+        $this->addresses = $addresses;
+
         return true;
+    }
+
+    /**
+     * CURLOPT_RESOLVE entries mapping the last valid hostname to the addresses
+     * it resolved to, so curl reuses them instead of resolving the hostname
+     * again. Empty for IP literals, which curl never resolves.
+     *
+     * @return array<string>
+     */
+    public function getResolve(int $port): array
+    {
+        if (empty($this->addresses)) {
+            return [];
+        }
+
+        $addresses = \array_map(
+            fn (string $ip) => \str_contains($ip, ':') ? "[{$ip}]" : $ip,
+            $this->addresses
+        );
+
+        return ["{$this->hostname}:{$port}:" . \implode(',', $addresses)];
     }
 
     /**

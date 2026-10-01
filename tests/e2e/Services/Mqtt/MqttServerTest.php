@@ -125,6 +125,42 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testJwtFromAnotherProjectConnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+
+        // Another project holds a user with the same ID and mints a session-less JWT for it.
+        $otherProject = $this->getProject(true);
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ], [
+            'userId' => $userId,
+            'email' => 'mqtt-other-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $otherProject['$id'],
+            'x-appwrite-key' => $otherProject['apiKey'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        // Still good where it was minted.
+        $own = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $own->connect($otherProject['$id'], $jwt['body']['jwt'], 'e2e-jwt-own-' . $userId, cleanStart: true));
+        $own->disconnect();
+
+        // Test for FAILURE: replayed against this project, it must not authenticate as this project's user.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $jwt['body']['jwt'], 'e2e-jwt-cross-' . $userId, cleanStart: true));
+        $subscriber->disconnect();
+    }
+
     public function testSessionAuthConnect(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -260,6 +296,14 @@ final class MqttServerTest extends Scope
             $this->assertSame([0x80], $subscriber->subscribe(['users/' . $otherId]));
             $this->assertSame([0x80], $subscriber->subscribe(['users/#']));
             $this->assertSame([0x80], $subscriber->subscribe(['users/+']));
+
+            // Test for FAILURE: a wildcard first level matches users/<id> like any other first level,
+            // so it is refused too — including + followed by another user's id.
+            $this->assertSame([0x80], $subscriber->subscribe(['#']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/+']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/#']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/' . $otherId]));
         } finally {
             $subscriber->disconnect();
         }
@@ -297,6 +341,50 @@ final class MqttServerTest extends Scope
         $this->assertSame('users/' . $userId, $received[0]['topic']);
         $payload = \json_decode($received[0]['payload'], true);
         $this->assertSame('you have mail', $payload['notification']['body']);
+    }
+
+    /**
+     * A users[]-addressed push reaches only its user, whatever another user of the project subscribed
+     * to. The other user's SUBACKs are deliberately not asserted here (testUserTopicOwnershipOnSubscribe
+     * does that): this pins the outcome, so it also holds on the delivery path alone.
+     */
+    public function testUserTargetedPushReachesOnlyItsUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        ['userId' => $otherId, 'jwt' => $otherJwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $this->setupAppwriteProvider($server);
+
+        $owner = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $owner->connect($projectId, $jwt, 'e2e-usertopic-owner-' . $userId, cleanStart: true));
+        $this->assertSame([1], $owner->subscribe(['users/' . $userId]));
+
+        // Another user of the same project tries every first-level wildcard that matches users/<id>.
+        $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-usertopic-other-' . $otherId, cleanStart: true));
+        $other->subscribe(['#', '+/+', '+/#', '+/' . $userId]);
+
+        try {
+            $this->publishToUser($server, $userId, 'Private', 'only for ' . $userId);
+            $ownerReceived = $owner->consume(limit: 1, timeout: 20.0);
+            $otherReceived = $other->consume(limit: 1, timeout: 5.0);
+        } finally {
+            $owner->disconnect();
+            $other->disconnect();
+        }
+
+        // Test for SUCCESS: the push was fanned out, and its user received it.
+        $this->assertCount(1, $ownerReceived, 'the user did not receive their own push');
+        $this->assertSame('users/' . $userId, $ownerReceived[0]['topic']);
+
+        // Test for FAILURE: nobody else in the project received it.
+        $this->assertSame([], $otherReceived, 'another user received a push addressed to ' . $userId);
     }
 
     public function testKeepAliveReapsSilentClient(): void
@@ -416,7 +504,7 @@ final class MqttServerTest extends Scope
      * @param  array<string, string>  $server
      * @param  array<string, mixed>  $data
      */
-    private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = [], array $extra = []): void
+    private function publishCampaign(array $server, string $topicId, string $title, string $body, array $data = [], array $extra = []): string
     {
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, \array_merge([
             'messageId' => ID::unique(),
@@ -432,6 +520,8 @@ final class MqttServerTest extends Scope
             $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $server);
             $this->assertContains($message['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
         }, 30000, 500);
+
+        return $messageId;
     }
 
     /**
@@ -501,7 +591,7 @@ final class MqttServerTest extends Scope
         $subscriber->subscribe([$topicName]);
 
         try {
-            $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
+            $messageId = $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
             $received = $subscriber->consume(limit: 1, timeout: 20.0);
         } finally {
             $subscriber->disconnect();
@@ -516,6 +606,7 @@ final class MqttServerTest extends Scope
         $this->assertEquals('Match update', $payload['notification']['title']);
         $this->assertEquals('India needs 12 off 6', $payload['notification']['body']);
         $this->assertEquals(['matchId' => '42'], $payload['data']);
+        $this->assertSame($messageId, $payload['messageId']);
     }
 
     public function testCampaignCarriesChannelIdToSubscriber(): void

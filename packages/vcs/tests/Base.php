@@ -223,30 +223,24 @@ abstract class Base extends TestCase
         $this->assertEmpty($result);
     }
 
-    #[DataProvider('rootDirectories')]
-    public function testGenerateCloneCommandSelectsTheRootDirectory(string $rootDirectory, string $pattern): void
+    #[DataProvider('cloneTypes')]
+    public function testGenerateCloneCommandRejectsAnOptionAsTheVersion(string $versionType): void
     {
-        $command = $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', Git::CLONE_TYPE_BRANCH, '/tmp/clone', $rootDirectory);
+        $this->expectException(\InvalidArgumentException::class);
 
-        $this->assertStringContainsString(escapeshellarg($pattern), $command);
+        $this->vcsAdapter->generateCloneCommand('owner', 'repo', '--upload-pack=id', $versionType, '/tmp/clone', '');
     }
 
-    /**
-     * Git matches a sparse-checkout pattern gitignore-style, so a './' prefix
-     * looks for a directory literally named '.' and checks out nothing.
-     */
-    public static function rootDirectories(): \Iterator
+    public static function cloneTypes(): \Iterator
     {
-        yield 'repository root' => ['', '*'];
-        yield 'dot' => ['.', '*'];
-        yield 'dot slash' => ['./', '*'];
-        yield 'slash' => ['/', '*'];
-        yield 'bare' => ['docs', 'docs'];
-        yield 'trailing slash' => ['docs/', 'docs'];
-        yield 'dot slash prefix' => ['./docs', 'docs'];
-        yield 'dot slash prefix and trailing slash' => ['./docs/', 'docs'];
-        yield 'nested' => ['./astro/starter', 'astro/starter'];
-        // A directory named '0' is a real path, not a root sentinel.
-        yield 'zero' => ['0', '0'];
+        yield 'branch' => [Git::CLONE_TYPE_BRANCH];
+        yield 'commit' => [Git::CLONE_TYPE_COMMIT];
+    }
+
+    public function testGenerateCloneCommandRejectsAnUnknownCloneType(): void
+    {
+        $this->expectException(Exception::class);
+
+        $this->vcsAdapter->generateCloneCommand('owner', 'repo', 'main', 'unknown', '/tmp/clone', '');
     }
 }

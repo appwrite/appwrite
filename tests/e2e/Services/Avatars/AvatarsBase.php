@@ -342,7 +342,7 @@ trait AvatarsBase
             'url' => 'http://unknown-address.test',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -350,7 +350,7 @@ trait AvatarsBase
             'url' => 'http://localhost',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }
@@ -814,6 +814,20 @@ trait AvatarsBase
             'height' => 600,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Headers that unlock cloud metadata services
+         */
+        foreach (['Metadata-Flavor' => 'Google', 'Metadata' => 'true', 'host' => 'metadata.google.internal'] as $name => $value) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+                'headers' => [$name => $value],
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        }
 
         /**
          * Test for FAILURE - Invalid viewport parameters
