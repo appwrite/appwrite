@@ -133,7 +133,7 @@ final class UsersConsoleClientTest extends Scope
         $this->assertEquals($targetId, $priority['body']['$id']);
     }
 
-    public function testCreateUserSessionRequiresServerScope(): void
+    public function testUserSessionRoutesRequireServerScope(): void
     {
         $projectId = $this->getProject()['$id'];
 
@@ -191,5 +191,54 @@ final class UsersConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $targetId . '/sessions', $memberHeaders);
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions/' . ID::unique(), $memberHeaders);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions', $memberHeaders);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+    }
+
+    public function testSessionScopedKeyCanManageSessions(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // A target user created by an operator
+        $target = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@example.com',
+            'password' => 'password',
+            'name' => 'Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        // A key scoped to sessions only, without users.*
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['sessions.read', 'sessions.write']),
+        ];
+
+        /**
+         * Test for SUCCESS: a key scoped to sessions.* manages user sessions without users.*
+         */
+        $created = $this->client->call(Client::METHOD_POST, '/users/' . $targetId . '/sessions', $keyHeaders);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $sessionId = $created['body']['$id'];
+
+        $list = $this->client->call(Client::METHOD_GET, '/users/' . $targetId . '/sessions', $keyHeaders);
+        $this->assertEquals(200, $list['headers']['status-code']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions/' . $sessionId, $keyHeaders);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $deletedAll = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions', $keyHeaders);
+        $this->assertEquals(204, $deletedAll['headers']['status-code']);
     }
 }

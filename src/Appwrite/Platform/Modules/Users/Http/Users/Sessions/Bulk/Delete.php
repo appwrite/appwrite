@@ -9,9 +9,11 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -32,7 +34,7 @@ class Delete extends Action
             ->desc('Delete user sessions')
             ->groups(['api', 'users'])
             ->label('event', 'users.[userId].sessions.delete')
-            ->label('scope', 'users.write')
+            ->label('scope', ['users.write', 'sessions.write'])
             ->label('audits.event', 'session.delete')
             ->label('audits.resource', 'user/{user.$id}')
             ->label('sdk', new Method(
@@ -53,11 +55,17 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization, User $authUser): void
     {
+        if (!$authUser->isKey($authorization->getRoles()) && !$authUser->isPrivileged($authorization->getRoles())) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {

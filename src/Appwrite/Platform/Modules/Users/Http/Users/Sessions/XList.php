@@ -7,9 +7,11 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
@@ -31,7 +33,7 @@ class XList extends Action
             ->setHttpPath('/v1/users/:userId/sessions')
             ->desc('List user sessions')
             ->groups(['api', 'users'])
-            ->label('scope', 'users.read')
+            ->label('scope', ['users.read', 'sessions.read'])
             ->label('sdk', new Method(
                 namespace: 'users',
                 group: 'sessions',
@@ -50,11 +52,17 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('locale')
+            ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale): void
+    public function action(string $userId, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Authorization $authorization, User $authUser): void
     {
+        if (!$authUser->isKey($authorization->getRoles()) && !$authUser->isPrivileged($authorization->getRoles())) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
