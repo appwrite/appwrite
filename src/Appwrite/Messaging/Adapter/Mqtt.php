@@ -23,6 +23,7 @@ class Mqtt extends MessagingAdapter
     public readonly Counter $messagesAcked;
     public readonly Counter $pubacksReceived;
     public readonly Counter $reauth;
+    public readonly Counter $connectRefused;
     public readonly Histogram $authDuration;
     public readonly Histogram $connectionDuration;
     public readonly Histogram $messageSize;
@@ -41,6 +42,8 @@ class Mqtt extends MessagingAdapter
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
         $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
         $this->reauth = $telemetry->createCounter('mqtt.reauth');
+        // The broker counts accepted/rejected CONNECTs; this adds the refusal reason it cannot see.
+        $this->connectRefused = $telemetry->createCounter('mqtt.connect.refused');
         $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
         $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
         $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');

@@ -64,6 +64,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'not_authorized']);
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
@@ -78,6 +79,7 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
+                $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
