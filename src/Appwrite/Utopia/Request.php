@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Network\TrustedProxies;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
@@ -26,6 +27,23 @@ class Request extends UtopiaRequest
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
 
         parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
+    }
+
+    /**
+     * Client address. X-Forwarded-For and other trusted IP headers are used
+     * only when the connection `remote_addr` is in `_APP_TRUSTED_PROXIES`.
+     * An empty list ignores client forwarding headers (safe for direct exposure).
+     */
+    #[\Override]
+    public function getIP(): string
+    {
+        $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
+
+        if (!TrustedProxies::fromEnv()->contains($remoteAddr)) {
+            return $remoteAddr;
+        }
+
+        return parent::getIP();
     }
 
     /**

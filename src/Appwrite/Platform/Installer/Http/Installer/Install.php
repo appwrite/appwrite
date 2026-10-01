@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Installer\Report;
 use Appwrite\Platform\Installer\Runtime\Config;
@@ -9,6 +10,7 @@ use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
@@ -99,6 +101,11 @@ class Install extends Action
             $swooleResponse->write("event: ping\ndata: {\"time\":" . time() . "}\n\n");
         }
 
+        if (!Validate::validateSecret($request)) {
+            $this->sendUnauthorized($response, $swooleResponse, $wantsStream, 'Invalid installer secret');
+            return;
+        }
+
         if (!Validate::validateCsrf($request)) {
             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Invalid CSRF token');
             return;
@@ -112,9 +119,12 @@ class Install extends Action
         $opensslKey = trim($opensslKey);
         $assistantOpenAIKey = trim($assistantOpenAIKey);
 
-        if ($opensslKey === '' && !$config->isUpgrade()) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Secret key is required');
-            return;
+        if (EncryptionKey::isInsecure($opensslKey)) {
+            if ($config->isUpgrade()) {
+                $opensslKey = '';
+            } else {
+                $opensslKey = (new Token())->generate();
+            }
         }
 
         $account = [];
@@ -406,11 +416,21 @@ class Install extends Action
 
     private function sendBadRequest(Response $response, SwooleResponse $swooleResponse, bool $wantsStream, string $message, string $step = Server::STEP_CONFIG_FILES): void
     {
+        $this->sendError($response, $swooleResponse, $wantsStream, Response::STATUS_CODE_BAD_REQUEST, $message, $step);
+    }
+
+    private function sendUnauthorized(Response $response, SwooleResponse $swooleResponse, bool $wantsStream, string $message): void
+    {
+        $this->sendError($response, $swooleResponse, $wantsStream, Response::STATUS_CODE_UNAUTHORIZED, $message);
+    }
+
+    private function sendError(Response $response, SwooleResponse $swooleResponse, bool $wantsStream, int $status, string $message, string $step = Server::STEP_CONFIG_FILES): void
+    {
         if ($wantsStream) {
             $this->writeSseEvent($swooleResponse, Server::STATUS_ERROR, ['message' => $message, 'step' => $step]);
             $swooleResponse->end();
         } else {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+            $response->setStatusCode($status);
             $response->json(['success' => false, 'message' => $message]);
         }
     }

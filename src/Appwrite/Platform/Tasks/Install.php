@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
@@ -448,13 +449,7 @@ class Install extends Action
             $hasDefault = $default !== null && $default !== '';
 
             if ($filter === 'token') {
-                if ($hasDefault) {
-                    $input[$var['name']] = $default;
-                } elseif ($shouldGenerateSecrets) {
-                    $input[$var['name']] = $token->generate();
-                } else {
-                    $input[$var['name']] = '';
-                }
+                $input[$var['name']] = $this->tokenEnvironmentValue(is_string($default) ? $default : '', $shouldGenerateSecrets, $token);
             } elseif ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
@@ -476,6 +471,17 @@ class Install extends Action
             }
         }
 
+        foreach ($vars as $var) {
+            if (($var['filter'] ?? null) !== 'token') {
+                continue;
+            }
+            $name = $var['name'];
+            $current = $input[$name] ?? '';
+            if (EncryptionKey::isInsecure(is_string($current) ? $current : null)) {
+                $input[$name] = $shouldGenerateSecrets ? $token->generate() : '';
+            }
+        }
+
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
         // encodes them as escaped single-line double-quoted assignments.
 
@@ -493,6 +499,15 @@ class Install extends Action
         }
 
         return $input;
+    }
+
+    private function tokenEnvironmentValue(string $default, bool $shouldGenerateSecrets, Token $token): string
+    {
+        if (!EncryptionKey::isInsecure($default)) {
+            return $default;
+        }
+
+        return $shouldGenerateSecrets ? $token->generate() : '';
     }
 
     public function hasExistingConfig(): bool

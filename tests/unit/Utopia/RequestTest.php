@@ -24,6 +24,40 @@ final class RequestTest extends TestCase
         $this->request = new Request(new SwooleRequest());
     }
 
+    public function testGetIPIgnoresClientForwardedForWhenProxiesEmpty(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['x-forwarded-for' => '198.51.100.1'];
+            $request = new Request($swoole);
+
+            $this->assertSame('203.0.113.10', $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testGetIPHonorsForwardedForFromTrustedProxy(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['x-forwarded-for' => '198.51.100.1'];
+            $request = new Request($swoole);
+
+            $this->assertSame('198.51.100.1', $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
     public function testFilters(): void
     {
         $this->assertFalse($this->request->hasFilters());

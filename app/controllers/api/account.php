@@ -3613,16 +3613,9 @@ Http::patch('/v1/account/password')
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
-        $sessions = $user->getAttribute('sessions', []);
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate && $current !== null) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                if ($session->getId() !== $current->getId()) {
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                }
-            }
+            User::invalidateAuthentication($dbForProject, $user, $current->getId());
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -4340,34 +4333,37 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if ($document->isEmpty()) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
 
+            $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
         $user->setAttributes($profile->getArrayCopy());
 
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
+            User::invalidateAuthentication($dbForProject, $profile);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
-
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
@@ -4710,34 +4706,37 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if ($document->isEmpty()) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
 
+            $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
         $user->setAttributes($profile->getArrayCopy());
 
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
+            User::invalidateAuthentication($dbForProject, $profile);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
-
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

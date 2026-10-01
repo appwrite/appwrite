@@ -2186,6 +2186,18 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        $reuse = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $id,
+            'secret' => $recovery,
+            'password' => $newPassword . '-reuse',
+        ]);
+
+        $this->assertEquals(401, $reuse['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */

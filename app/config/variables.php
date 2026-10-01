@@ -108,9 +108,9 @@ return [
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
-                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
+                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The installer generates a unique value. Production refuses to start when this is empty or the historical `your-secret-key` placeholder. **Keep it a secret and have a backup for it**.',
                 'introduction' => '',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
                 'filter' => 'token'
@@ -459,9 +459,18 @@ return [
             ],
             [
                 'name' => '_APP_TRUSTED_HEADERS',
-                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively. These headers are only read when the connection address is listed in `_APP_TRUSTED_PROXIES`.',
                 'introduction' => '1.8.0',
                 'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_PROXIES',
+                'description' => 'Comma-separated CIDRs (or exact IPs) of reverse proxies that may set `_APP_TRUSTED_HEADERS` such as X-Forwarded-For. Empty (the default) ignores client forwarding headers and uses the connection IP — the safe setting when Appwrite is exposed directly. Traefik and other load-balancer deployments must list the proxy addresses (for example the Docker bridge `172.16.0.0/12`, or the Traefik container IP).',
+                'introduction' => '1.8.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -4,9 +4,11 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -187,5 +189,37 @@ class User extends Document
         }
 
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    /**
+     * Delete sessions (optionally keeping the current one) and outstanding MFA
+     * challenges so a password change or recovery cannot leave a pending 2FA.
+     */
+    public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void
+    {
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            if (!$session instanceof Document) {
+                continue;
+            }
+            if ($keepSessionId !== null && $session->getId() === $keepSessionId) {
+                continue;
+            }
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $challenges = $dbForProject->find('challenges', [
+            Query::equal('userInternalId', [$sequence]),
+            Query::limit(APP_LIMIT_COUNT),
+            Query::orderAsc(),
+        ]);
+
+        foreach ($challenges as $challenge) {
+            $dbForProject->deleteDocument('challenges', $challenge->getId());
+        }
     }
 }

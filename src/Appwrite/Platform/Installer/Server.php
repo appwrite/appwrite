@@ -36,6 +36,9 @@ class Server
     public const string STATUS_ERROR = 'error';
 
     public const string CSRF_COOKIE = 'appwrite-installer-csrf';
+    public const string INSTALLER_SECRET_HEADER = 'x-appwrite-installer-secret';
+
+    private static string $installerSecret = '';
 
     public const array INSTALLER_CSP = [
         "default-src 'self'",
@@ -120,14 +123,34 @@ class Server
             $this->startDockerInstaller($opts);
         }
 
+        $this->issueInstallerSecret();
         $this->printInstallerUrl($host, $port);
         $this->startSwooleServer($host, (int) $port, $readyFile);
+    }
+
+    public static function installerSecret(): string
+    {
+        return self::$installerSecret;
+    }
+
+    public static function setInstallerSecret(string $secret): void
+    {
+        self::$installerSecret = $secret;
+    }
+
+    private function issueInstallerSecret(): void
+    {
+        self::$installerSecret = bin2hex(random_bytes(32));
+        fwrite(STDOUT, PHP_EOL);
+        fwrite(STDOUT, 'Installer secret: ' . self::$installerSecret . PHP_EOL);
+        fwrite(STDOUT, 'Provide it as the x-appwrite-installer-secret header, or open the URL below.' . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
     }
 
     private function printInstallerUrl(string $host, string $port): void
     {
         $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
-        $url = "http://$displayHost:$port";
+        $url = "http://$displayHost:$port/?secret=" . self::$installerSecret;
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
