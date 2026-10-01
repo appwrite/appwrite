@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Match requests by city, ISP, and connection type with Premium Geo DB"
-date: 2026-09-29
+date: 2026-10-01
 cover: /images/blog/announcing-premium-geo-db/cover.avif
 tags: firewall, security, console, api
 ---
