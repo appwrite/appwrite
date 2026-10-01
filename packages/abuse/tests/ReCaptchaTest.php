@@ -37,7 +37,13 @@ final class ReCaptchaTest extends TestCase
         $this->assertSame('POST', $request->getMethod());
         $this->assertSame(ReCaptcha::URL, (string) $request->getUri());
         $this->assertSame('application/x-www-form-urlencoded', $request->getHeaderLine('Content-Type'));
-        $this->assertSame('secret=s3cret%26key&response=token%2Fwith%2Bchars&remoteip=203.0.113.7', (string) $request->getBody());
+
+        \parse_str((string) $request->getBody(), $fields);
+        $this->assertSame([
+            'secret' => 's3cret&key',
+            'response' => 'token/with+chars',
+            'remoteip' => '203.0.113.7',
+        ], $fields);
     }
 
     /**
