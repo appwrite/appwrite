@@ -131,7 +131,7 @@ Once you have initialised your Orchestration object the following methods can be
     - `command` [Array]
 
         The command to run in the container seperated into a array.
-    
+
     - `entrypoint` [String]
 
         The executable to run in the container.
@@ -143,11 +143,11 @@ Once you have initialised your Orchestration object the following methods can be
     - `volumes` [Array]
 
         The volumes to attach to the container.
-    
+
     - `env` [Array]
 
         The environment variables to set in the container.
-    
+
     - `mountFolder` [String]
 
         A folder that will be automatically mounted to /tmp in the container
@@ -161,7 +161,7 @@ Once you have initialised your Orchestration object the following methods can be
         The hostname to set on the container.
 
     - `remove` [Boolean]
-  
+
         Whether to remove the container once it exits.
 
     </details>
@@ -194,7 +194,7 @@ Once you have initialised your Orchestration object the following methods can be
     - `container_id` [String] [Required]
 
         The ID of the container to execute the command in.
-    
+
     - `command` [Array] [Required]
 
         The command to execute in the container.
@@ -242,7 +242,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### List containers
-    
+
     This method returns an array of containers.
 
     ```php
@@ -262,7 +262,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### List Networks
-    
+
     This method returns an array of networks.
 
     ```php
@@ -280,7 +280,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### Create a Network
-    
+
     This method creates a new network and returns a boolean value indicating if the network was created successfully.
 
     ```php
