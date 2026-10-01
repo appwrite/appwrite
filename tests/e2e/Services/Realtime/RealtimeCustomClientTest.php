@@ -1162,6 +1162,92 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client);
     }
 
+    public function testConnectionEndsWithJwt(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'jwt-expiry@localhost.test';
+        $password = 'password';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $userId = $account['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $cookie,
+        ], [
+            'duration' => 2,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        $byJwt = $this->getWebsocket(['account'], ['origin' => 'http://localhost', 'x-appwrite-jwt' => $jwt]);
+        $this->assertEquals('connected', json_decode($byJwt->receive(), true)['type']);
+        $bySession = $this->getWebsocket(['account'], ['origin' => 'http://localhost', 'cookie' => $cookie]);
+        $this->assertEquals('connected', json_decode($bySession->receive(), true)['type']);
+
+        // Expiry fires no event; wait until the HTTP API refuses the JWT.
+        $this->assertEventually(function () use ($projectId, $jwt) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-jwt' => $jwt,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $cookie,
+        ], [
+            'prefs' => ['key' => 'value'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - the session behind the JWT is still valid, so its own connection stays
+         */
+        $event = $this->receiveUntilEvent($bySession, fn (array $message) => \in_array("users.{$userId}.update.prefs", $message['data']['events'] ?? [], true));
+        $this->assertEquals('event', $event['type']);
+
+        $bySession->send(\json_encode(['type' => 'ping']));
+        $this->assertEquals('pong', json_decode($bySession->receive(), true)['type']);
+        $bySession->close();
+
+        /**
+         * Test for FAILURE - the JWT connection gets nothing after expiry and is closed
+         */
+        $frames = $this->receiveUntilClosed($byJwt);
+        $events = \array_merge(...\array_map(fn (array $frame) => $frame['data']['events'] ?? [], $frames));
+        $this->assertNotContains("users.{$userId}.update.prefs", $events);
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
+    }
+
     public function testChannelDatabase()
     {
         $user = $this->getUser();

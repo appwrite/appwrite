@@ -170,4 +170,22 @@ class User extends Document
         return $session->isSet('expire')
             && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
     }
+
+    /**
+     * Unix timestamp at which a session of the user expires, or null when the user
+     * has no such session or it has no expiry.
+     *
+     * Used by realtime, which holds a connection open past the request that
+     * authenticated it and so has to end it at this time.
+     */
+    public function sessionExpire(string $sessionId): ?int
+    {
+        $session = $this->find('$id', $sessionId, 'sessions');
+
+        if (empty($session) || !$session->isSet('expire')) {
+            return null;
+        }
+
+        return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
 }

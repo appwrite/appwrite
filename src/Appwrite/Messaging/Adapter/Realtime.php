@@ -51,6 +51,8 @@ class Realtime extends MessagingAdapter
     // they delete sessions without emitting `sessions.*.delete`. `sessions.*.create`
     // stays out too: the session limit and ID-token sign-in delete older sessions the
     // same way, and magic URL, OTP and OAuth sign-in can set verification.
+    // `sessions.*.update` stays out: extending a session moves the expiry its open
+    // connections are held to.
     // `update.email` and `update.phone` stay out: they reset verification, which
     // changes roles.
     private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
@@ -62,7 +64,6 @@ class Realtime extends MessagingAdapter
         'update.mfa.recovery-codes',
         'create.mfa.recovery-codes',
         'delete.mfa',
-        'sessions.*.update',
         'recovery.*.create',
         'verification.*.create',
         'targets.*.create',
@@ -83,6 +84,8 @@ class Realtime extends MessagingAdapter
      *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
      *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
      *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
+     *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
+     *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
@@ -191,7 +194,7 @@ class Realtime extends MessagingAdapter
         ];
 
         // Recorded once by the connection handler; every later (re)subscribe keeps it.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -450,6 +453,24 @@ class Realtime extends MessagingAdapter
             && array_key_exists($role, $this->subscriptions[$projectId])
             && array_key_exists($channel, $this->subscriptions[$projectId][$role])
             && !empty($this->subscriptions[$projectId][$role][$channel]);
+    }
+
+    /**
+     * Whether the session or JWT a connection authenticated with has expired.
+     *
+     * Expiry fires no event, so this is checked before every delivery and
+     * periodically for connections that receive nothing.
+     */
+    public function isExpired(mixed $connection, int $now): bool
+    {
+        foreach (['expire', 'jwtExpire'] as $key) {
+            $expire = $this->connections[$connection][$key] ?? null;
+            if ($expire !== null && $expire <= $now) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

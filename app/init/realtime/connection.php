@@ -344,6 +344,27 @@ return function (Container $container): void {
         return null;
     }, ['request', 'user', 'store', 'proofForToken']);
 
+    // A connection holds no token to present again, so it ends when the JWT it was
+    // opened with expires, as an HTTP request with that JWT would then fail.
+    $container->set('jwtExpire', function (Request $request, User $user): ?int {
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        if ($user->isEmpty() || empty($authJWT)) {
+            return null;
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException) {
+            return null;
+        }
+
+        $expire = $payload['exp'] ?? null;
+
+        return \is_int($expire) ? $expire : null;
+    }, ['request', 'user']);
+
     $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();

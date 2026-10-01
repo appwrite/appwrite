@@ -474,6 +474,29 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
+    // Sent to a connection whose access has ended, right before it is closed: the same
+    // answer the HTTP API gives that session's next request.
+    $unauthorized = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+    $unauthorizedPayloadJson = json_encode([
+        'type' => 'error',
+        'data' => [
+            'code' => $unauthorized->getCode(),
+            'message' => $unauthorized->getMessage(),
+        ],
+    ]);
+
+    // A session or JWT that expires fires no event. Delivery already skips expired
+    // connections; this closes the ones that receive nothing.
+    Timer::tick(60000, function () use ($server, $realtime, $unauthorized, $unauthorizedPayloadJson) {
+        $now = \time();
+        foreach (\array_keys($realtime->connections) as $connection) {
+            if ($realtime->isExpired($connection, $now)) {
+                $server->send([$connection], $unauthorizedPayloadJson);
+                $server->close($connection, $unauthorized->getCode());
+            }
+        }
+    });
+
     // Flush coalesced console live-tail buffers to their connections (~150ms).
     // Must run per-worker: the registry is mutated by this worker's subscribe handler
     // and pub/sub ingest, which are not visible to the master process.
@@ -584,7 +607,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
                 $event = json_decode($payload, true);
                 $closing = [];
 
@@ -635,7 +658,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         foreach ($impersonating as $connection) {
                             if ($revoked($realtime->connections[$connection]['impersonator']['sessionId'] ?? null)) {
-                                $closing[] = $connection;
+                                $closing[$connection] = true;
                             }
                         }
 
@@ -643,7 +666,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
 
                             if ($revoked($sessionId)) {
-                                $closing[] = $connection;
+                                $closing[$connection] = true;
                                 continue;
                             }
 
@@ -652,6 +675,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
                             $presences = $realtime->connections[$connection]['presences'] ?? [];
+                            $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                            // Re-read, as extending the session moves it. An impersonated
+                            // connection has no sessionId and keeps what it was opened with.
+                            $expire = $sessionId !== null
+                                ? $user->sessionExpire($sessionId)
+                                : ($realtime->connections[$connection]['expire'] ?? null);
                             $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
                             $meta = $realtime->getSubscriptionMetadata($connection);
@@ -689,6 +718,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
                                 $realtime->connections[$connection]['impersonator'] = $impersonator;
                                 $realtime->connections[$connection]['sessionId'] = $sessionId;
+                                $realtime->connections[$connection]['expire'] = $expire;
+                                $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
                                 // Owned presences must survive too, or closing the socket later
                                 // would leave their rows behind until they expire.
                                 $realtime->connections[$connection]['presences'] = $presences;
@@ -744,7 +775,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 unset($data['subscriptions']);
                 $tail = $data === [] ? '' : ',' . substr(json_encode($data), 1, -1);
 
+                $now = \time();
                 foreach ($receivers as $id => $matched) {
+                    // Nothing more once the session or JWT has expired, as the HTTP API
+                    // would refuse it; the connection is closed below.
+                    if ($realtime->isExpired($id, $now)) {
+                        $closing[$id] = true;
+                        continue;
+                    }
+
                     $payloadJson = '{"type":"event","data":{"subscriptions":'
                         . json_encode(array_keys($matched)) . $tail . '}}';
 
@@ -786,23 +825,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 }
 
-                // Delivered above with the roles they held until now, so the client sees
-                // the event that ended its access before the socket goes: the same answer
-                // the HTTP API gives that session's next request.
-                if (!empty($closing)) {
-                    $unauthorized = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-                    $closingPayloadJson = json_encode([
-                        'type' => 'error',
-                        'data' => [
-                            'code' => $unauthorized->getCode(),
-                            'message' => $unauthorized->getMessage(),
-                        ],
-                    ]);
-
-                    foreach ($closing as $connection) {
-                        $server->send([$connection], $closingPayloadJson);
-                        $server->close($connection, $unauthorized->getCode());
-                    }
+                // Connections whose access ended with this event got it above with the
+                // roles they held until now, so the client sees what ended it before the
+                // socket goes. Expired ones got nothing.
+                foreach (\array_keys($closing) as $connection) {
+                    $server->send([$connection], $unauthorizedPayloadJson);
+                    $server->close($connection, $unauthorized->getCode());
                 }
 
                 // Console live event tail: runs for EVERY firehose event, regardless of
@@ -928,6 +956,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
         $session = $connectionContainer->get('session'); /** @var ?Document $session */
+        $jwtExpire = $connectionContainer->get('jwtExpire'); /** @var ?int $jwtExpire */
         if (!$impersonatorUser->isEmpty()) {
             getConsoleDB()->setMetadata('user', $targetUser->getId());
             getProjectDB($project)->setMetadata('user', $targetUser->getId());
@@ -997,6 +1026,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'userId' => $impersonatorUser->getId(),
             'sessionId' => $session?->getId(),
         ];
+        // Impersonated or not, the connection lasts only as long as the session it runs on.
+        $expire = $session !== null ? $user->sessionExpire($session->getId()) : null;
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
         $channelCount = \count($channels);
@@ -1045,6 +1076,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $realtime->connections[$connection]['sessionId'] = $sessionId;
             $realtime->connections[$connection]['impersonator'] = $impersonator;
+            $realtime->connections[$connection]['expire'] = $expire;
+            $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             triggerStats([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
@@ -1108,6 +1141,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
         $realtime->connections[$connection]['sessionId'] = $sessionId;
         $realtime->connections[$connection]['impersonator'] = $impersonator;
+        $realtime->connections[$connection]['expire'] = $expire;
+        $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);

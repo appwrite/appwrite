@@ -654,6 +654,7 @@ final class MessagingTest extends TestCase
             'users.A.verification.V.update',
             'users.A.recovery.R.update',
             'users.A.sessions.S.create',
+            'users.A.sessions.S.update',
             'users.A.sessions.S.delete',
             'users.A.sessions.delete',
             'users.A.delete',
@@ -680,7 +681,6 @@ final class MessagingTest extends TestCase
             'users.A.update.mfa.recovery-codes',
             'users.A.create.mfa.recovery-codes',
             'users.A.delete.mfa',
-            'users.A.sessions.S.update',
             'users.A.recovery.R.create',
             'users.A.verification.V.create',
             'users.A.targets.T.create',
@@ -707,6 +707,8 @@ final class MessagingTest extends TestCase
         $realtime->connections[1]['sessionId'] = 'session';
         $realtime->connections[1]['impersonatedUserId'] = 'A';
         $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'];
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->connections[1]['jwtExpire'] = 50;
 
         // A later subscribe on the same connection unions its channels and must not
         // drop what the connection handler recorded about how it was opened.
@@ -716,11 +718,38 @@ final class MessagingTest extends TestCase
         $this->assertSame('session', $realtime->connections[1]['sessionId']);
         $this->assertSame('A', $realtime->connections[1]['impersonatedUserId']);
         $this->assertSame(['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'], $realtime->connections[1]['impersonator']);
+        $this->assertSame(100, $realtime->connections[1]['expire']);
+        $this->assertSame(50, $realtime->connections[1]['jwtExpire']);
         $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
 
         // A full unsubscribe forgets the connection entirely.
         $realtime->unsubscribe(1);
         $this->assertArrayNotHasKey(1, $realtime->connections);
+    }
+
+    public function testIsExpired(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(ID::custom('A'))->toString();
+
+        // 1: session only. 2: session and a JWT that ends sooner. 3: neither (guest).
+        $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->subscribe('1', 2, 'sub-2', [$role], ['documents'], [], 'A');
+        $realtime->connections[2]['expire'] = 100;
+        $realtime->connections[2]['jwtExpire'] = 50;
+        $realtime->subscribe('1', 3, 'sub-3', [Role::guests()->toString()], ['documents']);
+
+        $this->assertFalse($realtime->isExpired(1, 49));
+        $this->assertFalse($realtime->isExpired(2, 49));
+
+        // The JWT has expired; the session behind it has not.
+        $this->assertFalse($realtime->isExpired(1, 50));
+        $this->assertTrue($realtime->isExpired(2, 50));
+
+        $this->assertTrue($realtime->isExpired(1, 100));
+        $this->assertFalse($realtime->isExpired(3, \PHP_INT_MAX));
+        $this->assertFalse($realtime->isExpired(4, \PHP_INT_MAX));
     }
 
     public function testGetUserConnectionsIncludesConnectionsWithoutSubscriptions(): void
