@@ -115,7 +115,7 @@ The remaining medium severity bugs are about content reaching people who should 
 
 In App Router apps built with **webpack**, metadata image routes such as `opengraph-image` and `twitter-image` ignore the `dynamicParams` route segment option. An attacker can request metadata images for dynamic segments you deliberately left out of `generateStaticParams()`.
 
-If you set `dynamicParams = false` to keep unlisted pages private, their Open Graph images were still reachable. Apps built with **Turbopack** are not affected, which is another reason to finish the migration covered in [everything new in Next.js 16](/blog/post/everything-new-in-nextjs16).
+If you use `dynamicParams = false` to prevent dynamic segments outside `generateStaticParams()` from being generated, affected metadata image routes could still be requested for those excluded segments.
 
 # Cache leak across root param values in nested `use cache`
 
