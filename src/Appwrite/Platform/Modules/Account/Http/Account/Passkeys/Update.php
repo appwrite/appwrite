@@ -42,7 +42,7 @@ class Update extends Action
                 description: <<<EOT
                 Rename a passkey of the currently logged in user.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

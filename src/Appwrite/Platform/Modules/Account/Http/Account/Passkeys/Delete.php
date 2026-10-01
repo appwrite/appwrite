@@ -41,7 +41,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a passkey from the currently logged in user. The passkey can no longer be used to sign in, although it may remain stored on the user's device. The session must have signed in or completed an MFA challenge within the last 10 minutes.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,

@@ -46,7 +46,7 @@ class Update extends Action
                 description: <<<EOT
                 Complete a passkey registration started with [Create passkey](/docs/references/cloud/client-web/account#createPasskey). Pass the challenge ID and the JSON form of the credential returned by `navigator.credentials.create()`, for example `credential.toJSON()`. Each challenge can only be used once.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

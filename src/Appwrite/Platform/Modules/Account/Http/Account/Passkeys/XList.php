@@ -38,7 +38,7 @@ class XList extends Action
                 description: <<<EOT
                 Get the list of verified passkeys registered by the currently logged in user.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
