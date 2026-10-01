@@ -15,16 +15,20 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "phpunit --testsuite e2e"
+        ]
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Orchestration\\": "src/Orchestration"
+            "Utopia\\Orchestration\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Orchestration"
+            "Utopia\\Orchestration\\Tests\\": "tests/"
         }
     },
     "require": {

@@ -1,6 +1,7 @@
 /vendor/
 /.idea/
 .phpunit.result.cache
+.phpunit.cache/
 *.phpdisabled
 .DS_Store
 composer.lock

@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Tests\Adapter;
+namespace Utopia\Orchestration\Tests\E2E\Adapter;
 
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
-use Utopia\Tests\Base;
+use Utopia\Orchestration\Tests\E2E\Base;
 
 class DockerAPITest extends Base
 {
