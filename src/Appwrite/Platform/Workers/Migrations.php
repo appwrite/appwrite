@@ -9,6 +9,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -507,6 +508,14 @@ class Migrations extends Action
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                if (\array_key_exists('endpoint', $credentials) && $credentials['endpoint'] !== $endpoint) {
+                    $validator = new Endpoint();
+
+                    if (!$validator->isValid($credentials['endpoint'])) {
+                        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `endpoint`: ' . $validator->getDescription());
+                    }
+                }
+
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;

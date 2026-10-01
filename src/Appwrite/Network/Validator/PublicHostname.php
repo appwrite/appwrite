@@ -44,7 +44,7 @@ class PublicHostname extends Validator
      * smuggle private IPv4 destinations past an IPv6-only check.
      */
     private const PRIVATE_IPV6_CIDRS = [
-        '::/128',               // Unspecified
+        '::/96',                // Unspecified and IPv4-compatible (e.g. ::7f00:1)
         '::ffff:0:0/96',        // IPv4-mapped (e.g. ::ffff:127.0.0.1)
         '64:ff9b::/96',         // IPv4/IPv6 translation
         '64:ff9b:1::/48',       // Local-use IPv4/IPv6 translation
@@ -52,6 +52,7 @@ class PublicHostname extends Validator
         '2001::/32',            // Teredo
         '2001:db8::/32',        // Documentation
         '2002::/16',            // 6to4 (covers 2002:7f00::/24 → 127.0.0.0/8 etc.)
+        'fec0::/10',            // Site-local (deprecated)
         'ff00::/8',             // Multicast
     ];
 
