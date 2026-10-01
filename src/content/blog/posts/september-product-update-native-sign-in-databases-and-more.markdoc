@@ -51,7 +51,7 @@ This month brought more updates across Auth, Databases, Storage, Sites, self-hos
 
 # Native sign-in with Apple and Google
 
-[cover-3.avif](September%20product%20update%20Native%20sign-in,%20databases/cover-3.avif)
+![Native sign-in with Apple and Google](/images/blog/september-product-update-native-sign-in-databases-and-more/native-sign-in.avif)
 
 Mobile apps can now sign users in with the native account picker built into their device and create an Appwrite session from the ID token it returns.
 
@@ -65,7 +65,7 @@ That means users can stay inside the native sign-in experience without being red
 
 # Native and dedicated databases are now available in every region
 
-[PostgreSQL, MySQL, and dedicated databases are now available across all regions.avif](September%20product%20update%20Native%20sign-in,%20databases/PostgreSQL_MySQL_and_dedicated_databases_are_now_available_across_all_regions.avif)
+![PostgreSQL, MySQL, and dedicated databases are now available across all regions](/images/blog/september-product-update-native-sign-in-databases-and-more/postgresql-mysql-and-dedicated-databases-are-now-available-across-all-regions.avif)
 
 PostgreSQL, MySQL, and dedicated Appwrite databases are now available across all six Appwrite Cloud regions:
 
@@ -84,7 +84,7 @@ Your database, backups, and replicas remain in the region you choose, giving you
 
 # Breached password detection in Appwrite Auth
 
-[Breached password detection in Appwrite Auth.avif](September%20product%20update%20Native%20sign-in,%20databases/Breached_password_detection_in_Appwrite_Auth.avif)
+![Breached password detection in Appwrite Auth](/images/blog/september-product-update-native-sign-in-databases-and-more/breached-password-detection-in-appwrite-auth.avif)
 
 Appwrite Auth can now detect passwords that have appeared in known data breaches.
 
@@ -102,7 +102,7 @@ Password checking is already enabled on Appwrite Cloud, while rejecting breached
 
 # One-click Resend setup
 
-[One-click Resend setup.avif](September%20product%20update%20Native%20sign-in,%20databases/One-click_Resend_setup.avif)
+![One-click Resend setup](/images/blog/september-product-update-native-sign-in-databases-and-more/one-click-resend-setup.avif)
 
 You can now connect Resend to Appwrite directly from the Console without manually creating API keys or copying credentials between tabs.
 
@@ -116,7 +116,7 @@ The result is a much shorter setup flow for sending authentication emails and me
 
 # User photos in Appwrite Avatars
 
-[User photos in Appwrite Avatars.avif](September%20product%20update%20Native%20sign-in,%20databases/User_photos_in_Appwrite_Avatars.avif)
+![User photos in Appwrite Avatars](/images/blog/september-product-update-native-sign-in-databases-and-more/user-photos-in-appwrite-avatars.avif)
 
 Appwrite Avatars can now return a profile photo for a user.
 
@@ -130,7 +130,7 @@ This gives apps one consistent way to retrieve profile images for users across d
 
 # Separate Appwrite CLI configs for each environment
 
-[Separate Appwrite CLI configs for each environment.avif](September%20product%20update%20Native%20sign-in,%20databases/Separate_Appwrite_CLI_configs_for_each_environment.avif)
+![Separate Appwrite CLI configs for each environment](/images/blog/september-product-update-native-sign-in-databases-and-more/separate-appwrite-cli-configs-for-each-environment.avif)
 
 Appwrite CLI 28.1.0 now lets you keep separate project configuration files for staging, production, and other environments in the same repository.
 
@@ -148,7 +148,7 @@ This makes it easier to work across multiple Appwrite projects without constantl
 
 # Authenticated preview deployments for Appwrite Sites
 
-[Authenticated preview deployments for Appwrite Sites.avif](September%20product%20update%20Native%20sign-in,%20databases/Authenticated_preview_deployments_for_Appwrite_Sites.avif)
+![Authenticated preview deployments for Appwrite Sites](/images/blog/september-product-update-native-sign-in-databases-and-more/authenticated-preview-deployments-for-appwrite-sites.avif)
 
 Preview deployments created through automatic Git deployments are now private to members of your Appwrite organization.
 
@@ -162,7 +162,7 @@ There is nothing additional to configure on your Site or project.
 
 # AutoGravity for Appwrite Storage
 
-[AutoGravity for Appwrite Storage.avif](September%20product%20update%20Native%20sign-in,%20databases/AutoGravity_for_Appwrite_Storage.avif)
+![AutoGravity for Appwrite Storage](/images/blog/september-product-update-native-sign-in-databases-and-more/autogravity-for-appwrite-storage.avif)
 
 Appwrite Storage can now automatically find the most important part of an image when cropping it.
 
@@ -176,7 +176,7 @@ It is available for Appwrite Cloud users, with support for self-hosted deploymen
 
 # Appwrite 2.1 is now available for self-hosting
 
-[Appwrite 2.1 is now available for self-hosting.avif](September%20product%20update%20Native%20sign-in,%20databases/Appwrite_2.1_is_now_available_for_self-hosting.avif)
+![Appwrite 2.1 is now available for self-hosting](/images/blog/september-product-update-native-sign-in-databases-and-more/appwrite-2.1-is-now-available-for-self-hosting.avif)
 
 Appwrite 2.1 brought several recent Appwrite features to self-hosting, including:
 
