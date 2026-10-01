@@ -1,6 +1,7 @@
 <?php
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\EmailWhitelist;
@@ -2455,7 +2456,8 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2739,6 +2741,11 @@ Http::post('/v1/account/tokens/magic-url')
             $token->setAttribute('phrase', $phrase);
         }
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
@@ -2784,7 +2791,8 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -3092,6 +3100,11 @@ Http::post('/v1/account/tokens/email')
             $token->setAttribute('phrase', $phrase);
         }
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
@@ -3238,7 +3251,8 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3401,6 +3415,11 @@ Http::post('/v1/account/tokens/phone')
             ->setProperty('secret', $secret)
             ->encode();
         $token->setAttribute('secret', $encoded);
+
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -4058,7 +4077,8 @@ Http::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization, ?Key $apiKey) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4252,6 +4272,11 @@ Http::post('/v1/account/recovery')
             ->setUser($deliverable ? $profile : new Document())
             ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
@@ -4414,7 +4439,8 @@ Http::post('/v1/account/recovery/otp')
     ->inject('queueForEvents')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -4621,6 +4647,11 @@ Http::post('/v1/account/recovery/otp')
             ->setParam('tokenId', $recovery->getId())
             ->setUser($deliverable ? $profile : new Document())
             ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
