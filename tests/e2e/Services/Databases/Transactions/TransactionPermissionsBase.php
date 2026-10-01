@@ -205,6 +205,81 @@ trait TransactionPermissionsBase
         $this->assertEquals(401, $staged['headers']['status-code']);
     }
 
+    public function testStagedNumericUpdatesWithRowPermissions(): void
+    {
+        $databaseId = $this->getPermissionsDatabase();
+        $userId = $this->getUser()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $admin = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $admin, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Numeric row permissions',
+            'permissions' => [],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer'), $admin, [
+                'key' => 'balance',
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+        $permissions = [Permission::update(Role::user($userId))];
+        $writable = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $admin, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['balance' => 50],
+            'permissions' => $permissions,
+        ]);
+        $readonly = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $admin, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['balance' => 50],
+            'permissions' => [Permission::read(Role::user($userId))],
+        ]);
+        $this->assertEquals(201, $writable['headers']['status-code']);
+        $this->assertEquals(201, $readonly['headers']['status-code']);
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test for SUCCESS: update-only row permission is sufficient, without read permission.
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $headers);
+        $this->assertEquals(401, $read['headers']['status-code']);
+        foreach (['increment' => 55, 'decrement' => 50] as $operation => $expected) {
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']) . '/balance/' . $operation, $headers, [
+                'value' => 5,
+                'transactionId' => $transactionId,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($expected, $response['body']['balance']);
+            $this->assertEquals($permissions, $response['body']['$permissions']);
+        }
+
+        // Test for FAILURE: readable rows without update permission cannot stage either operation.
+        foreach (['increment', 'decrement'] as $operation) {
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $readonly['body']['$id']) . '/balance/' . $operation, $headers, [
+                'value' => 5,
+                'transactionId' => $transactionId,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }
+        $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertEquals(200, $status['headers']['status-code']);
+        $this->assertEquals(2, $status['body']['operations']);
+        $committed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $admin);
+        $this->assertEquals(200, $committed['headers']['status-code']);
+        $this->assertEquals(50, $committed['body']['balance']);
+    }
+
     /**
      * Regression: a commit whose write fails authorization at commit time must leave
      * the transaction in the terminal `failed` state, never stuck in `committing`.

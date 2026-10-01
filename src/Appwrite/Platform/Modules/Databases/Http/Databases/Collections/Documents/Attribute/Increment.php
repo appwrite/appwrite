@@ -138,7 +138,7 @@ class Increment extends Action
             // Resolve the real transaction view before staging so a failed read
             // cannot leave a successful operation behind an error response.
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-            $document = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId));
+            $document = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, resolveRelationships: false));
             if ($document->isEmpty()) {
                 throw new Exception($this->getNotFoundException(), params: [$documentId]);
             }

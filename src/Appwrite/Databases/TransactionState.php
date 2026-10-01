@@ -55,14 +55,15 @@ class TransactionState
         string $collectionId,
         string $documentId,
         ?string $transactionId = null,
-        array $queries = []
+        array $queries = [],
+        bool $resolveRelationships = true
     ): Document {
         $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+            return $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
         }
 
-        $state = $this->getTransactionState($transactionId, $database, $collectionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId, $resolveRelationships);
 
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
@@ -77,7 +78,7 @@ class TransactionState
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 // Merge with committed version
-                $committedDoc = $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+                $committedDoc = $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
                 if (!$committedDoc->isEmpty()) {
                     foreach ($docState['document']->getAttributes() as $key => $value) {
                         if ($key !== '$id') {
@@ -91,7 +92,18 @@ class TransactionState
                 }
             }
         }
-        return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+        return $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
+    }
+
+    /**
+     * Read a committed document without expanding relationships for internal
+     * write previews: parent update permission does not grant related-row reads.
+     */
+    private function readDocument(Database $db, string $collectionId, string $documentId, array $queries, bool $resolveRelationships): Document
+    {
+        return $resolveRelationships
+            ? $db->getDocument($collectionId, $documentId, $queries)
+            : $db->skipRelationships(fn () => $db->getDocument($collectionId, $documentId, $queries));
     }
 
     /**
@@ -339,7 +351,7 @@ class TransactionState
      * @throws Exception\Query
      * @throws Timeout
      */
-    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId): array
+    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId, bool $resolveRelationships = true): array
     {
         $roles = $this->authorization->getRoles();
 
@@ -445,7 +457,7 @@ class TransactionState
                         $currentState = $state[$collectionId][$documentId] ?? null;
                         if ($currentState === null || $currentState['action'] !== 'create') {
                             $dbForDatabases = ($this->getDatabasesDB)($database);
-                            $document = $dbForDatabases->getDocument($collectionId, $documentId);
+                            $document = $this->readDocument($dbForDatabases, $collectionId, $documentId, [], $resolveRelationships);
                             if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
                                 break;
                             }

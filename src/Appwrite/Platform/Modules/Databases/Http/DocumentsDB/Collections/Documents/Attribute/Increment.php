@@ -67,6 +67,7 @@ class Increment extends IncrementDocumentAttribute
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
+            ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
             ->inject('user')
