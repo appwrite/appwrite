@@ -64,7 +64,6 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.app.header.accountMenu,
         user: 'ユーザー',
         account: 'アカウント',
-        changePhoto: '写真を変更',
         projects: 'プロジェクト',
         domains: 'ドメイン',
         memberSince: '登録日',

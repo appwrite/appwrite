@@ -54,7 +54,6 @@ export const enCatalog = {
       accountMenu: {
         user: 'User',
         account: 'Account',
-        changePhoto: 'Change photo',
         projects: 'Projects',
         domains: 'Domains',
         memberSince: 'Member since',

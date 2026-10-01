@@ -11,7 +11,6 @@ import {
   ChevronDown,
   LogOut,
   User,
-  Camera,
   Menu,
   Copy,
   Check,
@@ -1696,16 +1695,6 @@ export function ConsoleHeader({
                         <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <User className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.account}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/account"
-                          hash="photo"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                        >
-                          <Camera className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.changePhoto}</span>
                         </Link>
                       </DropdownMenuItem>
 

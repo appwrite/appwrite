@@ -125,16 +125,7 @@ export function ProfilePhotoSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const t = useT()
-  const cardRef = useRef<HTMLDivElement>(null)
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
-
-  // The header menu's "Change photo" links to `/account#photo`.
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.location.hash !== '#photo') {
-      return
-    }
-    cardRef.current?.scrollIntoView({ block: 'start' })
-  }, [])
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -180,9 +171,8 @@ export function ProfilePhotoSection() {
 
   return (
     <div
-      ref={cardRef}
       data-card-id="photo"
-      className="rounded-xl border border-border bg-card/50 overflow-hidden scroll-mt-20"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
