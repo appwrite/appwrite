@@ -2,9 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E;
 
-use Redis;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as AdapterRedis;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as AdapterRedis;
 
 class RedisTest extends Base
 {
@@ -13,6 +12,7 @@ class RedisTest extends Base
     /**
      * @throws \Exception
      */
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$redis)) {
@@ -29,6 +29,7 @@ class RedisTest extends Base
         return $redis;
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
         return new AdapterRedis($key, $limit, $seconds, self::$redis);
@@ -37,6 +38,7 @@ class RedisTest extends Base
     /**
      * Clean up Redis connection after all tests
      */
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {
