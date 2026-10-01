@@ -135,6 +135,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "excerpt": "Appwrite looks up the client IP of every request to find out where it came from. On every plan, the lookup returns the country, continent, EU membership, and currency. **Premium Geo DB** is a project add-on that switches the lookup to a more detailed database. It adds the city, region, postal code, coordinates, and time zone of the IP, and details of the network behind it: ISP, autonomous system, and connection type. Once the add-on is active, the extra attributes…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Premium Geo DB"
+    ]
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
