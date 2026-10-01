@@ -153,8 +153,15 @@ abstract readonly class RedisBase extends TokenBucket
         return \is_array($keys) ? \array_values(\array_filter($keys, \is_string(...))) : [];
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     private function used(mixed $value): int
     {
-        return \is_numeric($value) ? (int) $value : 0;
+        if (!\is_numeric($value)) {
+            throw new \RuntimeException('Redis script failed.');
+        }
+
+        return (int) $value;
     }
 }

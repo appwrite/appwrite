@@ -59,6 +59,9 @@ abstract readonly class RedisBase extends SlidingWindow
         return self::NAMESPACE . '__{' . $key . '}__' . $window;
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     #[\Override]
     protected function hit(string $key, int $window, float $elapsed): int
     {
@@ -75,7 +78,11 @@ abstract readonly class RedisBase extends SlidingWindow
             ],
         );
 
-        return \is_numeric($used) ? (int) $used : 0;
+        if (!\is_numeric($used)) {
+            throw new \RuntimeException('Redis script failed.');
+        }
+
+        return (int) $used;
     }
 
     #[\Override]
