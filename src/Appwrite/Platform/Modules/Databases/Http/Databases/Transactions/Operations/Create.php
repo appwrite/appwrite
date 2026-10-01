@@ -230,7 +230,7 @@ class Create extends Action
                     }
 
                     if (\in_array($operation['action'], ['create', 'update', 'upsert']) && \is_array($operation['data'] ?? null)) {
-                        $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $authorization);
+                        $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
                     }
                 }
             }
@@ -272,12 +272,13 @@ class Create extends Action
 
     /**
      * Related documents nested in staged data are written on commit, so the
-     * permissions they carry are checked while staging.
+     * permissions they carry are checked against the related document as already
+     * staged. Commit checks them again once earlier operations have been applied.
      *
      * @param array<string, mixed> $data
      * @throws Exception
      */
-    private function validateRelationships(Document $database, Document $collection, array $data, Database $dbForProject, Authorization $authorization): void
+    private function validateRelationships(Document $database, Document $collection, array $data, Database $dbForProject, TransactionState $transactionState, string $transactionId, Authorization $authorization): void
     {
         $relationships = \array_filter(
             $collection->getAttribute('attributes', []),
@@ -304,11 +305,11 @@ class Create extends Action
 
                 $relationId = $relation['$id'] ?? null;
                 $current = \is_string($relationId)
-                    ? $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relationId))
+                    ? $authorization->skip(fn () => $transactionState->getDocument($database, 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relationId, $transactionId))
                     : new Document();
 
                 $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
-                $this->validateRelationships($database, $relatedCollection, $relation, $dbForProject, $authorization);
+                $this->validateRelationships($database, $relatedCollection, $relation, $dbForProject, $transactionState, $transactionId, $authorization);
             }
         }
     }
