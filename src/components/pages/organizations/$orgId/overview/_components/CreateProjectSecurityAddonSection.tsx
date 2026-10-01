@@ -128,8 +128,10 @@ export function CreateProjectSecurityAddonSection({
               {t('+ more')}
               <span className="text-muted-foreground/45"> · </span>
               <BlogPageAnchor
-                href={PREMIUM_GEO_PROMO_LEARN_MORE_PATH}
-                {...analyticsAttrs('premium-geo-overview-promo-learn-more')}
+              href={PREMIUM_GEO_PROMO_LEARN_MORE_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...analyticsAttrs('premium-geo-overview-promo-learn-more')}
                 className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
               >
                 {t('Learn more')}

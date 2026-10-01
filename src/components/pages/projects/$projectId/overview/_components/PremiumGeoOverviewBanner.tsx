@@ -226,6 +226,8 @@ export function PremiumGeoOverviewBanner({
                 <span className="text-muted-foreground/40"> · </span>
                 <BlogPageAnchor
                   href={PREMIUM_GEO_PROMO_LEARN_MORE_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   {...analyticsAttrs('premium-geo-overview-promo-learn-more')}
                   className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
                 >
