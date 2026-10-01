@@ -101,7 +101,7 @@ class Filesystem implements Adapter
 
     public function flush(): bool
     {
-        return $this->deleteDirectory($this->path);
+        return $this->deleteDirectory($this->path, true);
     }
 
     public function ping(): bool
@@ -152,7 +152,7 @@ class Filesystem implements Adapter
      *
      * @throws Exception
      */
-    protected function deleteDirectory(string $path): bool
+    protected function deleteDirectory(string $path, bool $isRoot = false): bool
     {
         if (! is_dir($path)) {
             throw new Exception("$path must be a directory");
@@ -164,19 +164,19 @@ class Filesystem implements Adapter
 
         $files = glob($path . '*', GLOB_MARK);
 
-        if (! $files) {
+        if ($files === false) {
             throw new Exception('Error happened during glob');
         }
 
         foreach ($files as $file) {
             if (is_dir($file)) {
-                self::deleteDirectory($file);
+                $this->deleteDirectory($file, false);
             } else {
                 unlink($file);
             }
         }
 
-        return rmdir($path);
+        return $isRoot ? true : rmdir($path);
     }
 
     public function getName(?string $key = null): string

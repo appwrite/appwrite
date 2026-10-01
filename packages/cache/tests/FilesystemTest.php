@@ -65,4 +65,43 @@ final class FilesystemTest extends Base
             self::deletePath($path);
         }
     }
+
+    public function testFlushOnEmptyCacheAndSubsequentPing(): void
+    {
+        $path = self::scratch('empty-cache');
+
+        try {
+            $adapter = new Filesystem($path);
+            $cache = new Cache($adapter);
+
+            $this->assertTrue($cache->flush());
+            $this->assertTrue(is_dir($path));
+            $this->assertTrue($cache->ping());
+            $this->assertTrue($cache->flush());
+        } finally {
+            self::deletePath($path);
+        }
+    }
+
+    public function testFlushClearsContentsAndPreservesRoot(): void
+    {
+        $path = self::scratch('populated-cache');
+
+        try {
+            $adapter = new Filesystem($path);
+            $cache = new Cache($adapter);
+
+            $this->assertSame('data1', $cache->save('item1', 'data1'));
+            $this->assertSame('data2', $cache->save('nested/item2', 'data2'));
+
+            $this->assertTrue($cache->flush());
+            $this->assertTrue(is_dir($path));
+            $this->assertTrue($cache->ping());
+            $this->assertFalse($cache->load('item1', 60));
+            $this->assertFalse($cache->load('nested/item2', 60));
+            $this->assertTrue($cache->flush());
+        } finally {
+            self::deletePath($path);
+        }
+    }
 }
