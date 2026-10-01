@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FullScreenCurtain } from '@/components/global/shared/FullScreenCurtain'
 import { useT } from '@/lib/i18n/translate'
 
 const BUDGET_FALLBACK_MESSAGE =
@@ -45,17 +46,13 @@ export function BudgetLimitProjectCurtain({
   const billingHash = isOutstandingInvoice ? undefined : 'update-budget'
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <div className="mx-4 flex max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Lock className="size-9" />
-        </div>
-        <h1 className="text-[22px] font-semibold text-foreground">
-          {t(title)}
-        </h1>
-        <p className="mt-3 text-[15px] text-muted-foreground">{t(body)}</p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
+    <FullScreenCurtain
+      className="z-[200]"
+      icon={Lock}
+      title={t(title)}
+      description={t(body)}
+      actions={
+        <>
           {hasTeamId ? (
             <Button asChild variant="brandCta" className="gap-1.5">
               <Link
@@ -82,8 +79,8 @@ export function BudgetLimitProjectCurtain({
           >
             {hasTeamId ? t('Back to organization') : t('Back to console')}
           </Button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    />
   )
 }

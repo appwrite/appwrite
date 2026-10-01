@@ -5,6 +5,9 @@
  */
 export const APP_HEADER_HEIGHT_VAR = '--app-header-height'
 
+/** Attribute on the sticky app chrome, for portaled UI that must sit below it. */
+export const APP_CHROME_SELECTOR = '[data-app-chrome]'
+
 /** Stick in-flow content (table headers, TOCs) just below the live app header. */
 export const BELOW_APP_HEADER_STICKY_TOP_CLASS =
   'sticky top-[var(--app-header-height,0px)]'

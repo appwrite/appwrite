@@ -327,6 +327,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/self-hosting/configuration/sms',
           },
           {
+            label: 'Breached passwords',
+            href: '/docs/advanced/self-hosting/configuration/breached-passwords',
+          },
+          {
             label: 'Functions',
             href: '/docs/advanced/self-hosting/configuration/functions',
           },
@@ -1477,7 +1481,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -1671,7 +1675,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          }
+          },
         ],
       },
     ],

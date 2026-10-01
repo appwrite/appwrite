@@ -17,6 +17,7 @@ import {
 } from 'recharts'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -275,6 +276,13 @@ export function FunctionExecutionsChartPreview({
     [gbHoursPoints],
   )
 
+  const usageReady =
+    !enabled ||
+    ((executionsQuery.isFetched || executionsQuery.isError) &&
+      (gbHoursQuery.isFetched || gbHoursQuery.isError))
+  const fadeKey = usageReady ? 'data' : 'loading'
+  const fadeClassName = usageReady && enabled && USAGE_CHART_FADE_IN_CLASS_NAME
+
   const tooltipDisabled =
     !hasPoints || (executionsTotal === 0 && gbHoursTotal === 0)
 
@@ -299,7 +307,13 @@ export function FunctionExecutionsChartPreview({
                   aria-hidden
                 />
                 {t('Executions')}
-                <span className="font-mono tabular-nums text-foreground">
+                <span
+                  key={fadeKey}
+                  className={cn(
+                    'font-mono tabular-nums text-foreground',
+                    fadeClassName,
+                  )}
+                >
                   {executionsTotal.toLocaleString()}
                 </span>
               </span>
@@ -310,7 +324,13 @@ export function FunctionExecutionsChartPreview({
                   aria-hidden
                 />
                 {t('GB-hours')}
-                <span className="font-mono tabular-nums text-foreground">
+                <span
+                  key={fadeKey}
+                  className={cn(
+                    'font-mono tabular-nums text-foreground',
+                    fadeClassName,
+                  )}
+                >
                   {formatGbHoursTotal(gbHoursTotal)}
                 </span>
               </span>
@@ -322,8 +342,9 @@ export function FunctionExecutionsChartPreview({
         </div>
 
         <div
+          key={fadeKey}
           ref={chartContainerRef}
-          className="relative min-h-0 w-full min-w-0 flex-1"
+          className={cn('relative min-h-0 w-full min-w-0 flex-1', fadeClassName)}
           role="img"
           aria-label={`${t('Function executions')}, ${t('GB-hours')}. ${t('Last 24 hours')}`}
         >

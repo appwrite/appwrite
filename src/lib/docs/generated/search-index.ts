@@ -465,6 +465,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "excerpt": "Appwrite 2.3 and later can check user passwords against known data breaches with the breached passwords policy. On a self-hosted instance, the policy needs a breach service, which you set with the environment variable. The default value, , reports every password as safe. Until you change it, the policy has no effect even when it's turned on in the Console: nothing is rejected or blocked, and every checked password is recorded as not breached. Environment variables Set in the file…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Breached passwords"
+    ]
+  },
+  {
     "slug": "advanced/self-hosting/configuration/databases",
     "title": "Databases",
     "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
@@ -1838,7 +1849,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
-    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…",
+    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, password history, and breached password detection to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -2266,7 +2277,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "excerpt": "Appwrite provides many security features to keep both your Appwrite project and your user's information secure.",
     "breadcrumbs": [
       "Auth",

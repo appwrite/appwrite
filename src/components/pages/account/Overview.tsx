@@ -44,7 +44,6 @@ import {
   AlertTriangle,
   Download,
   ShieldAlert,
-  ShieldCheck,
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -381,12 +380,6 @@ export function UpdatePasswordSection() {
             <Badge variant="error" className="text-[10px] shrink-0 gap-1">
               <ShieldAlert className="h-3 w-3" />
               {t('breached')}
-            </Badge>
-          )}
-          {passwordPwned === false && (
-            <Badge variant="success" className="text-[10px] shrink-0 gap-1">
-              <ShieldCheck className="h-3 w-3" />
-              {t('no known breach')}
             </Badge>
           )}
         </div>

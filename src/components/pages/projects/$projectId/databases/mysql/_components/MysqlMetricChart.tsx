@@ -15,6 +15,7 @@ import { Info } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { MYSQL_USAGE_PLACEHOLDER_NOTE } from '@/lib/mysql-usage-placeholder-metrics'
 import {
   Tooltip as UITooltip,
@@ -73,6 +74,8 @@ const SECONDARY_CHART_COLOR = 'var(--chart-2)'
 const CHART_HEIGHT_PX = 180
 const METRIC_HEADER_MIN_CLASS =
   'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
+
+const METRIC_HEADER_ROW_CLASS = 'flex flex-wrap items-baseline gap-x-2 gap-y-1'
 
 const AREA_MARGIN = {
   top: 8,
@@ -315,7 +318,7 @@ export function MysqlMetricChart({
                   ) : null}
                 </>
               ) : showDualUsageHeadline ? (
-                <>
+                <div className={cn(METRIC_HEADER_ROW_CLASS, USAGE_CHART_FADE_IN_CLASS_NAME)}>
                   <span className="inline-flex items-baseline gap-2">
                     <span className="text-[24px] font-semibold tabular-nums text-foreground">
                       {formatY(usageValue)}
@@ -339,9 +342,9 @@ export function MysqlMetricChart({
                       </span>
                     ) : null}
                   </span>
-                </>
+                </div>
               ) : showUsageValue ? (
-                <>
+                <div className={cn(METRIC_HEADER_ROW_CLASS, USAGE_CHART_FADE_IN_CLASS_NAME)}>
                   <span className="text-[24px] font-semibold tabular-nums text-foreground">
                     {formatY(usageValue)}
                   </span>
@@ -357,7 +360,7 @@ export function MysqlMetricChart({
                       {t(usageUnitLabel)}
                     </span>
                   ) : null}
-                </>
+                </div>
               ) : null}
             </div>
           ) : null}
@@ -400,7 +403,11 @@ export function MysqlMetricChart({
           </div>
         ) : (
           <div
-            className={cn('shrink-0 text-muted-foreground', surfaceClassName)}
+            className={cn(
+              'shrink-0 text-muted-foreground',
+              surfaceClassName,
+              USAGE_CHART_FADE_IN_CLASS_NAME,
+            )}
             style={{ height: CHART_HEIGHT_PX }}
             aria-label={
               canSelect

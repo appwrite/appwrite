@@ -19,6 +19,7 @@ import {
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
+import { getProPlanBadgeLabelForPlans } from '@/lib/pricing/start-plan'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import {
@@ -271,6 +272,7 @@ export function PlanSelection({
   // Pro keeps the badge wherever Start is sold: Start is the regional price of Pro, not a
   // better plan, so recommending it over Pro reads as a downgrade being pushed.
   const recommendedPlanId = BillingPlanTier.Tier1
+  const recommendedPlanBadgeLabel = getProPlanBadgeLabelForPlans(availablePlans)
 
   const radioGroupContent = (
     <>
@@ -370,7 +372,7 @@ export function PlanSelection({
                           variant="success"
                           className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
 >
-                          {t('Recommended')}
+                          {t(recommendedPlanBadgeLabel)}
                         </Badge>
                       )}
                       {isCurrent && (

@@ -94,6 +94,7 @@ Platform errors are not related to an individual product, but can occur across t
 | 503  | general_service_disabled | The requested service is disabled. You can enable the service from the Appwrite console. |
 | 503  | general_smtp_disabled | SMTP is disabled on your Appwrite instance. You can learn more about setting up SMTP in our docs. |
 | 503  | general_phone_disabled | Phone provider is not configured. Please check the `_APP_SMS_PROVIDER` environment variable of your Appwrite server. |
+| 503  | general_pwned_passwords_unavailable | The breached password service could not be reached, so the password could not be verified. Please try again later. |
 
 ## Authentication errors {% #authentication-errors %}
 Errors found when using Appwrite Authentication.
@@ -102,6 +103,7 @@ Errors found when using Appwrite Authentication.
 | 400  | user_password_mismatch | Passwords do not match. Please check the password and confirm password. |
 | 400  | password_recently_used | The password you are trying to use is similar to your previous password. For your security, please choose a different password and try again. |
 | 400  | password_personal_data | The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again. |
+| 400  | password_pwned | The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again. |
 | 400  | user_phone_not_found | The current user does not have a phone number associated with their account. |
 | 400  | user_missing_id | Missing ID from OAuth2 provider. |
 | 400  | user_oauth2_bad_request | OAuth2 provider rejected the bad request. |
