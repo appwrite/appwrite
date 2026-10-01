@@ -91,16 +91,19 @@ class Create extends Action
 
         $passkeyId = $passkeyId === 'unique()' ? ID::unique() : $passkeyId;
 
-        // A registration restarted with the same ID replaces the pending one instead of conflicting with it
-        $existing = $dbForProject->getDocument('authenticators', $passkeyId);
-        if (
-            !$existing->isEmpty()
-            && $existing->getAttribute('type') === Ceremony::TYPE
-            && $existing->getAttribute('userInternalId') === $user->getSequence()
-            && !$existing->getAttribute('verified')
-        ) {
-            $dbForProject->deleteDocument('authenticators', $passkeyId);
-        }
+        // A registration restarted with the same ID replaces the pending one instead of conflicting with it.
+        // The row lock keeps a verification that lands first from being deleted.
+        $dbForProject->withTransaction(function () use ($dbForProject, $passkeyId, $user) {
+            $existing = $dbForProject->getDocument('authenticators', $passkeyId, forUpdate: true);
+            if (
+                !$existing->isEmpty()
+                && $existing->getAttribute('type') === Ceremony::TYPE
+                && $existing->getAttribute('userInternalId') === $user->getSequence()
+                && !$existing->getAttribute('verified')
+            ) {
+                $dbForProject->deleteDocument('authenticators', $passkeyId);
+            }
+        });
 
         $passkeys = $this->getPasskeys($user, $dbForProject);
         if (\count($passkeys) >= APP_LIMIT_USER_PASSKEYS) {
@@ -116,6 +119,9 @@ class Create extends Action
         }
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
+        // Binds the challenge to this registration, so a replaced one's challenge cannot verify its successor
+        $registration = ID::unique();
+
         try {
             $passkey = $dbForProject->createDocument('authenticators', new Document([
                 '$id' => $passkeyId,
@@ -130,6 +136,7 @@ class Create extends Action
                 'verified' => false,
                 'data' => [
                     'name' => $name,
+                    'registration' => $registration,
                 ],
             ]));
         } catch (Duplicate) {
@@ -145,6 +152,7 @@ class Create extends Action
         $stored = (new Challenges($dbForProject, $authorization))->issue(Ceremony::TYPE_REGISTRATION, $ceremony, $challenge, $user, [
             'passkeyId' => $passkey->getId(),
             'sessionId' => $session->getId(),
+            'registration' => $registration,
         ]);
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

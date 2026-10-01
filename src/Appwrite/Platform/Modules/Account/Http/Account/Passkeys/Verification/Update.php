@@ -86,18 +86,17 @@ class Update extends Action
         // Configuration changes invalidate outstanding challenges
         $ceremony = Ceremony::fromProject($project) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
 
+        // The challenge is checked first, so a mismatched one is rejected the same way whether or not the passkey exists
+        $passkey = $dbForProject->getDocument('authenticators', $passkeyId);
+        $registration = $this->isPending($passkey, $user) ? ($passkey->getAttribute('data', [])['registration'] ?? '') : '';
+
         $state = (new Challenges($dbForProject, $authorization))->consume($challengeId, Ceremony::TYPE_REGISTRATION, $ceremony, $user, [
             'passkeyId' => $passkeyId,
             'sessionId' => $session->getId(),
+            'registration' => $registration,
         ]);
 
-        $passkey = $dbForProject->getDocument('authenticators', $passkeyId);
-        if (
-            $passkey->isEmpty()
-            || $passkey->getAttribute('type') !== Ceremony::TYPE
-            || $passkey->getAttribute('userInternalId') !== $user->getSequence()
-            || $passkey->getAttribute('verified')
-        ) {
+        if (!$this->isPending($passkey, $user)) {
             throw new Exception(Exception::USER_PASSKEY_NOT_FOUND);
         }
 
@@ -108,13 +107,22 @@ class Update extends Action
         }
 
         try {
-            $passkey = $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
-                'verified' => true,
-                'identifier' => $verified->identifier,
-                'data' => \array_merge($passkey->getAttribute('data', []), [
-                    'record' => $verified->record,
-                ]),
-            ]));
+            // Locked so a restarted registration cannot replace the passkey while it is being verified
+            $passkey = $dbForProject->withTransaction(function () use ($dbForProject, $passkeyId, $user, $registration, $verified) {
+                $current = $dbForProject->getDocument('authenticators', $passkeyId, forUpdate: true);
+                $data = $current->getAttribute('data', []);
+                if (!$this->isPending($current, $user) || ($data['registration'] ?? '') !== $registration) {
+                    throw new Exception(Exception::USER_PASSKEY_NOT_FOUND);
+                }
+
+                return $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
+                    'verified' => true,
+                    'identifier' => $verified->identifier,
+                    'data' => \array_merge($data, [
+                        'record' => $verified->record,
+                    ]),
+                ]));
+            });
         } catch (Duplicate) {
             throw new Exception(Exception::USER_PASSKEY_ALREADY_EXISTS);
         }
@@ -122,5 +130,13 @@ class Update extends Action
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $response->dynamic($passkey, Response::MODEL_PASSKEY);
+    }
+
+    private function isPending(Document $passkey, Document $user): bool
+    {
+        return !$passkey->isEmpty()
+            && $passkey->getAttribute('type') === Ceremony::TYPE
+            && $passkey->getAttribute('userInternalId') === $user->getSequence()
+            && !$passkey->getAttribute('verified');
     }
 }
