@@ -105,10 +105,7 @@ class Create extends Base
             'fileInternalId' => $file->getSequence(),
             'name' => $name,
             'size' => $file->getAttribute('sizeOriginal', 0),
-            'status' => self::SOURCE_PENDING,
             'subtitlesExtracted' => false,
-            'chunksTotal' => self::chunkCount((int) $file->getAttribute('sizeOriginal', 0)),
-            'chunksUploaded' => 0,
             'search' => \implode(' ', [$file->getId(), $name]),
         ])));
 

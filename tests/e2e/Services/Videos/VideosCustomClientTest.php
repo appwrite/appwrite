@@ -271,11 +271,9 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Realtime video and rendition events inherit the source bucket/file read
-     * roles. The fixture bucket grants read("any"), so a session subscribed to
-     * the `videos` channel must receive processing events. Rendition rows carry
-     * no ACL of their own and were previously published with no roles at all,
-     * which realtime silently dropped — this covers both event families.
+     * Realtime rendition events inherit the source bucket/file read roles.
+     * The fixture bucket grants read("any"), so a session subscribed to the
+     * `videos` channel must receive rendition processing events.
      */
     public function testRealtimeEventsDeliveredForReadableSource(): void
     {
@@ -289,21 +287,6 @@ final class VideosCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
-
-        $this->createSource($videoId, $this->serverHeaders());
-
-        $event = $this->receiveUntilEvent(
-            $client,
-            fn (array $message) => ($message['type'] ?? '') === 'event'
-                && ($message['data']['payload']['$id'] ?? '') === $videoId
-        );
-        $this->assertContains('videos.' . $videoId . '.update', $event['data']['events'] ?? []);
-        $this->assertContains('videos.' . $videoId, $event['data']['channels'] ?? []);
-
-        // Renditions require a ready video; buffered video-update frames during
-        // the wait are harmless — the matcher below filters on the rendition id.
-        $ready = $this->waitForVideoReady($videoId);
-        $this->assertEquals('ready', $ready['status']);
 
         $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
@@ -360,13 +343,22 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
 
-        $this->createSource($videoId, $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
+        $this->assertNotEmpty($profileId);
 
-        // Once REST reports the video ready, every download-lifecycle event has
-        // been published; drain the socket briefly and assert none reference it.
-        // Frames for other tests' public videos may legitimately interleave.
-        $ready = $this->waitForVideoReady($videoId);
-        $this->assertEquals('ready', $ready['status']);
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
+            'profileId' => $profileId,
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+
+        // Once REST reports the rendition finished, every encode-lifecycle event
+        // has been published; drain the socket briefly and assert none reference it.
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status']);
 
         $deadline = \time() + 6;
         try {
@@ -380,6 +372,11 @@ final class VideosCustomClientTest extends Scope
                     $videoId,
                     $frame['data']['payload']['$id'] ?? '',
                     'Private video leaked a realtime event to a session without read access'
+                );
+                $this->assertNotEquals(
+                    $renditionId,
+                    $frame['data']['payload']['$id'] ?? '',
+                    'Private rendition leaked a realtime event to a session without read access'
                 );
                 $this->assertNotContains('videos.' . $videoId, $frame['data']['channels'] ?? []);
             }

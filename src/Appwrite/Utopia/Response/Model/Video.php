@@ -58,25 +58,6 @@ class Video extends Model
                 'default' => 0,
                 'example' => 23647142,
             ])
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Source status: one of `pending`, `downloading`, `ready`, `removed`, `error` or `aborted`.',
-                'default' => '',
-                'example' => 'ready',
-                'enum' => ['pending', 'downloading', 'ready', 'removed', 'error', 'aborted'],
-            ])
-            ->addRule('chunksTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of chunks in the source download.',
-                'default' => 0,
-                'example' => 8,
-            ])
-            ->addRule('chunksUploaded', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Number of source chunks downloaded so far.',
-                'default' => 0,
-                'example' => 3,
-            ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Container format.',

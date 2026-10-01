@@ -9,7 +9,6 @@ class Videos extends Base
         'fileId',
         'name',
         'size',
-        'status',
         'format',
         'duration',
         'width',

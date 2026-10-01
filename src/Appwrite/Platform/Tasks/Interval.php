@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Certificate;
-use Appwrite\Platform\Modules\Videos\Tasks\CleanStaleVideosResources;
 use DateTime;
 use Swoole\Coroutine\Channel;
 use Swoole\Process;
@@ -77,7 +76,6 @@ class Interval extends Action
     protected function getTasks(): array
     {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
-        $intervalStaleVideos = \max(1, (int) System::getEnv('_APP_VIDEOS_STUCK_SWEEP_INTERVAL', '300')); // 5 minutes
 
         return [
             [
@@ -86,13 +84,6 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ],
-            [
-                'name' => 'cleanStaleVideosResources',
-                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
-                    (new CleanStaleVideosResources())->sweep($dbForPlatform, $getProjectDB);
-                },
-                'interval' => $intervalStaleVideos * 1000,
             ],
         ];
     }

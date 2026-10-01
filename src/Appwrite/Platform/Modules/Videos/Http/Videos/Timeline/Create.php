@@ -6,7 +6,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Video as VideoMessage;
 use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -77,13 +76,6 @@ class Create extends Base
         VideoPublisher $publisherForVideos
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
-        $this->assertSourceReady($video);
-
-        $width = (int) $video->getAttribute('width', 0);
-        $height = (int) $video->getAttribute('height', 0);
-        if ($width <= 0 || $height <= 0) {
-            throw new Exception(Exception::VIDEO_TRACK_NOT_FOUND);
-        }
 
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,

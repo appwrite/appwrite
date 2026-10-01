@@ -25,7 +25,6 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRend
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Source\Create as CreateSource;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Create as CreateSubtitle;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Delete as DeleteSubtitle;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Update as UpdateSubtitle;
@@ -48,7 +47,6 @@ class Http extends Service
         $this->addAction(ListVideos::getName(), new ListVideos());
         $this->addAction(UpdateVideo::getName(), new UpdateVideo());
         $this->addAction(DeleteVideo::getName(), new DeleteVideo());
-        $this->addAction(CreateSource::getName(), new CreateSource());
 
         // Timeline and previews
         $this->addAction(CreateTimeline::getName(), new CreateTimeline());

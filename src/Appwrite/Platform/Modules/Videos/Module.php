@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Videos;
 
 use Appwrite\Platform\Modules\Videos\Services\Http;
-use Appwrite\Platform\Modules\Videos\Services\Tasks;
 use Appwrite\Platform\Modules\Videos\Services\Workers;
 use Utopia\Platform;
 
@@ -13,6 +12,5 @@ class Module extends Platform\Module
     {
         $this->addService('http', new Http());
         $this->addService('workers', new Workers());
-        $this->addService('tasks', new Tasks());
     }
 }

@@ -9,7 +9,6 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\System\System;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -30,9 +29,7 @@ class TimeTravel extends Action
             ->param('resourceId', '', new UID(), 'ID of resource.')
             ->param('createdAt', '', new Nullable(new DatetimeValidator()), 'New value for $createdAt.', true)
             ->param('updatedAt', '', new Nullable(new DatetimeValidator()), 'New value for $updatedAt.', true)
-            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (videos / renditions).', true)
-            ->param('chunksUploaded', null, new Nullable(new Integer(true)), 'Optional chunksUploaded (videos).', true)
-            ->param('chunksTotal', null, new Nullable(new Integer(true)), 'Optional chunksTotal (videos).', true)
+            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions).', true)
             ->param('progress', '', new Nullable(new Text(8)), 'Optional progress (renditions).', true)
             ->inject('getProjectDB')
             ->inject('dbForPlatform')
@@ -46,8 +43,6 @@ class TimeTravel extends Action
         ?string $createdAt,
         ?string $updatedAt,
         ?string $status,
-        ?int $chunksUploaded,
-        ?int $chunksTotal,
         ?string $progress,
         callable $getProjectDB,
         Database $dbForPlatform
@@ -91,12 +86,6 @@ class TimeTravel extends Action
         }
         if ($status !== null && $status !== '') {
             $data['status'] = $status;
-        }
-        if ($chunksUploaded !== null) {
-            $data['chunksUploaded'] = $chunksUploaded;
-        }
-        if ($chunksTotal !== null) {
-            $data['chunksTotal'] = $chunksTotal;
         }
         if ($progress !== null && $progress !== '') {
             $data['progress'] = $progress;

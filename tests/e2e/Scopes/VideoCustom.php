@@ -434,14 +434,6 @@ trait VideoCustom
         return $embedded;
     }
 
-    public function createSource(string $videoId, array $headers = []): array
-    {
-        return $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/source', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $headers !== [] ? $headers : $this->getHeaders()));
-    }
-
     public function createTimeline(string $videoId, array $headers = []): array
     {
         return $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/timeline', \array_merge([
@@ -451,9 +443,12 @@ trait VideoCustom
     }
 
     /**
-     * Create a video, enqueue its source download, and wait until status is ready.
+     * Create a video and wait until a job has probed its metadata (duration > 0).
      *
-     * @return array<string, mixed> ready video document
+     * Enqueues a timeline by default so duration is written without requiring a
+     * profile. Callers that need a video track get one via that same job.
+     *
+     * @return array<string, mixed> video document after probe
      */
     public function createReadyVideo(?array $file = null, string $name = '', array $headers = []): array
     {
@@ -473,39 +468,23 @@ trait VideoCustom
 
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
-        $this->assertEquals('pending', $create['body']['status']);
+        $this->assertArrayNotHasKey('status', $create['body']);
+        $this->assertSame(0, (int) ($create['body']['duration'] ?? 0));
 
-        $source = $this->createSource($videoId, $headers);
-        $this->assertEquals(202, $source['headers']['status-code']);
+        $timeline = $this->createTimeline($videoId, $headers);
+        $this->assertEquals(202, $timeline['headers']['status-code']);
 
-        $ready = $this->waitForVideoReady($videoId);
-        $this->assertEquals('ready', $ready['status'], 'Video source did not become ready');
+        $ready = $this->waitForVideoProbed($videoId);
+        $this->assertGreaterThan(0, (int) $ready['duration'], 'Video was not probed');
 
         return $ready;
     }
 
     /**
-     * Re-materialise the working copy when a prior rendition released it.
+     * Poll until the video document has probed duration (written by the first
+     * rendition or timeline job).
      */
-    public function ensureSourceReady(string $videoId, array $headers = []): array
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $status = $response['body']['status'] ?? '';
-        if ($status !== 'ready') {
-            $this->createSource($videoId, $headers);
-            $response['body'] = $this->waitForVideoStatus($videoId, 'ready');
-        }
-
-        $this->assertEquals('ready', $response['body']['status'] ?? '');
-
-        return $response['body'];
-    }
-
-    public function waitForVideoStatus(string $videoId, string $status, int $timeout = 180): array
+    public function waitForVideoProbed(string $videoId, int $timeout = 120): array
     {
         $deadline = \time() + $timeout;
         $body = [];
@@ -516,39 +495,10 @@ trait VideoCustom
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
-            $body = $response['body'];
-            if (($body['status'] ?? '') === $status) {
-                return $body;
-            }
-            \usleep(500000);
-        }
-
-        return $body;
-    }
-
-    /**
-     * Polls a video until its source download leaves `pending`/`downloading`
-     * and settles on `ready`, `removed` or `error`.
-     */
-    public function waitForVideoReady(string $videoId, int $timeout = 120): array
-    {
-        $pending = ['pending', 'downloading'];
-        $deadline = \time() + $timeout;
-        $body = [];
-
-        while (\time() < $deadline) {
-            // Key headers, not getHeaders(): this polls processing state, and on
-            // the client side the session may have no read access to the video
-            // (e.g. a private source bucket), which would 401 the poll.
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
 
             $body = $response['body'];
 
-            if (!\in_array($body['status'] ?? '', $pending, true)) {
+            if ((int) ($body['duration'] ?? 0) > 0) {
                 return $body;
             }
 
@@ -556,13 +506,6 @@ trait VideoCustom
         }
 
         return $body;
-    }
-
-    public function tmpSourcePath(string $videoId): string
-    {
-        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
-
-        return \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId . '/source';
     }
 
     public function tmpJobPath(string $videoId, string $renditionId): string
@@ -575,41 +518,11 @@ trait VideoCustom
             . '/jobs/' . $renditionId;
     }
 
-    public function waitUntilTmpSourceExists(string $videoId, int $timeout = 60): string
+    public function tmpSourcePath(string $videoId): string
     {
-        $path = $this->tmpSourcePath($videoId);
-        $deadline = \time() + $timeout;
+        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
 
-        while (\time() < $deadline) {
-            \clearstatcache(true, $path);
-            if (\is_file($path)) {
-                return $path;
-            }
-            \usleep(100000);
-        }
-
-        $this->fail(
-            'Tmp source never appeared at ' . $path
-            . '. Is appwrite-videos-tmp mounted on the appwrite container?'
-        );
-
-        return $path;
-    }
-
-    public function waitUntilTmpSourceGone(string $videoId, int $timeout = 60): void
-    {
-        $path = $this->tmpSourcePath($videoId);
-        $deadline = \time() + $timeout;
-
-        while (\time() < $deadline) {
-            \clearstatcache(true, $path);
-            if (!\is_file($path)) {
-                return;
-            }
-            \usleep(100000);
-        }
-
-        $this->fail('Tmp source was still present at ' . $path . ' after ' . $timeout . 's');
+        return \rtrim($root, '/') . '/app-' . $this->getProject()['$id'] . '/' . $videoId . '/source';
     }
 
     public function videoStoragePath(string $videoId, string $suffix = ''): string
@@ -718,10 +631,11 @@ trait VideoCustom
         $body = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
             $body = $response['body'];
 

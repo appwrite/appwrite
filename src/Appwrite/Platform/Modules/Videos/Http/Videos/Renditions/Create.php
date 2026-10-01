@@ -93,8 +93,6 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
-        $this->assertCanCreateRendition($video, $project->getId());
-
         $codec = self::normalizeCodec($profile->getAttribute('codec'));
         $this->assertCodecEnabled($codec);
         $this->assertCodecSupportsOutput($codec, $output);
@@ -135,16 +133,14 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
         }
 
-        if ((string) $video->getAttribute('status', '') === self::SOURCE_READY) {
-            $publisherForVideos->enqueue(new VideoMessage(
-                project: $project,
-                action: VideoAction::Encode,
-                video: $video,
-                profile: $profile,
-                rendition: $rendition,
-                output: $output,
-            ));
-        }
+        $publisherForVideos->enqueue(new VideoMessage(
+            project: $project,
+            action: VideoAction::Encode,
+            video: $video,
+            profile: $profile,
+            rendition: $rendition,
+            output: $output,
+        ));
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

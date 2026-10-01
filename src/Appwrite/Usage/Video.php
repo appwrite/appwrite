@@ -36,7 +36,7 @@ final class Video
             ->setResource('video')
             ->setResourceInternalId((string) $video->getSequence());
 
-        // Anything that settles as not `ready` — error, a sweeper abort, a park
+        // Anything that settles as not `ready` — error, abort, a park
         // observed mid-run — counts as failed, so success + failed always adds
         // up to the renditions total.
         if ($rendition->getAttribute('status') === 'ready') {

@@ -260,35 +260,8 @@ $video = call($client, Client::METHOD_POST, '/videos', $apiHeaders, [
     'fileId' => $fileId,
 ]);
 $videoId = $video['body']['$id'];
-echo "videoId={$videoId} status=" . ($video['body']['status'] ?? 'pending')
-    . " chunksTotal=" . ($video['body']['chunksTotal'] ?? 0) . "\n";
+echo "videoId={$videoId} duration=" . ($video['body']['duration'] ?? 0) . "\n";
 
-// The lifecycle is client-driven: nothing downloads until the source is
-// requested explicitly, and the timeline is its own request below.
-echo "==> Requesting source download\n";
-call($client, Client::METHOD_POST, '/videos/' . $videoId . '/source', $apiHeaders);
-
-echo "==> Waiting for source download\n";
-$downloaded = wait(function () use ($client, $apiHeaders, $videoId) {
-    $response = $client->call(Client::METHOD_GET, '/videos/' . $videoId, $apiHeaders);
-    $status = $response['body']['status'] ?? '';
-    $uploaded = $response['body']['chunksUploaded'] ?? 0;
-    $total = $response['body']['chunksTotal'] ?? 0;
-    echo "  status={$status} chunks={$uploaded}/{$total}\n";
-    if (in_array($status, ['ready', 'error'], true)) {
-        return $response['body'];
-    }
-    return;
-});
-
-if (($downloaded['status'] ?? '') !== 'ready') {
-    fwrite(STDERR, "Source download failed\n");
-    exit(1);
-}
-
-// Queue the rendition before the timeline: the waiting rendition row keeps the
-// working copy alive, otherwise a fast timeline job releases the source and a
-// later rendition create fails with video_source_removed.
 echo "==> Creating HLS 360p rendition\n";
 $profiles = call($client, Client::METHOD_GET, '/videos/profiles', $apiHeaders);
 $profileId = null;

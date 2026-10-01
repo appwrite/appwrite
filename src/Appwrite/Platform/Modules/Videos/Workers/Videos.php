@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Videos\Workers;
 use Appwrite\Event\Message\Video as VideoMessage;
 use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -96,7 +95,6 @@ class Videos extends Action
             ->inject('authorization')
             ->inject('usage')
             ->inject('publisherForUsage')
-            ->inject('publisherForVideos')
             ->callback($this->action(...));
     }
 
@@ -110,7 +108,6 @@ class Videos extends Action
         Authorization $authorization,
         Context $usage,
         UsagePublisher $publisherForUsage,
-        VideoPublisher $publisherForVideos,
     ): void {
         $payload = $message->getPayload();
 
@@ -126,19 +123,10 @@ class Videos extends Action
         Span::add('video.action', $action->value);
 
         match ($action) {
-            VideoAction::Download => $this->downloadSource(
+            VideoAction::Timeline => $this->timeline(
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
-                $queueForRealtime,
-                $publisherForVideos,
-                $project,
-                $videoMessage
-            ),
-            VideoAction::Timeline => $this->timeline(
-                $dbForProject,
-                $deviceForVideos,
-                $queueForRealtime,
                 $project,
                 $videoMessage
             ),
@@ -150,11 +138,11 @@ class Videos extends Action
             ),
             VideoAction::Encode => $this->encode(
                 $dbForProject,
+                $deviceForFiles,
                 $deviceForVideos,
                 $queueForRealtime,
                 $usage,
                 $publisherForUsage,
-                $publisherForVideos,
                 $project,
                 $videoMessage
             ),
@@ -162,166 +150,12 @@ class Videos extends Action
     }
 
     /**
-     * Fetch the source onto videos-tmp, probe it, extract embedded text
-     * subtitles, and mark the video ready. Renditions created while the copy
-     * was still pending or downloading are enqueued here.
-     */
-    private function downloadSource(
-        Database $dbForProject,
-        Device $deviceForFiles,
-        Device $deviceForVideos,
-        Realtime $queueForRealtime,
-        VideoPublisher $publisherForVideos,
-        Document $project,
-        VideoMessage $videoMessage
-    ): void {
-        $projectId = $videoMessage->project->getId();
-        $videoId = $videoMessage->video->getId();
-        $root = $this->getTmpPath($projectId, $videoId);
-
-        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
-            throw new \Exception('Failed to create videos-tmp directory');
-        }
-
-        try {
-            $video = $dbForProject->getDocument('videos', $videoId);
-            if ($video->isEmpty()) {
-                throw new \Exception('Video not found: ' . $videoId);
-            }
-
-            $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
-            $file = $this->resolveFile(
-                $dbForProject,
-                $video->getAttribute('bucketId', ''),
-                $video->getAttribute('fileId', '')
-            );
-            $sourcePath = $this->sourcePath($projectId, $videoId);
-            $fetched = !$this->sourceReady($sourcePath, $video)
-                || $video->getAttribute('status') !== Base::SOURCE_READY;
-
-            if ($fetched) {
-                $this->fetchSource(
-                    $dbForProject,
-                    $deviceForFiles,
-                    $queueForRealtime,
-                    $project,
-                    $video,
-                    $file,
-                    $sourcePath,
-                    $permissions
-                );
-                $video = $this->probe($dbForProject, $video, $file, $sourcePath);
-            }
-
-            if (!$video->getAttribute('subtitlesExtracted', false)) {
-                $workspace = $this->jobWorkspace($projectId, $videoId);
-                try {
-                    $this->extractEmbeddedSubtitles(
-                        $dbForProject,
-                        $deviceForVideos,
-                        $video,
-                        $sourcePath,
-                        $workspace['outDir'],
-                        $this->encoder()
-                    );
-                    $video = $dbForProject->updateDocument(
-                        'videos',
-                        $video->getId(),
-                        new Document(['subtitlesExtracted' => true])
-                    );
-                } catch (\Throwable $th) {
-                    Console::warning(
-                        'Videos worker: embedded subtitle extract failed for '
-                        . $videoId . ': ' . $th->getMessage()
-                    );
-                } finally {
-                    $this->cleanup($workspace['basePath']);
-                }
-            }
-
-            $video = $this->setVideoStatus(
-                $dbForProject,
-                $queueForRealtime,
-                $project,
-                $video,
-                Base::SOURCE_READY,
-                $permissions,
-                (int) $video->getAttribute('chunksTotal', 1),
-                (int) $video->getAttribute('chunksTotal', 1)
-            );
-            // A sweeper abort wins over this ready write. Leave pending
-            // renditions for the next successful download.
-            if ((string) $video->getAttribute('status', '') === Base::SOURCE_READY) {
-                $this->enqueuePendingRenditions($dbForProject, $publisherForVideos, $project, $video);
-            }
-        } catch (\Throwable $th) {
-            $video = $dbForProject->getDocument('videos', $videoId);
-            if (!$video->isEmpty()) {
-                $this->setVideoStatus(
-                    $dbForProject,
-                    $queueForRealtime,
-                    $project,
-                    $video,
-                    Base::SOURCE_ERROR,
-                    $this->sourceReadPermissions($dbForProject, $project, $video)
-                );
-            }
-
-            throw $th;
-        }
-    }
-
-    /**
-     * Enqueue encodes for renditions created before the working copy was ready.
-     *
-     * Create leaves those rows pending and does not publish. A second message
-     * for a row that create already published is dropped by the pending→started
-     * claim.
-     */
-    private function enqueuePendingRenditions(
-        Database $dbForProject,
-        VideoPublisher $publisherForVideos,
-        Document $project,
-        Document $video
-    ): void {
-        $filters = [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [Base::STATUS_PENDING]),
-        ];
-        $total = $dbForProject->count('videos_renditions', $filters);
-        if ($total === 0) {
-            return;
-        }
-
-        $renditions = $dbForProject->find('videos_renditions', [
-            ...$filters,
-            Query::limit($total),
-        ]);
-
-        foreach ($renditions as $rendition) {
-            $profile = $dbForProject->getDocument(
-                'videos_profiles',
-                (string) $rendition->getAttribute('profileId', '')
-            );
-
-            $publisherForVideos->enqueue(new VideoMessage(
-                project: $project,
-                action: VideoAction::Encode,
-                video: $video,
-                profile: $profile->isEmpty() ? null : $profile,
-                rendition: $rendition,
-                output: (string) $rendition->getAttribute('output', ''),
-            ));
-        }
-    }
-
-    /**
      * Probe the source, tile sprite sheets and emit a relative WebVTT timeline.
      */
     private function timeline(
         Database $dbForProject,
+        Device $deviceForFiles,
         Device $deviceForVideos,
-        Realtime $queueForRealtime,
         Document $project,
         VideoMessage $videoMessage
     ): void {
@@ -331,7 +165,13 @@ class Videos extends Action
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
-            $inPath = $this->assertSource($dbForProject, $queueForRealtime, $project, $videoMessage);
+            [$video, $inPath] = $this->prepareSource(
+                $dbForProject,
+                $deviceForFiles,
+                $deviceForVideos,
+                $video,
+                $workspace
+            );
 
             $encoder = $this->encoder();
 
@@ -408,9 +248,6 @@ class Videos extends Action
             }
         } finally {
             $this->cleanup($workspace['basePath']);
-            // Keep the tmp source after sprites so a follow-up rendition create
-            // cannot lose the race with tryRelease. Encode still releases.
-            // $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $video->getId());
         }
     }
 
@@ -497,11 +334,11 @@ class Videos extends Action
      */
     private function encode(
         Database $dbForProject,
+        Device $deviceForFiles,
         Device $deviceForVideos,
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
-        VideoPublisher $publisherForVideos,
         Document $project,
         VideoMessage $videoMessage
     ): void {
@@ -538,29 +375,9 @@ class Videos extends Action
                 return;
             }
 
-            // Created while the working copy was still coming down. Leave the
-            // row pending; downloadSource enqueues again once it is ready.
-            $video = $dbForProject->getDocument('videos', $videoId);
-            if (
-                !$video->isEmpty()
-                && !$this->sourceReady($this->sourcePath($projectId, $videoId), $video)
-                && \in_array((string) $video->getAttribute('status', ''), [Base::SOURCE_PENDING, Base::SOURCE_DOWNLOADING], true)
-            ) {
-                return;
-            }
-
-            $inPath = $this->assertSource($dbForProject, $queueForRealtime, $project, $videoMessage);
-
-            $video = $dbForProject->getDocument('videos', $videoId);
-            $ffmpeg = new FFmpeg(threads: 4);
-            $packager = new Packager($ffmpeg);
-
-            if (!$packager->valid($inPath)) {
-                throw new \Exception('Not a valid media file: ' . $inPath);
-            }
-
             // Compare-and-swap: concurrent coroutines can both see `pending`;
-            // only one updateDocuments may transition the row.
+            // only one updateDocuments may transition the row. Claim before
+            // downloading so a duplicate redelivery never fetches the source.
             $updated = $dbForProject->updateDocuments(
                 'videos_renditions',
                 new Document([
@@ -582,6 +399,20 @@ class Videos extends Action
             $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
 
             $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
+            [$video, $inPath] = $this->prepareSource(
+                $dbForProject,
+                $deviceForFiles,
+                $deviceForVideos,
+                $dbForProject->getDocument('videos', $videoId),
+                $workspace
+            );
+
+            $ffmpeg = new FFmpeg(threads: 4);
+            $packager = new Packager($ffmpeg);
+
+            if (!$packager->valid($inPath)) {
+                throw new \Exception('Not a valid media file: ' . $inPath);
+            }
 
             $representation = new Representation(
                 width: (int) $profile->getAttribute('width'),
@@ -844,7 +675,6 @@ class Videos extends Action
             if ($workspace !== null) {
                 $this->cleanup($workspace['basePath']);
             }
-            $this->tryRelease($dbForProject, $queueForRealtime, $project, $projectId, $videoId);
         }
     }
 
@@ -1159,330 +989,96 @@ class Videos extends Action
         return Base::tmpPath($projectId, $videoId);
     }
 
-    private function sourcePath(string $projectId, string $videoId): string
-    {
-        return Base::tmpSourcePath($projectId, $videoId);
-    }
-
     /**
-     * Per-job output directory under `{videoId}/jobs/{jobId}/out/`.
+     * Per-job directories under `{videoId}/jobs/{jobId}/in/` and `.../out/`.
      *
-     * Encode passes the rendition id so CleanStaleVideosResources can release
-     * that workspace alone. Call only after this run has claimed the rendition
-     * (pending→started): cleanup is keyed by the same id, and a no-op redelivery
-     * must not mkdir+rm the tree an in-flight encode is writing. Timeline /
-     * subtitle extract omit `$jobId` and get a uniqid — those runs are not
-     * aborted via the rendition sweeper.
+     * Encode passes the rendition id so each workspace is isolated. Call only
+     * after this run has claimed the rendition (pending→started): cleanup is
+     * keyed by the same id, and a no-op redelivery must not mkdir+rm the tree
+     * an in-flight encode is writing. Timeline omits `$jobId` and gets a uniqid.
      *
-     * @return array{basePath: string, outDir: string}
+     * @return array{basePath: string, inDir: string, outDir: string}
      */
     private function jobWorkspace(string $projectId, string $videoId, ?string $jobId = null): array
     {
         $basePath = Base::tmpJobPath($projectId, $videoId, $jobId ?? \uniqid('', true));
+        $inDir = $basePath . '/in/';
         $outDir = $basePath . '/out/';
 
+        if (!\mkdir($inDir, 0755, true) && !\is_dir($inDir)) {
+            throw new \Exception('Failed to create temp input directory');
+        }
         if (!\mkdir($outDir, 0755, true) && !\is_dir($outDir)) {
             throw new \Exception('Failed to create temp output directory');
         }
 
         return [
             'basePath' => $basePath,
+            'inDir' => $inDir,
             'outDir' => $outDir,
         ];
     }
 
-    private function sourceReady(string $sourcePath, Document $video): bool
-    {
-        return Base::sourceMatches($sourcePath, (int) $video->getAttribute('size', 0));
-    }
-
-    private function assertSource(
-        Database $dbForProject,
-        Realtime $queueForRealtime,
-        Document $project,
-        VideoMessage $videoMessage
-    ): string {
-        $video = $dbForProject->getDocument('videos', $videoMessage->video->getId());
-        $path = $this->sourcePath($videoMessage->project->getId(), $video->getId());
-
-        if ($this->sourceReady($path, $video)) {
-            return $path;
-        }
-
-        // Disk is the truth: the row claims a live working copy but the file is
-        // gone (crash, manual cleanup). Correct the status so createSource can
-        // materialise the source again instead of refusing on `ready`.
-        if (!$video->isEmpty() && $video->getAttribute('status') === Base::SOURCE_READY) {
-            $this->setVideoStatus(
-                $dbForProject,
-                $queueForRealtime,
-                $project,
-                $video,
-                Base::SOURCE_REMOVED,
-                $this->sourceReadPermissions($dbForProject, $project, $video)
-            );
-        }
-
-        throw new \Exception('Source missing or incomplete for ' . $video->getId());
-    }
-
     /**
-     * @param array<string> $permissions
+     * Download the storage file into the job directory, probe metadata once,
+     * and extract embedded subtitles once.
+     *
+     * @param array{basePath: string, inDir: string, outDir: string} $workspace
+     * @return array{0: Document, 1: string}
      */
-    private function fetchSource(
+    private function prepareSource(
         Database $dbForProject,
         Device $deviceForFiles,
-        Realtime $queueForRealtime,
-        Document $project,
+        Device $deviceForVideos,
         Document $video,
-        Document $file,
-        string $sourcePath,
-        array $permissions
-    ): void {
-        $fullPath = $file->getAttribute('path', '');
-
-        if (!$deviceForFiles->exists($fullPath)) {
-            throw new \Exception('Source file missing from storage: ' . $fullPath);
+        array $workspace
+    ): array {
+        if ($video->isEmpty()) {
+            throw new \Exception('Video not found');
         }
 
-        $storedSize = $deviceForFiles->getFileSize($fullPath);
-        $chunks = Base::chunkCount($storedSize);
-        $partPath = $sourcePath . '.' . \uniqid('', true) . '.part';
-
-        $video = $this->setVideoStatus(
+        $file = $this->resolveFile(
             $dbForProject,
-            $queueForRealtime,
-            $project,
-            $video,
-            Base::SOURCE_DOWNLOADING,
-            $permissions,
-            $chunks,
-            0
+            $video->getAttribute('bucketId', ''),
+            $video->getAttribute('fileId', '')
         );
+        $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
 
-        Console::info('Downloading source for video ' . $video->getId() . ' in ' . $chunks . ' chunk(s)');
-
-        $handle = \fopen($partPath, 'wb');
-        if ($handle === false) {
-            throw new \Exception('Unable to open source part file');
+        if ((int) $video->getAttribute('duration', 0) <= 0) {
+            $video = $this->probe($dbForProject, $video, $file, $inPath);
         }
 
-        try {
-            $chunkSize = APP_LIMIT_UPLOAD_CHUNK_SIZE;
-            // Cap progress writes at ~100 regardless of size (a 5 GB source is 1000
-            // chunks); always report the final chunk. For small sources step is 1,
-            // so every chunk is still reported.
-            $step = \max(1, \intdiv($chunks, 100));
-            for ($chunk = 1; $chunk <= $chunks; $chunk++) {
-                $offset = ($chunk - 1) * $chunkSize;
-                $length = (int) \min($chunkSize, $storedSize - $offset);
-                $data = (string) $deviceForFiles->read($fullPath, $offset, $length);
-                if (\fwrite($handle, $data) === false) {
-                    throw new \Exception('Unable to write source chunk ' . $chunk);
-                }
+        if (!$video->getAttribute('subtitlesExtracted', false)) {
+            $claimed = $dbForProject->updateDocuments(
+                'videos',
+                new Document(['subtitlesExtracted' => true]),
+                [
+                    Query::equal('$id', [$video->getId()]),
+                    Query::equal('subtitlesExtracted', [false]),
+                ]
+            );
 
-                if ($chunk % $step === 0 || $chunk === $chunks) {
-                    $this->setVideoStatus(
+            if ($claimed > 0) {
+                try {
+                    $this->extractEmbeddedSubtitles(
                         $dbForProject,
-                        $queueForRealtime,
-                        $project,
+                        $deviceForVideos,
                         $video,
-                        Base::SOURCE_DOWNLOADING,
-                        $permissions,
-                        $chunks,
-                        $chunk
+                        $inPath,
+                        $workspace['outDir'],
+                        $this->encoder()
+                    );
+                } catch (\Throwable $th) {
+                    Console::warning(
+                        'Videos worker: embedded subtitle extract failed for '
+                        . $video->getId() . ': ' . $th->getMessage()
                     );
                 }
-            }
-        } finally {
-            \fclose($handle);
-        }
-
-        $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
-        $compression = $file->getAttribute('algorithm', Compression::NONE);
-        $hasCompression = $compression !== Compression::NONE;
-
-        if ($hasEncryption || $hasCompression) {
-            $data = (string) \file_get_contents($partPath);
-
-            if ($hasEncryption) {
-                $data = OpenSSL::decrypt(
-                    $data,
-                    $file->getAttribute('openSSLCipher'),
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
-            }
-
-            if ($hasCompression) {
-                $data = match ($compression) {
-                    Compression::ZSTD => (new Zstd())->decompress($data),
-                    Compression::GZIP => (new GZIP())->decompress($data),
-                    default => $data,
-                };
-            }
-
-            $decodedPath = $sourcePath . '.' . \uniqid('', true) . '.decoded';
-            if (\file_put_contents($decodedPath, $data) === false) {
-                throw new \Exception('Unable to write decrypted source');
-            }
-            \unlink($partPath);
-            if (!\rename($decodedPath, $sourcePath)) {
-                \unlink($decodedPath);
-                throw new \Exception('Unable to finalise source download');
-            }
-        } elseif (!\rename($partPath, $sourcePath)) {
-            throw new \Exception('Unable to finalise source download');
-        }
-
-        $expected = (int) $video->getAttribute('size', 0);
-        if (!Base::sourceMatches($sourcePath, $expected)) {
-            // sourceMatches already cleared the path's stat cache.
-            $actual = \is_file($sourcePath) ? (int) \filesize($sourcePath) : 0;
-            throw new \Exception(
-                'Source size mismatch for video ' . $video->getId()
-                . ': expected ' . $expected . ', got ' . $actual
-            );
-        }
-    }
-
-    private function tryRelease(
-        Database $dbForProject,
-        Realtime $queueForRealtime,
-        Document $project,
-        string $projectId,
-        string $videoId
-    ): void {
-        $video = $dbForProject->getDocument('videos', $videoId);
-        if ($video->isEmpty()) {
-            return;
-        }
-
-        if ($video->getAttribute('status') === Base::SOURCE_DOWNLOADING) {
-            return;
-        }
-
-        $inFlight = $dbForProject->find('videos_renditions', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [
-                Base::STATUS_PENDING,
-                Base::STATUS_STARTED,
-                Base::STATUS_ENDED,
-                Base::STATUS_UPLOADING,
-            ]),
-            Query::limit(1),
-        ]);
-
-        // Another encode is still using the tmp source — skip the jobs glob.
-        if (!empty($inFlight)) {
-            return;
-        }
-
-        $jobs = $this->getTmpPath($projectId, $videoId) . '/jobs';
-        $jobsRemain = \is_dir($jobs) && !empty(\glob($jobs . '/*', GLOB_ONLYDIR));
-
-        if ($jobsRemain) {
-            return;
-        }
-
-        // Rendition create may have inserted `pending` after the first find —
-        // re-check immediately before unlinking so we do not drop the source
-        // under a new claim.
-        $inFlight = $dbForProject->find('videos_renditions', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::equal('status', [
-                Base::STATUS_PENDING,
-                Base::STATUS_STARTED,
-                Base::STATUS_ENDED,
-                Base::STATUS_UPLOADING,
-            ]),
-            Query::limit(1),
-        ]);
-        if (!empty($inFlight)) {
-            return;
-        }
-
-        $sourcePath = $this->sourcePath($projectId, $videoId);
-        foreach (\glob($sourcePath . '*') ?: [] as $path) {
-            if (\is_file($path)) {
-                \unlink($path);
-                Console::info('Released source [' . $path . ']');
+                $video = $dbForProject->getDocument('videos', $video->getId());
             }
         }
 
-        $this->setVideoStatus(
-            $dbForProject,
-            $queueForRealtime,
-            $project,
-            $video,
-            Base::SOURCE_REMOVED,
-            $this->sourceReadPermissions($dbForProject, $project, $video)
-        );
-    }
-
-    /**
-     * @param array<string> $permissions
-     */
-    private function setVideoStatus(
-        Database $dbForProject,
-        Realtime $queueForRealtime,
-        Document $project,
-        Document $video,
-        string $status,
-        array $permissions,
-        ?int $chunksTotal = null,
-        ?int $chunksUploaded = null
-    ): Document {
-        // Maintenance may have aborted a stuck download. Late ready/error from
-        // that same worker must not overwrite aborted; a fresh download
-        // (aborted → downloading) must still be allowed for client retry.
-        $current = $dbForProject->getDocument('videos', $video->getId());
-        if (
-            !$current->isEmpty()
-            && $current->getAttribute('status') === Base::SOURCE_ABORTED
-            && \in_array($status, [Base::SOURCE_READY, Base::SOURCE_ERROR], true)
-        ) {
-            return $current;
-        }
-
-        $data = ['status' => $status];
-        if ($chunksTotal !== null) {
-            $data['chunksTotal'] = $chunksTotal;
-        }
-        if ($chunksUploaded !== null) {
-            $data['chunksUploaded'] = $chunksUploaded;
-        }
-
-        $video = $dbForProject->updateDocument('videos', $video->getId(), new Document($data));
-        $this->notifyVideo($queueForRealtime, $project, $video, $permissions);
-
-        return $video;
-    }
-
-    /**
-     * @param array<string> $permissions
-     */
-    private function notifyVideo(Realtime $queueForRealtime, Document $project, Document $video, array $permissions): void
-    {
-        $payload = $video->getArrayCopy();
-        // Video rows are project-internal and carry no ACL; stamp the source
-        // bucket/file read roles (plus the console team, see
-        // sourceReadPermissions()) so realtime delivery matches the HTTP access
-        // model — a video backed by a private file must not broadcast its
-        // details to every subscriber.
-        if (empty($payload['$permissions'])) {
-            $payload['$permissions'] = $permissions;
-        }
-
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
-            ->setEvent('videos.[videoId].update')
-            ->setParam('videoId', $video->getId())
-            ->setPayload($payload)
-            ->trigger();
+        return [$video, $inPath];
     }
 
     /**

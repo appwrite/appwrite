@@ -214,7 +214,7 @@
 <body>
   <main>
     <h1>Appwrite Videos player <span class="muted" style="font-size:0.75rem;font-weight:400">hls-ladder-2</span></h1>
-    <p class="muted">Authenticate, then upload or paste a video ID. Create only writes the row. This page then calls source (download + extract embedded captions), waits until status is <code>ready</code>, and only then queues timeline + renditions in parallel. Optional uploaded captions win over extracted tracks for the same language.</p>
+    <p class="muted">Authenticate, then upload or paste a video ID. Create only writes the row. This page then queues timeline + renditions in parallel; each job downloads the source, probes metadata, and extracts embedded captions once. Optional uploaded captions win over extracted tracks for the same language.</p>
 
     <section class="panel">
       <h2>Connection &amp; auth <span class="muted">(Appwrite Web SDK)</span></h2>
@@ -444,7 +444,6 @@
     let account = null;
     let storage = null;
     let appwrite = null;
-    let unsubscribeDownload = null;
     let currentUserId = '';
     let jwt = '';
     let jwtMintedAt = 0;
@@ -653,12 +652,6 @@
       uploadProgress.value = 0;
       uploadProgress.hidden = true;
       const bar = $('downloadBar');
-      const meter = $('downloadProgress');
-      const label = $('downloadLabel');
-      const pct = $('downloadPct');
-      if (meter) meter.value = 0;
-      if (pct) pct.textContent = '0%';
-      if (label) label.textContent = 'source download';
       if (bar) bar.hidden = true;
     }
 
@@ -711,7 +704,7 @@
     function renderVideoMeta(videoDoc) {
       const el = $('videoMeta');
       if (!el) return;
-      if (!videoDoc || videoDoc.status !== 'ready') {
+      if (!videoDoc || !(Number(videoDoc.duration) > 0)) {
         el.hidden = true;
         el.innerHTML = '';
         return;
@@ -1112,23 +1105,6 @@
       return res.json();
     }
 
-    // Renditions may only be created once the source download finished — the
-    // endpoint rejects earlier requests with 400 `video_not_ready` — so poll
-    // the video until it settles on `ready` (or fail on `error`/timeout).
-    async function waitForVideoReady(videoId, onTick, timeoutMs = 300000) {
-      const deadline = Date.now() + timeoutMs;
-      while (Date.now() < deadline) {
-        const doc = await api(`/videos/${videoId}`);
-        const status = doc?.status || 'pending';
-        applyDownloadProgress(doc);
-        onTick?.(doc, status);
-        if (status === 'ready') return doc;
-        if (status === 'error') throw new Error('video source processing failed');
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      throw new Error('timed out waiting for the video source to become ready');
-    }
-
     async function apiDelete(path) {
       await ensureJwt();
       const res = await fetch(`${config().endpoint}${path}`, {
@@ -1315,7 +1291,6 @@
         if (!newVideoId) {
           throw new Error('create video returned no $id');
         }
-        await apiPost(`/videos/${newVideoId}/source`, {});
         const subtitleFile = $('subtitleFile').files[0];
         if (subtitleFile) {
           uploadInfo.textContent = 'uploading subtitle…';
@@ -1326,7 +1301,6 @@
             $('subtitleName').value
           );
         }
-        const chunksTotal = Number(videoDoc.chunksTotal) || 0;
 
         // Prefer the first encode output the user ticked, so Load/watch matches
         // what we just queued (avoids sitting on HLS while only CMAF was encoded).
@@ -1347,16 +1321,6 @@
         setVideoId(newVideoId);
         $('videoId').focus();
         $('videoId').scrollIntoView({ block: 'center', behavior: 'smooth' });
-        subscribeDownloadEvents(newVideoId);
-
-        await waitForVideoReady(newVideoId, (doc, status) => {
-          applyDownloadProgress(doc);
-          const { total, uploaded, pct } = sourceProgress(doc);
-          uploadInfo.textContent = `source ${status} · ${pct}% · ${uploaded}/${total || '?'} chunks`;
-          if (status === 'ready') renderVideoMeta(doc);
-        });
-        resetProgressBars();
-        uploadInfo.textContent = 'source ready · probe complete';
 
         const codec = selectedCodecId();
         const profileList = await api(`/videos/profiles?codec=${encodeURIComponent(codec)}`);
@@ -1365,7 +1329,7 @@
           wantedProfiles.includes(String(profile.name || '').toLowerCase())
         );
 
-        uploadInfo.textContent = 'source ready · queueing timeline + renditions…';
+        uploadInfo.textContent = 'queueing timeline + renditions…';
         const jobs = [apiPost(`/videos/${newVideoId}/timeline`, {})];
         let queued = 0;
         for (const profile of selected) {
@@ -1387,8 +1351,8 @@
         );
 
         uploadInfo.textContent = missing.length
-          ? `created ${newVideoId} (ready, ${chunksTotal} chunks); missing profiles: ${missing.join(', ')}`
-          : `created ${newVideoId} · ${codec} · source ready · queued ${queued} renditions (${outputs.join(', ')})`;
+          ? `created ${newVideoId}; missing profiles: ${missing.join(', ')}`
+          : `created ${newVideoId} · ${codec} · queued ${queued} renditions (${outputs.join(', ')})`;
         // Pass the id explicitly so polling cannot race on a stale input value.
         startPolling(newVideoId);
       } catch (err) {
@@ -1610,75 +1574,6 @@
       if (lastStatus) renderStatus(lastStatus);
     }
 
-    function sourceProgress(videoDoc) {
-      const total = Number(videoDoc?.chunksTotal) || 0;
-      const uploaded = Number(videoDoc?.chunksUploaded) || 0;
-      const pct = total > 0 ? Math.round((uploaded / total) * 100) : 0;
-      return { total, uploaded, pct };
-    }
-
-    function applyDownloadProgress(videoDoc) {
-      const bar = $('downloadBar');
-      const meter = $('downloadProgress');
-      const label = $('downloadLabel');
-      const pctEl = $('downloadPct');
-      if (!bar || !meter || !label) return;
-
-      const status = videoDoc?.status || '';
-      const { total, uploaded, pct } = sourceProgress(videoDoc);
-
-      if (!status || status === 'missing' || status === 'ready') {
-        meter.value = 0;
-        if (pctEl) pctEl.textContent = '0%';
-        label.textContent = 'source download';
-        bar.hidden = true;
-        return;
-      }
-
-      meter.max = 100;
-      meter.value = pct;
-      if (pctEl) pctEl.textContent = `${pct}%`;
-      if (status === 'error') {
-        label.textContent = `source download failed · ${pct}%`;
-        bar.hidden = false;
-      } else {
-        bar.hidden = false;
-        label.textContent = `source ${status} · ${pct}% · ${uploaded}/${total || '?'} chunks`;
-      }
-    }
-
-    function unsubscribeDownloadEvents() {
-      if (typeof unsubscribeDownload === 'function') {
-        try { unsubscribeDownload(); } catch { /* already closed */ }
-        unsubscribeDownload = null;
-      }
-    }
-
-    function subscribeDownloadEvents(videoId) {
-      unsubscribeDownloadEvents();
-      if (!appwrite || !videoId) return;
-      const channels = [
-        `videos.${videoId}`,
-        `videos.${videoId}.update`,
-      ];
-      unsubscribeDownload = appwrite.subscribe(channels, (event) => {
-        const payload = event?.payload || {};
-        if (payload.$id && payload.$id !== videoId) return;
-        applyDownloadProgress(payload);
-        statusEl.textContent = $('downloadLabel')?.textContent || statusEl.textContent;
-        if (lastStatus) {
-          lastStatus.videoDoc = { ...lastStatus.videoDoc, ...payload };
-          renderStatus(lastStatus);
-        }
-        if (payload.status === 'ready') {
-          pollOnce().catch(() => {});
-        }
-        if (payload.status === 'error') {
-          stopPolling();
-        }
-      });
-    }
-
     function renderStatus({ videoDoc, renditions, sprite, subtitles = [] }) {
       const width = Number(videoDoc?.width) || 0;
       const height = Number(videoDoc?.height) || 0;
@@ -1686,21 +1581,18 @@
         applyVideoAspect(width, height);
       }
       const rows = [];
-      const vStatus = videoDoc?.status || 'missing';
-      const { total, uploaded, pct } = sourceProgress(videoDoc);
-      const sourceHint = vStatus === 'ready'
-        ? (width && height ? `${width}×${height}` : '')
-        : (vStatus === 'error'
-          ? 'download failed'
-          : (total ? `${uploaded}/${total} chunks · ${pct}%` : 'queued'));
-      const durationHint = vStatus === 'ready' && videoDoc?.duration
+      const probed = Number(videoDoc?.duration) > 0;
+      const sourceHint = probed
+        ? (width && height ? `${width}×${height}` : (width || height ? 'audio' : 'probed'))
+        : 'awaiting first job';
+      const durationHint = probed && videoDoc?.duration
         ? `${Math.round((videoDoc.duration || 0) / 1000)}s`
         : '';
       rows.push(`
         <div class="row">
-          <span>source ${videoDoc?.name || videoDoc?.$id || '—'}</span>
+          <span>video ${videoDoc?.name || videoDoc?.$id || '—'}</span>
           <span>${sourceHint}${durationHint ? ` · ${durationHint}` : ''}</span>
-          ${badge(vStatus)}
+          ${badge(probed ? 'ready' : 'pending')}
         </div>
       `);
 
@@ -1890,11 +1782,7 @@
     }
 
     async function checkSprite(videoDoc) {
-      // Timeline lives in videos storage, not videos-tmp. After the last job
-      // the source status becomes `removed`; that must not hide a ready sprite.
-      if (videoDoc?.status === 'error') {
-        return { status: 'error', previewId: '' };
-      }
+      // Timeline lives in videos storage, not videos-tmp.
       if (videoDoc?.previewId) {
         return { status: 'ready', previewId: videoDoc.previewId };
       }
@@ -1925,28 +1813,7 @@
       renderSubtitleChips(subtitles);
       renderVideoMeta(videoDoc);
       lastStatus = { videoDoc, renditions, sprite, subtitles };
-      applyDownloadProgress(videoDoc);
 
-      const { total, uploaded, pct } = sourceProgress(videoDoc);
-      const sourceStatus = videoDoc.status || 'missing';
-
-      if (sourceStatus === 'error') {
-        statusEl.textContent = 'Source download failed';
-        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source error`;
-        stopPolling();
-        return;
-      }
-
-      const sourcePlayable = sourceStatus === 'ready' || sourceStatus === 'removed';
-
-      if (!sourcePlayable) {
-        statusEl.textContent = `Downloading source · ${uploaded}/${total || '?'} chunks (${pct}%)`;
-        pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · source ${sourceStatus} · ${pct}% · ${uploaded}/${total} chunks`;
-        if (sprite.status === 'ready' && !cues.length) {
-          await loadSprites();
-        }
-        return;
-      }
 
       const mode = playbackMode();
       const activeOutput = outputForMode(mode);
@@ -2428,7 +2295,6 @@
     });
 
     function stopPolling() {
-      unsubscribeDownloadEvents();
       if (pollTimer) {
         clearInterval(pollTimer);
         pollTimer = null;
@@ -2460,10 +2326,6 @@
       stopBtn.disabled = false;
       statusEl.textContent = `Polling ${config().videoId || '…'}…`;
       persistConfig();
-      ensureJwt()
-        .then(() => subscribeDownloadEvents(config().videoId))
-        .catch((err) => console.warn('realtime subscribe skipped', err));
-
       const tick = async () => {
         try {
           await pollOnce();
