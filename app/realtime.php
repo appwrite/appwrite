@@ -667,8 +667,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             || ($sessionId !== null && !$user->sessionActive($sessionId));
 
                         foreach ($impersonating as $connection) {
-                            if ($revoked($realtime->connections[$connection]['impersonator']['sessionId'] ?? null)) {
+                            $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
+
+                            // The HTTP API also stops impersonating as soon as this user is
+                            // no longer an impersonator.
+                            if ($revoked($impersonatorSessionId) || $user->getAttribute('impersonator', false) !== true) {
                                 $closing[$connection] = true;
+                                continue;
+                            }
+
+                            // The connection runs on this user's session, so extending that
+                            // session extends the connection.
+                            if ($impersonatorSessionId !== null) {
+                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($impersonatorSessionId);
                             }
                         }
 
@@ -687,7 +698,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $presences = $realtime->connections[$connection]['presences'] ?? [];
                             $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
                             // Re-read, as extending the session moves it. An impersonated
-                            // connection has no sessionId and keeps what it was opened with.
+                            // connection has no sessionId; its impersonator's events refresh it.
                             $expire = $sessionId !== null
                                 ? $user->getSessionExpiry($sessionId)
                                 : ($realtime->connections[$connection]['expire'] ?? null);
