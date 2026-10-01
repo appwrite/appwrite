@@ -745,8 +745,11 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $this->copyConfigFiles(match ($database) {
+                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml'],
+                });
             }
 
             // Changes to what the containers run on, rather than to what is inside the
@@ -1299,17 +1302,21 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * Copy the files the compose file bind-mounts next to itself.
+     *
+     * @param array<string> $files
+     */
+    private function copyConfigFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
                 $target = $this->path . '/' . $file;
+                // A local install writes into the project root itself, and copy() fails onto the same file
+                if (\realpath($source) === \realpath($target)) {
+                    continue;
+                }
                 if (@copy($source, $target) === false) {
                     $lastError = error_get_last();
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
