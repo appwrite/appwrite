@@ -8,9 +8,14 @@ import {
   resolveScreenshotModeUserPhotoSrc,
   subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
+import {
+  getUserPhotoVersion,
+  subscribeUserPhotoVersion,
+  withUserPhotoVersion,
+} from '@/lib/user-photo'
 import { cn } from '@/lib/utils'
 
-type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 interface InitialsAvatarProps {
   name?: string
@@ -58,6 +63,7 @@ const sizeClasses: Record<AvatarSize, string> = {
   sm: 'h-6 w-6 text-[10px]',
   md: 'h-8 w-8 text-[11px]',
   lg: 'h-10 w-10 text-[13px]',
+  xl: 'h-20 w-20 text-[20px]',
 }
 
 /** Request 2x pixels so avatars stay sharp on retina displays. */
@@ -66,6 +72,7 @@ const sizePixels: Record<AvatarSize, number> = {
   sm: 48,
   md: 64,
   lg: 80,
+  xl: 160,
 }
 
 const loadedPhotoSrcs = new Set<string>()
@@ -125,6 +132,9 @@ export function InitialsAvatar({
  * Pass `userId` only. Calling `getPhoto` with no identity params resolves the
  * signed-in session user (`useCurrentUser`). Add `projectId` to resolve a
  * customer project's user instead of a console user.
+ *
+ * The current console user's photo URL carries the user photo version (see
+ * `@/lib/user-photo`) so it reloads right after an upload or removal.
  */
 export function PhotoAvatar({
   userId,
@@ -137,6 +147,7 @@ export function PhotoAvatar({
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
+  const [photoVersion, setPhotoVersion] = useState(getUserPhotoVersion)
   const trimmedUserId = userId?.trim() || ''
   const trimmedProjectId = projectId?.trim() || ''
   const pixels = sizePixels[size]
@@ -147,37 +158,47 @@ export function PhotoAvatar({
     })
   }, [])
 
+  useEffect(() => subscribeUserPhotoVersion(setPhotoVersion), [])
+
   const src = useMemo(() => {
     // Project users are never the console account: in project scope, ignore
     // the console-current-user flags and the account ID comparison so the
     // screenshot-mode demo photo never replaces a project user's avatar.
     const consoleScoped = !trimmedProjectId
+    const currentUserId = consoleScoped
+      ? getConsoleAccountFromSingleton()?.$id
+      : undefined
     const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
       userId: trimmedUserId,
       useCurrentUser: consoleScoped && useCurrentUser,
       isCurrentUser: consoleScoped && isCurrentUser,
-      currentUserId: consoleScoped
-        ? getConsoleAccountFromSingleton()?.$id
-        : undefined,
+      currentUserId,
     })
     if (screenshotSrc) return screenshotSrc
+
+    const isSelf =
+      consoleScoped &&
+      (isCurrentUser ||
+        useCurrentUser ||
+        (!!trimmedUserId && trimmedUserId === currentUserId))
 
     if (trimmedUserId) {
       const avatars = trimmedProjectId
         ? sdk.forProject(trimmedProjectId).avatars
         : sdk.forConsole.avatars
-      return avatars.getPhoto({
+      const url = avatars.getPhoto({
         width: pixels,
         height: pixels,
         userId: trimmedUserId,
       })
+      return isSelf ? withUserPhotoVersion(url, photoVersion) : url
     }
 
-    if (useCurrentUser && !trimmedProjectId) {
-      return sdk.forConsole.avatars.getPhoto({
-        width: pixels,
-        height: pixels,
-      })
+    if (useCurrentUser && consoleScoped) {
+      return withUserPhotoVersion(
+        sdk.forConsole.avatars.getPhoto({ width: pixels, height: pixels }),
+        photoVersion,
+      )
     }
 
     return null
@@ -188,6 +209,7 @@ export function PhotoAvatar({
     useCurrentUser,
     isCurrentUser,
     screenshotModeEpoch,
+    photoVersion,
   ])
 
   const [loaded, setLoaded] = useState(() =>

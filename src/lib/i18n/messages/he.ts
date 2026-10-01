@@ -63,6 +63,7 @@ export const heCatalog: EnCatalog = {
         ...enCatalog.app.header.accountMenu,
         user: 'משתמש',
         account: 'חשבון',
+        changePhoto: 'שינוי תמונה',
         projects: 'פרויקטים',
         domains: 'דומיינים',
         memberSince: 'חבר מאז',

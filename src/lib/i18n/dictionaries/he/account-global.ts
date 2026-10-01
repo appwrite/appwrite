@@ -1335,4 +1335,23 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'דרישת שלב אימות נוסף בכל התחברות.',
   'Secure account': 'אבטחת החשבון',
   'Remind me later': 'הזכירו לי מאוחר יותר',
+
+  // Profile photo
+  'Profile photo': 'תמונת פרופיל',
+  'Shown next to your name across the Console and to the members of your organizations.':
+    'מוצגת לצד השם שלכם בכל הקונסול ולחברי הארגונים שלכם.',
+  'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.':
+    'PNG, JPEG או WebP עד 5MB. ללא תמונה נשתמש בתמונה מספק ה-OAuth המחובר, ב-Gravatar או בראשי התיבות שלכם.',
+  'Upload photo': 'העלאת תמונה',
+  'Remove photo': 'הסרת תמונה',
+  'Photo must be a PNG, JPEG, or WebP image':
+    'התמונה חייבת להיות בפורמט PNG, JPEG או WebP',
+  'Photo must be at most 5MB': 'גודל התמונה יכול להיות עד 5MB',
+  'Profile photo updated': 'תמונת הפרופיל עודכנה',
+  'Failed to update profile photo': 'עדכון תמונת הפרופיל נכשל',
+  'Profile photo removed': 'תמונת הפרופיל הוסרה',
+  'Failed to remove profile photo': 'הסרת תמונת הפרופיל נכשלה',
+  'Remove profile photo': 'הסרת תמונת פרופיל',
+  'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
+    'האווטאר שלכם יחזור לתמונה מספק ה-OAuth המחובר, ל-Gravatar או לראשי התיבות שלכם. אפשר להעלות תמונה חדשה בכל עת.',
 }
