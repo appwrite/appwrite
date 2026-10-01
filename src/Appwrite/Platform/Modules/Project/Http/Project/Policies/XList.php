@@ -176,6 +176,10 @@ class XList extends Action
                 '$id' => 'deny-corporate-email',
                 'enabled' => $auths['corporateEmails'] ?? false,
             ]),
+            new Document([
+                '$id' => 'phone-otp-channel',
+                'channel' => $auths['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS,
+            ]),
         ];
     }
 }

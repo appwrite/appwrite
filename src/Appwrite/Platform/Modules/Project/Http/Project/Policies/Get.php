@@ -91,6 +91,7 @@ class Get extends Action
             'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
             'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'phone-otp-channel' => Response::MODEL_POLICY_PHONE_OTP_CHANNEL,
         ];
     }
 
@@ -230,6 +231,13 @@ class Get extends Action
                     'enabled' => $auths['corporateEmails'] ?? false,
                 ]),
                 Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'phone-otp-channel' => [
+                new Document([
+                    '$id' => 'phone-otp-channel',
+                    'channel' => $auths['phoneOtpChannel'] ?? PHONE_OTP_CHANNEL_SMS,
+                ]),
+                Response::MODEL_POLICY_PHONE_OTP_CHANNEL,
             ],
             default => null,
         };
