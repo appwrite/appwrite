@@ -62,7 +62,7 @@ class TransactionState
             return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
 
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
@@ -118,7 +118,7 @@ class TransactionState
             return $dbForDatabases->find($collectionId, $queries);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
         $committedDocs = $dbForDatabases->find($collectionId, $queries);
         $documentMap = [];
 
@@ -180,7 +180,7 @@ class TransactionState
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
         $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
 
         if (!isset($state[$collectionId])) {
@@ -339,7 +339,7 @@ class TransactionState
      * @throws Exception\Query
      * @throws Timeout
      */
-    private function getTransactionState(string $transactionId): array
+    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId): array
     {
         $roles = $this->authorization->getRoles();
 
@@ -363,6 +363,9 @@ class TransactionState
             $databaseInternalId = $operation['databaseInternalId'];
             $collectionInternalId = $operation['collectionInternalId'];
             $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
+            if ($collectionId !== $targetCollectionId) {
+                continue;
+            }
             $documentId = $operation['documentId'];
             $action = $operation['action'];
             $data = $operation['data'];
@@ -429,10 +432,33 @@ class TransactionState
 
                 case 'increment':
                 case 'decrement':
-                    $attribute = $data['attribute'] ?? null;
+                    $attribute = $data['attribute'] ?? $data['column'] ?? null;
                     $value = $data['value'] ?? 1;
 
                     if ($attribute) {
+                        if (isset($state[$collectionId][$documentId]) && !$state[$collectionId][$documentId]['exists']) {
+                            break;
+                        }
+
+                        // Numeric operations are deltas, not replacement values. Start
+                        // from the committed row unless this transaction created it.
+                        $currentState = $state[$collectionId][$documentId] ?? null;
+                        if ($currentState === null || $currentState['action'] !== 'create') {
+                            $dbForDatabases = ($this->getDatabasesDB)($database);
+                            $document = $dbForDatabases->getDocument($collectionId, $documentId);
+                            if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
+                                break;
+                            }
+                            if ($currentState !== null) {
+                                $document->setAttributes($currentState['document']->getArrayCopy());
+                            }
+                            $state[$collectionId][$documentId] = [
+                                'action' => $currentState['action'] ?? 'update',
+                                'document' => $document,
+                                'exists' => true,
+                            ];
+                        }
+
                         if (isset($state[$collectionId][$documentId])) {
                             $existingDocument = $state[$collectionId][$documentId]['document'];
                             $currentValue = $existingDocument->getAttribute($attribute, 0);
@@ -443,13 +469,6 @@ class TransactionState
                             if ($currentAction !== 'create' && $currentAction !== 'upsert') {
                                 $state[$collectionId][$documentId]['action'] = 'update';
                             }
-                        } else {
-                            $newValue = $action === 'increment' ? $value : -$value;
-                            $state[$collectionId][$documentId] = [
-                                'action' => 'update',
-                                'document' => new Document([$attribute => $newValue]),
-                                'exists' => true
-                            ];
                         }
                     }
                     break;
