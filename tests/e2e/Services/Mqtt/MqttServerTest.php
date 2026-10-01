@@ -296,6 +296,14 @@ final class MqttServerTest extends Scope
             $this->assertSame([0x80], $subscriber->subscribe(['users/' . $otherId]));
             $this->assertSame([0x80], $subscriber->subscribe(['users/#']));
             $this->assertSame([0x80], $subscriber->subscribe(['users/+']));
+
+            // Test for FAILURE: a wildcard first level matches users/<id> like any other first level,
+            // so it is refused too — including + followed by another user's id.
+            $this->assertSame([0x80], $subscriber->subscribe(['#']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/+']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/#']));
+            $this->assertSame([0x80], $subscriber->subscribe(['+/' . $otherId]));
         } finally {
             $subscriber->disconnect();
         }
@@ -333,6 +341,50 @@ final class MqttServerTest extends Scope
         $this->assertSame('users/' . $userId, $received[0]['topic']);
         $payload = \json_decode($received[0]['payload'], true);
         $this->assertSame('you have mail', $payload['notification']['body']);
+    }
+
+    /**
+     * A users[]-addressed push reaches only its user, whatever another user of the project subscribed
+     * to. The other user's SUBACKs are deliberately not asserted here (testUserTopicOwnershipOnSubscribe
+     * does that): this pins the outcome, so it also holds on the delivery path alone.
+     */
+    public function testUserTargetedPushReachesOnlyItsUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        ['userId' => $otherId, 'jwt' => $otherJwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $this->setupAppwriteProvider($server);
+
+        $owner = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $owner->connect($projectId, $jwt, 'e2e-usertopic-owner-' . $userId, cleanStart: true));
+        $this->assertSame([1], $owner->subscribe(['users/' . $userId]));
+
+        // Another user of the same project tries every first-level wildcard that matches users/<id>.
+        $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-usertopic-other-' . $otherId, cleanStart: true));
+        $other->subscribe(['#', '+/+', '+/#', '+/' . $userId]);
+
+        try {
+            $this->publishToUser($server, $userId, 'Private', 'only for ' . $userId);
+            $ownerReceived = $owner->consume(limit: 1, timeout: 20.0);
+            $otherReceived = $other->consume(limit: 1, timeout: 5.0);
+        } finally {
+            $owner->disconnect();
+            $other->disconnect();
+        }
+
+        // Test for SUCCESS: the push was fanned out, and its user received it.
+        $this->assertCount(1, $ownerReceived, 'the user did not receive their own push');
+        $this->assertSame('users/' . $userId, $ownerReceived[0]['topic']);
+
+        // Test for FAILURE: nobody else in the project received it.
+        $this->assertSame([], $otherReceived, 'another user received a push addressed to ' . $userId);
     }
 
     public function testKeepAliveReapsSilentClient(): void
