@@ -381,7 +381,7 @@ function getDevice(string $root, string $connection = ''): Device
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region, bucket: $bucket);
             }
 
             return new AWS($root, $accessKey, $accessSecret, $bucket, $region);

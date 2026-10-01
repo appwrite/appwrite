@@ -412,6 +412,55 @@ class S3 extends Device
     }
 
     /**
+     * Request target for list-style operations.
+     *
+     * Single-object calls address the full root path directly, which services
+     * read path-style with the bucket as the first segment. List-style calls
+     * must instead hit `/<bucket>` with the bucket stripped from the prefix:
+     * against the service root the same request is answered as ListBuckets,
+     * whose response carries no objects. Devices without a known bucket keep
+     * the old target, as do prefixes outside the bucket.
+     *
+     * @return array{string, string} Request URI and listing prefix
+     */
+    private function listTarget(string $prefix): array
+    {
+        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
+        if ($this->bucket === null || $this->bucket === '') {
+            return ['/', $prefix];
+        }
+        if ($prefix === $this->bucket) {
+            return ['/' . $this->bucket, ''];
+        }
+        $namespaced = $this->bucket . '/';
+        if (! str_starts_with($prefix, $namespaced)) {
+            return ['/', $prefix];
+        }
+
+        return ['/' . $this->bucket, substr($prefix, \strlen($namespaced))];
+    }
+
+    /**
+     * Object key without the leading bucket segment, when the path carries one.
+     *
+     * Endpoint-style devices address objects by their full root path, so the
+     * bucket would appear twice if reused verbatim in bucket-relative fields
+     * such as the copy source. Devices addressed by bare keys are untouched.
+     */
+    private function stripBucketPrefix(string $path): string
+    {
+        if ($this->bucket === null || $this->bucket === '') {
+            return $path;
+        }
+        $namespaced = $this->bucket . '/';
+        if (str_starts_with($path, $namespaced)) {
+            return substr($path, \strlen($namespaced));
+        }
+
+        return $path;
+    }
+
+    /**
      * Get list of objects in the given path.
      *
      * @return array<mixed>
@@ -424,8 +473,7 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' objects');
         }
 
-        $uri = '/';
-        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
+        [$uri, $prefix] = $this->listTarget($prefix);
         $parameters = [
             'list-type' => 2,
             'prefix' => $prefix,
@@ -474,7 +522,7 @@ class S3 extends Device
         $info = $this->getInfo($source);
         $size = (int) ($info['content-length'] ?? 0);
 
-        $copySource = '/' . $this->bucket . '/' . ltrim(str_replace('%2F', '/', rawurlencode($source)), '/');
+        $copySource = '/' . $this->bucket . '/' . $this->stripBucketPrefix(ltrim(str_replace('%2F', '/', rawurlencode($source)), '/'));
         $uri = $target !== '' ? '/' . str_replace(['%2F', '%3F'], ['/', '?'], rawurlencode($target)) : '/';
 
         if ($size <= self::MAX_COPY_OBJECT_SIZE) {
@@ -537,7 +585,7 @@ class S3 extends Device
     {
         $path = $this->getRoot() . '/' . $path;
 
-        $uri = '/';
+        [$uri] = $this->listTarget($path);
         $continuationToken = '';
         do {
             $objects = $this->listObjects($path, continuationToken: $continuationToken);
@@ -697,9 +745,10 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' uploads');
         }
 
+        [$uri, $prefix] = $this->listTarget($prefix);
         $parameters = [
             'uploads' => '',
-            'prefix' => ltrim($prefix, '/'),
+            'prefix' => $prefix,
             'max-uploads' => $max,
         ];
 
@@ -712,7 +761,7 @@ class S3 extends Device
             $parameters['upload-id-marker'] = $markers['upload'];
         }
 
-        $response = $this->call(Method::GET, '/', '', $parameters, headers: ['content-type' => 'text/plain']);
+        $response = $this->call(Method::GET, $uri, '', $parameters, headers: ['content-type' => 'text/plain']);
 
         if (! \is_array($response->body)) {
             throw new RemoteException('Unexpected S3 upload listing response');
