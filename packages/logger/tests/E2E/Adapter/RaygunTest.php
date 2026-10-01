@@ -1,17 +1,19 @@
 <?php
 
-namespace Utopia\Tests\E2E\Adapter;
+namespace Utopia\Logger\Tests\E2E\Adapter;
 
 use Utopia\Logger\Adapter\Raygun;
-use Utopia\Tests\E2E\AdapterBase;
+use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class RaygunTest extends AdapterBase
 {
+    protected string $credential = 'TEST_RAYGUN_KEY';
+
     protected function setUp(): void
     {
         parent::setUp();
         $raygunKey = \getenv('TEST_RAYGUN_KEY');
-        $this->adapter = new Raygun($raygunKey ? $raygunKey : '');
+        $this->adapter = $raygunKey ? new Raygun($raygunKey) : null;
         $this->invalidAdapter = new Raygun('');
         $this->expected = 202;
     }

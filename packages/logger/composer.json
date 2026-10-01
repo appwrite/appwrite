@@ -18,27 +18,22 @@
     ],
     "license": "MIT",
     "scripts": {
-        "test-unit": "phpunit --configuration phpunit.xml --testsuite unit --debug",
-        "test-e2e": "phpunit --configuration phpunit.xml --testsuite e2e --debug",
-        "test": [
-            "@test-unit",
-            "@test-e2e"
-        ]
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "autoload": {
         "psr-4": {
-            "Utopia\\Logger\\": "src/Logger"
+            "Utopia\\Logger\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\E2E\\": "tests/e2e",
-            "Utopia\\Tests\\Unit\\": "tests/unit"
+            "Utopia\\Logger\\Tests\\": "tests/"
         }
     },
     "require": {
         "php": ">=8.1",
         "utopia-php/fetch": "^1.1"
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "stable"
 }

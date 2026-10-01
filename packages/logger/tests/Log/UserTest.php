@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\Unit\Log;
+namespace Utopia\Logger\Tests\Log;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Logger\Log\User;

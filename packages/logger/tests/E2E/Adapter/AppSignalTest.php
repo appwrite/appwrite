@@ -1,19 +1,21 @@
 <?php
 
-namespace Utopia\Tests\E2E\Adapter;
+namespace Utopia\Logger\Tests\E2E\Adapter;
 
 use Utopia\Logger\Adapter\AppSignal;
-use Utopia\Tests\E2E\AdapterBase;
+use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class AppSignalTest extends AdapterBase
 {
     protected int $expected = 204;
 
+    protected string $credential = 'TEST_APPSIGNAL_KEY';
+
     protected function setUp(): void
     {
         parent::setUp();
         $appSignalKey = \getenv('TEST_APPSIGNAL_KEY');
-        $this->adapter = new AppSignal($appSignalKey ? $appSignalKey : '');
+        $this->adapter = $appSignalKey ? new AppSignal($appSignalKey) : null;
         $this->invalidAdapter = new AppSignal('');
     }
 }

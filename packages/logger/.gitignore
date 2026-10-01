@@ -1,6 +1,6 @@
 /vendor/
 /.idea/
 .env
-.phpunit.result.cache
+.phpunit.cache
 .DS_Store
 composer.lock

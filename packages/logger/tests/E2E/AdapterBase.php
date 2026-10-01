@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Tests\E2E;
+namespace Utopia\Logger\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Logger\Adapter;
@@ -18,6 +18,12 @@ abstract class AdapterBase extends TestCase
     protected ?Adapter $invalidAdapter = null;
 
     protected int $expected = 200;
+
+    /**
+     * Environment variable holding the provider credential; without it the
+     * tests that expect a successful push are skipped.
+     */
+    protected string $credential = '';
 
     protected function setUp(): void
     {
@@ -53,8 +59,11 @@ abstract class AdapterBase extends TestCase
      */
     public function testAdapter(): void
     {
-        if (empty($this->log) || empty($this->adapter)) {
-            throw new \Exception('Log or adapter not set');
+        if (!$this->adapter instanceof Adapter) {
+            $this->markTestSkipped("Set {$this->credential} to run against the provider.");
+        }
+        if (!$this->log instanceof Log) {
+            throw new \Exception('Log not set');
         }
         $logger = new Logger($this->adapter);
         $response = $logger->addLog($this->log);
@@ -66,8 +75,11 @@ abstract class AdapterBase extends TestCase
      */
     public function testSampler(): void
     {
-        if (empty($this->log) || empty($this->adapter)) {
-            throw new \Exception('Log or adapter not set');
+        if (!$this->adapter instanceof Adapter) {
+            $this->markTestSkipped("Set {$this->credential} to run against the provider.");
+        }
+        if (!$this->log instanceof Log) {
+            throw new \Exception('Log not set');
         }
 
         $logger = new Logger($this->adapter);
@@ -91,7 +103,7 @@ abstract class AdapterBase extends TestCase
 
     public function testAdapterFailure(): void
     {
-        if (empty($this->log) || empty($this->invalidAdapter)) {
+        if (!$this->log instanceof Log || !$this->invalidAdapter instanceof Adapter) {
             throw new \Exception('Log or adapter not set');
         }
 

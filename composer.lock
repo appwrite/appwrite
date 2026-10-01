@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd4622072c49f8b71053c2866ca7fc92",
+    "content-hash": "5ebeb3ec4d9fd1a7a7cda634a56f5225",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2884,6 +2884,47 @@
                 "source": "https://github.com/utopia-php/database/tree/7.4.0"
             },
             "time": "2026-09-29T10:10:07+00:00"
+        },
+        {
+            "name": "utopia-php/fetch",
+            "version": "1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/fetch.git",
+                "reference": "64f2b3a789480f1deb102ce684dac4217d8e98d5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/fetch/zipball/64f2b3a789480f1deb102ce684dac4217d8e98d5",
+                "reference": "64f2b3a789480f1deb102ce684dac4217d8e98d5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5",
+                "swoole/ide-helper": "^6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Fetch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library that provides an interface for making HTTP Requests.",
+            "support": {
+                "issues": "https://github.com/utopia-php/fetch/issues",
+                "source": "https://github.com/utopia-php/fetch/tree/1.1.2"
+            },
+            "abandoned": true,
+            "time": "2026-04-29T11:19:19+00:00"
         },
         {
             "name": "utopia-php/migration",

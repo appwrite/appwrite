@@ -1,0 +1,13 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^PHPDoc tag @var with type T is not subtype of native type array\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Log.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\Logger\\Log\:\:mask\(\) expects array\<string, mixed\>, array\<mixed, mixed\>&T given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Log.php

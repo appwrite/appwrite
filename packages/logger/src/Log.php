@@ -8,19 +8,19 @@ use Utopia\Logger\Log\User;
 
 class Log
 {
-    const TYPE_DEBUG = 'debug';
+    public const TYPE_DEBUG = 'debug';
 
-    const TYPE_ERROR = 'error';
+    public const TYPE_ERROR = 'error';
 
-    const TYPE_WARNING = 'warning';
+    public const TYPE_WARNING = 'warning';
 
-    const TYPE_INFO = 'info';
+    public const TYPE_INFO = 'info';
 
-    const TYPE_VERBOSE = 'verbose';
+    public const TYPE_VERBOSE = 'verbose';
 
-    const ENVIRONMENT_PRODUCTION = 'production';
+    public const ENVIRONMENT_PRODUCTION = 'production';
 
-    const ENVIRONMENT_STAGING = 'staging';
+    public const ENVIRONMENT_STAGING = 'staging';
 
     /**
      * @var float (required, set by default to microtime(true))

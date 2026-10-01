@@ -6,9 +6,9 @@ use Exception;
 
 class Logger
 {
-    const LIBRARY_VERSION = '0.1.0';
+    public const LIBRARY_VERSION = '0.1.0';
 
-    const PROVIDERS = [
+    public const PROVIDERS = [
         'raygun',
         'sentry',
         'appSignal',
