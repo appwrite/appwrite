@@ -10,11 +10,11 @@ abstract class Base extends TestCase
     abstract public function getAdapter(string $key, int $limit, int $seconds): TimeLimit;
 
     /**
-     * Test a static key with a limit of 2 requests per second
+     * Test a static key with a limit of 2 requests
      */
     public function testStaticKey(): void
     {
-        $adapter = $this->getAdapter('static-key', 2, 1);
+        $adapter = $this->getAdapter('static-key-' . \uniqid(), 2, 3600);
         $this->waitForWindowStart(1);
         $this->assertFalse($adapter->check()->limited);
         $this->assertFalse($adapter->check()->limited);
@@ -22,11 +22,11 @@ abstract class Base extends TestCase
     }
 
     /**
-     * Test a dynamic key with a limit of 2 requests per second
+     * Test a dynamic key with a limit of 2 requests
      */
     public function testDynamicKey(): void
     {
-        $adapter = $this->getAdapter('dynamic-key-{{ip}}', 2, 1)
+        $adapter = $this->getAdapter('dynamic-key-' . \uniqid() . '-{{ip}}', 2, 3600)
             ->withParams(['{{ip}}' => '0.0.0.10']);
         $this->waitForWindowStart(1);
         $this->assertFalse($adapter->check()->limited);
@@ -39,7 +39,7 @@ abstract class Base extends TestCase
      */
     public function testDynamicKeyWith2Params(): void
     {
-        $adapter = $this->getAdapter('two-params-{{ip}}-{{email}}', 2, 1)
+        $adapter = $this->getAdapter('two-params-' . \uniqid() . '-{{ip}}-{{email}}', 2, 3600)
             ->withParams(['{{ip}}' => '0.0.0.10', '{{email}}' => 'test@test.com']);
         $this->waitForWindowStart(1);
         $this->assertFalse($adapter->check()->limited);
@@ -48,11 +48,11 @@ abstract class Base extends TestCase
     }
 
     /**
-     * Test a dynamic key with higher request rate like 10 requests per second
+     * Test a dynamic key with a higher limit of 10 requests
      */
     public function testDynamicKeyFastRequests(): void
     {
-        $adapter = $this->getAdapter('fast-requests-{{ip}}', 10, 1)
+        $adapter = $this->getAdapter('fast-requests-' . \uniqid() . '-{{ip}}', 10, 3600)
             ->withParams(['{{ip}}' => '0.0.0.10']);
         $this->waitForWindowStart(1);
         for ($i = 0; $i < 10; $i++) {
