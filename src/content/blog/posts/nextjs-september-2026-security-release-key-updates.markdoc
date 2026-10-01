@@ -131,7 +131,7 @@ The Next.js team notes that the leaked values cannot be attacker controlled. It 
 
 Pending `use cache` fills are shared across requests for the same key, without separating **Draft Mode** requests from regular ones. A regular visitor whose request overlaps with an editor's preview can receive unpublished content without authentication.
 
-If that overlapping request prerenders a page, the draft content can be persisted into the generated page and served to all later visitors until revalidation. You are affected if you enable Cache Components (or `experimental.useCache`) and serve Draft Mode previews whose cached functions return draft-dependent content. For teams using a headless CMS, that can mean embargoed announcements going public early.
+If that overlapping request prerenders a page, the draft content can be persisted into the generated page and served to all later visitors until revalidation. You are affected if you enable Cache Components (or `experimental.useCache`) and serve Draft Mode previews whose cached functions return draft-dependent content. For a CMS-backed site, this could potentially expose unpublished or embargoed content before its intended publication.
 
 # Low severity: Next.js dev server MCP endpoint
 
