@@ -10,10 +10,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -58,6 +60,7 @@ class Create extends Action
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->param('passkeyId', 'unique()', new CustomId(), 'Passkey ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('name', '', new Text(128, 0), 'Passkey name, shown when listing passkeys. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
@@ -69,6 +72,7 @@ class Create extends Action
     }
 
     public function action(
+        string $passkeyId,
         string $name,
         Response $response,
         Document $user,
@@ -85,6 +89,19 @@ class Create extends Action
         // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone
         $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: $user->getAttribute('name') ?: $user->getId();
 
+        $passkeyId = $passkeyId === 'unique()' ? ID::unique() : $passkeyId;
+
+        // A registration restarted with the same ID replaces the pending one instead of conflicting with it
+        $existing = $dbForProject->getDocument('authenticators', $passkeyId);
+        if (
+            !$existing->isEmpty()
+            && $existing->getAttribute('type') === Ceremony::TYPE
+            && $existing->getAttribute('userInternalId') === $user->getSequence()
+            && !$existing->getAttribute('verified')
+        ) {
+            $dbForProject->deleteDocument('authenticators', $passkeyId);
+        }
+
         $passkeys = $this->getPasskeys($user, $dbForProject);
         if (\count($passkeys) >= APP_LIMIT_USER_PASSKEYS) {
             throw new Exception(Exception::USER_PASSKEY_LIMIT_EXCEEDED);
@@ -99,21 +116,25 @@ class Create extends Action
         }
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
-        $passkey = $dbForProject->createDocument('authenticators', new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
-            'type' => Ceremony::TYPE,
-            'verified' => false,
-            'data' => [
-                'name' => $name,
-            ],
-        ]));
+        try {
+            $passkey = $dbForProject->createDocument('authenticators', new Document([
+                '$id' => $passkeyId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getSequence(),
+                'type' => Ceremony::TYPE,
+                'verified' => false,
+                'data' => [
+                    'name' => $name,
+                ],
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_PASSKEY_ALREADY_EXISTS, 'A passkey with the requested ID already exists.');
+        }
 
         // Re-count after writing so concurrent registrations cannot overshoot the cap
         if (\count($this->getPasskeys($user, $dbForProject)) > APP_LIMIT_USER_PASSKEYS) {
