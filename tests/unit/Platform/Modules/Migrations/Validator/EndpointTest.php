@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Migrations\Validator;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 
 final class EndpointTest extends TestCase
 {
@@ -61,6 +64,44 @@ final class EndpointTest extends TestCase
         $this->assertFalse($validator->isValid('http://192.168.1.1/v1'));
         $this->assertFalse($validator->isValid('http://169.254.169.254/v1'));
         $this->assertFalse($validator->isValid('http://[fe80::1]/v1'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolveReturnsTheCheckedAddresses(): void
+    {
+        \putenv('_APP_MIGRATIONS_ALLOWED_HOSTS=127.0.0.0/8,::1');
+        $validator = new Endpoint();
+        $resolve = null;
+
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run(function () use ($validator, &$resolve): void {
+            $resolve = $validator->resolve('http://localhost:8080/v1/users?limit=1');
+        });
+
+        $this->assertIsArray($resolve);
+        $this->assertCount(1, $resolve);
+        $this->assertStringStartsWith('localhost:8080:', $resolve[0]);
+        $this->assertStringContainsString('127.0.0.1', $resolve[0]);
+    }
+
+    public function testResolveIsEmptyForIpLiterals(): void
+    {
+        $this->assertSame([], (new Endpoint())->resolve('https://1.1.1.1/v1'));
+    }
+
+    public function testResolveRefusesInvalidEndpoints(): void
+    {
+        $validator = new Endpoint();
+
+        foreach ($this->rejectedEndpoints() as $endpoint) {
+            try {
+                $validator->resolve($endpoint);
+                $this->fail("Expected {$endpoint} to be refused");
+            } catch (Exception $error) {
+                $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $error->getType());
+                $this->assertSame('Invalid `endpoint`: ' . $validator->getDescription(), $error->getMessage());
+            }
+        }
     }
 
     /**

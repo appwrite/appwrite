@@ -3,6 +3,8 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Allowlist;
+use Swoole\Coroutine;
+use Swoole\Coroutine\System;
 use Utopia\Validator;
 
 /**
@@ -16,9 +18,8 @@ use Utopia\Validator;
  * Distinct from Utopia\Validator\Hostname, which only checks string format
  * and an optional allow-list and does not touch DNS.
  *
- * Known limitation: there is a TOCTOU window between this DNS lookup and the
- * subsequent HTTP fetch. To fully prevent DNS rebinding the caller must pin
- * curl to a verified IP via CURLOPT_RESOLVE.
+ * Callers that go on to fetch the host reuse the resolved addresses through
+ * getResolve() instead of resolving it a second time.
  */
 class PublicHostname extends Validator
 {
@@ -58,6 +59,13 @@ class PublicHostname extends Validator
 
     private string $reason = '';
 
+    private string $hostname = '';
+
+    /**
+     * @var array<string>
+     */
+    private array $addresses = [];
+
     public function __construct(
         private readonly Allowlist $allowlist = new Allowlist(),
     ) {
@@ -83,6 +91,8 @@ class PublicHostname extends Validator
     public function isValid(mixed $value): bool
     {
         $this->reason = '';
+        $this->hostname = '';
+        $this->addresses = [];
 
         if (!\is_string($value) || $value === '') {
             $this->reason = 'Hostname is empty.';
@@ -118,7 +128,31 @@ class PublicHostname extends Validator
             }
         }
 
+        $this->hostname = $hostname;
+        $this->addresses = $addresses;
+
         return true;
+    }
+
+    /**
+     * CURLOPT_RESOLVE entries mapping the last valid hostname to the addresses
+     * it resolved to, so curl reuses them instead of resolving the hostname
+     * again. Empty for IP literals, which curl never resolves.
+     *
+     * @return array<string>
+     */
+    public function getResolve(int $port): array
+    {
+        if (empty($this->addresses)) {
+            return [];
+        }
+
+        $addresses = \array_map(
+            fn (string $ip) => \str_contains($ip, ':') ? "[{$ip}]" : $ip,
+            $this->addresses
+        );
+
+        return ["{$this->hostname}:{$port}:" . \implode(',', $addresses)];
     }
 
     /**
@@ -128,6 +162,16 @@ class PublicHostname extends Validator
      */
     public static function resolve(string $hostname): array
     {
+        // Swoole 6.2 hooks dns_get_record() through a RemoteObject client that is
+        // created per call and never released (~140 KiB each), so coroutines resolve
+        // natively. getaddrinfo() needs a service; any port works for address lookup.
+        if (Coroutine::getCid() > 0) {
+            $ipv4 = System::getaddrinfo($hostname, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+            $ipv6 = System::getaddrinfo($hostname, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+
+            return \array_values(\array_unique([...$ipv4, ...$ipv6]));
+        }
+
         $ipv4 = [];
         $ipv6 = [];
 

@@ -306,10 +306,27 @@ class Migrations extends Action
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
+        if ($migrationSource instanceof SourceAppwrite && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
+            $migrationSource->setResolver((new Endpoint())->resolve(...));
+        }
+
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    protected function getInternalEndpoint(): string
+    {
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        return 'http://' . $host . '/v1';
     }
 
     /**
@@ -498,12 +515,7 @@ class Migrations extends Action
         $caughtError = null;
 
         try {
-            $host = System::getEnv('_APP_MIGRATION_HOST');
-            if (empty($host)) {
-                throw new \Exception('_APP_MIGRATION_HOST is not set');
-            }
-
-            $endpoint = 'http://' . $host . '/v1';
+            $endpoint = $this->getInternalEndpoint();
 
             $credentials = $migration->getAttribute('credentials', []);
 

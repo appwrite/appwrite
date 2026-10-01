@@ -93,7 +93,7 @@
         "utopia-php/lock": "0.3.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.1",
-        "utopia-php/migration": "^2.0.0",
+        "utopia-php/migration": "dev-feat/source-request-controls-2.0.x as 2.0.9",
         "utopia-php/platform": "1.0.0-rc18",
         "utopia-php/pools": "2.*",
         "utopia-php/span": "^4.2",

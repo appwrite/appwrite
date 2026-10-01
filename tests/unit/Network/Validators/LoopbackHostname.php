@@ -10,6 +10,10 @@ class LoopbackHostname extends PublicHostname
 {
     public static function resolve(string $hostname): array
     {
-        return $hostname === 'loopback.invalid' ? ['127.0.0.1', '::1'] : [];
+        return match ($hostname) {
+            'loopback.invalid', 'loopback.invalid.' => ['127.0.0.1', '::1'],
+            'loopback6.invalid' => ['::1'],
+            default => [],
+        };
     }
 }
