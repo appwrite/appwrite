@@ -170,8 +170,11 @@ class V26 extends Filter
         }
 
         foreach (Config::getParam('auth', []) as $id => $method) {
+            if (!\array_key_exists($id, $authMethods)) {
+                continue; // Hidden from this format by a newer filter
+            }
             $key = $method['key'] ?? '';
-            $content['auth' . ucfirst($key)] = $authMethods[$id] ?? true;
+            $content['auth' . ucfirst($key)] = $authMethods[$id];
         }
     }
 

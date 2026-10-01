@@ -1097,6 +1097,17 @@ class Deletes extends Action
             Query::orderAsc()
         ], $dbForProject);
 
+        // Delete authenticators, including passkeys, and their pending challenges
+        $this->deleteByGroup('authenticators', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        $this->deleteByGroup('challenges', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
         // Delete identities
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
