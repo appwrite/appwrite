@@ -9,7 +9,6 @@ use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -122,7 +121,7 @@ abstract class Base extends Action
 
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
         // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
-        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter(), new Anywhere()), $callback);
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback);
 
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);

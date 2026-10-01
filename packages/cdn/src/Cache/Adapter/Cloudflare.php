@@ -8,7 +8,6 @@ use Utopia\Cdn\Cache\Adapter;
 use Utopia\Cdn\Domain;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -37,7 +36,7 @@ class Cloudflare implements Adapter
         ?ClientInterface $client = null,
         private readonly string $apiBase = 'https://api.cloudflare.com/client/v4',
     ) {
-        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere());
+        $this->client = $client ?? new Client(new CurlAdapter());
     }
 
     public function purgePaths(string $domain, array $paths): void

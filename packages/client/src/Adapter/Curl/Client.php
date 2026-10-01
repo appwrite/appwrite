@@ -12,7 +12,8 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Utopia\Client\Adapter;
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Exception\AdapterInitializationException;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
@@ -52,7 +53,7 @@ class Client implements Adapter
 
     private ?CurlHandle $handle = null;
 
-    private ?Destination $destination = null;
+    private Destinations $destinations;
 
     /**
      * Native cURL options. Values override adapter defaults when keys overlap.
@@ -70,6 +71,7 @@ class Client implements Adapter
         ];
 
         $this->responseBuilder = new ResponseBuilder($responseFactory, $streamFactory);
+        $this->destinations = new Anywhere();
     }
 
     public function __clone(): void
@@ -78,10 +80,10 @@ class Client implements Adapter
         $this->handle = null;
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         $clone = clone $this;
-        $clone->destination = $destination;
+        $clone->destinations = $destinations;
 
         return $clone;
     }
@@ -377,9 +379,9 @@ class Client implements Adapter
         // Checked once connected, before anything is sent, against the address curl
         // actually connected to: every connection and every redirect hop. Authoritative
         // like the options above, so a constructor option cannot replace it.
-        $destination = $this->destination($request);
-        $merged[\CURLOPT_PREREQFUNCTION] = static function (CurlHandle $handle, string $address) use ($destination, &$refused): int {
-            if ($destination->allows($address)) {
+        $destinations = $this->destinations;
+        $merged[\CURLOPT_PREREQFUNCTION] = static function (CurlHandle $handle, string $address) use ($destinations, &$refused): int {
+            if ($destinations->allows($address)) {
                 return \CURL_PREREQFUNC_OK;
             }
 
@@ -390,7 +392,7 @@ class Client implements Adapter
 
         // Through a proxy the connected address is the proxy's, so ignore any the
         // environment configures unless the destination permits them.
-        if (!$this->destination($request)->permitsProxy()) {
+        if (!$this->destinations->permitsProxy()) {
             $merged[\CURLOPT_PROXY] = '';
         }
 
@@ -616,13 +618,5 @@ class Client implements Adapter
             'reason' => $reason,
             'headers' => $parsedHeaders,
         ];
-    }
-
-    /**
-     * @throws AdapterPreconditionException When no destination was configured
-     */
-    private function destination(RequestInterface $request): Destination
-    {
-        return $this->destination ?? throw new AdapterPreconditionException($request, 'No destination configured: set one with withDestination() before sending.');
     }
 }

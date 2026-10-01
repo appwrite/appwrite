@@ -3,7 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use InvalidArgumentException;
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
 use Utopia\DNS\Lookup;
 use Utopia\Validator;
 
@@ -21,7 +21,7 @@ class PublicHostname extends Validator
     private string $reason = '';
 
     public function __construct(
-        private readonly Destination $destination,
+        private readonly Destinations $destinations,
         private readonly Lookup $lookup,
     ) {
     }
@@ -85,7 +85,7 @@ class PublicHostname extends Validator
         }
 
         foreach ($addresses as $address) {
-            if (!$this->destination->allows($address)) {
+            if (!$this->destinations->allows($address)) {
                 throw new InvalidArgumentException($address === $host
                     ? "Address {$host} is in a private or reserved range."
                     : "Hostname {$host} resolves to private or reserved address {$address}.");

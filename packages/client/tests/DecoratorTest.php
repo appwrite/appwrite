@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
 use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Method;
@@ -65,7 +65,7 @@ final class SwappableAdapter implements Adapter
     {
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         return $this;
     }

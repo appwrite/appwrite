@@ -13,8 +13,8 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Pool as ConnectionPool;
@@ -342,7 +342,7 @@ abstract class Adapter
      * configures it (a Discord webhook URL, an Infobip base URL), so only the public
      * internet unless an adapter says otherwise.
      */
-    protected function destination(): Destination
+    protected function destinations(): Destinations
     {
         return new PublicInternet();
     }
@@ -357,7 +357,7 @@ abstract class Adapter
      */
     private function defaultClient(int $timeout, int $connectTimeout): Client
     {
-        return new Client(new CurlAdapter(options: [CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0]), $this->destination())
+        return new Client(new CurlAdapter(options: [CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0]), $this->destinations())
             ->withTimeout((float) $timeout)
             ->withConnectTimeout((float) $connectTimeout);
     }

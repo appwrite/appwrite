@@ -13,7 +13,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -120,7 +119,7 @@ abstract class Base extends Action
         }
 
         // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
-        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter(), new Anywhere()), $callback, $state);
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback, $state);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

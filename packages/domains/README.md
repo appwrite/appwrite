@@ -103,12 +103,11 @@ Use `https://rr-n1-tor.opensrs.net:55443` as the OpenSRS production endpoint.
 ```php
 use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Domains\Registrar;
 use Utopia\Domains\Registrar\Adapter\NameCom;
 
 // Optional: configure an injected transport instead of the registrar's defaults.
-$client = new Client(new CurlAdapter(), new Anywhere())
+$client = new Client(new CurlAdapter())
     ->withConnectTimeout(5)
     ->withTimeout(10)
     ->withSslVerification(true)

@@ -13,7 +13,6 @@ composer require utopia-php/pools
 <?php
 
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Pool;
 use Utopia\Pools\Adapter\Stack;
@@ -23,7 +22,7 @@ $pool = new Pool(new Connections(
     adapter: new Stack(),
     name: 'example',
     size: 10,
-    init: fn (): Client => new Client((new CurlAdapter())->withConnectionReuse(), new Anywhere()),
+    init: fn (): Client => new Client((new CurlAdapter())->withConnectionReuse()),
 ));
 
 $response = $pool->sendRequest($request);
@@ -42,7 +41,7 @@ headers, auth, retries — so every pooled connection carries the same setup:
 ```php
 <?php
 
-init: fn (): Client => (new Client(new Retry((new CurlAdapter())->withConnectionReuse()), new Anywhere()))
+init: fn (): Client => (new Client(new Retry((new CurlAdapter())->withConnectionReuse())))
     ->withBaseUri('https://api.example.com')
     ->withBearerAuth($token),
 ```
@@ -57,7 +56,6 @@ and have `init` return a Swoole adapter with reuse enabled.
 <?php
 
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Client\Pool;
 use Utopia\Pools\Adapter\Swoole;
@@ -67,7 +65,7 @@ $pool = new Pool(new Connections(
     adapter: new Swoole(),
     name: 'example',
     size: 10,
-    init: fn (): Client => new Client((new SwooleAdapter())->withConnectionReuse(), new Anywhere()),
+    init: fn (): Client => new Client((new SwooleAdapter())->withConnectionReuse()),
 ));
 ```
 

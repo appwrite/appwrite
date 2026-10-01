@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Client\Tests\Destination;
+namespace Utopia\Client\Tests\Destinations;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 
 final class PublicInternetTest extends TestCase
 {
@@ -65,12 +65,12 @@ final class PublicInternetTest extends TestCase
 
     public function testAlsoAllowedRangesAdmitOnlyThemselves(): void
     {
-        $destination = new PublicInternet(new IPRange('10.0.0.0/8'), new IPRange('0:0:0:0:0:0:0:1'));
+        $destinations = new PublicInternet(new IPRange('10.0.0.0/8'), new IPRange('0:0:0:0:0:0:0:1'));
 
-        $this->assertTrue($destination->allows('10.1.2.3'));
-        $this->assertTrue($destination->allows('::1'));
-        $this->assertFalse($destination->allows('127.0.0.1'));
-        $this->assertFalse($destination->allows('192.168.1.1'));
+        $this->assertTrue($destinations->allows('10.1.2.3'));
+        $this->assertTrue($destinations->allows('::1'));
+        $this->assertFalse($destinations->allows('127.0.0.1'));
+        $this->assertFalse($destinations->allows('192.168.1.1'));
     }
 
     public function testNeverPermitsAProxy(): void

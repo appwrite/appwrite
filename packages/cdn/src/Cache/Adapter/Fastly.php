@@ -9,7 +9,6 @@ use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\UnsupportedOperation;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -39,7 +38,7 @@ class Fastly implements Adapter
         ?ClientInterface $client = null,
         private readonly string $apiBase = 'https://api.fastly.com',
     ) {
-        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere());
+        $this->client = $client ?? new Client(new CurlAdapter());
     }
 
     public function purgePaths(string $domain, array $paths): void

@@ -11,7 +11,6 @@ use Tests\Unit\Network\CannedTransport;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 
 final class JwksTest extends TestCase
 {
@@ -25,7 +24,7 @@ final class JwksTest extends TestCase
             $fetches++;
 
             return $this->document(['kid-1']);
-        }), new Anywhere()));
+        })));
 
         $pem = $jwks->getKey(self::URL, 'kid-1');
 
@@ -45,7 +44,7 @@ final class JwksTest extends TestCase
             $fetches++;
 
             return $this->document($fetches === 1 ? ['kid-old'] : ['kid-old', 'kid-new']);
-        }), new Anywhere()));
+        })));
 
         $old = $jwks->getKey(self::URL, 'kid-old');
         $new = $jwks->getKey(self::URL, 'kid-new');
@@ -67,7 +66,7 @@ final class JwksTest extends TestCase
             $fetches++;
 
             return $this->document(['kid-1']);
-        }), new Anywhere()));
+        })));
 
         $this->assertNull($jwks->getKey(self::URL, 'bogus-a'));
         $this->assertNull($jwks->getKey(self::URL, 'bogus-b'));
@@ -84,7 +83,7 @@ final class JwksTest extends TestCase
             ['kty' => 'RSA', 'kid' => 'bad-material', 'use' => 'sig', 'n' => 'not base64url!!', 'e' => 'AQAB'],
             ['kty' => 'RSA', 'kid' => 'empty-material', 'use' => 'sig', 'n' => '', 'e' => 'AQAB'],
             ['kty' => 'RSA', 'kid' => 'sig-key', 'use' => 'sig', 'n' => 'AQID', 'e' => 'AQAB'],
-        ]])), new Anywhere()));
+        ]]))));
 
         $this->assertStringStartsWith(self::PEM_HEADER, $jwks->getKey(self::URL, 'sig-key'));
         $this->assertNull($jwks->getKey(self::URL, 'ec-key'));
@@ -115,7 +114,7 @@ final class JwksTest extends TestCase
             'kid' => 'real',
             'n' => $this->base64UrlEncode($details['rsa']['n']),
             'e' => $this->base64UrlEncode($details['rsa']['e']),
-        ]]])), new Anywhere()));
+        ]]]))));
 
         $pem = $jwks->getKey(self::URL, 'real');
 
@@ -128,7 +127,7 @@ final class JwksTest extends TestCase
 
     public function testInvalidDocumentThrows(): void
     {
-        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => 'not json'), new Anywhere()));
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => 'not json')));
 
         try {
             $jwks->getKey(self::URL, 'kid-1');

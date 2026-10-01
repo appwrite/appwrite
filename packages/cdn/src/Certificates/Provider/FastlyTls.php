@@ -10,7 +10,6 @@ use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Exception\Certificate;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -32,7 +31,7 @@ class FastlyTls implements Provider
         ?ClientInterface $client = null,
         private readonly string $apiBase = 'https://api.fastly.com',
     ) {
-        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere());
+        $this->client = $client ?? new Client(new CurlAdapter());
     }
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string

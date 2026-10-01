@@ -20,13 +20,12 @@ Use `ext-curl` for the cURL adapter and `ext-swoole` for the Swoole coroutine ad
 
 use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$client = new Client(new CurlAdapter(), new Anywhere());
+$client = new Client(new CurlAdapter());
 $requestFactory = new Request\Factory();
 
 $request = $requestFactory->json(Method::POST, 'https://example.com/users', [
@@ -45,16 +44,15 @@ The concrete `Utopia\Psr7` messages and factories are provided by the `utopia-ph
 
 ## Choose where it may connect
 
-Every `Client` takes a `Destination`, which decides which addresses it may connect to; there is no default. The client passes it to its adapter, and every adapter enforces it on the address each connection is actually made to, for every redirect hop, so a hostname that resolves differently at connect time cannot get past it. A refused connection throws `Utopia\Client\Exception\DestinationException`, and an adapter used without a destination refuses to send.
+A `Client` connects anywhere by default. Pass `Destinations` to restrict it, for example when fetching a URL a user chose. The client hands them to its adapter, and every adapter checks the address each connection is actually made to, for every redirect hop, so a hostname that resolves differently at connect time cannot get past the check. A refused connection throws `Utopia\Client\Exception\DestinationException`.
 
 ```php
 <?php
 
-use Utopia\Client\Destination\Anywhere;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 
-new Client($adapter, new Anywhere());       // your own services and fixed third-party APIs
+new Client($adapter);                       // Anywhere: your own services and fixed third-party APIs
 new Client($adapter, new PublicInternet()); // a URL a user chose: private and reserved ranges are refused
 new Client($adapter, new PublicInternet(new IPRange('10.0.0.0/8'))); // ...except the ranges you name
 ```

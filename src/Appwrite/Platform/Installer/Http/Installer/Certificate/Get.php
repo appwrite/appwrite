@@ -7,7 +7,6 @@ use Appwrite\Platform\Installer\Validator\AppDomain;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
@@ -65,7 +64,7 @@ class Get extends Action
             $options[CURLOPT_RESOLVE] = [$domain . ':' . $port . ':' . $gateway];
         }
 
-        $client = (new Client(new CurlAdapter(options: $options), new Anywhere()))
+        $client = (new Client(new CurlAdapter(options: $options)))
             ->withConnectTimeout(self::CONNECTION_TIMEOUT_SECONDS)
             ->withTimeout(self::CONNECTION_TIMEOUT_SECONDS)
             ->withSslVerification(true);

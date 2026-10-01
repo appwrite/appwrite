@@ -1070,7 +1070,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals('completed', $first['status']);
 
-        // Re-run under Skip: nothing on source has changed. Destination
+        // Re-run under Skip: nothing on source has changed. Destinations
         // schema + rows are already correct — expect clean completion.
         $reRunSkip = $this->performMigrationSync([
             'resources' => $resources,
@@ -6822,7 +6822,7 @@ trait MigrationsBase
         // Ensure only expected counters exist (10 total)
         $this->assertCount(10, $result['statusCounters']);
 
-        // ====== Validate on destination: SQL Database resources ======
+        // ====== Validate on destinations: SQL Database resources ======
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $sqlDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6879,7 +6879,7 @@ trait MigrationsBase
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
 
-        // ====== Validate on destination: DocumentsDB resources ======
+        // ====== Validate on destinations: DocumentsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6925,7 +6925,7 @@ trait MigrationsBase
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
 
-        // ====== Validate on destination: VectorsDB resources ======
+        // ====== Validate on destinations: VectorsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],

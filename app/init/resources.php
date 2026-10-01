@@ -40,9 +40,8 @@ use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -129,7 +128,7 @@ $container->set('publicHostname', function () {
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
 
 $container->set('jobs', function () {
-    $client = (new Client(new CurlAdapter(), new Anywhere()))
+    $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
@@ -144,7 +143,7 @@ $container->set('jobs', function () {
 }, []);
 
 $container->set('screenshots', function () {
-    $client = (new Client(new CurlAdapter(), new Anywhere()))
+    $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
         ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 60));
 
@@ -155,7 +154,7 @@ $container->set('autogravity', function (Cache $cache) {
     $host = System::getEnv('_APP_AUTOGRAVITY_HOST', '');
     $client = $host === ''
         ? null
-        : (new Client(new SwooleClientAdapter(), new Anywhere()))
+        : (new Client(new SwooleClientAdapter()))
             ->withBaseUri($host)
             ->withTimeout(30);
 
@@ -231,7 +230,7 @@ $container->set('usageConnection', function () {
         new SwoolePoolAdapter(),
         'usage',
         max(1, (int) System::getEnv('_APP_POOL_SIZE_USAGE', 2)),
-        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse(), new Anywhere()),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
         timeout: 3.0,
     ));
 
@@ -257,7 +256,7 @@ $container->set('executionStore', function () {
         new SwoolePoolAdapter(),
         'executions',
         max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
-        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse(), new Anywhere()),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
         timeout: 3.0,
     ));
 
@@ -464,7 +463,7 @@ $container->set('servers', function () {
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
 // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
-$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter(), new Anywhere())), ['cache']);
+$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter())), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 

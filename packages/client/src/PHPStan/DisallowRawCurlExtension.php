@@ -10,7 +10,7 @@ use PHPStan\Rules\RestrictedUsage\RestrictedFunctionUsageExtension;
 use PHPStan\Rules\RestrictedUsage\RestrictedUsage;
 
 /**
- * A curl handle opened anywhere but the Curl adapter connects without a Destination,
+ * A curl handle opened anywhere but the Curl adapter bypasses the client's Destinations,
  * so nothing checks the address it reaches.
  */
 class DisallowRawCurlExtension implements RestrictedFunctionUsageExtension
@@ -28,7 +28,7 @@ class DisallowRawCurlExtension implements RestrictedFunctionUsageExtension
         }
 
         return RestrictedUsage::create(
-            errorMessage: 'Send HTTP requests through Utopia\Client\Client, whose adapter checks every connection against a Destination.',
+            errorMessage: 'Send HTTP requests through Utopia\Client\Client, whose adapter checks every connection against its Destinations.',
             identifier: 'function.disallowedCurl',
         );
     }

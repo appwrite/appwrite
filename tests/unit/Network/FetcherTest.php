@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 

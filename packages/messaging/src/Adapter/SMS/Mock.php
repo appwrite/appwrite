@@ -2,8 +2,8 @@
 
 namespace Utopia\Messaging\Adapter\SMS;
 
-use Utopia\Client\Destination;
-use Utopia\Client\Destination\Anywhere;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Messages\SMS as SMSMessage;
 use Utopia\Messaging\Response;
@@ -38,7 +38,7 @@ class Mock extends SMSAdapter
     /**
      * A test double the operator points at a local request catcher.
      */
-    protected function destination(): Destination
+    protected function destinations(): Destinations
     {
         return new Anywhere();
     }

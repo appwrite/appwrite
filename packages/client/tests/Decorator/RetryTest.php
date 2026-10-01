@@ -11,7 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Decorator\Retry\Backoff;
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
 use Utopia\Client\Exception\InvalidUriException;
 use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Redirect;
@@ -198,7 +198,7 @@ final class QueueAdapter implements Adapter
     {
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         return $this;
     }

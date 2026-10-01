@@ -8,7 +8,6 @@ use Executor\Exception\Timeout as ExecutorTimeout;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream\Factory as StreamFactory;
@@ -223,7 +222,7 @@ class Executor
         }
 
         // No Accept-Encoding, so the executor never spends CPU compressing a response
-        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null]), new Anywhere()))
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
             ->withFollowRedirects()
             ->withConnectTimeout(0)
             ->withTimeout($timeout);

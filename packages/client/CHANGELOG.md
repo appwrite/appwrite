@@ -8,12 +8,12 @@ This project follows semantic versioning.
 
 ### Breaking
 
-- `Client` takes a `Utopia\Client\Destination` as its second constructor argument: `new Client(new Curl\Client(), new Anywhere())`. There is no default. `Client::withDestination()` changes it.
-- `Adapter` gains `withDestination()`. Every adapter must check the address each connection actually reaches, on every connection and every redirect hop. It throws `DestinationException` on a refused address, and `AdapterPreconditionException` when used with no destination. Proxy settings are dropped unless the destination permits a proxy. `Decorator` forwards the setting.
+- `Adapter` gains `withDestinations()`. A custom adapter must implement it and check the address each connection actually reaches, on every connection and every redirect hop, throwing `DestinationException` on a refused address and dropping proxy settings unless the destinations permit a proxy. `Decorator` forwards the setting.
 
 ### Added
 
-- Destinations: `Anywhere` (any address, any proxy), `PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `IPRange` (validated in its constructor).
+- `Utopia\Client\Destinations` decides where a client may connect. `Client` takes one as an optional second constructor argument and through `withDestinations()`; the default is `Anywhere`.
+- `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
 - `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
 
 ### Removed

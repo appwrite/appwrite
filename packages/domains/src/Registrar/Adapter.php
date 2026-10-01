@@ -7,7 +7,6 @@ namespace Utopia\Domains\Registrar;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Domains\Adapter as DomainsAdapter;
 use Utopia\Domains\Cache;
 use Utopia\Domains\Registrar;
@@ -47,7 +46,7 @@ abstract class Adapter extends DomainsAdapter
             return $this->client;
         }
 
-        $this->defaultClient ??= new Client(new CurlAdapter(), new Anywhere());
+        $this->defaultClient ??= new Client(new CurlAdapter());
 
         return $this->defaultClient
             ->withConnectTimeout($this->connectTimeout)

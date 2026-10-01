@@ -12,9 +12,9 @@ use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\Curl\Client as CurlClient;
 use Utopia\Client\Client;
-use Utopia\Client\Destination;
-use Utopia\Client\Destination\Anywhere;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\ProtocolException;
 use Utopia\Client\Exception\TimeoutException;
@@ -45,7 +45,7 @@ final class ClientTest extends TestCase
 
         // Changing it on a configured client reaches the adapter too
         $response = new Client(new CurlClient(), new PublicInternet())
-            ->withDestination(new Anywhere())
+            ->withDestinations(new Anywhere())
             ->withTimeout(0.25);
         try {
             $response->sendRequest($request);
@@ -61,7 +61,7 @@ final class ClientTest extends TestCase
     {
         $request = new Request\Factory()->createRequest('GET', 'https://example.com');
         $adapter = new RecordingAdapter();
-        $client = new Client($adapter, new Anywhere());
+        $client = new Client($adapter);
         $configured = $client
             ->withTimeout(5.5)
             ->withConnectTimeout(1.25);
@@ -76,7 +76,7 @@ final class ClientTest extends TestCase
     public function testItDecoratesTlsConfiguration(): void
     {
         $request = new Request\Factory()->createRequest('GET', 'https://example.com');
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
         $configured = $client
             ->withSslVerification(false)
             ->withCustomCA('/etc/ssl/ca.pem')
@@ -95,7 +95,7 @@ final class ClientTest extends TestCase
     public function testItDecoratesConnectionReuse(): void
     {
         $request = new Request\Factory()->createRequest('GET', 'https://example.com');
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
         $configured = $client->withConnectionReuse();
 
         $this->assertSame('', $client->sendRequest($request)->getHeaderLine('X-Connection-Reuse'));
@@ -106,7 +106,7 @@ final class ClientTest extends TestCase
     public function testItDecoratesFollowRedirects(): void
     {
         $request = new Request\Factory()->createRequest('GET', 'https://example.com');
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
         $configured = $client->withFollowRedirects();
 
         $this->assertSame('', $client->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
@@ -118,7 +118,7 @@ final class ClientTest extends TestCase
     {
         Http::serve(function (int $port): void {
             $requestFactory = new Request\Factory();
-            $client = new Client(new CurlClient(), new Anywhere())->withFollowRedirects(maxHops: 5);
+            $client = new Client(new CurlClient())->withFollowRedirects(maxHops: 5);
 
             $response = $client->sendRequest($requestFactory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/5'));
 
@@ -133,7 +133,7 @@ final class ClientTest extends TestCase
 
     public function testItRejectsInvalidTimeouts(): void
     {
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
 
         $this->expectException(ValueError::class);
 
@@ -143,7 +143,7 @@ final class ClientTest extends TestCase
     public function testItAppliesDefaultHeadersImmutablyWithoutOverridingRequestHeaders(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
         $configured = $client->withHeaders([
             'Accept' => 'application/json',
             'X-Trace' => ['one', 'two'],
@@ -165,7 +165,7 @@ final class ClientTest extends TestCase
     public function testItAppliesAuthDefaultsWithoutOverridingRequestAuthorization(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
 
         $basic = $client
             ->withBasicAuth('ada', 'secret')
@@ -188,7 +188,7 @@ final class ClientTest extends TestCase
     public function testItAppliesBaseUriToRelativeRequests(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere())
+        $client = new Client(new RecordingAdapter())
             ->withBaseUri('https://api.example.com/v1');
 
         $relative = $client->sendRequest(
@@ -209,7 +209,7 @@ final class ClientTest extends TestCase
 
     public function testItRejectsRelativeBaseUris(): void
     {
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -219,7 +219,7 @@ final class ClientTest extends TestCase
     public function testItPropagatesTheActiveTraceWithoutOverridingAnInboundOne(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere())->withTracePropagation();
+        $client = new Client(new RecordingAdapter())->withTracePropagation();
 
         Span::setStorage(new Memory());
         $span = Span::init('http.request');
@@ -244,7 +244,7 @@ final class ClientTest extends TestCase
     public function testItDoesNotPropagateTracesByDefault(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere());
+        $client = new Client(new RecordingAdapter());
 
         Span::setStorage(new Memory());
         $span = Span::init('http.request');
@@ -264,7 +264,7 @@ final class ClientTest extends TestCase
     public function testItLeavesRequestsUntouchedWithoutAnActiveSpan(): void
     {
         $requestFactory = new Request\Factory();
-        $client = new Client(new RecordingAdapter(), new Anywhere())->withTracePropagation();
+        $client = new Client(new RecordingAdapter())->withTracePropagation();
 
         $response = $client->sendRequest(
             $requestFactory->createRequest('GET', 'https://example.com'),
@@ -277,7 +277,7 @@ final class ClientTest extends TestCase
     {
         $requestFactory = new Request\Factory();
         $received = '';
-        $client = new Client(new RecordingAdapter(), new Anywhere())
+        $client = new Client(new RecordingAdapter())
             ->withBaseUri('https://api.example.com/v1')
             ->withHeaders(['Accept' => 'application/json']);
 
@@ -308,7 +308,7 @@ final class RecordingAdapter implements Adapter
     ) {
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         return $this;
     }

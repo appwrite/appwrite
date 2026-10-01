@@ -10,7 +10,6 @@ use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\Certificate;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -44,7 +43,7 @@ class Fastly implements Provider
             throw new \InvalidArgumentException('Deployment poll interval cannot be negative.');
         }
 
-        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere());
+        $this->client = $client ?? new Client(new CurlAdapter());
         $this->tls = new FastlyTls(
             apiToken: $this->apiToken,
             tlsConfigurationId: '',

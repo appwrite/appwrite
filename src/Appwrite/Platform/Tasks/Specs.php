@@ -17,7 +17,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;

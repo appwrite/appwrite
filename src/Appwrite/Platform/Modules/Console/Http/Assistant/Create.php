@@ -10,7 +10,6 @@ use Appwrite\Utopia\Response;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -66,7 +65,7 @@ class Create extends Action
         );
 
         // No Accept-Encoding: a compressing upstream would buffer the event stream
-        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null]), new Anywhere()))
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
             ->withFollowRedirects()
             ->withConnectTimeout(0)
             ->withTimeout(9000);

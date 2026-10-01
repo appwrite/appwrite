@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Client\Tests\Destination;
+namespace Utopia\Client\Tests\Destinations;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Client\Destination\IPRange;
+use Utopia\Client\Destinations\IPRange;
 
 final class IPRangeTest extends TestCase
 {

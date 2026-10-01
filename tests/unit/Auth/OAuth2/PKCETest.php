@@ -15,7 +15,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\CannedTransport;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 
 final class PKCETest extends TestCase
 {
@@ -56,7 +55,7 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testChallengeMatchesVerifierSentAtTokenExchange(string $provider): void
     {
-        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
 
         $verifier = $this->exchangeAndCaptureVerifier($provider, $login['state'] ?? '');
 
@@ -71,7 +70,7 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testChallengeIsNotTheRawVerifier(string $provider): void
     {
-        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
 
         $verifier = $this->exchangeAndCaptureVerifier($provider, $login['state'] ?? '');
 
@@ -81,7 +80,7 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testLoginUrlDeclaresS256(string $provider): void
     {
-        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
 
         $this->assertSame('S256', $login['code_challenge_method'] ?? null);
         $this->assertNotEmpty($login['code_challenge'] ?? '');
@@ -93,7 +92,7 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testVerifierMatchesRfc7636(string $provider): void
     {
-        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $login = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
 
         $verifier = $this->exchangeAndCaptureVerifier($provider, $login['state'] ?? '');
 
@@ -109,7 +108,7 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testVerifierIsNotExposedInLoginUrl(string $provider): void
     {
-        $url = (new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL();
+        $url = (new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL();
 
         $verifier = $this->exchangeAndCaptureVerifier($provider, $this->queryOf($url)['state'] ?? '');
 
@@ -120,8 +119,8 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testEachAuthorizationUsesAFreshVerifier(string $provider): void
     {
-        $first = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
-        $second = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $first = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
+        $second = $this->queryOf((new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->getLoginURL());
 
         $this->assertNotSame($first['code_challenge'] ?? null, $second['code_challenge'] ?? null);
         $this->assertNotSame(
@@ -133,12 +132,12 @@ final class PKCETest extends TestCase
     #[DataProvider('providers')]
     public function testCallerStateIsPreservedAndPkceEntryStripped(string $provider): void
     {
-        $url = (new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK, [
+        $url = (new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK, [
             'success' => 'https://example.com/ok',
             'failure' => 'https://example.com/no',
         ]))->getLoginURL();
 
-        $parsed = (new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))
+        $parsed = (new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))
             ->parseState($this->queryOf($url)['state'] ?? '');
 
         $this->assertIsArray($parsed);
@@ -167,7 +166,7 @@ final class PKCETest extends TestCase
         foreach ($malformed as $pkce) {
             $state = $this->encodeState($provider, ['success' => 'https://example.com', '_pkce' => $pkce]);
 
-            $parsed = (new $provider(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK))->parseState($state);
+            $parsed = (new $provider(new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK))->parseState($state);
 
             $this->assertIsArray($parsed);
             $this->assertArrayNotHasKey('_pkce', $parsed);
@@ -189,7 +188,7 @@ final class PKCETest extends TestCase
     private function exchangeAndCaptureVerifier(string $provider, string $state): string
     {
         $oauth = $this->getMockBuilder($provider)
-            ->setConstructorArgs([new Client(new CannedTransport(fn (): string => ''), new Anywhere()), self::APP_ID, self::APP_SECRET, self::CALLBACK])
+            ->setConstructorArgs([new Client(new CannedTransport(fn (): string => '')), self::APP_ID, self::APP_SECRET, self::CALLBACK])
             ->onlyMethods(['request'])
             ->getMock();
 

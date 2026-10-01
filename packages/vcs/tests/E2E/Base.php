@@ -8,7 +8,6 @@ use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\VCS\Adapter\Git;
@@ -370,7 +369,7 @@ abstract class Base extends TestCase
 
     private function client(): Client
     {
-        return new Client(new CurlAdapter(), new Anywhere())
+        return new Client(new CurlAdapter())
             ->withTimeout(15)
             ->withFollowRedirects();
     }

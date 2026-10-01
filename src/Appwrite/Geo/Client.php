@@ -5,7 +5,6 @@ namespace Appwrite\Geo;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client as HttpClient;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Console;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
@@ -30,7 +29,7 @@ class Client
             new SwoolePoolAdapter(),
             "geo.{$host}",
             $poolSize,
-            fn () => (new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout($timeout)->withConnectTimeout($timeout), new Anywhere()))
+            fn () => (new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout($timeout)->withConnectTimeout($timeout)))
                 ->withBaseUri(\rtrim($endpoint, '/') . '/')
                 ->withBearerAuth($secret),
             timeout: 3.0

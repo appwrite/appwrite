@@ -7,8 +7,8 @@ namespace Utopia\Client\Tests\Adapter\Curl;
 use Psr\Http\Message\RequestInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\Curl\Client;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
@@ -106,7 +106,7 @@ final class ClientTest extends AdapterContract
         $this->assertNotFalse($proxy);
         $this->assertNotFalse($target);
 
-        $client = $this->createAdapter(destination: new PublicInternet(new IPRange('127.0.0.1')));
+        $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
         $request = new Request\Factory()->createRequest(Method::GET, 'http://' . \stream_socket_get_name($target, false) . '/');
 
         \putenv('http_proxy=http://' . \stream_socket_get_name($proxy, false));

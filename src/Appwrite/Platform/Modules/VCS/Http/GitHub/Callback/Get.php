@@ -9,7 +9,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -132,7 +131,7 @@ class Get extends Action
 
             if (!empty($code)) {
                 // github.com is the operator's configured provider, not a user's choice
-                $oauth2 = new OAuth2Github(new Client(new CurlAdapter(), new Anywhere()), System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                $oauth2 = new OAuth2Github(new Client(new CurlAdapter()), System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
                 $accessToken = $oauth2->getAccessToken($code);
                 $refreshToken = $oauth2->getRefreshToken($code);

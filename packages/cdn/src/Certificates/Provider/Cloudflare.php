@@ -9,7 +9,6 @@ use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\UnsupportedOperation;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -25,7 +24,7 @@ class Cloudflare implements Provider
         ?ClientInterface $client = null,
         private readonly string $apiBase = 'https://api.cloudflare.com/client/v4',
     ) {
-        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere());
+        $this->client = $client ?? new Client(new CurlAdapter());
     }
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string

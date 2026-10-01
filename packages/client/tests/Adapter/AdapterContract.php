@@ -11,11 +11,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Utopia\Client\Adapter;
-use Utopia\Client\Destination;
-use Utopia\Client\Destination\Anywhere;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
-use Utopia\Client\Exception\AdapterPreconditionException;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\ConnectionException;
 use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
@@ -46,7 +45,7 @@ abstract class AdapterContract extends TestCase
      * @param array<string|int, mixed> $transportOptions
      */
     /**
-     * The adapter under test, with no destination configured.
+     * The adapter under test, as constructed: connecting anywhere.
      *
      * @param array<string|int, mixed> $transportOptions
      */
@@ -55,9 +54,11 @@ abstract class AdapterContract extends TestCase
     /**
      * @param array<string|int, mixed> $transportOptions
      */
-    protected function createAdapter(array $transportOptions = [], ?Destination $destination = null): Adapter
+    protected function createAdapter(array $transportOptions = [], ?Destinations $destinations = null): Adapter
     {
-        return $this->newAdapter($transportOptions)->withDestination($destination ?? new Anywhere());
+        $adapter = $this->newAdapter($transportOptions);
+
+        return $destinations instanceof Destinations ? $adapter->withDestinations($destinations) : $adapter;
     }
 
     abstract protected function runAdapter(callable $callback): void;
@@ -759,24 +760,10 @@ abstract class AdapterContract extends TestCase
         $this->assertNotSame($client, $client->withFollowRedirects(false));
     }
 
-    public function testItRefusesToSendWithoutADestination(): void
-    {
-        Http::serve(function (int $port): void {
-            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
-
-            try {
-                $this->send($this->newAdapter(), $request);
-                $this->fail('An adapter without a destination sent a request.');
-            } catch (AdapterPreconditionException $adapterPreconditionException) {
-                $this->assertStringContainsString('destination', $adapterPreconditionException->getMessage());
-            }
-        });
-    }
-
     public function testItRefusesAnAddressTheDestinationDoesNotAllow(): void
     {
         Http::serve(function (int $port): void {
-            $client = $this->createAdapter(destination: new PublicInternet());
+            $client = $this->createAdapter(destinations: new PublicInternet());
             $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
 
             try {
@@ -791,7 +778,7 @@ abstract class AdapterContract extends TestCase
     public function testItConnectsToAnAddressTheDestinationAllows(): void
     {
         Http::serve(function (int $port): void {
-            $client = $this->createAdapter(destination: new PublicInternet(new IPRange('127.0.0.1')));
+            $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
             $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
 
             $response = $this->send($client, $request);
@@ -809,7 +796,7 @@ abstract class AdapterContract extends TestCase
         $targetUrl = 'http://' . \stream_socket_get_name($target, false) . '/final';
 
         Http::serve(function (int $port) use ($target, $targetUrl): void {
-            $client = $this->createAdapter(destination: new PublicInternet(new IPRange('127.0.0.1')))->withFollowRedirects();
+            $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')))->withFollowRedirects();
             $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/redirect-to?to=' . \urlencode($targetUrl));
 
             try {

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Client\Destination;
+namespace Utopia\Client\Destinations;
 
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
 
 /**
  * Any address, through any proxy. For services whose address the operator configured,
  * never for a URL a user supplied.
  */
-final readonly class Anywhere implements Destination
+final readonly class Anywhere implements Destinations
 {
     public function allows(string $address): bool
     {

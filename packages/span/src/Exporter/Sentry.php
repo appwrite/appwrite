@@ -7,7 +7,6 @@ use Composer\InstalledVersions;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlClient;
 use Utopia\Client\Client as HttpClient;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Span\Exporter\Sentry\Level as SentryLevel;
@@ -111,7 +110,6 @@ class Sentry implements Exporter
                 \CURLOPT_TIMEOUT_MS => 1000,
                 \CURLOPT_CONNECTTIMEOUT_MS => 500,
             ]),
-            new Anywhere(),
         );
         $this->requestFactory = new RequestFactory();
         $this->sampler = static function (Span $span) use ($sampler): bool {

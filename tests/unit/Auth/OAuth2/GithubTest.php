@@ -12,7 +12,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\CannedTransport;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 
 final class GithubTest extends TestCase
 {
@@ -49,7 +48,7 @@ final class GithubTest extends TestCase
     #[DataProvider('promptSecrets')]
     public function testLoginURLPrompt(string $secret, ?string $expected): void
     {
-        $github = new Github(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback');
+        $github = new Github(new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback');
 
         \parse_str((string) \parse_url($github->getLoginURL(), PHP_URL_QUERY), $query);
 
@@ -164,7 +163,7 @@ final class GithubTest extends TestCase
     private function createGithub(string $response, string $code = 'authorization-code', string $secret = 'client-secret'): Github&MockObject
     {
         $github = $this->getMockBuilder(Github::class)
-            ->setConstructorArgs([new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback'])
+            ->setConstructorArgs([new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback'])
             ->onlyMethods(['request'])
             ->getMock();
 

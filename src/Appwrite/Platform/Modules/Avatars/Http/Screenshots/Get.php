@@ -14,7 +14,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
@@ -188,7 +187,7 @@ class Get extends Action
         try {
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
 
-            $screenshotResponse = (new Client(new CurlAdapter(), new Anywhere()))
+            $screenshotResponse = (new Client(new CurlAdapter()))
                 ->withTimeout(30)
                 ->withFollowRedirects(maxHops: 5)
                 ->sendRequest((new RequestFactory())->body(

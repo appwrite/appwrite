@@ -8,7 +8,6 @@ use Psr\Http\Client\ClientInterface;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -39,7 +38,7 @@ class HIBP extends PasswordPwned
         parent::__construct($allowEmpty);
 
         $this->cache = $cache;
-        $this->client = $client ?? (new Client(new CurlAdapter(), new Anywhere()))
+        $this->client = $client ?? (new Client(new CurlAdapter()))
             ->withConnectTimeout(self::CONNECT_TIMEOUT)
             ->withTimeout(self::REQUEST_TIMEOUT)
             ->withHeaders([Header::USER_AGENT => 'Appwrite']);

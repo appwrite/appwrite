@@ -5,7 +5,6 @@ namespace Utopia\Domains;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream\Factory as StreamFactory;
 
@@ -82,7 +81,7 @@ abstract class Adapter
         $client = new Client(new CurlAdapter(options: [
             CURLOPT_ENCODING => null,
             CURLOPT_USERAGENT => php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion(),
-        ]), new Anywhere())->withFollowRedirects();
+        ]))->withFollowRedirects();
 
         try {
             $response = $client->sendRequest($request);

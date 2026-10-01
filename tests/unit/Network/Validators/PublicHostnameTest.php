@@ -7,8 +7,8 @@ namespace Tests\Unit\Network\Validators;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\FixedLookup;
-use Utopia\Client\Destination\IPRange;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 
 final class PublicHostnameTest extends TestCase
 {

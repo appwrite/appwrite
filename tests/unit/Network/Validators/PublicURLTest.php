@@ -9,7 +9,7 @@ use Appwrite\Network\Validator\PublicURL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\FixedLookup;
-use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Destinations\PublicInternet;
 
 final class PublicURLTest extends TestCase
 {

@@ -25,19 +25,21 @@ final class Client implements Adapter
     private bool $tracePropagation = false;
 
     /**
-     * @param Destination $destination Where requests may connect; there is no default, so every client says
+     * @param Destinations|null $destinations Where requests may connect; when omitted the adapter's own setting stands, which is Anywhere unless it was changed
      */
     public function __construct(
         private Adapter $adapter,
-        Destination $destination,
+        ?Destinations $destinations = null,
     ) {
-        $this->adapter = $adapter->withDestination($destination);
+        if ($destinations instanceof Destinations) {
+            $this->adapter = $adapter->withDestinations($destinations);
+        }
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         $clone = clone $this;
-        $clone->adapter = $this->adapter->withDestination($destination);
+        $clone->adapter = $this->adapter->withDestinations($destinations);
 
         return $clone;
     }

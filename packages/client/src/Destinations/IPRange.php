@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Client\Destination;
+namespace Utopia\Client\Destinations;
 
 use InvalidArgumentException;
 

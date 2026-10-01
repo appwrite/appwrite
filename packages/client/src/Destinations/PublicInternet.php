@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Client\Destination;
+namespace Utopia\Client\Destinations;
 
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
 
 /**
  * Globally routable addresses only: never a private, loopback, link-local, multicast or
  * otherwise reserved one (cloud metadata, the host, the internal network), unless one of
  * the given ranges explicitly admits it. For fetching a URL a user supplied.
  */
-final readonly class PublicInternet implements Destination
+final readonly class PublicInternet implements Destinations
 {
     /**
      * Reserved ranges PHP's FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE miss.

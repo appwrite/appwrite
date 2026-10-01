@@ -7,7 +7,6 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Abuse\Adapter;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class ReCaptcha extends Adapter
@@ -75,7 +74,7 @@ class ReCaptcha extends Adapter
         $request = new RequestFactory()->body('POST', $url, \http_build_query($fields), 'application/x-www-form-urlencoded');
 
         try {
-            $body = (string) new Client(new CurlAdapter(), new Anywhere())->sendRequest($request)->getBody();
+            $body = (string) new Client(new CurlAdapter())->sendRequest($request)->getBody();
         } catch (ClientExceptionInterface) {
             $body = '';
         }

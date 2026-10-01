@@ -6,7 +6,6 @@ use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Command;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream\Factory as StreamFactory;
@@ -499,7 +498,7 @@ abstract class Adapter
             CURLOPT_PATH_AS_IS => true,
             CURLOPT_ENCODING => null,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
-        ]), new Anywhere())
+        ]))
             ->withFollowRedirects($followRedirects)
             ->withConnectTimeout(0)
             ->withTimeout(15);

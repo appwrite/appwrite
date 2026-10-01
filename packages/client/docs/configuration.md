@@ -155,7 +155,6 @@ The Swoole adapter must run inside a coroutine. Pass native client settings with
 use Swoole\Coroutine;
 use Utopia\Client\Client;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 
@@ -169,7 +168,6 @@ Coroutine\run(static function (): void {
             'timeout' => 5,
             'connect_timeout' => 1,
         ]),
-        new Anywhere(),
     );
 
     $response = $client->sendRequest(

@@ -11,7 +11,6 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -170,7 +169,7 @@ final class NotificationsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->clientForWebhooks = new Client(new CurlAdapter(), new Anywhere());
+        $this->clientForWebhooks = new Client(new CurlAdapter());
         $this->authorization = new Authorization();
         $this->authorization->addRole(Role::any()->toString());
 

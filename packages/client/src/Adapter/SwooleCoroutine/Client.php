@@ -15,7 +15,8 @@ use Swoole\Coroutine\Http\Client as SwooleClient;
 use Swoole\Coroutine\System;
 use Throwable;
 use Utopia\Client\Adapter;
-use Utopia\Client\Destination;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Exception\AdapterInitializationException;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
@@ -88,7 +89,7 @@ class Client implements Adapter
 
     private string $streamConnectionKey = '';
 
-    private ?Destination $destination = null;
+    private Destinations $destinations;
 
     /**
      * @param array<string, mixed> $settings
@@ -105,6 +106,7 @@ class Client implements Adapter
         ];
 
         $this->responseBuilder = new ResponseBuilder($responseFactory, $streamFactory);
+        $this->destinations = new Anywhere();
     }
 
     public function __clone(): void
@@ -113,10 +115,10 @@ class Client implements Adapter
         $this->forgetConnection();
     }
 
-    public function withDestination(Destination $destination): static
+    public function withDestinations(Destinations $destinations): static
     {
         $clone = clone $this;
-        $clone->destination = $destination;
+        $clone->destinations = $destinations;
 
         return $clone;
     }
@@ -310,7 +312,7 @@ class Client implements Adapter
 
         // Through a proxy the connected address is the proxy's, so drop any proxy
         // unless the destination permits one.
-        if (!$this->destination($request)->permitsProxy()) {
+        if (!$this->destinations->permitsProxy()) {
             unset($settings['http_proxy_host'], $settings['http_proxy_port'], $settings['socks5_host'], $settings['socks5_port']);
         }
 
@@ -562,7 +564,7 @@ class Client implements Adapter
 
         // A permitted proxy resolves and reaches the target itself; otherwise dial an
         // address the destination allowed
-        $proxied = $this->destination($request)->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
+        $proxied = $this->destinations->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
         $address = $proxied ? $uri->getHost() : $this->address($request);
 
         try {
@@ -618,7 +620,7 @@ class Client implements Adapter
         }
 
         foreach ($addresses as $address) {
-            if ($this->destination($request)->allows($address)) {
+            if ($this->destinations->allows($address)) {
                 return $address;
             }
         }
@@ -1035,13 +1037,5 @@ class Client implements Adapter
         }
 
         return $normalized;
-    }
-
-    /**
-     * @throws AdapterPreconditionException When no destination was configured
-     */
-    private function destination(RequestInterface $request): Destination
-    {
-        return $this->destination ?? throw new AdapterPreconditionException($request, 'No destination configured: set one with withDestination() before sending.');
     }
 }
