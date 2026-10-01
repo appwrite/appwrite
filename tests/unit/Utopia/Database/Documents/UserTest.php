@@ -129,7 +129,7 @@ final class UserTest extends TestCase
         $this->assertFalse($user->sessionActive('missing'));
     }
 
-    public function testSessionExpire(): void
+    public function testGetSessionExpiry(): void
     {
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60));
         $user = new User([
@@ -149,9 +149,9 @@ final class UserTest extends TestCase
             ],
         ]);
 
-        $this->assertSame((new \DateTime($expire))->getTimestamp(), $user->sessionExpire('session'));
-        $this->assertNull($user->sessionExpire('missing-expire'));
-        $this->assertNull($user->sessionExpire('missing'));
+        $this->assertSame((new \DateTime($expire))->getTimestamp(), $user->getSessionExpiry('session'));
+        $this->assertNull($user->getSessionExpiry('missing-expire'));
+        $this->assertNull($user->getSessionExpiry('missing'));
     }
 
     public function testTokenVerify(): void

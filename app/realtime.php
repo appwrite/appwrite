@@ -689,7 +689,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // Re-read, as extending the session moves it. An impersonated
                             // connection has no sessionId and keeps what it was opened with.
                             $expire = $sessionId !== null
-                                ? $user->sessionExpire($sessionId)
+                                ? $user->getSessionExpiry($sessionId)
                                 : ($realtime->connections[$connection]['expire'] ?? null);
                             $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
@@ -1038,7 +1038,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'sessionId' => $session?->getId(),
         ];
         // Impersonated or not, the connection lasts only as long as the session it runs on.
-        $expire = $session !== null ? $user->sessionExpire($session->getId()) : null;
+        $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
         $channelCount = \count($channels);

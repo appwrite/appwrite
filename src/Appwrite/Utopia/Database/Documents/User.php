@@ -178,7 +178,7 @@ class User extends Document
      * Used by realtime, which holds a connection open past the request that
      * authenticated it and so has to end it at this time.
      */
-    public function sessionExpire(string $sessionId): ?int
+    public function getSessionExpiry(string $sessionId): ?int
     {
         $session = $this->find('$id', $sessionId, 'sessions');
 
