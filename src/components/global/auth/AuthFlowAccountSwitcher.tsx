@@ -5,6 +5,12 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 
 type AuthFlowAccountSwitcherProps = {
   accountLabel?: string
+  /**
+   * Console user ID matching `accountLabel` when the label is not the
+   * signed-in account (e.g. the operator while impersonating). Defaults to
+   * the signed-in account.
+   */
+  accountId?: string
   disabled?: boolean
   preview?: boolean
   returnUrl?: string
@@ -13,6 +19,7 @@ type AuthFlowAccountSwitcherProps = {
 
 export function AuthFlowAccountSwitcher({
   accountLabel: accountLabelProp,
+  accountId,
   disabled = false,
   preview = false,
   returnUrl,
@@ -31,7 +38,7 @@ export function AuthFlowAccountSwitcher({
   return (
     <AuthAccountChip
       accountLabel={resolvedLabel}
-      userId={isAuthenticated ? account?.$id : undefined}
+      userId={accountId ?? (isAuthenticated ? account?.$id : undefined)}
       onSwitchAccount={onSwitchAccount ?? defaultSwitch}
       disabled={disabled}
     />

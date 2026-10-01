@@ -171,6 +171,7 @@ export function View({
     ) : (
       <AuthFlowAccountSwitcher
         accountLabel={operatorLabel}
+        accountId={operator?.$id}
         disabled={isStarting}
       />
     )
