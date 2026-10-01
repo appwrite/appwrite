@@ -1060,14 +1060,29 @@ final class MqttServerTest extends Scope
     {
         $this->skipIfUsageUnavailable();
 
-        $projectId = $this->getProject()['$id'];
-        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
-
+        // A fresh project with no prior MQTT traffic: a non-zero usage series can then only come from
+        // this test's own connection and delivery, so earlier tests cannot satisfy the assertion and a
+        // removed accounting call in deliver()/replay leaves it at zero.
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
         $server = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-key' => $project['apiKey'],
         ];
+
+        $userId = ID::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'mqtt-usage-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, []);
+        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
+        $jwt = $jwtResponse['body']['jwt'];
+
         $this->setupAppwriteProvider($server);
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
@@ -1081,13 +1096,12 @@ final class MqttServerTest extends Scope
             $subscriber->disconnect();
         }
 
+        $usageKey = $this->mintProjectKey($projectId, ['usage.read']);
+
         // The broker flushes accumulated usage every 10s and the stats worker then aggregates it.
-        // The metrics are cumulative per project, so assert each series becomes non-empty rather than
-        // an exact total (other deliveries in the suite share this project). A removed accounting call
-        // would leave the series empty.
-        $this->assertEventually(function (): void {
-            $this->assertGreaterThan(0, $this->usageSeriesTotal('mqtt.messages.delivered'), 'delivery usage was not recorded');
-            $this->assertGreaterThan(0, $this->usageSeriesTotal('mqtt.connections'), 'connection usage was not recorded');
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.connections'), 'connection usage was not recorded');
         }, 90_000, 2_000);
     }
 
@@ -1109,13 +1123,31 @@ final class MqttServerTest extends Scope
         }
     }
 
-    /** Sum the points of a cumulative usage metric series for the test project. */
-    private function usageSeriesTotal(string $metric): int
+    /** Mint an API key with the given scopes for a specific project (console-scoped). */
+    private function mintProjectKey(string $projectId, array $scopes): string
+    {
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'keyId' => ID::unique(),
+            'name' => 'MQTT usage key',
+            'scopes' => $scopes,
+        ]);
+        $this->assertEquals(201, $key['headers']['status-code']);
+
+        return $key['body']['secret'];
+    }
+
+    /** Sum the points of a cumulative usage metric series for a project. */
+    private function usageSeriesTotal(string $projectId, string $key, string $metric): int
     {
         $response = $this->client->call(Client::METHOD_GET, '/usage/events', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getNewKey(['usage.read']),
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key,
         ], [
             'metrics' => [$metric],
             'interval' => '1h',
