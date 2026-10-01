@@ -95,7 +95,7 @@ Two of the medium severity issues target the response cache that powers statical
 
 Self-hosted Next.js apps using the **Pages Router** with SSG or ISR pages can have a page's cache entry replaced with content from a different route. The affected page then serves the wrong content to every visitor until the entry is revalidated.
 
-Apps deployed on Vercel are not affected. Apps on your own infrastructure, in Docker, or on any platform that runs `next start` are.
+Apps deployed on Vercel are not affected. Self-hosted deployments using the Pages Router with SSG or ISR may be affected. The Next.js advisory specifically states that Vercel deployments are not affected.
 
 # Cache poisoning through a root-level catch-all page
 
