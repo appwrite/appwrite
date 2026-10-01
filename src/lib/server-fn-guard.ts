@@ -1,12 +1,14 @@
 /**
  * Boundary guard for TanStack Start server functions (`/_serverFn/*`).
  *
- * TanStack Start (`@tanstack/start-server-core` <= 1.169.37) let a crafted
+ * TanStack Start (`@tanstack/start-server-core` < 1.169.39) let a crafted
  * server-function URL seed internal middleware state from the wire payload and
  * answered a plain browser navigation with attacker-controlled HTML from our
- * own origin (reflected XSS; private TanStack advisory, September 2026). The
- * framework fix is backported in `patches/`; this module is the independent
- * second layer that keeps the vulnerable path unreachable on any version:
+ * own origin (reflected XSS; CVE-2026-102989 / GHSA-qx66-fv34-fjm8). The
+ * framework fix ships in `@tanstack/start-server-core` 1.169.39 and
+ * `@tanstack/react-start` 1.168.60, which this app now uses; this module is the
+ * independent second layer that keeps the vulnerable path unreachable even if a
+ * regression or a downgrade ever reintroduced it:
  *
  * 1. Only TanStack RPC calls reach a server function. The client fetcher always
  *    sends `x-tsr-serverFn: true`; a browser cannot attach that header to a
