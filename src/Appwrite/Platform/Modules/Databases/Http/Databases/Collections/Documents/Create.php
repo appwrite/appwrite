@@ -345,6 +345,10 @@ class Create extends Action
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
 
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $current, $authorization);
+                        }
+
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 

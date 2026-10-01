@@ -633,6 +633,100 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Test that staging cannot grant roles the user lacks on a related document
+     */
+    public function testCannotSetUnauthorizedRelatedPermissions(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+        $containerPermissions = [
+            Permission::read(Role::any()),
+            Permission::create(Role::any()),
+            Permission::update(Role::any()),
+        ];
+
+        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related Permissions Parent',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $parent['headers']['status-code']);
+        $parentId = $parent['body']['$id'];
+
+        $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related Permissions Child',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $child['headers']['status-code']);
+        $childId = $child['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $childId, 'string'), $keyHeaders, [
+            'key' => 'title',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAttribute($this->getPermissionsDatabase(), $childId, 'title');
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $keyHeaders, [
+            $this->getRelatedIdParam() => $childId,
+            'type' => 'oneToOne',
+            'key' => 'child',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $stage = fn (array $permissions) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transaction['body']['$id']) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $parentId,
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => [
+                    'child' => [
+                        '$id' => ID::unique(),
+                        '$permissions' => $permissions,
+                        'title' => 'Child',
+                    ],
+                ],
+            ]]
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $stage([Permission::read(Role::user($this->getUser()['$id']))]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $staged = $stage([Permission::update(Role::team('adminTeam'))]);
+        $this->assertEquals(401, $staged['headers']['status-code']);
+        $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
+    }
+
+    /**
      * Test successful staging when user has the required permissions
      */
     public function testSuccessfulStagingWithProperPermissions(): void
