@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_marketing/education')({
     meta: getMarketingPageMetaTags({
       pageName: 'Education',
       description:
-        'Students can expand their skillset without spending a penny. Sign up for the Appwrite Education program to get access to our Pro plan.',
+        'Students can expand their skillset without spending a penny. Sign up for the Appwrite Education program to get six months of Pro resources on Appwrite Cloud.',
     }),
   }),
   loader: async ({ context }) => {

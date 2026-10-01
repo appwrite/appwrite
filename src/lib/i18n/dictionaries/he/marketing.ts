@@ -90,8 +90,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Announcements': 'הכרזות',
   'Anonymous': 'אנונימי',
   "Any other details you'd like to share?": 'פרטים נוספים שתרצו לשתף?',
-  "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan until graduation.": // pragma: allowlist secret
-    'כל סטודנט הרשום ל-GitHub Student Developer Pack יכול להגיש מועמדות בחינם ולקבל את תוכנית ה-Education של Appwrite עד סיום הלימודים.', // pragma: allowlist secret
+  "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan for six months.": // pragma: allowlist secret
+    'כל סטודנט הרשום ל-GitHub Student Developer Pack יכול להגיש מועמדות בחינם ולקבל את תוכנית ה-Education של Appwrite למשך שישה חודשים.', // pragma: allowlist secret
   'Anyone can join and help Appwrite become better.': 'כל אחד יכול להצטרף ולעזור ל-Appwrite להשתפר.', // pragma: allowlist secret
   'API bandwidth': 'רוחב פס API',
   'App': 'אפליקציה',
@@ -373,8 +373,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Designed for the AI agents in your workflow': 'מתוכנן לסוכני ה-AI בתהליך העבודה שלכם',
   'Designing the new website': 'עיצוב האתר החדש',
   'Details': 'פרטים',
-  'Develop your developer skills with Appwrite Pro, join a vibrant community of open-source contributors, and start building with a vast array of frameworks.': // pragma: allowlist secret
-    'פתחו את כישורי הפיתוח שלכם עם Appwrite Pro, הצטרפו לקהילה תוססת של תורמי קוד פתוח והתחילו לבנות עם מגוון רחב של פריימוורקים.', // pragma: allowlist secret
+  'Grow your skills with Pro resources on Appwrite Cloud, join a community of open-source contributors, and build with the framework of your choice.': // pragma: allowlist secret
+    'פתחו את הכישורים שלכם עם משאבי Pro ב-Appwrite Cloud, הצטרפו לקהילה של תורמי קוד פתוח ובנו עם הפריימוורק שתבחרו.', // pragma: allowlist secret
   'Develop your skills': 'פתחו את הכישורים שלכם',
   'Developer experience': 'חוויית מפתח',
   'Developers': 'מפתחים',
@@ -402,8 +402,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Early access': 'גישה מוקדמת',
   'Early hand-drawn logo sketches from the Appwrite rebrand process': 'סקיצות לוגו מוקדמות בציור יד מתהליך המיתוג מחדש של Appwrite', // pragma: allowlist secret
   'Early-stage company': 'חברה בשלב מוקדם',
-  'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to receive Appwrite Cloud for the duration of your studies.': // pragma: allowlist secret
-    'קבלו גישה חינמית דרך GitHub Education לבניית הפרויקט הבא שלכם על Appwrite Cloud. הירשמו ל-GitHub Student Developer Pack כדי לקבל את Appwrite Cloud למשך תקופת הלימודים.', // pragma: allowlist secret
+  'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to get six months of Appwrite Cloud with Pro resources.': // pragma: allowlist secret
+    'קבלו גישה חינמית דרך GitHub Education לבניית הפרויקט הבא שלכם על Appwrite Cloud. הירשמו ל-GitHub Student Developer Pack כדי לקבל שישה חודשים של Appwrite Cloud עם משאבי Pro.', // pragma: allowlist secret
   'Edge compute': 'מחשוב קצה',
   'Edges': 'נקודות קצה',
   'Edit': 'עריכה',
@@ -544,8 +544,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Get community support and priority support from the Appwrite team.': 'קבלו תמיכה קהילתית ותמיכה מועדפת מצוות Appwrite.', // pragma: allowlist secret
   'Get community support in the Appwrite Discord server.': 'קבלו תמיכה קהילתית בשרת ה-Discord של Appwrite.', // pragma: allowlist secret
   'Get exclusive Appwrite swag for founders in the program.': 'קבלו מתנות Appwrite בלעדיות למייסדים בתוכנית.', // pragma: allowlist secret
-  'Get free access to build with Appwrite’s Education plan, valid throughout your student career.': // pragma: allowlist secret
-    'קבלו גישה חינמית לבנייה עם תוכנית ה-Education של Appwrite, בתוקף לכל אורך תקופת הלימודים שלכם.', // pragma: allowlist secret
+  'Get six months of free access to build with Appwrite’s Education plan.': // pragma: allowlist secret
+    'קבלו שישה חודשים של גישה חינמית לבנייה עם תוכנית ה-Education של Appwrite.', // pragma: allowlist secret
   'Get help from the open source community': 'קבלו עזרה מקהילת הקוד הפתוח',
   'Get involved': 'קחו חלק',
   'Get onboarded': 'השלימו את תהליך הקליטה',
@@ -611,8 +611,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'אם תתקבלו, נפעיל את הטבות התוכנית ונשתף את הצעדים הבאים לבנייה על Appwrite Cloud.', // pragma: allowlist secret
   'If you want to upgrade to a paid plan, you can do so in your Appwrite dashboard, select your organization, and change your plan in the Billing section.': // pragma: allowlist secret
     'כדי לשדרג לתוכנית בתשלום, היכנסו ללוח הבקרה של Appwrite, בחרו את הארגון שלכם ושנו את התוכנית באזור החיוב.', // pragma: allowlist secret
-  "If you're a student with the GitHub Student Developer Pack, you can access the Appwrite Education plan for free while in school to help you build your next project.": // pragma: allowlist secret
-    'אם אתם סטודנטים עם GitHub Student Developer Pack, תוכלו לקבל גישה חינמית לתוכנית ה-Education של Appwrite במהלך הלימודים כדי לבנות את הפרויקט הבא שלכם.', // pragma: allowlist secret
+  "If you're a student with the GitHub Student Developer Pack, you can use the Appwrite Education plan free for six months to build your next project.": // pragma: allowlist secret
+    'אם אתם סטודנטים עם GitHub Student Developer Pack, תוכלו להשתמש בתוכנית ה-Education של Appwrite בחינם למשך שישה חודשים כדי לבנות את הפרויקט הבא שלכם.', // pragma: allowlist secret
   "If you're already enrolled in the GitHub Student Developer Pack, click the 'Sign up' button on this page and fill in your details. If you're not enrolled with GitHub Education yet, first apply for the GitHub Student Developer Pack, then come back and sign up to Appwrite Cloud here.": // pragma: allowlist secret
     "אם אתם כבר רשומים ל-GitHub Student Developer Pack, לחצו על כפתור 'הרשמה' בעמוד זה ומלאו את הפרטים. אם אינכם רשומים עדיין ל-GitHub Education, הגישו קודם מועמדות ל-GitHub Student Developer Pack, ואז חזרו והירשמו כאן ל-Appwrite Cloud.", // pragma: allowlist secret
   'If your needs grow beyond the program, contact us to discuss Enterprise options and a tailored plan for your organization.':
@@ -649,8 +649,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Join Init': 'הצטרפו ל-Init',
   'Join event': 'הצטרפות לאירוע',
   'Join our Discord': 'הצטרפו ל-Discord שלנו',
-  'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
-    'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מקבלים גישה חינמית ל-Appwrite Cloud לאורך כל הלימודים.', // pragma: allowlist secret
+  'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Verified students get six months of Appwrite Cloud with Pro resources for free.': // pragma: allowlist secret
+    'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מאומתים מקבלים שישה חודשים של Appwrite Cloud עם משאבי Pro, בחינם.', // pragma: allowlist secret
   'Join the Appwrite Partners program and grow your business. Deliver powerful solutions to clients, increase revenue, and expand your reach.': // pragma: allowlist secret
     'הצטרפו לתוכנית השותפים של Appwrite והצמיחו את העסק. ספקו ללקוחות פתרונות עוצמתיים, הגדילו הכנסות והרחיבו את טווח ההגעה.', // pragma: allowlist secret
   'Join the Appwrite Startups program': 'הצטרפו לתוכנית הסטארטאפים של Appwrite', // pragma: allowlist secret
@@ -1171,8 +1171,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'The switch to using Appwrite brought':
     'המעבר ל-Appwrite הביא',
   'The very first Appwrite Console': 'קונסולת Appwrite הראשונה', // pragma: allowlist secret
-  'This credit is available only for users who are verified through the GitHub program as students. The plan is valid until you graduate from GitHub Education.':
-    'הקרדיט זמין רק למשתמשים שאומתו כסטודנטים דרך תוכנית GitHub. התוכנית בתוקף עד לסיום הלימודים ב-GitHub Education.',
+  "The Education plan is available only to students verified through the GitHub Student Developer Pack. It lasts six months, then you can choose the plan that fits what you're building next.":
+    'תוכנית ה-Education זמינה רק לסטודנטים שאומתו דרך GitHub Student Developer Pack. היא נמשכת שישה חודשים, ולאחר מכן תוכלו לבחור את התוכנית שמתאימה למה שתבנו בהמשך.',
   'This feature is powered by Appwrite Realtime and Appwrite Presences.':
     'התכונה הזו מופעלת באמצעות Appwrite Realtime ו-Appwrite Presences.',
   'This form is protected by reCAPTCHA, and the Google': 'הטופס מוגן באמצעות reCAPTCHA, וחלים עליו',
@@ -1314,8 +1314,12 @@ export const heMarketingDictionary: Record<string, string> = {
   'You will get access to the Appwrite engineering team to get the support you need.': 'תקבלו גישה ישירה לצוות ההנדסה של Appwrite כדי לקבל את התמיכה שאתם צריכים.', // pragma: allowlist secret
   'You will get early access to new features and products and the ability to influence our roadmap.':
     'תקבלו גישה מוקדמת ליכולות ולמוצרים חדשים ואת היכולת להשפיע על מפת הדרכים שלנו.',
-  'Your access to the Appwrite Education plan is valid until you finish your studies and graduate from the GitHub Student Developer Pack.': // pragma: allowlist secret
-    'הגישה שלכם לתוכנית ה-Education של Appwrite בתוקף עד לסיום הלימודים וסיום החברות ב-GitHub Student Developer Pack.', // pragma: allowlist secret
+  'The Education plan lasts six months from the day you join, and each account can join once. The Console reminds you five weeks before your term ends.': // pragma: allowlist secret
+    'תוכנית ה-Education נמשכת שישה חודשים מיום ההצטרפות, וכל חשבון יכול להצטרף פעם אחת. הקונסולה תזכיר לכם חמישה שבועות לפני סיום התקופה.', // pragma: allowlist secret
+  'What happens when my Education plan ends?': // pragma: allowlist secret
+    'מה קורה כשתוכנית ה-Education שלי מסתיימת?', // pragma: allowlist secret
+  "Before your term ends, choose the plan that fits what you're building next: Free for learning and side projects, Pro for apps that need more resources, or Start for students in India and Nepal. Your projects, data, and settings stay exactly as they are. If you don't choose a plan by the end date, your organization will be disabled until you select one. Projects are only deleted later, according to our standard retention process.": // pragma: allowlist secret
+    'לפני סיום התקופה, בחרו את התוכנית שמתאימה למה שתבנו בהמשך: Free ללמידה ולפרויקטים צדדיים, Pro לאפליקציות שצריכות יותר משאבים, או Start לסטודנטים בהודו ובנפאל. הפרויקטים, הנתונים וההגדרות שלכם יישארו בדיוק כפי שהם. אם לא תבחרו תוכנית עד מועד הסיום, הארגון שלכם יושבת עד שתבחרו תוכנית. הפרויקטים יימחקו רק בהמשך, בהתאם למדיניות שמירת הנתונים הרגילה שלנו.', // pragma: allowlist secret
   'Your company is 5 years old or younger and has raised funding (pre-seed through Series A) or bootstrapped revenue up to $5M in annual recurring revenue.':
     'החברה שלכם בת 5 שנים או פחות וגייסה הון (מ-pre-seed ועד Series A) או הגיעה בבוטסטראפ להכנסות של עד 5 מיליון דולר בהכנסות שנתיות חוזרות.',
   'Your data is always yours. Want to migrate away? You can do so at any time.': 'הנתונים שלכם תמיד שלכם. רוצים לעבור לפלטפורמה אחרת? תוכלו לעשות זאת בכל עת.',
