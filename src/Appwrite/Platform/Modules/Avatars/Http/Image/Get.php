@@ -72,8 +72,14 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
+        // Validated again for its resolved addresses, which the request below reuses
+        $validator = new PublicURL();
+        if (!$validator->isValid($url)) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
+        }
+
         try {
-            $res = (new Client(new CurlAdapter()))
+            $res = (new Client(new CurlAdapter(options: [CURLOPT_RESOLVE => $validator->getResolve()])))
                 ->withTimeout(15)
                 ->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
         } catch (\Throwable) {

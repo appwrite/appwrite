@@ -393,6 +393,7 @@ const METRIC_MESSAGES_TYPE_FAILED  = METRIC_MESSAGES . '.{type}.failed';
 const METRIC_MESSAGES_TYPE_PROVIDER = METRIC_MESSAGES . '.{type}.{provider}';
 const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider}.sent';
 const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
+const METRIC_MESSAGES_RESOURCE_TYPE = 'message';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
