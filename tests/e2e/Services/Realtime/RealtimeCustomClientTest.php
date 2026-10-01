@@ -1150,6 +1150,23 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client);
 
         /**
+         * Test for SUCCESS - the actor is no longer an impersonator
+         */
+        $session = $createSession();
+        $client = $connect($session);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $adminHeaders, [
+            'impersonator' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $assertClosed($client);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $adminHeaders, [
+            'impersonator' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
          * Test for SUCCESS - the actor is blocked
          */
         $session = $createSession();
