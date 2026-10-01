@@ -170,7 +170,8 @@ class Handler implements MqttHandler
         $userId = $connection->identity['userId'] ?? '';
 
         // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
-        // the reserved users/ namespace which is ownership-gated (see deniesUserTopic). The topic
+        // a filter that could reach the reserved users/ namespace, which is ownership-gated (see
+        // deniesUserTopic); a wildcard first level is refused for that reason. The topic
         // document is consulted only to cap the QoS and to enable offline replay for an exact name.
         $names = [];
         foreach ($subscribe->filters() as $filter) {
@@ -250,12 +251,22 @@ class Handler implements MqttHandler
     /**
      * Fan a message out to a topic's local subscribers, each at the QoS granted to that
      * subscription (clamped by the message QoS). Returns the number delivered.
+     *
+     * A reserved users/<id> topic reaches only that user's connections, whatever filter matched:
+     * the subscribe gate is the first line, this holds even for a subscription it did not catch.
      */
     public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence): int
     {
+        $segments = \explode('/', $topic);
+        $owner = \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX ? $segments[1] : null;
+
         $delivered = 0;
 
         foreach ($server->subscribers($projectId, $topic) as [$connection, $grantedQos]) {
+            if ($owner !== null && ($connection->identity['userId'] ?? '') !== $owner) {
+                continue;
+            }
+
             $deliveryQos = min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
@@ -305,13 +316,19 @@ class Handler implements MqttHandler
     }
 
     /**
-     * Whether a filter in the reserved users/ namespace must be refused: any wildcard under users/
-     * (so it can't span other users), or an exact users/<id> that is not the caller's own. An owned
-     * users/<id> is allowed (served like any exact topic), and a deeper users/<id>/… path is an
-     * ordinary topic, not a reserved one.
+     * Whether a filter that could reach the reserved users/ namespace must be refused: a wildcard
+     * first level (# or +, which the broker matches against users/<id> like any other first level),
+     * any wildcard under users/ (so it can't span other users), or an exact users/<id> that is not
+     * the caller's own. An owned users/<id> is allowed (served like any exact topic), and a deeper
+     * users/<id>/… path is an ordinary topic, not a reserved one.
      */
     private function deniesUserTopic(string $topic, string $userId): bool
     {
+        $first = \explode('/', $topic, 2)[0];
+        if ($first === '#' || $first === '+') {
+            return true;
+        }
+
         if (!\str_starts_with($topic, self::USER_TOPIC_PREFIX . '/')) {
             return false;
         }
