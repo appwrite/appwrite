@@ -33,11 +33,6 @@ faqs:
       After connecting a Resend account and selecting a verified domain,
       Appwrite can create a sending-only API key and configure the required SMTP
       settings or Resend Messaging provider automatically.
-  - question: What is included in Appwrite 2.1 for self-hosting?
-    answer: Appwrite 2.1 brings several recent features to self-hosted deployments,
-      including S3 API support for Storage, AutoGravity, TikTok and Kakao OAuth2
-      providers, Dart and Flutter runtime updates, and Console improvements and
-      fixes.
 ---
 September started with one of our biggest launch weeks of the year.
 
@@ -174,19 +169,6 @@ It is available for Appwrite Cloud users, with support for self-hosted deploymen
 
 [Read more about AutoGravity](/blog/post/introducing-autogravity)
 
-# Appwrite 2.1 is now available for self-hosting
-
-![Appwrite 2.1 is now available for self-hosting](/images/blog/september-product-update-native-sign-in-databases-and-more/appwrite-2.1-is-now-available-for-self-hosting.avif)
-
-Appwrite 2.1 brought several recent Appwrite features to self-hosting, including:
-
-* S3 API support for Storage
-* AutoGravity
-* TikTok and Kakao OAuth2 providers
-* Updates to Dart and Flutter runtimes
-* Console improvements and fixes
-
-[Read more about Appwrite 2.1](/blog/post/appwrite-2-1-self-hosted)
 # What's next
 
 September brought updates across nearly every part of Appwrite, from Auth and Databases to Storage, Sites, Messaging, the CLI, and self-hosting.
