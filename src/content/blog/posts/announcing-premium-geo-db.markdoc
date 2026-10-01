@@ -118,7 +118,7 @@ The Firewall rule wizard reads the same data. When a condition uses a premium at
 
 # Enable Premium Geo DB on a project
 
-![Premium Geo DB card in project settings with the Enable Premium Geo DB button](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
+![Premium Geo DB card in project settings](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
 
 1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open your project.
 2. Go to **Settings** and stay on the **Overview** tab.

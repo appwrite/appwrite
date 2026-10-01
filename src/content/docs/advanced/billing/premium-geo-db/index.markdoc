@@ -127,7 +127,7 @@ Auth sessions created while the add-on is active record the same location and ne
 
 # Enable Premium Geo DB {% #enable %}
 
-![Premium Geo DB card in project settings with the Enable Premium Geo DB button](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
+![Premium Geo DB card in project settings](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
 
 1. In the Appwrite Console, open your project and go to **Settings**.
 2. On the **Overview** tab, find the **Premium Geo DB** card.
