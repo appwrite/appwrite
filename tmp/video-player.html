@@ -88,6 +88,44 @@
       background: #20262e;
     }
     .chip .code { opacity: 0.7; font-family: ui-monospace, monospace; }
+    #profileList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.85rem;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #2a3038;
+      border-radius: 8px;
+      background: #12151a;
+      min-height: 2.5rem;
+    }
+    #profileList label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 1;
+      grid-column: auto;
+      font-size: 0.85rem;
+      font-family: ui-monospace, monospace;
+    }
+    #profileList .empty {
+      opacity: 0.55;
+      font-size: 0.8rem;
+    }
+    .profile-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
+    .profile-toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 1;
+      grid-column: auto;
+      font-size: 0.85rem;
+    }
     .player-wrap { position: relative; }
     #captionChip {
       position: absolute;
@@ -295,10 +333,15 @@
           Subtitle name <span class="muted">(optional — defaults to the language)</span>
           <input id="subtitleName" placeholder="English" maxlength="128" autocomplete="off" />
         </label>
-        <label class="full">
-          Profile names
-          <input id="profileNames" value="360p, 480p, 720p" />
-        </label>
+        <fieldset class="full" style="border:0;padding:0;margin:0">
+          <legend class="muted" style="font-size:0.8rem;padding:0;margin-bottom:0.35rem">Rendition profiles</legend>
+          <div class="profile-toolbar">
+            <label><input type="checkbox" id="profileSelectAll" /> Select all</label>
+            <button type="button" class="secondary" id="refreshProfilesBtn" disabled>Refresh</button>
+            <span class="mono muted" id="profileListInfo">authenticate to load profiles</span>
+          </div>
+          <div id="profileList"><span class="empty">No profiles loaded</span></div>
+        </fieldset>
         <label>
           Codec
           <select id="codec">
@@ -460,6 +503,9 @@
     let demoDefaults = null;
     /** @type {Array<{ $id: string, name: string, outputs: string[] }>} */
     let availableCodecs = [{ $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] }];
+    /** @type {Array<{ $id: string, name: string, codec: string, width: number, height: number }>} */
+    let availableProfiles = [];
+    const DEFAULT_PROFILE_NAMES = ['360p', '480p', '720p'];
     const spriteBlobs = new Map();
     const spriteSizes = new Map();
     const THUMB_MAX_W = 160;
@@ -603,6 +649,113 @@
         console.warn('load codecs failed', err);
       }
       renderCodecOptions();
+      await loadProfiles();
+    }
+
+    function preferredProfileNames() {
+      const savedNames = Array.isArray(saved.profiles) ? saved.profiles.map((n) => String(n).toLowerCase()) : [];
+      if (savedNames.length) return savedNames;
+      return DEFAULT_PROFILE_NAMES;
+    }
+
+    function selectedProfiles() {
+      return [...document.querySelectorAll('#profileList input[type="checkbox"][data-profile-id]:checked')]
+        .map((el) => ({
+          $id: el.dataset.profileId,
+          name: el.dataset.profileName || el.dataset.profileId,
+        }))
+        .filter((p) => p.$id);
+    }
+
+    function syncProfileSelectAll() {
+      const boxes = [...document.querySelectorAll('#profileList input[type="checkbox"][data-profile-id]')];
+      const master = $('profileSelectAll');
+      if (!master) return;
+      if (!boxes.length) {
+        master.checked = false;
+        master.indeterminate = false;
+        master.disabled = true;
+        return;
+      }
+      master.disabled = false;
+      const checked = boxes.filter((el) => el.checked).length;
+      master.checked = checked === boxes.length;
+      master.indeterminate = checked > 0 && checked < boxes.length;
+    }
+
+    function renderProfileCheckboxes(preferredNames = preferredProfileNames()) {
+      const list = $('profileList');
+      const info = $('profileListInfo');
+      const refreshBtn = $('refreshProfilesBtn');
+      if (!list) return;
+
+      if (!availableProfiles.length) {
+        list.innerHTML = '<span class="empty">No profiles for this codec. Create some in the console, or refresh after seeding.</span>';
+        if (info) info.textContent = '0 profiles';
+        if (refreshBtn) refreshBtn.disabled = !account;
+        syncProfileSelectAll();
+        return;
+      }
+
+      const prefer = new Set(preferredNames.map((n) => String(n).toLowerCase()));
+      const selectAllIfNonePreferred = ![...prefer].some((name) =>
+        availableProfiles.some((p) => String(p.name || '').toLowerCase() === name)
+      );
+
+      list.innerHTML = availableProfiles.map((profile) => {
+        const name = String(profile.name || profile.$id);
+        const checked = selectAllIfNonePreferred || prefer.has(name.toLowerCase());
+        const meta = [
+          profile.width && profile.height ? `${profile.width}×${profile.height}` : '',
+          profile.videoBitRate ? `${profile.videoBitRate}kbps` : '',
+        ].filter(Boolean).join(' · ');
+        return `
+          <label title="${meta || name}">
+            <input
+              type="checkbox"
+              data-profile-id="${profile.$id}"
+              data-profile-name="${name.replace(/"/g, '&quot;')}"
+              ${checked ? 'checked' : ''}
+            />
+            ${name}${meta ? ` <span class="muted">(${meta})</span>` : ''}
+          </label>
+        `;
+      }).join('');
+
+      if (info) info.textContent = `${availableProfiles.length} profile${availableProfiles.length === 1 ? '' : 's'}`;
+      if (refreshBtn) refreshBtn.disabled = !account;
+      syncProfileSelectAll();
+    }
+
+    async function loadProfiles() {
+      const info = $('profileListInfo');
+      if (!account) {
+        availableProfiles = [];
+        renderProfileCheckboxes();
+        if (info) info.textContent = 'authenticate to load profiles';
+        return;
+      }
+      if (info) info.textContent = 'loading profiles…';
+      try {
+        const codec = selectedCodecId();
+        const list = await api(`/videos/profiles?codec=${encodeURIComponent(codec)}`);
+        availableProfiles = (list.profiles || []).map((p) => ({
+          $id: p.$id,
+          name: p.name || p.$id,
+          codec: p.codec || codec,
+          width: Number(p.width) || 0,
+          height: Number(p.height) || 0,
+          videoBitRate: Number(p.videoBitRate) || 0,
+        }));
+        // Keep higher ladders sorted by height when present.
+        availableProfiles.sort((a, b) => (a.height - b.height) || String(a.name).localeCompare(String(b.name)));
+      } catch (err) {
+        console.warn('load profiles failed', err);
+        availableProfiles = [];
+        if (info) info.textContent = `failed: ${err.message}`;
+      }
+      renderProfileCheckboxes();
+      persistConfig();
     }
 
     function languageLabel(code) {
@@ -840,6 +993,7 @@
         bucketId: $('bucketId').value.trim(),
         playback: playbackMode(),
         codec: selectedCodecId(),
+        profiles: selectedProfiles().map((p) => p.name),
         encode: {
           hls: $('encodeHls').checked,
           dash: $('encodeDash').checked,
@@ -1046,6 +1200,12 @@
       createBucketBtn.disabled = true;
       if (addSubtitleBtn) addSubtitleBtn.disabled = true;
       uploadInfo.textContent = 'authenticate first';
+      availableProfiles = [];
+      renderProfileCheckboxes();
+      const refreshBtn = $('refreshProfilesBtn');
+      if (refreshBtn) refreshBtn.disabled = true;
+      const info = $('profileListInfo');
+      if (info) info.textContent = 'authenticate to load profiles';
     });
 
     // Resume an existing session (SDK keeps it in cookies/localStorage).
@@ -1218,10 +1378,7 @@
       let bucketId = $('bucketId').value.trim();
       const file = $('videoFile').files[0];
       const apiKey = $('apiKey').value.trim();
-      const wantedProfiles = $('profileNames').value
-        .split(',')
-        .map((name) => name.trim().toLowerCase())
-        .filter(Boolean);
+      const selected = selectedProfiles();
 
       if (!storage || !account) {
         uploadInfo.textContent = 'authenticate first';
@@ -1229,6 +1386,10 @@
       }
       if (!file) {
         uploadInfo.textContent = 'video file is required';
+        return;
+      }
+      if (!selected.length) {
+        uploadInfo.textContent = 'pick at least one rendition profile';
         return;
       }
 
@@ -1323,12 +1484,6 @@
         $('videoId').scrollIntoView({ block: 'center', behavior: 'smooth' });
 
         const codec = selectedCodecId();
-        const profileList = await api(`/videos/profiles?codec=${encodeURIComponent(codec)}`);
-        const profiles = profileList.profiles || [];
-        const selected = profiles.filter((profile) =>
-          wantedProfiles.includes(String(profile.name || '').toLowerCase())
-        );
-
         uploadInfo.textContent = 'queueing timeline + renditions…';
         const jobs = [apiPost(`/videos/${newVideoId}/timeline`, {})];
         let queued = 0;
@@ -1346,13 +1501,8 @@
         }
         await Promise.all(jobs);
 
-        const missing = wantedProfiles.filter((name) =>
-          !selected.some((profile) => String(profile.name || '').toLowerCase() === name)
-        );
-
-        uploadInfo.textContent = missing.length
-          ? `created ${newVideoId}; missing profiles: ${missing.join(', ')}`
-          : `created ${newVideoId} · ${codec} · queued ${queued} renditions (${outputs.join(', ')})`;
+        uploadInfo.textContent =
+          `created ${newVideoId} · ${codec} · queued ${queued} renditions (${outputs.join(', ')}) for ${selected.map((p) => p.name).join(', ')}`;
         // Pass the id explicitly so polling cannot race on a stale input value.
         startPolling(newVideoId);
       } catch (err) {
@@ -2361,6 +2511,7 @@
     codecSelect.addEventListener('change', async () => {
       applyCodecOutputs();
       persistConfig();
+      await loadProfiles();
       if (!pollTimer) return;
       destroyPlayer();
       statusEl.textContent = `Switching to ${selectedCodecId()}…`;
@@ -2371,7 +2522,33 @@
       }
     });
 
+    $('profileSelectAll')?.addEventListener('change', () => {
+      const on = $('profileSelectAll').checked;
+      for (const el of document.querySelectorAll('#profileList input[type="checkbox"][data-profile-id]')) {
+        el.checked = on;
+      }
+      $('profileSelectAll').indeterminate = false;
+      persistConfig();
+    });
+
+    $('profileList')?.addEventListener('change', (event) => {
+      if (event.target?.matches?.('input[type="checkbox"][data-profile-id]')) {
+        syncProfileSelectAll();
+        persistConfig();
+      }
+    });
+
+    $('refreshProfilesBtn')?.addEventListener('click', async () => {
+      $('refreshProfilesBtn').disabled = true;
+      try {
+        await loadProfiles();
+      } finally {
+        $('refreshProfilesBtn').disabled = !account;
+      }
+    });
+
     applyCodecOutputs();
+    renderProfileCheckboxes();
   </script>
 </body>
 </html>
