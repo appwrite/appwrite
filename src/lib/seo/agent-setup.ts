@@ -69,7 +69,7 @@ const OPENCODE_JSON = JSON.stringify(MCP_OPENCODE_CONFIG_SNIPPET, null, 2)
 
 /** Non-interactive global install of every Appwrite skill for one agent. */
 function skillsInstall(agent: string): string {
-  return `npx skills add appwrite/skills -g -a ${agent} -s '*' -y`
+  return `npx --yes skills add appwrite/skills -g -a ${agent} -s '*' -y`
 }
 
 /**
@@ -96,7 +96,7 @@ How to work:
 
 Check each item and skip its step when it is done:
 
-- **MCP**: if you can call \`appwrite_get_context\` (or any other \`appwrite_*\` tool), MCP is connected. Skip step 3.
+- **MCP**: if you can call \`appwrite_get_context\` (or any other \`appwrite_*\` tool), MCP is connected. In step 3, skip the plugin and server setup, but still install the skills if they are missing.
 - **CLI**: run \`appwrite --version\`. If it prints a version, step 4 only needs the upgrade command.
 - **SDK**: check the project manifest (for example \`package.json\`) for an Appwrite SDK and look for an existing Appwrite client module.
 - **Skills**: if Appwrite skills such as \`appwrite-typescript\` or \`appwrite-cli\` are already available to you, skip the skills install.
@@ -286,7 +286,7 @@ For the user's list: start a new Grok session, run \`/mcps\`, select **appwrite*
 
 ### Other agents
 
-Add a remote HTTP server named \`${MCP_SERVER_NAME}\` with URL \`${MCP_SERVER_URL}\` to your app's user-level MCP configuration, and install the skills with \`npx skills add appwrite/skills -g -s '*' -y\` (add \`-a <agent>\` when the skills CLI knows your app). Clients that only support stdio can run the server through \`npx mcp-remote ${MCP_SERVER_URL}\`.
+Add a remote HTTP server named \`${MCP_SERVER_NAME}\` with URL \`${MCP_SERVER_URL}\` to your app's user-level MCP configuration, and install the skills with \`npx --yes skills add appwrite/skills -g -s '*' -y\` (add \`-a <agent>\` when the skills CLI knows your app). Clients that only support stdio can run the server through \`npx mcp-remote ${MCP_SERVER_URL}\`.
 
 Per-agent guides for people: ${AI_AGENTS_DOCS}
 

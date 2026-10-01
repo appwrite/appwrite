@@ -70,7 +70,7 @@ describe('generateAgentSetupMarkdown', () => {
       'grok',
     ]) {
       expect(markdown).toContain(
-        `npx skills add appwrite/skills -g -a ${agent} -s '*' -y`,
+        `npx --yes skills add appwrite/skills -g -a ${agent} -s '*' -y`,
       )
     }
   })
@@ -107,5 +107,13 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('Do not invent an API key')
     expect(markdown).toContain('## 6. Sign the CLI in and select the project')
     expect(markdown).toContain('## 7. Verify and hand off')
+  })
+
+  test('still installs the skills when MCP is already connected', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain(
+      'skip the plugin and server setup, but still install the skills if they are missing',
+    )
+    expect(markdown).not.toContain('MCP is connected. Skip step 3.')
   })
 })
