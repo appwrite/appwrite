@@ -412,21 +412,41 @@ class S3 extends Device
     }
 
     /**
+     * Whether the device root carries the bucket as its first segment.
+     *
+     * Endpoint-style setups address objects by their full root path, with the
+     * bucket prepended by the caller. Virtual-hosted devices address the
+     * bucket through the host instead, so a root that happens to repeat the
+     * bucket name is key space, not addressing, and must be left alone.
+     */
+    private function isBucketPrefixedRoot(): bool
+    {
+        if ($this->bucket === null || $this->bucket === '') {
+            return false;
+        }
+        if (str_starts_with($this->host, $this->bucket . '.')) {
+            return false;
+        }
+        $root = ltrim($this->root, '/');
+
+        return $root === $this->bucket || str_starts_with($root, $this->bucket . '/');
+    }
+
+    /**
      * Request target for list-style operations.
      *
      * Single-object calls address the full root path directly, which services
      * read path-style with the bucket as the first segment. List-style calls
      * must instead hit `/<bucket>` with the bucket stripped from the prefix:
      * against the service root the same request is answered as ListBuckets,
-     * whose response carries no objects. Devices without a known bucket keep
-     * the old target, as do prefixes outside the bucket.
+     * whose response carries no objects. Any other device keeps the old target.
      *
      * @return array{string, string} Request URI and listing prefix
      */
     private function listTarget(string $prefix): array
     {
         $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
-        if ($this->bucket === null || $this->bucket === '') {
+        if (! $this->isBucketPrefixedRoot()) {
             return ['/', $prefix];
         }
         if ($prefix === $this->bucket) {
@@ -449,7 +469,7 @@ class S3 extends Device
      */
     private function stripBucketPrefix(string $path): string
     {
-        if ($this->bucket === null || $this->bucket === '') {
+        if (! $this->isBucketPrefixedRoot()) {
             return $path;
         }
         $namespaced = $this->bucket . '/';

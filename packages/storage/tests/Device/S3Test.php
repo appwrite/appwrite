@@ -777,6 +777,27 @@ final class S3Test extends TestCase
         $this->assertSame('/', $client->requests[0]->getUri()->getPath());
     }
 
+    public function testListingKeepsServiceRootForVirtualHostedRootsRepeatingTheBucket(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+        $device = new S3(
+            root: 'my-bucket/backups',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://my-bucket.s3.us-east-1.amazonaws.com',
+            region: 'us-east-1',
+            bucket: 'my-bucket',
+            client: new Retry($client, new RetryStrategy(delay: 0.0)),
+        );
+
+        $device->listFiles('my-bucket/backups/daily');
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('/', $client->requests[0]->getUri()->getPath());
+        $this->assertStringContainsString('prefix=my-bucket%2Fbackups%2Fdaily', $client->requests[0]->getUri()->getQuery());
+    }
+
     public function testFinalizeCompletesOverAnExistingObject(): void
     {
         // The upload replaces whatever is at the path; an object already there is no reason to skip completion.
