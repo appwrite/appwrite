@@ -39,20 +39,17 @@ faqs:
       providers, Dart and Flutter runtime updates, and Console improvements and
       fixes.
 ---
-Status: Drafting
-Evergreen content: No
-
 September started with one of our biggest launch weeks of the year.
 
 During Appwrite Init 2026, we shipped Appwrite 2.0, native PostgreSQL and MySQL, VectorsDB, DocumentsDB, S3-compatible Storage, Firewall, OAuth2, Domains, and more.
 
-If you missed any of it, you can catch up on everything we announced in the [Appwrite Init 2026 recap](https://appwrite.io/blog/post/appwrite-init-2026-recap).
+If you missed any of it, you can catch up on everything we announced in the [Appwrite Init 2026 recap](/blog/post/appwrite-init-2026-recap).
 
 And we kept shipping after Init.
 
 This month brought more updates across Auth, Databases, Storage, Sites, self-hosting, Messaging, and the Appwrite CLI. Here's what's new.
 
-## Native sign-in with Apple and Google
+# Native sign-in with Apple and Google
 
 [cover-3.avif](September%20product%20update%20Native%20sign-in,%20databases/cover-3.avif)
 
@@ -64,9 +61,9 @@ Once your app receives the ID token, Appwrite exchanges it for a session in a si
 
 That means users can stay inside the native sign-in experience without being redirected through a web-based OAuth flow.
 
-[Read more about native sign-in](https://appwrite.io/blog/post/announcing-native-sign-in)
+[Read more about native sign-in](/blog/post/announcing-native-sign-in)
 
-## Native and dedicated databases are now available in every region
+# Native and dedicated databases are now available in every region
 
 [PostgreSQL, MySQL, and dedicated databases are now available across all regions.avif](September%20product%20update%20Native%20sign-in,%20databases/PostgreSQL_MySQL_and_dedicated_databases_are_now_available_across_all_regions.avif)
 
@@ -83,9 +80,9 @@ This includes dedicated TablesDB, DocumentsDB, and VectorsDB deployments.
 
 Your database, backups, and replicas remain in the region you choose, giving you more control over data residency while letting you keep your database closer to your users.
 
-[Read more about databases across all Appwrite Cloud regions](https://appwrite.io/blog/post/native-databases-all-appwrite-cloud-regions)
+[Read more about databases across all Appwrite Cloud regions](/blog/post/native-databases-all-appwrite-cloud-regions)
 
-## Breached password detection in Appwrite Auth
+# Breached password detection in Appwrite Auth
 
 [Breached password detection in Appwrite Auth.avif](September%20product%20update%20Native%20sign-in,%20databases/Breached_password_detection_in_Appwrite_Auth.avif)
 
@@ -101,9 +98,9 @@ You can choose how Appwrite responds when a breached password is found:
 
 Password checking is already enabled on Appwrite Cloud, while rejecting breached passwords and blocking sign-in remain opt-in.
 
-[Read more about breached password detection](https://appwrite.io/blog/post/announcing-breached-password-detection)
+[Read more about breached password detection](/blog/post/announcing-breached-password-detection)
 
-## One-click Resend setup
+# One-click Resend setup
 
 [One-click Resend setup.avif](September%20product%20update%20Native%20sign-in,%20databases/One-click_Resend_setup.avif)
 
@@ -115,9 +112,9 @@ Appwrite can then configure the SMTP settings or Resend Messaging provider for y
 
 The result is a much shorter setup flow for sending authentication emails and messages through Resend.
 
-[Read more about one-click Resend setup](https://appwrite.io/blog/post/announcing-resend-one-click-setup)
+[Read more about one-click Resend setup](/blog/post/announcing-resend-one-click-setup)
 
-## User photos in Appwrite Avatars
+# User photos in Appwrite Avatars
 
 [User photos in Appwrite Avatars.avif](September%20product%20update%20Native%20sign-in,%20databases/User_photos_in_Appwrite_Avatars.avif)
 
@@ -129,9 +126,9 @@ You can pass the signed-in user, any user ID, or details such as an email hash a
 
 This gives apps one consistent way to retrieve profile images for users across different authentication providers.
 
-[Read more about user photos](https://appwrite.io/blog/post/announcing-user-photos)
+[Read more about user photos](/blog/post/announcing-user-photos)
 
-## Separate Appwrite CLI configs for each environment
+# Separate Appwrite CLI configs for each environment
 
 [Separate Appwrite CLI configs for each environment.avif](September%20product%20update%20Native%20sign-in,%20databases/Separate_Appwrite_CLI_configs_for_each_environment.avif)
 
@@ -147,9 +144,9 @@ You can also set `APPWRITE_CONFIG_FILE` once for an entire shell session or CI j
 
 This makes it easier to work across multiple Appwrite projects without constantly replacing or switching a single project config.
 
-[Read the CLI changelog](https://appwrite.io/changelog/entry/2026-09-28)
+[Read the CLI changelog](/changelog/entry/2026-09-28)
 
-## Authenticated preview deployments for Appwrite Sites
+# Authenticated preview deployments for Appwrite Sites
 
 [Authenticated preview deployments for Appwrite Sites.avif](September%20product%20update%20Native%20sign-in,%20databases/Authenticated_preview_deployments_for_Appwrite_Sites.avif)
 
@@ -161,9 +158,9 @@ This keeps unreleased work private without adding another authentication layer t
 
 There is nothing additional to configure on your Site or project.
 
-[Read more about authenticated Site previews](https://appwrite.io/blog/post/authenticated-site-previews)
+[Read more about authenticated Site previews](/blog/post/authenticated-site-previews)
 
-## AutoGravity for Appwrite Storage
+# AutoGravity for Appwrite Storage
 
 [AutoGravity for Appwrite Storage.avif](September%20product%20update%20Native%20sign-in,%20databases/AutoGravity_for_Appwrite_Storage.avif)
 
@@ -175,9 +172,9 @@ You no longer need to know where the subject sits in every image before choosing
 
 It is available for Appwrite Cloud users, with support for self-hosted deployments included in Appwrite 2.1.
 
-[Read more about AutoGravity](https://appwrite.io/blog/post/introducing-autogravity)
+[Read more about AutoGravity](/blog/post/introducing-autogravity)
 
-## Appwrite 2.1 is now available for self-hosting
+# Appwrite 2.1 is now available for self-hosting
 
 [Appwrite 2.1 is now available for self-hosting.avif](September%20product%20update%20Native%20sign-in,%20databases/Appwrite_2.1_is_now_available_for_self-hosting.avif)
 
@@ -189,12 +186,11 @@ Appwrite 2.1 brought several recent Appwrite features to self-hosting, including
 * Updates to Dart and Flutter runtimes
 * Console improvements and fixes
 
-[Read more about Appwrite 2.1](https://appwrite.io/blog/post/appwrite-2-1-self-hosted?utm_source=chatgpt.com)
-
-## What's next
+[Read more about Appwrite 2.1](/blog/post/appwrite-2-1-self-hosted)
+# What's next
 
 September brought updates across nearly every part of Appwrite, from Auth and Databases to Storage, Sites, Messaging, the CLI, and self-hosting.
 
 We'll keep shipping improvements across the platform.
 
-Until then, check the [Appwrite Changelog](https://appwrite.io/changelog) for the latest releases or head to the [Appwrite Console](https://cloud.appwrite.io/) to start building.
+Until then, check the [Appwrite Changelog](/changelog) for the latest releases or head to the [Appwrite Console](https://cloud.appwrite.io/) to start building.
