@@ -1275,6 +1275,78 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testMessageRefusedAfterJwtExpiry(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'jwt-message@localhost.test';
+        $password = 'password';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ], [
+            'duration' => 2,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        // No channels, so no event can reach the connection and close it first: only
+        // the inbound message below can find it expired.
+        $client = $this->getWebsocket([], ['origin' => 'http://localhost', 'x-appwrite-jwt' => $jwt]);
+        $this->assertEquals('connected', json_decode($client->receive(), true)['type']);
+
+        /**
+         * Test for SUCCESS - messages are answered while the JWT is valid
+         */
+        $client->send(\json_encode(['type' => 'ping']));
+        $this->assertEquals('pong', json_decode($client->receive(), true)['type']);
+
+        // Expiry fires no event; wait until the HTTP API refuses the JWT.
+        $this->assertEventually(function () use ($projectId, $jwt) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-jwt' => $jwt,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        /**
+         * Test for FAILURE - a message after expiry gets 401 instead of an answer, and the socket closes
+         */
+        $client->send(\json_encode(['type' => 'ping']));
+
+        $frames = $this->receiveUntilClosed($client);
+        $types = \array_map(fn (array $frame) => $frame['type'] ?? null, $frames);
+        $this->assertNotContains('pong', $types);
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
+    }
+
     public function testConnectionEndsWithJwt(): void
     {
         $projectId = $this->getProject()['$id'];
