@@ -20,6 +20,7 @@ class Mqtt extends MessagingAdapter
     public readonly Counter $messagesPublished;
     public readonly Counter $messagesDelivered;
     public readonly Counter $messagesDropped;
+    public readonly Counter $messagesFailed;
     public readonly Counter $messagesAcked;
     public readonly Counter $pubacksReceived;
     public readonly Counter $reauth;
@@ -39,6 +40,7 @@ class Mqtt extends MessagingAdapter
         $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
         $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
         $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
+        $this->messagesFailed = $telemetry->createCounter('mqtt.messages.failed');
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
         $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
         $this->reauth = $telemetry->createCounter('mqtt.reauth');

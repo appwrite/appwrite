@@ -90,6 +90,7 @@ class Appwrite extends PushAdapter
                 $response->incrementDeliveredTo();
                 $response->addResult($to);
             } catch (\Throwable $error) {
+                $this->broker->messagesFailed->add(1);
                 $response->addResult($to, $error->getMessage());
             }
         }
