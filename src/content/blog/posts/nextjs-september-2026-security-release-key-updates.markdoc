@@ -107,7 +107,7 @@ Root catch-alls are common in CMS-driven sites, where one `[...slug]` route rend
 
 # Medium severity: Next.js information disclosure and cache leaks
 
-The remaining medium severity bugs are about content reaching people who should not see it. None of them require authentication to trigger or observe.
+The remaining medium severity bugs are about content reaching people who should not see it.
 
 ## Metadata image routes ignore `dynamicParams`
 
