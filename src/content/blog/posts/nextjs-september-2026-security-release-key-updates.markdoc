@@ -34,7 +34,7 @@ The [Next.js September 2026 security release](https://nextjs.org/blog/september-
 
 The Next.js team pre-announced the release a week earlier, but the fixes were held back by upstream dependency delays. They are now available in **v16.3.8 (Active LTS)** and **v15.5.27 (Maintenance LTS)**.
 
-Most of these issues are not exotic. They sit in features that a large share of production Next.js apps use every day: remote images, statically generated pages, Draft Mode previews, and Cache Components. Several of them only affect **self-hosted** Next.js, which includes any app you run on your own servers, in Docker, or on a container-based platform.
+Most of these issues are not exotic. They sit in features that a large share of production Next.js apps use every day: remote images, statically generated pages, Draft Mode previews, and Cache Components. One of the vulnerabilities specifically affects self-hosted Next.js applications, while others depend on features such as SSG, ISR, Cache Components, Draft Mode, or Image Optimization.
 
 Here is what each vulnerability does, how to tell if your app is affected, and how to patch it.
 
