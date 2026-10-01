@@ -1371,6 +1371,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_ALLOWED_HOSTS',
+                'description' => 'Comma-separated hostnames, IP addresses and CIDR ranges (IPv4 or IPv6, for example 10.0.0.0/8 or fd00::/8) that Appwrite migration source endpoints may use even when they are not public. Hostnames match exactly, ignoring case and a trailing dot, with no wildcard or suffix matching. Ranges match an IP endpoint and every address a hostname resolves to. Entries that cannot be parsed are ignored. Empty by default, which allows public sources only.',
+                'introduction' => '1.9.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ]
     ],
