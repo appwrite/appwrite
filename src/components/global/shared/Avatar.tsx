@@ -148,15 +148,17 @@ export function PhotoAvatar({
   }, [])
 
   const src = useMemo(() => {
+    // Project users are never the console account: in project scope, ignore
+    // the console-current-user flags and the account ID comparison so the
+    // screenshot-mode demo photo never replaces a project user's avatar.
+    const consoleScoped = !trimmedProjectId
     const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
       userId: trimmedUserId,
-      useCurrentUser,
-      isCurrentUser,
-      // Project users are never the console account, so only console-scoped
-      // avatars compare against it.
-      currentUserId: trimmedProjectId
-        ? undefined
-        : getConsoleAccountFromSingleton()?.$id,
+      useCurrentUser: consoleScoped && useCurrentUser,
+      isCurrentUser: consoleScoped && isCurrentUser,
+      currentUserId: consoleScoped
+        ? getConsoleAccountFromSingleton()?.$id
+        : undefined,
     })
     if (screenshotSrc) return screenshotSrc
 
