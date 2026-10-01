@@ -47,7 +47,7 @@ import {
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
@@ -1723,8 +1723,10 @@ export function DeleteAccountSection() {
           </p>
           {/* Account Info Summary */}
           <div className="flex items-center gap-3 mt-4">
-            <InitialsAvatar
+            <PhotoAvatar
+              userId={account?.$id}
               name={account?.name || account?.email || t('User')}
+              isCurrentUser
               size="md"
             />
             <div className="flex-1 min-w-0">
@@ -1765,8 +1767,10 @@ export function DeleteAccountSection() {
                 {account && (
                   <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
                     <div className="flex items-center gap-3">
-                      <InitialsAvatar
+                      <PhotoAvatar
+                        userId={account.$id}
                         name={account.name || account.email || t('User')}
+                        isCurrentUser
                         size="sm"
                       />
                       <div>

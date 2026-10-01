@@ -31,6 +31,7 @@ export function AuthFlowAccountSwitcher({
   return (
     <AuthAccountChip
       accountLabel={resolvedLabel}
+      userId={isAuthenticated ? account?.$id : undefined}
       onSwitchAccount={onSwitchAccount ?? defaultSwitch}
       disabled={disabled}
     />

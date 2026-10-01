@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Eye, Loader2, UserRound } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -202,7 +202,8 @@ export function View({
             </div>
 
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-              <InitialsAvatar
+              <PhotoAvatar
+                userId={preview ? undefined : targetId}
                 name={targetLabel}
                 size="sm"
                 className="shrink-0"
