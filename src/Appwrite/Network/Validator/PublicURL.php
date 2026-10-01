@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Appwrite\Network\Allowlist;
 use Utopia\Domains\Domain;
 use Utopia\Validator\URL;
 
@@ -19,8 +20,9 @@ class PublicURL extends URL
      */
     private array $resolve = [];
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly Allowlist $allowlist = new Allowlist(),
+    ) {
         parent::__construct(['http', 'https']);
     }
 
@@ -40,20 +42,12 @@ class PublicURL extends URL
 
         $host = \parse_url($value, PHP_URL_HOST) ?? '';
 
-        if (\filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false) {
-            try {
-                $known = (new Domain($host))->isKnown();
-            } catch (\Throwable) {
-                $known = false;
-            }
-
-            if (!$known) {
-                $this->reason = "Hostname '{$host}' is not a known public domain.";
-                return false;
-            }
+        if (\filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false && !$this->isKnown($host) && !$this->isAllowed($host)) {
+            $this->reason = "Hostname '{$host}' is not a known public domain.";
+            return false;
         }
 
-        $hostname = new PublicHostname();
+        $hostname = new PublicHostname($this->allowlist);
         if (!$hostname->isValid($host)) {
             $this->reason = $hostname->getDescription();
             return false;
@@ -63,6 +57,32 @@ class PublicURL extends URL
         $this->resolve = $hostname->getResolve(\parse_url($value, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80));
 
         return true;
+    }
+
+    private function isKnown(string $host): bool
+    {
+        try {
+            return (new Domain($host))->isKnown();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function isAllowed(string $host): bool
+    {
+        if (PublicHostname::isNumericAddress($host)) {
+            return false;
+        }
+
+        if ($this->allowlist->hasHostname($host)) {
+            return true;
+        }
+
+        if (!$this->allowlist->hasSubnets()) {
+            return false;
+        }
+
+        return $this->allowlist->admits(PublicHostname::resolve($host));
     }
 
     /**

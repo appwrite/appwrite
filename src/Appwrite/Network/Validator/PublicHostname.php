@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Appwrite\Network\Allowlist;
 use Swoole\Coroutine;
 use Swoole\Coroutine\System;
 use Utopia\Validator;
@@ -64,6 +65,11 @@ class PublicHostname extends Validator
      */
     private array $addresses = [];
 
+    public function __construct(
+        private readonly Allowlist $allowlist = new Allowlist(),
+    ) {
+    }
+
     public function getDescription(): string
     {
         return $this->reason !== ''
@@ -96,10 +102,14 @@ class PublicHostname extends Validator
 
         // IP literals are checked directly, no DNS round-trip.
         if (\filter_var($hostname, FILTER_VALIDATE_IP) !== false) {
-            if (!static::isPublicIp($hostname)) {
+            if (!$this->isAllowedAddress($hostname)) {
                 $this->reason = "Address {$hostname} is in a private or reserved range.";
                 return false;
             }
+            return true;
+        }
+
+        if ($this->allowlist->hasHostname($hostname)) {
             return true;
         }
 
@@ -111,7 +121,7 @@ class PublicHostname extends Validator
         }
 
         foreach ($addresses as $ip) {
-            if (!static::isPublicIp($ip)) {
+            if (!$this->isAllowedAddress($ip)) {
                 $this->reason = "Hostname {$hostname} resolves to private or reserved address {$ip}.";
                 return false;
             }
@@ -181,6 +191,35 @@ class PublicHostname extends Validator
     }
 
     /**
+     * Decimal, octal, hex and shortened forms that inet_aton(), and therefore
+     * curl, reads as IPv4 addresses but FILTER_VALIDATE_IP does not.
+     */
+    public static function isNumericAddress(string $value): bool
+    {
+        $value = \strtolower($value);
+
+        if (\str_ends_with($value, '.')) {
+            $value = \substr($value, 0, -1);
+        }
+
+        $parts = \explode('.', $value);
+
+        if (\count($parts) > 4) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            $hex = \str_starts_with($part, '0x') && ($part === '0x' || \ctype_xdigit(\substr($part, 2)));
+
+            if (!$hex && !\ctype_digit($part)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Returns true only if the given IP literal sits in a globally routable range.
      */
     public static function isPublicIp(string $ip): bool
@@ -205,6 +244,11 @@ class PublicHostname extends Validator
         }
 
         return true;
+    }
+
+    private function isAllowedAddress(string $address): bool
+    {
+        return static::isPublicIp($address) || $this->allowlist->hasAddress($address);
     }
 
     /**

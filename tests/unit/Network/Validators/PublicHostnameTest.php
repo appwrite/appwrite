@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Allowlist;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
@@ -228,6 +229,87 @@ final class PublicHostnameTest extends TestCase
 
         $this->assertFalse($valid);
         $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
+    }
+
+    #[DataProvider('numericAddresses')]
+    public function testDetectsNumericAddressSpellings(string $value, bool $expected): void
+    {
+        $this->assertSame($expected, PublicHostname::isNumericAddress($value), $value);
+    }
+
+    public static function numericAddresses(): \Iterator
+    {
+        yield 'decimal' => ['2130706433', true];
+        yield 'octal' => ['0177.0.0.1', true];
+        yield 'hex dotted' => ['0x7f.0.0.1', true];
+        yield 'hex' => ['0x7F000001', true];
+        yield 'shortened' => ['127.1', true];
+        yield 'trailing dot' => ['127.0.0.1.', true];
+        yield 'bare hex prefix' => ['0x', true];
+        yield 'five parts' => ['1.2.3.4.5', false];
+        yield 'two trailing dots' => ['127.0.0.1..', false];
+        yield 'empty part' => ['127..1', false];
+        yield 'empty' => ['', false];
+        yield 'bad hex' => ['0xg1', false];
+        yield 'hostname' => ['example.com', false];
+        yield 'leading digit label' => ['1password.com', false];
+        yield 'ipv6' => ['::1', false];
+    }
+
+    public function testAcceptsIpv4LiteralInAllowedSubnet(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+
+        $this->assertTrue($validator->isValid('10.1.2.3'));
+        $this->assertFalse($validator->isValid('192.168.1.1'));
+        $this->assertFalse($validator->isValid('127.0.0.1'));
+    }
+
+    public function testAcceptsIpv6LiteralInAllowedSubnet(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('fd00::/8'));
+
+        $this->assertTrue($validator->isValid('fd12::1'));
+        $this->assertTrue($validator->isValid('[fd12::1]'));
+        $this->assertFalse($validator->isValid('fe80::1'));
+        $this->assertFalse($validator->isValid('::1'));
+    }
+
+    public function testAcceptsAllowedHostnameWithoutLookup(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('a-hostname-that-does-not-exist.invalid'));
+
+        $this->assertTrue($validator->isValid('a-hostname-that-does-not-exist.invalid'));
+        $this->assertTrue($validator->isValid('A-HOSTNAME-THAT-DOES-NOT-EXIST.INVALID.'));
+        $this->assertSame([], $validator->getResolve(80));
+        $this->assertFalse($validator->isValid('x.a-hostname-that-does-not-exist.invalid'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testAcceptsHostnameResolvingIntoAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('127.0.0.0/8,::1'));
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertTrue($valid, $validator->getDescription());
+        $this->assertNotSame([], $validator->getResolve(80));
+    }
+
+    #[RunInSeparateProcess]
+    public function testRejectsHostnameResolvingOutsideAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
     }
 
     #[RunInSeparateProcess]
