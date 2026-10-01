@@ -320,8 +320,14 @@ return function (Container $container): void {
 
             try {
                 $payload = $jwt->decode($authJWT);
-            } catch (JWTException) {
-                return null;
+            } catch (JWTException $error) {
+                // The user resource verified this token, but it can expire before this
+                // second decode. The signature is checked before expiry, so its claims
+                // still hold; the connection is closed for the expiry at its first send.
+                if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                    return null;
+                }
+                $payload = $jwt->decode($authJWT, false);
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
@@ -356,8 +362,13 @@ return function (Container $container): void {
 
         try {
             $payload = $jwt->decode($authJWT);
-        } catch (JWTException) {
-            return null;
+        } catch (JWTException $error) {
+            // Expired since the user resource verified it: keep that expiry, which
+            // closes the connection at its first send, rather than dropping it.
+            if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                return null;
+            }
+            $payload = $jwt->decode($authJWT, false);
         }
 
         $expire = $payload['exp'] ?? null;
