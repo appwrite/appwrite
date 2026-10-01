@@ -17,6 +17,7 @@ use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
 
@@ -1053,5 +1054,112 @@ final class MqttServerTest extends Scope
         $fresh->subscribe([$topicName]);
         $this->assertCount(0, $fresh->consume(limit: 1, timeout: 3.0), 'clean-start session should not replay a backlog');
         $fresh->disconnect();
+    }
+
+    public function testDeliveryCountsTowardProjectUsage(): void
+    {
+        $this->skipIfUsageUnavailable();
+
+        // A fresh project with no prior MQTT traffic: a non-zero usage series can then only come from
+        // this test's own connection and delivery, so earlier tests cannot satisfy the assertion and a
+        // removed accounting call in deliver()/replay leaves it at zero.
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $userId = ID::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'mqtt-usage-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, []);
+        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
+        $jwt = $jwtResponse['body']['jwt'];
+
+        $this->setupAppwriteProvider($server);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-usage-' . $userId, cleanStart: true));
+        $this->assertSame([1], $subscriber->subscribe(['users/' . $userId]));
+
+        try {
+            $this->publishToUser($server, $userId, 'Ping', 'count me', ['k' => 'v']);
+            $this->assertCount(1, $subscriber->consume(limit: 1, timeout: 20.0));
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        $usageKey = $this->mintProjectKey($projectId, ['usage.read']);
+
+        // The broker flushes accumulated usage every 60s and the stats worker then aggregates it, so
+        // allow for a full flush interval plus aggregation before giving up.
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.connections'), 'connection usage was not recorded');
+        }, 180_000, 3_000);
+    }
+
+    /** Skip when the stack has no usage pipeline (the dedicated MQTT lane may omit it). */
+    private function skipIfUsageUnavailable(): void
+    {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
+            $this->markTestSkipped('Usage stats are disabled on this stack');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/usage', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['health.read']),
+        ]);
+
+        if (($response['headers']['status-code'] ?? 0) !== 200) {
+            $this->markTestSkipped('Usage storage is not available on this stack');
+        }
+    }
+
+    /** Mint an API key with the given scopes for a specific project (console-scoped). */
+    private function mintProjectKey(string $projectId, array $scopes): string
+    {
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'keyId' => ID::unique(),
+            'name' => 'MQTT usage key',
+            'scopes' => $scopes,
+        ]);
+        $this->assertEquals(201, $key['headers']['status-code']);
+
+        return $key['body']['secret'];
+    }
+
+    /** Sum the points of a cumulative usage metric series for a project. */
+    private function usageSeriesTotal(string $projectId, string $key, string $metric): int
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/usage/events', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key,
+        ], [
+            'metrics' => [$metric],
+            'interval' => '1h',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $total = 0;
+        foreach ($response['body']['metrics'][0]['points'] ?? [] as $point) {
+            $total += (int) ($point['value'] ?? 0);
+        }
+
+        return $total;
     }
 }
