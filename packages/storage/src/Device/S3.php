@@ -10,6 +10,7 @@ use Psr\Http\Message\StreamInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Decorator\Retry;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -91,7 +92,7 @@ class S3 extends Device
                 \CURLOPT_LOW_SPEED_LIMIT => 1,
                 \CURLOPT_LOW_SPEED_TIME => 60,
                 \CURLOPT_TCP_KEEPALIVE => 1,
-            ])),
+            ]), new Anywhere()),
             new S3\RetryStrategy(),
         );
     }

@@ -23,6 +23,8 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -38,12 +40,16 @@ use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
+use Utopia\Client\Destination\IPRange;
+use Utopia\Client\Destination\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
@@ -83,8 +89,47 @@ $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'
 
 $container->set('executor', fn () => new Executor(), []);
 
+// Clients for destinations a user chose. Each connection, redirects included, is checked on the
+// address it actually reaches: public addresses only, plus the private or reserved ranges this
+// container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
+// own network). A malformed range throws rather than being skipped. Shared per process: without
+// connection reuse every request opens its own handle, and each with*() returns a copy.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+
+// Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
+// falling back to _APP_DNS, never the container's own resolver.
+$container->set('publicHostname', function () {
+    $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
+
+    $publicInternet = new PublicInternet(...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    ));
+
+    return new PublicHostname($publicInternet, new Recursive($servers));
+}, []);
+
+$container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
 $container->set('jobs', function () {
-    $client = (new Client(new CurlAdapter()))
+    $client = (new Client(new CurlAdapter(), new Anywhere()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
@@ -99,7 +144,7 @@ $container->set('jobs', function () {
 }, []);
 
 $container->set('screenshots', function () {
-    $client = (new Client(new CurlAdapter()))
+    $client = (new Client(new CurlAdapter(), new Anywhere()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
         ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 60));
 
@@ -110,7 +155,7 @@ $container->set('autogravity', function (Cache $cache) {
     $host = System::getEnv('_APP_AUTOGRAVITY_HOST', '');
     $client = $host === ''
         ? null
-        : (new Client(new SwooleClientAdapter()))
+        : (new Client(new SwooleClientAdapter(), new Anywhere()))
             ->withBaseUri($host)
             ->withTimeout(30);
 
@@ -186,7 +231,7 @@ $container->set('usageConnection', function () {
         new SwoolePoolAdapter(),
         'usage',
         max(1, (int) System::getEnv('_APP_POOL_SIZE_USAGE', 2)),
-        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse(), new Anywhere()),
         timeout: 3.0,
     ));
 
@@ -212,7 +257,7 @@ $container->set('executionStore', function () {
         new SwoolePoolAdapter(),
         'executions',
         max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
-        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse(), new Anywhere()),
         timeout: 3.0,
     ));
 
@@ -418,7 +463,8 @@ $container->set('servers', function () {
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+// The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter(), new Anywhere())), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 

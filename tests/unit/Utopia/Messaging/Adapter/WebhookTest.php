@@ -6,12 +6,15 @@ namespace Tests\Unit\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use PHPUnit\Framework\TestCase;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class WebhookTest extends TestCase
 {
     public function testPostsExpectedBodyShape(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $payload = [
             'subject' => 'Hello',
             'body' => 'World',
@@ -43,7 +46,7 @@ final class WebhookTest extends TestCase
 
     public function testSigningSecretProducesHmacSha256Signature(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $payload = ['subject' => 'Signed', 'body' => 'B'];
         $secret = 'super-secret';
 
@@ -78,7 +81,7 @@ final class WebhookTest extends TestCase
 
     public function testNoSecretLeavesPayloadUnsigned(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $message = new WebhookMessage(
             urls: ['https://hooks.example.test/unsigned'],
             payload: ['x' => 1],
@@ -93,7 +96,7 @@ final class WebhookTest extends TestCase
 
     public function testEmptySecretIsTreatedAsUnsigned(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $message = new WebhookMessage(
             urls: ['https://hooks.example.test/empty-secret'],
             payload: ['x' => 1],
@@ -108,7 +111,7 @@ final class WebhookTest extends TestCase
 
     public function testTwoXxIsSuccess(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $adapter->response = ['statusCode' => 204, 'response' => '', 'error' => null];
         $message = new WebhookMessage(urls: ['https://hooks.example.test/ok'], payload: []);
 
@@ -119,7 +122,7 @@ final class WebhookTest extends TestCase
 
     public function testNonTwoXxSurfacesError(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $adapter->response = ['statusCode' => 503, 'response' => 'Server', 'error' => null];
         $message = new WebhookMessage(urls: ['https://hooks.example.test/fail'], payload: []);
 
@@ -132,7 +135,7 @@ final class WebhookTest extends TestCase
 
     public function testCurlErrorSurfacesAsResultError(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $adapter->response = ['statusCode' => 0, 'response' => null, 'error' => 'connection refused'];
         $message = new WebhookMessage(urls: ['https://hooks.example.test/down'], payload: []);
 
@@ -144,7 +147,7 @@ final class WebhookTest extends TestCase
 
     public function testCustomHeadersForwarded(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $message = new WebhookMessage(
             urls: ['https://hooks.example.test/with-headers'],
             payload: [],
@@ -159,7 +162,7 @@ final class WebhookTest extends TestCase
 
     public function testRejectsForeignMessageType(): void
     {
-        $adapter = new CapturingWebhook();
+        $adapter = new CapturingWebhook(new Client(new CurlAdapter(), new Anywhere()));
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid message type.');
 

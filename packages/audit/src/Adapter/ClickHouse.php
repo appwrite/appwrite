@@ -9,6 +9,7 @@ use Utopia\Audit\Log;
 use Utopia\Audit\Query;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Database;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method as HttpMethod;
@@ -136,7 +137,7 @@ class ClickHouse extends SQL
         $this->host = $host;
         $this->port = $port;
 
-        $this->client = $client ?? new Client(new CurlAdapter())
+        $this->client = $client ?? new Client(new CurlAdapter(), new Anywhere())
             ->withTimeout(30)
             ->withFollowRedirects()
             ->withConnectionReuse();

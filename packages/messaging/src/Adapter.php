@@ -13,6 +13,8 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination;
+use Utopia\Client\Destination\PublicInternet;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Pool as ConnectionPool;
@@ -46,7 +48,7 @@ abstract class Adapter
      *         to utopia-php/client's cURL adapter configured for HTTP/2 with the request()/requestMulti()
      *         timeouts applied. A custom factory owns its own timeout configuration, and its clients
      *         must be able to negotiate HTTP/2 for push adapters — APNs rejects HTTP/1.1 connections,
-     *         so a bare `new Client(new CurlAdapter())` will not work; configure the adapter with
+     *         so a bare `new Client(new CurlAdapter(), new PublicInternet())` will not work; configure the adapter with
      *         `new CurlAdapter(options: [CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0])`.
      */
     public function __construct(?Telemetry $telemetry = null, private readonly ?Closure $clientFactory = null)
@@ -336,6 +338,16 @@ abstract class Adapter
     }
 
     /**
+     * Where this adapter's requests may go. A provider's URL can come from whoever
+     * configures it (a Discord webhook URL, an Infobip base URL), so only the public
+     * internet unless an adapter says otherwise.
+     */
+    protected function destination(): Destination
+    {
+        return new PublicInternet();
+    }
+
+    /**
      * Build the default HTTP client used when none was injected.
      *
      * cURL rather than Swoole's HTTP client: APNs only accepts HTTP/2, which
@@ -345,7 +357,7 @@ abstract class Adapter
      */
     private function defaultClient(int $timeout, int $connectTimeout): Client
     {
-        return new Client(new CurlAdapter(options: [CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0]))
+        return new Client(new CurlAdapter(options: [CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0]), $this->destination())
             ->withTimeout((float) $timeout)
             ->withConnectTimeout((float) $connectTimeout);
     }

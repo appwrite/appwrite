@@ -3,7 +3,13 @@
 namespace Utopia\VCS;
 
 use Exception;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Command;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Stream\Factory as StreamFactory;
 
 abstract class Adapter
 {
@@ -469,70 +475,54 @@ abstract class Adapter
     protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true)
     {
         $headers = array_merge($this->headers, $headers);
-        $ch = curl_init($this->endpoint . $path . (($method === self::METHOD_GET && $params !== []) ? '?' . http_build_query($params) : ''));
-
-        if (!$ch) {
-            throw new Exception('Curl failed to initialize');
-        }
-
-        $responseHeaders = [];
-        $responseStatus = -1;
-        $responseType = '';
-        $responseBody = '';
+        $url = $this->endpoint . $path . (($method === self::METHOD_GET && $params !== []) ? '?' . http_build_query($params) : '');
 
         $query = match ($headers['content-type']) {
             // An empty body must encode as an object - some APIs (e.g.
             // Origin's proto3-JSON endpoints) reject a bare array
             'application/json' => $params === [] ? '{}' : json_encode($params),
-            'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
             default => http_build_query($params),
         };
 
-        $headerLines = [];
+        $request = new RequestFactory()->createRequest($method, $url);
+
         foreach ($headers as $name => $header) {
-            $headerLines[] = $name . ':' . $header;
+            $request = $request->withHeader($name, $header);
         }
-
-        curl_setopt($ch, CURLOPT_PATH_AS_IS, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headerLines);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, string $header) use (&$responseHeaders): int {
-            $length = \strlen($header);
-            $parts = explode(':', $header, 2);
-
-            if (\count($parts) < 2) { // ignore invalid headers
-                return $length;
-            }
-
-            $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
-
-            return $length;
-        });
 
         if ($method !== self::METHOD_GET) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+            $request = $request->withBody(new StreamFactory()->createStream(\is_string($query) ? $query : ''));
         }
+
+        $client = new Client(new CurlAdapter(options: [
+            CURLOPT_PATH_AS_IS => true,
+            CURLOPT_ENCODING => null,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+        ]), new Anywhere())
+            ->withFollowRedirects($followRedirects)
+            ->withConnectTimeout(0)
+            ->withTimeout(15);
 
         // Allow self signed certificates
         if ($this->selfSigned) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $client = $client->withSslVerification(false);
         }
 
-        $responseBody = curl_exec($ch) ?: '';
+        try {
+            $response = $client->sendRequest($request);
+        } catch (ClientExceptionInterface $e) {
+            throw new Exception($e->getMessage() . ' with status code 0', 0, $e);
+        }
 
-        if ($responseBody === true) {
-            $responseBody = '';
+        $responseHeaders = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $responseHeaders[strtolower($name)] = (string) end($values);
         }
 
         $responseType = $responseHeaders['content-type'] ?? '';
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $responseStatus = $response->getStatusCode();
+        $responseBody = (string) $response->getBody();
 
         if ($decode) {
             $length = strpos($responseType, ';') ?: \strlen($responseType);
@@ -546,10 +536,6 @@ abstract class Adapter
             }
         }
 
-        if ((curl_errno($ch) !== 0/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
-        }
-
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
@@ -560,28 +546,5 @@ abstract class Adapter
             'headers' => $responseHeaders,
             'body' => $responseBody,
         ];
-    }
-
-    /**
-     * Flatten params array to PHP multiple format
-     *
-     * @param  array<mixed>  $data
-     * @return array<mixed>
-     */
-    protected function flatten(array $data, string $prefix = ''): array
-    {
-        $output = [];
-
-        foreach ($data as $key => $value) {
-            $finalKey = $prefix !== '' && $prefix !== '0' ? "{$prefix}[{$key}]" : $key;
-
-            if (\is_array($value)) {
-                $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
-            } else {
-                $output[$finalKey] = $value;
-            }
-        }
-
-        return $output;
     }
 }

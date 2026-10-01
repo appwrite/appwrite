@@ -14,6 +14,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
@@ -83,7 +84,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE_PNG
             ))
-            ->param('url', '', new PublicURL(), 'Website URL which you want to capture.', example: 'https://example.com')
+            ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to capture.', false, ['publicURL'], example: 'https://example.com')
             ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Only Accept and Accept-Language are allowed. Defaults to empty.', true, example: '{"Accept-Language":"en-US,en;q=0.9"}')
             ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true, example: '1920')
             ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true, example: '1080')
@@ -187,7 +188,7 @@ class Get extends Action
         try {
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
 
-            $screenshotResponse = (new Client(new CurlAdapter()))
+            $screenshotResponse = (new Client(new CurlAdapter(), new Anywhere()))
                 ->withTimeout(30)
                 ->withFollowRedirects(maxHops: 5)
                 ->sendRequest((new RequestFactory())->body(

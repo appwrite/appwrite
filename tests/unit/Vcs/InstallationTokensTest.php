@@ -9,6 +9,9 @@ use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -357,7 +360,7 @@ final class InstallationTokensTest extends TestCase
 
             public function __construct(protected bool $emptyUserId, protected string $refresh)
             {
-                parent::__construct('id', 'secret', '');
+                parent::__construct(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'id', 'secret', '');
             }
 
             public function getName(): string

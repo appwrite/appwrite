@@ -7,6 +7,9 @@ namespace Tests\Unit\AvatarPhotos\Providers;
 use Appwrite\AvatarPhotos\Providers\Gravatar;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Document;
 
 final class GravatarTest extends TestCase
@@ -27,6 +30,6 @@ final class GravatarTest extends TestCase
     #[DataProvider('provideSupports')]
     public function testSupports(array $attributes, bool $expected): void
     {
-        $this->assertSame($expected, (new Gravatar())->supports(new Document($attributes)));
+        $this->assertSame($expected, (new Gravatar(new Client(new CannedTransport(fn (): string => ''), new Anywhere())))->supports(new Document($attributes)));
     }
 }

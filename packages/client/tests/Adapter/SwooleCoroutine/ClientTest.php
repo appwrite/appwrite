@@ -23,7 +23,7 @@ final class ClientTest extends AdapterContract
     /**
      * @param array<string, mixed> $transportOptions
      */
-    protected function createAdapter(array $transportOptions = []): Adapter
+    protected function newAdapter(array $transportOptions = []): Adapter
     {
         return new Client(new Response\Factory(), new Stream\Factory(), $transportOptions);
     }

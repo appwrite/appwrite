@@ -12,11 +12,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client as SwooleClient;
+use Swoole\Coroutine\System;
 use Throwable;
 use Utopia\Client\Adapter;
+use Utopia\Client\Destination;
 use Utopia\Client\Exception\AdapterInitializationException;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\InvalidResponseException;
 use Utopia\Client\Exception\InvalidUriException;
@@ -85,6 +88,8 @@ class Client implements Adapter
 
     private string $streamConnectionKey = '';
 
+    private ?Destination $destination = null;
+
     /**
      * @param array<string, mixed> $settings
      */
@@ -106,6 +111,14 @@ class Client implements Adapter
     {
         // Clones get their own connections; Swoole closes the dropped ones on GC.
         $this->forgetConnection();
+    }
+
+    public function withDestination(Destination $destination): static
+    {
+        $clone = clone $this;
+        $clone->destination = $destination;
+
+        return $clone;
     }
 
     public function withTimeout(float $seconds): static
@@ -294,6 +307,12 @@ class Client implements Adapter
         $client = $this->connect($request, $streaming);
 
         $settings = $this->settings + [self::SETTING_HTTP2 => false];
+
+        // Through a proxy the connected address is the proxy's, so drop any proxy
+        // unless the destination permits one.
+        if (!$this->destination($request)->permitsProxy()) {
+            unset($settings['http_proxy_host'], $settings['http_proxy_port'], $settings['socks5_host'], $settings['socks5_port']);
+        }
 
         // Authoritative over any keep_alive passed in $settings.
         $settings[self::SETTING_KEEP_ALIVE] = $this->reuseConnections;
@@ -531,11 +550,24 @@ class Client implements Adapter
                 }
             }
 
-            return $connection;
+            // A pooled connection that must reconnect dials a freshly checked address: the
+            // host may have moved since the address this client was built with was checked
+            $socket = $connection->socket ?? null;
+            if (!$this->reuseConnections || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
+                return $connection;
+            }
+
+            $connection->close();
         }
 
+        // A permitted proxy resolves and reaches the target itself; otherwise dial an
+        // address the destination allowed
+        $proxied = $this->destination($request)->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
+        $address = $proxied ? $uri->getHost() : $this->address($request);
+
         try {
-            $client = new SwooleClient($uri->getHost(), $this->port($request), $secure);
+            // Dial the address the destination allowed; TLS and Host stay on the hostname
+            $client = new SwooleClient($address, $this->port($request), $secure);
         } catch (Throwable $throwable) {
             throw new AdapterInitializationException($request, $throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }
@@ -549,6 +581,49 @@ class Client implements Adapter
         }
 
         return $client;
+    }
+
+    /**
+     * The address to dial for this request's host: one the destination allows, checked
+     * before connecting, so DNS cannot answer differently at connect time.
+     *
+     * @throws ClientExceptionInterface
+     */
+    private function address(RequestInterface $request): string
+    {
+        $host = \trim($request->getUri()->getHost(), '[]');
+
+        $addresses = [];
+        if (\filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            $addresses[] = $host;
+        } else {
+            // Both lookups share the connect timeout, so a slow resolver cannot outlast it
+            $timeout = $this->settings[self::SETTING_CONNECT_TIMEOUT];
+            $timeout = \is_int($timeout) || \is_float($timeout) ? (float) $timeout : self::DEFAULT_CONNECT_TIMEOUT;
+            $deadline = \microtime(true) + $timeout;
+            foreach ([AF_INET, AF_INET6] as $family) {
+                $remaining = $timeout > 0.0 ? \max(0.001, $deadline - \microtime(true)) : -1;
+                // getaddrinfo() needs a socket type and a service; any port works for the lookup
+                $found = System::getaddrinfo($host, $family, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', $remaining);
+                foreach (\is_array($found) ? $found : [] as $address) {
+                    if (\is_string($address)) {
+                        $addresses[] = $address;
+                    }
+                }
+            }
+        }
+
+        if ($addresses === []) {
+            throw new DnsException($request, "Could not resolve host: {$host}");
+        }
+
+        foreach ($addresses as $address) {
+            if ($this->destination($request)->allows($address)) {
+                return $address;
+            }
+        }
+
+        throw new DestinationException($request, "Connection to {$addresses[0]} refused: not an allowed destination.");
     }
 
     private function forgetConnection(): void
@@ -960,5 +1035,13 @@ class Client implements Adapter
         }
 
         return $normalized;
+    }
+
+    /**
+     * @throws AdapterPreconditionException When no destination was configured
+     */
+    private function destination(RequestInterface $request): Destination
+    {
+        return $this->destination ?? throw new AdapterPreconditionException($request, 'No destination configured: set one with withDestination() before sending.');
     }
 }

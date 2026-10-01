@@ -54,6 +54,7 @@ class Get extends Action
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
             ->inject('getDatabasesDB')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -63,11 +64,12 @@ class Get extends Action
         string $projectID,
         string $key,
         Response $response,
-        callable $getDatabasesDB
+        callable $getDatabasesDB,
+        PublicHostname $publicHostname
     ): void {
         // Block a source endpoint that resolves to a private or reserved
         // address to prevent SSRF into the internal network.
-        $hostname = new PublicHostname();
+        $hostname = $publicHostname;
         if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
         }

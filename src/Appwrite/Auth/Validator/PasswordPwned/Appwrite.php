@@ -8,6 +8,7 @@ use Psr\Http\Client\ClientInterface;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\DSN\DSN;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
@@ -49,7 +50,7 @@ class Appwrite extends PasswordPwned
 
         $this->endpoint = $scheme . '://' . $dsn->getHost() . $port . '/' . ($path === '' || $path === null ? self::PATH : $path);
         $this->secret = $dsn->getUser() ?? '';
-        $this->client = $client ?? (new Client(new CurlAdapter()))
+        $this->client = $client ?? (new Client(new CurlAdapter(), new Anywhere()))
             ->withConnectTimeout(self::CONNECT_TIMEOUT)
             ->withTimeout(self::REQUEST_TIMEOUT)
             ->withHeaders([Header::USER_AGENT => 'Appwrite']);

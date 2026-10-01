@@ -20,12 +20,13 @@ Use `ext-curl` for the cURL adapter and `ext-swoole` for the Swoole coroutine ad
 
 use Utopia\Client\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$client = new Client(new CurlAdapter());
+$client = new Client(new CurlAdapter(), new Anywhere());
 $requestFactory = new Request\Factory();
 
 $request = $requestFactory->json(Method::POST, 'https://example.com/users', [
@@ -41,6 +42,24 @@ echo $response->json()['name'];
 `Utopia\Client\Client` implements `Psr\Http\Client\ClientInterface`, so it works anywhere a PSR-18 client is expected. HTTP/1.1 is used by default and redirects are not followed unless you call `withFollowRedirects()`, so you receive exactly the response the server returned.
 
 The concrete `Utopia\Psr7` messages and factories are provided by the `utopia-php/psr7` dependency.
+
+## Choose where it may connect
+
+Every `Client` takes a `Destination`, which decides which addresses it may connect to; there is no default. The client passes it to its adapter, and every adapter enforces it on the address each connection is actually made to, for every redirect hop, so a hostname that resolves differently at connect time cannot get past it. A refused connection throws `Utopia\Client\Exception\DestinationException`, and an adapter used without a destination refuses to send.
+
+```php
+<?php
+
+use Utopia\Client\Destination\Anywhere;
+use Utopia\Client\Destination\IPRange;
+use Utopia\Client\Destination\PublicInternet;
+
+new Client($adapter, new Anywhere());       // your own services and fixed third-party APIs
+new Client($adapter, new PublicInternet()); // a URL a user chose: private and reserved ranges are refused
+new Client($adapter, new PublicInternet(new IPRange('10.0.0.0/8'))); // ...except the ranges you name
+```
+
+`PublicInternet` also ignores proxy settings, since a proxy would hide the destination from the check.
 
 ## Configure the client
 

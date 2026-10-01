@@ -192,6 +192,7 @@ Long-running processes that already own a pooled client can hand it to the adapt
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Pool as Connections;
@@ -200,7 +201,7 @@ $client = new HttpClientPool(new Connections(
     new SwoolePoolAdapter(),
     'agents',
     16,
-    fn () => new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(30)),
+    fn () => new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(30), new Anywhere()),
     timeout: 3.0,
 ));
 

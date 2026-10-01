@@ -17,6 +17,7 @@ use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Platform\Action;
@@ -1077,7 +1078,7 @@ class Install extends Action
         }
 
         try {
-            (new Client(new CurlAdapter()))
+            (new Client(new CurlAdapter(), new Anywhere()))
                 ->withConnectTimeout(5)
                 ->withTimeout(5)
                 ->withFollowRedirects(maxHops: 5)
@@ -1107,7 +1108,7 @@ class Install extends Action
      */
     private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
-        $client = (new Client(new CurlAdapter()))
+        $client = (new Client(new CurlAdapter(), new Anywhere()))
             ->withTimeout(2)
             ->withConnectTimeout(2)
             ->withFollowRedirects(maxHops: 5);
@@ -1208,7 +1209,7 @@ class Install extends Action
 
     private function makeApiCall(string $endpoint, array $body, bool $extractSession = false, string $apiUrl = self::APPWRITE_API_URL, string $domain = 'localhost')
     {
-        $response = (new Client(new CurlAdapter()))
+        $response = (new Client(new CurlAdapter(), new Anywhere()))
             ->withTimeout(30)
             ->withConnectTimeout(10)
             ->withFollowRedirects(maxHops: 5)

@@ -8,10 +8,11 @@ retries failed requests. Because it is itself an `Adapter`, it composes — wrap
 <?php
 
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Decorator\Retry;
 
-$client = new Client(new Retry(new CurlAdapter()));
+$client = new Client(new Retry(new CurlAdapter()), new Anywhere());
 ```
 
 With no configuration it uses `Backoff`, the default best-practice strategy:
@@ -46,6 +47,7 @@ $client = new Client(
             multiplier: 2.0,  // delay ceiling grows by this factor each attempt
         ),
     ),
+    new Anywhere(),
 );
 ```
 
@@ -72,7 +74,7 @@ final class RetryOnceImmediately implements Strategy
     }
 }
 
-$client = new Client(new Retry(new CurlAdapter(), new RetryOnceImmediately()));
+$client = new Client(new Retry(new CurlAdapter(), new RetryOnceImmediately()), new Anywhere());
 ```
 
 Exactly one of `$response` or `$error` is non-null: `$response` when the inner
@@ -105,4 +107,4 @@ $retry = new Retry(
 another. It forwards every configuration helper to the inner adapter and delegates
 sending; a subclass overrides only `sendRequest()` / `stream()`. Because each
 decorator is itself an `Adapter`, they stack in any order — for example
-`new Client(new Retry(new SomeOtherDecorator(new CurlAdapter())))`.
+`new Client(new Retry(new SomeOtherDecorator(new CurlAdapter())), new Anywhere())`.

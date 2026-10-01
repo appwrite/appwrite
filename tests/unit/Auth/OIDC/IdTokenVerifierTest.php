@@ -9,8 +9,11 @@ use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Document;
 
 final class IdTokenVerifierTest extends TestCase
@@ -243,7 +246,7 @@ final class IdTokenVerifierTest extends TestCase
 
     private function verifier(): IdTokenVerifier
     {
-        $jwks = new Jwks(new Cache(new Memory()), fn (): string => \json_encode(['keys' => [self::$jwk]]));
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [self::$jwk]])), new Anywhere()));
 
         return new IdTokenVerifier($jwks);
     }

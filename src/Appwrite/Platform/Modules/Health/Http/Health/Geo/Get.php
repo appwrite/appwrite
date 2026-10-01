@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -45,7 +46,7 @@ class Get extends Action
         $checkStart = \microtime(true);
 
         try {
-            $result = (new Client(new CurlAdapter()))
+            $result = (new Client(new CurlAdapter(), new Anywhere()))
                 ->withTimeout(3)
                 ->withFollowRedirects(maxHops: 5)
                 ->sendRequest((new RequestFactory())->createRequest(Method::GET, \rtrim($geoEndpoint, '/') . '/health'));

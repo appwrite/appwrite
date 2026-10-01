@@ -8,6 +8,7 @@ use Swoole\Coroutine;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Client\Client as HttpClient;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
@@ -363,12 +364,12 @@ abstract class Adapter
                 new SwoolePoolAdapter(),
                 'agents.'.$this->getName(),
                 static::POOL_SIZE,
-                static fn () => new HttpClient((new SwooleAdapter())->withConnectionReuse()->withTimeout($timeout)),
+                static fn () => new HttpClient((new SwooleAdapter())->withConnectionReuse()->withTimeout($timeout), new Anywhere()),
                 timeout: $timeout,
             ));
         }
 
-        return new HttpClient((new CurlAdapter())->withConnectionReuse()->withTimeout($timeout));
+        return new HttpClient((new CurlAdapter())->withConnectionReuse()->withTimeout($timeout), new Anywhere());
     }
 
     /**

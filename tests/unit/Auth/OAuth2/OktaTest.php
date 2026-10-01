@@ -7,6 +7,9 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Okta;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class OktaTest extends TestCase
 {
@@ -32,7 +35,7 @@ final class OktaTest extends TestCase
             $secret['prompt'] = $prompt;
         }
 
-        $okta = new Okta('client-id', \json_encode($secret), 'https://example.com/callback');
+        $okta = new Okta(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', \json_encode($secret), 'https://example.com/callback');
 
         \parse_str((string) \parse_url($okta->getLoginURL(), PHP_URL_QUERY), $query);
 

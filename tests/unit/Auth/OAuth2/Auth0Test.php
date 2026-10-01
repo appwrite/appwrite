@@ -7,6 +7,9 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Auth0;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class Auth0Test extends TestCase
 {
@@ -32,7 +35,7 @@ final class Auth0Test extends TestCase
             $secret['prompt'] = $prompt;
         }
 
-        $auth0 = new Auth0('client-id', \json_encode($secret), 'https://example.com/callback');
+        $auth0 = new Auth0(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', \json_encode($secret), 'https://example.com/callback');
 
         \parse_str((string) \parse_url($auth0->getLoginURL(), PHP_URL_QUERY), $query);
 

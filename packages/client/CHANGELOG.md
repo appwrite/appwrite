@@ -6,6 +6,16 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Breaking
+
+- `Client` takes a `Utopia\Client\Destination` as its second constructor argument: `new Client(new Curl\Client(), new Anywhere())`. There is no default. `Client::withDestination()` changes it.
+- `Adapter` gains `withDestination()`. Every adapter must check the address each connection actually reaches, on every connection and every redirect hop. It throws `DestinationException` on a refused address, and `AdapterPreconditionException` when used with no destination. Proxy settings are dropped unless the destination permits a proxy. `Decorator` forwards the setting.
+
+### Added
+
+- Destinations: `Anywhere` (any address, any proxy), `PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `IPRange` (validated in its constructor).
+- `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
+
 ### Removed
 
 - Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.

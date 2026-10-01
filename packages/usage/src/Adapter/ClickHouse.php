@@ -11,6 +11,7 @@ use Psr\Http\Client\ClientInterface;
 use Throwable;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Psr7\Method as HttpMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
@@ -228,7 +229,7 @@ class ClickHouse extends SQL
         // requests so the TCP/TLS handshake is paid once. Auth and database are
         // layered on each request via the factory, so an injected client stays
         // a pure transport.
-        $this->client = $client ?? new Client(new CurlAdapter()->withConnectionReuse());
+        $this->client = $client ?? new Client(new CurlAdapter()->withConnectionReuse(), new Anywhere());
         $this->requestFactory = new RequestFactory();
     }
 

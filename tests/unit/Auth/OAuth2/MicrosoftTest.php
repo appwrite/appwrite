@@ -7,6 +7,9 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Microsoft;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class MicrosoftTest extends TestCase
 {
@@ -31,7 +34,7 @@ final class MicrosoftTest extends TestCase
             $secret['prompt'] = $prompt;
         }
 
-        $microsoft = new Microsoft('client-id', \json_encode($secret), 'https://example.com/callback');
+        $microsoft = new Microsoft(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', \json_encode($secret), 'https://example.com/callback');
 
         \parse_str((string) \parse_url($microsoft->getLoginURL(), PHP_URL_QUERY), $query);
 

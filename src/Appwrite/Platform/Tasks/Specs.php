@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -14,12 +16,15 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\DI\Container;
+use Utopia\DNS\Lookup\Recursive;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
@@ -394,6 +399,7 @@ class Specs extends Action
         $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('publicURL', fn () => new PublicURL(new PublicHostname(new Anywhere(), new Recursive(['127.0.0.1']))));
         $specsContainer->set('project', fn () => new Document([]));
         $specsContainer->set('passwordsDictionary', fn () => []);
         $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));

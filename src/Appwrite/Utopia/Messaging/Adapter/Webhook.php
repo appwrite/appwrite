@@ -2,10 +2,8 @@
 
 namespace Appwrite\Utopia\Messaging\Adapter;
 
-use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Psr\Http\Client\ClientExceptionInterface;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Message;
@@ -22,6 +20,12 @@ class Webhook extends Adapter
 
     protected const SIGNATURE_HEADER = 'X-Appwrite-Webhook-Signature';
     protected const TIMESTAMP_HEADER = 'X-Appwrite-Webhook-Timestamp';
+
+    public function __construct(
+        private readonly Client $client,
+    ) {
+        parent::__construct();
+    }
 
     public function getName(): string
     {
@@ -94,19 +98,8 @@ class Webhook extends Adapter
      */
     protected function dispatch(string $method, string $url, array $headers, string $body, int $timeout): array
     {
-        // Block any target that resolves to a private or reserved address to
-        // prevent SSRF into the internal network.
-        $host = \parse_url($url, PHP_URL_HOST) ?? '';
-        $hostname = new PublicHostname();
-        if (!$hostname->isValid($host)) {
-            return [
-                'statusCode' => 0,
-                'response' => null,
-                'error' => $hostname->getDescription(),
-            ];
-        }
-
-        $client = (new Client(new CurlAdapter()))
+        // A refused destination fails this delivery like a transport error
+        $client = $this->client
             ->withTimeout($timeout)
             ->withConnectTimeout(\min(10, $timeout))
             ->withHeaders([Header::USER_AGENT => 'Appwrite Webhook']);

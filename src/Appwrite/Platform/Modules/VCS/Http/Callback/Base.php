@@ -7,6 +7,9 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,7 +44,7 @@ abstract class Base extends Action
      * endpoint (token exchange is a server-to-server call, unlike Authorize's
      * browser-facing endpoint).
      */
-    abstract protected function createOAuth2(string $callback): OAuth2;
+    abstract protected function createOAuth2(Client $client, string $callback): OAuth2;
 
     public function __construct()
     {
@@ -118,7 +121,8 @@ abstract class Base extends Action
         }
 
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
-        $oauth2 = $this->createOAuth2($callback);
+        // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter(), new Anywhere()), $callback);
 
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);

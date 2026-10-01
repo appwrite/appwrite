@@ -68,6 +68,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -82,11 +83,12 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        PublicHostname $publicHostname
     ): void {
         // Block a source endpoint that resolves to a private or reserved
         // address to prevent SSRF into the internal network.
-        $hostname = new PublicHostname();
+        $hostname = $publicHostname;
         if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
         }

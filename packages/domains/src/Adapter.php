@@ -2,11 +2,18 @@
 
 namespace Utopia\Domains;
 
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Stream\Factory as StreamFactory;
+
 abstract class Adapter
 {
     protected string $userAgent = 'Utopia PHP Framework';
 
-    /** @var array<mixed> */
+    /** @var array<string, string> */
     protected array $headers;
 
     /**
@@ -27,6 +34,8 @@ abstract class Adapter
      *
      * Make an API call
      *
+     * @param array<string, string> $headers
+     *
      * @retury array|string
      *
      * @throws \Exception
@@ -34,73 +43,64 @@ abstract class Adapter
     public function call(string $method, string $path = '', array|string $params = [], array $headers = []): array|string
     {
         $headers = array_merge($this->headers, $headers);
-        $ch = curl_init(
-            (
-                str_contains($path, 'http')
-                ? $path
-                : $this->endpoint . $path . (
-                    ($method === 'GET' && !\in_array($params, ['', '0', []], true) && $headers['Content-Type'] != 'text/xml')
-                    ? '?' . http_build_query($params)
-                    : ''
-                )
-            ),
-        );
+        $url = str_contains($path, 'http')
+            ? $path
+            : $this->endpoint . $path . (
+                ($method === 'GET' && !\in_array($params, ['', '0', []], true) && $headers['Content-Type'] != 'text/xml')
+                ? '?' . http_build_query($params)
+                : ''
+            );
 
-        $responseHeaders = [];
-        $responseStatus = -1;
-        $responseType = '';
-        $responseBody = '';
-
-        $query = null;
+        $query = '';
 
         if (!\in_array($params, ['', '0', []], true)) {
             $query = match ($headers['Content-Type']) {
                 'application/json' => json_encode($params, JSON_UNESCAPED_SLASHES),
-                'multipart/form-data' => $this->flatten($params),
                 'text/xml' => $params,
                 default => http_build_query($params),
             };
         }
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
+        $factory = new RequestFactory();
 
-            unset($headers[$i]);
-        }
+        if ($method !== 'GET' && $headers['Content-Type'] === 'multipart/form-data' && \is_array($params)) {
+            // The factory sets Content-Type itself, with the body's boundary
+            unset($headers['Content-Type']);
+            $request = $factory->multipart($method, $url, $this->flatten($params), $headers);
+        } else {
+            $request = $factory->createRequest($method, $url);
 
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion());
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, string $header) use (&$responseHeaders): int {
-            $len = \strlen($header);
-            $header = explode(':', strtolower($header), 2);
-
-            if (\count($header) < 2) { // ignore invalid headers
-                return $len;
+            foreach ($headers as $name => $header) {
+                $request = $request->withHeader($name, $header);
             }
 
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-
-            return $len;
-        });
-
-        if ($method !== 'GET') {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+            if ($method !== 'GET') {
+                $request = $request->withBody(new StreamFactory()->createStream(\is_string($query) ? $query : ''));
+            }
         }
 
-        $responseBody = curl_exec($ch);
+        $client = new Client(new CurlAdapter(options: [
+            CURLOPT_ENCODING => null,
+            CURLOPT_USERAGENT => php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion(),
+        ]), new Anywhere())->withFollowRedirects();
+
+        try {
+            $response = $client->sendRequest($request);
+        } catch (ClientExceptionInterface $e) {
+            throw new \Exception($e->getMessage());
+        }
+
+        $responseHeaders = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $responseHeaders[strtolower($name)] = strtolower((string) end($values));
+        }
 
         $responseType = $responseHeaders['content-type'] ?? '';
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $responseStatus = $response->getStatusCode();
+        $responseBody = (string) $response->getBody();
 
         if (substr($responseType, 0, strpos($responseType, ';')) === 'application/json') {
             $responseBody = json_decode($responseBody, true);
-        }
-
-        if (curl_errno($ch) !== 0) {
-            throw new \Exception(curl_error($ch));
         }
 
         if ($responseStatus >= 400) {
@@ -115,19 +115,22 @@ abstract class Adapter
     }
 
     /**
-     * Flatten params array to PHP multiple format
+     * Flatten params to PHP's nested field names (a[b][c])
+     *
+     * @param array<mixed> $data
+     * @return array<string, string>
      */
     protected function flatten(array $data, string $prefix = ''): array
     {
         $output = [];
 
         foreach ($data as $key => $value) {
-            $finalKey = $prefix !== '' && $prefix !== '0' ? "{$prefix}[{$key}]" : $key;
+            $finalKey = $prefix !== '' ? "{$prefix}[{$key}]" : (string) $key;
 
             if (\is_array($value)) {
-                $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
+                $output += $this->flatten($value, $finalKey);
             } else {
-                $output[$finalKey] = $value;
+                $output[$finalKey] = \is_scalar($value) ? (string) $value : '';
             }
         }
 

@@ -4,9 +4,15 @@ namespace Appwrite\Platform\Installer\Http\Installer\Certificate;
 
 use Appwrite\Platform\Installer\Http\Installer\Validate;
 use Appwrite\Platform\Installer\Validator\AppDomain;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Validator\Range;
 
 class Get extends Action
@@ -53,26 +59,24 @@ class Get extends Action
     {
         $gateway = $this->getDockerGateway();
 
-        $ch = curl_init();
-        $options = [
-            CURLOPT_URL => 'https://' . $domain . ':' . $port . '/',
-            CURLOPT_NOBODY => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => self::CONNECTION_TIMEOUT_SECONDS,
-            CURLOPT_TIMEOUT => self::CONNECTION_TIMEOUT_SECONDS,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-        ];
+        $options = [];
 
         if ($gateway !== '') {
             $options[CURLOPT_RESOLVE] = [$domain . ':' . $port . ':' . $gateway];
         }
 
-        curl_setopt_array($ch, $options);
-        curl_exec($ch);
-        $errno = curl_errno($ch);
+        $client = (new Client(new CurlAdapter(options: $options), new Anywhere()))
+            ->withConnectTimeout(self::CONNECTION_TIMEOUT_SECONDS)
+            ->withTimeout(self::CONNECTION_TIMEOUT_SECONDS)
+            ->withSslVerification(true);
 
-        return $errno === 0;
+        try {
+            $client->sendRequest((new RequestFactory())->createRequest(Method::HEAD, 'https://' . $domain . ':' . $port . '/'));
+        } catch (ClientExceptionInterface) {
+            return false;
+        }
+
+        return true;
     }
 
     private function getDockerGateway(): string

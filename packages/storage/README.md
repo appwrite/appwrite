@@ -300,12 +300,13 @@ Inject your own client to change the transport or the retry policy — for examp
 ```php
 use Utopia\Client\Client;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
+use Utopia\Client\Destination\Anywhere;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\S3\RetryStrategy;
 
 $client = new Retry(
-    new Client(new SwooleAdapter())->withTimeout(60),
+    new Client(new SwooleAdapter(), new Anywhere())->withTimeout(60),
     new RetryStrategy(retries: 5, delay: 1.0),
 );
 

@@ -7,6 +7,9 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Discord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class DiscordTest extends TestCase
 {
@@ -24,7 +27,7 @@ final class DiscordTest extends TestCase
     #[DataProvider('promptSecrets')]
     public function testLoginURLPrompt(string $secret, ?string $expected): void
     {
-        $discord = new Discord('client-id', $secret, 'https://example.com/callback');
+        $discord = new Discord(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback');
 
         \parse_str((string) \parse_url($discord->getLoginURL(), PHP_URL_QUERY), $query);
 
@@ -43,7 +46,7 @@ final class DiscordTest extends TestCase
     #[DataProvider('clientSecrets')]
     public function testAccessTokenSendsClientSecret(string $secret): void
     {
-        $discord = new FakeDiscord('client-id', $secret, 'https://example.com/callback');
+        $discord = new FakeDiscord(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback');
 
         $this->assertSame('access-token', $discord->getAccessToken('authorization-code'));
 

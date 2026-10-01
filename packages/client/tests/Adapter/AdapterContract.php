@@ -11,7 +11,13 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Utopia\Client\Adapter;
+use Utopia\Client\Destination;
+use Utopia\Client\Destination\Anywhere;
+use Utopia\Client\Destination\IPRange;
+use Utopia\Client\Destination\PublicInternet;
+use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\InvalidResponseException;
 use Utopia\Client\Exception\InvalidUriException;
@@ -39,7 +45,20 @@ abstract class AdapterContract extends TestCase
     /**
      * @param array<string|int, mixed> $transportOptions
      */
-    abstract protected function createAdapter(array $transportOptions = []): Adapter;
+    /**
+     * The adapter under test, with no destination configured.
+     *
+     * @param array<string|int, mixed> $transportOptions
+     */
+    abstract protected function newAdapter(array $transportOptions = []): Adapter;
+
+    /**
+     * @param array<string|int, mixed> $transportOptions
+     */
+    protected function createAdapter(array $transportOptions = [], ?Destination $destination = null): Adapter
+    {
+        return $this->newAdapter($transportOptions)->withDestination($destination ?? new Anywhere());
+    }
 
     abstract protected function runAdapter(callable $callback): void;
 
@@ -738,6 +757,77 @@ abstract class AdapterContract extends TestCase
 
         $this->assertNotSame($client, $client->withFollowRedirects());
         $this->assertNotSame($client, $client->withFollowRedirects(false));
+    }
+
+    public function testItRefusesToSendWithoutADestination(): void
+    {
+        Http::serve(function (int $port): void {
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
+
+            try {
+                $this->send($this->newAdapter(), $request);
+                $this->fail('An adapter without a destination sent a request.');
+            } catch (AdapterPreconditionException $adapterPreconditionException) {
+                $this->assertStringContainsString('destination', $adapterPreconditionException->getMessage());
+            }
+        });
+    }
+
+    public function testItRefusesAnAddressTheDestinationDoesNotAllow(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter(destination: new PublicInternet());
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
+
+            try {
+                $this->send($client, $request);
+                $this->fail('A loopback address reached a public-internet destination . ');
+            } catch (DestinationException $destinationException) {
+                $this->assertStringContainsString('127.0.0.1', $destinationException->getMessage());
+            }
+        });
+    }
+
+    public function testItConnectsToAnAddressTheDestinationAllows(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter(destination: new PublicInternet(new IPRange('127.0.0.1')));
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('final', (string) $response->getBody());
+        });
+    }
+
+    public function testItChecksEveryRedirectHopAgainstTheDestination(): void
+    {
+        // Something listening on the redirect target, so only the destination can stop it
+        $target = \stream_socket_server('tcp://127.0.0.2:0');
+        $this->assertNotFalse($target);
+        $targetUrl = 'http://' . \stream_socket_get_name($target, false) . '/final';
+
+        Http::serve(function (int $port) use ($target, $targetUrl): void {
+            $client = $this->createAdapter(destination: new PublicInternet(new IPRange('127.0.0.1')))->withFollowRedirects();
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/redirect-to?to=' . \urlencode($targetUrl));
+
+            try {
+                $this->send($client, $request);
+                $this->fail('A redirect reached an address the destination does not allow . ');
+            } catch (DestinationException $destinationException) {
+                $this->assertStringContainsString('127.0.0.2', $destinationException->getMessage());
+            }
+
+            $connection = @\stream_socket_accept($target, 0.2);
+            $received = '';
+            if ($connection !== false) {
+                \stream_set_blocking($connection, false);
+                $received = (string) \fread($connection, 1024);
+            }
+
+            $this->assertSame('', $received);
+        });
     }
 
     public function testDefaultTimeoutsAllowReasonablySlowResponses(): void

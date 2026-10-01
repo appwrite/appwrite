@@ -7,6 +7,9 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Zoho;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class ZohoTest extends TestCase
 {
@@ -23,7 +26,7 @@ final class ZohoTest extends TestCase
     #[DataProvider('promptSecrets')]
     public function testLoginURLPrompt(string $secret, ?string $expected): void
     {
-        $zoho = new Zoho('client-id', $secret, 'https://example.com/callback');
+        $zoho = new Zoho(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback');
 
         \parse_str((string) \parse_url($zoho->getLoginURL(), PHP_URL_QUERY), $query);
 
@@ -42,7 +45,7 @@ final class ZohoTest extends TestCase
     #[DataProvider('clientSecrets')]
     public function testAccessTokenSendsClientSecret(string $secret): void
     {
-        $zoho = new FakeZoho('client-id', $secret, 'https://example.com/callback');
+        $zoho = new FakeZoho(new Client(new CannedTransport(fn (): string => ''), new Anywhere()), 'client-id', $secret, 'https://example.com/callback');
 
         $this->assertSame('access-token', $zoho->getAccessToken('authorization-code'));
 

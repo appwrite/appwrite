@@ -7,8 +7,11 @@ namespace Tests\Unit\Auth\OIDC;
 use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\CannedTransport;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
+use Utopia\Client\Destination\Anywhere;
 
 final class JwksTest extends TestCase
 {
@@ -18,11 +21,11 @@ final class JwksTest extends TestCase
     public function testKnownKidIsServedFromCacheAfterOneFetch(): void
     {
         $fetches = 0;
-        $jwks = new Jwks(new Cache(new Memory()), function () use (&$fetches): string {
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(function () use (&$fetches): string {
             $fetches++;
 
             return $this->document(['kid-1']);
-        });
+        }), new Anywhere()));
 
         $pem = $jwks->getKey(self::URL, 'kid-1');
 
@@ -38,11 +41,11 @@ final class JwksTest extends TestCase
     public function testUnknownKidTriggersOneForcedRefetch(): void
     {
         $fetches = 0;
-        $jwks = new Jwks(new Cache(new Memory()), function () use (&$fetches): string {
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(function () use (&$fetches): string {
             $fetches++;
 
             return $this->document($fetches === 1 ? ['kid-old'] : ['kid-old', 'kid-new']);
-        });
+        }), new Anywhere()));
 
         $old = $jwks->getKey(self::URL, 'kid-old');
         $new = $jwks->getKey(self::URL, 'kid-new');
@@ -60,11 +63,11 @@ final class JwksTest extends TestCase
     public function testCooldownSuppressesRepeatedForcedRefetches(): void
     {
         $fetches = 0;
-        $jwks = new Jwks(new Cache(new Memory()), function () use (&$fetches): string {
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(function () use (&$fetches): string {
             $fetches++;
 
             return $this->document(['kid-1']);
-        });
+        }), new Anywhere()));
 
         $this->assertNull($jwks->getKey(self::URL, 'bogus-a'));
         $this->assertNull($jwks->getKey(self::URL, 'bogus-b'));
@@ -74,14 +77,14 @@ final class JwksTest extends TestCase
 
     public function testUnusableKeysAreSkipped(): void
     {
-        $jwks = new Jwks(new Cache(new Memory()), fn (): string => \json_encode(['keys' => [
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [
             ['kty' => 'EC', 'kid' => 'ec-key', 'crv' => 'P-256', 'x' => 'x', 'y' => 'y'],
             ['kty' => 'RSA', 'kid' => 'enc-key', 'use' => 'enc', 'n' => 'AQID', 'e' => 'AQAB'],
             ['kty' => 'RSA', 'kid' => 'no-material'],
             ['kty' => 'RSA', 'kid' => 'bad-material', 'use' => 'sig', 'n' => 'not base64url!!', 'e' => 'AQAB'],
             ['kty' => 'RSA', 'kid' => 'empty-material', 'use' => 'sig', 'n' => '', 'e' => 'AQAB'],
             ['kty' => 'RSA', 'kid' => 'sig-key', 'use' => 'sig', 'n' => 'AQID', 'e' => 'AQAB'],
-        ]]));
+        ]])), new Anywhere()));
 
         $this->assertStringStartsWith(self::PEM_HEADER, $jwks->getKey(self::URL, 'sig-key'));
         $this->assertNull($jwks->getKey(self::URL, 'ec-key'));
@@ -106,13 +109,13 @@ final class JwksTest extends TestCase
         $this->assertNotFalse($key);
         $details = \openssl_pkey_get_details($key);
 
-        $jwks = new Jwks(new Cache(new Memory()), fn (): string => \json_encode(['keys' => [[
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [[
             'kty' => 'RSA',
             'use' => 'sig',
             'kid' => 'real',
             'n' => $this->base64UrlEncode($details['rsa']['n']),
             'e' => $this->base64UrlEncode($details['rsa']['e']),
-        ]]]));
+        ]]])), new Anywhere()));
 
         $pem = $jwks->getKey(self::URL, 'real');
 
@@ -125,7 +128,7 @@ final class JwksTest extends TestCase
 
     public function testInvalidDocumentThrows(): void
     {
-        $jwks = new Jwks(new Cache(new Memory()), fn (): string => 'not json');
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => 'not json'), new Anywhere()));
 
         try {
             $jwks->getKey(self::URL, 'kid-1');
