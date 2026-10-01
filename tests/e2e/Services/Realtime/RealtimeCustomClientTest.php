@@ -1119,18 +1119,19 @@ final class RealtimeCustomClientTest extends Scope
 
         /**
          * Test for SUCCESS - the target's events still reach the connection, and a
-         * change to the target keeps it bound to the actor
+         * change to the target that rebuilds the connection keeps it bound to the actor
          */
         $session = $createSession();
         $other = $createSession();
         $client = $connect($session);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $adminHeaders, [
-            'name' => 'Target ' . uniqid(),
+        // Labels shape roles, so this re-resolves the connection (a name change would not).
+        $response = $this->client->call(Client::METHOD_PUT, '/users/' . $targetId . '/labels', $adminHeaders, [
+            'labels' => ['impersonated'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $event = $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$targetId}.update.name", $message['data']['events'] ?? [], true));
+        $event = $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$targetId}.update.labels", $message['data']['events'] ?? [], true));
         $this->assertEquals('event', $event['type']);
 
         /**

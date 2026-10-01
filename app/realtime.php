@@ -441,7 +441,18 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry) {
+// Sent to a connection whose access has ended, right before it is closed: the same
+// answer the HTTP API gives that session's next request.
+$unauthorized = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+$unauthorizedPayloadJson = json_encode([
+    'type' => 'error',
+    'data' => [
+        'code' => $unauthorized->getCode(),
+        'message' => $unauthorized->getMessage(),
+    ],
+]);
+
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -473,17 +484,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
     $attempts = 0;
     $start = time();
-
-    // Sent to a connection whose access has ended, right before it is closed: the same
-    // answer the HTTP API gives that session's next request.
-    $unauthorized = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-    $unauthorizedPayloadJson = json_encode([
-        'type' => 'error',
-        'data' => [
-            'code' => $unauthorized->getCode(),
-            'message' => $unauthorized->getMessage(),
-        ],
-    ]);
 
     // Flush coalesced console live-tail buffers to their connections (~150ms).
     // Must run per-worker: the registry is mutated by this worker's subscribe handler
@@ -1240,7 +1240,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1353,6 +1353,17 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         if (!\is_scalar($messageType)) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
+        }
+
+        // Expiry fires no event, so it is checked on every message too, as the HTTP API
+        // checks every request. Only `authentication` goes through: it replaces the
+        // expired credentials with a session's.
+        if ($messageType !== 'authentication' && $realtime->isExpired($connection, \time())) {
+            $responseCode = $unauthorized->getCode();
+            $server->send([$connection], $unauthorizedPayloadJson);
+            $server->close($connection, $unauthorized->getCode());
+            $outboundBytes += \strlen($unauthorizedPayloadJson);
+            return;
         }
 
         // Child of the global container: per-message values like $connection and $project
