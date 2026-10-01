@@ -383,9 +383,16 @@ return function (Container $container): void {
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
             'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
-            // The project whose users hold this impersonator (see the `user` resource),
-            // so events about them can reach the connections they opened.
-            'projectId' => ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? 'console' : $project->getId(),
+            // The project whose users hold this impersonator, so events about them can
+            // reach the connections they opened. The `user` resource loads them from the
+            // platform database in admin mode, on the console project, and for an account
+            // key on any project; it throws when a key and a session are both sent, so a
+            // user alongside both key headers came from the key.
+            'projectId' => (
+                $mode === APP_MODE_ADMIN
+                || $project->getId() === 'console'
+                || (!empty($request->getHeaderLine('x-appwrite-key', '')) && !empty($request->getHeaderLine('x-appwrite-user', '')))
+            ) ? 'console' : $project->getId(),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
 
