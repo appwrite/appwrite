@@ -46,7 +46,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
@@ -737,7 +737,13 @@ function UserStatusCard({
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="flex items-start gap-4 flex-wrap">
-          <InitialsAvatar name={displayName} size="lg" className="shrink-0" />
+          <PhotoAvatar
+            projectId={projectId}
+            userId={userId}
+            name={displayName}
+            size="lg"
+            className="shrink-0"
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <p className="text-[15px] font-medium text-foreground truncate">
@@ -1953,7 +1959,12 @@ function DeleteUserSection({
 
           {/* User Info Summary */}
           <div className="flex items-center gap-3 mt-4">
-            <InitialsAvatar name={displayName} size="md" />
+            <PhotoAvatar
+              projectId={projectId}
+              userId={userId}
+              name={displayName}
+              size="md"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
                 {displayName}
