@@ -1,0 +1,49 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot access offset ''content\-type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Cannot access offset ''dns'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Cannot access offset ''remote_addr'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Cannot access offset ''remote_port'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Cannot access offset ''request_method'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Cannot access offset ''x\-forwarded\-for'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole/Http.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<\-764, 255\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Message/Record.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Zone/File.php

@@ -10,8 +10,8 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -110,6 +110,7 @@ class Webhooks extends Action
         }
 
         $rawUrl = $webhook->getAttribute('url');
+        $options = [];
 
         if (System::getEnv('_APP_ENV', 'development') === 'production') {
             $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
@@ -117,6 +118,11 @@ class Webhooks extends Action
             if (!$hostnameValidator->isValid($host)) {
                 return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
             }
+
+            // Reuse the addresses resolved above instead of resolving the host again
+            $scheme = \strtolower(\parse_url($rawUrl, PHP_URL_SCHEME) ?? '');
+            $port = \parse_url($rawUrl, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80);
+            $options[CURLOPT_RESOLVE] = $hostnameValidator->getResolve($port);
         }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
@@ -124,7 +130,7 @@ class Webhooks extends Action
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $client = (new Client(new CurlAdapter()))
+        $client = (new Client(new CurlAdapter(options: $options)))
             ->withTimeout(15)
             ->withConnectTimeout(15)
             ->withSslVerification($webhook->getAttribute('security', true));
@@ -178,7 +184,6 @@ class Webhooks extends Action
         if (!empty($clientError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
-            $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
             $logs .= 'URL: ' . $rawUrl . "\n";
@@ -194,15 +199,31 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            $updatePayload = ['logs' => $logs];
+            $threshold = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
+            // Claim the pause under a row lock, so concurrent deliveries of the same webhook pause it once
+            $pausedAttempts = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhook, $logs, $threshold): ?int {
+                $current = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
+
+                if ($current->isEmpty()) {
+                    return null;
+                }
+
+                $attempts = $current->getAttribute('attempts');
+                $pause = $current->getAttribute('enabled') === true && $attempts >= $threshold;
+
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document(
+                    $pause ? ['logs' => $logs, 'enabled' => false] : ['logs' => $logs]
+                ));
+
+                return $pause ? $attempts : null;
+            });
+
+            if ($pausedAttempts !== null) {
                 $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+                $this->sendAlert($pausedAttempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;

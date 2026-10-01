@@ -3,7 +3,12 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Fetch\Client as FetchClient;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 // Reference Material
 // https://developers.kakao.com/docs/latest/en/kakaologin/common
@@ -55,6 +60,7 @@ class Kakao extends OAuth2
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
             'state' => \json_encode($this->state),
+            'prompt' => $this->getPrompt() ?: null,
         ];
 
         $scopes = $this->getScopes();
@@ -80,7 +86,7 @@ class Kakao extends OAuth2
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getClientSecret(),
                     'redirect_uri' => $this->callback,
                     'code' => $code,
                 ])
@@ -104,7 +110,7 @@ class Kakao extends OAuth2
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'refresh_token' => $refreshToken,
             ])
         ), true);
@@ -213,22 +219,25 @@ class Kakao extends OAuth2
 
     public function verifyCredentials(): void
     {
-        $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+        $response = (new Client(new CurlAdapter()))
+            ->withTimeout(15)
+            ->withFollowRedirects(maxHops: 5)
+            ->sendRequest((new RequestFactory())->form(
+                Method::POST,
+                $this->endpoint . 'token',
+                [
+                    'grant_type' => 'authorization_code',
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->getClientSecret(),
+                    'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
+                    'code' => 'intentionally-invalid-code',
+                ],
+                [
+                    Header::CONTENT_TYPE => ContentType::FORM_URLENCODED . ';charset=utf-8',
+                ],
+            ));
 
-        $response = $client->fetch(
-            url: $this->endpoint . 'token',
-            method: FetchClient::METHOD_POST,
-            body: [
-                'grant_type' => 'authorization_code',
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => 'https://invalid.appwrite.callback/intentionally-invalid',
-                'code' => 'intentionally-invalid-code',
-            ]
-        );
-
-        $json = \json_decode($response->getBody(), true);
+        $json = \json_decode((string) $response->getBody(), true);
 
         // KOE010, raised before the authorization code is looked at
         if (isset($json['error']) && $json['error'] === 'invalid_client') {
@@ -237,5 +246,50 @@ class Kakao extends OAuth2
 
         // We still expect an error, like invalid_grant or invalid_request,
         // but that indicates valid credentials
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(',', $secret['prompt'] ?? []);
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }

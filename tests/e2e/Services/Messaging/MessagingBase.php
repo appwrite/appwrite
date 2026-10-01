@@ -504,7 +504,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['$id'],
         ]);
@@ -615,7 +615,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -718,7 +718,7 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -1024,10 +1024,13 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', \array_merge([
+        // Subscribe the target to the topic as a server (API key) call: the target belongs to the
+        // user created above, not to the caller, and only privileged callers may subscribe it.
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -1700,6 +1703,90 @@ trait MessagingBase
         }
     }
 
+    public function testCreateSubscriberForeignTargetDenied(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $apiKey = $this->getProject()['apiKey'];
+
+        // A topic any signed-in user is allowed to subscribe to.
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'foreign-target-topic',
+            'subscribe' => [Role::users()->toString()],
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Sendgrid-foreign-target',
+            'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain.com',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // A victim user the caller does not own, plus an email target with a secret identifier.
+        $victim = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'victim-' . uniqid() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Victim',
+        ]);
+        $this->assertEquals(201, $victim['headers']['status-code']);
+
+        $victimIdentifier = 'victim-secret-' . uniqid() . '@mail.org';
+        $victimTarget = $this->client->call(Client::METHOD_POST, '/users/' . $victim['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $victimIdentifier,
+        ]);
+        $this->assertEquals(201, $victimTarget['headers']['status-code']);
+
+        // The caller attempts to bind the victim's target to the topic.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $victimTarget['body']['$id'],
+        ]);
+
+        if ($this->getSide() === 'client') {
+            // A session/JWT caller may only subscribe a target it owns. The refusal must not
+            // disclose the victim's identifier, and no subscriber may be created.
+            $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertStringNotContainsStringIgnoringCase($victimIdentifier, \json_encode($response['body']));
+
+            $subscribers = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ]);
+            $this->assertEquals(200, $subscribers['headers']['status-code']);
+            $this->assertEquals(0, $subscribers['body']['total']);
+        } else {
+            // Admin console and API key callers act for the project and may subscribe any target.
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals($victimTarget['body']['$id'], $response['body']['target']['$id']);
+        }
+    }
+
     public function testSubscriberTargetSubQuery()
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
@@ -1737,10 +1824,11 @@ trait MessagingBase
 
             $target = $targets[0];
 
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
                 'subscriberId' => $user['$id'],
                 'targetId' => $target['$id'],
             ]);
@@ -2186,6 +2274,27 @@ trait MessagingBase
         $image = $client->call(Client::METHOD_GET, $imageUrl);
 
         $this->assertEquals(200, $image['headers']['status-code']);
+
+        // Push serves ranged reads on the same guard as file view and download.
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $size = \filesize($path);
+
+        $firstByte = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=0-0']);
+
+        $this->assertEquals(206, $firstByte['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $firstByte['headers']['content-range']);
+        $this->assertEquals('1', $firstByte['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $firstByte['body']);
+
+        $pastEnd = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500)]);
+
+        $this->assertEquals(206, $pastEnd['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $pastEnd['headers']['content-range']);
+        $this->assertEquals('1', $pastEnd['headers']['content-length']);
+
+        $rejected = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . $size . '-']);
+
+        $this->assertEquals(416, $rejected['headers']['status-code']);
     }
 
     public function testCreateDraftPushWithData(): void
@@ -2225,6 +2334,98 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals($data, $message['body']['data']['data']);
+    }
+
+    public function testCreateDraftEmailKeepsNullAttachments(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => ID::unique(),
+            'subject' => 'Draft',
+            'content' => 'Draft content',
+            'attachments' => null,
+            'draft' => true,
+        ]);
+        $this->assertSame(201, $email['headers']['status-code']);
+
+        // An explicit null is stored as given rather than replaced with the empty-list default
+        $email = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], $headers);
+        $this->assertSame(200, $email['headers']['status-code']);
+        $this->assertArrayHasKey('attachments', $email['body']['data']);
+        $this->assertNull($email['body']['data']['attachments']);
+    }
+
+    public function testCreatePushWithNullOptionalParams(): void
+    {
+        // Explicit nulls must behave like omitted params instead of reaching the action as null
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $required = [
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post',
+            'draft' => true,
+        ];
+
+        $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            ...$required,
+        ]);
+        $this->assertSame(201, $omitted['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            ...$required,
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'data' => null,
+            'action' => null,
+            'image' => null,
+            'icon' => null,
+            'sound' => null,
+            'color' => null,
+            'tag' => null,
+            'badge' => null,
+            'scheduledAt' => null,
+            'contentAvailable' => null,
+            'critical' => null,
+            'priority' => null,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $expected = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $omitted['body']['$id'], $headers);
+        $actual = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $response['body']['$id'], $headers);
+
+        $this->assertSame(200, $actual['headers']['status-code']);
+        foreach (['status', 'topics', 'users', 'targets', 'scheduledAt', 'data'] as $attribute) {
+            $this->assertSame($expected['body'][$attribute], $actual['body'][$attribute], $attribute);
+        }
+
+        // Without draft, null recipients must be rejected the same way as omitted ones rather than crash
+        $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+        ]);
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => ID::unique(),
+            'title' => 'New blog post',
+            'topics' => null,
+            'users' => null,
+            'targets' => null,
+            'draft' => null,
+        ]);
+
+        $this->assertSame(400, $omitted['headers']['status-code']);
+        $this->assertSame($omitted['headers']['status-code'], $response['headers']['status-code']);
+        $this->assertSame($omitted['body']['type'], $response['body']['type']);
     }
 
     public function testScheduledMessage(): void
@@ -2519,7 +2720,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['$id'],
         ]);
@@ -2654,10 +2855,11 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -2926,10 +3128,11 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -3052,7 +3255,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
@@ -3229,7 +3432,7 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);

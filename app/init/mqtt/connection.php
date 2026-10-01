@@ -49,6 +49,15 @@ return function (Container $container): void {
                 $userId = $payload['userId'] ?? '';
                 $sessionId = $payload['sessionId'] ?? '';
 
+                // Same binding as the HTTP and realtime user resources: a JWT is only good for
+                // the project that minted it, and one minted before the projectId claim existed
+                // only when it names a session.
+                $jwtProjectId = $payload['projectId'] ?? '';
+                $bound = $jwtProjectId !== '' ? $jwtProjectId === $project->getId() : $sessionId !== '';
+                if (!$bound) {
+                    return new User([]);
+                }
+
                 /** @var User $user */
                 $user = $dbForProject->getDocument('users', $userId);
 
@@ -109,7 +118,7 @@ return function (Container $container): void {
     }, []);
 
     $container->set('authorizer', function () use ($getProject, $container): callable {
-        return function (array $identity, string $topic) use ($getProject, $container): bool {
+        return function (array $identity) use ($getProject, $container): bool {
             $userId = $identity['userId'] ?? '';
             $projectId = $identity['projectId'] ?? '';
             if ($userId === '' || $projectId === '') {

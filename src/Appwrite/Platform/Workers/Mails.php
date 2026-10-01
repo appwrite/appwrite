@@ -207,6 +207,7 @@ class Mails extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+                headers: $payload['headers'] ?? [],
             );
             $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 

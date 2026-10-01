@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Screenshots;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,25 +12,43 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Domains\Domain;
-use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\ContentType as RequestContentType;
+use Utopia\Psr7\Method as RequestMethod;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
 {
     use HTTP;
+
+    /**
+     * The browser resolves the host itself, so a rebound DNS answer can point
+     * the target origin at an internal address. These headers are what cloud
+     * metadata services require before answering, or would retarget the
+     * request to another virtual host.
+     */
+    private const BLOCKED_HEADERS = [
+        'host',
+        'metadata',
+        'metadata-flavor',
+        'x-google-metadata-request',
+        'x-aws-ec2-metadata-token',
+        'x-aws-ec2-metadata-token-ttl-seconds',
+        'x-aliyun-ecs-metadata-token',
+    ];
 
     public static function getName(): string
     {
@@ -65,7 +83,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE_PNG
             ))
-            ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.', example: 'https://example.com')
+            ->param('url', '', new PublicURL(), 'Website URL which you want to capture.', example: 'https://example.com')
             ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true, example: '{"Authorization":"Bearer token123","X-Custom-Header":"value"}')
             ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true, example: '1920')
             ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true, example: '1080')
@@ -96,24 +114,11 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $host = \parse_url($url, PHP_URL_HOST) ?? '';
-
-        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
-        if (!$isIpLiteral) {
-            $domain = new Domain($host);
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        foreach (\array_keys($headers) as $key) {
+            if (\in_array(\strtolower(\trim((string) $key)), self::BLOCKED_HEADERS, true)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed.");
             }
         }
-
-        $hostnameValidator = new PublicHostname();
-        if (!$hostnameValidator->isValid($host)) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
-        }
-
-        $client = new Client();
-        $client->setTimeout(30 * 1000); // 30 seconds
-        $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
         // Convert indexed array to empty array (should not happen due to Assoc validator)
         if (count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
@@ -183,17 +188,21 @@ class Get extends Action
         try {
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
 
-            $fetchResponse = $client->fetch(
-                url: $browserEndpoint . '/screenshots',
-                method: 'POST',
-                body: $config
-            );
+            $screenshotResponse = (new Client(new CurlAdapter()))
+                ->withTimeout(30)
+                ->withFollowRedirects(maxHops: 5)
+                ->sendRequest((new RequestFactory())->body(
+                    RequestMethod::POST,
+                    $browserEndpoint . '/screenshots',
+                    \json_encode($config, JSON_THROW_ON_ERROR),
+                    RequestContentType::JSON,
+                ));
 
-            if ($fetchResponse->getStatusCode() >= 400) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $fetchResponse->getBody());
+            if ($screenshotResponse->getStatusCode() >= 400) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $screenshotResponse->getBody());
             }
 
-            $screenshot = $fetchResponse->getBody();
+            $screenshot = (string) $screenshotResponse->getBody();
 
             if (empty($screenshot)) {
                 throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');

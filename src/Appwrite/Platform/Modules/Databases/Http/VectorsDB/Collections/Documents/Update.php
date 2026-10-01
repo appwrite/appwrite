@@ -47,6 +47,12 @@ class Update extends DocumentUpdate
                 group: $this->getSdkGroup(),
                 name: 'updateDocument',
                 description: '/docs/references/vectorsdb/update-document.md',
+                requestExamples: [
+                    'update' => [
+                        'summary' => 'Update document metadata',
+                        'value' => ['data' => ['metadata' => ['name' => 'Updated document']]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
