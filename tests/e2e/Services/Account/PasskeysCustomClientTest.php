@@ -9,7 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Auth\Tests\Passkeys\Authenticator;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 final class PasskeysCustomClientTest extends Scope
 {
@@ -552,6 +554,74 @@ final class PasskeysCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('user_passkey_limit_exceeded', $response['body']['type']);
+    }
+
+    public function testListPasskeys(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        [, $otherSession] = $this->createUserWithSession($project);
+        for ($i = 0; $i < 3; $i++) {
+            $this->registerPasskey($project, $session);
+        }
+        $this->registerPasskey($project, $otherSession);
+        $headers = $this->getSessionHeaders($project, $session);
+
+        /**
+         * Test for SUCCESS
+         */
+        $all = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString()],
+        ]);
+        $this->assertSame(200, $all['headers']['status-code']);
+        $this->assertSame(3, $all['body']['total']);
+        $ids = \array_column($all['body']['passkeys'], '$id');
+
+        $page = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::limit(1)->toString()],
+        ]);
+        $this->assertSame([$ids[0]], \array_column($page['body']['passkeys'], '$id'));
+        $this->assertSame(3, $page['body']['total']);
+
+        $next = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::cursorAfter(new Document(['$id' => $ids[0]]))->toString(), Query::limit(1)->toString()],
+        ]);
+        $this->assertSame([$ids[1]], \array_column($next['body']['passkeys'], '$id'));
+
+        $filtered = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::equal('$id', [$ids[2]])->toString()],
+        ]);
+        $this->assertSame([$ids[2]], \array_column($filtered['body']['passkeys'], '$id'));
+        $this->assertSame(1, $filtered['body']['total']);
+
+        $withoutTotal = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'total' => false,
+        ]);
+        $this->assertSame(0, $withoutTotal['body']['total']);
+        $this->assertCount(3, $withoutTotal['body']['passkeys']);
+
+        $admin = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project), [
+            'queries' => [Query::limit(2)->toString()],
+        ]);
+        $this->assertSame(200, $admin['headers']['status-code']);
+        $this->assertCount(2, $admin['body']['passkeys']);
+        $this->assertSame(3, $admin['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::equal('name', ['MacBook'])->toString()],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $foreign = $this->client->call(Client::METHOD_GET, '/account/passkeys', $this->getSessionHeaders($project, $otherSession));
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $foreign['body']['passkeys'][0]['$id']]))->toString()],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $response['body']['type']);
     }
 
     public function testPasskeySatisfiesMfa(): void
