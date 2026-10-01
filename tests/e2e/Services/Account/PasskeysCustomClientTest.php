@@ -676,6 +676,55 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    public function testCustomPasskeyId(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        [, $otherSession] = $this->createUserWithSession($project);
+        $headers = $this->getSessionHeaders($project, $session);
+        $passkeyId = 'laptop-' . \bin2hex(\random_bytes(4));
+
+        /**
+         * Test for SUCCESS
+         */
+        $first = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $this->assertSame(201, $first['headers']['status-code']);
+        $this->assertSame($passkeyId, $first['body']['passkeyId']);
+
+        // Restarting a pending registration with the same ID replaces it
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $this->assertSame(201, $challenge['headers']['status-code']);
+        $this->assertSame($passkeyId, $challenge['body']['passkeyId']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'credential' => (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN),
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame($passkeyId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
+        $this->assertSame(1, $response['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $this->assertSame(409, $response['headers']['status-code']);
+        $this->assertSame('user_passkey_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $otherSession), ['passkeyId' => $passkeyId]);
+        $this->assertSame(409, $response['headers']['status-code']);
+        $this->assertSame('user_passkey_already_exists', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => '-invalid']);
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
     public function testPasskeySatisfiesMfa(): void
     {
         $project = $this->getProject(true);
