@@ -725,7 +725,7 @@ final class S3Test extends TestCase
         $list = $this->endpointDevice($client)->listFiles('my-bucket/storage/uploads/app-1/bkt-1');
 
         $this->assertCount(1, $list->files);
-        $this->assertSame('storage/uploads/app-1/bkt-1/file.txt', $list->files[0]->path);
+        $this->assertSame('my-bucket/storage/uploads/app-1/bkt-1/file.txt', $list->files[0]->path, 'listed paths stay usable with read and delete on the same device');
 
         $this->assertCount(1, $client->requests);
         $request = $client->requests[0];
@@ -775,6 +775,24 @@ final class S3Test extends TestCase
 
         $this->assertCount(1, $client->requests);
         $this->assertSame('/', $client->requests[0]->getUri()->getPath());
+    }
+
+    public function testEndpointStyleCopyUsesASingleBucketSegment(): void
+    {
+        $copyBody = '<?xml version="1.0" encoding="UTF-8"?><CopyObjectResult><ETag>&quot;etag-copy&quot;</ETag></CopyObjectResult>';
+        $client = new ScriptedClient([
+            (new Response(200))->withHeader('content-length', '5')->withHeader('content-type', 'text/plain'),
+            (new Response(200, body: new Stream($copyBody)))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $device = $this->endpointDevice($client);
+        $this->assertTrue($device->copy('my-bucket/storage/uploads/app-1/a.txt', 'my-bucket/storage/uploads/app-1/b.txt'));
+
+        $this->assertCount(2, $client->requests);
+        $copy = $client->requests[1];
+        $this->assertSame('PUT', $copy->getMethod());
+        $this->assertSame('/my-bucket/storage/uploads/app-1/b.txt', $copy->getUri()->getPath());
+        $this->assertSame('/my-bucket/storage/uploads/app-1/a.txt', $copy->getHeaderLine('x-amz-copy-source'));
     }
 
     public function testListingKeepsServiceRootForVirtualHostedRootsRepeatingTheBucket(): void

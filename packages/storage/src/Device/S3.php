@@ -433,6 +433,23 @@ class S3 extends Device
     }
 
     /**
+     * Key as callers address it on this device.
+     *
+     * Single-object calls take the full root path, so on bucket-prefixed
+     * roots a stripped listing key gains the bucket back: a listed path stays
+     * directly usable with read, delete and abort on the same device.
+     */
+    private function displayPath(string $key): string
+    {
+        $bucket = $this->bucket;
+        if ($bucket === null || $bucket === '' || ! $this->isBucketPrefixedRoot()) {
+            return $key;
+        }
+
+        return $bucket . '/' . ltrim($key, '/');
+    }
+
+    /**
      * Request target for list-style operations.
      *
      * Single-object calls address the full root path directly, which services
@@ -731,7 +748,7 @@ class S3 extends Device
             $modified = $object['LastModified'] ?? null;
             $etag = $object['ETag'] ?? null;
             $files[] = new FileInfo(
-                path: $object['Key'],
+                path: $this->displayPath($object['Key']),
                 size: is_numeric($size) ? (int) $size : 0,
                 modifiedAt: \is_string($modified) ? new \DateTimeImmutable($modified) : null,
                 etag: \is_string($etag) ? trim($etag, '"') : null,
@@ -804,7 +821,7 @@ class S3 extends Device
             }
             $initiated = $entry['Initiated'] ?? null;
             $uploads[] = new UploadInfo(
-                path: $entry['Key'],
+                path: $this->displayPath($entry['Key']),
                 uploadId: $entry['UploadId'],
                 initiatedAt: \is_string($initiated) ? new \DateTimeImmutable($initiated) : null,
             );
