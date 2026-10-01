@@ -7,8 +7,10 @@ use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class AppSignalTest extends AdapterBase
 {
+    #[\Override]
     protected int $expected = 204;
 
+    #[\Override]
     protected string $credential = 'TEST_APPSIGNAL_KEY';
 
     protected function setUp(): void

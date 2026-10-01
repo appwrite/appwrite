@@ -7,6 +7,7 @@ use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class LogOwlTest extends AdapterBase
 {
+    #[\Override]
     protected string $credential = 'TEST_LOGOWL_KEY';
 
     protected function setUp(): void

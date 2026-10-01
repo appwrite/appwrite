@@ -2,11 +2,17 @@
 
 namespace Utopia\Logger\Adapter;
 
-use Utopia\Fetch\Client;
-use Utopia\Fetch\Exception as FetchException;
+use InvalidArgumentException;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Logger\Adapter;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 // Reference Material
 // https://raygun.com/documentation/product-guides/crash-reporting/api/
@@ -33,17 +39,27 @@ class Raygun extends Adapter
     protected int $connectTimeout;
 
     /**
+     * PSR-18 client the log is pushed through.
+     */
+    protected ClientInterface $client;
+
+    /**
      * Raygun constructor.
      *
      * @param  string  $key
      * @param  int  $timeout
      * @param  int  $connectTimeout
+     * @param  ClientInterface|null  $client  PSR-18 client (default: cURL with the timeouts above, redirects followed)
      */
-    public function __construct(string $key, int $timeout = self::DEFAULT_TIMEOUT, int $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT)
+    public function __construct(string $key, int $timeout = self::DEFAULT_TIMEOUT, int $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT, ?ClientInterface $client = null)
     {
         $this->apiKey = $key;
         $this->timeout = $timeout > 0 ? $timeout : self::DEFAULT_TIMEOUT;
         $this->connectTimeout = $connectTimeout > 0 ? $connectTimeout : self::DEFAULT_CONNECT_TIMEOUT;
+        $this->client = $client ?? new Client(new CurlAdapter())
+            ->withTimeout($this->timeout)
+            ->withConnectTimeout($this->connectTimeout)
+            ->withFollowRedirects();
     }
 
     /**
@@ -110,19 +126,23 @@ class Raygun extends Adapter
             ],
         ];
 
-        $client = (new Client())
-            ->setTimeout($this->timeout * 1000)
-            ->setConnectTimeout($this->connectTimeout * 1000)
-            ->addHeader('Content-Type', Client::CONTENT_TYPE_APPLICATION_JSON)
-            ->addHeader('X-ApiKey', $this->apiKey);
+        $body = \json_encode($requestBody);
+
+        if ($body === false) {
+            error_log('Raygun push failed with fetch error: Failed to encode data to JSON: '.\json_last_error_msg());
+
+            return 500;
+        }
 
         try {
-            $response = $client->fetch(
-                url: 'https://api.raygun.com/entries',
-                method: Client::METHOD_POST,
-                body: $requestBody,
-            );
-        } catch (FetchException $e) {
+            $response = $this->client->sendRequest(new RequestFactory()->body(
+                Method::POST,
+                'https://api.raygun.com/entries',
+                $body,
+                ContentType::JSON,
+                ['X-ApiKey' => $this->apiKey],
+            ));
+        } catch (ClientExceptionInterface|InvalidArgumentException $e) {
             error_log('Raygun push failed with fetch error: '.$e->getMessage());
 
             return 500;
@@ -131,7 +151,7 @@ class Raygun extends Adapter
         $httpCode = $response->getStatusCode();
 
         if ($httpCode >= 400) {
-            error_log("Raygun push failed with status code {$httpCode}: {$response->text()}");
+            error_log("Raygun push failed with status code {$httpCode}: {$response->getBody()}");
         }
 
         return $httpCode;

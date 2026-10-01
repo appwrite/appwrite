@@ -32,8 +32,17 @@
         }
     },
     "require": {
-        "php": ">=8.1",
-        "utopia-php/fetch": "^1.1"
+        "php": ">=8.5",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0",
+        "utopia-php/client": "^0.5",
+        "utopia-php/psr7": "^0.2.1"
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
 }

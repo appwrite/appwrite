@@ -8,7 +8,7 @@
 
 Utopia Logger library is simple and lite library for logging information, such as errors or warnings. This library aims to be as simple and easy to learn and use as possible. This library is maintained by the [Appwrite team](https://appwrite.io).
 
-Although the library was built for the [Utopia Framework](https://github.com/utopia-php/framework) project, it is completely independent, **dependency-free** and can be used with any other PHP project or framework.
+Although the library was built for the [Utopia Framework](https://github.com/utopia-php/framework) project, it is completely independent of it and can be used with any other PHP project or framework.
 
 ## Getting Started
 

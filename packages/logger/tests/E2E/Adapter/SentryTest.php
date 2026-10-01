@@ -7,6 +7,7 @@ use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class SentryTest extends AdapterBase
 {
+    #[\Override]
     protected string $credential = 'TEST_SENTRY_DSN';
 
     protected function setUp(): void

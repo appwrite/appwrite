@@ -7,6 +7,7 @@ use Utopia\Logger\Tests\E2E\AdapterBase;
 
 class RaygunTest extends AdapterBase
 {
+    #[\Override]
     protected string $credential = 'TEST_RAYGUN_KEY';
 
     protected function setUp(): void

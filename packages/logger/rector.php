@@ -7,6 +7,8 @@ use Rector\Php70\Rector\FuncCall\RandomFunctionRector;
 use Rector\Php70\Rector\MethodCall\ThisCallOnStaticMethodToStaticCallRector;
 use Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
+use Rector\Php83\Rector\ClassConst\AddTypeToConstRector;
+use Rector\Php84\Rector\Foreach_\ForeachToArrayAnyRector;
 use Rector\TypeDeclaration\Rector\Empty_\EmptyOnNullableObjectToInstanceOfRector;
 
 return RectorConfig::configure()
@@ -21,8 +23,10 @@ return RectorConfig::configure()
     // Absorbing moves code: keep src exactly as released. Constructor
     // promotion would also rename the named arguments callers pass.
     ->withSkip([
+        AddTypeToConstRector::class => [__DIR__ . '/src'],
         ClassPropertyAssignToConstructorPromotionRector::class => [__DIR__ . '/src'],
         EmptyOnNullableObjectToInstanceOfRector::class => [__DIR__ . '/src'],
+        ForeachToArrayAnyRector::class => [__DIR__ . '/src'],
         RandomFunctionRector::class => [__DIR__ . '/src'],
         TernaryToNullCoalescingRector::class => [__DIR__ . '/src'],
         ThisCallOnStaticMethodToStaticCallRector::class => [__DIR__ . '/src'],

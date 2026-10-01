@@ -77,7 +77,7 @@ class [ADAPTER_NAME] extends Adapter
      */
     public function push(Log $log): int
     {
-        // TODO: Implement HTTP API request that submit a log into external server. For building HTTP request, use `curl_exec()`, just like all other adapters
+        // TODO: Implement HTTP API request that submit a log into external server. Send it as a PSR-7 request through a PSR-18 client (`utopia-php/client` by default), just like all other adapters
     }
 
     /**
