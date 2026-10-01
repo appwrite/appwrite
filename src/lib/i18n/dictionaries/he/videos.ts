@@ -104,6 +104,10 @@ export const heVideosDictionary: Record<string, string> = {
   'Download again': 'הורדה מחדש',
   'Source download started': 'הורדת המקור התחילה',
   'Failed to start source download': 'הפעלת הורדת המקור נכשלה',
+  'Wait until the source download finishes.':
+    'המתינו עד שסיום הורדת המקור.',
+  'Download the source again before creating more renditions.':
+    'הורידו את המקור שוב לפני יצירת גרסאות קידוד נוספות.',
   'Renditions can be created once the source download is ready.':
     'אפשר ליצור גרסאות קידוד לאחר שהורדת המקור מסתיימת.',
 
@@ -192,6 +196,7 @@ export const heVideosDictionary: Record<string, string> = {
   // Player
   'Original file': 'קובץ מקורי',
   'No ready HLS renditions': 'אין גרסאות HLS מוכנות',
+  'No ready DASH renditions': 'אין גרסאות DASH מוכנות',
   'No ready CMAF renditions': 'אין גרסאות CMAF מוכנות',
   'No ready renditions': 'אין גרסאות קידוד מוכנות',
   'Downloading source': 'מוריד את המקור',
@@ -203,10 +208,10 @@ export const heVideosDictionary: Record<string, string> = {
   'Subtitles off': 'ללא כתוביות',
   'New renditions are ready.': 'גרסאות קידוד חדשות מוכנות.',
   'Reload stream': 'טעינה מחדש של הסטרים',
-  'Playing the original Storage file. Switch to HLS or CMAF to test adaptive streaming.':
-    'מתנגן קובץ המקור מהאחסון. עברו ל-HLS או ל-CMAF כדי לבדוק הזרמה אדפטיבית.',
-  'Playing the original Storage file. Create HLS or CMAF renditions to test adaptive streaming.':
-    'מתנגן קובץ המקור מהאחסון. צרו גרסאות HLS או CMAF כדי לבדוק הזרמה אדפטיבית.',
+  'Playing the original Storage file. Switch to HLS, DASH, or CMAF to test adaptive streaming.':
+    'מתנגן קובץ המקור מהאחסון. עברו ל-HLS, DASH או CMAF כדי לבדוק הזרמה אדפטיבית.',
+  'Playing the original Storage file. Create HLS, DASH, or CMAF renditions to test adaptive streaming.':
+    'מתנגן קובץ המקור מהאחסון. צרו גרסאות HLS, DASH או CMAF כדי לבדוק הזרמה אדפטיבית.',
   'Generate timeline': 'יצירת ציר זמן',
   'Timeline generation started': 'יצירת ציר הזמן התחילה',
   'Failed to generate timeline': 'יצירת ציר הזמן נכשלה',
@@ -221,6 +226,15 @@ export const heVideosDictionary: Record<string, string> = {
   Buffer: 'באפר',
   'Buffered ahead': 'נטען מראש',
   'Buffered ranges': 'טווחים טעונים',
+  'Buffer visualizer': 'הצגת באפר',
+  'Fully buffered': 'נטען במלואו',
+  'Buffer ahead, last 60s': 'באפר קדימה, 60 שניות אחרונות',
+  Audio: 'אודיו',
+  Healthy: 'תקין',
+  'Low buffer': 'באפר נמוך',
+  'Buffer critical': 'באפר קריטי',
+  Played: 'נוגן',
+  Buffered: 'נטען',
   'Adaptive bitrate': 'Bitrate אדפטיבי',
   'Current level': 'רמת איכות נוכחית',
   'Loading level': 'רמת איכות בטעינה',
@@ -238,8 +252,8 @@ export const heVideosDictionary: Record<string, string> = {
   Playing: 'מתנגן',
   Lock: 'נעילה',
   'No levels parsed yet.': 'עדיין לא נותחו רמות איכות.',
-  'Quality levels are only available for HLS outputs.':
-    'רמות איכות זמינות רק עבור פלטי HLS.',
+  'Quality levels are only available for adaptive streams.':
+    'רמות איכות זמינות רק בהזרמה אדפטיבית.',
   Segments: 'סגמנטים',
   'No segments loaded yet.': 'עדיין לא נטענו סגמנטים.',
   'Load time': 'זמן טעינה',
@@ -278,4 +292,21 @@ export const heVideosDictionary: Record<string, string> = {
   thumbnails: 'תמונות ממוזערות',
   'Time to manifest': 'זמן עד למניפסט',
   'Time to first frame': 'זמן עד לפריים הראשון',
+  'Data source': 'מקור נתונים',
+  'Inspect live playback health: buffer, timing, dropped frames, and which variant Shaka is using.':
+    'בדקו את בריאות הניגון בזמן אמת: באפר, תזמון, פריימים שנפלו ואיזה variant Shaka משתמשת.',
+  'Lists every adaptive variant from the manifest. Lock a row to disable ABR and pin playback to that variant.':
+    'מציג את כל ה-variants האדפטיביים מהמניפסט. נעלו שורה כדי לכבות ABR ולקבע ניגון ל-variant הזה.',
+  'Shows the most recent media segments fetched for the current stream, with size and load timing.':
+    'מציג את סגמנטי המדיה האחרונים שנמשכו עבור הסטרים הנוכחי, עם גודל וזמני טעינה.',
+  'Chronological log of player lifecycle, adaptation, and errors (newest first).':
+    'יומן כרונולוגי של מחזור החיים של הנגן, adaptation ושגיאות (החדשים ביותר קודם).',
+  'Public manifest URLs for HLS and DASH outputs, plus raw playlist or MPD text for debugging clients.':
+    'כתובות מניפסט ציבוריות לפלטי HLS ו-DASH, ובנוסף טקסט גולמי של playlist או MPD לדיבוג לקוחות.',
+  'Container and stream metadata from the Videos probe when the source file was ingested.':
+    'מטא-דאטה של קונטיינר וסטרים מ-probe של Videos בעת ingest של קובץ המקור.',
+  'Worker state for the source download and every rendition and subtitle encoding job.':
+    'מצב ה-worker להורדת המקור ולכל job של קידוד rendition או כתוביות.',
+  'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
+    'רמזי תמונות ממוזערות מ-WebVTT של ציר הזמן. בחרו תמונה ממוזערת כדי לדלג בנגן.',
 }

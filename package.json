@@ -142,6 +142,7 @@
     "recharts": "^3.2.1",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
+    "shaka-player": "^4.12.0",
     "sharp": "^0.34.5",
     "sonner": "^2.0.7",
     "sql-formatter": "^15.8.1",

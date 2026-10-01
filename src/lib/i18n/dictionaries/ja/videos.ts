@@ -109,6 +109,10 @@ export const jaVideosDictionary: Record<string, string> = {
   'Source download started': 'ソースのダウンロードを開始しました',
   'Failed to start source download':
     'ソースのダウンロードを開始できませんでした',
+  'Wait until the source download finishes.':
+    'ソースのダウンロードが完了するまでお待ちください。',
+  'Download the source again before creating more renditions.':
+    '追加のレンディションを作成する前に、ソースを再度ダウンロードしてください。',
   'Renditions can be created once the source download is ready.':
     'ソースのダウンロードが完了すると、レンディションを作成できます。',
 
@@ -198,6 +202,7 @@ export const jaVideosDictionary: Record<string, string> = {
   // Player
   'Original file': '元のファイル',
   'No ready HLS renditions': '準備完了の HLS レンディションがありません',
+  'No ready DASH renditions': '準備完了の DASH レンディションがありません',
   'No ready CMAF renditions': '準備完了の CMAF レンディションがありません',
   'No ready renditions': '準備完了のレンディションがありません',
   'Downloading source': 'ソースをダウンロード中',
@@ -209,10 +214,10 @@ export const jaVideosDictionary: Record<string, string> = {
   'Subtitles off': '字幕オフ',
   'New renditions are ready.': '新しいレンディションの準備ができました。',
   'Reload stream': 'ストリームを再読み込み',
-  'Playing the original Storage file. Switch to HLS or CMAF to test adaptive streaming.':
-    'ストレージの元のファイルを再生しています。アダプティブストリーミングを試すには HLS または CMAF に切り替えてください。',
-  'Playing the original Storage file. Create HLS or CMAF renditions to test adaptive streaming.':
-    'ストレージの元のファイルを再生しています。アダプティブストリーミングを試すには HLS または CMAF のレンディションを作成してください。',
+  'Playing the original Storage file. Switch to HLS, DASH, or CMAF to test adaptive streaming.':
+    'ストレージの元のファイルを再生しています。アダプティブストリーミングを試すには HLS、DASH、または CMAF に切り替えてください。',
+  'Playing the original Storage file. Create HLS, DASH, or CMAF renditions to test adaptive streaming.':
+    'ストレージの元のファイルを再生しています。アダプティブストリーミングを試すには HLS、DASH、または CMAF のレンディションを作成してください。',
   'Generate timeline': 'タイムラインを生成',
   'Timeline generation started': 'タイムラインの生成を開始しました',
   'Failed to generate timeline': 'タイムラインを生成できませんでした',
@@ -227,6 +232,15 @@ export const jaVideosDictionary: Record<string, string> = {
   Buffer: 'バッファ',
   'Buffered ahead': '先読み済み',
   'Buffered ranges': 'バッファ済み範囲',
+  'Buffer visualizer': 'バッファビジュアライザー',
+  'Fully buffered': 'すべてバッファ済み',
+  'Buffer ahead, last 60s': '先読みバッファ (直近60秒)',
+  Audio: '音声',
+  Healthy: '良好',
+  'Low buffer': 'バッファ低下',
+  'Buffer critical': 'バッファ不足',
+  Played: '再生済み',
+  Buffered: 'バッファ済み',
   'Adaptive bitrate': 'アダプティブビットレート',
   'Current level': '現在のレベル',
   'Loading level': '読み込み中のレベル',
@@ -244,8 +258,8 @@ export const jaVideosDictionary: Record<string, string> = {
   Playing: '再生中',
   Lock: '固定',
   'No levels parsed yet.': 'まだレベルが解析されていません。',
-  'Quality levels are only available for HLS outputs.':
-    '画質レベルは HLS 出力でのみ利用できます。',
+  'Quality levels are only available for adaptive streams.':
+    '画質レベルはアダプティブストリームでのみ利用できます。',
   Segments: 'セグメント',
   'No segments loaded yet.': 'まだセグメントが読み込まれていません。',
   'Load time': '読み込み時間',
@@ -285,4 +299,21 @@ export const jaVideosDictionary: Record<string, string> = {
   thumbnails: 'サムネイル',
   'Time to manifest': 'マニフェストまでの時間',
   'Time to first frame': '最初のフレームまでの時間',
+  'Data source': 'データソース',
+  'Inspect live playback health: buffer, timing, dropped frames, and which variant Shaka is using.':
+    'ライブ再生の状態 (バッファ、タイミング、ドロップフレーム、Shaka が使用中の variant) を確認します。',
+  'Lists every adaptive variant from the manifest. Lock a row to disable ABR and pin playback to that variant.':
+    'マニフェスト内のすべてのアダプティブ variant を一覧表示します。行を固定すると ABR を無効にし、その variant に再生を固定します。',
+  'Shows the most recent media segments fetched for the current stream, with size and load timing.':
+    '現在のストリームで取得した最新のメディアセグメントを、サイズと読み込み時間付きで表示します。',
+  'Chronological log of player lifecycle, adaptation, and errors (newest first).':
+    'プレーヤーのライフサイクル、adaptation、エラーの時系列ログ (新しい順)。',
+  'Public manifest URLs for HLS and DASH outputs, plus raw playlist or MPD text for debugging clients.':
+    'HLS と DASH 出力の公開マニフェスト URL と、クライアントデバッグ用の playlist / MPD 生テキスト。',
+  'Container and stream metadata from the Videos probe when the source file was ingested.':
+    'ソースファイル取り込み時の Videos プローブによるコンテナとストリームのメタデータ。',
+  'Worker state for the source download and every rendition and subtitle encoding job.':
+    'ソースのダウンロードと各レンディション・字幕エンコードジョブの worker 状態。',
+  'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
+    'タイムライン WebVTT のスプライトサムネイル cue。サムネイルを選ぶとプレーヤーがシークします。',
 }

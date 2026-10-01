@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Models } from '@appwrite.io/console'
-import { Info, Loader2, RefreshCw } from 'lucide-react'
+import { BarChart3, Info, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Tooltip,
@@ -29,10 +31,13 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
+import { BufferVisualizer } from './BufferVisualizer'
 import { StreamDebugPanel, type StreamManifest } from './StreamDebugPanel'
-import { useHlsPlayer, type PlayerSource } from './useHlsPlayer'
+import { useStreamPlayer, type PlayerSource } from './useStreamPlayer'
 
-type PlaybackOutput = 'hls' | 'cmaf' | 'source'
+const BUFFER_VIZ_STORAGE_KEY = 'console.videos.bufferVisualizer'
+
+type PlaybackOutput = 'hls' | 'dash' | 'cmaf' | 'source'
 
 const AUTO_LEVEL = '-1'
 const SUBTITLES_OFF = '-1'
@@ -71,7 +76,9 @@ export function VideoStreamPlayer({
       ? 'hls'
       : readyIds.cmaf.length > 0
         ? 'cmaf'
-        : 'source'
+        : readyIds.dash.length > 0
+          ? 'dash'
+          : 'source'
   const [chosenOutput, setChosenOutput] = useState<PlaybackOutput | null>(null)
   const output = chosenOutput ?? preferredOutput
 
@@ -132,28 +139,40 @@ export function VideoStreamPlayer({
     [projectId, video.$id, video.previewId],
   )
 
-  const activeManifestUrl =
-    output === 'hls'
-      ? manifests[0].url
-      : output === 'cmaf'
-        ? manifests[1].url
-        : null
+  const activeManifestUrl = useMemo(() => {
+    switch (output) {
+      case 'hls':
+        return videos.getHlsManifest({ videoId: video.$id })
+      case 'cmaf':
+        return videos.getCmafHlsManifest({ videoId: video.$id })
+      case 'dash':
+        return videos.getDashManifest({ videoId: video.$id })
+      default:
+        return null
+    }
+  }, [output, videos, video.$id])
 
   const outputReadyKey =
     output === 'hls'
       ? readyIds.hls.join(',')
       : output === 'cmaf'
         ? readyIds.cmaf.join(',')
-        : 'source'
+        : output === 'dash'
+          ? readyIds.dash.join(',')
+          : 'source'
 
-  // The master manifest only lists renditions that were ready when it loaded;
-  // track what was loaded so newly finished renditions can prompt a reload.
   const [loadedKey, setLoadedKey] = useState(outputReadyKey)
   const [reloadToken, setReloadToken] = useState(0)
+  const [bufferVisualizerEnabled, setBufferVisualizerEnabled] = useState(
+    () => {
+      if (typeof window === 'undefined') return false
+      return window.localStorage.getItem(BUFFER_VIZ_STORAGE_KEY) === 'true'
+    },
+  )
   const playerSource: PlayerSource | null = useMemo(
     () =>
       activeManifestUrl
-        ? { url: activeManifestUrl, type: 'hls' }
+        ? { url: activeManifestUrl, type: 'stream' }
         : { url: sourceFileUrl, type: 'file' },
     [activeManifestUrl, sourceFileUrl],
   )
@@ -171,7 +190,7 @@ export function VideoStreamPlayer({
     setReloadToken((n) => n + 1)
   }
 
-  const { state, setLevel, setSubtitleTrack, clearEvents } = useHlsPlayer(
+  const { state, setLevel, setSubtitleTrack, clearEvents } = useStreamPlayer(
     videoRef,
     playerSource,
     reloadToken,
@@ -191,6 +210,9 @@ export function VideoStreamPlayer({
   )
   const failedRenditions = renditions.filter((r) => r.status === 'error')
 
+  const hasAdaptiveReady =
+    readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
+
   const outputOptions: Array<{
     id: PlaybackOutput
     label: string
@@ -201,6 +223,12 @@ export function VideoStreamPlayer({
       label: 'HLS',
       disabledReason:
         readyIds.hls.length === 0 ? t('No ready HLS renditions') : undefined,
+    },
+    {
+      id: 'dash',
+      label: 'DASH',
+      disabledReason:
+        readyIds.dash.length === 0 ? t('No ready DASH renditions') : undefined,
     },
     {
       id: 'cmaf',
@@ -281,7 +309,7 @@ export function VideoStreamPlayer({
             poster={posterUrl}
             aria-label={video.name}
           />
-          {state.fatalError && state.engine !== 'hls.js' ? (
+          {state.fatalError ? (
             <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
               <p className="max-w-md text-[13px] text-white/80">
                 {state.fatalError}
@@ -289,6 +317,16 @@ export function VideoStreamPlayer({
             </div>
           ) : null}
         </div>
+        {bufferVisualizerEnabled && state.stats ? (
+          <BufferVisualizer
+            stats={state.stats}
+            fragments={state.fragments}
+            levels={state.levels}
+            onSeek={(seconds) => {
+              if (videoRef.current) videoRef.current.currentTime = seconds
+            }}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -331,7 +369,7 @@ export function VideoStreamPlayer({
           </ToggleGroup>
         </TooltipProvider>
 
-        {state.engine === 'hls.js' && state.levels.length > 0 ? (
+        {state.engine === 'shaka' && state.levels.length > 0 ? (
           <Select
             value={currentLevelValue}
             onValueChange={(value) => setLevel(Number(value))}
@@ -389,6 +427,29 @@ export function VideoStreamPlayer({
           </Select>
         ) : null}
 
+        <div className="flex items-center gap-2 rounded-md border border-border bg-card/50 px-2.5 py-1.5">
+          <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label
+            htmlFor="buffer-visualizer"
+            className="cursor-pointer text-[12px] font-normal text-foreground"
+          >
+            {t('Buffer visualizer')}
+          </Label>
+          <Switch
+            id="buffer-visualizer"
+            checked={bufferVisualizerEnabled}
+            onCheckedChange={(checked) => {
+              setBufferVisualizerEnabled(checked)
+              if (typeof window !== 'undefined') {
+                window.localStorage.setItem(
+                  BUFFER_VIZ_STORAGE_KEY,
+                  checked ? 'true' : 'false',
+                )
+              }
+            }}
+          />
+        </div>
+
         <div className="ms-auto flex items-center gap-2">
           {hasNewRenditions ? (
             <span className="text-[12px] text-muted-foreground">
@@ -410,12 +471,12 @@ export function VideoStreamPlayer({
       {output === 'source' ? (
         <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
           <Info className="h-3.5 w-3.5 shrink-0" />
-          {readyIds.hls.length + readyIds.cmaf.length > 0
+          {hasAdaptiveReady
             ? t(
-                'Playing the original Storage file. Switch to HLS or CMAF to test adaptive streaming.',
+                'Playing the original Storage file. Switch to HLS, DASH, or CMAF to test adaptive streaming.',
               )
             : t(
-                'Playing the original Storage file. Create HLS or CMAF renditions to test adaptive streaming.',
+                'Playing the original Storage file. Create HLS, DASH, or CMAF renditions to test adaptive streaming.',
               )}
         </p>
       ) : null}

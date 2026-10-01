@@ -263,11 +263,20 @@ export function Layout() {
         ? t('Create subtitle')
         : undefined
 
+  const createRenditionsBlockedReason =
+    activeTab === 'renditions' && !sourceReady
+      ? video.status === 'downloading'
+        ? t('Wait until the source download finishes.')
+        : video.status === 'removed' ||
+            video.status === 'error' ||
+            video.status === 'aborted'
+          ? t('Download the source again before creating more renditions.')
+          : t('Renditions can be created once the source download is ready.')
+      : undefined
+
   const createDisabledTooltip = !canWrite
     ? t("You don't have permission to manage videos.")
-    : activeTab === 'renditions' && !sourceReady
-      ? t('Renditions can be created once the source download is ready.')
-      : undefined
+    : createRenditionsBlockedReason
 
   return (
     <VideoDetailActionsContext.Provider value={actions}>

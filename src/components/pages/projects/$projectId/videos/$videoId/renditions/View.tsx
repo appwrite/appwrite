@@ -130,9 +130,17 @@ export function View({ initialData }: ViewProps = {}) {
               ? t(
                   'Encode the source into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.',
                 )
-              : t(
-                  'Renditions can be created once the source download is ready.',
-                )
+              : video?.status === 'downloading'
+                ? t('Wait until the source download finishes.')
+                : video?.status === 'removed' ||
+                    video?.status === 'error' ||
+                    video?.status === 'aborted'
+                  ? t(
+                      'Download the source again before creating more renditions.',
+                    )
+                  : t(
+                      'Renditions can be created once the source download is ready.',
+                    )
           }
           isEmpty
           hasFilters={false}

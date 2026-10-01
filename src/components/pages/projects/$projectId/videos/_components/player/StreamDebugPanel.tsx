@@ -31,7 +31,11 @@ import {
 } from '@/lib/react-query/hooks/videos'
 import { useT } from '@/lib/i18n/translate'
 import { VideoStatusBadge } from '../VideoStatusBadge'
-import { withConsoleVideoAccess, type HlsPlayerState } from './useHlsPlayer'
+import { BufferVisualizer } from './BufferVisualizer'
+import {
+  withConsoleVideoAccess,
+  type StreamPlayerState,
+} from './useStreamPlayer'
 
 const READY_STATES = [
   'HAVE_NOTHING',
@@ -128,11 +132,51 @@ function EmptyDebug({ children }: { children: ReactNode }) {
   )
 }
 
+function StreamDebugTabIntro({
+  description,
+  dataSource,
+}: {
+  description: string
+  dataSource: string
+}) {
+  const t = useT()
+  return (
+    <div className="mb-5 space-y-1.5 border-b border-border pb-4">
+      <p className="text-[13px] leading-relaxed text-foreground">
+        {t(description)}
+      </p>
+      <p className="text-[12px] text-muted-foreground">
+        <span className="font-semibold text-foreground">{t('Data source')}</span>
+        {': '}
+        <span className="font-mono text-[11px] break-all">{dataSource}</span>
+      </p>
+    </div>
+  )
+}
+
+const DEBUG_TAB_DATA_SOURCES = {
+  playback:
+    'HTMLMediaElement; Shaka Player.getStats(), getConfiguration(), getVariantTracks() (500 ms poll in useStreamPlayer)',
+  levels:
+    'Shaka Player.getVariantTracks(); selectVariantTrack() and configure({ abr }) when you lock a level',
+  segments:
+    'Shaka NetworkingEngine.registerResponseFilter() for RequestType.SEGMENT',
+  events:
+    'Shaka Player listeners (error, adaptation, trackschanged) and load lifecycle in useStreamPlayer',
+  manifests:
+    'SDK videos.getHlsManifest, getDashManifest, getCmafHlsManifest, getCmafDashManifest; fetch() for raw manifest text',
+  video: 'Appwrite videos.get → Models.Video (probe metadata from source ingest)',
+  processing:
+    'Appwrite videos.get, listRenditions, listSubtitles; Console realtime for job updates',
+  timeline:
+    'GET /v1/videos/{videoId}/timeline (WebVTT); videos.createTimeline to generate',
+} as const
+
 export interface StreamDebugPanelProps {
   video: Models.Video
   renditions: Models.VideoRendition[]
   subtitles: Models.VideoSubtitle[]
-  player: HlsPlayerState
+  player: StreamPlayerState
   activeManifestUrl: string | null
   manifests: StreamManifest[]
   timeline: { cues: VideoTimelineCue[]; url: string } | null | undefined
@@ -188,18 +232,38 @@ export function StreamDebugPanel({
         </div>
         <div className="px-6 py-5">
           <TabsContent value="playback">
-            <PlaybackTab player={player} />
+            <StreamDebugTabIntro
+              description="Inspect live playback health: buffer, timing, dropped frames, and which variant Shaka is using."
+              dataSource={DEBUG_TAB_DATA_SOURCES.playback}
+            />
+            <PlaybackTab player={player} onSeek={onSeek} />
           </TabsContent>
           <TabsContent value="levels">
+            <StreamDebugTabIntro
+              description="Lists every adaptive variant from the manifest. Lock a row to disable ABR and pin playback to that variant."
+              dataSource={DEBUG_TAB_DATA_SOURCES.levels}
+            />
             <LevelsTab player={player} onSelectLevel={onSelectLevel} />
           </TabsContent>
           <TabsContent value="segments">
+            <StreamDebugTabIntro
+              description="Shows the most recent media segments fetched for the current stream, with size and load timing."
+              dataSource={DEBUG_TAB_DATA_SOURCES.segments}
+            />
             <SegmentsTab player={player} />
           </TabsContent>
           <TabsContent value="events">
+            <StreamDebugTabIntro
+              description="Chronological log of player lifecycle, adaptation, and errors (newest first)."
+              dataSource={DEBUG_TAB_DATA_SOURCES.events}
+            />
             <EventsTab player={player} onClear={onClearEvents} />
           </TabsContent>
           <TabsContent value="manifests">
+            <StreamDebugTabIntro
+              description="Public manifest URLs for HLS and DASH outputs, plus raw playlist or MPD text for debugging clients."
+              dataSource={DEBUG_TAB_DATA_SOURCES.manifests}
+            />
             <ManifestsTab
               manifests={manifests}
               activeManifestUrl={activeManifestUrl}
@@ -207,9 +271,17 @@ export function StreamDebugPanel({
             />
           </TabsContent>
           <TabsContent value="video">
+            <StreamDebugTabIntro
+              description="Container and stream metadata from the Videos probe when the source file was ingested."
+              dataSource={DEBUG_TAB_DATA_SOURCES.video}
+            />
             <VideoTab video={video} />
           </TabsContent>
           <TabsContent value="processing">
+            <StreamDebugTabIntro
+              description="Worker state for the source download and every rendition and subtitle encoding job."
+              dataSource={DEBUG_TAB_DATA_SOURCES.processing}
+            />
             <ProcessingTab
               video={video}
               renditions={renditions}
@@ -217,6 +289,10 @@ export function StreamDebugPanel({
             />
           </TabsContent>
           <TabsContent value="timeline">
+            <StreamDebugTabIntro
+              description="Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player."
+              dataSource={DEBUG_TAB_DATA_SOURCES.timeline}
+            />
             <TimelineTab
               timeline={timeline}
               loading={timelineLoading}
@@ -233,7 +309,13 @@ export function StreamDebugPanel({
   )
 }
 
-function PlaybackTab({ player }: { player: HlsPlayerState }) {
+function PlaybackTab({
+  player,
+  onSeek,
+}: {
+  player: StreamPlayerState
+  onSeek: (seconds: number) => void
+}) {
   const t = useT()
   const { stats } = player
   const level =
@@ -271,8 +353,8 @@ function PlaybackTab({ player }: { player: HlsPlayerState }) {
           <DebugItem
             label={t('Engine')}
             value={
-              player.engine === 'hls.js'
-                ? `hls.js ${player.hlsVersion ?? ''}`
+              player.engine === 'shaka'
+                ? `Shaka Player ${player.playerVersion ?? ''}`
                 : player.engine === 'native'
                   ? t('Native video element')
                   : '-'
@@ -331,14 +413,16 @@ function PlaybackTab({ player }: { player: HlsPlayerState }) {
           />
         </DebugGrid>
         {Number.isFinite(stats.duration) && stats.duration > 0 ? (
-          <BufferBar
-            duration={stats.duration}
-            ranges={stats.bufferedRanges}
-            position={stats.currentTime}
+          <BufferVisualizer
+            stats={stats}
+            fragments={player.fragments}
+            levels={player.levels}
+            onSeek={onSeek}
+            compact
           />
         ) : null}
       </DebugSection>
-      {player.engine === 'hls.js' ? (
+      {player.engine === 'shaka' ? (
         <DebugSection title={t('Adaptive bitrate')}>
           <DebugGrid>
             <DebugItem
@@ -379,40 +463,11 @@ function PlaybackTab({ player }: { player: HlsPlayerState }) {
   )
 }
 
-function BufferBar({
-  duration,
-  ranges,
-  position,
-}: {
-  duration: number
-  ranges: Array<[number, number]>
-  position: number
-}) {
-  return (
-    <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
-      {ranges.map(([start, end]) => (
-        <div
-          key={`${start}-${end}`}
-          className="absolute inset-y-0 bg-foreground/30"
-          style={{
-            insetInlineStart: `${(start / duration) * 100}%`,
-            width: `${((end - start) / duration) * 100}%`,
-          }}
-        />
-      ))}
-      <div
-        className="absolute inset-y-0 w-0.5 bg-foreground"
-        style={{ insetInlineStart: `${(position / duration) * 100}%` }}
-      />
-    </div>
-  )
-}
-
 function LevelsTab({
   player,
   onSelectLevel,
 }: {
-  player: HlsPlayerState
+  player: StreamPlayerState
   onSelectLevel: (level: number) => void
 }) {
   const t = useT()
@@ -420,7 +475,7 @@ function LevelsTab({
     return (
       <EmptyDebug>
         {player.engine === 'native'
-          ? t('Quality levels are only available for HLS outputs.')
+          ? t('Quality levels are only available for adaptive streams.')
           : t('No levels parsed yet.')}
       </EmptyDebug>
     )
@@ -498,7 +553,7 @@ function LevelsTab({
   )
 }
 
-function SegmentsTab({ player }: { player: HlsPlayerState }) {
+function SegmentsTab({ player }: { player: StreamPlayerState }) {
   const t = useT()
   if (player.fragments.length === 0) {
     return <EmptyDebug>{t('No segments loaded yet.')}</EmptyDebug>
@@ -566,16 +621,13 @@ function EventsTab({
   player,
   onClear,
 }: {
-  player: HlsPlayerState
+  player: StreamPlayerState
   onClear: () => void
 }) {
   const t = useT()
   return (
     <DebugSection
       title={t('Event log')}
-      description={t(
-        'Player lifecycle events, level switches, and errors (newest first).',
-      )}
       actions={
         <Button
           variant="outline"
@@ -628,7 +680,7 @@ function ManifestsTab({
 }: {
   manifests: StreamManifest[]
   activeManifestUrl: string | null
-  player: HlsPlayerState
+  player: StreamPlayerState
 }) {
   const t = useT()
   const [viewing, setViewing] = useState<{ label: string; url: string } | null>(
@@ -640,10 +692,12 @@ function ManifestsTab({
 
   const levelPlaylists = useMemo(
     () =>
-      player.levels.map((level) => ({
-        label: `${t('Level')} ${level.index} (${formatResolution(level.width, level.height)})`,
-        url: level.url,
-      })),
+      player.levels
+        .filter((level) => level.url)
+        .map((level) => ({
+          label: `${t('Level')} ${level.index} (${formatResolution(level.width, level.height)})`,
+          url: level.url,
+        })),
     [player.levels, t],
   )
 
@@ -1029,7 +1083,6 @@ function TimelineTab({
   return (
     <DebugSection
       title={`${timeline.cues.length} ${t('thumbnails')}`}
-      description={t('Select a thumbnail to seek the player.')}
       actions={
         <Button
           variant="outline"
