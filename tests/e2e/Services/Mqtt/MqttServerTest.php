@@ -1098,11 +1098,12 @@ final class MqttServerTest extends Scope
 
         $usageKey = $this->mintProjectKey($projectId, ['usage.read']);
 
-        // The broker flushes accumulated usage every 10s and the stats worker then aggregates it.
+        // The broker flushes accumulated usage every 60s and the stats worker then aggregates it, so
+        // allow for a full flush interval plus aggregation before giving up.
         $this->assertEventually(function () use ($projectId, $usageKey): void {
             $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
             $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.connections'), 'connection usage was not recorded');
-        }, 90_000, 2_000);
+        }, 180_000, 3_000);
     }
 
     /** Skip when the stack has no usage pipeline (the dedicated MQTT lane may omit it). */

@@ -223,7 +223,7 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
 $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container): void {
     // Flush accumulated per-project usage (connections, deliveries) to the stats-usage queue.
-    Timer::tick(10000, function () use ($mqtt, $container): void {
+    Timer::tick(60000, function () use ($mqtt, $container): void {
         $usage = $mqtt->flushUsage();
         if ($usage === []) {
             return;
