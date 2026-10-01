@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing Jaspr support in Appwrite Sites: SSR in Dart"
 description: Appwrite Sites now supports Jaspr with server-side rendering. Build websites in Dart, deploy them from Git, and render every request on Appwrite Cloud.
-date: 2026-10-01
+date: 2026-10-02
 cover: /images/blog/announcing-jaspr-support/cover.avif
 timeToRead: 7
 author: matej-baco
