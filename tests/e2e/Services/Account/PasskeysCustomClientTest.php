@@ -725,6 +725,79 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
+    public function testRestartedRegistrationRejectsOldChallenge(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [, $session] = $this->createUserWithSession($project);
+        $headers = $this->getSessionHeaders($project, $session);
+        $passkeyId = 'restart-' . \bin2hex(\random_bytes(4));
+
+        $first = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $second = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $this->assertSame(201, $second['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
+            'challengeId' => $first['body']['$id'],
+            'credential' => (new Authenticator())->register($first['body']['publicKey'], self::ORIGIN),
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
+            'challengeId' => $second['body']['$id'],
+            'credential' => (new Authenticator())->register($second['body']['publicKey'], self::ORIGIN),
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+    }
+
+    public function testRestartCannotRemoveConcurrentlyVerifiedPasskey(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [, $session] = $this->createUserWithSession($project);
+        $headers = $this->getSessionHeaders($project, $session);
+
+        for ($i = 0; $i < 5; $i++) {
+            $passkeyId = 'race-' . $i . '-' . \bin2hex(\random_bytes(4));
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+            $this->assertSame(201, $challenge['headers']['status-code']);
+
+            [$verified, $restarted] = $this->parallel([
+                [
+                    'method' => 'PUT',
+                    'path' => '/account/passkeys/' . $passkeyId . '/verification',
+                    'headers' => $headers,
+                    'body' => ['challengeId' => $challenge['body']['$id'], 'credential' => (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN)],
+                ],
+                [
+                    'method' => 'POST',
+                    'path' => '/account/passkeys',
+                    'headers' => $headers,
+                    'body' => ['passkeyId' => $passkeyId],
+                ],
+            ]);
+
+            // Either the verification wins and the restart conflicts, or the restart wins and the verification finds nothing
+            $passkey = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $headers);
+            if ($verified === 200) {
+                $this->assertSame(409, $restarted);
+                $this->assertSame(200, $passkey['headers']['status-code']);
+            } else {
+                $this->assertSame(201, $restarted);
+                $this->assertSame(404, $passkey['headers']['status-code']);
+            }
+
+            $this->client->call(Client::METHOD_DELETE, '/account/passkeys/' . $passkeyId, $headers);
+        }
+    }
+
     public function testPasskeySatisfiesMfa(): void
     {
         $project = $this->getProject(true);
