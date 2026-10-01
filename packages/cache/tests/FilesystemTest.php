@@ -65,4 +65,31 @@ final class FilesystemTest extends Base
             self::deletePath($path);
         }
     }
+
+    public function testFlushKeepsRootAndIsIdempotent(): void
+    {
+        $path = self::scratch('flush-root');
+
+        try {
+            $cache = new Cache(new Filesystem($path));
+
+            $this->assertTrue($cache->flush());
+            $this->assertDirectoryExists($path);
+            $this->assertTrue($cache->ping());
+
+            $cache->save('item', 'value');
+            $this->assertSame('value', $cache->load('item', 60));
+
+            $this->assertTrue($cache->flush());
+            $this->assertDirectoryExists($path);
+            $this->assertTrue($cache->ping());
+            $this->assertFalse($cache->load('item', 60));
+
+            $this->assertTrue($cache->flush());
+            $this->assertDirectoryExists($path);
+            $this->assertTrue($cache->ping());
+        } finally {
+            self::deletePath($path);
+        }
+    }
 }

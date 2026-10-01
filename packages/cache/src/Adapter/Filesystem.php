@@ -101,7 +101,9 @@ class Filesystem implements Adapter
 
     public function flush(): bool
     {
-        return $this->deleteDirectory($this->path);
+        // Keep the configured root directory so ping() and later flush() calls
+        // remain valid after clearing cached entries.
+        return $this->deleteDirectory($this->path, false);
     }
 
     public function ping(): bool
@@ -149,10 +151,14 @@ class Filesystem implements Adapter
     }
 
     /**
+     * Recursively delete directory contents.
+     *
+     * When `$removeRoot` is false (used by flush()), cached files and nested
+     * directories are removed but `$path` itself is preserved.
      *
      * @throws Exception
      */
-    protected function deleteDirectory(string $path): bool
+    protected function deleteDirectory(string $path, bool $removeRoot = true): bool
     {
         if (! is_dir($path)) {
             throw new Exception("$path must be a directory");
@@ -164,7 +170,8 @@ class Filesystem implements Adapter
 
         $files = glob($path . '*', GLOB_MARK);
 
-        if (! $files) {
+        // glob() returns [] for an empty directory and false only on failure.
+        if ($files === false) {
             throw new Exception('Error happened during glob');
         }
 
@@ -174,6 +181,10 @@ class Filesystem implements Adapter
             } else {
                 unlink($file);
             }
+        }
+
+        if (! $removeRoot) {
+            return true;
         }
 
         return rmdir($path);
