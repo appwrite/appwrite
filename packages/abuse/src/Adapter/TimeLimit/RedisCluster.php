@@ -38,8 +38,8 @@ final readonly class RedisCluster extends RedisBase
     #[\Override]
     public function getLogs(?int $offset = 0, ?int $limit = 25): array
     {
-        $offset = $offset ?? 0;
-        $limit = $limit ?? 25;
+        $offset ??= 0;
+        $limit ??= 25;
         $matches = [];
         $pattern = self::NAMESPACE . '__*';
 

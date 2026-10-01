@@ -36,8 +36,8 @@ readonly class RedisPool extends RedisBase
     #[\Override]
     public function getLogs(?int $offset = null, ?int $limit = 25): array
     {
-        $offset = $offset ?? 0;
-        $limit = $limit ?? 25;
+        $offset ??= 0;
+        $limit ??= 25;
 
         return $this->pool->use(function (\Redis|\RedisCluster $redis) use ($offset, $limit): array {
             if ($redis instanceof \RedisCluster) {
