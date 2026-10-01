@@ -86,6 +86,10 @@ final class PublicHostnameTest extends TestCase
         yield '6to4 imds' => ['2002:a9fe:a9fe::'];
         yield 'teredo' => ['2001:0:1::1'];
         yield 'documentation' => ['2001:db8::1'];
+        yield 'ipv4-compatible loopback' => ['::7f00:1'];
+        yield 'ipv4-compatible link-local' => ['::a9fe:a9fe'];
+        yield 'site-local' => ['fec0::1'];
+        yield 'site-local upper bound' => ['feff:ffff::1'];
     }
 
     #[DataProvider('publicIpAddresses')]

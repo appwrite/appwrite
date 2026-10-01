@@ -43,6 +43,13 @@ final class PublicURLTest extends TestCase
         yield 'private' => ['http://10.0.0.5:8080/', 'private or reserved'];
         yield 'loopback v6' => ['http://[::1]/', 'private or reserved'];
         yield 'ipv4-mapped' => ['http://[::ffff:127.0.0.1]/', 'private or reserved'];
+        yield 'ipv4-compatible' => ['http://[::7f00:1]/', 'private or reserved'];
+        yield 'ipv4-compatible link-local' => ['http://[::a9fe:a9fe]/', 'private or reserved'];
+        yield 'site-local' => ['http://[fec0::1]/', 'private or reserved'];
+        yield 'userinfo' => ['http://1.1.1.1@127.0.0.1/', 'must not contain credentials'];
+        yield 'public userinfo' => ['http://user:secret@1.1.1.1/', 'must not contain credentials'];
+        yield 'empty userinfo' => ['http://@1.1.1.1/', 'must not contain credentials'];
+        yield 'backslash' => ['http://1.1.1.1/a\\b', 'must not contain credentials or backslashes'];
     }
 
     public function testResolveIsEmptyForIpLiteralsAndRejections(): void
@@ -98,6 +105,23 @@ final class PublicURLTest extends TestCase
         yield 'decimal' => ['http://2130706433/'];
         yield 'octal' => ['http://0177.0.0.1/'];
         yield 'shortened' => ['http://127.1/'];
+    }
+
+    #[DataProvider('refusedDespiteAllowlist')]
+    public function testAllowlistKeepsSchemeAndCredentialChecks(string $url, string $reason): void
+    {
+        $validator = new PublicURL(Allowlist::parse('10.0.0.0/8,appwrite'));
+
+        $this->assertFalse($validator->isValid($url), "Expected {$url} to be rejected");
+        $this->assertStringContainsString($reason, $validator->getDescription());
+    }
+
+    public static function refusedDespiteAllowlist(): \Iterator
+    {
+        yield 'userinfo' => ['http://user@10.0.0.5/', 'must not contain credentials'];
+        yield 'userinfo hostname' => ['http://user@appwrite/', 'must not contain credentials'];
+        yield 'backslash' => ['http://10.0.0.5/a\\b', 'must not contain credentials or backslashes'];
+        yield 'gopher scheme' => ['gopher://10.0.0.5/', 'valid URL'];
     }
 
     #[RunInSeparateProcess]

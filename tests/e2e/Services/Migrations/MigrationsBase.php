@@ -280,6 +280,37 @@ trait MigrationsBase
         $this->assertEquals(0, $webhookCounts['error']);
     }
 
+    public function testAppwriteMigrationRejectsPrivateEndpoints(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::1]/v1', 'gopher://appwrite.test/'] as $endpoint) {
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectID' => $this->getProject()['$id'],
+                'key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame(400, $report['headers']['status-code'], "Report accepted {$endpoint}");
+            $this->assertSame('general_argument_invalid', $report['body']['type']);
+
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame(400, $migration['headers']['status-code'], "Migration accepted {$endpoint}");
+            $this->assertSame('general_argument_invalid', $migration['body']['type']);
+        }
+    }
+
     /**
      * Auth
      */

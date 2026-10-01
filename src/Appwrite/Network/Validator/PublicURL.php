@@ -40,6 +40,11 @@ class PublicURL extends URL
             return false;
         }
 
+        if (\str_contains($value, '\\') || \parse_url($value, PHP_URL_USER) !== null) {
+            $this->reason = 'URL must not contain credentials or backslashes.';
+            return false;
+        }
+
         $host = \parse_url($value, PHP_URL_HOST) ?? '';
 
         if (\filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false && !$this->isKnown($host) && !$this->isAllowed($host)) {

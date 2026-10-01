@@ -776,6 +776,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\URL::class:
                     case \Appwrite\Network\Validator\Redirect::class:
                     case \Appwrite\Network\Validator\PublicURL::class:
+                    case \Appwrite\Platform\Modules\Migrations\Validator\Endpoint::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';

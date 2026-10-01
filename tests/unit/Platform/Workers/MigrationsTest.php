@@ -16,6 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
@@ -260,6 +261,150 @@ final class MigrationsTest extends TestCase
             'resourceId' => 'database-a:table-a',
             'resourceType' => Resource::TYPE_DATABASE,
         ])));
+    }
+
+    public function testAppwriteSourceWithPrivateEndpointFailsBeforeTheSourceIsBuilt(): void
+    {
+        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::7f00:1]/v1', 'gopher://1.1.1.1/'] as $endpoint) {
+            $events = [];
+            $migration = $this->createAppwriteMigration($endpoint);
+
+            $this->process($this->createEndpointProcessor($events), $migration);
+
+            $this->assertSame('failed', $migration->getAttribute('status'), $endpoint);
+            $this->assertSame(['persist:failed:finished'], $events, $endpoint);
+            $this->assertStringContainsString('Invalid `endpoint`', \implode(',', $migration->getAttribute('errors')));
+        }
+    }
+
+    public function testAppwriteSourceAcceptsAnAllowedEndpoint(): void
+    {
+        $allowlist = \getenv('_APP_MIGRATIONS_ALLOWED_HOSTS');
+
+        try {
+            $refused = $this->createAppwriteMigration('http://10.0.0.5/v1');
+            $events = [];
+            $this->process($this->createEndpointProcessor($events), $refused);
+
+            \putenv('_APP_MIGRATIONS_ALLOWED_HOSTS=10.0.0.0/8');
+
+            $allowed = $this->createAppwriteMigration('http://10.0.0.5/v1');
+            $allowedEvents = [];
+            $this->process($this->createEndpointProcessor($allowedEvents), $allowed);
+        } finally {
+            \putenv($allowlist === false ? '_APP_MIGRATIONS_ALLOWED_HOSTS' : '_APP_MIGRATIONS_ALLOWED_HOSTS=' . $allowlist);
+        }
+
+        $this->assertSame('failed', $refused->getAttribute('status'));
+        $this->assertSame('completed', $allowed->getAttribute('status'));
+        $this->assertContains('source:build', $allowedEvents);
+    }
+
+    public function testAppwriteSourceSkipsRevalidationOnlyForTheInternalEndpoint(): void
+    {
+        $internal = $this->createAppwriteMigration('http://localhost/v1');
+        $internalEvents = [];
+        $this->process($this->createEndpointProcessor($internalEvents), $internal);
+
+        $other = $this->createAppwriteMigration('http://localhost:8080/v1');
+        $otherEvents = [];
+        $this->process($this->createEndpointProcessor($otherEvents), $other);
+
+        $this->assertSame('completed', $internal->getAttribute('status'));
+        $this->assertContains('source:build', $internalEvents);
+        $this->assertSame('failed', $other->getAttribute('status'));
+        $this->assertNotContains('source:build', $otherEvents);
+    }
+
+    private function createAppwriteMigration(string $endpoint): Document
+    {
+        $migration = $this->createMigration();
+        $migration->setAttribute('source', SourceAppwrite::getName());
+        $migration->setAttribute('credentials', ['endpoint' => $endpoint]);
+
+        return $migration;
+    }
+
+    /**
+     * @param array<string> $events
+     */
+    private function createEndpointProcessor(array &$events): \Closure
+    {
+        $source = $this->createStub(Source::class);
+        $source->method('getErrors')->willReturn([]);
+        $destination = $this->createStub(Destination::class);
+        $destination->method('getErrors')->willReturn([]);
+
+        $record = static function (string $event) use (&$events): void {
+            $events[] = $event;
+        };
+
+        $worker = new class ($source, $destination, $record) extends Migrations {
+            public function __construct(
+                private readonly Source $migrationSource,
+                private readonly Destination $migrationDestination,
+                private readonly \Closure $record,
+            ) {
+            }
+
+            public function process(
+                Document $migration,
+                Document $project,
+                Realtime $queueForRealtime,
+                MailPublisher $publisherForMails,
+                Context $usage,
+                UsagePublisher $publisherForUsage,
+                Authorization $authorization,
+            ): void {
+                $this->project = $project;
+
+                $this->processMigration(
+                    $migration,
+                    $queueForRealtime,
+                    $publisherForMails,
+                    $usage,
+                    $publisherForUsage,
+                    [],
+                    $authorization,
+                );
+            }
+
+            #[\Override]
+            protected function generateAPIKey(Document $project): string
+            {
+                return 'key';
+            }
+
+            #[\Override]
+            protected function processSource(Document $migration): Source
+            {
+                ($this->record)('source:build');
+
+                return $this->migrationSource;
+            }
+
+            #[\Override]
+            protected function processDestination(Document $migration): Destination
+            {
+                return $this->migrationDestination;
+            }
+
+            #[\Override]
+            protected function updateMigrationDocument(
+                Document $migration,
+                Document $project,
+                Realtime $queueForRealtime,
+            ): Document {
+                ($this->record)('persist:'
+                    . $migration->getAttribute('status')
+                    . ':'
+                    . $migration->getAttribute('stage'));
+
+                return $migration;
+            }
+        };
+
+        return $worker->process(...);
     }
 
     private function createSourceMock(): Source&MockObject
