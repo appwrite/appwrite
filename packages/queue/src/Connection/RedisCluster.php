@@ -2,6 +2,7 @@
 
 namespace Utopia\Queue\Connection;
 
+use Utopia\DSN\DSN;
 use Utopia\Queue\Connection;
 
 class RedisCluster implements Connection
@@ -13,6 +14,31 @@ class RedisCluster implements Connection
 
     public function __construct(protected array $seeds, protected float $connectTimeout = -1, protected float $readTimeout = -1, protected ?string $user = null, protected ?string $password = null)
     {
+    }
+
+    /**
+     * Connect to `redis-cluster://[user]:[password]@[host:port;host:port]`. A port
+     * after the list applies to every seed that names none, so
+     * `redis://[h1;h2]:6379` works too. Credentials are handled as in
+     * Redis::fromDSN().
+     */
+    public static function fromDSN(DSN $dsn, float $connectTimeout = -1, float $readTimeout = -1): self
+    {
+        $port = $dsn->getPort();
+        $seeds = [];
+        foreach (\explode(';', \trim($dsn->getHost(), '[]')) as $seed) {
+            $seed = \trim($seed);
+            if ($seed === '') {
+                continue;
+            }
+            $seeds[] = $port === null || \str_contains($seed, ':') ? $seed : $seed . ':' . $port;
+        }
+
+        if ($seeds === []) {
+            throw new \InvalidArgumentException('Redis cluster DSN names no seed hosts.');
+        }
+
+        return new self($seeds, $connectTimeout, $readTimeout, $dsn->getUser(), $dsn->getPassword());
     }
 
     public function execute(string $script, array $keys, array $args): mixed
