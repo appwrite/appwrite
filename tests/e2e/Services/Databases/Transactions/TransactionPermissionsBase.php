@@ -253,7 +253,7 @@ trait TransactionPermissionsBase
 
         // Test for SUCCESS: update-only row permission is sufficient, without read permission.
         $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $headers);
-        $this->assertEquals(401, $read['headers']['status-code']);
+        $this->assertEquals(404, $read['headers']['status-code']);
         foreach (['increment' => 55, 'decrement' => 50] as $operation => $expected) {
             $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']) . '/balance/' . $operation, $headers, [
                 'value' => 5,
