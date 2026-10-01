@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import {
@@ -294,7 +294,9 @@ export function TeamMembers({
                           onClick={() => openDrawer(membership)}
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <InitialsAvatar
+                            <PhotoAvatar
+                              projectId={projectId}
+                              userId={membership.userId}
                               name={userName !== '-' ? userName : userEmail}
                               size="md"
                             />

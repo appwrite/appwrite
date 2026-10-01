@@ -68,7 +68,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -1557,7 +1557,9 @@ export function View({
                                     className="block group"
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
-                                      <InitialsAvatar
+                                      <PhotoAvatar
+                                        projectId={projectId}
+                                        userId={user.$id}
                                         name={user.name || user.email || ''}
                                         size="sm"
                                         className="shrink-0"
