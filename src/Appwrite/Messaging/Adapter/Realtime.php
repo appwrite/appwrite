@@ -48,8 +48,11 @@ class Realtime extends MessagingAdapter
     // new user event is safe by default.
     //
     // `update.password` and `recovery.*.update` stay out: with `invalidateSessions`
-    // they delete sessions without emitting `sessions.*.delete`. `update.email` and
-    // `update.phone` stay out: they reset verification, which changes roles.
+    // they delete sessions without emitting `sessions.*.delete`. `sessions.*.create`
+    // stays out too: the session limit and ID-token sign-in delete older sessions the
+    // same way, and magic URL, OTP and OAuth sign-in can set verification.
+    // `update.email` and `update.phone` stay out: they reset verification, which
+    // changes roles.
     private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
         'create',
         'update.name',
@@ -59,7 +62,6 @@ class Realtime extends MessagingAdapter
         'update.mfa.recovery-codes',
         'create.mfa.recovery-codes',
         'delete.mfa',
-        'sessions.*.create',
         'sessions.*.update',
         'recovery.*.create',
         'verification.*.create',
