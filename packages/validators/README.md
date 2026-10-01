@@ -45,6 +45,8 @@ For advanced flows combine validators with `Multiple`, `AnyOf`, `AllOf`, `NoneOf
 - `ArrayList`, `Assoc`, `Nullable`, `WhiteList`, `Wildcard`
 - `Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`
 - `Domain`, `Host`, `Hostname`, `IP`, `URL`
+- `Subnet` – an IPv4 or IPv6 address inside a CIDR range, or equal to a single address
+- `Allowlist` – a hostname listed exactly (case and a trailing dot ignored), or an address inside a listed `Subnet`
 - `HexColor`, `Identifier`, `JSON`, `Phone`, `Text`
 - `JSON\ObjectValidator`, `JSON\ArrayValidator` – JSON shape checks that accept encoded strings
 - `JSON\FCM` – FCM service account JSON with required credential fields

@@ -2,6 +2,22 @@
 
 All notable changes to `utopia-php/validators` are documented in this file.
 
+## Unreleased
+
+### Added
+
+- New `Subnet` validator. Accepts an IPv4 or IPv6 address inside a CIDR range
+  (`10.0.0.0/8`, `fd00::/8`), or equal to a single address when the range has
+  no prefix length. Host bits in the range are masked, and an address of the
+  other family never matches, so `::ffff:10.0.0.5` is outside `10.0.0.0/8`.
+  The constructor throws `InvalidArgumentException` for a range that is not an
+  IP address with an optional decimal prefix length.
+- New `Allowlist` validator. Accepts a listed hostname, compared exactly after
+  lowercasing and removing one trailing dot (no wildcard or suffix matching),
+  or an IP address (optionally in brackets) inside one of the listed `Subnet`s.
+  `hasHostname()`, `hasAddress()` and `hasSubnets()` expose each half for
+  callers that check names and resolved addresses separately.
+
 ## 0.4.2
 
 ### Added

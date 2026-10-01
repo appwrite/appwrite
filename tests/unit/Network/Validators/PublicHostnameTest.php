@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Allowlist;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
@@ -15,6 +14,8 @@ use Utopia\Client\Client;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Validator\Allowlist;
+use Utopia\Validator\Subnet;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -262,7 +263,7 @@ final class PublicHostnameTest extends TestCase
 
     public function testAcceptsIpv4LiteralInAllowedSubnet(): void
     {
-        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+        $validator = new PublicHostname(new Allowlist(subnets: [new Subnet('10.0.0.0/8')]));
 
         $this->assertTrue($validator->isValid('10.1.2.3'));
         $this->assertFalse($validator->isValid('192.168.1.1'));
@@ -271,7 +272,7 @@ final class PublicHostnameTest extends TestCase
 
     public function testAcceptsIpv6LiteralInAllowedSubnet(): void
     {
-        $validator = new PublicHostname(Allowlist::parse('fd00::/8'));
+        $validator = new PublicHostname(new Allowlist(subnets: [new Subnet('fd00::/8')]));
 
         $this->assertTrue($validator->isValid('fd12::1'));
         $this->assertTrue($validator->isValid('[fd12::1]'));
@@ -281,7 +282,7 @@ final class PublicHostnameTest extends TestCase
 
     public function testAcceptsAllowedHostnameWithoutLookup(): void
     {
-        $validator = new PublicHostname(Allowlist::parse('a-hostname-that-does-not-exist.invalid'));
+        $validator = new PublicHostname(new Allowlist(['a-hostname-that-does-not-exist.invalid']));
 
         $this->assertTrue($validator->isValid('a-hostname-that-does-not-exist.invalid'));
         $this->assertTrue($validator->isValid('A-HOSTNAME-THAT-DOES-NOT-EXIST.INVALID.'));
@@ -292,7 +293,7 @@ final class PublicHostnameTest extends TestCase
     #[RunInSeparateProcess]
     public function testAcceptsHostnameResolvingIntoAllowedSubnetInsideCoroutine(): void
     {
-        $validator = new PublicHostname(Allowlist::parse('127.0.0.0/8,::1'));
+        $validator = new PublicHostname(new Allowlist(subnets: [new Subnet('127.0.0.0/8'), new Subnet('::1')]));
         $valid = null;
 
         $this->inHookedCoroutine(function () use ($validator, &$valid): void {
@@ -306,7 +307,7 @@ final class PublicHostnameTest extends TestCase
     #[RunInSeparateProcess]
     public function testRejectsHostnameResolvingOutsideAllowedSubnetInsideCoroutine(): void
     {
-        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+        $validator = new PublicHostname(new Allowlist(subnets: [new Subnet('10.0.0.0/8')]));
         $valid = null;
 
         $this->inHookedCoroutine(function () use ($validator, &$valid): void {

@@ -63,6 +63,40 @@ final class EndpointTest extends TestCase
         $this->assertFalse($validator->isValid('http://[fe80::1]/v1'));
     }
 
+    public function testIgnoresUnparsableHostnamesAndKeepsValidSiblings(): void
+    {
+        \putenv('_APP_MIGRATIONS_ALLOWED_HOSTS= *.example.invalid , .example.invalid,host:5432,http://x,2130706433,127.1, Appwrite. ');
+        $validator = new Endpoint();
+
+        $this->assertTrue($validator->isValid('http://appwrite/v1'), $validator->getDescription());
+        $this->assertTrue($validator->isValid('http://APPWRITE./v1'), $validator->getDescription());
+
+        foreach ([
+            'http://db.example.invalid/v1',
+            'http://example.invalid/v1',
+            'http://host:5432/v1',
+            'http://x/v1',
+            'http://2130706433/v1',
+            'http://127.1/v1',
+        ] as $endpoint) {
+            $this->assertFalse($validator->isValid($endpoint), "Expected {$endpoint} to be rejected");
+        }
+    }
+
+    public function testIgnoresUnparsableRangesAndKeepsValidSiblings(): void
+    {
+        \putenv('_APP_MIGRATIONS_ALLOWED_HOSTS=10.0.0.0/33,[fd00::]/8, 192.168.0.0/16 ,[fd12::1],10.0.0.5');
+        $validator = new Endpoint();
+
+        foreach (['http://192.168.1.1/v1', 'http://[fd12::1]/v1', 'http://10.0.0.5/v1'] as $endpoint) {
+            $this->assertTrue($validator->isValid($endpoint), "Expected {$endpoint} to be accepted");
+        }
+
+        foreach (['http://10.0.0.1/v1', 'http://[fd00::1]/v1', 'http://[fd12::2]/v1', 'http://10.0.0.6/v1'] as $endpoint) {
+            $this->assertFalse($validator->isValid($endpoint), "Expected {$endpoint} to be rejected");
+        }
+    }
+
     /**
      * @return array<string>
      */

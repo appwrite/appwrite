@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Allowlist;
 use Appwrite\Network\Validator\PublicURL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
+use Utopia\Validator\Allowlist;
+use Utopia\Validator\Subnet;
 
 final class PublicURLTest extends TestCase
 {
@@ -65,7 +66,7 @@ final class PublicURLTest extends TestCase
 
     public function testAcceptsAddressInAllowedSubnet(): void
     {
-        $validator = new PublicURL(Allowlist::parse('10.0.0.0/8,fd00::/8'));
+        $validator = new PublicURL(new Allowlist(subnets: [new Subnet('10.0.0.0/8'), new Subnet('fd00::/8')]));
 
         $this->assertTrue($validator->isValid('http://10.0.0.5/v1'), $validator->getDescription());
         $this->assertTrue($validator->isValid('http://[fd12::1]:8080/v1'), $validator->getDescription());
@@ -75,7 +76,7 @@ final class PublicURLTest extends TestCase
 
     public function testAcceptsAllowedHostnameThatIsNotAKnownDomain(): void
     {
-        $validator = new PublicURL(Allowlist::parse('appwrite'));
+        $validator = new PublicURL(new Allowlist(['appwrite']));
 
         $this->assertTrue($validator->isValid('http://appwrite/v1'), $validator->getDescription());
         $this->assertTrue($validator->isValid('http://APPWRITE./v1'), $validator->getDescription());
@@ -84,7 +85,7 @@ final class PublicURLTest extends TestCase
 
     public function testAllowedHostnameDoesNotMatchLookalikes(): void
     {
-        $validator = new PublicURL(Allowlist::parse('example.invalid'));
+        $validator = new PublicURL(new Allowlist(['example.invalid']));
 
         $this->assertTrue($validator->isValid('http://example.invalid/v1'), $validator->getDescription());
         $this->assertFalse($validator->isValid('http://evil-example.invalid/v1'));
@@ -95,7 +96,7 @@ final class PublicURLTest extends TestCase
     #[DataProvider('numericHosts')]
     public function testRefusesNumericHostsInsideAllowedSubnet(string $url): void
     {
-        $validator = new PublicURL(Allowlist::parse('127.0.0.0/8'));
+        $validator = new PublicURL(new Allowlist(subnets: [new Subnet('127.0.0.0/8')]));
 
         $this->assertFalse($validator->isValid($url), "Expected {$url} to be rejected");
     }
@@ -110,7 +111,7 @@ final class PublicURLTest extends TestCase
     #[DataProvider('refusedDespiteAllowlist')]
     public function testAllowlistKeepsSchemeAndCredentialChecks(string $url, string $reason): void
     {
-        $validator = new PublicURL(Allowlist::parse('10.0.0.0/8,appwrite'));
+        $validator = new PublicURL(new Allowlist(['appwrite'], [new Subnet('10.0.0.0/8')]));
 
         $this->assertFalse($validator->isValid($url), "Expected {$url} to be rejected");
         $this->assertStringContainsString($reason, $validator->getDescription());
@@ -127,7 +128,7 @@ final class PublicURLTest extends TestCase
     #[RunInSeparateProcess]
     public function testAcceptsHostnameResolvingIntoAllowedSubnetInsideCoroutine(): void
     {
-        $validator = new PublicURL(Allowlist::parse('127.0.0.0/8,::1'));
+        $validator = new PublicURL(new Allowlist(subnets: [new Subnet('127.0.0.0/8'), new Subnet('::1')]));
         $valid = null;
 
         $this->inHookedCoroutine(function () use ($validator, &$valid): void {
@@ -141,7 +142,7 @@ final class PublicURLTest extends TestCase
     #[RunInSeparateProcess]
     public function testRejectsHostnameResolvingOutsideAllowedSubnetInsideCoroutine(): void
     {
-        $validator = new PublicURL(Allowlist::parse('10.0.0.0/8'));
+        $validator = new PublicURL(new Allowlist(subnets: [new Subnet('10.0.0.0/8')]));
         $valid = null;
 
         $this->inHookedCoroutine(function () use ($validator, &$valid): void {

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Network\Validator;
 
-use Appwrite\Network\Allowlist;
 use Utopia\Domains\Domain;
+use Utopia\Validator\Allowlist;
 use Utopia\Validator\URL;
 
 /**
@@ -87,7 +87,7 @@ class PublicURL extends URL
             return false;
         }
 
-        return $this->allowlist->admits(PublicHostname::resolve($host));
+        return \array_any(PublicHostname::resolve($host), $this->allowlist->hasAddress(...));
     }
 
     /**

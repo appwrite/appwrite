@@ -2,10 +2,10 @@
 
 namespace Appwrite\Network\Validator;
 
-use Appwrite\Network\Allowlist;
 use Swoole\Coroutine;
 use Swoole\Coroutine\System;
 use Utopia\Validator;
+use Utopia\Validator\Allowlist;
 
 /**
  * Validates that a hostname (or IP literal) is publicly routable.
