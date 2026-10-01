@@ -1,0 +1,211 @@
+---
+layout: post
+title: "Next.js September 2026 security release: Key updates"
+description: Next.js September 2026 security release patches seven
+  vulnerabilities. See what is affected, the risks, and which versions
+  developers should update to.
+date: 2026-10-01
+timeToRead: 5
+author: atharva
+category: news
+featured: false
+unlisted: true
+faqs:
+  - question: What is the Next.js September 2026 security release?
+    answer: The Next.js September 2026 security release patches seven
+      vulnerabilities affecting Image Optimization, SSG and ISR caching, Cache
+      Components, App Router metadata routes, Draft Mode, and the Next.js
+      development server. The fixes are available in Next.js 16.3.8 and 15.5.27.
+  - question: Which Next.js versions fix the September 2026 security vulnerabilities?
+    answer: Next.js 16.3.8 fixes the vulnerabilities for the 16.3 Active LTS line,
+      while Next.js 15.5.27 provides the fixes for the 15.5 Maintenance LTS
+      line. Developers running affected or older versions should upgrade to a
+      patched release.
+  - question: Is Next.js 16.3.7 vulnerable?
+    answer: Next.js 16.3.7 predates the September 2026 security fixes. The patched
+      release for the 16.3 line is Next.js 16.3.8, so applications on earlier
+      16.3 versions should upgrade.
+  - question: Is Next.js 15.5.26 vulnerable?
+    answer: Next.js 15.5.26 does not include the September 2026 security patches.
+      The fixed release for the 15.5 line is Next.js 15.5.27.
+cover: /images/blog/nextjs-september-2026-security-release-key-updates/cover.avif
+---
+The [Next.js September 2026 security release](https://nextjs.org/blog/september-2026-security-release) is out, and it is not a release you can skip. It patches seven vulnerabilities across Image Optimization, the SSG and ISR response cache, `'use cache'`, App Router metadata routes, and the `next dev` server.
+
+The Next.js team pre-announced the release a week earlier, but the fixes were held back by upstream dependency delays. They are now available in **v16.3.8 (Active LTS)** and **v15.5.27 (Maintenance LTS)**.
+
+Most of these issues are not exotic. They sit in features that a large share of production Next.js apps use every day: remote images, statically generated pages, Draft Mode previews, and Cache Components. Several of them only affect **self-hosted** Next.js, which includes any app you run on your own servers, in Docker, or on a container-based platform.
+
+Here is what each vulnerability does, how to tell if your app is affected, and how to patch it.
+
+## Next.js September 2026 security release at a glance
+
+**Short answer:** Upgrade to `next@16.3.8` if you are on the 16.3 line, or `next@15.5.27` if you are on 15.5. The release fixes one high severity Server-Side Request Forgery (SSRF), five medium severity cache poisoning and information disclosure bugs, and one low severity dev server issue.
+
+| Vulnerability                                       | Severity | Identifier          | Affected when                                                   |
+| --------------------------------------------------- | -------- | ------------------- | --------------------------------------------------------------- |
+| SSRF in Image Optimization                          | High     | CVE-2026-94483      | `images.remotePatterns` is configured                           |
+| Cache poisoning of SSG and ISR pages                | Medium   | CVE-2026-94543      | Self-hosted, Pages Router, SSG or ISR pages                     |
+| Cache poisoning via root-level catch-all            | Medium   | CVE-2026-94484      | Root catch-all page plus SSG or ISR routes                      |
+| Metadata image routes bypass `dynamicParams`        | Medium   | CVE-2026-94485      | App Router built with webpack                                   |
+| Cache leak across root params in nested `use cache` | Medium   | GHSA-h694-7cp9-m8p3 | Cache Components with nested `'use cache'` reading a root param |
+| Draft Mode content leak through pending cache fills | Medium   | CVE-2026-94544      | Cache Components plus Draft Mode previews                       |
+| Information disclosure in dev server MCP endpoint   | Low      | CVE-2026-94486      | Running `next dev` only                                         |
+
+## Which Next.js versions are patched
+
+The fixes ship on the two supported LTS lines. If you are on an older major or minor, the safe path is to move onto one of these.
+
+| Release line | Support status  | Patched version |
+| ------------ | --------------- | --------------- |
+| Next.js 16.3 | Active LTS      | `16.3.8`        |
+| Next.js 15.5 | Maintenance LTS | `15.5.27`       |
+
+To patch, install the version for your release line:
+
+```bash
+npm install next@16.3.8   # for 16.3
+npm install next@15.5.27  # for 15.5
+```
+
+If you use pnpm, Yarn, or Bun, run the equivalent command and commit the updated lockfile. A dependency bump that never reaches your lockfile never reaches production.
+
+## High severity: SSRF in Next.js Image Optimization
+
+**CVE-2026-94483 /** [GHSA-cjq9-62q9-8jv4](https://github.com/vercel/next.js/security/advisories/GHSA-cjq9-62q9-8jv4)
+
+This is the most serious issue in the release. During Image Optimization, an attacker-controlled remote URL that matches your allow-list can trigger **Server-Side Request Forgery**, including requests to private IP ranges.
+
+SSRF matters because the request comes from your server, not the attacker's browser. That means it can reach internal services, metadata endpoints, and admin interfaces that are never exposed to the public internet. The [OWASP SSRF reference](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery) covers why this class of bug is so often used as a pivot into internal networks.
+
+**Are you affected?**
+
+* **Yes**, if your `next.config` sets `images.remotePatterns`.
+* **No**, if you do not configure `images.remotePatterns`.
+
+While you patch, tighten your patterns. Wildcard hostnames and broad path globs widen the set of URLs an attacker can route through your optimizer. Allow only the exact hosts and paths you actually serve images from.
+
+## Medium severity: Next.js cache poisoning in SSG and ISR
+
+Two of the medium severity issues target the response cache that powers statically generated (SSG) and Incremental Static Regeneration (ISR) pages. **Cache poisoning** is worse than a one-off bad response because a single request can change what every later visitor sees.
+
+## Cache poisoning of SSG and ISR pages in self-hosted apps
+
+**CVE-2026-94543 /** [GHSA-4jqv-mc3x-m676](https://github.com/vercel/next.js/security/advisories/GHSA-4jqv-mc3x-m676)
+
+Self-hosted Next.js apps using the **Pages Router** with SSG or ISR pages can have a page's cache entry replaced with content from a different route. The affected page then serves the wrong content to every visitor until the entry is revalidated.
+
+Apps deployed on Vercel are not affected. Apps on your own infrastructure, in Docker, or on any platform that runs `next start` are.
+
+## Cache poisoning through a root-level catch-all page
+
+**CVE-2026-94484 /** [GHSA-mcj8-r9mp-w47p](https://github.com/vercel/next.js/security/advisories/GHSA-mcj8-r9mp-w47p)
+
+Apps that combine a **root-level catch-all page** with SSG or ISR routes can have their shared response cache poisoned by a single unauthenticated, crafted request. The result is cross-user content substitution and a persistent denial of service until the cache is cleared or revalidated.
+
+Root catch-alls are common in CMS-driven sites, where one `[...slug]` route renders every marketing page. If that describes your app, prioritize this patch.
+
+## Medium severity: Next.js information disclosure and cache leaks
+
+The remaining medium severity bugs are about content reaching people who should not see it. None of them require authentication to trigger or observe.
+
+## Metadata image routes ignore `dynamicParams`
+
+**CVE-2026-94485 /** [GHSA-f87g-xv8r-7p7x](https://github.com/vercel/next.js/security/advisories/GHSA-f87g-xv8r-7p7x)
+
+In App Router apps built with **webpack**, metadata image routes such as `opengraph-image` and `twitter-image` ignore the `dynamicParams` route segment option. An attacker can request metadata images for dynamic segments you deliberately left out of `generateStaticParams()`.
+
+If you set `dynamicParams = false` to keep unlisted pages private, their Open Graph images were still reachable. Apps built with **Turbopack** are not affected, which is another reason to finish the migration covered in [everything new in Next.js 16](/blog/post/everything-new-in-nextjs16).
+
+## Cache leak across root param values in nested `use cache`
+
+[GHSA-h694-7cp9-m8p3](https://github.com/vercel/next.js/security/advisories/GHSA-h694-7cp9-m8p3)
+
+With **Cache Components** enabled, a `'use cache'` function that calls another `'use cache'` function which reads a root param can be keyed incorrectly. The outer function's cache key omits that root param, so content generated for one value can be served for another, whether the page is prerendered or dynamic.
+
+The Next.js team notes that the leaked values cannot be attacker controlled. It still matters for apps that use root params for locale or tenant routing, which became easier with the Root Params API in [Next.js 16.3](/blog/post/nextjs-163-brings-client-side-caching-to-the-app-router).
+
+## Draft Mode content leaks through pending `use cache` fills
+
+**CVE-2026-94544 /** [GHSA-3w37-wq28-93x7](https://github.com/vercel/next.js/security/advisories/GHSA-3w37-wq28-93x7)
+
+Pending `use cache` fills are shared across requests for the same key, without separating **Draft Mode** requests from regular ones. A regular visitor whose request overlaps with an editor's preview can receive unpublished content without authentication.
+
+If that overlapping request prerenders a page, the draft content can be persisted into the generated page and served to all later visitors until revalidation. You are affected if you enable Cache Components (or `experimental.useCache`) and serve Draft Mode previews whose cached functions return draft-dependent content. For teams using a headless CMS, that can mean embargoed announcements going public early.
+
+## Low severity: Next.js dev server MCP endpoint
+
+**CVE-2026-94486 /** [GHSA-39w2-rjm5-chcv](https://github.com/vercel/next.js/security/advisories/GHSA-39w2-rjm5-chcv)
+
+`next dev` exposes a **Model Context Protocol (MCP)** endpoint for AI coding agents. It does not verify which website a request comes from, so a malicious site the developer visits can read development data, including:
+
+* The project's location on disk
+* Source code snippets from error reports
+* The route inventory
+* Development logs
+
+Production deployments do not serve this endpoint. The risk is to developer machines, so update local environments too, not just your deployed apps.
+
+## How to check if your Next.js app is affected
+
+**Short answer:** Every app on an unpatched version should upgrade. Use this checklist to decide how urgently, and which mitigations to apply while the upgrade rolls out.
+
+| If your app...                                              | Exposed to            | Priority          |
+| ----------------------------------------------------------- | --------------------- | ----------------- |
+| Configures `images.remotePatterns`                          | SSRF (CVE-2026-94483) | Patch immediately |
+| Is self-hosted and uses Pages Router SSG or ISR             | CVE-2026-94543        | High              |
+| Has a root `[...slug]` catch-all plus SSG or ISR routes     | CVE-2026-94484        | High              |
+| Uses Cache Components with Draft Mode previews              | CVE-2026-94544        | High              |
+| Uses nested `'use cache'` functions reading root params     | GHSA-h694-7cp9-m8p3   | Medium            |
+| Builds the App Router with webpack and uses `dynamicParams` | CVE-2026-94485        | Medium            |
+| Is developed locally with `next dev`                        | CVE-2026-94486        | Low               |
+
+A practical rollout looks like this:
+
+1. Run `npm ls next` in each repository to confirm which version is actually installed.
+2. Bump `next` to `16.3.8` or `15.5.27` and commit the lockfile.
+3. Run your test suite, focusing on pages that use ISR, Draft Mode, and remote images.
+4. Deploy, then revalidate or purge cached pages so any poisoned entries are replaced.
+5. Update local environments so `next dev` picks up the MCP fix.
+
+Step four is easy to miss. Patching stops new cache poisoning, but entries that were already poisoned keep serving until they are revalidated.
+
+## Self-hosted Next.js security: what changes for you
+
+The SSG and ISR cache poisoning advisory (CVE-2026-94543) explicitly states that **Vercel deployments are not affected**, and several others live in the response cache and image optimizer that a managed platform runs for you. That is not a reason to avoid self-hosting. It is a reminder that when you run the Next.js server yourself, the response cache, image optimizer, and patch cadence are your responsibility.
+
+That shared responsibility model is the same one covered in our post on [backend platform security responsibilities](/blog/post/backend-platform-security-responsibilities). The fix is process, not panic:
+
+* **Pin and lock dependencies.** Commit your lockfile and use `npm ci` in CI so builds install exactly what you reviewed. Our [Axios npm incident update](/blog/post/security-update-regarding-the-axios-npm-incident) explains why this matters beyond Next.js.
+* **Subscribe to advisories.** Watch the [Next.js security advisories](https://github.com/vercel/next.js/security/advisories) and enable [Dependabot alerts](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts) on your repositories.
+* **Keep a fast deploy path.** A patch that takes a day to ship leaves you exposed for a day. Git-based deployments shorten that window to minutes.
+* **Plan for rollback.** If a patch release breaks a page, you need to revert quickly without reintroducing the old version for long.
+
+## Patching Next.js apps on Appwrite Sites
+
+[Appwrite Sites](/docs/products/sites) runs Next.js in a container-based Node.js runtime with full [SSR support](/docs/products/sites/rendering/ssr), rather than translating it into serverless functions. That gives you full Next.js server behavior, including ISR and Image Optimization, without adapters. It also means the self-hosted advisories in this release apply to you, so patch the same way you would on your own servers.
+
+On Appwrite Sites, patching is a dependency bump and a push:
+
+1. Update `next` to `16.3.8` or `15.5.27` and commit the lockfile.
+2. Push to your connected branch. [Git deployments](/docs/products/sites/deploy-from-git) build and activate the new version automatically.
+3. Use [preview deployments](/docs/products/sites/previews) to check ISR, Draft Mode, and image routes on a branch before merging.
+4. If anything regresses, [instant rollbacks](/docs/products/sites/instant-rollbacks) let you switch back to a previous ready deployment with zero downtime while you investigate.
+
+To be fair about the tradeoff, Vercel builds Next.js and can mitigate some issues at the platform level before you patch. On any platform that runs the Next.js server for you as a container, including Appwrite Sites, keeping `next` current is on your team. What you get in exchange is a standard Node.js runtime, no adapter layer between your app and the framework, and your backend in the same project. If you are choosing an output mode, [Next.js output modes](/blog/post/nextjs-output-modes) explains why standalone builds are a good default.
+
+## Getting started with secure Next.js deployments on Appwrite
+
+Patch first. Every app on an unpatched Next.js version should move to `16.3.8` or `15.5.27` today, with immediate priority for apps that configure `images.remotePatterns` or self-host ISR pages.
+
+If you are setting up a new project or moving an existing one, the [Next.js quick start for Appwrite Sites](/docs/products/sites/quick-start/nextjs) takes you from `create-next-app` to a live URL with Git deployments, previews, and instant rollbacks in place. That way the next security release is a commit and a push, not an incident.
+
+## Resources
+
+* [Next.js September 2026 security release](https://nextjs.org/blog/september-2026-security-release)
+* [Next.js security advisories on GitHub](https://github.com/vercel/next.js/security/advisories)
+* [Deploy a Next.js app to Appwrite Sites](/docs/products/sites/quick-start/nextjs)
+* [Appwrite Sites documentation](/docs/products/sites)
+* [Instant rollbacks on Appwrite Sites](/docs/products/sites/instant-rollbacks)
+* [Next.js 16.3 brings client-side caching to the App Router](/blog/post/nextjs-163-brings-client-side-caching-to-the-app-router)
+* [Join the Appwrite Discord](https://appwrite.io/discord)
