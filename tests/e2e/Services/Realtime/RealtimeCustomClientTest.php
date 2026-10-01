@@ -1179,6 +1179,101 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client);
     }
 
+    public function testImpersonatedConnectionFollowsSessionExtension(): void
+    {
+        // Its own project: sessions here only last the 60s policy minimum.
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $adminHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $setDuration = function (int $seconds) use ($adminHeaders): void {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/session-duration', $adminHeaders, [
+                'duration' => $seconds,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        };
+
+        $setDuration(60);
+
+        $targetId = ID::unique();
+        $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => $targetId,
+            'email' => 'extension-target-' . $targetId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Target',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $actorId = ID::unique();
+        $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => $actorId,
+            'email' => 'extension-actor-' . $actorId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Actor',
+        ]);
+        $this->assertEquals(201, $actor['headers']['status-code']);
+
+        $actor = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $adminHeaders, [
+            'impersonator' => true,
+        ]);
+        $this->assertEquals(200, $actor['headers']['status-code']);
+
+        // Two sessions with the same 60s expiry: one is extended, the other shows when
+        // that original expiry has passed.
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $actorId . '/sessions', $adminHeaders);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $reference = $this->client->call(Client::METHOD_POST, '/users/' . $actorId . '/sessions', $adminHeaders);
+        $this->assertEquals(201, $reference['headers']['status-code']);
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ], $projectId);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertEquals($targetId, $response['data']['user']['$id']);
+
+        $setDuration(3600);
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/' . $session['body']['$id'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(\strtotime($reference['body']['expire']), \strtotime($response['body']['expire']));
+
+        // Expiry fires no event; wait until the HTTP API refuses the unextended session.
+        $this->assertEventually(function () use ($projectId, $reference) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-session' => $reference['body']['secret'],
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }, 75_000, 500);
+
+        /**
+         * Test for SUCCESS - past the original expiry, the connection still gets the target's events
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $adminHeaders, [
+            'name' => 'Target ' . uniqid(),
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $event = $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$targetId}.update.name", $message['data']['events'] ?? [], true));
+        $this->assertEquals('event', $event['type']);
+
+        $client->send(\json_encode(['type' => 'ping']));
+        $this->assertEquals('pong', json_decode($client->receive(), true)['type']);
+        $client->close();
+    }
+
     public function testConnectionEndsWithJwt(): void
     {
         $projectId = $this->getProject()['$id'];
