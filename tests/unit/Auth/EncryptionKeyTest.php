@@ -18,16 +18,14 @@ final class EncryptionKeyTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: ?string, 1: bool}>
+     * @return \Iterator<string, array{0: ?string, 1: bool}>
      */
-    public static function insecureKeys(): array
+    public static function insecureKeys(): \Iterator
     {
-        return [
-            'null' => [null, true],
-            'empty' => ['', true],
-            'placeholder' => [EncryptionKey::PLACEHOLDER, true],
-            'unique' => ['a-unique-generated-secret', false],
-        ];
+        yield 'null' => [null, true];
+        yield 'empty' => ['', true];
+        yield 'placeholder' => [EncryptionKey::PLACEHOLDER, true];
+        yield 'unique' => ['a-unique-generated-secret', false];
     }
 
     public function testAssertProductionRejectsPlaceholder(): void

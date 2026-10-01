@@ -43,16 +43,14 @@ final class TrustedProxiesTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string, 1: string, 2: bool}>
+     * @return \Iterator<string, array{0: string, 1: string, 2: bool}>
      */
-    public static function cidrCases(): array
+    public static function cidrCases(): \Iterator
     {
-        return [
-            'v4 in range' => ['192.168.1.0/24', '192.168.1.50', true],
-            'v4 out of range' => ['192.168.1.0/24', '192.168.2.50', false],
-            'v6 in range' => ['2001:db8::/32', '2001:db8:1::1', true],
-            'v6 out of range' => ['2001:db8::/32', '2001:db9::1', false],
-            'family mismatch' => ['10.0.0.0/8', '2001:db8::1', false],
-        ];
+        yield 'v4 in range' => ['192.168.1.0/24', '192.168.1.50', true];
+        yield 'v4 out of range' => ['192.168.1.0/24', '192.168.2.50', false];
+        yield 'v6 in range' => ['2001:db8::/32', '2001:db8:1::1', true];
+        yield 'v6 out of range' => ['2001:db8::/32', '2001:db9::1', false];
+        yield 'family mismatch' => ['10.0.0.0/8', '2001:db8::1', false];
     }
 }
