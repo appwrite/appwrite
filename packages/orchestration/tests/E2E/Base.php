@@ -27,6 +27,23 @@ abstract class Base extends TestCase
         return __DIR__.'/Resources';
     }
 
+    /**
+     * The daemon's speed varies with whatever else the host runs, so wait for
+     * a condition instead of sleeping a fixed time.
+     */
+    protected static function waitUntil(callable $condition, int $seconds = 30): bool
+    {
+        $deadline = \time() + $seconds;
+        while (! $condition()) {
+            if (\time() >= $deadline) {
+                return false;
+            }
+            \usleep(250_000);
+        }
+
+        return true;
+    }
+
     public function setUp(): void
     {
         \exec('rm -rf '.\escapeshellarg(self::resources().'/screens')); // cleanup
@@ -563,12 +580,10 @@ abstract class Base extends TestCase
 
         $this->assertNotEmpty($response);
 
-        sleep(1);
-
         // Check if container exists
-        $statusResponse = static::getOrchestration()->list(['id' => $response]);
+        $removed = self::waitUntil(fn (): bool => static::getOrchestration()->list(['id' => $response]) === []);
 
-        $this->assertSame(0, count($statusResponse));
+        $this->assertTrue($removed, 'TestContainerRM still exists after exiting');
     }
 
     #[Depends('testPullImage')]
@@ -612,7 +627,22 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($containerId2);
-        sleep(2);
+
+        // Both containers install screen on start
+        foreach ([$containerId1, $containerId2] as $containerId) {
+            $installed = self::waitUntil(function () use ($containerId): bool {
+                $output = '';
+                try {
+                    static::getOrchestration()->execute($containerId, ['which', 'screen'], $output);
+                } catch (\Exception) {
+                    return false;
+                }
+
+                return true;
+            }, 120);
+
+            $this->assertTrue($installed, "screen is not installed in {$containerId}");
+        }
 
         // This allows CPU-heavy load check
         $output = '';
