@@ -168,15 +168,17 @@ class Filesystem implements Adapter
             throw new Exception('Error happened during glob');
         }
 
+        $success = true;
+
         foreach ($files as $file) {
             if (is_dir($file)) {
-                $this->deleteDirectory($file, false);
+                $success = $this->deleteDirectory($file, false) && $success;
             } else {
-                unlink($file);
+                $success = @unlink($file) && $success;
             }
         }
 
-        return $isRoot ? true : rmdir($path);
+        return $isRoot ? $success : ($success && @rmdir($path));
     }
 
     public function getName(?string $key = null): string

@@ -104,4 +104,39 @@ final class FilesystemTest extends Base
             self::deletePath($path);
         }
     }
+
+    public function testFlushReportsFailureWhenEntryCannotBeDeleted(): void
+    {
+        $path = self::scratch('unwritable-cache');
+
+        try {
+            $adapter = new Filesystem($path);
+            $cache = new Cache($adapter);
+
+            $this->assertSame('data', $cache->save('item', 'data'));
+
+            $isRoot = function_exists('posix_geteuid') && posix_geteuid() === 0;
+            $switched = false;
+            $origEuid = null;
+
+            chmod($path, 0555);
+
+            if ($isRoot && function_exists('posix_seteuid')) {
+                $origEuid = posix_geteuid();
+                $switched = @posix_seteuid(1000);
+            }
+
+            try {
+                $this->assertFalse($cache->flush());
+            } finally {
+                if ($switched && $origEuid !== null) {
+                    posix_seteuid($origEuid);
+                }
+                chmod($path, 0777);
+            }
+        } finally {
+            chmod($path, 0777);
+            self::deletePath($path);
+        }
+    }
 }
