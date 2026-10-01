@@ -45,6 +45,7 @@ import {
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   USER_PREFS_KEY_DISMISSED_BANNERS,
   USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
+  USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
   USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
@@ -137,6 +138,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
     description:
       'Project IDs where the Agents landing was dismissed (JSON string array).',
+    category: 'Account',
+  },
+  {
+    id: 'premiumGeoOverviewDismissedProjectIds',
+    scope: 'account',
+    key: USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+    description:
+      'Project IDs where the Premium Geo DB overview promo was dismissed (JSON string array).',
     category: 'Account',
   },
   // Layout / chrome
