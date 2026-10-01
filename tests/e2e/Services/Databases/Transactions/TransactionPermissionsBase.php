@@ -1269,6 +1269,118 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Test that a leaked transaction ID does not expose another user's staged documents
+     */
+    public function testUserCannotReadAnotherUsersStagedDocuments(): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Staged Read Test',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => false,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'title',
+                'size' => 255,
+                'required' => true,
+            ]);
+
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $documentId = ID::unique();
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['title' => 'Staged secret'],
+            ]]
+        ]);
+
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ownRead = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers), [
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertEquals(200, $ownRead['headers']['status-code']);
+        $this->assertEquals('Staged secret', $ownRead['body']['title']);
+
+        /**
+         * Test for FAILURE
+         */
+        $user2 = $this->getUser(true);
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        $foreignRead = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers), [
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertEquals(404, $foreignRead['headers']['status-code']);
+
+        $foreignList = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers), [
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertEquals(200, $foreignList['headers']['status-code']);
+        $this->assertEquals(0, $foreignList['body']['total']);
+        $this->assertNotContains($documentId, \array_column($foreignList['body'][$this->getRecordResource()], '$id'));
+    }
+
+    /**
      * Test that an authenticated user can successfully list their own transactions
      */
     public function testAuthenticatedUserCanListTheirOwnTransactions(): void
