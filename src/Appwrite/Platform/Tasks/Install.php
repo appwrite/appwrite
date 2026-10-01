@@ -1313,6 +1313,10 @@ class Install extends Action
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
                 $target = $this->path . '/' . $file;
+                // A local install writes into the project root itself, and copy() fails onto the same file
+                if (\realpath($source) === \realpath($target)) {
+                    continue;
+                }
                 if (@copy($source, $target) === false) {
                     $lastError = error_get_last();
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
