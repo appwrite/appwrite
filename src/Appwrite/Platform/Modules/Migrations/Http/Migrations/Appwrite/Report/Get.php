@@ -65,8 +65,7 @@ class Get extends Action
         callable $getDatabasesDB
     ): void {
         try {
-            $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
-            $report = $appwrite->report($resources);
+            $report = $this->createSource($endpoint, $projectID, $key, $getDatabasesDB)->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
                 Exception::MIGRATION_PROVIDER_ERROR,
@@ -77,5 +76,13 @@ class Get extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
+    }
+
+    protected function createSource(string $endpoint, string $projectID, string $key, callable $getDatabasesDB): AppwriteSource
+    {
+        $source = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+        $source->setResolver((new Endpoint())->resolve(...));
+
+        return $source;
     }
 }
