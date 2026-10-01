@@ -633,7 +633,9 @@ abstract class Base extends TestCase
             $installed = self::waitUntil(function () use ($containerId): bool {
                 $output = '';
                 try {
-                    static::getOrchestration()->execute($containerId, ['which', 'screen'], $output);
+                    // Bound each probe too: execute() waits forever by default, which
+                    // would keep a stalled daemon from ever reaching the deadline.
+                    static::getOrchestration()->execute($containerId, ['which', 'screen'], $output, timeout: 10);
                 } catch (\Exception) {
                     return false;
                 }

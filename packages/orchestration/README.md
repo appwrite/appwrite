@@ -36,11 +36,10 @@ $orchestration->pull('ubuntu:latest');
 // Launch a ubuntu container that doesn't end using the tail command.
 $containerID = $orchestration->run('ubuntu:latest', 'testContainer', ['tail', '-f', '/dev/null']);
 
-$stderr = '';
-$stdout = '';
+$output = '';
 
 // Execute a hello world command in the container
-$orchestration->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr);
+$orchestration->execute($containerID, ['echo', 'Hello World!'], $output);
 
 // Remove the container forcefully since it's still running.
 $orchestration->remove($containerID, true);
@@ -172,17 +171,15 @@ Once you have initialised your Orchestration object the following methods can be
     This method executes a command in an already running container and returns a boolean value indicating if the command was executed successfully.
 
     ```php
-    $stdout = '';
-    $stderr = '';
+    $output = '';
 
-    $orchestraton->execute(
+    $orchestration->execute(
         'container_id',
         ['echo', 'Hello World!'],
-        $stdout,
-        $stderr,
+        $output,
         ['VAR' => 'VALUE'],
         10,
-    )
+    );
     ```
 
     <details>
@@ -199,13 +196,9 @@ Once you have initialised your Orchestration object the following methods can be
 
         The command to execute in the container.
 
-    - `stdout` [String] [Reference]
+    - `output` [String] [Reference]
 
-        The variable to store the stdout of the command in.
-
-    - `stderr` [String] [Reference]
-
-        The variable to store the stderr of the command in.
+        The variable to store the command's output in. `DockerAPI` appends stderr to stdout; `DockerCLI` stores stdout and reports stderr in the exception it throws when the command fails.
 
     - `env` [Array]
 
