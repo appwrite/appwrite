@@ -34,6 +34,9 @@ class Mqtt extends MessagingAdapter
     public readonly Histogram $replayBacklog;
     public readonly Histogram $ledgerDuration;
 
+    /** @var array<string, array{connections: int, delivered: int}> per-project usage, drained by flushUsage() */
+    private array $usage = [];
+
     public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
     {
         $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
@@ -101,5 +104,37 @@ class Mqtt extends MessagingAdapter
 
     public function unsubscribe(mixed $identifier): void
     {
+    }
+
+    /** Accumulate one accepted connection for a project, for per-project usage. */
+    public function recordConnection(string $projectId): void
+    {
+        if ($projectId === '') {
+            return;
+        }
+        $this->usage[$projectId]['connections'] = ($this->usage[$projectId]['connections'] ?? 0) + 1;
+    }
+
+    /** Accumulate delivered messages for a project, for per-project usage. */
+    public function recordDeliveries(string $projectId, int $count): void
+    {
+        if ($projectId === '' || $count <= 0) {
+            return;
+        }
+        $this->usage[$projectId]['delivered'] = ($this->usage[$projectId]['delivered'] ?? 0) + $count;
+    }
+
+    /**
+     * Drain and reset the accumulated per-project usage so a flush can enqueue it. The broker runs a
+     * single worker with cooperative coroutines, so the read-and-reset is atomic (no yield between).
+     *
+     * @return array<string, array{connections?: int, delivered?: int}>
+     */
+    public function flushUsage(): array
+    {
+        $usage = $this->usage;
+        $this->usage = [];
+
+        return $usage;
     }
 }

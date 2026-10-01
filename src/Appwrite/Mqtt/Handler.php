@@ -95,6 +95,7 @@ class Handler implements MqttHandler
 
         $this->mqtt->connectResult->add(1, ['result' => 'accepted']);
         $this->mqtt->connectionsActive->add(1);
+        $this->mqtt->recordConnection($connection->prefix);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
     }
@@ -285,6 +286,8 @@ class Handler implements MqttHandler
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
         }
+
+        $this->mqtt->recordDeliveries($projectId, $delivered);
 
         return $delivered;
     }
