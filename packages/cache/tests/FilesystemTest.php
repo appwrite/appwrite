@@ -99,6 +99,11 @@ final class FilesystemTest extends Base
             $this->markTestSkipped('POSIX permission bits are required for this regression.');
         }
 
+        // Root ignores directory write bits for unlink(); CI unit jobs run as root.
+        if (\function_exists('posix_geteuid') && \posix_geteuid() === 0) {
+            $this->markTestSkipped('Cannot simulate unlink failure while running as root.');
+        }
+
         $path = self::scratch('flush-readonly');
 
         try {
