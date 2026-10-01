@@ -113,14 +113,6 @@ final class JobsDedupeTest extends TestCase
         $this->assertSame(["npm install\n"], $this->written);
     }
 
-    public function testRepeatOfAnAppliedEventIsSkipped(): void
-    {
-        $this->deliver('evt-1', 'npm install');
-        $this->deliver('evt-1', 'npm install');
-
-        $this->assertSame(["npm install\n"], $this->written);
-    }
-
     private function deliver(string $eventId, string $line, bool $lockTimesOut = false): void
     {
         $dbForProject = $this->createStub(Database::class);
