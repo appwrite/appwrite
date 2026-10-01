@@ -7,7 +7,6 @@ use Appwrite\PubSub\Adapter as PubSub;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\Histogram;
-use Utopia\Telemetry\UpDownCounter;
 
 /**
  * The MQTT producer: publishes messages onto the 'mqtt' pub/sub channel for the broker workers
@@ -24,9 +23,6 @@ class Mqtt extends MessagingAdapter
     public readonly Counter $messagesAcked;
     public readonly Counter $pubacksReceived;
     public readonly Counter $reauth;
-    public readonly Counter $connectResult;
-    public readonly Counter $subscribeOutcome;
-    public readonly UpDownCounter $connectionsActive;
     public readonly Histogram $authDuration;
     public readonly Histogram $connectionDuration;
     public readonly Histogram $messageSize;
@@ -45,9 +41,6 @@ class Mqtt extends MessagingAdapter
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
         $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
         $this->reauth = $telemetry->createCounter('mqtt.reauth');
-        $this->connectResult = $telemetry->createCounter('mqtt.connect.result');
-        $this->subscribeOutcome = $telemetry->createCounter('mqtt.subscribe.outcome');
-        $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
         $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
         $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
         $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');

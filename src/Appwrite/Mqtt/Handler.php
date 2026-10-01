@@ -64,7 +64,6 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
-            $this->mqtt->connectResult->add(1, ['result' => 'not_authorized']);
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
@@ -79,7 +78,6 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
-                $this->mqtt->connectResult->add(1, ['result' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
@@ -93,8 +91,6 @@ class Handler implements MqttHandler
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
 
-        $this->mqtt->connectResult->add(1, ['result' => 'accepted']);
-        $this->mqtt->connectionsActive->add(1);
         $this->mqtt->recordConnection($connection->prefix);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
@@ -167,7 +163,6 @@ class Handler implements MqttHandler
         if ($authorizer !== null && !$authorizer($connection->identity)) {
             foreach ($subscribe->filters() as $filter) {
                 $suback->deny();
-                $this->mqtt->subscribeOutcome->add(1, ['result' => 'denied']);
             }
 
             return $suback;
@@ -211,7 +206,6 @@ class Handler implements MqttHandler
             // users/<id> falls through and is served like any exact topic name below.
             if ($this->deniesUserTopic($filter->topic, $userId)) {
                 $suback->deny();
-                $this->mqtt->subscribeOutcome->add(1, ['result' => 'denied']);
                 continue;
             }
 
@@ -220,7 +214,6 @@ class Handler implements MqttHandler
             $topicQos = $document?->getAttribute('qos');
             $grantedQos = min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
             $suback->grant($grantedQos);
-            $this->mqtt->subscribeOutcome->add(1, ['result' => 'granted']);
 
             // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
             // topic is delivered live only.
@@ -317,11 +310,10 @@ class Handler implements MqttHandler
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
-        // The broker already removed the connection, its subscriptions and keep-alive slot. Only an
-        // accepted session (identity set in onConnect) incremented connections.active and has an
-        // openedAt, so balance the gauge and record its lifetime for those.
+        // The broker already removed the connection, its subscriptions and keep-alive slot, and owns
+        // the connections.active gauge. Record the lifetime of accepted sessions (identity set in
+        // onConnect) only, which also have an openedAt.
         if (($connection->identity['userId'] ?? '') !== '') {
-            $this->mqtt->connectionsActive->add(-1);
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
         }
     }
@@ -407,11 +399,18 @@ class Handler implements MqttHandler
                 Query::limit($maxDepth),
             ]));
 
+            $replayed = 0;
             foreach ($messages as $message) {
                 $stored = $message->getAttribute('data');
                 $data = \is_string($stored) ? $stored : (string) json_encode($stored);
                 $connection->publish($filter, $data, qos: 1, dup: true, sequence: (int) $message->getAttribute('sequence'));
+                $this->mqtt->messagesDelivered->add(1, ['qos' => 1]);
+                $replayed++;
             }
+
+            // Offline-replay re-deliveries are real deliveries: account for them in per-project usage
+            // too, so a device catching up after reconnect is not undercounted.
+            $this->mqtt->recordDeliveries($connection->prefix, $replayed);
         }
 
         if ($persist !== []) {
