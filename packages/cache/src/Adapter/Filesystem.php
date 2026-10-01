@@ -175,19 +175,23 @@ class Filesystem implements Adapter
             throw new Exception('Error happened during glob');
         }
 
+        $success = true;
+
         foreach ($files as $file) {
             if (is_dir($file)) {
-                self::deleteDirectory($file);
-            } else {
-                unlink($file);
+                if (! self::deleteDirectory($file)) {
+                    $success = false;
+                }
+            } elseif (! unlink($file)) {
+                $success = false;
             }
         }
 
         if (! $removeRoot) {
-            return true;
+            return $success;
         }
 
-        return rmdir($path);
+        return $success && rmdir($path);
     }
 
     public function getName(?string $key = null): string

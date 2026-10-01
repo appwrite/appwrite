@@ -92,4 +92,33 @@ final class FilesystemTest extends Base
             self::deletePath($path);
         }
     }
+
+    public function testFlushReportsFailureWhenEntryCannotBeDeleted(): void
+    {
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('POSIX permission bits are required for this regression.');
+        }
+
+        $path = self::scratch('flush-readonly');
+
+        try {
+            $cache = new Cache(new Filesystem($path));
+            $cache->save('locked', 'value');
+
+            $file = $path . DIRECTORY_SEPARATOR . 'locked';
+            $this->assertTrue(\chmod($path, 0555));
+
+            try {
+                $this->assertFalse($cache->flush());
+            } finally {
+                \chmod($path, 0755);
+            }
+
+            $this->assertDirectoryExists($path);
+            $this->assertFileExists($file);
+        } finally {
+            @\chmod($path, 0755);
+            self::deletePath($path);
+        }
+    }
 }
