@@ -3,3 +3,4 @@
 .phpunit.result.cache
 *.phpdisabled
 .DS_Store
+composer.lock

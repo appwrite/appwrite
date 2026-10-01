@@ -1,5 +1,8 @@
 # Utopia Orchestration
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/orchestration`](https://github.com/appwrite/appwrite/tree/main/packages/orchestration) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://app.travis-ci.com/utopia-php/orchestration.svg?branch=main)](https://app.travis-ci.com/github/utopia-php/orchestration)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/orchestration.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
