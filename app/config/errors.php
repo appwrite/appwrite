@@ -1593,7 +1593,7 @@ return [
     ],
     Exception::VIDEO_NOT_READY => [
         'name' => Exception::VIDEO_NOT_READY,
-        'description' => 'The video source is not ready. Call the create source endpoint and wait until the video status is ready before creating a timeline or rendition.',
+        'description' => 'The video source is not ready. A timeline requires status ready. A rendition is rejected while the source status is error or aborted. Call the create source endpoint and wait until the video status is ready.',
         'code' => 400,
     ],
     Exception::VIDEO_SOURCE_REMOVED => [

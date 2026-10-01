@@ -387,6 +387,17 @@ final class VideosStaleResourcesServerTest extends Scope
         $this->triggerCleanStale();
         $this->assertEquals('aborted', $this->getVideo($videoId)['status']);
 
+        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $this->assertNotEmpty($profiles['body']['profiles']);
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profiles['body']['profiles'][0]['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(400, $rendition['headers']['status-code']);
+        $this->assertEquals('video_not_ready', $rendition['body']['type']);
+
         $source = $this->createSource($videoId, $this->headers());
         $this->assertEquals(202, $source['headers']['status-code']);
 

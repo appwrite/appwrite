@@ -629,10 +629,9 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Renditions may only be created against a fully processed source: while the
-     * download is still `pending`/`downloading` the endpoint rejects with 400
-     * `video_not_ready`, and once the video reaches `ready` the same request is
-     * accepted and encodes to completion.
+     * A rendition created while the source is still `pending` is accepted and
+     * stays pending. The download job enqueues the encode once the working
+     * copy is ready, and that same rendition finishes.
      */
     public function testCreateRenditionRequiresReadyVideo(): void
     {
@@ -653,22 +652,15 @@ final class VideosCustomServerTest extends Scope
             'profileId' => $profile['$id'],
             'output' => 'hls',
         ]);
-        $this->assertEquals(400, $rendition['headers']['status-code']);
-        $this->assertEquals('video_not_ready', $rendition['body']['type']);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('pending', $rendition['body']['status']);
 
         $this->createSource($videoId);
         $ready = $this->waitForVideoReady($videoId);
         $this->assertEquals('ready', $ready['status']);
 
-        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $profile['$id'],
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $rendition['headers']['status-code']);
-        $this->assertEquals('pending', $rendition['body']['status']);
-
         $body = $this->waitForRenditionTerminalState($videoId, $rendition['body']['$id']);
-        $this->assertEquals('ready', $body['status'], 'Rendition queued after the video became ready did not finish');
+        $this->assertEquals('ready', $body['status'], 'Rendition created while the source was pending did not finish');
     }
 
     /**
@@ -1591,8 +1583,8 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Post-insert disk check: ready status with a missing working copy must not
-     * return 202 (doomed encode) or leave a pending rendition row behind.
+     * Ready status with a missing working copy is rejected like `removed`,
+     * before a rendition row is created.
      */
     public function testCreateRenditionRejectsMissingWorkingCopy(): void
     {
@@ -1611,6 +1603,10 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('video_source_removed', $response['body']['type']);
+
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(200, $video['headers']['status-code']);
+        $this->assertEquals('ready', $video['body']['status']);
 
         $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
@@ -1675,12 +1671,30 @@ final class VideosCustomServerTest extends Scope
         $pendingId = $pending['body']['$id'];
         $this->assertEquals('pending', $pending['body']['status']);
 
-        $this->assertGatedEndpointsFail($pendingId, 'video_not_ready', $profile['$id']);
+        $timeline = $this->createTimeline($pendingId);
+        $this->assertEquals(400, $timeline['headers']['status-code']);
+        $this->assertEquals('video_not_ready', $timeline['body']['type']);
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $pendingId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('pending', $rendition['body']['status']);
 
         $this->createSource($pendingId);
         $downloading = $this->client->call(Client::METHOD_GET, '/videos/' . $pendingId, $this->headers());
         if (($downloading['body']['status'] ?? '') === 'downloading') {
-            $this->assertGatedEndpointsFail($pendingId, 'video_not_ready', $profile['$id']);
+            $timeline = $this->createTimeline($pendingId);
+            $this->assertEquals(400, $timeline['headers']['status-code']);
+            $this->assertEquals('video_not_ready', $timeline['body']['type']);
+
+            $dash = $this->client->call(Client::METHOD_POST, '/videos/' . $pendingId . '/renditions', $this->headers(), [
+                'profileId' => $profile['$id'],
+                'output' => 'dash',
+            ]);
+            $this->assertEquals(202, $dash['headers']['status-code']);
+            $this->assertEquals('pending', $dash['body']['status']);
         }
         $this->waitForVideoReady($pendingId);
 

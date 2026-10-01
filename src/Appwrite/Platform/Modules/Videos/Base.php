@@ -353,19 +353,72 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Timeline and rendition creates require a live working copy.
+     * Rendition creates allow a working copy that is queued, downloading, or ready.
+     *
+     * `ready` with no file on disk is the same rejection as `removed`.
+     */
+    protected function assertCanCreateRendition(Document $video, string $projectId): void
+    {
+        $status = (string) $video->getAttribute('status', '');
+        $fileMissing = $status === self::SOURCE_READY
+            && !self::sourceExists(self::tmpSourcePath($projectId, $video->getId()));
+
+        $error = self::renditionSourceError($status, $fileMissing);
+        if ($error !== null) {
+            throw new Exception($error);
+        }
+    }
+
+    /**
+     * Timeline creates require a live working copy.
      */
     protected function assertSourceReady(Document $video): void
     {
-        $status = (string) $video->getAttribute('status', '');
+        $error = self::timelineSourceError((string) $video->getAttribute('status', ''));
+        if ($error !== null) {
+            throw new Exception($error);
+        }
+    }
+
+    /**
+     * Error type when creating a timeline, or null when the working copy is `ready`.
+     *
+     * `removed` is `video_source_removed`. Every other status, including
+     * `pending` and `downloading`, is `video_not_ready`.
+     */
+    public static function timelineSourceError(string $status): ?string
+    {
+        if ($status === self::SOURCE_READY) {
+            return null;
+        }
 
         if ($status === self::SOURCE_REMOVED) {
-            throw new Exception(Exception::VIDEO_SOURCE_REMOVED);
+            return Exception::VIDEO_SOURCE_REMOVED;
         }
 
-        if ($status !== self::SOURCE_READY) {
-            throw new Exception(Exception::VIDEO_NOT_READY);
+        return Exception::VIDEO_NOT_READY;
+    }
+
+    /**
+     * Error type when creating a rendition, or null when the source status allows it.
+     *
+     * `pending` and `downloading` are allowed: the row stays pending until the
+     * working copy is ready and the download job enqueues the encode. `ready`
+     * is allowed when the file is on disk. `removed`, and `ready` with the
+     * file already gone, are `video_source_removed`. `error`, `aborted`, and
+     * any other status are `video_not_ready`.
+     */
+    public static function renditionSourceError(string $status, bool $fileMissing = false): ?string
+    {
+        if ($status === self::SOURCE_REMOVED || ($status === self::SOURCE_READY && $fileMissing)) {
+            return Exception::VIDEO_SOURCE_REMOVED;
         }
+
+        if (\in_array($status, [self::SOURCE_PENDING, self::SOURCE_DOWNLOADING, self::SOURCE_READY], true)) {
+            return null;
+        }
+
+        return Exception::VIDEO_NOT_READY;
     }
 
     /**

@@ -131,6 +131,7 @@ class Videos extends Action
                 $deviceForFiles,
                 $deviceForVideos,
                 $queueForRealtime,
+                $publisherForVideos,
                 $project,
                 $videoMessage
             ),
@@ -162,14 +163,15 @@ class Videos extends Action
 
     /**
      * Fetch the source onto videos-tmp, probe it, extract embedded text
-     * subtitles, and mark the video ready. Timeline and rendition jobs are
-     * client-enqueued; this job does not fan out.
+     * subtitles, and mark the video ready. Renditions created while the copy
+     * was still pending or downloading are enqueued here.
      */
     private function downloadSource(
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
         Realtime $queueForRealtime,
+        VideoPublisher $publisherForVideos,
         Document $project,
         VideoMessage $videoMessage
     ): void {
@@ -237,7 +239,7 @@ class Videos extends Action
                 }
             }
 
-            $this->setVideoStatus(
+            $video = $this->setVideoStatus(
                 $dbForProject,
                 $queueForRealtime,
                 $project,
@@ -247,6 +249,11 @@ class Videos extends Action
                 (int) $video->getAttribute('chunksTotal', 1),
                 (int) $video->getAttribute('chunksTotal', 1)
             );
+            // A sweeper abort wins over this ready write. Leave pending
+            // renditions for the next successful download.
+            if ((string) $video->getAttribute('status', '') === Base::SOURCE_READY) {
+                $this->enqueuePendingRenditions($dbForProject, $publisherForVideos, $project, $video);
+            }
         } catch (\Throwable $th) {
             $video = $dbForProject->getDocument('videos', $videoId);
             if (!$video->isEmpty()) {
@@ -261,6 +268,50 @@ class Videos extends Action
             }
 
             throw $th;
+        }
+    }
+
+    /**
+     * Enqueue encodes for renditions created before the working copy was ready.
+     *
+     * Create leaves those rows pending and does not publish. A second message
+     * for a row that create already published is dropped by the pending→started
+     * claim.
+     */
+    private function enqueuePendingRenditions(
+        Database $dbForProject,
+        VideoPublisher $publisherForVideos,
+        Document $project,
+        Document $video
+    ): void {
+        $filters = [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('status', [Base::STATUS_PENDING]),
+        ];
+        $total = $dbForProject->count('videos_renditions', $filters);
+        if ($total === 0) {
+            return;
+        }
+
+        $renditions = $dbForProject->find('videos_renditions', [
+            ...$filters,
+            Query::limit($total),
+        ]);
+
+        foreach ($renditions as $rendition) {
+            $profile = $dbForProject->getDocument(
+                'videos_profiles',
+                (string) $rendition->getAttribute('profileId', '')
+            );
+
+            $publisherForVideos->enqueue(new VideoMessage(
+                project: $project,
+                action: VideoAction::Encode,
+                video: $video,
+                profile: $profile->isEmpty() ? null : $profile,
+                rendition: $rendition,
+                output: (string) $rendition->getAttribute('output', ''),
+            ));
         }
     }
 
@@ -484,6 +535,17 @@ class Videos extends Action
             // row already left `pending` is a stale redelivery and is dropped here.
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_PENDING) {
+                return;
+            }
+
+            // Created while the working copy was still coming down. Leave the
+            // row pending; downloadSource enqueues again once it is ready.
+            $video = $dbForProject->getDocument('videos', $videoId);
+            if (
+                !$video->isEmpty()
+                && !$this->sourceReady($this->sourcePath($projectId, $videoId), $video)
+                && \in_array((string) $video->getAttribute('status', ''), [Base::SOURCE_PENDING, Base::SOURCE_DOWNLOADING], true)
+            ) {
                 return;
             }
 

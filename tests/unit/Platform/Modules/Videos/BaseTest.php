@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Platform\Modules\Videos;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -51,6 +52,49 @@ final class BaseTest extends TestCase
         } finally {
             @\unlink($path);
         }
+    }
+
+    #[DataProvider('renditionSourceCases')]
+    public function testRenditionSourceError(string $status, bool $fileMissing, ?string $expected): void
+    {
+        $this->assertSame($expected, Base::renditionSourceError($status, $fileMissing));
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: bool, 2: string|null}>
+     */
+    public static function renditionSourceCases(): array
+    {
+        return [
+            'pending' => [Base::SOURCE_PENDING, true, null],
+            'downloading' => [Base::SOURCE_DOWNLOADING, true, null],
+            'ready' => [Base::SOURCE_READY, false, null],
+            'ready file missing' => [Base::SOURCE_READY, true, Exception::VIDEO_SOURCE_REMOVED],
+            'removed' => [Base::SOURCE_REMOVED, false, Exception::VIDEO_SOURCE_REMOVED],
+            'error' => [Base::SOURCE_ERROR, false, Exception::VIDEO_NOT_READY],
+            'aborted' => [Base::SOURCE_ABORTED, false, Exception::VIDEO_NOT_READY],
+        ];
+    }
+
+    #[DataProvider('timelineSourceCases')]
+    public function testTimelineSourceError(string $status, ?string $expected): void
+    {
+        $this->assertSame($expected, Base::timelineSourceError($status));
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string|null}>
+     */
+    public static function timelineSourceCases(): array
+    {
+        return [
+            'ready' => [Base::SOURCE_READY, null],
+            'pending' => [Base::SOURCE_PENDING, Exception::VIDEO_NOT_READY],
+            'downloading' => [Base::SOURCE_DOWNLOADING, Exception::VIDEO_NOT_READY],
+            'error' => [Base::SOURCE_ERROR, Exception::VIDEO_NOT_READY],
+            'aborted' => [Base::SOURCE_ABORTED, Exception::VIDEO_NOT_READY],
+            'removed' => [Base::SOURCE_REMOVED, Exception::VIDEO_SOURCE_REMOVED],
+        ];
     }
 
     public function testStaleSourceStatusesContainsDownloadingOnly(): void

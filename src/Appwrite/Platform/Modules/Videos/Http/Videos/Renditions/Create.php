@@ -93,7 +93,7 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
-        $this->assertSourceReady($video);
+        $this->assertCanCreateRendition($video, $project->getId());
 
         $codec = self::normalizeCodec($profile->getAttribute('codec'));
         $this->assertCodecEnabled($codec);
@@ -141,28 +141,29 @@ class Create extends Base
             throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
         }
 
-        // The pending row is the claim tryRelease looks for. Re-validate after
-        // insert so a concurrent timeline release that already dropped the
-        // working copy cannot leave us returning 202 for a doomed encode.
+        // The pending row is the claim tryRelease looks for. Re-read after
+        // insert: a release that won the race has already dropped the file,
+        // and returning 202 would queue an encode with nothing to read.
         try {
             $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-            $this->assertSourceReady($video);
-            if (!self::sourceExists(self::tmpSourcePath($project->getId(), $videoId))) {
-                throw new Exception(Exception::VIDEO_SOURCE_REMOVED);
-            }
+            $this->assertCanCreateRendition($video, $project->getId());
         } catch (\Throwable $th) {
             $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
             throw $th;
         }
 
-        $publisherForVideos->enqueue(new VideoMessage(
-            project: $project,
-            action: VideoAction::Encode,
-            video: $video,
-            profile: $profile,
-            rendition: $rendition,
-            output: $output,
-        ));
+        // A copy that is not on disk yet stays pending. downloadSource enqueues
+        // the encode once the working copy is ready.
+        if ((string) $video->getAttribute('status', '') === self::SOURCE_READY) {
+            $publisherForVideos->enqueue(new VideoMessage(
+                project: $project,
+                action: VideoAction::Encode,
+                video: $video,
+                profile: $profile,
+                rendition: $rendition,
+                output: $output,
+            ));
+        }
 
         $queueForEvents
             ->setParam('videoId', $video->getId())
