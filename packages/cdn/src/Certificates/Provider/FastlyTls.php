@@ -512,7 +512,7 @@ class FastlyTls implements Provider
 
         // Without a readable expiry on any of them, the last reference is the
         // most recently added.
-        return \is_string($bestId) ? $bestId : $ids[\array_key_last($ids)];
+        return \is_string($bestId) ? $bestId : \array_last($ids);
     }
 
     /**
