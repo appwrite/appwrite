@@ -183,7 +183,7 @@ That shared responsibility model is the same one covered in our post on [backend
 
 # Patching Next.js apps on Appwrite Sites
 
-[Appwrite Sites](/docs/products/sites) runs Next.js in a container-based Node.js runtime with full [SSR support](/docs/products/sites/rendering/ssr), rather than translating it into serverless functions. That gives you full Next.js server behavior, including ISR and Image Optimization, without adapters. It also means the self-hosted advisories in this release apply to you, so patch the same way you would on your own servers.
+[Appwrite Sites](/docs/products/sites) runs Next.js in a container-based Node.js runtime with full [SSR support](/docs/products/sites/rendering/ssr), rather than translating it into serverless functions. That gives you full Next.js server behavior, including ISR and Image Optimization, without adapters.
 
 On Appwrite Sites, patching is a dependency bump and a push:
 
