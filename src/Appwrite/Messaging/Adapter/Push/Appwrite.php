@@ -84,7 +84,7 @@ class Appwrite extends PushAdapter
                     [],
                     [$name],
                     [],
-                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
+                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence, 'publishedAt' => \microtime(true)],
                 );
 
                 $response->incrementDeliveredTo();
@@ -154,6 +154,17 @@ class Appwrite extends PushAdapter
      * correctness backstop.
      */
     private function persist(string $topic, string $payload): int
+    {
+        $start = \microtime(true);
+
+        try {
+            return $this->persistLedger($topic, $payload);
+        } finally {
+            $this->broker->ledgerDuration->record(\microtime(true) - $start);
+        }
+    }
+
+    private function persistLedger(string $topic, string $payload): int
     {
         $authorization = $this->dbForProject->getAuthorization();
 

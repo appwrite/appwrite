@@ -7,6 +7,7 @@ use Appwrite\PubSub\Adapter as PubSub;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\Histogram;
+use Utopia\Telemetry\UpDownCounter;
 
 /**
  * The MQTT producer: publishes messages onto the 'mqtt' pub/sub channel for the broker workers
@@ -23,9 +24,15 @@ class Mqtt extends MessagingAdapter
     public readonly Counter $messagesAcked;
     public readonly Counter $pubacksReceived;
     public readonly Counter $reauth;
+    public readonly Counter $connectResult;
+    public readonly Counter $subscribeOutcome;
+    public readonly UpDownCounter $connectionsActive;
     public readonly Histogram $authDuration;
     public readonly Histogram $connectionDuration;
     public readonly Histogram $messageSize;
+    public readonly Histogram $deliveryLatency;
+    public readonly Histogram $replayBacklog;
+    public readonly Histogram $ledgerDuration;
 
     public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
     {
@@ -35,9 +42,15 @@ class Mqtt extends MessagingAdapter
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
         $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
         $this->reauth = $telemetry->createCounter('mqtt.reauth');
+        $this->connectResult = $telemetry->createCounter('mqtt.connect.result');
+        $this->subscribeOutcome = $telemetry->createCounter('mqtt.subscribe.outcome');
+        $this->connectionsActive = $telemetry->createUpDownCounter('mqtt.connections.active');
         $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
         $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
         $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');
+        $this->deliveryLatency = $telemetry->createHistogram('mqtt.delivery.latency', 's');
+        $this->replayBacklog = $telemetry->createHistogram('mqtt.replay.backlog', '{message}');
+        $this->ledgerDuration = $telemetry->createHistogram('mqtt.ledger.duration', 's');
     }
 
     /**
@@ -50,13 +63,14 @@ class Mqtt extends MessagingAdapter
      * @param array<int, string> $events ignored
      * @param array<int, string> $channels topics to publish to
      * @param array<int, string> $roles ignored
-     * @param array{payload?: string, qos?: int, sequence?: int} $options
+     * @param array{payload?: string, qos?: int, sequence?: int, publishedAt?: float} $options
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         $message = $options['payload'] ?? '';
         $qos = $options['qos'] ?? 0;
         $sequence = (int) ($options['sequence'] ?? 0);
+        $publishedAt = (float) ($options['publishedAt'] ?? \microtime(true));
 
         $this->messageSize->record(\strlen($message));
 
@@ -67,6 +81,7 @@ class Mqtt extends MessagingAdapter
                 'topic' => $topic,
                 'qos' => $qos,
                 'sequence' => $sequence,
+                'publishedAt' => $publishedAt,
                 'payload' => base64_encode($message),
             ]));
         }

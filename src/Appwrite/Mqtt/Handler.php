@@ -64,6 +64,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
+            $this->mqtt->connectResult->add(1, ['result' => 'not_authorized']);
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
@@ -78,6 +79,7 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
+                $this->mqtt->connectResult->add(1, ['result' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
@@ -90,6 +92,9 @@ class Handler implements MqttHandler
         }
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
+
+        $this->mqtt->connectResult->add(1, ['result' => 'accepted']);
+        $this->mqtt->connectionsActive->add(1);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
     }
@@ -161,6 +166,7 @@ class Handler implements MqttHandler
         if ($authorizer !== null && !$authorizer($connection->identity)) {
             foreach ($subscribe->filters() as $filter) {
                 $suback->deny();
+                $this->mqtt->subscribeOutcome->add(1, ['result' => 'denied']);
             }
 
             return $suback;
@@ -204,6 +210,7 @@ class Handler implements MqttHandler
             // users/<id> falls through and is served like any exact topic name below.
             if ($this->deniesUserTopic($filter->topic, $userId)) {
                 $suback->deny();
+                $this->mqtt->subscribeOutcome->add(1, ['result' => 'denied']);
                 continue;
             }
 
@@ -212,6 +219,7 @@ class Handler implements MqttHandler
             $topicQos = $document?->getAttribute('qos');
             $grantedQos = min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
             $suback->grant($grantedQos);
+            $this->mqtt->subscribeOutcome->add(1, ['result' => 'granted']);
 
             // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
             // topic is delivered live only.
@@ -255,10 +263,15 @@ class Handler implements MqttHandler
      * A reserved users/<id> topic reaches only that user's connections, whatever filter matched:
      * the subscribe gate is the first line, this holds even for a subscription it did not catch.
      */
-    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence): int
+    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence, float $publishedAt = 0.0): int
     {
         $segments = \explode('/', $topic);
         $owner = \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX ? $segments[1] : null;
+
+        // publish (worker) -> deliver (broker) latency; clamped as the two clocks may differ slightly.
+        if ($publishedAt > 0.0) {
+            $this->mqtt->deliveryLatency->record(\max(0.0, \microtime(true) - $publishedAt));
+        }
 
         $delivered = 0;
 
@@ -301,10 +314,11 @@ class Handler implements MqttHandler
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
-        // The broker already removed the connection, its subscriptions and keep-alive slot, and
-        // records the active-connections gauge itself. Record the connection lifetime for
-        // accepted sessions.
+        // The broker already removed the connection, its subscriptions and keep-alive slot. Only an
+        // accepted session (identity set in onConnect) incremented connections.active and has an
+        // openedAt, so balance the gauge and record its lifetime for those.
         if (($connection->identity['userId'] ?? '') !== '') {
+            $this->mqtt->connectionsActive->add(-1);
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
         }
     }
@@ -379,6 +393,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
+            $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
             $start = max($from + 1, $tail - $maxDepth + 1);

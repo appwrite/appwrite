@@ -214,6 +214,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
                     $sequence = (int) ($event['sequence'] ?? 0);
+                    $publishedAt = (float) ($event['publishedAt'] ?? 0.0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
                     $span = Span::init('mqtt.deliver');
@@ -222,7 +223,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $span->set('mqtt.qos', $qos);
                     $span->set('mqtt.is_broker', true);
 
-                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence);
+                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence, $publishedAt);
 
                     $span->set('mqtt.subscribers', $delivered);
                     if ($delivered === 0) {
