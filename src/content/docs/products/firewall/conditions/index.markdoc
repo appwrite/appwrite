@@ -53,15 +53,11 @@ The condition builder groups attributes by what they describe. A further 13 attr
 
 With the premium Geo DB addon you can also match on **City**, **State**, **Postal code**, **Latitude**, **Longitude**, **Time zone**, **Weather code**, **ISP**, **AS number**, **AS organization**, **Connection type**, **Connection usage type**, and **Connection organization**. The network attributes tell data center traffic apart from residential and mobile connections.
 
-Premium Geo DB is a paid project add-on on the Pro and Scale plans. See [Premium Geo DB](/docs/advanced/billing/premium-geo-db) for pricing and how to enable it.
+Premium Geo DB is a paid project add-on on the Pro plan. See [Premium Geo DB](/docs/advanced/billing/premium-geo-db) for pricing and how to enable it.
 
 {% info title="Operator limits on premium attributes" %}
 **Latitude**, **Longitude**, and **AS number** support only equals, not equal, is empty, and is not empty. See [Operators](#operators) for the full list.
 {% /info %}
-
-Without the addon the Console disables these attributes, and the API rejects them with a `waf_rule_premium_condition` error.
-
-If the addon lapses on a project that already uses them, Appwrite treats those attributes as empty on API traffic. **Equals** conditions then never match, and **Not equal** conditions match every request, so a deny rule can start denying everything. Rewrite those rules before you drop the addon.
 
 # Header and query parameter keys {% #header-and-query-parameter-keys %}
 

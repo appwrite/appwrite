@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-premium-geo-db",
+    "href": "/blog/post/announcing-premium-geo-db",
+    "title": "Announcing Premium Geo DB: city, ISP, and connection data",
+    "description": "Premium Geo DB adds city, time zone, ISP, ASN, and connection type to IP geolocation on Appwrite Cloud, for Firewall rules, usage, and the Locale API.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-premium-geo-db/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "multi-tenant-app-appwrite-teams-documentsdb",
     "href": "/blog/post/multi-tenant-app-appwrite-teams-documentsdb",
     "title": "How to build a multi-tenant SaaS app with Appwrite Teams",
@@ -96,20 +110,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements, security",
     "featured": false,
     "cover": "/images/blog/announcing-breached-password-detection/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-premium-geo-db",
-    "href": "/blog/post/announcing-premium-geo-db",
-    "title": "Announcing Premium Geo DB: city, ISP, and connection data",
-    "description": "Premium Geo DB adds city, time zone, ISP, ASN, and connection type to IP geolocation on Appwrite Cloud, for Firewall rules, usage, and the Locale API.",
-    "date": "2026-09-29",
-    "lastUpdated": "2026-09-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "announcements, security",
-    "featured": false,
-    "cover": "/images/blog/announcing-premium-geo-db/cover.avif",
     "hasCover": true
   },
   {

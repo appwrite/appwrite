@@ -10,7 +10,7 @@ tags: firewall, security, console, api
 
 With the add-on, Firewall gets 13 more condition attributes and a preset that denies API traffic from hosting networks. The project **Usage** page breaks requests down by city and network, and `locale.get()` returns the city, time zone, ISP, and AS number to your client apps.
 
-Enable it under **Settings** > **Overview** on any project in a Pro or Scale organization. It costs $10 per project per month, prorated for the first billing cycle.
+Enable it under **Settings** > **Overview** on any project in a Pro organization. It costs $10 per project per month, prorated for the first billing cycle.
 
 {% arrow_link href="/blog/post/announcing-premium-geo-db" %}
 Read the announcement

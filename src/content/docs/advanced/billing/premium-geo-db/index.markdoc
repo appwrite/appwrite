@@ -9,7 +9,7 @@ Appwrite looks up the client IP of every request to find out where it came from.
 Once the add-on is active, the extra attributes appear in [Firewall conditions](/docs/products/firewall/conditions#premium-geo-db), in your project's usage breakdowns, and in responses from the [Locale API](/docs/references/cloud/client-web/locale#get).
 
 {% info title="Appwrite Cloud" %}
-Premium Geo DB is available on Appwrite Cloud for organizations on the Pro and Scale plans. It is not available on the Free plan.
+Premium Geo DB is available on Appwrite Cloud for organizations on the Pro plan.
 {% /info %}
 
 # Attributes {% #attributes %}
@@ -37,9 +37,9 @@ Premium Geo DB adds these attributes:
 | ISP | `isp` | Internet service provider of the IP |
 | AS number | `autonomousSystemNumber` | Autonomous System Number (ASN) of the IP |
 | AS organization | `autonomousSystemOrganization` | Organization that owns the ASN |
-| Connection type | - | Connection type of the IP, such as `Cable/DSL`, `Cellular`, or `Corporate`. Available in Firewall conditions |
-| Connection usage type | - | What the network is used for, such as `residential`, `cellular`, `business`, or `hosting`. Available in Firewall conditions |
-| Connection organization | - | Registered organization of the IP. Available in Firewall conditions |
+| Connection type | `connectionType` | Connection type of the IP, such as `Cable/DSL`, `Cellular`, or `Corporate` |
+| Connection usage type | `connectionUsageType` | What the network is used for, such as `residential`, `cellular`, `business`, or `hosting` |
+| Connection organization | `connectionOrganization` | Registered organization of the IP |
 
 Without the add-on, the premium fields are empty in every response.
 
@@ -64,8 +64,6 @@ The Firewall rule wizard uses the same data. Its impact preview charts the top v
 The `get` method of the Locale API returns the location of the IP that sent the request. With Premium Geo DB, the response includes the location and network fields listed under [Attributes](#attributes). The client SDKs declare them as optional fields on the `Locale` model.
 
 Call it from a client SDK. From a server SDK, the IP that sends the request is your server's, so you get your server's location.
-
-The response has a `Cache-Control: private, max-age=3888000` header, so a browser can reuse it for up to 45 days. A cached response can be from before the add-on was active or before the user moved, so treat the fields as a hint.
 
 {% multicode %}
 ```client-web
@@ -128,6 +126,8 @@ println("${result.city} ${result.timeZone} ${result.isp}")
 Auth sessions created while the add-on is active record the same location and network details. Activity events show them while the add-on is active.
 
 # Enable Premium Geo DB {% #enable %}
+
+![Premium Geo DB card in project settings with the Enable Premium Geo DB button](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
 
 1. In the Appwrite Console, open your project and go to **Settings**.
 2. On the **Overview** tab, find the **Premium Geo DB** card.
