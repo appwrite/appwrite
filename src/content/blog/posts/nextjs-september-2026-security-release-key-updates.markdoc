@@ -150,7 +150,7 @@ Production deployments do not serve this endpoint. The risk is to developer mach
 
 Every app on an unpatched version should upgrade. Use this checklist to decide how urgently, and which mitigations to apply while the upgrade rolls out.
 
-| If your app...                                              | Exposed to            | Priority          |
+| If your app...                                              | Exposed to            |  Suggested patch priority          |
 | ----------------------------------------------------------- | --------------------- | ----------------- |
 | Configures `images.remotePatterns`                          | SSRF (CVE-2026-94483) | Patch immediately |
 | Is self-hosted and uses Pages Router SSG or ISR             | CVE-2026-94543        | High              |
