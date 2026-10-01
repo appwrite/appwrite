@@ -12,6 +12,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use WebSocket\ConnectionException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -187,6 +188,52 @@ final class RealtimeConsoleClientTest extends Scope
         }, 120000, 500);
 
         return $data;
+    }
+
+    public function testConnectionPlatform(): void
+    {
+        $session = $this->getRoot()['session'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://appwrite.unknown',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $payload = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertStringStartsWith('Invalid Origin', $payload['data']['message']);
+
+        // The server closes the socket right after the error frame; the next read
+        // returns as soon as that happens instead of waiting out the read timeout.
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+            // Socket closed by the server
+        }
+        $this->assertFalse($client->isConnected());
     }
 
     public function testManualAuthentication(): void

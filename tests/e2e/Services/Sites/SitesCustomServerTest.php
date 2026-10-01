@@ -3304,6 +3304,7 @@ final class SitesCustomServerTest extends Scope
             'path' => '/contact'
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/contact', $response['headers']['location']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', (string) $response['headers']['set-cookie']);
         // due to swoole update; no more httponly
@@ -3321,6 +3322,45 @@ final class SitesCustomServerTest extends Scope
             $this->assertStringContainsString("Contact page", (string) $response['body']);
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
+
+        // Success: Path defaults to the site root
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => ''
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        // Failure: Path must be relative to the site root
+        $paths = [
+            ['contact'],
+            'contact',
+            'example.com',
+            '@example.com',
+            '.example.com',
+            '-example.com',
+            ':8080/contact',
+            'https://example.com/contact',
+            '//example.com/contact',
+            '/\\example.com/contact',
+            "/contact\r\nx-test: 1",
+        ];
+        foreach ($paths as $path) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $jwt['body']['jwt'],
+                'path' => $path
+            ], followRedirects: false);
+            $message = \var_export($path, true);
+            $this->assertEquals(400, $response['headers']['status-code'], $message);
+            $this->assertArrayNotHasKey('location', $response['headers'], $message);
+            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
+        }
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
