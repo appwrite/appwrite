@@ -15,6 +15,11 @@ class PublicURL extends URL
 {
     private string $reason = '';
 
+    /**
+     * @var array<string>
+     */
+    private array $resolve = [];
+
     public function __construct(
         private readonly Allowlist $allowlist = new Allowlist(),
     ) {
@@ -29,6 +34,7 @@ class PublicURL extends URL
     public function isValid($value): bool
     {
         $this->reason = '';
+        $this->resolve = [];
 
         if (!parent::isValid($value)) {
             return false;
@@ -51,6 +57,9 @@ class PublicURL extends URL
             $this->reason = $hostname->getDescription();
             return false;
         }
+
+        $scheme = \strtolower(\parse_url($value, PHP_URL_SCHEME) ?? '');
+        $this->resolve = $hostname->getResolve(\parse_url($value, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80));
 
         return true;
     }
@@ -79,5 +88,16 @@ class PublicURL extends URL
         }
 
         return $this->allowlist->admits(PublicHostname::resolve($host));
+    }
+
+    /**
+     * CURLOPT_RESOLVE entries mapping the last valid URL's host to the
+     * addresses it resolved to. See PublicHostname::getResolve().
+     *
+     * @return array<string>
+     */
+    public function getResolve(): array
+    {
+        return $this->resolve;
     }
 }

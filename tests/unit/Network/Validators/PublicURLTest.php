@@ -50,6 +50,34 @@ final class PublicURLTest extends TestCase
         yield 'backslash' => ['http://1.1.1.1/a\\b', 'must not contain credentials or backslashes'];
     }
 
+    public function testResolveIsEmptyForIpLiteralsAndRejections(): void
+    {
+        $validator = new PublicURL();
+
+        $this->assertTrue($validator->isValid('https://1.1.1.1/'));
+        $this->assertSame([], $validator->getResolve());
+
+        $this->assertFalse($validator->isValid('http://127.0.0.1/'));
+        $this->assertSame([], $validator->getResolve());
+    }
+
+    public function testResolveUsesTheURLPort(): void
+    {
+        $validator = new PublicURL(Allowlist::parse('127.0.0.0/8,::1'));
+
+        $this->assertTrue($validator->isValid('http://localhost:8080/v1'), $validator->getDescription());
+        $this->assertStringStartsWith('localhost:8080:', $validator->getResolve()[0] ?? '');
+
+        $this->assertTrue($validator->isValid('http://localhost/v1'), $validator->getDescription());
+        $this->assertStringStartsWith('localhost:80:', $validator->getResolve()[0] ?? '');
+
+        $this->assertTrue($validator->isValid('https://localhost/v1'), $validator->getDescription());
+        $this->assertStringStartsWith('localhost:443:', $validator->getResolve()[0] ?? '');
+
+        $this->assertFalse($validator->isValid('http://10.0.0.5/v1'));
+        $this->assertSame([], $validator->getResolve());
+    }
+
     public function testAcceptsAddressInAllowedSubnet(): void
     {
         $validator = new PublicURL(Allowlist::parse('10.0.0.0/8,fd00::/8'));
