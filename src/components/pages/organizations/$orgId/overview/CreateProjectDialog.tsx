@@ -1,4 +1,5 @@
 import type { Flag } from '@appwrite.io/console'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,8 +19,14 @@ import {
   useCreateProject,
   useRegions,
   useOrganizationPlan,
+  useOrganizationById,
+  useOrganizationAddonPrice,
   PROJECT_NAME_MAX_LENGTH,
 } from '@/lib/react-query/hooks'
+import { ADDON_KEY_PREMIUM_GEO_DB } from '@/lib/billing/addons'
+import { enablePremiumGeoDbAddon } from '@/lib/billing/enable-premium-geo-db-addon'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { CreateProjectSecurityAddonSection } from './_components/CreateProjectSecurityAddonSection'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -53,11 +60,13 @@ export function CreateProjectDialog({
 }: CreateProjectDialogProps) {
   const t = useT()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
   const [projectId, setProjectId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
+  const [enableSecurityAddon, setEnableSecurityAddon] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Fetch plan when dialog is open and not provided by parent (e.g. from ProjectSelector)
@@ -65,6 +74,17 @@ export function CreateProjectDialog({
     open && !organizationPlanProp ? teamId : null,
   )
   const organizationPlan = organizationPlanProp ?? organizationPlanFromHook
+  const { organization } = useOrganizationById(open ? teamId : null)
+  const planSupportsPremiumGeoDB =
+    organizationPlan?.supportedAddons?.premiumGeoDB === true
+  const showSecurityAddonSection =
+    features.billing && !!teamId && planSupportsPremiumGeoDB
+  const { addonPrice: premiumGeoAddonPrice } = useOrganizationAddonPrice(
+    showSecurityAddonSection ? teamId : null,
+    showSecurityAddonSection ? ADDON_KEY_PREMIUM_GEO_DB : null,
+  )
+  const paymentMethodMissing =
+    showSecurityAddonSection && !organization?.paymentMethodId
 
   const createProjectMutation = useCreateProject(teamId)
   const {
@@ -132,6 +152,7 @@ export function CreateProjectDialog({
     setProjectId(undefined)
     setName('')
     setSelectedRegion(null)
+    setEnableSecurityAddon(false)
     setErrors({})
   }
 
@@ -179,15 +200,50 @@ export function CreateProjectDialog({
         region: supportsMultiRegion ? (selectedRegion ?? undefined) : undefined,
       })
 
+      const newProjectId = result?.$id
+      const shouldEnableSecurityAddon =
+        enableSecurityAddon &&
+        showSecurityAddonSection &&
+        !!newProjectId &&
+        !!teamId
+      const paymentMethodId = organization?.paymentMethodId
+
       toast.success(t('Project created successfully'))
       handleOpenChange(false)
 
-      // Navigate to the new project
-      if (result?.$id) {
+      if (newProjectId) {
         navigate({
           to: '/projects/$projectId',
-          params: { projectId: result.$id },
+          params: { projectId: newProjectId },
         })
+      }
+
+      if (shouldEnableSecurityAddon) {
+        const toastId = toast.loading(t('Enabling Premium Geo DB...'))
+        try {
+          const addonResult = await enablePremiumGeoDbAddon({
+            projectId: newProjectId,
+            organizationId: teamId,
+            paymentMethodId,
+            missingPaymentMethodMessage: t(
+              'Add a payment method to your organization before enabling this addon.',
+            ),
+            queryClient,
+          })
+          toast.success(
+            addonResult === 'already_active'
+              ? t('Premium Geo DB addon is already active for this project')
+              : t('Premium Geo DB addon has been enabled'),
+            { id: toastId },
+          )
+        } catch (addonError) {
+          toast.error(
+            t(
+              'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.',
+            ),
+            { id: toastId, description: getErrorMessage(addonError) },
+          )
+        }
       }
     } catch (error: unknown) {
       toast.error(error?.message || t('Failed to create project'))
@@ -196,7 +252,7 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create project')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -399,6 +455,18 @@ export function CreateProjectDialog({
               />
             )}
           </div>
+
+          {showSecurityAddonSection ? (
+            <div className="border-t border-border px-6 py-4">
+              <CreateProjectSecurityAddonSection
+                checked={enableSecurityAddon}
+                onCheckedChange={setEnableSecurityAddon}
+                disabled={createProjectMutation.isPending}
+                paymentMethodMissing={paymentMethodMissing}
+                addonPrice={premiumGeoAddonPrice}
+              />
+            </div>
+          ) : null}
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button

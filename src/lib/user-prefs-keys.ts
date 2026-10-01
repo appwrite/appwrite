@@ -194,6 +194,49 @@ export function mergeAgentsDismissedProjectIdsPrefs(
 }
 
 /**
+ * Project IDs where the Premium Geo DB overview promo was dismissed.
+ * Value: JSON string of project ID strings.
+ */
+export const USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS =
+  'console.premiumGeoOverview.dismissedProjectIds'
+
+const MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS = 200
+
+export function parsePremiumGeoOverviewDismissedProjectIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  return parseProjectIdList(
+    prefs?.[USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS],
+  ).slice(0, MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS)
+}
+
+export function isPremiumGeoOverviewPromoDismissed(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): boolean {
+  if (!projectId) return false
+  return parsePremiumGeoOverviewDismissedProjectIds(prefs).includes(projectId)
+}
+
+export function mergePremiumGeoOverviewDismissedProjectIdsPrefs(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): UserPrefs {
+  const current = parsePremiumGeoOverviewDismissedProjectIds(prefs)
+  const next = current.includes(projectId)
+    ? current
+    : [...current, projectId].slice(
+        0,
+        MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+      )
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS]:
+      JSON.stringify(next),
+  }
+}
+
+/**
  * Appwrite `Assoc` prefs validator (`new Assoc()`): max JSON body size in bytes.
  * Oversized payloads fail with the same message as a non-object prefs value:
  * "Invalid `prefs` param: Value must be a valid object."

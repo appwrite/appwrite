@@ -103,8 +103,8 @@
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.90.2",
-    "@tanstack/react-router": "1.170.33",
-    "@tanstack/react-start": "1.168.50",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
     "@vercel/og": "^0.11.1",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-search": "^0.15.0",
@@ -160,20 +160,20 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "use-sync-external-store": "^1.6.0",
-    "@tanstack/react-store": "^0.9.3",
-    "@tanstack/store": "^0.9.3"
+    "@tanstack/react-store": "^0.11.2",
+    "@tanstack/store": "^0.11.2"
   },
   "pnpm": {
     "overrides": {
       "react": "19.1.1",
       "react-dom": "19.1.1",
-      "@tanstack/react-store": "^0.9.3",
-      "@tanstack/store": "^0.9.3"
+      "@tanstack/react-store": "^0.11.2",
+      "@tanstack/store": "^0.11.2"
     }
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@tanstack/router-cli": "1.167.34",
+    "@tanstack/router-cli": "1.167.40",
     "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
@@ -191,10 +191,5 @@
     "typescript-eslint": "^8.50.0",
     "vite": "npm:rolldown-vite@7.3.1",
     "vite-plugin-devtools-json": "^1.0.0"
-  },
-  "patchedDependencies": {
-    "@tanstack/start-server-core@1.169.32": "patches/@tanstack%2Fstart-server-core@1.169.32.patch",
-    "@tanstack/start-client-core@1.170.28": "patches/@tanstack%2Fstart-client-core@1.170.28.patch",
-    "@tanstack/router-core@1.171.28": "patches/@tanstack%2Frouter-core@1.171.28.patch"
   }
 }

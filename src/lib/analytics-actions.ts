@@ -230,6 +230,8 @@ export const ANALYTICS_ACTIONS = {
     'Native OAuth Promo Banner Learn More Clicked',
   'firewall-promo-banner-learn-more':
     'Firewall Promo Banner Learn More Clicked',
+  'premium-geo-overview-promo-learn-more':
+    'Premium Geo Overview Promo Learn More Clicked',
   'firewall-promo-banner-open-firewall':
     'Firewall Promo Banner Open Firewall Clicked',
   'firewall-promo-banner-skip': 'Firewall Promo Banner Skip Clicked',

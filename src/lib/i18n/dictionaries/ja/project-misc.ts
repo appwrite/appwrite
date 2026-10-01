@@ -3020,8 +3020,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '「有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
   'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
     '「有効にする」をクリックすると、請求サイクルの残日数分の按分額が支払い方法に請求され、今後のサイクル向けにこのプロジェクトのサブスクリプションへアドオンが追加されます。',
-  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
-    'Premium Geo DB は、タイムゾーン、郵便番号、ISP、接続タイプ、組織などの詳細な位置情報でセッションとリクエストデータを補強します。',
+  'Richer geolocation on users and usage for better security and observability.':
+    'ユーザーと利用状況の位置情報を強化し、セキュリティとオブザーバビリティを向上します。',
   'Due today (prorated)': '本日お支払い (按分)',
   '* Plus applicable tax and fees': '* 税および手数料が別途かかる場合があります',
   'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':

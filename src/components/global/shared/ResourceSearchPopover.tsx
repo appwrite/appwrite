@@ -39,7 +39,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -93,10 +93,12 @@ function getSiteFramework(site: {
 function ResourceSearchListItemIcon({
   kind,
   item,
+  projectId,
   fallbackIcon: FallbackIcon,
 }: {
   kind: ResourceSearchKind
   item: ResourceSearchListItem
+  projectId?: string | null
   fallbackIcon: LucideIcon
 }) {
   if (kind === 'function') {
@@ -119,7 +121,19 @@ function ResourceSearchListItemIcon({
     )
   }
 
-  if (kind === 'user' || kind === 'team') {
+  if (kind === 'user') {
+    return (
+      <PhotoAvatar
+        projectId={projectId ?? undefined}
+        userId={item.id}
+        name={item.initialsName || item.label}
+        size="xs"
+        className="shrink-0"
+      />
+    )
+  }
+
+  if (kind === 'team') {
     return (
       <InitialsAvatar
         name={item.initialsName || item.label}
@@ -590,6 +604,7 @@ export function ResourceSearchPopover({
                         <ResourceSearchListItemIcon
                           kind={kind}
                           item={item}
+                          projectId={projectId}
                           fallbackIcon={Icon}
                         />
                         <span className="truncate">{item.label}</span>

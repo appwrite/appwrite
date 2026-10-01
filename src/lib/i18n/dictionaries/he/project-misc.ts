@@ -3039,8 +3039,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'בלחיצה על הפעלה, הסכום החודשי של התוסף יתווסף למנוי שלכם ואמצעי התשלום יחויב מיד בסכום היחסי עבור הימים שנותרו במחזור החיוב.',
   'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
     'בלחיצה על הפעלה, אמצעי התשלום שלכם יחויב בסכום היחסי עבור הימים שנותרו במחזור החיוב, והתוסף יתווסף למנוי הפרויקט למחזורים הבאים.',
-  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
-    'Premium Geo DB מעשיר נתוני סשן ובקשות בפרטי מיקום מתקדמים כולל אזור זמן, מיקוד, ספק אינטרנט, סוג חיבור וארגון.',
+  'Richer geolocation on users and usage for better security and observability.':
+    'מיקום גיאוגרפי עשיר יותר על משתמשים ושימוש, לאבטחה ו-Observability טובים יותר.',
   'Due today (prorated)': 'לתשלום היום (יחסי)',
   '* Plus applicable tax and fees': '* בתוספת מסים ועמלות רלוונטיים',
   'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':

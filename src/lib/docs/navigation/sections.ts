@@ -72,6 +72,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Text Embeddings',
             href: '/docs/advanced/billing/embeddings',
           },
+          {
+            label: 'Premium Geo DB',
+            href: '/docs/advanced/billing/premium-geo-db',
+          },
         ],
       },
       {

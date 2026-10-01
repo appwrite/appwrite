@@ -57,13 +57,13 @@ export function buildConnectMcpPrompt(options: {
 }): string {
   const { projectId, projectName, endpoint, origin } = options
   const lines: string[] = [
-    `Install Appwrite MCP, the latest CLI, and the matching official SDK by following ${getAgentSetupUrl(origin)}`,
+    `Install Appwrite MCP, the Appwrite skills, the latest CLI, and the matching official SDK by following ${getAgentSetupUrl(origin)}`,
     '',
     `- Project ID: \`${projectId}\``,
     `- Name: ${projectName}`,
-    `- Endpoint: \`${endpoint ?? ''}\``,
+    ...(endpoint ? [`- Endpoint: \`${endpoint}\``] : []),
     '',
-    'If you cannot open that page, ask me to paste it instead of guessing the steps.',
+    'If your web tool cannot open that page, download it with curl. If you still cannot read it, ask me to paste it instead of guessing the steps.',
   ]
 
   return `${lines.join('\n')}\n`
