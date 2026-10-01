@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Usage;
 
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 /**
@@ -13,14 +13,14 @@ final class CapturingPublisher implements Publisher
     /** @var list<array<string, mixed>> */
     public array $published = [];
 
-    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
+    public function publish(Queue $queue, array $payload): bool
     {
         $this->published[] = $payload;
 
         return true;
     }
 
-    public function enqueueMany(Queue $queue, array $payloads, bool $priority = false): bool
+    public function publishMany(Queue $queue, array $payloads): bool
     {
         foreach ($payloads as $payload) {
             $this->published[] = $payload;
@@ -34,6 +34,11 @@ final class CapturingPublisher implements Publisher
     }
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+    {
+        return 0;
+    }
+
+    public function getFailedCount(Queue $queue): int
     {
         return 0;
     }
