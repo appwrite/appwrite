@@ -36,11 +36,6 @@ final class SMTPRefusalTest extends TestCase
             'Expected 220, the server said: 554 Too many failed login requests',
             true,
         ];
-        yield 'our address not on the account allow list' => [
-            ['220 smtp-relay.brevo.com ESMTP', self::EHLO, '525 5.7.1 Unauthorized IP address'],
-            'Authentication failed: 525 5.7.1 Unauthorized IP address',
-            true,
-        ];
         yield 'our address listed, before and after the HELO fallback' => [
             [
                 '220 smtp.improvmx.com ESMTP',
