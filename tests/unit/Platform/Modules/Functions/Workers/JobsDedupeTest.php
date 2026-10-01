@@ -26,6 +26,13 @@ final class JobsDedupeTest extends TestCase
 {
     private Cache $cache;
 
+    private AgingMemory $store;
+
+    /** Run inside the next database write, while that delivery holds its claim. */
+    private ?\Closure $whileApplying = null;
+
+    private bool $killNextWrite = false;
+
     /** @var list<string> */
     private array $written = [];
 
@@ -33,7 +40,8 @@ final class JobsDedupeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cache = new Cache(new Memory());
+        $this->store = new AgingMemory();
+        $this->cache = new Cache($this->store);
     }
 
     public function testRedeliveryAppliesAnEventWhoseFirstAttemptFailed(): void
@@ -68,6 +76,43 @@ final class JobsDedupeTest extends TestCase
         $this->assertSame(["npm install\n"], $this->written);
     }
 
+    public function testADeliveryKilledMidCallbackIsAppliedOnceItsClaimLapses(): void
+    {
+        $this->killNextWrite = true;
+        $this->deliver('evt-1', 'npm install');
+
+        try {
+            $this->deliver('evt-1', 'npm install');
+            $this->fail('a redelivery while the claim is live must be retried, not skipped');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('being applied by another delivery', $error->getMessage());
+        }
+
+        $this->store->age(seconds: 121);
+        $this->deliver('evt-1', 'npm install');
+
+        $this->assertSame(["npm install\n"], $this->written);
+    }
+
+    public function testARepeatWhileAnotherCopyIsApplyingIsRetriedAndThenSkipped(): void
+    {
+        $repeat = null;
+        $this->whileApplying = function () use (&$repeat): void {
+            try {
+                $this->deliver('evt-1', 'npm install');
+            } catch (\RuntimeException $error) {
+                $repeat = $error;
+            }
+        };
+
+        $this->deliver('evt-1', 'npm install');
+        $this->assertInstanceOf(\RuntimeException::class, $repeat, 'the repeat must be failed for a retry, not dropped');
+
+        $this->deliver('evt-1', 'npm install');
+
+        $this->assertSame(["npm install\n"], $this->written);
+    }
+
     public function testRepeatOfAnAppliedEventIsSkipped(): void
     {
         $this->deliver('evt-1', 'npm install');
@@ -87,6 +132,15 @@ final class JobsDedupeTest extends TestCase
             'buildLogs' => '',
         ]));
         $dbForProject->method('updateDocuments')->willReturnCallback(function (string $collection, Document $update): int {
+            if ($this->killNextWrite) {
+                $this->killNextWrite = false;
+                throw new KilledMidCallback();
+            }
+            if ($this->whileApplying !== null) {
+                $during = $this->whileApplying;
+                $this->whileApplying = null;
+                $during();
+            }
             if ($this->failures > 0) {
                 $this->failures--;
                 throw new \RuntimeException('connection lost');
@@ -130,12 +184,37 @@ final class JobsDedupeTest extends TestCase
             $this->createStub(Device::class),
             $this->createStub(VcsFactory::class),
             $this->cache,
-            fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $lockTimesOut
-                ? throw new \RuntimeException('lock timeout')
-                : $callback(),
+            function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($lockTimesOut): mixed {
+                if ($lockTimesOut) {
+                    throw new \RuntimeException('lock timeout');
+                }
+                try {
+                    return $callback();
+                } catch (KilledMidCallback) {
+                    // The process died here: nothing after this point runs, the worker's own
+                    // cleanup included, so the cache is left as the killed delivery left it.
+                    return null;
+                }
+            },
             [],
             [],
             $this->createStub(Bus::class),
         );
+    }
+}
+
+/** A delivery's process dying mid-callback, as SIGKILL or the OOM killer would end it. */
+final class KilledMidCallback extends \Exception
+{
+}
+
+/** An in-memory cache whose entries can be made older, so a TTL can lapse without a wait. */
+final class AgingMemory extends Memory
+{
+    public function age(int $seconds): void
+    {
+        foreach ($this->store as $key => $entry) {
+            $this->store[$key]['time'] = $entry['time'] - $seconds;
+        }
     }
 }

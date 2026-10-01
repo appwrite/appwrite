@@ -66,6 +66,12 @@ use Utopia\System\System;
 class Jobs extends Action
 {
     private const DEDUPE_TTL = 3600;
+    // How long a claim on a callback keeps other copies of the event out. Longer than any
+    // callback takes (48s at most on staging over 7 days), short enough that the claim of a
+    // delivery killed mid-callback lapses before the broker runs out of redeliveries.
+    private const CLAIM_TTL = 120;
+    private const CLAIMED = 'claimed';
+    private const APPLIED = 'applied';
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
 
@@ -161,20 +167,36 @@ class Jobs extends Action
 
         $failure = null;
         $key = $event->id !== '' ? 'jobs-event-' . $event->id : null;
-        $marked = false;
+        $claimed = false;
 
         try {
-            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, &$marked, &$failure): void {
-                if ($key !== null) {
-                    if ($cache->load($key, self::DEDUPE_TTL) !== false) {
-                        return; // already processed
+            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, &$claimed, &$failure): void {
+                // A copy of an event is claimed while it is applied and marked applied once it
+                // has been. A repeat of an applied event is skipped. A repeat that finds a live
+                // claim is failed, so the broker brings it back once the claim has settled: it
+                // is then skipped if the claimer finished, or applied if the claimer died.
+                $settle = function () use ($cache, $key, &$claimed): void {
+                    if ($key !== null) {
+                        $cache->save($key, self::APPLIED);
+                        $claimed = false;
                     }
-                    $cache->save($key, true);
-                    $marked = true;
+                };
+
+                if ($key !== null) {
+                    $state = $cache->load($key, self::DEDUPE_TTL);
+                    if ($state !== false && $state !== self::CLAIMED) {
+                        return; // already applied
+                    }
+                    if ($state === self::CLAIMED && $cache->load($key, self::CLAIM_TTL) !== false) {
+                        throw new \RuntimeException("Callback {$event->id} is being applied by another delivery");
+                    }
+                    $cache->save($key, self::CLAIMED);
+                    $claimed = true;
                 }
 
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+                    $settle();
                     return;
                 }
 
@@ -233,12 +255,14 @@ class Jobs extends Action
                     Span::add('artifact.error.code', $artifact->error?->code->value);
                     $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
                 }
+
+                $settle();
             }, self::LOCK_TIMEOUT);
         } catch (\Throwable $error) {
-            // A callback that failed part-way is unmarked so its redelivery is
-            // applied. Only this delivery's own mark: a copy that timed out on
-            // the lock must not clear the mark of the one holding it.
-            if ($marked) {
+            // A callback that failed part-way gives up its claim, so its redelivery is applied
+            // straight away rather than once the claim lapses. Only this delivery's own claim:
+            // a copy that timed out on the lock, or found another copy's claim, holds none.
+            if ($claimed) {
                 $cache->purge($key);
             }
             throw $error;
