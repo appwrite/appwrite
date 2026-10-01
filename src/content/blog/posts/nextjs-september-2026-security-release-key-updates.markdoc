@@ -192,7 +192,7 @@ On Appwrite Sites, patching is a dependency bump and a push:
 3. Use [preview deployments](/docs/products/sites/previews) to check ISR, Draft Mode, and image routes on a branch before merging.
 4. If anything regresses, [instant rollbacks](/docs/products/sites/instant-rollbacks) let you switch back to a previous ready deployment with zero downtime while you investigate.
 
-To be fair about the tradeoff, Vercel builds Next.js and can mitigate some issues at the platform level before you patch. On any platform that runs the Next.js server for you as a container, including Appwrite Sites, keeping `next` current is on your team. What you get in exchange is a standard Node.js runtime, no adapter layer between your app and the framework, and your backend in the same project. If you are choosing an output mode, [Next.js output modes](/blog/post/nextjs-output-modes) explains why standalone builds are a good default.
+On any platform that runs the Next.js server for you as a container, including Appwrite Sites, keeping `next` current is on your team. What you get in exchange is a standard Node.js runtime, no adapter layer between your app and the framework, and your backend in the same project. If you are choosing an output mode, [Next.js output modes](/blog/post/nextjs-output-modes) explains why standalone builds are a good default.
 
 # Getting started with secure Next.js deployments on Appwrite
 
