@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -7,7 +9,7 @@ use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\TestCase;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
-class MqttTest extends TestCase
+final class MqttTest extends TestCase
 {
     private function adapter(): Mqtt
     {
