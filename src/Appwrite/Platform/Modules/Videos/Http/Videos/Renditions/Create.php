@@ -114,9 +114,6 @@ class Create extends Base
         $videoBitRate = (int) $profile->getAttribute('videoBitRate', 0);
         $audioBitRate = (int) $profile->getAttribute('audioBitRate', 0);
 
-        // Created up front with status `pending` rather than returning a bare 204,
-        // so the caller has an id to poll and the worker always has a document to
-        // report failure on.
         try {
             $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videos_renditions', new Document([
                 '$id' => ID::unique(),
@@ -135,25 +132,9 @@ class Create extends Base
                 'progress' => '0',
             ])));
         } catch (DuplicateException) {
-            // Lost a race with a concurrent create for the same profile and
-            // output — the unique index is the authority the pre-check above
-            // cannot be.
             throw new Exception(Exception::VIDEO_RENDITION_ALREADY_EXISTS);
         }
 
-        // The pending row is the claim tryRelease looks for. Re-read after
-        // insert: a release that won the race has already dropped the file,
-        // and returning 202 would queue an encode with nothing to read.
-        try {
-            $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
-            $this->assertCanCreateRendition($video, $project->getId());
-        } catch (\Throwable $th) {
-            $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
-            throw $th;
-        }
-
-        // A copy that is not on disk yet stays pending. downloadSource enqueues
-        // the encode once the working copy is ready.
         if ((string) $video->getAttribute('status', '') === self::SOURCE_READY) {
             $publisherForVideos->enqueue(new VideoMessage(
                 project: $project,
