@@ -174,8 +174,8 @@ abstract class Base extends TestCase
     public function testWithParamsKeepsOriginalKey(): void
     {
         $prefix = 'param-reuse-' . \uniqid() . '-';
-        $first = $this->getAdapter($prefix . '{{ip}}', 2, 3600)
-            ->withParams(['{{ip}}' => '10.0.0.1']);
+        $base = $this->getAdapter($prefix . '{{ip}}', 2, 3600);
+        $first = $base->withParams(['{{ip}}' => '10.0.0.1']);
         $this->waitForWindowStart(1);
 
         $this->assertFalse($first->check()->limited);
@@ -183,8 +183,8 @@ abstract class Base extends TestCase
 
         $second = $first->withParams(['{{ip}}' => '10.0.0.2']);
 
-        $this->assertSame($prefix . '10.0.0.1', $first->key());
-        $this->assertSame($prefix . '10.0.0.2', $second->key());
+        $this->assertSame(\str_replace('{{ip}}', '10.0.0.1', $base->key()), $first->key());
+        $this->assertSame(\str_replace('{{ip}}', '10.0.0.2', $base->key()), $second->key());
 
         $this->assertFalse($second->check()->limited);
         $this->assertFalse($second->check()->limited);
