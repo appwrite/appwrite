@@ -6,8 +6,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Permissions;
 
 class Action extends AppwriteAction
 {
@@ -203,5 +207,39 @@ class Action extends AppwriteAction
     protected function purgeListCache(Database $dbForProject, string $collectionId): bool
     {
         return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $collectionId));
+    }
+
+    /**
+     * Users can only grant roles they hold on a related document written through
+     * its parent. Permissions the related document already has may be sent back
+     * unchanged.
+     *
+     * @throws Exception
+     */
+    protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
+    {
+        if ($permissions === null) {
+            return;
+        }
+
+        $validator = new Permissions();
+        if (!$validator->isValid($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+        }
+
+        $granted = \array_diff(Permission::aggregate($permissions), $current->getPermissions());
+
+        foreach ($granted as $permission) {
+            $permission = Permission::parse($permission);
+            $role = (new Role(
+                $permission->getRole(),
+                $permission->getIdentifier(),
+                $permission->getDimension()
+            ))->toString();
+
+            if (!$authorization->hasRole($role)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization->getRoles()) . ')');
+            }
+        }
     }
 }

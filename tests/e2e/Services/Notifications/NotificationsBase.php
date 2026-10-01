@@ -90,6 +90,25 @@ trait NotificationsBase
         self::$seededAlertId = $alertId;
     }
 
+    public function testListNotificationsTotal(): void
+    {
+        self::$seededAlertId ??= $this->seedWebhookFailureAlert();
+
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders(), [
+            'total' => true,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['notifications']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders(), [
+            'total' => false,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['notifications']);
+    }
+
     /**
      * The webhook-paused fanout enqueues a single Notification with both a
      * console and an email recipient. The console side is asserted above; this
