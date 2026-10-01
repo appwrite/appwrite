@@ -23,9 +23,15 @@ abstract readonly class TokenBucket extends Adapter
         parent::__construct($key);
     }
 
-    abstract protected function hit(string $key, float $now): int;
+    /**
+     * Refill the bucket, consume a token when one is available, and return the balance before consuming.
+     */
+    abstract protected function hit(string $key, float $now): float;
 
-    abstract protected function count(string $key, float $now): int;
+    /**
+     * Return the refilled balance without consuming.
+     */
+    abstract protected function count(string $key, float $now): float;
 
     abstract protected function clear(string $key): void;
 
@@ -43,7 +49,7 @@ abstract readonly class TokenBucket extends Adapter
             return new Result(false, 0, 0, (int) $now);
         }
 
-        return $this->result($this->hit($this->key(), $now), $now);
+        return $this->result($this->hit($this->key(), $now), $now, consumed: true);
     }
 
     #[\Override]
@@ -55,7 +61,7 @@ abstract readonly class TokenBucket extends Adapter
             return new Result(false, 0, 0, (int) $now);
         }
 
-        return $this->result($this->count($this->key(), $now), $now);
+        return $this->result($this->count($this->key(), $now), $now, consumed: false);
     }
 
     #[\Override]
@@ -64,15 +70,16 @@ abstract readonly class TokenBucket extends Adapter
         $this->clear($this->key());
     }
 
-    private function result(int $used, float $now): Result
+    private function result(float $available, float $now, bool $consumed): Result
     {
-        $remaining = \max(0, $this->tokens - $used - 1);
+        $limited = $available < 1;
+        $balance = $consumed && !$limited ? $available - 1 : $available;
 
         return new Result(
-            $used >= $this->tokens,
+            $limited,
             $this->tokens,
-            $remaining,
-            (int) \ceil($now + ($this->tokens - $remaining) / $this->refillRate),
+            \max(0, (int) \floor($available) - 1),
+            (int) \ceil($now + ($this->tokens - $balance) / $this->refillRate),
         );
     }
 }

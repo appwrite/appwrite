@@ -22,7 +22,7 @@ abstract readonly class RedisBase extends TokenBucket
         if elapsed < 0 then elapsed = 0 end
         tokens = math.min(max_tokens, tokens + elapsed * refill_rate)
 
-        local used = max_tokens - math.floor(tokens)
+        local available = tokens
 
         if tokens >= 1 then
           tokens = tokens - 1
@@ -31,7 +31,7 @@ abstract readonly class RedisBase extends TokenBucket
         redis.call('HSET', key, 'tokens', tostring(tokens), 'last_refill', tostring(now))
         redis.call('EXPIRE', key, math.ceil(max_tokens / refill_rate) + 1)
 
-        return used
+        return tostring(available)
         LUA;
 
     protected const string TOKENS_SCRIPT = <<<'LUA'
@@ -48,7 +48,7 @@ abstract readonly class RedisBase extends TokenBucket
         if elapsed < 0 then elapsed = 0 end
         tokens = math.min(max_tokens, tokens + elapsed * refill_rate)
 
-        return max_tokens - math.floor(tokens)
+        return tostring(tokens)
         LUA;
 
     /**
@@ -60,15 +60,15 @@ abstract readonly class RedisBase extends TokenBucket
     abstract protected function delete(string ...$keys): void;
 
     #[\Override]
-    protected function hit(string $key, float $now): int
+    protected function hit(string $key, float $now): float
     {
-        return $this->used($this->eval(self::LIMIT_CHECK_SCRIPT, [$this->bucketKey($key)], [$this->tokens, $this->refillRate, $now]));
+        return $this->balance($this->eval(self::LIMIT_CHECK_SCRIPT, [$this->bucketKey($key)], [$this->tokens, $this->refillRate, $now]));
     }
 
     #[\Override]
-    protected function count(string $key, float $now): int
+    protected function count(string $key, float $now): float
     {
-        return $this->used($this->eval(self::TOKENS_SCRIPT, [$this->bucketKey($key)], [$this->tokens, $this->refillRate, $now]));
+        return $this->balance($this->eval(self::TOKENS_SCRIPT, [$this->bucketKey($key)], [$this->tokens, $this->refillRate, $now]));
     }
 
     #[\Override]
@@ -156,12 +156,12 @@ abstract readonly class RedisBase extends TokenBucket
     /**
      * @throws \RuntimeException
      */
-    private function used(mixed $value): int
+    private function balance(mixed $value): float
     {
         if (!\is_numeric($value)) {
             throw new \RuntimeException('Redis script failed.');
         }
 
-        return (int) $value;
+        return (float) $value;
     }
 }
