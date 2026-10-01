@@ -22,14 +22,13 @@ import {
   useDeleteAccountPasskey,
   useUpdateAccountPasskey,
 } from '@/lib/react-query/hooks'
-import type { PasskeyList } from '@/lib/appwrite/passkeys'
+import type { Models } from '@appwrite.io/console'
 import {
   defaultPasskeyName,
   isPasskeyCancellation,
   isPasskeyReauthenticationError,
   isPasskeySupported,
   passkeyErrorMessage,
-  type Passkey,
 } from '@/lib/passkeys'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -40,7 +39,7 @@ const HEAD_CLASS =
 export function PasskeysSection({
   initialData,
 }: {
-  initialData?: PasskeyList
+  initialData?: Models.PasskeyList
 } = {}) {
   const t = useT()
   const { signOut } = useAuth()
@@ -62,7 +61,9 @@ export function PasskeysSection({
     null,
   )
   // The passkey stays set while the dialog animates closed.
-  const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null)
+  const [passkeyToDelete, setPasskeyToDelete] = useState<Models.Passkey | null>(
+    null,
+  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const showError = (error: unknown, fallback: string) => {

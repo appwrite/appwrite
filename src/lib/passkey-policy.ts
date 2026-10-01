@@ -1,8 +1,4 @@
-/** Auth method ID for passkeys (not yet on ProjectAuthMethodId in the pinned SDK build). */
-export const PasskeyAuthMethodId = 'passkey' as const
-
-/** Policy ID for the passkey relying party (not yet on ProjectPolicyId in the pinned SDK build). */
-export const PasskeyPolicyId = 'passkey' as const
+import type { Models } from '@appwrite.io/console'
 
 /** The server rejects more origins than this. */
 export const MAX_PASSKEY_ORIGINS = 10
@@ -12,12 +8,11 @@ export const MAX_PASSKEY_RP_ID_LENGTH = 253
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
 
-export type PasskeyPolicy = {
-  /** Mirrors the passkey auth method, which the pinned SDK's response format hides. */
-  enabled: boolean
-  rpId: string
-  origins: string[]
-}
+/** `enabled` mirrors the passkey auth method, which the 2.3.0 response format hides. */
+export type PasskeyPolicy = Pick<
+  Models.PolicyPasskey,
+  'enabled' | 'rpId' | 'origins'
+>
 
 export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
   enabled: false,
@@ -25,20 +20,14 @@ export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
   origins: [],
 }
 
-/** Normalises the policy the API returns; the SDK's policy union has no passkey shape. */
-export function parsePasskeyPolicy(value: unknown): PasskeyPolicy {
-  if (!value || typeof value !== 'object') return DEFAULT_PASSKEY_POLICY
-  const { enabled, rpId, origins } = value as {
-    enabled?: unknown
-    rpId?: unknown
-    origins?: unknown
-  }
+export function parsePasskeyPolicy(
+  policy: Models.PolicyPasskey | undefined,
+): PasskeyPolicy {
+  if (!policy) return DEFAULT_PASSKEY_POLICY
   return {
-    enabled: enabled === true,
-    rpId: typeof rpId === 'string' ? rpId : '',
-    origins: Array.isArray(origins)
-      ? origins.filter((origin): origin is string => typeof origin === 'string')
-      : [],
+    enabled: policy.enabled,
+    rpId: policy.rpId,
+    origins: policy.origins,
   }
 }
 

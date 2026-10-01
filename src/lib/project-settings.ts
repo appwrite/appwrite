@@ -15,8 +15,6 @@ import {
 } from '@/lib/password-strength'
 import {
   DEFAULT_PASSKEY_POLICY,
-  PasskeyAuthMethodId,
-  PasskeyPolicyId,
   parsePasskeyPolicy,
   type PasskeyPolicy,
 } from '@/lib/passkey-policy'
@@ -103,10 +101,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
 
 function policyById(
   policies: ProjectPolicy[] | undefined,
-  id:
-    | ProjectPolicyId
-    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId]
-    | typeof PasskeyPolicyId,
+  id: ProjectPolicyId | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
@@ -196,7 +191,9 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyCorporateEmail,
   )
-  const passkey = policyById(policies, PasskeyPolicyId)
+  const passkey = policyById(policies, ProjectPolicyId.Passkey) as
+    | Models.PolicyPasskey
+    | undefined
 
   return {
     authLimit: parsePolicyCountLimit(userLimit, 0),
@@ -360,10 +357,9 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
   }
 }
 
-export type AuthMethodId = ProjectAuthMethodId | typeof PasskeyAuthMethodId
-
 export function authMethodsRecordFromProject(
   project: Models.Project | null | undefined,
+  passkeyPolicy: PasskeyPolicy,
 ): Record<ProjectAuthMethodId, boolean> {
   const defaults: Record<ProjectAuthMethodId, boolean> = {
     [ProjectAuthMethodId.Emailpassword]: false,
@@ -373,6 +369,8 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Anonymous]: false,
     [ProjectAuthMethodId.Invites]: false,
     [ProjectAuthMethodId.Jwt]: false,
+    // The 2.3.0 response format hides passkey from authMethods; its policy mirrors it.
+    [ProjectAuthMethodId.Passkey]: passkeyPolicy.enabled,
   }
   if (!project?.authMethods?.length) {
     return defaults

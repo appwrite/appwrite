@@ -7,14 +7,8 @@ import {
   projectQueryOptions,
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
-import {
-  authMethodsRecordFromProject,
-  type AuthMethodId,
-} from '@/lib/project-settings'
-import {
-  PasskeyAuthMethodId,
-  isPasskeyPolicyConfigured,
-} from '@/lib/passkey-policy'
+import { authMethodsRecordFromProject } from '@/lib/project-settings'
+import { isPasskeyPolicyConfigured } from '@/lib/passkey-policy'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -53,7 +47,7 @@ type AuthMethodPolicy = {
 }
 
 const AUTH_METHODS: ReadonlyArray<{
-  key: AuthMethodId
+  key: ProjectAuthMethodId
   label: string
   icon: LucideIcon
   policy?: AuthMethodPolicy
@@ -110,7 +104,7 @@ const AUTH_METHODS: ReadonlyArray<{
     icon: Lock,
   },
   {
-    key: PasskeyAuthMethodId,
+    key: ProjectAuthMethodId.Passkey,
     label: 'Passkey',
     icon: Fingerprint,
     policy: {
@@ -136,20 +130,15 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   )
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
-  // The pinned SDK's response format hides passkey from project.authMethods, so its
-  // state comes from the passkey policy's mirror.
-  const baseAuthMethods = useMemo<Record<AuthMethodId, boolean>>(
-    () => ({
-      ...authMethodsRecordFromProject(projectData),
-      [PasskeyAuthMethodId]: security.authPasskey.enabled,
-    }),
-    [projectData, security.authPasskey.enabled],
+  const baseAuthMethods = useMemo(
+    () => authMethodsRecordFromProject(projectData, security.authPasskey),
+    [projectData, security.authPasskey],
   )
 
   useEffect(() => {
     Object.keys(lastSubmittedAuthMethods.current).forEach((method) => {
       const expectedValue = lastSubmittedAuthMethods.current[method]
-      const serverValue = baseAuthMethods[method as AuthMethodId]
+      const serverValue = baseAuthMethods[method as ProjectAuthMethodId]
 
       if (serverValue === expectedValue) {
         setOptimisticAuthMethods((prev) => {
@@ -173,7 +162,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   const updateAuthMethodMutation = useUpdateAuthMethod(projectId)
 
-  const handleAuthMethodToggle = (method: AuthMethodId, checked: boolean) => {
+  const handleAuthMethodToggle = (method: ProjectAuthMethodId, checked: boolean) => {
     setOptimisticAuthMethods((prev) => ({ ...prev, [method]: checked }))
     setUpdatingAuthMethods((prev) => new Set(prev).add(method))
     lastSubmittedAuthMethods.current[method] = checked
@@ -230,7 +219,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               // Passkeys fail closed without a relying party, so enabling waits on
               // the policy; turning an enabled method off always stays possible.
               const needsPasskeySetup =
-                method.key === PasskeyAuthMethodId &&
+                method.key === ProjectAuthMethodId.Passkey &&
                 !passkeyConfigured &&
                 !enabled
               const setupHintId = `${method.key}-setup-hint`

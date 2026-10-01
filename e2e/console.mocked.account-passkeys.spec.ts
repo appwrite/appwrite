@@ -1,9 +1,6 @@
 import { generateKeyPairSync, randomBytes } from 'node:crypto'
 import type { Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
-// Type-only: a value import would pull `@/lib/appwrite/sdk` and its `import.meta.env`
-// reads into Playwright's loader, which has no Vite transform and crashes on them.
-import type { Passkey } from '@/lib/passkeys'
 import { expect, test } from './fixtures'
 
 /**
@@ -39,7 +36,7 @@ const ACCOUNT = {
 
 const TOKEN_SECRET = 'passkey-token-secret'
 
-const SYNCED: Passkey = {
+const SYNCED: Models.Passkey = {
   $id: 'passkey00000000000000001',
   $createdAt: NOW,
   $updatedAt: NOW,
@@ -48,7 +45,7 @@ const SYNCED: Passkey = {
   backedUp: true,
 }
 
-const DEVICE_BOUND: Passkey = {
+const DEVICE_BOUND: Models.Passkey = {
   $id: 'passkey00000000000000002',
   $createdAt: NOW,
   $updatedAt: NOW,
@@ -61,7 +58,7 @@ type ApiError = { message: string; code: number; type: string }
 
 type MockOptions = {
   signedIn?: boolean
-  passkeys?: Passkey[]
+  passkeys?: Models.Passkey[]
   /** When set, adding a passkey is refused with this error. */
   createError?: ApiError
 }
@@ -200,7 +197,7 @@ async function mockAppwriteApi(
       const pending = calls.requests.find(
         (call) => call.method === 'POST' && call.path === '/account/passkeys',
       )
-      const created: Passkey = {
+      const created: Models.Passkey = {
         $id: passkeyId,
         $createdAt: NOW,
         $updatedAt: NOW,
@@ -281,7 +278,7 @@ async function addVirtualAuthenticator(
       },
     },
   )
-  if (withCredential) {
+  const addCredential = async () => {
     const { privateKey } = generateKeyPairSync('ec', {
       namedCurve: 'prime256v1',
     })
@@ -299,17 +296,8 @@ async function addVirtualAuthenticator(
       },
     })
   }
-}
-
-/**
- * Turns off passkey autofill. A virtual authenticator answers the autofill request
- * on its own, which would sign in before the test clicks anything.
- */
-async function disablePasskeyAutofill(page: Page) {
-  await page.addInitScript(() => {
-    PublicKeyCredential.isConditionalMediationAvailable = () =>
-      Promise.resolve(false)
-  })
+  if (withCredential) await addCredential()
+  return { addCredential }
 }
 
 /** Makes the browser prompt behave as if the user closed it. */
@@ -373,9 +361,10 @@ test.describe('console passkeys (mocked API)', () => {
   }) => {
     await useProfile(page, 'cloud')
     const calls = await mockAppwriteApi(page)
-    await disablePasskeyAutofill(page)
+    // Without a credential yet, the authenticator cannot answer the autofill request.
+    const { addCredential } = await addVirtualAuthenticator(page)
     await openSignIn(page)
-    await addVirtualAuthenticator(page, { withCredential: true })
+    await addCredential()
 
     await passkeyButton(page).click()
 

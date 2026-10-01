@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { fetchAccountIdentities } from '@/lib/react-query/hooks'
-import type { PasskeyList } from '@/lib/appwrite/passkeys'
+import type { Models } from '@appwrite.io/console'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -15,7 +15,7 @@ import { PasskeysSection } from './Passkeys'
 
 export type AccountSecurityInitialData = {
   identities?: Awaited<ReturnType<typeof fetchAccountIdentities>>
-  passkeys?: PasskeyList
+  passkeys?: Models.PasskeyList
 }
 
 export function AccountSecurity({

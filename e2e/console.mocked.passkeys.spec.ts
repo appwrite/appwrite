@@ -15,7 +15,7 @@ import { expect, test } from './fixtures'
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
 
-/** Mirrors `PasskeyPolicyId` and `PasskeyAuthMethodId`. */
+/** Mirrors `ProjectPolicyId.Passkey` and `ProjectAuthMethodId.Passkey`. */
 const PASSKEY_ID = 'passkey'
 
 const PASSKEY_POLICY_PATH = `/project/policies/${PASSKEY_ID}`

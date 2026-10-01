@@ -914,7 +914,7 @@ export function useUpdatePasskeyPolicy(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
 
-      return sdk.forProject(projectId).passkeys.updatePasskeyPolicy(policy)
+      return sdk.forProject(projectId).project.updatePasskeyPolicy(policy)
     },
     // Awaited so the mutation stays pending until the refetch lands: the card keeps
     // Update disabled across the whole write, not just the PATCH.
@@ -1409,7 +1409,7 @@ const ACCOUNT_PASSKEYS_QUERY_KEY = ['passkeys', 'account'] as const
 export function accountPasskeysQueryOptions() {
   return queryOptions({
     queryKey: ACCOUNT_PASSKEYS_QUERY_KEY,
-    queryFn: () => sdk.forConsole.passkeys.listPasskeys(),
+    queryFn: () => sdk.forConsole.account.listPasskeys(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnWindowFocus: false,
@@ -1441,7 +1441,7 @@ export function useUpdateAccountPasskey() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ passkeyId, name }: { passkeyId: string; name: string }) =>
-      sdk.forConsole.passkeys.updatePasskey({ passkeyId, name }),
+      sdk.forConsole.account.updatePasskey({ passkeyId, name }),
     onSuccess: () =>
       queryClient.refetchQueries({ queryKey: ACCOUNT_PASSKEYS_QUERY_KEY }),
   })
@@ -1451,7 +1451,7 @@ export function useDeleteAccountPasskey() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (passkeyId: string) =>
-      sdk.forConsole.passkeys.deletePasskey({ passkeyId }),
+      sdk.forConsole.account.deletePasskey({ passkeyId }),
     onSuccess: () =>
       queryClient.refetchQueries({ queryKey: ACCOUNT_PASSKEYS_QUERY_KEY }),
   })

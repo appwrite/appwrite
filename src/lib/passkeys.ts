@@ -1,9 +1,6 @@
-import { AppwriteException } from '@appwrite.io/console'
+import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import type { Passkey, PasskeyToken } from '@/lib/appwrite/passkeys'
 import type { Translator } from '@/lib/i18n/translate'
-
-export type { Passkey, PasskeyList } from '@/lib/appwrite/passkeys'
 
 /** WebAuthn in this browser. The JSON helpers are optional: see the fallbacks below. */
 export function isPasskeySupported(): boolean {
@@ -158,34 +155,38 @@ export async function signInWithPasskey(
     signal?: AbortSignal
     onSelected?: () => void
   } = {},
-): Promise<PasskeyToken> {
-  const passkeys = sdk.forConsole.passkeys
-  const challenge = await passkeys.createPasskeyToken()
+): Promise<Models.Token> {
+  const account = sdk.forConsole.account
+  const challenge = await account.createPasskeyToken()
   options.signal?.throwIfAborted()
   const credential = asPublicKeyCredential(
     await navigator.credentials.get({
-      publicKey: parseRequestOptions(challenge.publicKey),
+      publicKey: parseRequestOptions(
+        challenge.publicKey as PublicKeyCredentialRequestOptionsJSON,
+      ),
       mediation: options.autofill ? 'conditional' : undefined,
       signal: options.signal,
     }),
   )
   options.onSelected?.()
-  return passkeys.updatePasskeyToken({
+  return account.updatePasskeyToken({
     challengeId: challenge.$id,
     credential: credentialToJSON(credential),
   })
 }
 
 /** Registers a new passkey on this device for the signed-in account. */
-export async function registerPasskey(name: string): Promise<Passkey> {
-  const passkeys = sdk.forConsole.passkeys
-  const challenge = await passkeys.createPasskey({ name })
+export async function registerPasskey(name: string): Promise<Models.Passkey> {
+  const account = sdk.forConsole.account
+  const challenge = await account.createPasskey({ name })
   const credential = asPublicKeyCredential(
     await navigator.credentials.create({
-      publicKey: parseCreationOptions(challenge.publicKey),
+      publicKey: parseCreationOptions(
+        challenge.publicKey as PublicKeyCredentialCreationOptionsJSON,
+      ),
     }),
   )
-  return passkeys.updatePasskeyVerification({
+  return account.updatePasskeyVerification({
     passkeyId: challenge.passkeyId,
     challengeId: challenge.$id,
     credential: credentialToJSON(credential),
