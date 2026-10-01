@@ -4154,7 +4154,8 @@ trait TransactionsBase
      * Test individual increment/decrement endpoints with transactions for Legacy Collections API
      * This test ensures that:
      * 1. Transaction logs store the correct attribute key ('attribute' for Collections API)
-     * 2. Mock responses return the correct ID keys ('$collectionId' not '$tableId')
+     * 2. Staged responses contain real metadata and projected numeric values
+     * 3. Committed values stay unchanged until commit
      */
     public function testIncrementDecrementEndpointsWithTransaction(): void
     {
@@ -4208,7 +4209,8 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => 'joe',
-            'data' => ['balance' => 100]
+            'data' => ['balance' => 100],
+            'permissions' => [Permission::read(Role::any()), Permission::update(Role::any())],
         ]);
 
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -4216,7 +4218,8 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => 'jane',
-            'data' => ['balance' => 50]
+            'data' => ['balance' => 50],
+            'permissions' => [Permission::read(Role::any()), Permission::update(Role::any())],
         ]);
 
         // Create transaction
@@ -4270,6 +4273,44 @@ trait TransactionsBase
         $this->assertEquals($collectionId, $incrementResponse['body'][$this->getContainerIdResponseKey()]);
         $this->assertEquals($databaseId, $incrementResponse['body']['$databaseId']);
 
+        foreach ([$decrementResponse, $incrementResponse] as $response) {
+            $this->assertEquals([Permission::read(Role::any()), Permission::update(Role::any())], $response['body']['$permissions']);
+            $this->assertNotEmpty($response['body']['$createdAt']);
+            $this->assertNotEmpty($response['body']['$updatedAt']);
+            $this->assertNotEmpty($response['body']['$sequence']);
+        }
+        $this->assertEquals(50, $decrementResponse['body']['balance']);
+        $this->assertEquals(100, $incrementResponse['body']['balance']);
+
+        // A second increment must see the first staged increment, not start at zero.
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $secondIncrement = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, 'jane') . '/balance/increment', $headers, [
+            'transactionId' => $transactionId,
+            'value' => 25,
+        ]);
+        $this->assertEquals(200, $secondIncrement['headers']['status-code']);
+        $this->assertEquals(125, $secondIncrement['body']['balance']);
+
+        $pending = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'jane'), $headers, ['transactionId' => $transactionId]);
+        $committed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'jane'), $headers);
+        $this->assertEquals(200, $pending['headers']['status-code']);
+        $this->assertEquals(125, $pending['body']['balance']);
+        $this->assertEquals(200, $committed['headers']['status-code']);
+        $this->assertEquals(50, $committed['body']['balance']);
+
+        // Test for FAILURE: a missing row must not stage another operation.
+        $missing = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, ID::unique()) . '/balance/increment', $headers, [
+            'transactionId' => $transactionId,
+            'value' => 1,
+        ]);
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $transaction = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertEquals(200, $transaction['headers']['status-code']);
+        $this->assertEquals(3, $transaction['body']['operations']);
+
         // Commit transaction - this will fail if transaction log has wrong schema param
         $commitResponse = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
             'content-type' => 'application/json',
@@ -4295,7 +4336,7 @@ trait TransactionsBase
         $this->assertEquals(50, $joe['body']['balance'], 'Joe should have 100 - 50 = 50');
 
         $this->assertEquals(200, $jane['headers']['status-code']);
-        $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
+        $this->assertEquals(125, $jane['body']['balance'], 'Jane should have 50 + 50 + 25 = 125');
     }
 
     /**

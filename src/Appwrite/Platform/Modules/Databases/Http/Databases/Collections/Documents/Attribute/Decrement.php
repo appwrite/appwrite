@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -22,6 +23,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -86,13 +88,14 @@ class Decrement extends Action
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
+            ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
             ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization, User $user): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -132,6 +135,24 @@ class Decrement extends Action
                 );
             }
 
+            // Resolve the real transaction view before staging so a failed read
+            // cannot leave a successful operation behind an error response.
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $document = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId));
+            if ($document->isEmpty()) {
+                throw new Exception($this->getNotFoundException(), params: [$documentId]);
+            }
+            if (!$isAPIKey && !$isPrivilegedUser && !$authorization->isValid(new Input(Database::PERMISSION_UPDATE, [
+                ...$collection->getUpdate(),
+                ...($collection->getAttribute('documentSecurity', false) ? $document->getUpdate() : []),
+            ]))) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+            }
+            $document
+                ->setAttribute($attribute, $document->getAttribute($attribute, 0) - $value)
+                ->setAttribute('$databaseId', $databaseId)
+                ->setAttribute('$' . $this->getGroupId(), $collectionId);
+
             // Stage the operation in transaction logs
             $staged = new Document([
                 '$id' => ID::unique(),
@@ -159,17 +180,10 @@ class Decrement extends Action
 
             $queueForEvents->reset();
 
-            // Return successful response without actually decrementing
-            $groupId = $this->getGroupId();
-            $mockDocument = new Document([
-                '$id' => $documentId,
-                '$' . $groupId => $collectionId,
-                '$databaseId' => $databaseId,
-                $attribute => $value,
-            ]);
+            // Return the projected row without committing the decrement.
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-                ->dynamic($mockDocument, $this->getResponseModel());
+                ->dynamic($document, $this->getResponseModel());
             return;
         }
 
