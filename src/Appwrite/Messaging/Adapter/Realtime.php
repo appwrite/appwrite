@@ -458,8 +458,8 @@ class Realtime extends MessagingAdapter
     /**
      * Whether the session or JWT a connection authenticated with has expired.
      *
-     * Expiry fires no event, so this is checked before every delivery and
-     * periodically for connections that receive nothing.
+     * Expiry fires no event, so this is checked before every delivery. A connection
+     * that receives nothing stays open, but is closed at its next delivery.
      */
     public function isExpired(mixed $connection, int $now): bool
     {

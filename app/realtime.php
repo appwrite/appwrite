@@ -485,26 +485,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         ],
     ]);
 
-    // A session or JWT that expires fires no event. Delivery already skips expired
-    // connections; this closes the ones that receive nothing.
-    Timer::tick(60000, function () use ($server, $realtime, $unauthorized, $unauthorizedPayloadJson) {
+    // Flush coalesced console live-tail buffers to their connections (~150ms).
+    // Must run per-worker: the registry is mutated by this worker's subscribe handler
+    // and pub/sub ingest, which are not visible to the master process.
+    Timer::tick(150, function () use ($server, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+        // Expiry fires no event, so it is checked on every send.
         $now = \time();
-        foreach (\array_keys($realtime->connections) as $connection) {
+        foreach ($eventTailRegistry->getConnections() as $connection) {
             if ($realtime->isExpired($connection, $now)) {
+                $eventTailRegistry->removeConnection($connection);
                 $server->send([$connection], $unauthorizedPayloadJson);
                 $server->close($connection, $unauthorized->getCode());
             }
         }
-    });
 
-    // Flush coalesced console live-tail buffers to their connections (~150ms).
-    // Must run per-worker: the registry is mutated by this worker's subscribe handler
-    // and pub/sub ingest, which are not visible to the master process.
-    Timer::tick(150, function () use ($server, $eventTailRegistry) {
         $eventTailRegistry->flush($server);
     });
 
-    Timer::tick(5000, function () use ($server, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $realtime, $stats, $unauthorized, $unauthorizedPayloadJson) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -550,7 +548,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         ]
                     ];
 
-                    $server->send(array_keys($realtime->getSubscribers($event)), json_encode([
+                    // Expiry fires no event, so it is checked on every send.
+                    $now = \time();
+                    $receivers = [];
+                    foreach (\array_keys($realtime->getSubscribers($event)) as $id) {
+                        if ($realtime->isExpired($id, $now)) {
+                            $server->send([$id], $unauthorizedPayloadJson);
+                            $server->close($id, $unauthorized->getCode());
+                            continue;
+                        }
+                        $receivers[] = $id;
+                    }
+
+                    $server->send($receivers, json_encode([
                         'type' => 'event',
                         'data' => $event['data']
                     ]));
@@ -777,8 +787,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $now = \time();
                 foreach ($receivers as $id => $matched) {
-                    // Nothing more once the session or JWT has expired, as the HTTP API
-                    // would refuse it; the connection is closed below.
+                    // Expiry fires no event, so it is checked on every send. Nothing more
+                    // once the session or JWT has expired, as the HTTP API would refuse it;
+                    // the connection is closed below.
                     if ($realtime->isExpired($id, $now)) {
                         $closing[$id] = true;
                         continue;
