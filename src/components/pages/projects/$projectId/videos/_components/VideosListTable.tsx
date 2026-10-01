@@ -16,7 +16,6 @@ import { formatBytes } from '@/lib/utils/mock-data'
 import { formatResolution, formatVideoDuration } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { VideoContextMenu } from './VideoContextMenu'
-import { VideoStatusBadge } from './VideoStatusBadge'
 import { VideoThumb } from './VideoThumb'
 
 const HEAD_CLASS =
@@ -54,7 +53,6 @@ export function VideosListTable({
               />
             </TableHead>
             <TableHead className={HEAD_CLASS}>{t('Video')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Status')}</TableHead>
             <TableHead className={HEAD_CLASS}>{t('Duration')}</TableHead>
             <TableHead className={HEAD_CLASS}>{t('Resolution')}</TableHead>
             <TableHead className={HEAD_CLASS}>{t('Codecs')}</TableHead>
@@ -125,9 +123,6 @@ export function VideosListTable({
                       </div>
                     </div>
                   </Link>
-                </TableCell>
-                <TableCell className="px-4 py-3">
-                  <VideoStatusBadge status={video.status} />
                 </TableCell>
                 <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
                   {formatVideoDuration(video.duration)}

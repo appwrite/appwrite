@@ -246,35 +246,21 @@ export function VideoStreamPlayer({
 
   return (
     <div className="space-y-4">
-      {video.status === 'downloading' ||
-      activeRenditions.length > 0 ||
-      failedRenditions.length > 0 ? (
+      {activeRenditions.length > 0 || failedRenditions.length > 0 ? (
         <div className="rounded-xl border border-border bg-card/50 px-6 py-4">
           <div className="flex items-center gap-2">
-            {video.status === 'downloading' || activeRenditions.length > 0 ? (
+            {activeRenditions.length > 0 ? (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <Info className="h-4 w-4 text-muted-foreground" />
             )}
             <h3 className="text-[13px] font-semibold text-foreground">
-              {video.status === 'downloading'
-                ? t('Downloading source')
-                : activeRenditions.length > 0
-                  ? t('Processing renditions')
-                  : t('Some renditions failed')}
+              {activeRenditions.length > 0
+                ? t('Processing renditions')
+                : t('Some renditions failed')}
             </h3>
           </div>
           <div className="mt-3 space-y-2">
-            {video.status === 'downloading' ? (
-              <ProgressBarRow
-                value={
-                  video.chunksTotal > 0
-                    ? (video.chunksUploaded / video.chunksTotal) * 100
-                    : 0
-                }
-                className="mb-0"
-              />
-            ) : null}
             {[...activeRenditions, ...failedRenditions].map((rendition) => (
               <div
                 key={rendition.$id}

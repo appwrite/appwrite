@@ -2,7 +2,7 @@
  * Merge Videos worker realtime payloads into React Query caches.
  *
  * The worker publishes raw documents (not response models) on:
- * - `videos.{videoId}.update` (source download status)
+ * - `videos.{videoId}.update` (probe metadata and document updates)
  * - `videos.{videoId}.renditions.{renditionId}.update` (encode status/progress)
  * - `videos.{videoId}.subtitles.{subtitleId}.update` (subtitle processing)
  *

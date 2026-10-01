@@ -41,7 +41,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   if (!video) return null
 
-  const showRenditionsCta = video.status === 'ready' && renditions.length === 0
+  const showRenditionsCta = renditions.length === 0
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
@@ -53,11 +53,11 @@ export function View({ initialData }: ViewProps = {}) {
             </div>
             <div className="min-w-0">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Source is ready to encode')}
+                {t('Create your first renditions')}
               </h3>
               <p className="mt-1 text-[13px] text-muted-foreground">
                 {t(
-                  'Create renditions to stream this video with adaptive bitrate. Until then, the player uses the original file.',
+                  'Encode this video into HLS, DASH, or CMAF for adaptive streaming. Until then, the player uses the original Storage file.',
                 )}
               </p>
             </div>

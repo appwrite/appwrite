@@ -305,8 +305,17 @@ export const heVideosDictionary: Record<string, string> = {
     'כתובות מניפסט ציבוריות לפלטי HLS ו-DASH, ובנוסף טקסט גולמי של playlist או MPD לדיבוג לקוחות.',
   'Container and stream metadata from the Videos probe when the source file was ingested.':
     'מטא-דאטה של קונטיינר וסטרים מ-probe של Videos בעת ingest של קובץ המקור.',
-  'Worker state for the source download and every rendition and subtitle encoding job.':
-    'מצב ה-worker להורדת המקור ולכל job של קידוד rendition או כתוביות.',
+  'Worker state for rendition and subtitle encoding jobs.':
+    'מצב ה-worker לקידוד renditions וכתוביות.',
+  'Create your first renditions': 'צרו את גרסאות הקידוד הראשונות שלכם',
+  'Encode this video into HLS, DASH, or CMAF for adaptive streaming. Until then, the player uses the original Storage file.':
+    'קודדו את הסרטון ל-HLS, DASH או CMAF לסטרימינג אדפטיבי. עד אז, הנגן משתמש בקובץ המקורי ב-Storage.',
+  'Encode this video into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.':
+    'קודדו את הסרטון ל-renditions של HLS, DASH או CMAF כדי להזרים אותו עם bitrate אדפטיבי.',
+  'Select codec': 'בחרו codec',
+  'Video created': 'הסרטון נוצר',
+  'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.':
+    'בחרו קובץ וידאו מ-Storage. Appwrite סורקת את הקובץ ומאפשרת לקודד renditions לסטרימינג אדפטיבי.',
   'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
     'רמזי תמונות ממוזערות מ-WebVTT של ציר הזמן. בחרו תמונה ממוזערת כדי לדלג בנגן.',
 }

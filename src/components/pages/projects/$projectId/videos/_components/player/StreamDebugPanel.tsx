@@ -25,6 +25,7 @@ import {
   formatVideoDuration,
 } from '@/lib/utils/video-format'
 import {
+  isVideoMetadataReady,
   isVideoRenditionActive,
   parseVideoProgress,
   type VideoTimelineCue,
@@ -279,14 +280,10 @@ export function StreamDebugPanel({
           </TabsContent>
           <TabsContent value="processing">
             <StreamDebugTabIntro
-              description="Worker state for the source download and every rendition and subtitle encoding job."
+              description="Worker state for rendition and subtitle encoding jobs."
               dataSource={DEBUG_TAB_DATA_SOURCES.processing}
             />
-            <ProcessingTab
-              video={video}
-              renditions={renditions}
-              subtitles={subtitles}
-            />
+            <ProcessingTab renditions={renditions} subtitles={subtitles} />
           </TabsContent>
           <TabsContent value="timeline">
             <StreamDebugTabIntro
@@ -298,7 +295,7 @@ export function StreamDebugPanel({
               loading={timelineLoading}
               pending={timelinePending}
               canWrite={canWrite}
-              sourceReady={video.status === 'ready'}
+              metadataReady={isVideoMetadataReady(video)}
               onGenerate={onGenerateTimeline}
               onSeek={onSeek}
             />
@@ -904,35 +901,15 @@ function VideoTab({ video }: { video: Models.Video }) {
 }
 
 function ProcessingTab({
-  video,
   renditions,
   subtitles,
 }: {
-  video: Models.Video
   renditions: Models.VideoRendition[]
   subtitles: Models.VideoSubtitle[]
 }) {
   const t = useT()
-  const downloadProgress =
-    video.chunksTotal > 0 ? (video.chunksUploaded / video.chunksTotal) * 100 : 0
   return (
     <div className="space-y-6">
-      <DebugSection
-        title={t('Source')}
-        description={t(
-          'The worker downloads the Storage file into a working copy before encoding.',
-        )}
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          <VideoStatusBadge status={video.status} />
-          <span className="font-mono text-[12px] text-muted-foreground">
-            {t('Chunks')} {video.chunksUploaded}/{video.chunksTotal}
-          </span>
-        </div>
-        {video.status === 'downloading' ? (
-          <ProgressBarRow value={downloadProgress} className="mb-0" />
-        ) : null}
-      </DebugSection>
       <DebugSection title={t('Renditions')}>
         {renditions.length === 0 ? (
           <EmptyDebug>{t('No renditions requested yet.')}</EmptyDebug>
@@ -1040,7 +1017,7 @@ function TimelineTab({
   loading,
   pending,
   canWrite,
-  sourceReady,
+  metadataReady,
   onGenerate,
   onSeek,
 }: {
@@ -1048,7 +1025,7 @@ function TimelineTab({
   loading: boolean
   pending: boolean
   canWrite: boolean
-  sourceReady: boolean
+  metadataReady: boolean
   onGenerate: () => void
   onSeek: (seconds: number) => void
 }) {
@@ -1071,7 +1048,7 @@ function TimelineTab({
         <Button
           size="sm"
           className="h-8 gap-1.5 text-[12px]"
-          disabled={!canWrite || !sourceReady || pending}
+          disabled={!canWrite || !metadataReady || pending}
           onClick={onGenerate}
         >
           {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}

@@ -72,7 +72,7 @@ export function CreateVideo({
       { bucketId: source.bucketId, fileId: source.fileId, name },
       {
         onSuccess: (video) => {
-          toast.success(t('Video created. Downloading source...'))
+          toast.success(t('Video created'))
           onOpenChange(false)
           navigate({
             to: '/projects/$projectId/videos/$videoId',
@@ -94,7 +94,7 @@ export function CreateVideo({
             <DialogTitle>{t('Create video')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'Choose a video file from Storage. Appwrite downloads a working copy so you can encode renditions and stream it.',
+                'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.',
               )}
             </DialogDescription>
           </DialogHeader>

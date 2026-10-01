@@ -177,6 +177,9 @@ export function View() {
                     {t('Resolution')}
                   </TableHead>
                   <TableHead className={HEAD_CLASSNAME}>
+                    {t('Video codec')}
+                  </TableHead>
+                  <TableHead className={HEAD_CLASSNAME}>
                     {t('Video bitrate')}
                   </TableHead>
                   <TableHead className={HEAD_CLASSNAME}>
@@ -203,6 +206,10 @@ export function View() {
                     </TableCell>
                     <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {formatResolution(profile.width, profile.height)}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 font-mono text-[13px] uppercase">
+                      {(profile as Models.VideoProfile & { codec?: string })
+                        .codec || 'h264'}
                     </TableCell>
                     <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {formatBitrate(profile.videoBitRate, 'kbps')}

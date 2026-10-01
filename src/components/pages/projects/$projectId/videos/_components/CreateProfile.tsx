@@ -11,7 +11,14 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useSaveVideoProfile } from '@/lib/react-query/hooks'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useSaveVideoProfile, useVideoCodecs } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -26,20 +33,28 @@ type NumericField = keyof typeof LIMITS
 
 type FormState = {
   name: string
+  codec: string
 } & Record<NumericField, string>
 
 const EMPTY_FORM: FormState = {
   name: '',
+  codec: 'h264',
   width: '1280',
   height: '720',
   videoBitRate: '2800',
   audioBitRate: '128',
 }
 
+function profileCodec(profile: Models.VideoProfile): string {
+  const codec = (profile as Models.VideoProfile & { codec?: string }).codec
+  return codec?.trim() || 'h264'
+}
+
 function toForm(profile: Models.VideoProfile | null | undefined): FormState {
   if (!profile) return EMPTY_FORM
   return {
     name: profile.name,
+    codec: profileCodec(profile),
     width: String(profile.width),
     height: String(profile.height),
     videoBitRate: String(profile.videoBitRate),
@@ -69,6 +84,7 @@ export function CreateProfile({
   const t = useT()
   const [form, setForm] = useState<FormState>(() => toForm(profile))
   const saveMutation = useSaveVideoProfile(projectId)
+  const { data: codecs = [] } = useVideoCodecs(projectId)
   const isUpdate = !!profile
 
   useEffect(() => {
@@ -101,6 +117,7 @@ export function CreateProfile({
         height: Number(form.height),
         videoBitRate: Number(form.videoBitRate),
         audioBitRate: Number(form.audioBitRate),
+        codec: form.codec,
       },
       {
         onSuccess: () => {
@@ -143,6 +160,29 @@ export function CreateProfile({
                 autoFocus
                 maxLength={128}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="video-profile-codec" className="text-[13px]">
+                {t('Video codec')}
+              </Label>
+              <Select
+                value={form.codec}
+                onValueChange={(codec) => setForm({ ...form, codec })}
+              >
+                <SelectTrigger id="video-profile-codec" className="h-9">
+                  <SelectValue placeholder={t('Select codec')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(codecs.length > 0
+                    ? codecs
+                    : [{ $id: 'h264', name: 'H.264', outputs: [] }]
+                  ).map((codec) => (
+                    <SelectItem key={codec.$id} value={codec.$id}>
+                      {codec.name || codec.$id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {numericFields.map(({ field, label, unit }) => {

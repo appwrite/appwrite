@@ -312,8 +312,17 @@ export const jaVideosDictionary: Record<string, string> = {
     'HLS と DASH 出力の公開マニフェスト URL と、クライアントデバッグ用の playlist / MPD 生テキスト。',
   'Container and stream metadata from the Videos probe when the source file was ingested.':
     'ソースファイル取り込み時の Videos プローブによるコンテナとストリームのメタデータ。',
-  'Worker state for the source download and every rendition and subtitle encoding job.':
-    'ソースのダウンロードと各レンディション・字幕エンコードジョブの worker 状態。',
+  'Worker state for rendition and subtitle encoding jobs.':
+    'レンディションと字幕エンコードジョブの worker 状態。',
+  'Create your first renditions': '最初のレンディションを作成',
+  'Encode this video into HLS, DASH, or CMAF for adaptive streaming. Until then, the player uses the original Storage file.':
+    'アダプティブストリーミング用に HLS、DASH、または CMAF にエンコードしてください。それまではプレーヤーは Storage の元ファイルを使用します。',
+  'Encode this video into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.':
+    'アダプティブビットレートで配信するには、この動画を HLS、DASH、または CMAF レンディションにエンコードしてください。',
+  'Select codec': 'コーデックを選択',
+  'Video created': '動画を作成しました',
+  'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.':
+    'Storage から動画ファイルを選びます。Appwrite がファイルをプローブし、アダプティブストリーミング用のレンディションをエンコードできます。',
   'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
     'タイムライン WebVTT のスプライトサムネイル cue。サムネイルを選ぶとプレーヤーがシークします。',
 }

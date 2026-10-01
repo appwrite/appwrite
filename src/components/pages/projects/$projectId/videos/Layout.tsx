@@ -6,14 +6,12 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import { AlertCircle, ArrowLeft, Info } from 'lucide-react'
-import { toast } from 'sonner'
+import { ArrowLeft } from 'lucide-react'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CreateRenditions } from './_components/CreateRenditions'
 import { CreateSubtitle } from './_components/CreateSubtitle'
 import type { VideoTab } from './_components/VideoContextMenu'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -21,14 +19,11 @@ import {
   canShowVideoSettings,
 } from '@/lib/console-access-checks'
 import {
-  useCreateVideoSource,
   useOrganizationScopes,
   useProject,
   useProjectVideo,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { cn } from '@/lib/utils'
 
 const VIDEO_TABS: VideoTab[] = [
   'overview',
@@ -36,7 +31,6 @@ const VIDEO_TABS: VideoTab[] = [
   'subtitles',
   'settings',
 ]
-const RETRYABLE_SOURCE_STATUSES = new Set(['removed', 'error', 'aborted'])
 
 type VideoDetailActions = {
   openCreateRenditions: () => void
@@ -75,7 +69,6 @@ export function Layout() {
   }, [location.pathname, videoId])
 
   const { data: video, isLoading } = useProjectVideo(projectId, videoId)
-  const retrySource = useCreateVideoSource(projectId, videoId)
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -173,89 +166,6 @@ export function Layout() {
     )
   }
 
-  const sourceReady = video.status === 'ready'
-  const needsSourceRetry = RETRYABLE_SOURCE_STATUSES.has(video.status)
-
-  const sourceReleased = video.status === 'removed'
-  const sourceAlert = needsSourceRetry ? (
-    <div
-      className={cn(
-        'border-b border-border',
-        sourceReleased ? 'bg-muted/30' : 'bg-amber-500/5',
-      )}
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-        <Alert
-          variant="default"
-          className={cn(
-            'bg-transparent',
-            sourceReleased ? 'border-border' : 'border-amber-500/30',
-          )}
-        >
-          {sourceReleased ? (
-            <Info className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-          )}
-          <div className="flex flex-1 items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <AlertTitle
-                className={cn(
-                  'text-[13px] font-medium',
-                  sourceReleased
-                    ? 'text-foreground'
-                    : 'text-amber-600 dark:text-amber-400',
-                )}
-              >
-                {sourceReleased
-                  ? t('Working copy released')
-                  : t('Source download failed')}
-              </AlertTitle>
-              <AlertDescription
-                className={cn(
-                  'text-[12px]',
-                  sourceReleased
-                    ? 'text-muted-foreground'
-                    : 'text-amber-600/80 dark:text-amber-400/80',
-                )}
-              >
-                {sourceReleased
-                  ? t(
-                      'Appwrite releases the working copy after encoding. Existing renditions keep streaming. Download it again from Storage to create more renditions.',
-                    )
-                  : t(
-                      'New renditions need a working copy of the source file. Download it again from Storage to continue encoding.',
-                    )}
-              </AlertDescription>
-            </div>
-            <Button
-              size="sm"
-              variant={sourceReleased ? 'outline' : 'default'}
-              className={cn(
-                'h-8 shrink-0 px-3 text-[12px] font-medium',
-                !sourceReleased &&
-                  'bg-amber-500 text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400',
-              )}
-              disabled={!canWrite || retrySource.isPending}
-              onClick={() =>
-                retrySource.mutate(undefined, {
-                  onSuccess: () => toast.success(t('Source download started')),
-                  onError: (error) =>
-                    toast.error(
-                      getErrorMessage(error) ||
-                        t('Failed to start source download'),
-                    ),
-                })
-              }
-            >
-              {t('Download again')}
-            </Button>
-          </div>
-        </Alert>
-      </div>
-    </div>
-  ) : undefined
-
   const createLabel =
     activeTab === 'renditions'
       ? t('Create renditions')
@@ -263,20 +173,9 @@ export function Layout() {
         ? t('Create subtitle')
         : undefined
 
-  const createRenditionsBlockedReason =
-    activeTab === 'renditions' && !sourceReady
-      ? video.status === 'downloading'
-        ? t('Wait until the source download finishes.')
-        : video.status === 'removed' ||
-            video.status === 'error' ||
-            video.status === 'aborted'
-          ? t('Download the source again before creating more renditions.')
-          : t('Renditions can be created once the source download is ready.')
-      : undefined
-
   const createDisabledTooltip = !canWrite
     ? t("You don't have permission to manage videos.")
-    : createRenditionsBlockedReason
+    : undefined
 
   return (
     <VideoDetailActionsContext.Provider value={actions}>
@@ -306,11 +205,8 @@ export function Layout() {
                 ? () => setSubtitleOpen(true)
                 : undefined
           }
-          createDisabled={
-            !canWrite || (activeTab === 'renditions' && !sourceReady)
-          }
+          createDisabled={!canWrite}
           createDisabledTooltip={createDisabledTooltip}
-          contentAfterBorder={sourceAlert}
         />
         <div className="min-h-0 flex-1">
           <Outlet />

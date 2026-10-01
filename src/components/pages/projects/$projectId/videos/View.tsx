@@ -67,7 +67,6 @@ import { useT } from '@/lib/i18n/translate'
 import { CreateVideo } from './_components/CreateVideo'
 import { VideoContextMenu } from './_components/VideoContextMenu'
 import { VideosListTable } from './_components/VideosListTable'
-import { VideoStatusBadge } from './_components/VideoStatusBadge'
 import { VideoThumb } from './_components/VideoThumb'
 
 export function getVideosServiceTabs(projectId: string): Tab[] {
@@ -635,7 +634,6 @@ function VideoCard({
             </div>
             <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
               <div className="flex min-w-0 items-center gap-x-1.5">
-                <VideoStatusBadge status={video.status} />
                 {video.width > 0 ? (
                   <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
                     {formatResolution(video.width, video.height)}

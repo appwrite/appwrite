@@ -1,10 +1,10 @@
 /**
  * React Query hooks for the Videos product (`sdk.forProject(projectId).videos`).
  *
- * Videos are created from a Storage file, downloaded into a working copy
- * (`createSource`), then encoded into renditions per profile and output
- * (HLS, DASH, CMAF). Worker progress arrives over realtime and is merged into
- * these caches by `@/lib/realtime/video-cache`.
+ * Videos are created from a Storage file, probed for metadata, then encoded
+ * into renditions per profile and output (HLS, DASH, CMAF). Worker progress
+ * arrives over realtime and is merged into these caches by
+ * `@/lib/realtime/video-cache`.
  */
 
 import {
@@ -23,16 +23,13 @@ import { Dependencies } from './dependencies'
 export const VIDEOS_DEFAULT_SORT_BY = '$createdAt'
 export const VIDEOS_DEFAULT_SORT_ORDER: 'asc' | 'desc' = 'desc'
 
-/** Source (working copy) statuses reported on `Models.Video.status`. */
-export const VIDEO_SOURCE_STATUSES = [
-  'pending',
-  'downloading',
-  'ready',
-  'removed',
-  'error',
-  'aborted',
-] as const
-export type VideoSourceStatus = (typeof VIDEO_SOURCE_STATUSES)[number]
+/** True when probe metadata is available on the video document. */
+export function isVideoMetadataReady(
+  video: Pick<Models.Video, 'width' | 'height'> | null | undefined,
+): boolean {
+  if (!video) return false
+  return (video.width ?? 0) > 0 && (video.height ?? 0) > 0
+}
 
 /** Rendition statuses that mean the worker is still processing. */
 export const VIDEO_RENDITION_ACTIVE_STATUSES = [
@@ -46,10 +43,6 @@ export function isVideoRenditionActive(status: string | undefined): boolean {
   return (VIDEO_RENDITION_ACTIVE_STATUSES as readonly string[]).includes(
     status ?? '',
   )
-}
-
-export function isVideoSourceActive(status: string | undefined): boolean {
-  return status === 'downloading'
 }
 
 /** Rendition progress arrives as a string percentage (`"42"`, `"42.5"`). */
@@ -86,6 +79,8 @@ export const videoKeys = {
   ) => ['video-subtitles', 'project', projectId, videoId] as const,
   profiles: (projectId: string | null | undefined) =>
     ['video-profiles', 'project', projectId] as const,
+  codecs: (projectId: string | null | undefined) =>
+    ['video-codecs', 'project', projectId] as const,
   timeline: (
     projectId: string | null | undefined,
     videoId: string | null | undefined,
@@ -145,6 +140,28 @@ export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
   return await sdk.forProject(projectId).videos.listProfiles()
+}
+
+export type VideoCodecOption = {
+  $id: string
+  name: string
+  outputs: string[]
+}
+
+export async function fetchVideoCodecs(
+  projectId: string,
+): Promise<VideoCodecOption[]> {
+  const videos = sdk.forProject(projectId).videos
+  const listCodecs = (
+    videos as {
+      listCodecs?: () => Promise<{ codecs?: VideoCodecOption[] }>
+    }
+  ).listCodecs
+  if (!listCodecs) {
+    return [{ $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] }]
+  }
+  const response = await listCodecs.call(videos)
+  return response.codecs ?? []
 }
 
 export type VideoTimelineCue = {
@@ -317,6 +334,18 @@ export function videoProfilesQueryOptions(
   })
 }
 
+export function videoCodecsQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: videoKeys.codecs(projectId),
+    queryFn: () => fetchVideoCodecs(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
 export function videoTimelineQueryOptions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
@@ -402,11 +431,15 @@ export function useVideoProfiles(projectId: string | null | undefined) {
   return useQuery(videoProfilesQueryOptions(projectId))
 }
 
+export function useVideoCodecs(projectId: string | null | undefined) {
+  return useQuery(videoCodecsQueryOptions(projectId))
+}
+
 // ---------------------------------------------------------------------------
 // Mutations
 // ---------------------------------------------------------------------------
 
-/** Register a video from a Storage file and start downloading its working copy. */
+/** Register a video from a Storage file (metadata is probed asynchronously). */
 export function useCreateVideo(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -416,12 +449,11 @@ export function useCreateVideo(projectId: string | null | undefined) {
       name?: string
     }) => {
       const videos = sdk.forProject(projectId!).videos
-      const video = await videos.create({
+      return await videos.create({
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name?.trim() || undefined,
       })
-      return await videos.createSource({ videoId: video.$id })
     },
     onSuccess: async (video) => {
       queryClient.setQueryData(videoKeys.detail(projectId, video.$id), video)
@@ -454,22 +486,6 @@ export function useDeleteVideo(projectId: string | null | undefined) {
       queryClient.removeQueries({
         queryKey: videoKeys.detail(projectId, videoId),
       })
-      await queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
-    },
-  })
-}
-
-/** Re-download the working copy (after `removed`, `error`, or `aborted`). */
-export function useCreateVideoSource(
-  projectId: string | null | undefined,
-  videoId: string | null | undefined,
-) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: () =>
-      sdk.forProject(projectId!).videos.createSource({ videoId: videoId! }),
-    onSuccess: async (video) => {
-      queryClient.setQueryData(videoKeys.detail(projectId, videoId), video)
       await queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
     },
   })
@@ -628,6 +644,7 @@ export type VideoProfileInput = {
   height: number
   videoBitRate: number
   audioBitRate: number
+  codec?: string
 }
 
 export function useSaveVideoProfile(projectId: string | null | undefined) {
@@ -635,10 +652,11 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
       const videos = sdk.forProject(projectId!).videos
-      const { profileId, ...values } = input
+      const { profileId, codec = 'h264', ...values } = input
+      const payload = { ...values, codec }
       return profileId
-        ? videos.updateProfile({ profileId, ...values })
-        : videos.createProfile(values)
+        ? videos.updateProfile({ profileId, ...payload })
+        : videos.createProfile(payload)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
