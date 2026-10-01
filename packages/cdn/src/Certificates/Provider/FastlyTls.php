@@ -78,9 +78,6 @@ class FastlyTls implements Provider
         // need a TLS activation, or the hostname keeps the default certificate.
         if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
             if ($status === Status::ISSUED && !$this->ensureActivated($subscription, $domain)) {
-                // Fastly can report the subscription issued before the certificate
-                // appears on it. There is nothing to attach yet, so the hostname is
-                // not ready and the caller has to come back.
                 return Status::PROCESSING;
             }
 
@@ -92,8 +89,12 @@ class FastlyTls implements Provider
         // subscription state alone cannot tell waiting from progress.
         $authorizations = $this->findAuthorizations($subscription, $domain);
         if ($status !== Status::FAILED && !$this->isBlocked($authorizations)) {
-            if ($status === Status::RENEWING) {
-                $this->ensureActivated($subscription, $domain);
+            // Renewing is treated as ready by the caller, so it needs the same
+            // activation guard as issued. A subscription with no certificate
+            // reference at all has no old certificate serving either, so there is
+            // nothing attached and nothing to attach.
+            if ($status === Status::RENEWING && !$this->ensureActivated($subscription, $domain)) {
+                return Status::PROCESSING;
             }
 
             return $status;
@@ -452,6 +453,10 @@ class FastlyTls implements Provider
      * there is no activation to create.
      *
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * Fastly can report a subscription issued or renewing slightly before the
+     * certificate appears on it. Callers treat both states as ready, so both have
+     * to honour a false return and report PROCESSING instead.
+     *
      * @return bool False when the subscription carries no certificate to attach yet.
      */
     private function ensureActivated(array $subscription, string $domain): bool

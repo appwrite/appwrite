@@ -264,6 +264,41 @@ final class FastlyTlsTest extends TestCase
         $this->assertSame([], \array_column($this->activations($client), 'domain'));
     }
 
+    public function testRenewingSubscriptionWithoutACertificateIsStillProcessing(): void
+    {
+        // Renewing is reported ready, so it needs the same guard as issued. No
+        // certificate reference at all means no old certificate is serving either,
+        // so nothing is attached and the hostname is not ready.
+        $client = new TestClient([$this->json($this->subscription(state: 'renewing', authorizationState: 'passing'))]);
+
+        $this->assertSame(
+            Status::PROCESSING,
+            new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null),
+        );
+        $this->assertSame([], \array_column($this->activations($client), 'domain'));
+    }
+
+    public function testRenewingSubscriptionActivatesItsCertificate(): void
+    {
+        // The guard must not swallow the normal case: a renewing subscription that
+        // does carry a certificate is still reported renewing, and gets attached.
+        $client = new TestClient([
+            $this->json($this->subscription(
+                state: 'renewing',
+                authorizationState: 'passing',
+                certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            )),
+            $this->json(['data' => []]),
+            $this->json(['data' => ['id' => 'act_1', 'type' => 'tls_activation']], 201),
+        ]);
+
+        $this->assertSame(
+            Status::RENEWING,
+            new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null),
+        );
+        $this->assertSame(['example.com'], \array_column($this->activations($client), 'domain'));
+    }
+
     public function testIssuedCertificateWithoutATlsConfigurationIsNotActivated(): void
     {
         $client = new TestClient([$this->json($this->subscription(state: 'issued'))]);
