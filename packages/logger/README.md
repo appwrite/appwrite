@@ -108,7 +108,7 @@ docker run --rm --interactive --tty --env-file .env \
   composer test
 ```
 
-> Make sure to replace `TEST_SENTRY_DSN` with actual keys from Sentry. 
+> Make sure to replace `TEST_SENTRY_DSN` with actual keys from Sentry.
 
 > Make sure to replace `TEST_APPSIGNAL_KEY` with key found in Appsignal -> Project -> App Settings -> Push & deploy -> Push Key
 

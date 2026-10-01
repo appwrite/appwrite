@@ -89,7 +89,7 @@ class [ADAPTER_NAME] extends Adapter
     {
         // TODO: Fill protected variables with keys using values from constructor parameters
     }
-    
+
     public function getSupportedTypes(): array
     {
         // TODO: Return array of supported log types, such as Log::TYPE_DEBUG or Log::TYPE_ERROR
