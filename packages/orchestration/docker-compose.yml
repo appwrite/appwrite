@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+    tests:
+        container_name: tests
+        build: 
+            context: .
+        networks:
+            - orchestration
+        environment:
+            HOST_DIR: "$PWD" # Nessessary to mount test resources to child containers
+        volumes:
+            - ./:/usr/src/code
+            - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+    orchestration:
