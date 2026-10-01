@@ -96,6 +96,31 @@ final class CertificatesDomainValidationTest extends TestCase
 
     public function testActivationFailureLeavesTheRuleRetryable(): void
     {
+        // The domain's own checks passed; only the provider is outstanding. Moving
+        // the rule to 'unverified' here would strand it, because the worker's
+        // guard accepts only generating or verified and the interval requeues
+        // only generating. So it stays on generating and is tried again.
+        $writes = $this->generate($this->failingActivation(), skipDomainValidation: true);
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $writes['rules']['status']);
+        $this->assertSame(1, $writes['certificates']['attempts']);
+    }
+
+    public function testActivationThatKeepsFailingIsEventuallyReportedFailed(): void
+    {
+        // Retrying forever would hide a permanently broken configuration, so the
+        // last attempt is terminal and visible.
+        $writes = $this->generate($this->failingActivation(), skipDomainValidation: true, attempts: 4);
+
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+        $this->assertSame(5, $writes['certificates']['attempts']);
+    }
+
+    /**
+     * A provider holding an issued certificate it cannot attach.
+     */
+    private function failingActivation(): Provider&Stub
+    {
         $certificates = $this->createMock(Provider::class);
         $certificates->method('isRenewRequired')->willReturn(false);
         $certificates->method('isInstantGeneration')->willReturn(false);
@@ -104,10 +129,7 @@ final class CertificatesDomainValidationTest extends TestCase
         ));
         $certificates->expects($this->never())->method('issueCertificate');
 
-        $writes = $this->generate($certificates, skipDomainValidation: true);
-
-        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
-        $this->assertSame(1, $writes['certificates']['attempts']);
+        return $certificates;
     }
 
     /**
@@ -115,7 +137,7 @@ final class CertificatesDomainValidationTest extends TestCase
      *
      * @return array<string, array<string, mixed>> the attributes written per collection
      */
-    private function generate(Provider&Stub $certificates, bool $skipDomainValidation): array
+    private function generate(Provider&Stub $certificates, bool $skipDomainValidation, int $attempts = 0): array
     {
         $rule = new Document([
             '$id' => md5(self::DOMAIN),
@@ -135,7 +157,7 @@ final class CertificatesDomainValidationTest extends TestCase
             '$collection' => 'certificates',
             '$updatedAt' => DateTime::now(),
             'domain' => self::DOMAIN,
-            'attempts' => 0,
+            'attempts' => $attempts,
             'logs' => '',
         ]);
 

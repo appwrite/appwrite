@@ -49,29 +49,40 @@ final readonly class Zone
             }
         }
 
-        // A managed apex CAA is stored as "@" and absolutized to the zone name.
-        // The same CAA copied again under the apex FQDN is a second document with
-        // the same rdata. Fastly Certainly treats those two identical issue
-        // records as a conflict and refuses to issue. Publish the first copy only.
-        $this->records = self::withoutDuplicateCaa($records);
+        // An RRset is a set. The same record twice is not two records, it is one
+        // published twice, which RFC 2181 section 5 makes invalid rather than
+        // merely redundant. Appwrite arrives here with the apex stored both as
+        // "@" and as the apex FQDN: two documents that absolutize to the same
+        // owner carrying the same rdata. Publish the first copy only.
+        //
+        // TTL is deliberately not part of the identity. RFC 2181 section 5.2
+        // requires one TTL across an RRset, so where two copies disagree the
+        // first one's TTL is the answer.
+        $this->records = self::withoutDuplicates($records);
     }
 
     /**
      * @param list<Record> $records
      * @return list<Record>
      */
-    private static function withoutDuplicateCaa(array $records): array
+    private static function withoutDuplicates(array $records): array
     {
         $published = [];
         $seen = [];
 
         foreach ($records as $record) {
-            if ($record->type !== Record::TYPE_CAA) {
-                $published[] = $record;
-                continue;
-            }
+            // Everything that distinguishes one resource record from another:
+            // MX and SRV carry part of their meaning outside rdata.
+            $key = \implode("\0", [
+                $record->name,
+                $record->class,
+                $record->type,
+                $record->rdata,
+                $record->priority ?? '',
+                $record->weight ?? '',
+                $record->port ?? '',
+            ]);
 
-            $key = json_encode([$record->name, $record->class, $record->rdata], JSON_THROW_ON_ERROR);
             if (isset($seen[$key])) {
                 continue;
             }

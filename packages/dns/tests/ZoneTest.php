@@ -131,8 +131,8 @@ final class ZoneTest extends TestCase
     public function testLockedAndUnlockedIdenticalApexCaaPublishOnce(): void
     {
         // The managed record is the locked "@" CAA. An unlocked copy stored under
-        // the apex FQDN absolutizes to the same name and the same rdata. Certainly
-        // stops issuance when both are published.
+        // the apex FQDN absolutizes to the same name with the same rdata, so the
+        // zone would otherwise answer one record twice.
         $managed = new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "certainly.com"');
         $copy = new Record('caudit.com', Record::TYPE_CAA, ttl: 300, rdata: '0 issue "certainly.com"');
         $otherIssuer = new Record('caudit.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "letsencrypt.org"');
@@ -149,6 +149,33 @@ final class ZoneTest extends TestCase
         $this->assertSame($managed, $apex[0]);
         $this->assertSame('0 issue "letsencrypt.org"', $apex[1]->rdata);
         $this->assertCount(3, $zone->records);
+    }
+
+    public function testAnyRecordTypePublishesOnce(): void
+    {
+        // An RRset is a set for every type, not just CAA.
+        $first = new Record('caudit.com', Record::TYPE_A, ttl: 3600, rdata: '192.0.2.1');
+        $duplicate = new Record('caudit.com', Record::TYPE_A, ttl: 300, rdata: '192.0.2.1');
+        $sibling = new Record('caudit.com', Record::TYPE_A, ttl: 3600, rdata: '192.0.2.2');
+        $txt = new Record('caudit.com', Record::TYPE_TXT, ttl: 3600, rdata: '192.0.2.1');
+
+        $zone = new Zone('caudit.com', [$first, $duplicate, $sibling, $txt], $this->soa('caudit.com'));
+
+        $this->assertSame([$first, $sibling, $txt], $zone->records);
+    }
+
+    public function testRecordsDifferingOnlyOutsideRdataBothPublish(): void
+    {
+        // MX and SRV carry part of their identity outside rdata, so collapsing on
+        // rdata alone would silently drop a valid record.
+        $mx10 = new Record('caudit.com', Record::TYPE_MX, ttl: 3600, rdata: 'mail.caudit.com', priority: 10);
+        $mx20 = new Record('caudit.com', Record::TYPE_MX, ttl: 3600, rdata: 'mail.caudit.com', priority: 20);
+        $srv = new Record('_sip._tcp.caudit.com', Record::TYPE_SRV, ttl: 3600, rdata: 'sip.caudit.com', priority: 10, weight: 5, port: 5060);
+        $srvOtherPort = new Record('_sip._tcp.caudit.com', Record::TYPE_SRV, ttl: 3600, rdata: 'sip.caudit.com', priority: 10, weight: 5, port: 5061);
+
+        $zone = new Zone('caudit.com', [$mx10, $mx20, $srv, $srvOtherPort], $this->soa('caudit.com'));
+
+        $this->assertCount(4, $zone->records);
     }
 
     private function soa(string $name): Record

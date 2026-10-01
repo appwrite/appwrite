@@ -150,12 +150,16 @@ class Interval extends Action
      * is still pending, and nothing else would come back to attach it to the
      * TLS configuration once it is issued. DNS already passed when the rule
      * entered this status, so the follow-up does not run that check again.
-     * Rules touched in the last minute are left alone so a tick does not queue
-     * the same hostname twice.
+     *
+     * $updatedAt is only written when a job finishes, so the age threshold has
+     * to be comfortably longer than a job takes or a tick would enqueue the
+     * same hostname while the previous attempt is still running. Five minutes
+     * is well past that for every provider, and still well inside what a
+     * customer waiting on issuance would notice.
      */
     private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
-        $before = DatabaseDateTime::format(new DateTime('-60 seconds'));
+        $before = DatabaseDateTime::format(new DateTime('-5 minutes'));
 
         $rules = $dbForPlatform->find('rules', [
             Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATING]),
@@ -166,11 +170,11 @@ class Interval extends Action
         ]);
 
         $scanned = \count($rules);
-        Span::add('interval.certificate_generation.scanned', $scanned);
+        Span::add('scanned', $scanned);
 
         if ($scanned === 0) {
-            Span::add('interval.certificate_generation.processed', 0);
-            Span::add('interval.certificate_generation.failed', 0);
+            Span::add('processed', 0);
+            Span::add('failed', 0);
             return;
         }
 
@@ -197,7 +201,7 @@ class Interval extends Action
             }
         }
 
-        Span::add('interval.certificate_generation.processed', $processed);
-        Span::add('interval.certificate_generation.failed', $failed);
+        Span::add('processed', $processed);
+        Span::add('failed', $failed);
     }
 }
