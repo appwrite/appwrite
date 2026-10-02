@@ -3,22 +3,14 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
+import { ADDON_KEY_PREMIUM_GEO_DB } from '@/lib/billing/addons'
+import { enablePremiumGeoDbAddon } from '@/lib/billing/enable-premium-geo-db-addon'
+import { PREMIUM_GEO_PROMO_DESCRIPTION } from '@/lib/billing/premium-geo-promo'
 import {
-  ADDON_KEY_PREMIUM_GEO_DB,
-  isPaymentAuthentication,
-  resolveStripeProviderMethodId,
-} from '@/lib/billing/addons'
-import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
-import {
-  projectAddonPriceQueryOptions,
-  projectAddonsQueryOptions,
   useOrganizationById,
   useProject,
   useProjectAddonPrice,
 } from '@/lib/react-query/hooks'
-import { confirmPayment } from '@/lib/utils/stripe'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { Button } from '@/components/ui/button'
@@ -55,78 +47,32 @@ export function EnablePremiumGeoDBDialog({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const refreshAddonQueries = async () => {
-    const organizationId = organization?.$id
-    await Promise.all([
-      queryClient.refetchQueries({
-        queryKey: projectAddonsQueryOptions(projectId).queryKey,
-      }),
-      queryClient.refetchQueries({
-        queryKey: projectAddonPriceQueryOptions(
-          projectId,
-          ADDON_KEY_PREMIUM_GEO_DB,
-        ).queryKey,
-      }),
-      queryClient.refetchQueries({ queryKey: ['project', projectId] }),
-      ...(organizationId
-        ? [refetchOrganizationBillingQueries(queryClient, organizationId)]
-        : []),
-    ])
-  }
-
   const handleEnable = async () => {
     setSubmitting(true)
     setError(null)
     try {
-      const result = (await sdk.forConsole.projects.createPremiumGeoDBAddon({
-        projectId,
-      })) as Models.Addon | Models.PaymentAuthentication
-
-      if (isPaymentAuthentication(result)) {
-        const paymentMethodId = organization?.paymentMethodId
-        if (!paymentMethodId || !organization?.$id) {
-          throw new Error(
-            t('Add a payment method to your organization before enabling this addon.'),
-          )
-        }
-        const providerMethodId = await resolveStripeProviderMethodId({
-          organizationId: organization.$id,
-          paymentMethodId,
-        })
-        await confirmPayment({
-          clientSecret: result.clientSecret,
-          paymentMethod: providerMethodId,
-        })
-        try {
-          await sdk.forConsole.projects.confirmAddonPayment({
-            projectId,
-            addonId: result.addonId,
-          })
-        } catch (confirmError) {
-          const candidate = confirmError as { type?: string; code?: number }
-          if (
-            candidate?.type !== 'billing_invoice_not_found' &&
-            candidate?.type !== 'addon_not_found' &&
-            candidate?.code !== 404
-          ) {
-            throw confirmError
-          }
-        }
+      if (!organization?.$id) {
+        throw new Error(
+          t('Add a payment method to your organization before enabling this addon.'),
+        )
       }
-
-      await refreshAddonQueries()
-      toast.success(t('Premium Geo DB addon has been enabled'))
+      const result = await enablePremiumGeoDbAddon({
+        projectId,
+        organizationId: organization.$id,
+        paymentMethodId: organization.paymentMethodId,
+        missingPaymentMethodMessage: t(
+          'Add a payment method to your organization before enabling this addon.',
+        ),
+        queryClient,
+      })
+      toast.success(
+        result === 'already_active'
+          ? t('Premium Geo DB addon is already active for this project')
+          : t('Premium Geo DB addon has been enabled'),
+      )
       onOpenChange(false)
       onEnabled?.()
     } catch (enableError) {
-      const candidate = enableError as { code?: number }
-      if (candidate?.code === 409) {
-        await refreshAddonQueries()
-        toast.success(t('Premium Geo DB addon is already active for this project'))
-        onOpenChange(false)
-        onEnabled?.()
-        return
-      }
       setError(getErrorMessage(enableError))
     } finally {
       setSubmitting(false)
@@ -151,9 +97,7 @@ export function EnablePremiumGeoDBDialog({
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <p className="text-[13px] text-muted-foreground">
-            {t(
-              'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.',
-            )}
+            {t(PREMIUM_GEO_PROMO_DESCRIPTION)}
           </p>
           {addonPrice ? (
             <div className="rounded-lg border border-border p-4 space-y-3">

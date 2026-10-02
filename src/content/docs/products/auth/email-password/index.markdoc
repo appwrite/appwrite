@@ -4,7 +4,7 @@ title: Email and password login
 description: Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.
 ---
 
-Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling [email policies](/docs/products/auth/email-policies) to block free, aliased, or disposable email providers.
+Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, password history, and [breached password detection](/docs/products/auth/security#breached-passwords) to help users choose good passwords. You can also restrict which addresses can sign up by enabling [email policies](/docs/products/auth/email-policies) to block free, aliased, or disposable email providers.
 
 # Signup {% #sign-up %}
 
@@ -156,4 +156,4 @@ promise.then(function (response) {
 
 # Security {% #security %}
 
-Appwrite's security first mindset goes beyond a securely implemented authentication API. You can enable features like password strength requirements, password dictionary, password history, and disallow personal data in passwords to encourage users to pick better passwords. By enabling these features, you protect user data and teach better password choices, which helps make the internet a safer place.
+Appwrite's security first mindset goes beyond a securely implemented authentication API. You can enable features like password strength requirements, password dictionary, password history, [breached password detection](/docs/products/auth/security#breached-passwords), and disallow personal data in passwords to encourage users to pick better passwords. By enabling these features, you protect user data and teach better password choices, which helps make the internet a safer place.

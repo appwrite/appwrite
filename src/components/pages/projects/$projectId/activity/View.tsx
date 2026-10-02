@@ -1,6 +1,4 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { isTerraformActivity } from '@/lib/terraform/activity'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -1182,6 +1180,8 @@ export function View({ projectId, initialData }: ViewProps) {
                           <UserTypeAvatar
                             actorType={activity.actorType}
                             actorName={activity.actorName}
+                            actorId={activity.actorId}
+                            projectId={projectId}
                             className="shadow-none"
                           />
                           <div className="min-w-0">
@@ -1203,26 +1203,6 @@ export function View({ projectId, initialData }: ViewProps) {
                                   </TooltipTrigger>
                                   <TooltipContent side="top">
                                     {t('Via MCP')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : null}
-                              {isTerraformActivity(rawEvent) ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span
-                                      className="inline-flex shrink-0 text-violet-600 dark:text-violet-400"
-                                      aria-label={t('Via Terraform')}
-                                      onClick={(e) => e.stopPropagation()}
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                    >
-                                      <TerraformIcon
-                                        variant="mark"
-                                        className="h-3.5 w-3.5"
-                                      />
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    {t('Via Terraform')}
                                   </TooltipContent>
                                 </Tooltip>
                               ) : null}
@@ -1358,6 +1338,7 @@ export function View({ projectId, initialData }: ViewProps) {
       </div>
 
       <ActivityLogDrawer
+        projectId={projectId}
         open={drawerOpen}
         onOpenChange={(open) => {
           if (open) {

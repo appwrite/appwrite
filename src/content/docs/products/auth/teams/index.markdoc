@@ -223,7 +223,7 @@ Learn more about permissions
 
 # Memberships privacy {% #memberships-privacy %}
 
-In certain use cases, your app may not need to share members' personal information with others. You can safeguard privacy by marking specific membership details as private. To configure this setting, navigate to **Auth** > **Security** > **Memberships privacy**
+In certain use cases, your app may not need to share members' personal information with others. You can safeguard privacy by marking specific membership details as private. To configure this setting, navigate to **Auth** > **Policies** > **Memberships** > **Privacy**.
 
 These details can be made private:
 

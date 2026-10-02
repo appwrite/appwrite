@@ -1,7 +1,5 @@
 // Database-level overview (tabs: tables list, visualizer, monitor, …) - per product copy.
 import { cn } from '@/lib/utils'
-import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -816,12 +814,6 @@ export function Overview({
           }
           contentAfterBorder={
             <>
-              {activeTab === 'settings' ? (
-                <TerraformResourceAlert
-                  projectId={projectId}
-                  resource={getTerraformResourcePath('database', databaseId)}
-                />
-              ) : null}
               {activeTab === 'monitor' ? (
                 <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                   <DatabaseMonitorMobileNav

@@ -12,6 +12,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useChartLiveUpdateAnimation } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import {
   getUsageChartIntervalsForPlan,
   resolveUsageChartIntervalForRange,
@@ -180,7 +181,10 @@ function MetricTile({
           <>
             <AnimatedCounter
               value={value}
-              className="text-[20px] font-semibold text-foreground"
+              className={cn(
+                'text-[20px] font-semibold text-foreground',
+                USAGE_CHART_FADE_IN_CLASS_NAME,
+              )}
               decimals={decimals}
               suffix={suffix}
               formatDisplay={formatValue}
@@ -485,7 +489,10 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
             ) : (
               <AnimatedCounter
                 value={totalRequests}
-                className="text-[24px] font-semibold text-foreground"
+                className={cn(
+                  'text-[24px] font-semibold text-foreground',
+                  USAGE_CHART_FADE_IN_CLASS_NAME,
+                )}
               />
             )}
             <span className="text-[13px] text-muted-foreground">
@@ -495,6 +502,7 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
               <span
                 className={cn(
                   'text-[12px] font-medium tabular-nums',
+                  USAGE_CHART_FADE_IN_CLASS_NAME,
                   requestsChange > 0 &&
                     'text-emerald-600 dark:text-emerald-400',
                   requestsChange < 0 &&
@@ -584,7 +592,12 @@ export function TrafficOverview({ resourceSelection }: TrafficOverviewProps) {
             />
           ) : (
           <div
-            className={cn(surfaceClassName, 'relative')}
+            key={overview ? 'data' : 'empty'}
+            className={cn(
+              surfaceClassName,
+              'relative',
+              overview && USAGE_CHART_FADE_IN_CLASS_NAME,
+            )}
             aria-label={
               canSelect
                 ? t('Drag on the chart to select a date range')

@@ -4,7 +4,7 @@ title: Frameworks
 description: Discover which frameworks are supported out-of-the-box by Appwrite Sites.
 ---
 
-Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is "supported," it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you.
+Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is "supported," it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you.
 
 # Zero-configuration approach
 
@@ -71,6 +71,12 @@ This means you can focus on building your application while Appwrite handles the
 - {% icon icon="flutter" size="m" /%}
 - [**Flutter Web**](/docs/products/sites/quick-start/flutter)
 - `Static`
+
+---
+
+- {% icon icon="jaspr" size="m" /%}
+- [**Jaspr**](/docs/products/sites/quick-start/jaspr)
+- `SSR`
 
 ---
 

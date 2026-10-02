@@ -8,9 +8,14 @@ import {
   resolveScreenshotModeUserPhotoSrc,
   subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
+import {
+  getUserPhotoVersion,
+  subscribeUserPhotoVersion,
+  withUserPhotoVersion,
+} from '@/lib/user-photo'
 import { cn } from '@/lib/utils'
 
-type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 interface InitialsAvatarProps {
   name?: string
@@ -26,6 +31,12 @@ interface PhotoAvatarProps {
    */
   userId?: string
   /**
+   * Resolve `userId` against this project's users (`sdk.forProject`) instead
+   * of the console project. Required for Auth users, team members, and
+   * activity actors; `useCurrentUser` is ignored in project scope.
+   */
+  projectId?: string
+  /**
    * Resolve via the signed-in console user (OAuth photo chain). Use only when
    * the account ID is not available yet; prefer `userId` when you have it.
    */
@@ -34,6 +45,12 @@ interface PhotoAvatarProps {
   isCurrentUser?: boolean
   /** Used only for initials fallback when the photo is unavailable. */
   name?: string
+  /**
+   * What shows under the photo while it loads: the user's initials (default)
+   * or a plain surface. A photo that fails to load still falls back to
+   * initials either way.
+   */
+  placeholder?: 'initials' | 'blank'
   size?: AvatarSize
   className?: string
 }
@@ -52,6 +69,7 @@ const sizeClasses: Record<AvatarSize, string> = {
   sm: 'h-6 w-6 text-[10px]',
   md: 'h-8 w-8 text-[11px]',
   lg: 'h-10 w-10 text-[13px]',
+  xl: 'h-20 w-20 text-[20px]',
 }
 
 /** Request 2x pixels so avatars stay sharp on retina displays. */
@@ -60,6 +78,7 @@ const sizePixels: Record<AvatarSize, number> = {
   sm: 48,
   md: 64,
   lg: 80,
+  xl: 160,
 }
 
 const loadedPhotoSrcs = new Set<string>()
@@ -117,19 +136,27 @@ export function InitialsAvatar({
  * Profile photo via `avatars.getPhoto({ userId })`.
  *
  * Pass `userId` only. Calling `getPhoto` with no identity params resolves the
- * signed-in session user (`useCurrentUser`).
+ * signed-in session user (`useCurrentUser`). Add `projectId` to resolve a
+ * customer project's user instead of a console user.
+ *
+ * The current console user's photo URL carries the user photo version (see
+ * `@/lib/user-photo`) so it reloads right after an upload or removal.
  */
 export function PhotoAvatar({
   userId,
+  projectId,
   useCurrentUser = false,
   isCurrentUser = false,
   name,
+  placeholder = 'initials',
   size = 'md',
   className,
 }: PhotoAvatarProps) {
   const [failed, setFailed] = useState(false)
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
+  const [photoVersion, setPhotoVersion] = useState(getUserPhotoVersion)
   const trimmedUserId = userId?.trim() || ''
+  const trimmedProjectId = projectId?.trim() || ''
   const pixels = sizePixels[size]
 
   useEffect(() => {
@@ -138,32 +165,59 @@ export function PhotoAvatar({
     })
   }, [])
 
+  useEffect(() => subscribeUserPhotoVersion(setPhotoVersion), [])
+
   const src = useMemo(() => {
+    // Project users are never the console account: in project scope, ignore
+    // the console-current-user flags and the account ID comparison so the
+    // screenshot-mode demo photo never replaces a project user's avatar.
+    const consoleScoped = !trimmedProjectId
+    const currentUserId = consoleScoped
+      ? getConsoleAccountFromSingleton()?.$id
+      : undefined
     const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
       userId: trimmedUserId,
-      useCurrentUser,
-      isCurrentUser,
-      currentUserId: getConsoleAccountFromSingleton()?.$id,
+      useCurrentUser: consoleScoped && useCurrentUser,
+      isCurrentUser: consoleScoped && isCurrentUser,
+      currentUserId,
     })
     if (screenshotSrc) return screenshotSrc
 
+    const isSelf =
+      consoleScoped &&
+      (isCurrentUser ||
+        useCurrentUser ||
+        (!!trimmedUserId && trimmedUserId === currentUserId))
+
     if (trimmedUserId) {
-      return sdk.forConsole.avatars.getPhoto({
+      const avatars = trimmedProjectId
+        ? sdk.forProject(trimmedProjectId).avatars
+        : sdk.forConsole.avatars
+      const url = avatars.getPhoto({
         width: pixels,
         height: pixels,
         userId: trimmedUserId,
       })
+      return isSelf ? withUserPhotoVersion(url, photoVersion) : url
     }
 
-    if (useCurrentUser) {
-      return sdk.forConsole.avatars.getPhoto({
-        width: pixels,
-        height: pixels,
-      })
+    if (useCurrentUser && consoleScoped) {
+      return withUserPhotoVersion(
+        sdk.forConsole.avatars.getPhoto({ width: pixels, height: pixels }),
+        photoVersion,
+      )
     }
 
     return null
-  }, [pixels, trimmedUserId, useCurrentUser, isCurrentUser, screenshotModeEpoch])
+  }, [
+    pixels,
+    trimmedUserId,
+    trimmedProjectId,
+    useCurrentUser,
+    isCurrentUser,
+    screenshotModeEpoch,
+    photoVersion,
+  ])
 
   const [loaded, setLoaded] = useState(() =>
     src ? loadedPhotoSrcs.has(src) : false,
@@ -196,11 +250,13 @@ export function PhotoAvatar({
         className,
       )}
     >
-      <InitialsAvatar
-        name={name}
-        size={size}
-        className="pointer-events-none absolute inset-0 h-full w-full"
-      />
+      {placeholder === 'initials' ? (
+        <InitialsAvatar
+          name={name}
+          size={size}
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
+      ) : null}
       <img
         ref={imageRef}
         src={src}

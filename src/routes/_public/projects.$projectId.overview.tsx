@@ -11,7 +11,7 @@ import {
   overviewStorageOverviewQueryOptions,
   fetchProject,
   organizationPlanQueryOptions,
-  accountConnectedAppsQueryOptions,
+  accountConsentsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
@@ -109,7 +109,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
 
       // API keys can hang when billable services are blocked. Bound the wait so the
       // project layout (and budget curtain) can still mount.
-      const [apiKeysRaw, account, connectedApps] = await Promise.all([
+      const [apiKeysRaw, account, consents] = await Promise.all([
         Promise.race([
           queryClient
             .ensureQueryData(apiKeysQueryOptions(projectId))
@@ -122,7 +122,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
           .ensureQueryData(consoleAccountQueryOptions())
           .catch(() => null),
         queryClient
-          .ensureQueryData(accountConnectedAppsQueryOptions())
+          .ensureQueryData(accountConsentsQueryOptions())
           .catch(() => null),
       ])
       const usageStatsEnabled = getActiveProfileFeatures().usageStats
@@ -178,7 +178,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
       return {
         apiKeys: mapApiKeysFromResponse(apiKeysRaw),
         apiKeysRaw,
-        mcpAgentConnected: hasAccountMcpAgentConnected(connectedApps?.groups),
+        mcpAgentConnected: hasAccountMcpAgentConnected(consents),
       }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)

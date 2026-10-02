@@ -1,6 +1,4 @@
 import { useState, useCallback } from 'react'
-import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
-import { isTerraformActivity } from '@/lib/terraform/activity'
 import { Browser, Flag, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -74,6 +72,8 @@ interface ActivityLogDrawerProps {
   onOpenChange: (open: boolean) => void
   event: Models.ActivityEvent | null
   display: ActivityDrawerDisplay | null
+  /** Resolves the actor photo for regular project users. */
+  projectId?: string
 }
 
 const actionLabels: Record<ActionType, string> = {
@@ -237,6 +237,7 @@ export function ActivityLogDrawer({
   onOpenChange,
   event,
   display,
+  projectId,
 }: ActivityLogDrawerProps) {
   const t = useT()
   const { lookups: countryLookups } = useCountryLookups()
@@ -402,6 +403,8 @@ export function ActivityLogDrawer({
                           event.actorEmail?.trim() ||
                           t('Unknown')
                         }
+                        actorId={event.actorId}
+                        projectId={projectId}
                       />
                       <div className="flex min-w-0 items-center gap-1.5">
                         <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
@@ -419,24 +422,6 @@ export function ActivityLogDrawer({
                             </TooltipTrigger>
                             <TooltipContent side="top">
                               {t('Via MCP')}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : null}
-                        {isTerraformActivity(event) ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                className="inline-flex shrink-0 text-violet-600 dark:text-violet-400"
-                                aria-label={t('Via Terraform')}
-                              >
-                                <TerraformIcon
-                                  variant="mark"
-                                  className="h-3.5 w-3.5"
-                                />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {t('Via Terraform')}
                             </TooltipContent>
                           </Tooltip>
                         ) : null}

@@ -72,6 +72,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Text Embeddings',
             href: '/docs/advanced/billing/embeddings',
           },
+          {
+            label: 'Premium Geo DB',
+            href: '/docs/advanced/billing/premium-geo-db',
+          },
         ],
       },
       {
@@ -321,6 +325,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'SMS delivery',
             href: '/docs/advanced/self-hosting/configuration/sms',
+          },
+          {
+            label: 'Breached passwords',
+            href: '/docs/advanced/self-hosting/configuration/breached-passwords',
           },
           {
             label: 'Functions',
@@ -1473,7 +1481,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/mysql/integrations/retool',
-          }
+          },
         ],
       },
     ],
@@ -1667,7 +1675,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Retool',
             href: '/docs/products/databases/postgresql/integrations/retool',
-          }
+          },
         ],
       },
     ],

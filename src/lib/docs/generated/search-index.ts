@@ -135,6 +135,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "excerpt": "Appwrite looks up the client IP of every request to find out where it came from. On every plan, the lookup returns the country, continent, EU membership, and currency. **Premium Geo DB** is a project add-on that switches the lookup to a more detailed database. It adds the city, region, postal code, coordinates, and time zone of the IP, and details of the network behind it: ISP, autonomous system, and connection type. Once the add-on is active, the extra attributes…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Premium Geo DB"
+    ]
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
@@ -451,6 +462,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Getting started",
       "Overview"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "excerpt": "Appwrite 2.3 and later can check user passwords against known data breaches with the breached passwords policy. On a self-hosted instance, the policy needs a breach service, which you set with the environment variable. The default value, , reports every password as safe. Until you change it, the policy has no effect even when it's turned on in the Console: nothing is rejected or blocked, and every checked password is recorded as not breached. Environment variables Set in the file…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Configuration",
+      "Breached passwords"
     ]
   },
   {
@@ -1827,7 +1849,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
-    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, and password history to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You can use the…",
+    "excerpt": "Email and password login is the most commonly used authentication method. Appwrite Authentication promotes a safer internet by providing secure APIs and promoting better password choices to end users. Appwrite supports added security features like password strength requirements, blocking personal info in passwords, password dictionary, password history, and breached password detection to help users choose good passwords. You can also restrict which addresses can sign up by enabling email policies to block free, aliased, or disposable email providers. Signup You…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -1937,7 +1959,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/native-sign-in",
     "title": "Native sign-in",
     "description": "Sign users in with Sign in with Apple or Google on device, then exchange the ID token for an Appwrite session without a redirect through Appwrite.",
-    "excerpt": "Native sign-in creates an Appwrite session from an OpenID Connect ID token that your app obtained on the device. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns a session in the same request. Compared with OAuth2 login, no redirect passes through Appwrite, and the provider configuration holds…",
+    "excerpt": "Native sign-in creates an Appwrite session from an ID token that Apple or Google issues to your app on the device. An ID token is a signed record of who the user is, defined by the OpenID Connect standard. The app calls the platform's own sign-in API, such as Sign in with Apple on iOS or Credential Manager on Android, and sends the returned ID token to Appwrite. Appwrite verifies the token against the provider's published signing keys and returns…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -2255,7 +2277,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "excerpt": "Appwrite provides many security features to keep both your Appwrite project and your user's information secure.",
     "breadcrumbs": [
       "Auth",
@@ -4991,7 +5013,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/frameworks",
     "title": "Frameworks",
     "description": "Discover which frameworks are supported out-of-the-box by Appwrite Sites.",
-    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you…",
+    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you deploy a project, Appwrite: 1. Automatically detects your framework based on your package dependencies and configuration files (like ,…",
     "breadcrumbs": [
       "Sites",
       "Concepts",
@@ -5084,6 +5106,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Sites",
       "Start with Sites",
       "Deploy a Flutter Web app to Appwrite Sites"
+    ]
+  },
+  {
+    "slug": "products/sites/quick-start/jaspr",
+    "title": "Deploy a Jaspr app to Appwrite Sites",
+    "description": "Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.",
+    "excerpt": "Jaspr is a web framework for Dart that renders HTML and CSS from Dart components. Appwrite Sites runs Jaspr apps in **server mode**, which pre-renders your components on the server for each incoming request. Open your terminal, install the Jaspr CLI, and create a project in server mode. In case you have an existing Jaspr app, confirm that the section of your file sets server mode: Appwrite builds Jaspr sites on the Flutter 3.44 runtime, which ships with the Jaspr…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Jaspr app to Appwrite Sites"
     ]
   },
   {
@@ -5712,7 +5745,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/agents/claude-code",
     "title": "Claude Code",
     "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and the Appwrite MCP server for AI-assisted development.",
-    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes agent skills for the CLI and all major SDKs, giving Claude Code the context it needs to work with your Appwrite projects. To install the plugin, run the following command in your terminal: Once installed, run Claude Code and configure the plugin: - Run in Claude Code. - Go to the **Installed** tab. - Select the…",
+    "excerpt": "The fastest way to get started with Appwrite in Claude Code is to install the **Appwrite plugin** from the official marketplace. The plugin includes the hosted Appwrite MCP server, agent skills for the CLI and all major SDKs, and commands for deploying sites and functions. To install the plugin, run the following command in your terminal: If Claude Code cannot find the plugin, add the Appwrite marketplace and install it from there: Run in Claude Code to load the plugin…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",
@@ -6357,7 +6390,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-line/non-interactive",
     "title": "Non-interactive",
     "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
-    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner, without saving configuration or sessions. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : When you set the global configuration parameters using the command, they take precedence over the local configuration parameters in your thereby switching the CLI to non-interactive mode. In this mode, the…",
+    "excerpt": "The Appwrite CLI can be used in a non-interactive and headless manner. This is especially useful when you want to automate tasks on a continuous integration server. You can enable the non-interactive mode for the Appwrite CLI by setting the , , and : The command stores the endpoint and API key in the CLI's global configuration, and writes the project ID to your project config file, by default. In this mode, the CLI can only interact with one project…",
     "breadcrumbs": [
       "Tooling",
       "Guides",

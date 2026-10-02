@@ -2603,6 +2603,28 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ツアーはこれで完了です。さあ、作り始めましょう。',
   by: 'による',
   Firewall: 'Firewall',
+  'Open Firewall': 'Firewall を開く',
+  'Turn off sound': '音声をオフ',
+  'Turn on sound': '音声をオン',
+  'Skip to console': 'コンソールへスキップ',
+  'Project rules that run before traffic reaches your API, Functions, or Sites.':
+    'API、Functions、Sites へのトラフィックに到達する前に適用されるプロジェクトルール。',
+  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
+    'API、Functions、サイトに届く前に、リクエストを拒否、レート制限、リダイレクト、またはチャレンジできます。',
+  'This one is harmless. Firewall stops the rest before they reach your API, Functions, or Sites.':
+    'このクモは無害です。それ以外は API、Functions、サイトに届く前に Firewall が止めます。',
+  'Block this crawler': 'このクローラーをブロック',
+  'Blocked by Firewall': 'Firewall によりブロック',
+  'Keep unwanted bots out of your app': '不要なボットをアプリから締め出す',
+  'Deny crawlers and scrapers': 'クローラーやスクレイパーを拒否',
+  'Return a 403 to any request that matches your conditions.':
+    '条件に一致するリクエストに 403 を返します。',
+  'Rate limit noisy clients': '過剰なリクエストをレート制限',
+  'Throttle each client IP and return a 429 once it goes over quota.':
+    'クライアント IP ごとにリクエストを抑制し、上限を超えると 429 を返します。',
+  'Preview impact first': '事前に影響をプレビュー',
+  'See how much recent traffic a rule would match before you enable it.':
+    'ルールを有効にする前に、最近のトラフィックのうち一致する量を確認できます。',
   Rules: 'ルール',
   Analytics: 'アナリティクス',
   Logs: 'ログ',
@@ -3012,8 +3034,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '「有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
   'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
     '「有効にする」をクリックすると、請求サイクルの残日数分の按分額が支払い方法に請求され、今後のサイクル向けにこのプロジェクトのサブスクリプションへアドオンが追加されます。',
-  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
-    'Premium Geo DB は、タイムゾーン、郵便番号、ISP、接続タイプ、組織などの詳細な位置情報でセッションとリクエストデータを補強します。',
+  'Richer geolocation on users and usage for better security and observability.':
+    'ユーザーと利用状況の位置情報を強化し、セキュリティとオブザーバビリティを向上します。',
   'Due today (prorated)': '本日お支払い (按分)',
   '* Plus applicable tax and fees': '* 税および手数料が別途かかる場合があります',
   'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
@@ -3044,34 +3066,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このデータセットではエージェントクローラーの内訳はまだ利用できません',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
-  'No changes were made. This resource is managed by Terraform.':
-    '変更は行われませんでした。このリソースは Terraform で管理されています。',
-  'Managed by Terraform': 'Terraform で管理',
-  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
-    'Appwrite Terraform プロバイダーがこのリソースを作成しました。Terraform の構成で更新してください。',
-  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
-    'このプロジェクトのリソースは Appwrite Terraform プロバイダーによって作成されました。Terraform の構成で更新してください。',
-  'Managed resources': '管理対象のリソース',
-  'Last apply': '最終 apply',
-  'View activity': 'アクティビティを表示',
-  'Changed outside Terraform': 'Terraform 外で変更',
-  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
-    'このリソースは Terraform で管理されていますが、最後の apply の後に変更されました。terraform plan を実行して構成との差分を確認してください。',
-  'Last change:': '最終変更:',
-  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
-    'ここで行った変更は Terraform の構成に含まれません。次回の terraform apply で元に戻される可能性があります。',
-  'Delete a Terraform-managed resource?':
-    'Terraform で管理されているリソースを削除しますか？',
-  'Update a Terraform-managed resource?':
-    'Terraform で管理されているリソースを更新しますか？',
-  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
-    'このリソースは Terraform によって作成されました。Terraform の構成からも削除しない限り、次回の terraform apply で再作成されます。',
-  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
-    'このリソースは Terraform によって作成されました。Terraform の構成も更新しない限り、次回の terraform apply でこの変更が上書きされる可能性があります。',
-  "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
-  'Delete anyway': '削除を続行',
-  'Update anyway': '更新を続行',
-  'Via Terraform': 'Terraform 経由',
 
   // Project environment switcher
   Environments: '環境',

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Key, Server, ShieldUser, Ghost } from '@/lib/icons'
 import { isRegularUserType } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { useT } from '@/lib/i18n/translate'
@@ -16,15 +16,32 @@ const avatarFrame =
 export function UserTypeAvatar({
   actorType,
   actorName,
+  actorId,
+  projectId,
   className,
 }: {
   actorType: string | undefined | null
   actorName: string
+  /** Project user ID of a regular actor; with `projectId`, resolves their photo. */
+  actorId?: string | null
+  projectId?: string
   /** Merged with the frame; e.g. `shadow-none` for the activity table actor column. */
   className?: string
 }) {
   const t = useT()
   if (isRegularUserType(actorType)) {
+    const userId = actorId?.trim() || ''
+    if (userId && projectId) {
+      return (
+        <PhotoAvatar
+          projectId={projectId}
+          userId={userId}
+          name={actorName}
+          size="sm"
+          className={cn(avatarFrame, className)}
+        />
+      )
+    }
     return (
       <InitialsAvatar
         name={actorName}

@@ -33,7 +33,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Team: 'チーム',
   'The app is created in your current team. Switch teams to create it in another team.':
     'アプリは現在のチームに作成されます。別のチームに作成するには、チームを切り替えてください。',
-  'Add at least one project to grant access.': 'アクセスを許可するには、プロジェクトを1つ以上追加してください。',
+  'Add at least one project to grant access.':
+    'アクセスを許可するには、プロジェクトを1つ以上追加してください。',
   'Add backup': 'バックアップを追加',
   'Add billing address': '請求先住所を追加',
   'Add credits': 'クレジットを追加',
@@ -44,11 +45,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Add new card': '新しいカードを追加',
   'Add payment method': '支払い方法を追加',
   'Add platform': 'プラットフォームを追加',
-  'Add post-logout URI and press Enter': 'ログアウト後 URI を追加して Enter を押す',
+  'Add post-logout URI and press Enter':
+    'ログアウト後 URI を追加して Enter を押す',
   'Add preset': 'プリセットを追加',
   'Add preset records': 'プリセットレコードを追加',
   'Add promo code': 'プロモコードを追加',
-  'Add redirect URI and press Enter': 'リダイレクト URI を追加して Enter を押す',
+  'Add redirect URI and press Enter':
+    'リダイレクト URI を追加して Enter を押す',
   'Additional members': '追加メンバー',
   'Additional projects': '追加プロジェクト',
   'Address line 2': '住所 2行目',
@@ -59,8 +62,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'All projects': 'すべてのプロジェクト',
   'Per project': 'プロジェクトごと',
   'Project access': 'プロジェクトアクセス',
-  'Projects': 'プロジェクト',
-  'projects': 'プロジェクト',
+  Projects: 'プロジェクト',
+  projects: 'プロジェクト',
   'Add project': 'プロジェクトを追加',
   'Remove project': 'プロジェクトを削除',
   'Specific projects': '特定のプロジェクト',
@@ -136,7 +139,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Choose members to keep': '保持するメンバーを選択',
   'Choose projects to keep': '保持するプロジェクトを選択',
   'Clear search': '検索をクリア',
-  'Click to upload or drag and drop': 'クリックしてアップロード、またはドラッグ&ドロップ',
+  'Click to upload or drag and drop':
+    'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client type': 'クライアントタイプ',
   'Coming soon': '近日公開',
   'Comment (optional)': 'コメント (任意)',
@@ -162,16 +166,43 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Coupon code': 'クーポンコード',
   'Create DNS Record': 'DNS レコードを作成',
   'Create Record': 'レコードを作成',
-  'Create a new project in your organization.': '組織に新しいプロジェクトを作成します。',
+  'Create a new project in your organization.':
+    '組織に新しいプロジェクトを作成します。',
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'Advanced security': '高度なセキュリティ',
+  'Security add-on': 'セキュリティアドオン',
+  '+ more': '+ その他',
+  'Geolocation for Firewall rules': 'Firewall ルール用の位置情報',
+  'Geolocation for Firewall rules.': 'Firewall ルール用の位置情報。',
+  '{price}/mo, prorated.': '{price}/月、日割り請求。',
+  'Billed monthly, prorated.': '月額、日割り請求。',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'Firewall ルール用の位置情報 · {price}/月、日割り請求。',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'Firewall ルール用の位置情報 · 月額、日割り請求。',
+  'Optional security add-on': 'オプションのセキュリティアドオン',
+  'Advanced geolocation for access control': 'アクセス制御用の高度な位置情報',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    '都市、ISP、ASN、接続情報を各リクエストに付与し、Firewall ルールと地域別アクセス制御を強化します。',
+  'Prorated when you enable this add-on.': '有効化時は日割り請求されます。',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    '都市、ISP、ASN、接続コンテキストで各リクエストを拡張し、Firewall ルールで不正利用のブロック、地域別アクセス制限、不審なトラフィックへの的確な対応ができます。',
+  '{price}/month for this project. Prorated when enabled.':
+    'このプロジェクトは {price}/月。有効化時は日割り請求されます。',
+  'Billed monthly for this project, prorated when enabled.':
+    'このプロジェクトに対して月額請求。有効化時は日割りです。',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'プロジェクトは作成されましたが、セキュリティアドオンを有効にできませんでした。プロジェクト設定から Premium Geo DB を有効にしてください。',
+  'Enabling Premium Geo DB...': 'Premium Geo DB を有効にしています...',
   'Create secret': 'シークレットを作成',
   'Credit History': 'クレジット履歴',
   'Credit expiration': 'クレジットの有効期限',
   'Credit expires': 'クレジットの有効期限',
   'Credit has been added to': 'クレジットを次に追加しました',
-  'Credit has been added to your organization': '組織にクレジットを追加しました',
+  'Credit has been added to your organization':
+    '組織にクレジットを追加しました',
   'Credits applied': 'クレジットを適用しました',
   'Credits expire': 'クレジットの有効期限',
   'Current Plan': '現在のプラン',
@@ -237,7 +268,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Enter project name': 'プロジェクト名を入力',
   'Enter street address': '住所を入力',
   'Enter tax identification number': '税務識別番号を入力',
-  'Enterprise': 'Enterprise',
+  Enterprise: 'Enterprise',
   'Estimated total': '見積合計',
   'Expires soon': 'まもなく期限切れ',
   'Expiring soon': 'まもなく期限切れ',
@@ -270,24 +301,28 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load page': 'ページの読み込みに失敗しました',
   'Failed to load projects': 'プロジェクトの読み込みに失敗しました',
   'Failed to load regions': 'リージョンの読み込みに失敗しました',
-  'Failed to read file. Please try again.': 'ファイルの読み込みに失敗しました。もう一度お試しください。',
+  'Failed to read file. Please try again.':
+    'ファイルの読み込みに失敗しました。もう一度お試しください。',
   'Failed to remove alert': 'アラートの削除に失敗しました',
   'Failed to remove billing address': '請求先住所の削除に失敗しました',
   'Failed to remove member': 'メンバーの削除に失敗しました',
   'Failed to remove payment method': '支払い方法の削除に失敗しました',
-  'Failed to reorder pinned projects': 'ピン留めプロジェクトの並べ替えに失敗しました',
+  'Failed to reorder pinned projects':
+    'ピン留めプロジェクトの並べ替えに失敗しました',
   'Failed to resend invitation': '招待の再送に失敗しました',
   'Failed to retry payment': '支払いの再試行に失敗しました',
   'Failed to start installation': 'インストールの開始に失敗しました',
   'Failed to start transfer out': '転出の開始に失敗しました',
   'Failed to transfer domain': 'ドメインの移管に失敗しました',
   'Failed to update auto renewal': '自動更新の更新に失敗しました',
-  'Failed to update backup payment method': 'バックアップ支払い方法の更新に失敗しました',
+  'Failed to update backup payment method':
+    'バックアップ支払い方法の更新に失敗しました',
   'Failed to update billing address': '請求先住所の更新に失敗しました',
   'Failed to update budget cap': '予算上限の更新に失敗しました',
   'Failed to update organization name': '組織名の更新に失敗しました',
   'Failed to update payment method': '支払い方法の更新に失敗しました',
-  'Failed to update pinned projects': 'ピン留めプロジェクトの更新に失敗しました',
+  'Failed to update pinned projects':
+    'ピン留めプロジェクトの更新に失敗しました',
   'Failed to update plan': 'プランの更新に失敗しました',
   'Failed to update role': 'ロールの更新に失敗しました',
   'Failed to update tax ID': '税務 ID の更新に失敗しました',
@@ -392,7 +427,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'My integration': 'マイインテグレーション',
   'Name is required': '名前は必須です',
   'Name must be no longer than': '名前は次より長くできません',
-  'Need 24/7 or enterprise support?': '24時間365日またはエンタープライズサポートが必要ですか?',
+  'Need 24/7 or enterprise support?':
+    '24時間365日またはエンタープライズサポートが必要ですか?',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -416,7 +452,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'No payment method on file': '登録済みの支払い方法がありません',
   'No payment methods available': '利用可能な支払い方法がありません',
   'No projects yet': 'プロジェクトはまだありません',
-  'No records match your filters': 'フィルター条件に一致するレコードがありません',
+  'No records match your filters':
+    'フィルター条件に一致するレコードがありません',
   'No regions available': '利用可能なリージョンがありません',
   'Not transferrable': '移管不可',
   'OAuth apps': 'OAuth アプリ',
@@ -427,7 +464,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'One line summary': '1行サマリー',
   'One-time display': '一度だけ表示',
   'Only PNG logos are supported': 'PNG ロゴのみサポートしています',
-  'Only one free organization per account.': 'アカウントあたり無料組織は1つのみです。',
+  'Only one free organization per account.':
+    'アカウントあたり無料組織は1つのみです。',
   'Open in new tab': '新しいタブで開く',
   'Open in new window': '新しいウィンドウで開く',
   'Optional comment': 'コメント (任意)',
@@ -458,7 +496,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create Partners key': 'パートナーキーを作成',
   'Create a Partners key for Console automation':
     'Console 自動化用のパートナーキーを作成',
-  'Partners keys for partner platforms': 'パートナープラットフォーム向けのパートナーキー',
+  'Partners keys for partner platforms':
+    'パートナープラットフォーム向けのパートナーキー',
   'Pay and register': '支払って登録',
   'Payment authorized': '支払いを承認しました',
   'Payment authorization required': '支払いの承認が必要です',
@@ -513,7 +552,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Public client': 'パブリッククライアント',
   'Publisher guidelines': 'パブリッシャーガイドライン',
   'Purchase could not be completed': '購入を完了できませんでした',
-  'Read-only access across all resources.': 'すべてのリソースへの読み取り専用アクセス。',
+  'Read-only access across all resources.':
+    'すべてのリソースへの読み取り専用アクセス。',
   'Ready to start': '開始の準備完了',
   'Recurring Charge': '定期課金',
   'Redirect URIs': 'リダイレクト URI',
@@ -554,11 +594,14 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Select a plan': 'プランを選択',
   'Select a plan to see comparison': '比較を表示するプランを選択',
   'Select a plan to see summary': 'サマリーを表示するプランを選択',
-  'Select a project to view resources.': 'リソースを表示するプロジェクトを選択してください。',
+  'Select a project to view resources.':
+    'リソースを表示するプロジェクトを選択してください。',
   'Select a region': 'リージョンを選択',
-  'Select a resource type to review items.': 'アイテムを確認するリソースタイプを選択してください。',
+  'Select a resource type to review items.':
+    'アイテムを確認するリソースタイプを選択してください。',
   'Select a state': '州を選択',
-  'Select an organization to invite members.': 'メンバーを招待する組織を選択してください。',
+  'Select an organization to invite members.':
+    'メンバーを招待する組織を選択してください。',
   'Select app logo': 'アプリロゴを選択',
   'Select billing address': '請求先住所を選択',
   'Select destination': '移行先を選択',
@@ -602,7 +645,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このアプリは有効で、ユーザーを認可できます。',
   'This app is disabled and cannot authorize users.':
     'このアプリは無効で、ユーザーを認可できません。',
-  'This organization has no projects.': 'この組織にはプロジェクトがありません。',
+  'This organization has no projects.':
+    'この組織にはプロジェクトがありません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
   'Total due': '合計支払額',
@@ -629,7 +673,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Unknown error': '不明なエラー',
   'Unnamed app': '名前のないアプリ',
   'Unpin project': 'プロジェクトのピン留めを解除',
-  'Unselected domains will be deleted.': '選択されていないドメインは削除されます。',
+  'Unselected domains will be deleted.':
+    '選択されていないドメインは削除されます。',
   'Update DNS Record': 'DNS レコードを更新',
   'Update Record': 'レコードを更新',
   'Update Role': 'ロールを更新',
@@ -637,9 +682,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Update the role for': '次のロールを更新',
   'Updating plan': 'プランを更新中',
   'Updating your plan': 'プランを更新中',
-  'Upgrade to add credits.': 'クレジットを追加するにはアップグレードしてください。',
+  'Upgrade to add credits.':
+    'クレジットを追加するにはアップグレードしてください。',
   'Upload PNG': 'PNG をアップロード',
-  'Upload a PNG logo to get started.': '開始するには PNG ロゴをアップロードしてください。',
+  'Upload a PNG logo to get started.':
+    '開始するには PNG ロゴをアップロードしてください。',
   'Usage details': '使用詳細',
   'Usage unavailable': '使用状況は利用できません',
   'Use as primary': '主要な支払い方法として使用',
@@ -675,9 +722,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Zone File': 'ゾーンファイル',
   'Zone file downloaded': 'ゾーンファイルをダウンロードしました',
   'Zone file imported successfully': 'ゾーンファイルをインポートしました',
-  'after redemption and do not roll over.': 'の有効期限が切れ、繰り越されません。',
+  'after redemption and do not roll over.':
+    'の有効期限が切れ、繰り越されません。',
   'and all its DNS records?': 'とすべての DNS レコードを削除しますか?',
-  'and all its resources will be deleted.': 'とそのすべてのリソースが削除されます。',
+  'and all its resources will be deleted.':
+    'とそのすべてのリソースが削除されます。',
   'contact support': 'サポートに連絡',
   'e.g. mycompany or mycompany.com': '例: mycompany または mycompany.com',
   'entire organization deleted': '組織全体が削除されます',
@@ -720,249 +769,467 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Creating organization': '組織を作成中',
   'Preparing downgrade': 'ダウングレードを準備中',
   'Payment setup did not complete': '支払い設定が完了しませんでした',
-  ', all billable services will be paused until the next billing cycle or until you increase your limit.': '、次の請求サイクルまで、または上限を引き上げるまで、課金対象のすべてのサービスが一時停止されます。',
-  "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.": 'サービスプロバイダーが対象事業者に代わって保護対象保健情報(PHI)を扱う場合、HIPAA の下で BAA が必要です。アプリケーションが米国の患者の健康関連データを処理、保存、または送信する場合は、BAA を締結する必要があります。',
+  ', all billable services will be paused until the next billing cycle or until you increase your limit.':
+    '、次の請求サイクルまで、または上限を引き上げるまで、課金対象のすべてのサービスが一時停止されます。',
+  "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.":
+    'サービスプロバイダーが対象事業者に代わって保護対象保健情報(PHI)を扱う場合、HIPAA の下で BAA が必要です。アプリケーションが米国の患者の健康関連データを処理、保存、または送信する場合は、BAA を締結する必要があります。',
   'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
     'Appwrite が組織に代わって保護対象保健情報 (PHI) を扱う場合、HIPAA の下で BAA が必要です。米国の患者の健康データを処理、保存、または送信する場合は有効にしてください。',
-  'A DPA is a legally binding document that outlines how': 'DPA は、次のように個人データを取り扱うかを定める法的拘束力のある文書です:',
-  'A backup payment method ensures uninterrupted service if your primary method fails.': 'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
-  'A card was entered in a previous attempt. Complete the details below to finish adding it.': '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
-  'A new payment method has been added to your account': '新しい支払い方法がアカウントに追加されました',
-  'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.': 'A レコードはドメインを IPv4 アドレスにマッピングし、ドメイン名を IP アドレスに変換することでブラウザがウェブサイトを見つけられるようにします。',
-  'A week of launches, live sessions, and community events. Claim your ticket to join.': '1週間にわたる新機能発表、ライブセッション、コミュニティイベント。参加するにはチケットを取得してください。',
-  'AAAA records map a domain to an IPv6 address, providing the same function as A records but for IPv6-enabled devices.': 'AAAA レコードはドメインを IPv6 アドレスにマッピングし、IPv6 対応デバイス向けに A レコードと同じ機能を提供します。',
-  'ALIAS records are similar to CNAMEs but can be used for the root domain, allowing you to point your domain to another domain or server.': 'ALIAS レコードは CNAME に似ていますが、ルートドメインに使用でき、ドメインを別のドメインやサーバーに向けることができます。',
-  'Account-level ops, CLI auth, sessions. Per-user credentials.': 'アカウントレベルの操作、CLI 認証、セッション。ユーザーごとの認証情報。',
-  'Add a billing address for invoices and tax documents.': '請求書や税務書類のために請求先住所を追加してください。',
-  'Add a new credit card to pay for your organization.': '組織の支払いに使用する新しいクレジットカードを追加してください。',
-  'Add a payment method to continue with a paid plan.': '有料プランを続けるには支払い方法を追加してください。',
-  'Add a payment method to see your estimated total.': '見積合計を確認するには支払い方法を追加してください。',
-  'Add your first DNS record to get started': '開始するには最初の DNS レコードを追加してください',
-  'Add your first app to share it with other organizations.': '他の組織と共有するには、最初のアプリを追加してください。',
-  'All resources except team management and billing writes.': 'チーム管理と請求の書き込みを除くすべてのリソース。',
-  'Allow OAuth2 Device Authorization Grant (RFC 8628).': 'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
-  'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
+  'A DPA is a legally binding document that outlines how':
+    'DPA は、次のように個人データを取り扱うかを定める法的拘束力のある文書です:',
+  'A backup payment method ensures uninterrupted service if your primary method fails.':
+    'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
+  'A card was entered in a previous attempt. Complete the details below to finish adding it.':
+    '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
+  'A new payment method has been added to your account':
+    '新しい支払い方法がアカウントに追加されました',
+  'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
+    'A レコードはドメインを IPv4 アドレスにマッピングし、ドメイン名を IP アドレスに変換することでブラウザがウェブサイトを見つけられるようにします。',
+  'A week of launches, live sessions, and community events. Claim your ticket to join.':
+    '1週間にわたる新機能発表、ライブセッション、コミュニティイベント。参加するにはチケットを取得してください。',
+  'AAAA records map a domain to an IPv6 address, providing the same function as A records but for IPv6-enabled devices.':
+    'AAAA レコードはドメインを IPv6 アドレスにマッピングし、IPv6 対応デバイス向けに A レコードと同じ機能を提供します。',
+  'ALIAS records are similar to CNAMEs but can be used for the root domain, allowing you to point your domain to another domain or server.':
+    'ALIAS レコードは CNAME に似ていますが、ルートドメインに使用でき、ドメインを別のドメインやサーバーに向けることができます。',
+  'Account-level ops, CLI auth, sessions. Per-user credentials.':
+    'アカウントレベルの操作、CLI 認証、セッション。ユーザーごとの認証情報。',
+  'Add a billing address for invoices and tax documents.':
+    '請求書や税務書類のために請求先住所を追加してください。',
+  'Add a new credit card to pay for your organization.':
+    '組織の支払いに使用する新しいクレジットカードを追加してください。',
+  'Add a payment method to continue with a paid plan.':
+    '有料プランを続けるには支払い方法を追加してください。',
+  'Add a payment method to see your estimated total.':
+    '見積合計を確認するには支払い方法を追加してください。',
+  'Add your first DNS record to get started':
+    '開始するには最初の DNS レコードを追加してください',
+  'Add your first app to share it with other organizations.':
+    '他の組織と共有するには、最初のアプリを追加してください。',
+  'All resources except team management and billing writes.':
+    'チーム管理と請求の書き込みを除くすべてのリソース。',
+  'Allow OAuth2 Device Authorization Grant (RFC 8628).':
+    'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
+    '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
-  'Apps will appear here when other organizations publish listings.': '他の組織がアプリを公開すると、ここに表示されます。',
-  'Are you sure you want to cancel the invitation for': '次の招待をキャンセルしてもよろしいですか',
-  'Are you sure you want to delete this domain?': 'このドメインを削除してもよろしいですか?',
-  'Are you sure you want to delete this project? This action cannot be undone.': 'このプロジェクトを削除してもよろしいですか? この操作は元に戻せません。',
-  'Are you sure you want to remove the billing address from': '次から請求先住所を削除してもよろしいですか',
-  'Auto renewal is available for domains registered with Appwrite.': '自動更新は Appwrite で登録したドメインで利用できます。',
-  'Billing address has been created and set for your organization': '請求先住所を作成し、組織に設定しました',
-  'Billing, team, cross-project. One key for the whole org.': '請求、チーム、プロジェクト横断。組織全体で1つのキー。',
-  'Budget cap applies only to additional usage beyond your plan limits': '予算上限は、プランの上限を超えた追加使用分にのみ適用されます',
-  'Budget caps are not supported on your current plan.': '現在のプランでは予算上限はサポートされていません。',
-  'CAA records define which certificate authorities can issue SSL certificates for your domain. To avoid setup issues, make sure certainly.com is authorized.': 'CAA レコードは、ドメインに SSL 証明書を発行できる認証局を定義します。設定の問題を避けるため、certainly.com が許可されていることを確認してください。',
-  'CNAME records alias one domain name to another, allowing you to point subdomains or other domain names to an existing domain.': 'CNAME レコードはあるドメイン名を別のドメイン名のエイリアスにし、サブドメインや他のドメイン名を既存のドメインに向けることができます。',
-  'Calculating impact for resources to remove...': '削除するリソースへの影響を計算中...',
-  'Calculating impact for the organization that will be removed...': '削除される組織への影響を計算中...',
-  'Can modify most resources but not critical backend.': 'ほとんどのリソースを変更できますが、重要なバックエンドは変更できません。',
-  'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.': '未払いの請求書が支払われるまで、プロジェクトとサービスへの変更は制限されます。支払いを完了すると、フルアクセスが復元されます。',
-  'Choose a PNG from the app assets bucket or upload a new one.': 'app assets バケットから PNG を選択するか、新しいファイルをアップロードしてください。',
-  'Choose the plan that best fits your needs.': 'ニーズに最も合ったプランを選択してください。',
-  'Choose whether this domain should renew automatically before it expires.': 'このドメインの有効期限が切れる前に自動更新するかどうかを選択してください。',
-  'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': 'Appwrite トークンを集めて雷の危険を避けましょう。デバッグセッション用の持久力ミニゲームです。',
-  'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.': 'トークンを集めて雷を避けましょう。スペースキー、↑キー、またはクリックでジャンプします。',
-  'Complete the selections above to review project resources.': '上記の選択を完了すると、プロジェクトのリソースを確認できます。',
-  'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.': '機密クライアントはシークレットを使用してトークン交換を認証します。定期的にローテーションし、値はシークレットマネージャーに保存してください。',
-  'Confirmation email with ticket ID. Typically within 24h during support hours.': 'チケット ID を記載した確認メール。サポート時間中は通常24時間以内に届きます。',
-  'Copy this code and submit it at your new registrar to complete the transfer out.': 'このコードをコピーし、新しいレジストラで送信して転出を完了してください。',
-  'Copy this value now. For security, the full secret cannot be retrieved after you close this dialog.': '今すぐこの値をコピーしてください。セキュリティ上の理由から、このダイアログを閉じた後は完全なシークレットを取得できません。',
-  'Coupon not found. Please check the code and try again.': 'クーポンが見つかりません。コードを確認してもう一度お試しください。',
-  'Create a new organization to manage your projects and organization members.': 'プロジェクトと組織メンバーを管理する新しい組織を作成します。',
-  'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.': 'サーバーサイドでのトークン交換を伴う認可コードなど、機密の OAuth フロー用のシークレットを作成します。',
+  'Apps will appear here when other organizations publish listings.':
+    '他の組織がアプリを公開すると、ここに表示されます。',
+  'Are you sure you want to cancel the invitation for':
+    '次の招待をキャンセルしてもよろしいですか',
+  'Are you sure you want to delete this domain?':
+    'このドメインを削除してもよろしいですか?',
+  'Are you sure you want to delete this project? This action cannot be undone.':
+    'このプロジェクトを削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to remove the billing address from':
+    '次から請求先住所を削除してもよろしいですか',
+  'Auto renewal is available for domains registered with Appwrite.':
+    '自動更新は Appwrite で登録したドメインで利用できます。',
+  'Billing address has been created and set for your organization':
+    '請求先住所を作成し、組織に設定しました',
+  'Billing, team, cross-project. One key for the whole org.':
+    '請求、チーム、プロジェクト横断。組織全体で1つのキー。',
+  'Budget cap applies only to additional usage beyond your plan limits':
+    '予算上限は、プランの上限を超えた追加使用分にのみ適用されます',
+  'Budget caps are not supported on your current plan.':
+    '現在のプランでは予算上限はサポートされていません。',
+  'CAA records define which certificate authorities can issue SSL certificates for your domain. To avoid setup issues, make sure certainly.com is authorized.':
+    'CAA レコードは、ドメインに SSL 証明書を発行できる認証局を定義します。設定の問題を避けるため、certainly.com が許可されていることを確認してください。',
+  'CNAME records alias one domain name to another, allowing you to point subdomains or other domain names to an existing domain.':
+    'CNAME レコードはあるドメイン名を別のドメイン名のエイリアスにし、サブドメインや他のドメイン名を既存のドメインに向けることができます。',
+  'Calculating impact for resources to remove...':
+    '削除するリソースへの影響を計算中...',
+  'Calculating impact for the organization that will be removed...':
+    '削除される組織への影響を計算中...',
+  'Can modify most resources but not critical backend.':
+    'ほとんどのリソースを変更できますが、重要なバックエンドは変更できません。',
+  'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.':
+    '未払いの請求書が支払われるまで、プロジェクトとサービスへの変更は制限されます。支払いを完了すると、フルアクセスが復元されます。',
+  'Choose a PNG from the app assets bucket or upload a new one.':
+    'app assets バケットから PNG を選択するか、新しいファイルをアップロードしてください。',
+  'Choose the plan that best fits your needs.':
+    'ニーズに最も合ったプランを選択してください。',
+  'Choose whether this domain should renew automatically before it expires.':
+    'このドメインの有効期限が切れる前に自動更新するかどうかを選択してください。',
+  'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.':
+    'Appwrite トークンを集めて雷の危険を避けましょう。デバッグセッション用の持久力ミニゲームです。',
+  'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.':
+    'トークンを集めて雷を避けましょう。スペースキー、↑キー、またはクリックでジャンプします。',
+  'Complete the selections above to review project resources.':
+    '上記の選択を完了すると、プロジェクトのリソースを確認できます。',
+  'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.':
+    '機密クライアントはシークレットを使用してトークン交換を認証します。定期的にローテーションし、値はシークレットマネージャーに保存してください。',
+  'Confirmation email with ticket ID. Typically within 24h during support hours.':
+    'チケット ID を記載した確認メール。サポート時間中は通常24時間以内に届きます。',
+  'Copy this code and submit it at your new registrar to complete the transfer out.':
+    'このコードをコピーし、新しいレジストラで送信して転出を完了してください。',
+  'Copy this value now. For security, the full secret cannot be retrieved after you close this dialog.':
+    '今すぐこの値をコピーしてください。セキュリティ上の理由から、このダイアログを閉じた後は完全なシークレットを取得できません。',
+  'Coupon not found. Please check the code and try again.':
+    'クーポンが見つかりません。コードを確認してもう一度お試しください。',
+  'Create a new organization to manage your projects and organization members.':
+    'プロジェクトと組織メンバーを管理する新しい組織を作成します。',
+  'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
+    'サーバーサイドでのトークン交換を伴う認可コードなど、機密の OAuth フロー用のシークレットを作成します。',
   'Create an OAuth2 app listing for the marketplace.':
     'マーケットプレイス用の OAuth2 アプリを作成します。',
-  'Create an app to share it with other organizations on the marketplace.': 'マーケットプレイスで他の組織と共有するアプリを作成します。',
-  'Create your first domain to get started': '開始するには最初のドメインを作成してください',
-  'Create your first project to get started': '開始するには最初のプロジェクトを作成してください',
-  'Credits expire on the date shown for each code. Unused credits do not roll over after that date.': 'クレジットは各コードに表示された日付に失効します。未使用のクレジットはその日付以降繰り越されません。',
-  'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.': '個別交渉した上限、コンプライアンス、プレミアムサポート、カスタム請求が必要なチーム向けのカスタムプラン。',
-  'Databases, storage, users, functions. One project per key.': 'データベース、ストレージ、ユーザー、関数。1つのキーにつき1プロジェクト。',
-  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.': '問題や質問を詳しく説明してください。プロジェクト、SDK バージョン、エラーメッセージなど関連情報を含めると、より迅速に対応できます。',
-  'Domain transfers usually take 5-7 days. ICANN allows the old registrar up to 5 days to release the domain, with .com and .net sometimes taking 1-2 extra days to finalize.': 'ドメインの移管には通常5〜7日かかります。ICANN は旧レジストラにドメインを解放するまで最大5日間を認めており、.com と .net はさらに1〜2日かかる場合があります。',
-  'Domain verification failed. Please check your domain settings or try again later.': 'ドメインの検証に失敗しました。ドメイン設定を確認するか、後でもう一度お試しください。',
-  'Download the DPA, review it with your legal team, sign it, and send a copy to': 'DPA をダウンロードし、法務チームと確認したうえで署名し、コピーを次に送付してください:',
-  'Enable budget cap to configure billing alerts.': '請求アラートを設定するには予算上限を有効にしてください。',
-  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits.': 'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。',
-  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.': 'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
-  'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.': 'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
-  'Enter a full domain name (e.g. example.com)': 'ドメイン名をすべて入力してください (例: example.com)',
-  'Enter tax ID (e.g., VAT, GST, EIN)': '税務 ID を入力してください (例: VAT、GST、EIN)',
-  'Enter the domain name without protocol (e.g., example.com)': 'プロトコルを除いたドメイン名を入力してください (例: example.com)',
-  'Enter the domain name you want to add to your organization.': '組織に追加したいドメイン名を入力してください。',
-  'Enter your card details to add a new payment method.': '新しい支払い方法を追加するには、カード情報を入力してください。',
-  'Enter your full domain name to load a price quote.': '見積もりを取得するには、ドメイン名をすべて入力してください。',
-  'Estimate, subject to change based on usage': '見積もりであり、使用量に応じて変動する場合があります',
+  'Create an app to share it with other organizations on the marketplace.':
+    'マーケットプレイスで他の組織と共有するアプリを作成します。',
+  'Create your first domain to get started':
+    '開始するには最初のドメインを作成してください',
+  'Create your first project to get started':
+    '開始するには最初のプロジェクトを作成してください',
+  'Credits expire on the date shown for each code. Unused credits do not roll over after that date.':
+    'クレジットは各コードに表示された日付に失効します。未使用のクレジットはその日付以降繰り越されません。',
+  'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.':
+    '個別交渉した上限、コンプライアンス、プレミアムサポート、カスタム請求が必要なチーム向けのカスタムプラン。',
+  'Databases, storage, users, functions. One project per key.':
+    'データベース、ストレージ、ユーザー、関数。1つのキーにつき1プロジェクト。',
+  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.':
+    '問題や質問を詳しく説明してください。プロジェクト、SDK バージョン、エラーメッセージなど関連情報を含めると、より迅速に対応できます。',
+  'Domain transfers usually take 5-7 days. ICANN allows the old registrar up to 5 days to release the domain, with .com and .net sometimes taking 1-2 extra days to finalize.':
+    'ドメインの移管には通常5〜7日かかります。ICANN は旧レジストラにドメインを解放するまで最大5日間を認めており、.com と .net はさらに1〜2日かかる場合があります。',
+  'Domain verification failed. Please check your domain settings or try again later.':
+    'ドメインの検証に失敗しました。ドメイン設定を確認するか、後でもう一度お試しください。',
+  'Download the DPA, review it with your legal team, sign it, and send a copy to':
+    'DPA をダウンロードし、法務チームと確認したうえで署名し、コピーを次に送付してください:',
+  'Enable budget cap to configure billing alerts.':
+    '請求アラートを設定するには予算上限を有効にしてください。',
+  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits.':
+    'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。',
+  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.':
+    'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
+  'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
+    'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a full domain name (e.g. example.com)':
+    'ドメイン名をすべて入力してください (例: example.com)',
+  'Enter tax ID (e.g., VAT, GST, EIN)':
+    '税務 ID を入力してください (例: VAT、GST、EIN)',
+  'Enter the domain name without protocol (e.g., example.com)':
+    'プロトコルを除いたドメイン名を入力してください (例: example.com)',
+  'Enter the domain name you want to add to your organization.':
+    '組織に追加したいドメイン名を入力してください。',
+  'Enter your card details to add a new payment method.':
+    '新しい支払い方法を追加するには、カード情報を入力してください。',
+  'Enter your full domain name to load a price quote.':
+    '見積もりを取得するには、ドメイン名をすべて入力してください。',
+  'Estimate, subject to change based on usage':
+    '見積もりであり、使用量に応じて変動する場合があります',
   'Usage-based estimate; updates may take up to 4 hours.':
     '使用量に基づく見積もりです。反映まで最大 4 時間かかる場合があります。',
-  'Estimated fees from the registry before you pay.': '支払い前のレジストリからの見積もり手数料。',
-  'Explore all apps available in the marketplace.': 'マーケットプレイスで利用可能なすべてのアプリを見る。',
-  'Failed to load domain prices. Please try again.': 'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
-  'Failed to mount payment form. Please try again.': '支払いフォームの読み込みに失敗しました。もう一度お試しください。',
-  'Featured apps, popular integrations, and browse by category.': '注目のアプリ、人気のインテグレーション、カテゴリ別閲覧。',
+  'Estimated fees from the registry before you pay.':
+    '支払い前のレジストリからの見積もり手数料。',
+  'Explore all apps available in the marketplace.':
+    'マーケットプレイスで利用可能なすべてのアプリを見る。',
+  'Failed to load domain prices. Please try again.':
+    'ドメイン価格の読み込みに失敗しました。もう一度お試しください。',
+  'Failed to mount payment form. Please try again.':
+    '支払いフォームの読み込みに失敗しました。もう一度お試しください。',
+  'Featured apps, popular integrations, and browse by category.':
+    '注目のアプリ、人気のインテグレーション、カテゴリ別閲覧。',
   'Browse official apps, or explore by category.':
     '公式アプリを閲覧、またはカテゴリ別に探索。',
-  'Find integrations grouped by what they help you build.': '構築内容に応じてグループ分けされたインテグレーションを見つけましょう。',
-  'For business accounts, enter your tax identification number': '法人アカウントの場合は、税務識別番号を入力してください',
-  'For more details on our plans, visit our': 'プランの詳細については、次をご覧ください:',
-  'Full control over all aspects including team and billing.': 'チームや請求を含むすべての側面を完全に管理できます。',
-  'Full hostname and the auth code your registrar provided.': 'フルホスト名と、レジストラから提供された認証コード。',
-  'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.': 'このドメインを別のレジストラに移動するための認可コードを生成します。このコードは移管先のレジストラで入力します。',
-  'Get dedicated support and SLAs for your organization.': '組織向けの専任サポートと SLA を利用できます。',
-  'Get notified when your spending reaches certain thresholds of your budget.': '支出が予算の一定のしきい値に達したときに通知を受け取ります。',
-  'HTTPS records define which service or endpoint handles secure HTTPS traffic for your domain, typically used in SSL/TLS configurations.': 'HTTPS レコードは、ドメインの安全な HTTPS トラフィックを処理するサービスやエンドポイントを定義し、通常 SSL/TLS の設定で使用されます。',
-  'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.': 'HIPAA 準拠のアプリケーションを構築する医療提供者、医療保険プラン、医療クリアリングハウス、およびそのビジネスアソシエイト向け。',
-  'How users can get help with your app during OAuth2 consent.': 'OAuth2 の同意画面でユーザーがアプリのサポートを受ける方法。',
-  'Init week has ended. Explore every launch and session replay.': 'Init week は終了しました。すべての発表とセッションのリプレイをご覧ください。',
-  'Invite organization members to collaborate on your projects': 'プロジェクトで協力するために組織メンバーを招待します',
-  "Invite organization members to your organization. They'll receive an email invitation to join.": '組織メンバーを招待します。招待されたメンバーには参加用のメール招待が届きます。',
-  'Keys apply at different levels. Each key has its own permissions (scopes) to control access.': 'キーは異なるレベルで適用されます。各キーにはアクセスを制御する独自の権限 (スコープ) があります。',
-  'Launch week is live. Follow daily drops, live sessions, and giveaways.': 'Launch week 開催中です。毎日の新機能発表、ライブセッション、プレゼント企画をお見逃しなく。',
+  'Find integrations grouped by what they help you build.':
+    '構築内容に応じてグループ分けされたインテグレーションを見つけましょう。',
+  'For business accounts, enter your tax identification number':
+    '法人アカウントの場合は、税務識別番号を入力してください',
+  'For more details on our plans, visit our':
+    'プランの詳細については、次をご覧ください:',
+  'Full control over all aspects including team and billing.':
+    'チームや請求を含むすべての側面を完全に管理できます。',
+  'Full hostname and the auth code your registrar provided.':
+    'フルホスト名と、レジストラから提供された認証コード。',
+  'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.':
+    'このドメインを別のレジストラに移動するための認可コードを生成します。このコードは移管先のレジストラで入力します。',
+  'Get dedicated support and SLAs for your organization.':
+    '組織向けの専任サポートと SLA を利用できます。',
+  'Get notified when your spending reaches certain thresholds of your budget.':
+    '支出が予算の一定のしきい値に達したときに通知を受け取ります。',
+  'HTTPS records define which service or endpoint handles secure HTTPS traffic for your domain, typically used in SSL/TLS configurations.':
+    'HTTPS レコードは、ドメインの安全な HTTPS トラフィックを処理するサービスやエンドポイントを定義し、通常 SSL/TLS の設定で使用されます。',
+  'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.':
+    'HIPAA 準拠のアプリケーションを構築する医療提供者、医療保険プラン、医療クリアリングハウス、およびそのビジネスアソシエイト向け。',
+  'How users can get help with your app during OAuth2 consent.':
+    'OAuth2 の同意画面でユーザーがアプリのサポートを受ける方法。',
+  'Init week has ended. Explore every launch and session replay.':
+    'Init week は終了しました。すべての発表とセッションのリプレイをご覧ください。',
+  'Invite organization members to collaborate on your projects':
+    'プロジェクトで協力するために組織メンバーを招待します',
+  "Invite organization members to your organization. They'll receive an email invitation to join.":
+    '組織メンバーを招待します。招待されたメンバーには参加用のメール招待が届きます。',
+  'Keys apply at different levels. Each key has its own permissions (scopes) to control access.':
+    'キーは異なるレベルで適用されます。各キーにはアクセスを制御する独自の権限 (スコープ) があります。',
+  'Launch week is live. Follow daily drops, live sessions, and giveaways.':
+    'Launch week 開催中です。毎日の新機能発表、ライブセッション、プレゼント企画をお見逃しなく。',
   'Lower numbers have higher priority': '数値が小さいほど優先度が高くなります',
-  'MX records specify mail servers responsible for receiving emails for a domain, helping route email traffic to the correct mail server.': 'MX レコードはドメイン宛てのメールを受信するメールサーバーを指定し、メールトラフィックを正しいメールサーバーにルーティングします。',
-  'Many enterprise customers and regulated industries require SOC 2 compliance from their vendors. Access to our SOC 2 report is available on Enterprise plans.': '多くのエンタープライズ顧客や規制業界では、ベンダーに SOC 2 準拠を求めています。SOC 2 レポートへのアクセスは Enterprise プランでご利用いただけます。',
+  'MX records specify mail servers responsible for receiving emails for a domain, helping route email traffic to the correct mail server.':
+    'MX レコードはドメイン宛てのメールを受信するメールサーバーを指定し、メールトラフィックを正しいメールサーバーにルーティングします。',
+  'Many enterprise customers and regulated industries require SOC 2 compliance from their vendors. Access to our SOC 2 report is available on Enterprise plans.':
+    '多くのエンタープライズ顧客や規制業界では、ベンダーに SOC 2 準拠を求めています。SOC 2 レポートへのアクセスは Enterprise プランでご利用いただけます。',
   'Member limit reached for your plan.': 'プランのメンバー上限に達しました。',
-  'Members who are not part of the destination organization must be invited to gain access to this domain.': '移動先の組織に所属していないメンバーは、このドメインにアクセスするために招待が必要です。',
-  'Monthly Charges for Extra Organization Members': '追加の組織メンバーに対する月額料金',
-  "NS records define the authoritative DNS servers for a domain, directing queries to the servers that manage the domain's DNS settings.": 'NS レコードはドメインの権威 DNS サーバーを定義し、そのドメインの DNS 設定を管理するサーバーへクエリを転送します。',
-  'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.': 'マーケットプレイスの掲載ページと OAuth2 の同意画面に表示される名前と説明。',
-  'Nameservers updated. Please wait for DNS propagation.': 'ネームサーバーを更新しました。DNS の伝播をお待ちください。',
-  'Need compliance, custom SLAs, or volume pricing?': 'コンプライアンス、カスタム SLA、ボリューム料金が必要ですか?',
-  'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as': 'OAuth シークレットをモバイルアプリ、SPA、または公開リポジトリに埋め込まないでください。次のような環境変数を使用してください:',
-  'No additional apps in the catalog yet.': 'カタログにはまだ追加のアプリがありません。',
-  'No invoices yet. Once you have made a payment, your invoices will appear here.': 'まだ請求書がありません。支払いを行うと、請求書がここに表示されます。',
-  'No payment method available. Please add a payment method first.': '利用可能な支払い方法がありません。まず支払い方法を追加してください。',
-  'No plans available. Please try refreshing the page.': '利用可能なプランがありません。ページを更新してみてください。',
-  'No projects to review. Confirm your member and domain selections above, then continue.': '確認するプロジェクトがありません。上記でメンバーとドメインの選択を確認してから続行してください。',
-  'No projects, members, domains, or resources will be deleted.': 'プロジェクト、メンバー、ドメイン、リソースは削除されません。',
-  'No resource types match your search.': '検索条件に一致するリソースタイプがありません。',
-  'OAuth2 apps published by your organization to the marketplace.': '組織がマーケットプレイスに公開している OAuth2 アプリ。',
-  'Only one free organization is allowed per account.': 'アカウントあたり無料組織は1つのみ許可されています。',
-  'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.': '組織レベルのキーは利用可能になり次第、ここで管理できるようになります。それまではサーバーサイドのアクセスにプロジェクトキーを使用してください。',
-  'Payment failed - organization has restricted access': '支払いに失敗しました。組織は制限付きアクセスです',
-  'Payment form not ready. Please try again.': '支払いフォームの準備ができていません。もう一度お試しください。',
-  'Payment method has been added to your organization': '支払い方法が組織に追加されました',
-  'Permanently delete this app and revoke all associated tokens. This action cannot be undone.': 'このアプリを完全に削除し、関連するすべてのトークンを取り消します。この操作は元に戻せません。',
-  'Permanently delete this domain and all associated DNS records.': 'このドメインと関連するすべての DNS レコードを完全に削除します。',
-  'Permanently delete this organization and all associated data. This action cannot be undone.': 'この組織と関連するすべてのデータを完全に削除します。この操作は元に戻せません。',
-  'Phone is required (E.164, e.g. +15551234567)': '電話番号は必須です (E.164、例: +15551234567)',
-  'Plan changes are not available for self-service. Please contact support to change your plan.': 'プラン変更はセルフサービスでは利用できません。プランを変更するにはサポートにお問い合わせください。',
-  'Please share anything that influenced your decision to downgrade...': 'ダウングレードを決めた理由について、お聞かせください...',
-  'Policy links shown on the OAuth2 consent screen.': 'OAuth2 の同意画面に表示されるポリシーリンク。',
-  'Popular integrations from the marketplace catalog.': 'マーケットプレイスカタログの人気インテグレーション。',
-  'Pricing is confirmed when you submit payment.': '料金は支払いを送信した時点で確定します。',
-  'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.': '料金は支払いを送信した時点で確定します。プレミアムおよび特殊なドメイン名はレジストリによる手動審査が必要になる場合があります。',
-  'Public clients require PKCE. Confidential clients use a client secret.': 'パブリッククライアントには PKCE が必要です。機密クライアントはクライアントシークレットを使用します。',
-  'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.': 'パブリッククライアントは PKCE を使用し、OAuth シークレットは不要です。サーバーサイドのシークレット認証が必要な場合は、OAuth クライアントタブで機密クライアントに切り替えてください。',
+  'Members who are not part of the destination organization must be invited to gain access to this domain.':
+    '移動先の組織に所属していないメンバーは、このドメインにアクセスするために招待が必要です。',
+  'Monthly Charges for Extra Organization Members':
+    '追加の組織メンバーに対する月額料金',
+  "NS records define the authoritative DNS servers for a domain, directing queries to the servers that manage the domain's DNS settings.":
+    'NS レコードはドメインの権威 DNS サーバーを定義し、そのドメインの DNS 設定を管理するサーバーへクエリを転送します。',
+  'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.':
+    'マーケットプレイスの掲載ページと OAuth2 の同意画面に表示される名前と説明。',
+  'Nameservers updated. Please wait for DNS propagation.':
+    'ネームサーバーを更新しました。DNS の伝播をお待ちください。',
+  'Need compliance, custom SLAs, or volume pricing?':
+    'コンプライアンス、カスタム SLA、ボリューム料金が必要ですか?',
+  'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
+    'OAuth シークレットをモバイルアプリ、SPA、または公開リポジトリに埋め込まないでください。次のような環境変数を使用してください:',
+  'No additional apps in the catalog yet.':
+    'カタログにはまだ追加のアプリがありません。',
+  'No invoices yet. Once you have made a payment, your invoices will appear here.':
+    'まだ請求書がありません。支払いを行うと、請求書がここに表示されます。',
+  'No payment method available. Please add a payment method first.':
+    '利用可能な支払い方法がありません。まず支払い方法を追加してください。',
+  'No plans available. Please try refreshing the page.':
+    '利用可能なプランがありません。ページを更新してみてください。',
+  'No projects to review. Confirm your member and domain selections above, then continue.':
+    '確認するプロジェクトがありません。上記でメンバーとドメインの選択を確認してから続行してください。',
+  'No projects, members, domains, or resources will be deleted.':
+    'プロジェクト、メンバー、ドメイン、リソースは削除されません。',
+  'No resource types match your search.':
+    '検索条件に一致するリソースタイプがありません。',
+  'OAuth2 apps published by your organization to the marketplace.':
+    '組織がマーケットプレイスに公開している OAuth2 アプリ。',
+  'Only one free organization is allowed per account.':
+    'アカウントあたり無料組織は1つのみ許可されています。',
+  'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
+    '組織レベルのキーは利用可能になり次第、ここで管理できるようになります。それまではサーバーサイドのアクセスにプロジェクトキーを使用してください。',
+  'Payment failed - organization has restricted access':
+    '支払いに失敗しました。組織は制限付きアクセスです',
+  'Payment form not ready. Please try again.':
+    '支払いフォームの準備ができていません。もう一度お試しください。',
+  'Payment method has been added to your organization':
+    '支払い方法が組織に追加されました',
+  'Permanently delete this app and revoke all associated tokens. This action cannot be undone.':
+    'このアプリを完全に削除し、関連するすべてのトークンを取り消します。この操作は元に戻せません。',
+  'Permanently delete this domain and all associated DNS records.':
+    'このドメインと関連するすべての DNS レコードを完全に削除します。',
+  'Permanently delete this organization and all associated data. This action cannot be undone.':
+    'この組織と関連するすべてのデータを完全に削除します。この操作は元に戻せません。',
+  'Phone is required (E.164, e.g. +15551234567)':
+    '電話番号は必須です (E.164、例: +15551234567)',
+  'Plan changes are not available for self-service. Please contact support to change your plan.':
+    'プラン変更はセルフサービスでは利用できません。プランを変更するにはサポートにお問い合わせください。',
+  'Please share anything that influenced your decision to downgrade...':
+    'ダウングレードを決めた理由について、お聞かせください...',
+  'Policy links shown on the OAuth2 consent screen.':
+    'OAuth2 の同意画面に表示されるポリシーリンク。',
+  'Popular integrations from the marketplace catalog.':
+    'マーケットプレイスカタログの人気インテグレーション。',
+  'Pricing is confirmed when you submit payment.':
+    '料金は支払いを送信した時点で確定します。',
+  'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.':
+    '料金は支払いを送信した時点で確定します。プレミアムおよび特殊なドメイン名はレジストリによる手動審査が必要になる場合があります。',
+  'Public clients require PKCE. Confidential clients use a client secret.':
+    'パブリッククライアントには PKCE が必要です。機密クライアントはクライアントシークレットを使用します。',
+  'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.':
+    'パブリッククライアントは PKCE を使用し、OAuth シークレットは不要です。サーバーサイドのシークレット認証が必要な場合は、OAuth クライアントタブで機密クライアントに切り替えてください。',
   'Marketplace page': 'マーケットプレイスページ',
   'Public listing page for this app in the marketplace.':
     'マーケットプレイスにおけるこのアプリの公開ページ。',
   'Control whether this app can be used to authorize users.':
     'このアプリでユーザーを認可できるかを設定します。',
-  'Published apps from other organizations will appear here.': '他の組織が公開したアプリがここに表示されます。',
-  'Purchase could not be completed. Please try again.': '購入を完了できませんでした。もう一度お試しください。',
-  'Redirect URIs and client type for OAuth2 and OpenID Connect.': 'OAuth2 と OpenID Connect のリダイレクト URI とクライアントタイプ。',
-  'Registrant details must match your domain registry requirements.': '登録者情報はドメインレジストリの要件に一致している必要があります。',
-  'Removing members that are not kept for the target plan.': '対象プランで保持されないメンバーを削除しています。',
-  'Removing projects that are not kept for the target plan.': '対象プランで保持されないプロジェクトを削除しています。',
-  'Removing resources that are not kept for the target plan.': '対象プランで保持されないリソースを削除しています。',
-  'Removing the organization you chose not to keep.': '保持しないことを選択した組織を削除しています。',
-  'Replace the existing billing address for your organization.': '組織の既存の請求先住所を置き換えます。',
-  'Reply to the confirmation email to add more context or attachments.': '確認メールに返信すると、詳細情報や添付ファイルを追加できます。',
-  'Request a transfer into this organization using the authorization code from your current registrar. Registry fees are shown in the summary as you type the domain name.': '現在のレジストラから取得した認可コードを使用して、この組織へのドメイン移管をリクエストします。ドメイン名を入力すると、レジストリ手数料がサマリーに表示されます。',
-  'Resources removed to fit the target plan limits.': '対象プランの上限に合わせて削除されるリソース。',
-  'Review charges before you complete payment.': '支払いを完了する前に料金を確認してください。',
-  "SOC 2 Type II is an auditing standard that verifies a service provider's security controls over an extended period. It demonstrates that": 'SOC 2 Type II は、サービスプロバイダーのセキュリティ管理を長期間にわたって検証する監査基準です。これは次のことを証明します:',
-  'SRV records specify the location (hostname and port number) of servers for specific services, directing traffic to particular servers based on service types.': 'SRV レコードは特定のサービス向けサーバーの場所 (ホスト名とポート番号) を指定し、サービスの種類に応じて特定のサーバーへトラフィックを転送します。',
-  'Securing your subscription with your payment method.': '支払い方法でサブスクリプションを確定しています。',
-  'Select an email provider preset to automatically add the required DNS records.': 'メールプロバイダーのプリセットを選択すると、必要な DNS レコードが自動的に追加されます。',
-  'Select an organization you own to move this domain.': 'このドメインを移動する、所有している組織を選択してください。',
-  'Select projects above to review their resources.': '上記でプロジェクトを選択すると、そのリソースを確認できます。',
+  'Published apps from other organizations will appear here.':
+    '他の組織が公開したアプリがここに表示されます。',
+  'Purchase could not be completed. Please try again.':
+    '購入を完了できませんでした。もう一度お試しください。',
+  'Redirect URIs and client type for OAuth2 and OpenID Connect.':
+    'OAuth2 と OpenID Connect のリダイレクト URI とクライアントタイプ。',
+  'Registrant details must match your domain registry requirements.':
+    '登録者情報はドメインレジストリの要件に一致している必要があります。',
+  'Removing members that are not kept for the target plan.':
+    '対象プランで保持されないメンバーを削除しています。',
+  'Removing projects that are not kept for the target plan.':
+    '対象プランで保持されないプロジェクトを削除しています。',
+  'Removing resources that are not kept for the target plan.':
+    '対象プランで保持されないリソースを削除しています。',
+  'Removing the organization you chose not to keep.':
+    '保持しないことを選択した組織を削除しています。',
+  'Replace the existing billing address for your organization.':
+    '組織の既存の請求先住所を置き換えます。',
+  'Reply to the confirmation email to add more context or attachments.':
+    '確認メールに返信すると、詳細情報や添付ファイルを追加できます。',
+  'Request a transfer into this organization using the authorization code from your current registrar. Registry fees are shown in the summary as you type the domain name.':
+    '現在のレジストラから取得した認可コードを使用して、この組織へのドメイン移管をリクエストします。ドメイン名を入力すると、レジストリ手数料がサマリーに表示されます。',
+  'Resources removed to fit the target plan limits.':
+    '対象プランの上限に合わせて削除されるリソース。',
+  'Review charges before you complete payment.':
+    '支払いを完了する前に料金を確認してください。',
+  "SOC 2 Type II is an auditing standard that verifies a service provider's security controls over an extended period. It demonstrates that":
+    'SOC 2 Type II は、サービスプロバイダーのセキュリティ管理を長期間にわたって検証する監査基準です。これは次のことを証明します:',
+  'SRV records specify the location (hostname and port number) of servers for specific services, directing traffic to particular servers based on service types.':
+    'SRV レコードは特定のサービス向けサーバーの場所 (ホスト名とポート番号) を指定し、サービスの種類に応じて特定のサーバーへトラフィックを転送します。',
+  'Securing your subscription with your payment method.':
+    '支払い方法でサブスクリプションを確定しています。',
+  'Select an email provider preset to automatically add the required DNS records.':
+    'メールプロバイダーのプリセットを選択すると、必要な DNS レコードが自動的に追加されます。',
+  'Select an organization you own to move this domain.':
+    'このドメインを移動する、所有している組織を選択してください。',
+  'Select projects above to review their resources.':
+    '上記でプロジェクトを選択すると、そのリソースを確認できます。',
   'Short summary for listings and consent': '掲載ページと同意画面用の短い概要',
-  'Space or ↑ to jump · R to restart · click arena to jump': 'スペースキーまたは ↑ でジャンプ · R でリスタート · アリーナをクリックしてジャンプ',
-  'Space or ↑ to jump · R to restart · tap arena to jump': 'スペースキーまたは ↑ でジャンプ · R でリスタート · アリーナをタップしてジャンプ',
-  'Start another run to beat your best.': 'もう一度プレイして自己ベストを更新しましょう。',
-  'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.': '続行する前に、このシークレットをデプロイ環境に保存してください。削除されたシークレットを使用しているアクティブなセッションは、直ちにトークンの更新に失敗します。',
-  'Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.': 'Stripe の決済処理が設定されていません。環境に VITE_STRIPE_PUBLISHABLE_KEY が設定されていることを確認してください。',
-  'Summary of everything that will be deleted when you change plan.': 'プラン変更時に削除されるすべての内容の概要。',
-  'TXT records store arbitrary text data in DNS, commonly used for verification purposes, such as domain ownership or email security settings.': 'TXT レコードは任意のテキストデータを DNS に保存し、ドメインの所有権確認やメールセキュリティ設定など、一般的に検証目的で使用されます。',
-  'The address will remain on your account; only the link to this organization will be removed.': '住所はアカウントに残りますが、この組織へのリンクのみ削除されます。',
-  'The card was declined or authentication was cancelled. Please try again or use a different card.': 'カードが拒否されたか、認証がキャンセルされました。もう一度お試しいただくか、別のカードをお使いください。',
-  'There are no billing addresses on your account. Add one below.': 'アカウントに請求先住所がありません。以下から追加してください。',
-  'They will not be able to join the organization.': 'この組織に参加できなくなります。',
-  'This app may have been deleted or you do not have access.': 'このアプリは削除されたか、アクセス権がない可能性があります。',
-  'This entire organization will be deleted, including all of its projects and resources.': 'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
-  'This invoice is missing authentication details.': 'この請求書には認証情報がありません。',
-  'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.': 'この名前はプレミアムとして登録されています。最終的な移管料金は支払いを送信した時点で確定します。',
-  'This usually takes a few seconds. Please keep this window open.': '通常は数秒で完了します。このウィンドウを開いたままにしてください。',
-  'This usually takes a few seconds to a couple of minutes. Please keep this window open.': '通常は数秒から数分で完了します。このウィンドウを開いたままにしてください。',
-  'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.': 'ドメインの移管認可コードを生成します。移管先のレジストラで使用するまで、他人に知られないようにしてください。',
-  'Tickets can be submitted anytime; we reply during support hours.': 'チケットはいつでも送信できます。返信はサポート時間内に行います。',
+  'Space or ↑ to jump · R to restart · click arena to jump':
+    'スペースキーまたは ↑ でジャンプ · R でリスタート · アリーナをクリックしてジャンプ',
+  'Space or ↑ to jump · R to restart · tap arena to jump':
+    'スペースキーまたは ↑ でジャンプ · R でリスタート · アリーナをタップしてジャンプ',
+  'Start another run to beat your best.':
+    'もう一度プレイして自己ベストを更新しましょう。',
+  'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.':
+    '続行する前に、このシークレットをデプロイ環境に保存してください。削除されたシークレットを使用しているアクティブなセッションは、直ちにトークンの更新に失敗します。',
+  'Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.':
+    'Stripe の決済処理が設定されていません。環境に VITE_STRIPE_PUBLISHABLE_KEY が設定されていることを確認してください。',
+  'Summary of everything that will be deleted when you change plan.':
+    'プラン変更時に削除されるすべての内容の概要。',
+  'TXT records store arbitrary text data in DNS, commonly used for verification purposes, such as domain ownership or email security settings.':
+    'TXT レコードは任意のテキストデータを DNS に保存し、ドメインの所有権確認やメールセキュリティ設定など、一般的に検証目的で使用されます。',
+  'The address will remain on your account; only the link to this organization will be removed.':
+    '住所はアカウントに残りますが、この組織へのリンクのみ削除されます。',
+  'The card was declined or authentication was cancelled. Please try again or use a different card.':
+    'カードが拒否されたか、認証がキャンセルされました。もう一度お試しいただくか、別のカードをお使いください。',
+  'There are no billing addresses on your account. Add one below.':
+    'アカウントに請求先住所がありません。以下から追加してください。',
+  'They will not be able to join the organization.':
+    'この組織に参加できなくなります。',
+  'This app may have been deleted or you do not have access.':
+    'このアプリは削除されたか、アクセス権がない可能性があります。',
+  'This entire organization will be deleted, including all of its projects and resources.':
+    'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
+  'This invoice is missing authentication details.':
+    'この請求書には認証情報がありません。',
+  'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.':
+    'この名前はプレミアムとして登録されています。最終的な移管料金は支払いを送信した時点で確定します。',
+  'This usually takes a few seconds. Please keep this window open.':
+    '通常は数秒で完了します。このウィンドウを開いたままにしてください。',
+  'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
+    '通常は数秒から数分で完了します。このウィンドウを開いたままにしてください。',
+  'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
+    'ドメインの移管認可コードを生成します。移管先のレジストラで使用するまで、他人に知られないようにしてください。',
+  'Tickets can be submitted anytime; we reply during support hours.':
+    'チケットはいつでも送信できます。返信はサポート時間内に行います。',
   'Time to live in seconds (default: 3600)': 'TTL (秒単位、デフォルト: 3600)',
-  'To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.': 'このカードを削除するには、まずアカウントの別の支払い方法に置き換えてください。新しい主要カードが設定されると、このカードを削除できます。',
-  'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.': 'このシークレットを使用したトークン更新と認可フローは直ちに動作しなくなります。この操作は元に戻せません。',
-  'Transfer could not be completed. Please try again.': '移管を完了できませんでした。もう一度お試しください。',
-  'Transfer fees are charged to the selected payment method.': '移管手数料は選択した支払い方法に請求されます。',
-  'Try adjusting or clearing filters to see more records': 'フィルターを調整またはクリアすると、さらにレコードを表示できます',
-  'Try adjusting or clearing your search.': '検索条件を調整またはクリアしてみてください。',
-  'Type at least 2 characters to see suggestions': '候補を表示するには2文字以上入力してください',
-  'URLs shown on the OAuth2 consent screen.': 'OAuth2 の同意画面に表示される URL。',
-  'Unselected members will be removed from the organization.': '選択されていないメンバーは組織から削除されます。',
-  'Unselected projects and everything in them will be deleted.': '選択されていないプロジェクトとその中のすべてが削除されます。',
+  'To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.':
+    'このカードを削除するには、まずアカウントの別の支払い方法に置き換えてください。新しい主要カードが設定されると、このカードを削除できます。',
+  'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.':
+    'このシークレットを使用したトークン更新と認可フローは直ちに動作しなくなります。この操作は元に戻せません。',
+  'Transfer could not be completed. Please try again.':
+    '移管を完了できませんでした。もう一度お試しください。',
+  'Transfer fees are charged to the selected payment method.':
+    '移管手数料は選択した支払い方法に請求されます。',
+  'Try adjusting or clearing filters to see more records':
+    'フィルターを調整またはクリアすると、さらにレコードを表示できます',
+  'Try adjusting or clearing your search.':
+    '検索条件を調整またはクリアしてみてください。',
+  'Type at least 2 characters to see suggestions':
+    '候補を表示するには2文字以上入力してください',
+  'URLs shown on the OAuth2 consent screen.':
+    'OAuth2 の同意画面に表示される URL。',
+  'Unselected members will be removed from the organization.':
+    '選択されていないメンバーは組織から削除されます。',
+  'Unselected projects and everything in them will be deleted.':
+    '選択されていないプロジェクトとその中のすべてが削除されます。',
   'Update the nameservers of your domain': 'ドメインのネームサーバーを更新',
-  "Update your domain's nameservers to point to Appwrite": 'ドメインのネームサーバーを Appwrite を指すように更新',
-  "Update your organization's display name. This will be visible to all organization members.": '組織の表示名を更新します。これはすべての組織メンバーに表示されます。',
-  'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.': 'DNS レコードをインポートするには DNS ゾーンファイル (.txt 形式) をアップロードしてください。最大ファイルサイズは 5MB です。',
+  "Update your domain's nameservers to point to Appwrite":
+    'ドメインのネームサーバーを Appwrite を指すように更新',
+  "Update your organization's display name. This will be visible to all organization members.":
+    '組織の表示名を更新します。これはすべての組織メンバーに表示されます。',
+  'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.':
+    'DNS レコードをインポートするには DNS ゾーンファイル (.txt 形式) をアップロードしてください。最大ファイルサイズは 5MB です。',
   'Upload a PNG logo for the OAuth2 consent screen.':
     'OAuth2 同意画面用に PNG ロゴをアップロードしてください。',
   'Upload a PNG logo for the consent screen and marketplace.':
     '同意画面とマーケットプレイス用に PNG ロゴをアップロードしてください。',
-  'Use @ for the root domain, or enter a subdomain (e.g., www, mail)': 'ルートドメインには @ を使用するか、サブドメインを入力してください (例: www、mail)',
-  'Use an existing card or add a new one for this organization.': 'この組織に既存のカードを使用するか、新しいカードを追加してください。',
-  'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.': 'Appwrite API、webhook、SDK と連携する際にこの ID を使用してください。問題対応の際にサポートからこの ID を求められることもあります。',
-  'Used for registry contact and invoicing.': 'レジストリの連絡先情報と請求に使用されます。',
+  'Use @ for the root domain, or enter a subdomain (e.g., www, mail)':
+    'ルートドメインには @ を使用するか、サブドメインを入力してください (例: www、mail)',
+  'Use an existing card or add a new one for this organization.':
+    'この組織に既存のカードを使用するか、新しいカードを追加してください。',
+  'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.':
+    'Appwrite API、webhook、SDK と連携する際にこの ID を使用してください。問題対応の際にサポートからこの ID を求められることもあります。',
+  'Used for registry contact and invoicing.':
+    'レジストリの連絡先情報と請求に使用されます。',
   'Used in the public listing URL': '公開掲載ページの URL に使用されます',
-  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.':
     'このドメインの Appwrite ネームサーバーをまだ確認できませんでした。DNS の変更が反映されるまで最大 48 時間かかることがあります。レジストラで下記のネームサーバーを確認し、少し待ってから再試行してください。', // pragma: allowlist secret
-  "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.": 'このドメインの見積もりを読み込めませんでした。そのまま続行できます。支払額は支払いを完了した時点で確定します。',
-  'We typically respond within 24 hours during support hours (Mon–Fri).': 'サポート時間内 (月〜金) は通常24時間以内に返信します。',
-  "We'll countersign and return a fully executed copy within 5 business days.": '当社が署名し、完全に締結された書類を5営業日以内に返送します。',
-  "We're having a temporary issue with the support portal, and our engineering team are aware. In the meantime, please reach out at": 'サポートポータルで一時的な問題が発生しており、エンジニアリングチームが認識しています。その間は次までご連絡ください:',
-  "We're sorry - we couldn't submit your support request": '申し訳ございません。サポートリクエストを送信できませんでした',
-  "We've received your request and will get back to you as soon as we can.": 'リクエストを受け付けました。できるだけ早くご連絡いたします。',
-  "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.": 'どのような点にご不満がありましたか? ダウングレードの決定に影響した内容をお聞かせください。いただいたフィードバックはプラットフォームの改善に役立てられます。',
-  'When your additional usage spending (beyond plan limits) reaches': 'プランの上限を超えた追加使用料の支出が次に達したとき',
-  'You are on a custom plan. To change your plan, contact your customer success manager or': 'カスタムプランをご利用中です。プランを変更するには、カスタマーサクセスマネージャーにお問い合わせいただくか、次までご連絡ください:',
-  "You don't have any credits. Credits can be used to offset your monthly charges.": 'クレジットがありません。クレジットは月々の料金の相殺に使用できます。',
-  "You don't have permission to create projects.": 'プロジェクトを作成する権限がありません。',
-  "You don't have permission to invite members.": 'メンバーを招待する権限がありません。',
-  "You don't have permission to manage members.": 'メンバーを管理する権限がありません。',
-  'You will be charged for each organization member beyond the plan limit.': 'プランの上限を超える組織メンバーごとに料金が請求されます。',
-  'You will lose access to premium features and organization members beyond the free limit will be removed.': 'プレミアム機能へのアクセスを失い、無料プランの上限を超える組織メンバーは削除されます。',
-  "You've reached the limit for projects on your plan": 'プランのプロジェクト上限に達しました',
-  "Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.": 'デフォルトの支払い方法が失敗し、バックアップの方法もありません。サービスを継続してご利用いただくには、新しい支払い方法を追加してください。',
-  'Your last payment attempt failed. Please update your payment method and try again.': '前回の支払い試行は失敗しました。支払い方法を更新してもう一度お試しください。',
-  'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.': 'カード発行会社による支払い確認が必要です。支払い履歴の請求書で承認を実行してください。',
-  "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.": 'プランは現在の請求期間の終了時に変更されます。それまでは現在のプランの機能をご利用いただけます。',
-  'and all its projects, databases, and files? This action cannot be undone.': 'とそのすべてのプロジェクト、データベース、ファイルを削除しますか? この操作は元に戻せません。',
-  'and revoke all associated tokens? This action cannot be undone.': 'と関連するすべてのトークンを取り消しますか? この操作は元に戻せません。',
-  'for a confirmation email with your ticket reference.': 'チケット番号を記載した確認メールをご確認ください。',
-  'from the team? They will lose access to all organization resources.': 'をチームから削除しますか? 組織のすべてのリソースへのアクセスを失います。',
-  'is on a paid plan with recurring billing. Your primary payment method must remain on file while subscription charges are active.': 'は継続課金の有料プランを利用中です。サブスクリプションの課金が有効な間は、主要な支払い方法を登録しておく必要があります。',
-  'maintains rigorous security practices for data protection, availability, and confidentiality.': 'はデータ保護、可用性、機密性のために厳格なセキュリティ対策を維持しています。',
-  'per month for each organization member beyond the plan limit.': '月あたり、プランの上限を超える組織メンバーごとに課金されます。',
-  "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.": 'が皆様に代わって個人データを処理する方法です。EU 居住者のデータを取り扱う際の GDPR 準拠に必要です。',
-  'projects, but the selected plan allows only': '個のプロジェクトがありますが、選択したプランで許可されるのは',
-  'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.': 'を Appwrite を指すように設定します。DNS の変更が反映されるまで最大48時間かかる場合があります。',
-  'Setting up your workspace and billing profile.': 'ワークスペースと請求プロファイルを設定しています。',
-  'Organizations with compliance or procurement requirements': 'コンプライアンスまたは調達要件がある組織',
-  'Companies needing annual contracts, custom SLAs, or dedicated support': '年間契約、カスタム SLA、専任サポートが必要な企業',
-  'Teams that need custom resource limits or volume pricing': 'カスタムのリソース上限やボリューム料金が必要なチーム',
-  'When you need SOC 2, BAA, 24/7 support, or a success manager': 'SOC 2、BAA、24時間365日サポート、またはサクセスマネージャーが必要な場合',
-  'During vendor review, security assessment, or enterprise procurement': 'ベンダー審査、セキュリティ評価、またはエンタープライズ調達の際',
-  'When pay-as-you-go plans do not meet your support or billing needs': '従量課金制プランがサポートまたは請求のニーズを満たさない場合',
+  "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
+    'このドメインの見積もりを読み込めませんでした。そのまま続行できます。支払額は支払いを完了した時点で確定します。',
+  'We typically respond within 24 hours during support hours (Mon–Fri).':
+    'サポート時間内 (月〜金) は通常24時間以内に返信します。',
+  "We'll countersign and return a fully executed copy within 5 business days.":
+    '当社が署名し、完全に締結された書類を5営業日以内に返送します。',
+  "We're having a temporary issue with the support portal, and our engineering team are aware. In the meantime, please reach out at":
+    'サポートポータルで一時的な問題が発生しており、エンジニアリングチームが認識しています。その間は次までご連絡ください:',
+  "We're sorry - we couldn't submit your support request":
+    '申し訳ございません。サポートリクエストを送信できませんでした',
+  "We've received your request and will get back to you as soon as we can.":
+    'リクエストを受け付けました。できるだけ早くご連絡いたします。',
+  "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
+    'どのような点にご不満がありましたか? ダウングレードの決定に影響した内容をお聞かせください。いただいたフィードバックはプラットフォームの改善に役立てられます。',
+  'When your additional usage spending (beyond plan limits) reaches':
+    'プランの上限を超えた追加使用料の支出が次に達したとき',
+  'You are on a custom plan. To change your plan, contact your customer success manager or':
+    'カスタムプランをご利用中です。プランを変更するには、カスタマーサクセスマネージャーにお問い合わせいただくか、次までご連絡ください:',
+  "You don't have any credits. Credits can be used to offset your monthly charges.":
+    'クレジットがありません。クレジットは月々の料金の相殺に使用できます。',
+  "You don't have permission to create projects.":
+    'プロジェクトを作成する権限がありません。',
+  "You don't have permission to invite members.":
+    'メンバーを招待する権限がありません。',
+  "You don't have permission to manage members.":
+    'メンバーを管理する権限がありません。',
+  'You will be charged for each organization member beyond the plan limit.':
+    'プランの上限を超える組織メンバーごとに料金が請求されます。',
+  'You will lose access to premium features and organization members beyond the free limit will be removed.':
+    'プレミアム機能へのアクセスを失い、無料プランの上限を超える組織メンバーは削除されます。',
+  "You've reached the limit for projects on your plan":
+    'プランのプロジェクト上限に達しました',
+  "Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.":
+    'デフォルトの支払い方法が失敗し、バックアップの方法もありません。サービスを継続してご利用いただくには、新しい支払い方法を追加してください。',
+  'Your last payment attempt failed. Please update your payment method and try again.':
+    '前回の支払い試行は失敗しました。支払い方法を更新してもう一度お試しください。',
+  'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.':
+    'カード発行会社による支払い確認が必要です。支払い履歴の請求書で承認を実行してください。',
+  "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.":
+    'プランは現在の請求期間の終了時に変更されます。それまでは現在のプランの機能をご利用いただけます。',
+  'and all its projects, databases, and files? This action cannot be undone.':
+    'とそのすべてのプロジェクト、データベース、ファイルを削除しますか? この操作は元に戻せません。',
+  'and revoke all associated tokens? This action cannot be undone.':
+    'と関連するすべてのトークンを取り消しますか? この操作は元に戻せません。',
+  'for a confirmation email with your ticket reference.':
+    'チケット番号を記載した確認メールをご確認ください。',
+  'from the team? They will lose access to all organization resources.':
+    'をチームから削除しますか? 組織のすべてのリソースへのアクセスを失います。',
+  'is on a paid plan with recurring billing. Your primary payment method must remain on file while subscription charges are active.':
+    'は継続課金の有料プランを利用中です。サブスクリプションの課金が有効な間は、主要な支払い方法を登録しておく必要があります。',
+  'maintains rigorous security practices for data protection, availability, and confidentiality.':
+    'はデータ保護、可用性、機密性のために厳格なセキュリティ対策を維持しています。',
+  'per month for each organization member beyond the plan limit.':
+    '月あたり、プランの上限を超える組織メンバーごとに課金されます。',
+  "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.":
+    'が皆様に代わって個人データを処理する方法です。EU 居住者のデータを取り扱う際の GDPR 準拠に必要です。',
+  'projects, but the selected plan allows only':
+    '個のプロジェクトがありますが、選択したプランで許可されるのは',
+  'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.':
+    'を Appwrite を指すように設定します。DNS の変更が反映されるまで最大48時間かかる場合があります。',
+  'Setting up your workspace and billing profile.':
+    'ワークスペースと請求プロファイルを設定しています。',
+  'Organizations with compliance or procurement requirements':
+    'コンプライアンスまたは調達要件がある組織',
+  'Companies needing annual contracts, custom SLAs, or dedicated support':
+    '年間契約、カスタム SLA、専任サポートが必要な企業',
+  'Teams that need custom resource limits or volume pricing':
+    'カスタムのリソース上限やボリューム料金が必要なチーム',
+  'When you need SOC 2, BAA, 24/7 support, or a success manager':
+    'SOC 2、BAA、24時間365日サポート、またはサクセスマネージャーが必要な場合',
+  'During vendor review, security assessment, or enterprise procurement':
+    'ベンダー審査、セキュリティ評価、またはエンタープライズ調達の際',
+  'When pay-as-you-go plans do not meet your support or billing needs':
+    '従量課金制プランがサポートまたは請求のニーズを満たさない場合',
   Active: 'アクティブ',
   Add: '追加',
   Address: '住所',
@@ -1058,8 +1325,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Official: '公式',
   'We invite app makers to contact us and get your integrations published.':
     'アプリ開発者の方は、ぜひお問い合わせのうえインテグレーションを公開してください。',
-  'Add your first app to get started.':
-    '最初のアプリを追加して始めましょう。',
+  'Add your first app to get started.': '最初のアプリを追加して始めましょう。',
   Offline: 'オフライン',
   Online: 'オンライン',
   Open: '開く',
@@ -1218,10 +1484,12 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Delete selected projects': '選択したプロジェクトを削除',
   'Delete selected members': '選択したメンバーを削除',
   'Delete selected domains': '選択したドメインを削除',
-  'Only the selected items will be deleted.': '選択した項目だけが削除されます。',
+  'Only the selected items will be deleted.':
+    '選択した項目だけが削除されます。',
   'Finish deleting project resources that exceed the selected plan.':
     '選択したプランを超えるプロジェクトリソースの削除を完了してください。',
-  'Checking whether the plan can be changed...': 'プランを変更できるか確認しています...',
+  'Checking whether the plan can be changed...':
+    'プランを変更できるか確認しています...',
   'This plan change is unavailable. Please contact support.':
     'このプラン変更は利用できません。サポートにお問い合わせください。',
   'Could not change plan. Remaining usage still exceeds the selected plan.':
@@ -1268,11 +1536,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'for this project.': '(このプロジェクト)',
   'Some project resources could not be loaded. Reload and try again.':
     '一部のプロジェクトリソースを読み込めませんでした。再読み込みしてやり直してください。',
-  'Addons not available on the selected plan': '選択したプランで利用できないアドオン',
+  'Addons not available on the selected plan':
+    '選択したプランで利用できないアドオン',
   'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
     'これらのアドオンはプラン変更の一部として無効化されます。事前にオフにする必要はありません。',
   'They are removed immediately.': 'すぐに削除されます。',
-  'What changes in the projects you are keeping': '残すプロジェクトで変わること',
+  'What changes in the projects you are keeping':
+    '残すプロジェクトで変わること',
   'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
     'これらはプラン変更時に自動的に適用されます。事前に選択したり整理したりする必要はありません。',
   'Backups stop running': 'バックアップが停止します',
@@ -1281,7 +1551,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Dedicated databases are spun down': '専用データベースが停止されます',
   'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
     '選択したプランには専用データベースが含まれないため、プラン変更時に停止されます。データは保持されますが、データベースはリクエストの処理を停止し、専用データベースを含むプランに戻しても再開できません。',
-  'The following is deleted as soon as you confirm.': '確定すると、以下がただちに削除されます。',
+  'The following is deleted as soon as you confirm.':
+    '確定すると、以下がただちに削除されます。',
   'Deleted data cannot be recovered.': '削除されたデータは復元できません。',
   'Could not load which backup policies stop running when your plan changes.':
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
@@ -1290,4 +1561,29 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
   'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'Choose a new plan': '新しいプランを選択',
+  'Plans could not be loaded. Refresh and try again.':
+    'プランを読み込めませんでした。更新してやり直してください。',
+  'day left': '日残っています',
+  'days left': '日残っています',
+  'Production resources for the projects you want to keep.':
+    '続けたいプロジェクトのための本番リソース。',
+  'Daily backups, email support, and more':
+    '日次バックアップ、メールサポート、その他',
+  'Congratulations on graduating from the Appwrite Education program!':
+    'Appwrite Education programの修了おめでとうございます！',
+  'You are about to graduate from the Appwrite Education program!':
+    'まもなくAppwrite Education programを修了します！',
+  'We hope it helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'Appwrite Cloudでの学習や開発、初めてのプロジェクトの実現に役立っていれば幸いです。',
+  'We hope it has helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'Appwrite Cloudでの学習や開発、初めてのプロジェクトの実現に役立っていれば幸いです。',
+  'Your organization is now disabled until you choose a new plan.':
+    '新しいプランを選択するまで、この組織は無効になっています。',
+  'Your projects and data are still here for now, but they will be deleted if you don’t choose a plan.':
+    'プロジェクトとデータは現時点では残っていますが、プランを選択しない場合は削除されます。',
+  'Choose a new plan to keep your projects and data.':
+    'プロジェクトとデータを残すには、新しいプランを選択してください。',
+  'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
+    'Educationプランが終了すると、組織は無効になり、プロジェクトは後日削除されます。今プランを選べば、すべてそのまま使い続けられます。',
 }

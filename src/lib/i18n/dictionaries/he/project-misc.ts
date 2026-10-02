@@ -271,6 +271,29 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Firewall
   Firewall: 'חומת אש',
+  'Open Firewall': 'פתיחת Firewall',
+  'Turn off sound': 'כיבוי שמע',
+  'Turn on sound': 'הפעלת שמע',
+  'Skip to console': 'דילוג לקונסול',
+  'Project rules that run before traffic reaches your API, Functions, or Sites.':
+    'כללי פרויקט שרצים לפני שהתעבורה מגיעה ל-API, לפונקציות או לאתרים שלכם.',
+  'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
+    'חסמו, הגבילו קצב, הפנו או אתגרו בקשות לפני שהן מגיעות ל-API, לפונקציות או לאתרים שלכם.',
+  'This one is harmless. Firewall stops the rest before they reach your API, Functions, or Sites.':
+    'העכביש הזה לא מזיק. Firewall עוצר את כל השאר לפני שהם מגיעים ל-API, לפונקציות או לאתרים שלכם.',
+  'Block this crawler': 'חסימת הסורק הזה',
+  'Blocked by Firewall': 'נחסם על ידי Firewall',
+  'Keep unwanted bots out of your app':
+    'הרחיקו בוטים לא רצויים מהאפליקציה שלכם',
+  'Deny crawlers and scrapers': 'חסימת סורקים וסקרייפרים',
+  'Return a 403 to any request that matches your conditions.':
+    'החזרת 403 לכל בקשה שתואמת לתנאים שהגדרתם.',
+  'Rate limit noisy clients': 'הגבלת קצב ללקוחות שמציפים בבקשות',
+  'Throttle each client IP and return a 429 once it goes over quota.':
+    'האטה לפי כתובת IP של כל לקוח והחזרת 429 כשהוא חורג מהמכסה.',
+  'Preview impact first': 'בדיקת ההשפעה מראש',
+  'See how much recent traffic a rule would match before you enable it.':
+    'ראו כמה מהתעבורה האחרונה תואמת לכלל לפני שאתם מפעילים אותו.',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',
@@ -3031,8 +3054,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'בלחיצה על הפעלה, הסכום החודשי של התוסף יתווסף למנוי שלכם ואמצעי התשלום יחויב מיד בסכום היחסי עבור הימים שנותרו במחזור החיוב.',
   'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
     'בלחיצה על הפעלה, אמצעי התשלום שלכם יחויב בסכום היחסי עבור הימים שנותרו במחזור החיוב, והתוסף יתווסף למנוי הפרויקט למחזורים הבאים.',
-  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
-    'Premium Geo DB מעשיר נתוני סשן ובקשות בפרטי מיקום מתקדמים כולל אזור זמן, מיקוד, ספק אינטרנט, סוג חיבור וארגון.',
+  'Richer geolocation on users and usage for better security and observability.':
+    'מיקום גיאוגרפי עשיר יותר על משתמשים ושימוש, לאבטחה ו-Observability טובים יותר.',
   'Due today (prorated)': 'לתשלום היום (יחסי)',
   '* Plus applicable tax and fees': '* בתוספת מסים ועמלות רלוונטיים',
   'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
@@ -3063,32 +3086,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פירוט סורקי סוכנים עדיין לא זמין בסט הנתונים הזה',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'תצוגה זו לא כוללת ספירות מדומות של ChatGPT, Claude או Perplexity. מדדו שליפות של סוכני קוד על llms.txt ומסמכי Markdown ב-Plausible, לא לפי מפנים מ-chatgpt.com.',
-  'No changes were made. This resource is managed by Terraform.':
-    'לא בוצעו שינויים. המשאב הזה מנוהל על ידי Terraform.',
-  'Managed by Terraform': 'מנוהל על ידי Terraform',
-  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
-    'ספק ה-Terraform של Appwrite יצר את המשאב הזה. עדכנו אותו בתצורת ה-Terraform שלכם.',
-  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
-    'המשאבים בפרויקט הזה נוצרו על ידי ספק ה-Terraform של Appwrite. עדכנו אותם בתצורת ה-Terraform שלכם.',
-  'Managed resources': 'משאבים מנוהלים',
-  'Last apply': 'apply אחרון',
-  'View activity': 'צפייה בפעילות',
-  'Changed outside Terraform': 'שונה מחוץ ל-Terraform',
-  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
-    'המשאב הזה מנוהל על ידי Terraform, אבל הוא השתנה אחרי ה-apply האחרון. הריצו terraform plan כדי לראות מה שונה מהתצורה שלכם.',
-  'Last change:': 'שינוי אחרון:',
-  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
-    'שינויים שתבצעו כאן לא נמצאים בתצורת ה-Terraform שלכם. ה-terraform apply הבא עשוי לבטל אותם.',
-  'Delete a Terraform-managed resource?': 'למחוק משאב שמנוהל על ידי Terraform?',
-  'Update a Terraform-managed resource?': 'לעדכן משאב שמנוהל על ידי Terraform?',
-  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
-    'Terraform יצר את המשאב הזה. ה-terraform apply הבא ייצור אותו מחדש, אלא אם תסירו אותו גם מתצורת ה-Terraform שלכם.',
-  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
-    'Terraform יצר את המשאב הזה. ה-terraform apply הבא עשוי לדרוס את השינוי, אלא אם תעדכנו גם את תצורת ה-Terraform שלכם.',
-  "Don't ask again for this project": 'לא לשאול שוב עבור הפרויקט הזה',
-  'Delete anyway': 'מחיקה בכל זאת',
-  'Update anyway': 'עדכון בכל זאת',
-  'Via Terraform': 'דרך Terraform',
 
   // Project environment switcher
   Environments: 'סביבות',

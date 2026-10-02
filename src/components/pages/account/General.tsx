@@ -6,6 +6,7 @@ import {
 import {
   AccountIdSection,
   DeleteAccountSection,
+  ProfilePhotoSection,
   UpdateEmailSection,
   UpdateNameSection,
 } from './Overview'
@@ -20,6 +21,14 @@ export function AccountGeneral() {
           keywords: ['id', 'api', 'sdk', 'copy'],
         },
         node: <AccountIdSection />,
+      },
+      {
+        id: 'photo',
+        search: {
+          title: 'Profile photo',
+          keywords: ['photo', 'avatar', 'picture', 'image', 'gravatar'],
+        },
+        node: <ProfilePhotoSection />,
       },
       {
         id: 'name',

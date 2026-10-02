@@ -87,6 +87,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 9
   },
   {
+    "slug": "advanced/billing/premium-geo-db",
+    "title": "Premium Geo DB",
+    "description": "Add city, time zone, ISP, AS number, and connection type to IP geolocation in an Appwrite Cloud project with the Premium Geo DB add-on.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "advanced/billing/pro",
     "title": "Pro",
     "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
@@ -288,6 +295,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "advanced/self-hosting/configuration/breached-passwords",
+    "title": "Breached passwords",
+    "description": "Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/self-hosting/configuration/databases",
@@ -1458,7 +1472,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/auth/security",
     "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
+    "description": "Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.",
     "layout": "article",
     "readingTimeMinutes": 1
   },
@@ -3262,6 +3276,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/sites/quick-start/jaspr",
+    "title": "Deploy a Jaspr app to Appwrite Sites",
+    "description": "Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/sites/quick-start/nextjs",
     "title": "Deploy a Next.js app to Appwrite Sites",
     "description": "Learn how to setup and deploy Next.js apps on Appwrite Sites.",
@@ -4099,7 +4120,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "tooling/command-line/non-interactive",

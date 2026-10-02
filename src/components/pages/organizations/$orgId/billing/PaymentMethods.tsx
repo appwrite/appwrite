@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CreditCard, Plus, Info } from '@/lib/icons'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
-import {
-  warningAlertContainerClassName,
-  warningAlertTextClassName} from '@/components/global/shared/WarningAlert'
-import { Trash2, Star, ArrowLeftRight } from 'lucide-react'
+import { AlertCircle, Trash2, Star, ArrowLeftRight } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   MenuItemContent,
@@ -26,7 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
 import { formatCardExpiry, maskCardNumber } from './utils'
-import { cn } from '@/lib/utils'
 import {
   useOrganizationById,
   useOrganizationPaymentMethod,
@@ -537,9 +533,7 @@ function PaymentMethodCard({
       : false
 
   const hasError = method.failed || method.expired
-  const errorMessage =
-    method.lastError ||
-    (method.expired ? t('Card expired') : method.failed ? t('Payment failed') : null)
+  const errorMessage = hasError ? method.lastError || null : null
 
   return (
     <OrgPaymentMethodContextMenu
@@ -552,11 +546,13 @@ function PaymentMethodCard({
       onRemove={onRemove}
       onAddPaymentMethod={onAddPaymentMethod}
     >
-    <div className="flex items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
-      <div className="flex items-center gap-2">
-        <PaymentMethodBrandAvatar brand={method.brand} />
-        <div>
-          <div className="flex items-center gap-2">
+    <div className="flex items-start justify-between gap-4 px-6 py-5 hover:bg-accent/50 transition-colors">
+      <div className="flex min-w-0 items-start gap-3.5">
+        <div className="flex h-5 items-center">
+          <PaymentMethodBrandAvatar brand={method.brand} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex h-5 items-center gap-2">
             <p className="text-[13px] font-medium text-foreground">
               {method.brand} {maskCardNumber(method.last4 || '')}
             </p>
@@ -577,28 +573,22 @@ function PaymentMethodCard({
             )}
           </div>
           {method.expiryMonth && method.expiryYear && (
-            <p className="text-[12px] text-muted-foreground">
+            <p className="mt-1.5 text-[12px] leading-4 text-muted-foreground">
               {t('Expires')} {formatCardExpiry(method.expiryMonth, method.expiryYear)}
             </p>
           )}
           {errorMessage && (
-            <div
-              className={cn(
-                'mt-1.5 rounded-md border px-2 py-1',
-                warningAlertContainerClassName,
-              )}
->
-              <p className={cn('text-[11px]', warningAlertTextClassName)}>
-                {errorMessage}
-              </p>
-            </div>
+            <p className="mt-3 flex items-start gap-1.5 text-[12px] leading-4 text-red-600 dark:text-red-400">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 translate-y-px" />
+              <span>{errorMessage}</span>
+            </p>
           )}
         </div>
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <RowActionsMenuTrigger />
+          <RowActionsMenuTrigger className="-my-1.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

@@ -67,6 +67,10 @@ Ensure the `entry.server.tsx` file uses `@remix-run/node` package.
 Use `@astrojs/node` adapter in the `astro.config.mjs` file.
 {% /tabsitem %}
 
+{% tabsitem #jaspr title="Jaspr" %}
+Set `mode` to `server` in the `jaspr` section of the `pubspec.yaml` file.
+{% /tabsitem %}
+
 {% /tabs %}
 
 # Authenticating with Appwrite {% #authentication %}

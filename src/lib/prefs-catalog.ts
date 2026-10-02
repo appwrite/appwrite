@@ -17,7 +17,6 @@ import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
-import { USER_PREFS_KEY_TERRAFORM_SKIP_CONFIRM } from '@/lib/terraform/prefs'
 import {
   USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
   USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
@@ -46,6 +45,7 @@ import {
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   USER_PREFS_KEY_DISMISSED_BANNERS,
   USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
+  USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
   USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
@@ -138,6 +138,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
     description:
       'Project IDs where the Agents landing was dismissed (JSON string array).',
+    category: 'Account',
+  },
+  {
+    id: 'premiumGeoOverviewDismissedProjectIds',
+    scope: 'account',
+    key: USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+    description:
+      'Project IDs where the Premium Geo DB overview promo was dismissed (JSON string array).',
     category: 'Account',
   },
   // Layout / chrome
@@ -520,14 +528,6 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_COVER_GENERATIONS,
     description: 'Saved cover generator generations (JSON).',
     category: 'Generators',
-  },
-  {
-    id: 'terraformSkipConfirmProjectIds',
-    scope: 'account',
-    key: USER_PREFS_KEY_TERRAFORM_SKIP_CONFIRM,
-    description:
-      'Projects where changes to Terraform-managed resources skip the confirmation (JSON string[]).',
-    category: 'Projects',
   },
   {
     id: 'diagramGeneratorPropertiesSplit',
