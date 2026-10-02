@@ -127,6 +127,7 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
                 $project,
                 $videoMessage
             ),
@@ -158,6 +159,7 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
+        Realtime $queueForRealtime,
         Document $project,
         VideoMessage $videoMessage
     ): void {
@@ -171,6 +173,8 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
+                $project,
                 $video,
                 $workspace
             );
@@ -213,7 +217,9 @@ class Videos extends Action
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
-                (new Tile())->vtt(false)
+                // 480px stays sharp on HiDPI screens and enlarged previews; a 4x4
+                // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
+                (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
             );
 
             $timelineDir = $deviceForVideos->getPath($video->getId()) . '/timeline/';
@@ -411,6 +417,8 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
+                $project,
                 $dbForProject->getDocument('videos', $videoId),
                 $workspace
             );
@@ -1038,6 +1046,8 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
+        Realtime $queueForRealtime,
+        Document $project,
         Document $video,
         array $workspace
     ): array {
@@ -1054,6 +1064,12 @@ class Videos extends Action
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
             $video = $this->probe($dbForProject, $video, $file, $inPath);
+            $this->notifyVideo(
+                $queueForRealtime,
+                $project,
+                $video,
+                $this->sourceReadPermissions($dbForProject, $project, $video)
+            );
         }
 
         if (!$video->getAttribute('subtitlesExtracted', false)) {
@@ -1570,6 +1586,31 @@ class Videos extends Action
             ->setEvent('videos.[videoId].subtitles.[subtitleId].update')
             ->setParam('videoId', $subtitle->getAttribute('videoId', ''))
             ->setParam('subtitleId', $subtitle->getId())
+            ->setPayload($payload)
+            ->trigger();
+    }
+
+    /**
+     * Publishes probed metadata (duration, dimensions, codecs) so video lists refresh.
+     *
+     * @param array<string> $permissions
+     */
+    private function notifyVideo(
+        Realtime $queueForRealtime,
+        Document $project,
+        Document $video,
+        array $permissions
+    ): void {
+        $payload = $video->getArrayCopy();
+        if (empty($payload['$permissions'])) {
+            $payload['$permissions'] = $permissions;
+        }
+
+        $queueForRealtime
+            ->setProject($project)
+            ->setSubscribers(['console', $project->getId()])
+            ->setEvent('videos.[videoId].update')
+            ->setParam('videoId', $video->getId())
             ->setPayload($payload)
             ->trigger();
     }

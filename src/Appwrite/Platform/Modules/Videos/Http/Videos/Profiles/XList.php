@@ -67,7 +67,6 @@ class XList extends Base
         $this->assertCodecEnabled($codec);
 
         $queries = [
-            Query::equal('codec', [$codec]),
             Query::orderAsc('height'),
             Query::limit(APP_LIMIT_SUBQUERY),
         ];
@@ -77,6 +76,13 @@ class XList extends Base
         }
 
         $profiles = $authorization->skip(fn () => $dbForProject->find('videos_profiles', $queries));
+
+        // Filter by codec in memory so list works on project DBs created before the
+        // `codec` attribute was added to videos_profiles (Query::equal would 500).
+        $profiles = \array_values(\array_filter(
+            $profiles,
+            static fn (Document $profile) => self::normalizeCodec($profile->getAttribute('codec')) === $codec
+        ));
 
         $response->dynamic(new Document([
             'profiles' => $profiles,

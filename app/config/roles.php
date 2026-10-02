@@ -168,6 +168,7 @@ return [
             'locale.read',
             'avatars.read',
             'executions.write',
+            'videos.read',
         ],
     ],
     User::ROLE_USERS => [
