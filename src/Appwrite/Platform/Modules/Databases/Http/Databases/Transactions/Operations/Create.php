@@ -231,6 +231,10 @@ class Create extends Action
                             }
                         }
                     }
+
+                    if (\in_array($operation['action'], ['create', 'update', 'upsert']) && \is_array($operation['data'] ?? null)) {
+                        $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
+                    }
                 }
             }
 
@@ -275,5 +279,49 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Related documents nested in staged data are written on commit, so the
+     * permissions they carry are checked against the related document as already
+     * staged. Commit checks them again once earlier operations have been applied.
+     *
+     * @param array<string, mixed> $data
+     * @throws Exception
+     */
+    private function validateRelationships(Document $database, Document $collection, array $data, Database $dbForProject, TransactionState $transactionState, string $transactionId, Authorization $authorization): void
+    {
+        $relationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
+        );
+
+        foreach ($relationships as $relationship) {
+            $related = $data[$relationship->getAttribute('key')] ?? null;
+
+            if (empty($related) || !\is_array($related)) {
+                continue;
+            }
+
+            $relations = \array_is_list($related) ? $related : [$related];
+
+            $relatedCollection = $authorization->skip(
+                fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relationship->getAttribute('relatedCollection'))
+            );
+
+            foreach ($relations as $relation) {
+                if (!\is_array($relation) || \array_is_list($relation)) {
+                    continue;
+                }
+
+                $relationId = $relation['$id'] ?? null;
+                $current = \is_string($relationId)
+                    ? $authorization->skip(fn () => $transactionState->getDocument($database, 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relationId, $transactionId))
+                    : new Document();
+
+                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
+                $this->validateRelationships($database, $relatedCollection, $relation, $dbForProject, $transactionState, $transactionId, $authorization);
+            }
+        }
     }
 }

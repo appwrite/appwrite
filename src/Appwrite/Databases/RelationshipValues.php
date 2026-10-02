@@ -13,6 +13,9 @@ use Utopia\Database\Validator\Authorization;
 /**
  * A nested related document without an ID, or with the `unique()` placeholder, gets a generated ID at any depth,
  * because the database library would store `unique()` as the ID itself.
+ *
+ * Given the database holding the related documents, the permissions a nested document carries are checked against
+ * the stored related document, so a caller can only grant roles it holds. API keys and privileged users pass none.
  */
 final readonly class RelationshipValues
 {
@@ -20,6 +23,7 @@ final readonly class RelationshipValues
         private Database $dbForProject,
         private Document $database,
         private Authorization $authorization,
+        private ?Database $dbForDatabases = null,
     ) {
     }
 
@@ -53,6 +57,7 @@ final readonly class RelationshipValues
                         'database_' . $this->database->getSequence(),
                         (string) $relationship->getAttribute('relatedCollection', '')
                     ));
+                    $this->validatePermissions($relation, $relatedCollection);
                     $relation = $this->prepare($relation, $relatedCollection);
                 }
 
@@ -63,6 +68,23 @@ final readonly class RelationshipValues
         }
 
         return $document;
+    }
+
+    /**
+     * @param array<string, mixed> $relation
+     */
+    private function validatePermissions(array $relation, Document $relatedCollection): void
+    {
+        if ($this->dbForDatabases === null) {
+            return;
+        }
+
+        $current = $this->authorization->skip(fn (): Document => $this->dbForDatabases->getDocument(
+            'database_' . $this->database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
+            $relation['$id']
+        ));
+
+        (new RelatedPermissions($this->authorization))->validate($relation['$permissions'] ?? null, $current);
     }
 
     private function validate(mixed $relation): void

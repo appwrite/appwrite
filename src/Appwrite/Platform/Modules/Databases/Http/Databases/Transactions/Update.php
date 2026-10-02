@@ -34,6 +34,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -224,7 +225,7 @@ class Update extends Action
                     }
                 }
 
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -252,6 +253,15 @@ class Update extends Action
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
+                            }
+                        }
+
+                        if (!$isAPIKey && !$isPrivilegedUser && \in_array($action, ['create', 'update', 'upsert']) && \is_array($data)) {
+                            try {
+                                $this->validateRelationships($dbForDatabases, $collection, $data, $authorization);
+                            } catch (Exception $e) {
+                                // Rethrown as a database exception so withTransaction() rolls back without retrying.
+                                throw new AuthorizationException($e->getMessage(), previous: $e);
                             }
                         }
 
@@ -563,6 +573,54 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Related documents nested in a staged operation are written with it, so the
+     * permissions they carry are checked against the related document as it exists
+     * at this point of the commit, after any earlier operations in the transaction.
+     *
+     * @param array<string, mixed> $data
+     * @throws Exception
+     */
+    private function validateRelationships(Database $dbForDatabases, Document $collection, array $data, Authorization $authorization): void
+    {
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute['type'] !== ColumnType::Relationship->value) {
+                continue;
+            }
+
+            $related = $data[$attribute['key']] ?? null;
+            if ($related instanceof Document) {
+                $related = $related->getArrayCopy();
+            }
+
+            if (empty($related) || !\is_array($related)) {
+                continue;
+            }
+
+            $relations = \array_is_list($related) ? $related : [$related];
+
+            $relatedCollection = $authorization->skip(fn () => $dbForDatabases->getCollection($attribute['options']['relatedCollection']));
+
+            foreach ($relations as $relation) {
+                if ($relation instanceof Document) {
+                    $relation = $relation->getArrayCopy();
+                }
+
+                if (!\is_array($relation) || \array_is_list($relation)) {
+                    continue;
+                }
+
+                $relationId = $relation['$id'] ?? null;
+                $current = \is_string($relationId)
+                    ? $authorization->skip(fn () => $dbForDatabases->getDocument($relatedCollection->getId(), $relationId))
+                    : new Document();
+
+                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
+                $this->validateRelationships($dbForDatabases, $relatedCollection, $relation, $authorization);
+            }
+        }
     }
 
     /**

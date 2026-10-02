@@ -106,6 +106,16 @@ class EventTailRegistry
     }
 
     /**
+     * IDs of every connection holding a tail.
+     *
+     * @return array<int, int>
+     */
+    public function getConnections(): array
+    {
+        return \array_keys($this->entries);
+    }
+
+    /**
      * Drop any tail whose authorizing team role the connection no longer holds. Called
      * from the permissions-changed path (which already recomputes a connection's roles
      * and rebuilds its tree) so a membership revocation or project transfer stops the

@@ -518,6 +518,108 @@ final class UsageCustomServerTest extends Scope
         return $path;
     }
 
+    public function testMessageResourceId(): void
+    {
+        self::$project = $this->getProject(true);
+        $this->waitForUsageStats();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $providers = [];
+        foreach (['sent' => (int) System::getEnv('_APP_SMTP_PORT', '1025'), 'failed' => 1] as $outcome => $port) {
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => ID::unique(),
+                'name' => 'Usage ' . $outcome,
+                'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
+                'port' => $port,
+                'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+                'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+                'fromName' => 'Appwrite',
+                'fromEmail' => 'usage@appwrite.io',
+                'enabled' => true,
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $providers[$outcome] = $response['body']['$id'];
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $messages = [];
+        foreach (['sent' => 2, 'failed' => 1] as $outcome => $recipients) {
+            $targets = [];
+            for ($i = 0; $i < $recipients; $i++) {
+                $response = $this->client->call(Client::METHOD_POST, "/users/$userId/targets", $headers, [
+                    'targetId' => ID::unique(),
+                    'providerType' => 'email',
+                    'providerId' => $providers[$outcome],
+                    'identifier' => \uniqid() . '@appwrite.io',
+                ]);
+                $this->assertSame(201, $response['headers']['status-code']);
+                $targets[] = $response['body']['$id'];
+            }
+
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+                'messageId' => ID::unique(),
+                'targets' => $targets,
+                'subject' => 'Usage ' . $outcome,
+                'content' => 'Usage attribution',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $messageId = $response['body']['$id'];
+            $messages[$outcome] = $messageId;
+
+            $this->assertEventually(function () use ($messageId, $outcome, $headers) {
+                $response = $this->client->call(Client::METHOD_GET, "/messaging/messages/$messageId", $headers);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame($outcome, $response['body']['status']);
+            }, 30_000, 500);
+        }
+
+        $expected = [
+            '' => [2, 1],
+            $messages['sent'] => [2, 0],
+            $messages['failed'] => [0, 1],
+            $this->getProject()['$id'] => [0, 0],
+            ID::unique() => [0, 0],
+        ];
+        $usageHeaders = array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
+        foreach ($expected as $resourceId => $values) {
+            $this->assertEventually(function () use ($resourceId, $values, $usageHeaders) {
+                $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                    'metrics' => ['messages.sent', 'messages.failed'],
+                    'queries' => $resourceId === '' ? [] : [
+                        Query::equal('resourceType', ['message'])->toString(),
+                        Query::equal('resourceId', [$resourceId])->toString(),
+                    ],
+                ]);
+                $this->assertSame(200, $response['headers']['status-code']);
+                foreach ($values as $index => $value) {
+                    $this->assertEquals($value, array_sum(array_column($response['body']['metrics'][$index]['points'], 'value')), "Message '$resourceId': " . $response['body']['metrics'][$index]['metric']);
+                }
+            }, 60_000, 500);
+        }
+
+        $this->assertEventually(function () use ($messages, $usageHeaders) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['messages.sent'],
+                'dimensions' => ['resourceId'],
+                'queries' => [Query::equal('resourceType', ['message'])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $points = array_column($response['body']['metrics'][0]['points'], 'value', 'resourceId');
+            $this->assertSame([$messages['sent'] => 2], $points);
+        }, 60_000, 500);
+    }
+
     private function waitForUsageStats(): void
     {
         if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {

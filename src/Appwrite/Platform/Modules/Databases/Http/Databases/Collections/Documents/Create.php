@@ -284,7 +284,8 @@ class Create extends Action
             $document->setAttribute('$permissions', $permissions);
         };
 
-        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $relationshipValues = new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases);
 
         $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
             $document['$collection'] = $collection->getId();
@@ -383,7 +384,6 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $writes = Operations::writes($collection, $documents, fn (string $id): Document => $authorization->skip(
             fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)

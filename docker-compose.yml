@@ -258,6 +258,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
@@ -329,6 +330,8 @@ services:
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1690,6 +1693,7 @@ services:
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro
     ulimits:
       nofile:
         soft: 262144

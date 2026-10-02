@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -54,6 +55,7 @@ class XList extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')
@@ -66,6 +68,7 @@ class XList extends Action
         string $installationId,
         string $search,
         array $queries,
+        bool $includeTotal,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Response $response,
@@ -127,7 +130,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'namespaces' => $namespaces,
-            'total' => $total,
+            'total' => $includeTotal ? $total : 0,
         ]), Response::MODEL_VCS_NAMESPACE_LIST);
     }
 }

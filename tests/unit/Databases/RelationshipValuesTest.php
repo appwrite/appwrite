@@ -13,6 +13,8 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
@@ -23,6 +25,7 @@ final class RelationshipValuesTest extends TestCase
     private const int GENERATED_ID_LENGTH = 20;
     private const string DATABASE_SEQUENCE = '1';
     private const string CATALOG = 'database_' . self::DATABASE_SEQUENCE;
+    private const string CALLER = 'caller';
 
     public function testNestedDocumentsAskingForAUniqueIdGetGeneratedIds(): void
     {
@@ -152,6 +155,137 @@ final class RelationshipValuesTest extends TestCase
         yield 'a malformed nested ID at depth 2' => [['artist' => ['name' => 'Artist', 'label' => ['$id' => 'bad id!!']]]];
     }
 
+    public function testNestedDocumentCannotGrantARoleTheCallerLacks(): void
+    {
+        $this->assertUnauthorized([
+            'artist' => [
+                '$id' => 'artist1',
+                '$permissions' => [Permission::update(Role::user('other'))],
+            ],
+        ], 'a nested document granting a role the caller lacks');
+    }
+
+    public function testNestedDocumentDeeperDownCannotGrantARoleTheCallerLacks(): void
+    {
+        $this->assertUnauthorized([
+            'artist' => [
+                '$id' => 'artist1',
+                'label' => ['$id' => 'label1', '$permissions' => [Permission::read(Role::any()), Permission::delete(Role::user('other'))]],
+            ],
+        ], 'a nested document at depth 2 granting a role the caller lacks');
+    }
+
+    public function testNewNestedDocumentInAToManyListCannotGrantARoleTheCallerLacks(): void
+    {
+        $this->assertUnauthorized([
+            'tracks' => [
+                'track1',
+                ['name' => 'Track 2', '$permissions' => [Permission::write(Role::users())]],
+            ],
+        ], 'a new nested document granting a role the caller lacks');
+    }
+
+    public function testNestedDocumentMayGrantRolesTheCallerHolds(): void
+    {
+        $permissions = [Permission::read(Role::any()), Permission::update(Role::user(self::CALLER))];
+
+        $prepared = $this->prepareAsCaller([
+            'artist' => ['$id' => 'artist1', '$permissions' => $permissions],
+        ]);
+
+        $this->assertSame($permissions, $prepared['artist']['$permissions']);
+    }
+
+    public function testNestedDocumentMaySendBackPermissionsItAlreadyHas(): void
+    {
+        $permissions = [Permission::read(Role::any()), Permission::update(Role::user('other'))];
+
+        $prepared = $this->prepareAsCaller(
+            ['artist' => ['$id' => 'artist1', 'name' => 'Renamed', '$permissions' => $permissions]],
+            ['artists' => [new Document(['$id' => 'artist1', '$permissions' => $permissions])]],
+        );
+
+        $this->assertSame('Renamed', $prepared['artist']['name']);
+    }
+
+    public function testNestedDocumentWithoutPermissionsIsNotChecked(): void
+    {
+        $prepared = $this->prepareAsCaller([
+            'artist' => ['$id' => 'artist1', 'name' => 'Artist'],
+        ]);
+
+        $this->assertSame('artist1', $prepared['artist']['$id']);
+    }
+
+    public function testNestedDocumentWithMalformedPermissionsIsRejected(): void
+    {
+        $error = null;
+
+        try {
+            $this->prepareAsCaller(['artist' => ['$id' => 'artist1', '$permissions' => ['not a permission']]]);
+        } catch (Exception $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(Exception::class, $error, 'malformed nested permissions must be rejected');
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $error->getType());
+    }
+
+    public function testWithoutTheRelatedDocumentsAnyRoleMayBeGranted(): void
+    {
+        $permissions = [Permission::update(Role::user('other'))];
+
+        $prepared = $this->prepare(['artist' => ['$id' => 'artist1', '$permissions' => $permissions]]);
+
+        $this->assertSame($permissions, $prepared['artist']['$permissions'], 'API keys and privileged users are not checked');
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     */
+    private function assertUnauthorized(array $document, string $subject): void
+    {
+        $error = null;
+
+        try {
+            $this->prepareAsCaller($document);
+        } catch (Exception $caught) {
+            $error = $caught;
+        }
+
+        $this->assertInstanceOf(Exception::class, $error, $subject . ' must be refused');
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
+        $this->assertSame(401, $error->getCode());
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     * @param array<string, list<Document>> $stored
+     * @return array<string, mixed>
+     */
+    private function prepareAsCaller(array $document, array $stored = []): array
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::user(self::CALLER)->toString());
+
+        $tables = [];
+        foreach ($stored as $collection => $documents) {
+            foreach ($documents as $related) {
+                $tables[self::CATALOG . '_collection_' . $collection][$related->getId()] = $related;
+            }
+        }
+
+        $collections = self::collections();
+        $values = new RelationshipValues(
+            $this->catalog($collections),
+            new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
+            $authorization,
+            $this->tables($tables),
+        );
+
+        return $values->prepare($document, $collections['albums']);
+    }
+
     /**
      * @param array<string, mixed> $document
      * @return array<string, mixed>
@@ -173,7 +307,15 @@ final class RelationshipValuesTest extends TestCase
      */
     private function catalog(array $collections): Database
     {
-        return new class ([self::CATALOG => $collections]) extends Database {
+        return $this->tables([self::CATALOG => $collections]);
+    }
+
+    /**
+     * @param array<string, array<string, Document>> $tables
+     */
+    private function tables(array $tables): Database
+    {
+        return new class ($tables) extends Database {
             /**
              * @param array<string, array<string, Document>> $catalog
              */
@@ -227,6 +369,7 @@ final class RelationshipValuesTest extends TestCase
     {
         return new Document([
             '$id' => $id,
+            '$sequence' => $id,
             'attributes' => $attributes,
         ]);
     }

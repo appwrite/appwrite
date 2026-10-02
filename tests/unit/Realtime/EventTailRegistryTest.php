@@ -415,6 +415,20 @@ final class EventTailRegistryTest extends TestCase
         $this->assertCount(0, $sent);
     }
 
+    public function testGetConnections(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $this->assertSame([], $registry->getConnections());
+
+        $registry->add(7, 'sub-a', 'projX', $this->compile([]), 0.0);
+        $registry->add(7, 'sub-b', 'projY', $this->compile([]), 0.0);
+        $registry->add(8, 'sub-a', 'projX', $this->compile([]), 0.0);
+        $this->assertEqualsCanonicalizing([7, 8], $registry->getConnections());
+
+        $registry->removeConnection(7);
+        $this->assertSame([8], $registry->getConnections());
+    }
+
     public function testRemoveSingleSubscription(): void
     {
         $registry = new EventTailRegistry(rate: 100);

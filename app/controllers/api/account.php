@@ -1,6 +1,7 @@
 <?php
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\EmailWhitelist;
@@ -599,11 +600,12 @@ Http::get('/v1/account/sessions')
         ],
         contentType: ContentType::JSON,
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('targetUser')
     ->inject('locale')
     ->inject('session')
-    ->action(function (Response $response, User $targetUser, Locale $locale, ?Document $current) {
+    ->action(function (bool $includeTotal, Response $response, User $targetUser, Locale $locale, ?Document $current) {
 
 
         $sessions = $targetUser->getAttribute('sessions', []);
@@ -624,7 +626,7 @@ Http::get('/v1/account/sessions')
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total' => count($sessions),
+            'total' => $includeTotal ? count($sessions) : 0,
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -2456,7 +2458,8 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2740,6 +2743,11 @@ Http::post('/v1/account/tokens/magic-url')
             $token->setAttribute('phrase', $phrase);
         }
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
@@ -2785,7 +2793,8 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -3093,6 +3102,11 @@ Http::post('/v1/account/tokens/email')
             $token->setAttribute('phrase', $phrase);
         }
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
@@ -3239,7 +3253,8 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3402,6 +3417,11 @@ Http::post('/v1/account/tokens/phone')
             ->setProperty('secret', $secret)
             ->encode();
         $token->setAttribute('secret', $encoded);
+
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $token->setAttribute('secret', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3613,16 +3633,9 @@ Http::patch('/v1/account/password')
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
-        $sessions = $user->getAttribute('sessions', []);
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate && $current !== null) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                if ($session->getId() !== $current->getId()) {
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                }
-            }
+            User::invalidateAuthentication($dbForProject, $user, $current->getId());
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -4059,7 +4072,8 @@ Http::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization, ?Key $apiKey) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4253,6 +4267,11 @@ Http::post('/v1/account/recovery')
             ->setUser($deliverable ? $profile : new Document())
             ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
@@ -4340,34 +4359,40 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
-
-        $user->setAttributes($profile->getArrayCopy());
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                return;
             }
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
+        $user->setAttributes($profile->getArrayCopy());
 
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
+        if ($invalidate) {
+            User::invalidateAuthentication($dbForProject, $profile);
+        }
+
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
@@ -4415,7 +4440,8 @@ Http::post('/v1/account/recovery/otp')
     ->inject('queueForEvents')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('apiKey')
+    ->action(function (string $email, bool $phrase, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -4623,6 +4649,11 @@ Http::post('/v1/account/recovery/otp')
             ->setUser($deliverable ? $profile : new Document())
             ->setPayload($response->showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
+        // The secret proves control of the inbox or phone; only keys that can already mint tokens through users.write may read it back.
+        if ($apiKey !== null && !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('secret', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
@@ -4710,34 +4741,40 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
-
-        $user->setAttributes($profile->getArrayCopy());
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                return;
             }
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
+        $user->setAttributes($profile->getArrayCopy());
 
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
+        if ($invalidate) {
+            User::invalidateAuthentication($dbForProject, $profile);
+        }
+
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

@@ -181,7 +181,7 @@ class Update extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
-        $data = (new RelationshipValues($dbForProject, $database, $authorization))->prepare($data, $collection);
+        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $this->validateTimestamps($data);
         $newDocument = new Document($data);

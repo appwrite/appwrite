@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Databases\ListCache;
+use Appwrite\Databases\RelatedPermissions;
 use Appwrite\Databases\Support;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
@@ -12,6 +13,7 @@ use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction
@@ -171,5 +173,13 @@ class Action extends AppwriteAction
     protected function purgeListCache(Database $dbForProject, Document $database, string $collectionId): bool
     {
         return $dbForProject->getCache()->purge(ListCache::key($dbForProject, $database, $collectionId));
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
+    {
+        (new RelatedPermissions($authorization))->validate($permissions, $current);
     }
 }
