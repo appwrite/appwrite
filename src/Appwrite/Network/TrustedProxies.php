@@ -2,17 +2,17 @@
 
 namespace Appwrite\Network;
 
-use Utopia\System\System;
-
 /**
  * Connection addresses that may supply client IP headers such as X-Forwarded-For.
  *
- * An empty list means no hop is trusted: use the connection address and ignore
- * client-controlled forwarding headers. Traefik / load-balancer deployments
- * must list those proxy CIDRs in `_APP_TRUSTED_PROXIES`.
+ * An unset `_APP_TRUSTED_PROXIES` trusts loopback and private networks, where
+ * the bundled Traefik runs. An empty value trusts no hop: the connection
+ * address is used and client-controlled forwarding headers are ignored.
  */
 final class TrustedProxies
 {
+    public const string DEFAULT = '127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16';
+
     /**
      * @param list<string> $cidrs
      */
@@ -23,7 +23,10 @@ final class TrustedProxies
 
     public static function fromEnv(?string $value = null): self
     {
-        $raw = $value ?? System::getEnv('_APP_TRUSTED_PROXIES', '');
+        $raw = $value ?? getenv('_APP_TRUSTED_PROXIES');
+        if ($raw === false) {
+            $raw = self::DEFAULT;
+        }
         $cidrs = [];
 
         foreach (explode(',', $raw) as $part) {

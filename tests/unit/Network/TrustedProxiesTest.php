@@ -19,6 +19,35 @@ final class TrustedProxiesTest extends TestCase
         $this->assertFalse($proxies->contains('127.0.0.1'));
     }
 
+    public function testUnsetEnvironmentTrustsPrivateNetworks(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES');
+
+        try {
+            $proxies = TrustedProxies::fromEnv();
+
+            $this->assertFalse($proxies->isEmpty());
+            $this->assertTrue($proxies->contains('172.18.0.5'));
+            $this->assertTrue($proxies->contains('127.0.0.1'));
+            $this->assertFalse($proxies->contains('203.0.113.10'));
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testEmptyEnvironmentTrustsNobody(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=');
+
+        try {
+            $this->assertTrue(TrustedProxies::fromEnv()->isEmpty());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
     public function testFromEnvSplitsCidrs(): void
     {
         $proxies = TrustedProxies::fromEnv('10.0.0.0/8, 172.16.0.0/12');
