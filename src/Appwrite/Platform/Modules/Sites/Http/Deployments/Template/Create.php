@@ -193,7 +193,7 @@ class Create extends Base
             'providerBranchUrl' => $branchUrl,
             // The resolved concrete ref, so a duplicate can re-fetch the source.
             'providerBranch' => $ref,
-            'providerRootDirectory' => $rootDirectory,
+            'providerRootDirectory' => Deployments::normalizeRootDirectory($rootDirectory),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
