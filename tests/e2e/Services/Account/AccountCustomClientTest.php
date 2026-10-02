@@ -6388,6 +6388,43 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
     }
 
+    public function testUpdateUserPasswordInvalidatesSessionsAndMFAChallenges(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $this->updateProjectinvalidateSessionsProperty(true);
+        $mfa = $this->createPendingMFAChallenge($data);
+        $newPassword = 'server-set-password';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/password', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'password' => $newPassword,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $current = $this->client->call(Client::METHOD_GET, '/account', $mfa['current']);
+        $this->assertEquals(401, $current['headers']['status-code']);
+
+        $other = $this->client->call(Client::METHOD_GET, '/account', $mfa['other']);
+        $this->assertEquals(401, $other['headers']['status-code']);
+        $this->assertNotEquals('user_more_factors_required', $other['body']['type'], 'The second session must be revoked, not just waiting on MFA');
+
+        $this->assertSame([], $this->listUserSessionIds($data['id']));
+
+        $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
+        $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
+            'challengeId' => $mfa['challengeId'],
+            'otp' => $mfa['totp']->now(),
+        ]);
+        $this->assertEquals(401, $pending['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $pending['body']['type']);
+    }
+
     public function testCreatePushTargetReplacesRotatedTokenUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
