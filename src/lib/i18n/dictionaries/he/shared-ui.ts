@@ -535,6 +535,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search projects...': 'חיפוש פרויקטים…',
   'Search providers...': 'חיפוש ספקים…',
   'Search providers by name or ID...': 'חיפוש ספקים לפי שם או מזהה…',
+  'Search videos by name or ID...': 'חיפוש סרטונים לפי שם או מזהה…',
   'Search rows by ID...': 'חיפוש שורות לפי מזהה…',
   'Search sites...': 'חיפוש אתרים…',
   'Search sites by name or ID...': 'חיפוש אתרים לפי שם או מזהה…',
@@ -1009,6 +1010,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
   'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
+  'Adaptive video streaming, renditions and subtitles': 'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
@@ -1061,6 +1063,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Subscriber topics for fan-out messaging':
     'נושאי מנויים לשליחת הודעות בתפוצה רחבה',
   'Messaging · Providers': 'הודעות · ספקים',
+  'Videos · Encoding profiles': 'סרטונים · פרופילי קידוד',
+  'Resolution and bitrate targets for renditions': 'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
   'Email, SMS and push providers': 'ספקי אימייל, SMS ופוש',
   'Settings · Overview': 'הגדרות · סקירה',
   'Project ID, name, region, API endpoint':
@@ -1126,6 +1130,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Create a new bucket': 'יצירת באקט חדש',
   'Create a new function': 'יצירת פונקציה חדשה',
   'Create a new site': 'יצירת אתר חדש',
+  'Create a new video': 'יצירת סרטון חדש',
   'Create a new team': 'יצירת צוות חדש',
   'Create a new user': 'יצירת משתמש חדש',
 
@@ -1143,6 +1148,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search messages': 'חיפוש הודעות',
   'Search topics': 'חיפוש נושאים',
   'Search providers': 'חיפוש ספקים',
+  'Search videos': 'חיפוש סרטונים',
   'Search projects': 'חיפוש פרויקטים',
   'Find a database by name or ID': 'חיפוש מסד נתונים לפי שם או מזהה',
   'Find a user by name, email or ID': 'חיפוש משתמש לפי שם, אימייל או מזהה',
@@ -1153,6 +1159,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Find a message by content or ID': 'חיפוש הודעה לפי תוכן או מזהה',
   'Find a topic by name or ID': 'חיפוש נושא לפי שם או מזהה',
   'Find a provider by name or ID': 'חיפוש ספק לפי שם או מזהה',
+  'Find a video by name or ID': 'חיפוש סרטון לפי שם או מזהה',
   'Find a project in this organization': 'חיפוש פרויקט בארגון הזה',
 
   // Command center: local actions and groups
@@ -1234,6 +1241,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'User (optional)': 'משתמש (אופציונלי)',
   'Topic (optional)': 'נושא (אופציונלי)',
   'Provider (optional)': 'ספק (אופציונלי)',
+  'Video (optional)': 'סרטון (אופציונלי)',
   'Resource (optional)': 'משאב (אופציונלי)',
   'Table (optional)': 'טבלה (אופציונלי)',
   'File (optional)': 'קובץ (אופציונלי)',

@@ -46,6 +46,7 @@ import {
   STORAGE_FILES_SPLIT_PANE_BG_CLASS,
 } from './files-documents-layout'
 import { FileSecurity } from './FileSecurity'
+import { FileVideoAction } from './FileVideoAction'
 import { TransformImageWizard } from './TransformImageWizard'
 import {
   buildAdminFileViewUrl,
@@ -560,6 +561,15 @@ export function FileInspectorPanel({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {!isPending ? (
+        <FileVideoAction
+          projectId={projectId}
+          bucketId={bucketId}
+          file={file}
+          access={access}
+        />
       ) : null}
 
       <div>

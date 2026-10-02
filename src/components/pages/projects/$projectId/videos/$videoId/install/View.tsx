@@ -154,7 +154,6 @@ export function View() {
   return (
     <VideoPage
       title={t('Install')}
-      term="adaptive"
       actions={
         <Button
           type="button"

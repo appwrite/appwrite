@@ -370,6 +370,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Stream it': 'הזרמה',
   'Sort videos': 'מיון סרטונים',
   'No videos match your search.': 'אין סרטונים שתואמים לחיפוש.',
+  'No videos match your filters.': 'אין סרטונים שתואמים למסננים.',
   'No videos yet. Create one from a Storage file.':
     'אין עדיין סרטונים. צרו סרטון מקובץ באחסון.',
   'Live streaming is coming soon. Ingest a live feed and deliver it with the same HLS and DASH outputs.':

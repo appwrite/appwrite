@@ -339,6 +339,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search projects...': 'プロジェクトを検索…',
   'Search providers...': 'プロバイダーを検索…',
   'Search providers by name or ID...': '名前または ID でプロバイダーを検索…',
+  'Search videos by name or ID...': '名前または ID で動画を検索…',
   'Search rows by ID...': 'ID で行を検索…',
   'Search sites...': 'サイトを検索…',
   'Search sites by name or ID...': '名前または ID でサイトを検索…',
@@ -653,6 +654,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'プッシュ通知、メール、SMS メッセージ',
   'Deployed websites and hosting': 'デプロイ済みのウェブサイトとホスティング',
+  'Adaptive video streaming, renditions and subtitles': 'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
   'Realtime channels and live messages':
     'Realtime チャンネルとライブメッセージ',
@@ -683,6 +685,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Sent and scheduled messages': '送信済みおよびスケジュール済みのメッセージ',
   'Messaging · Topics': 'メッセージング · トピック',
   'Messaging · Providers': 'メッセージング · プロバイダー',
+  'Videos · Encoding profiles': '動画 · エンコードプロファイル',
+  'Resolution and bitrate targets for renditions': 'レンディションの解像度とビットレートの目標値',
   'Email, SMS and push providers': 'メール、SMS、プッシュプロバイダー',
   'Settings · Overview': '設定 · 概要',
   'Settings · Custom domains': '設定 · カスタムドメイン',
@@ -720,6 +724,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Create a new bucket': '新しいバケットを作成',
   'Create a new function': '新しい関数を作成',
   'Create a new site': '新しいサイトを作成',
+  'Create a new video': '新しい動画を作成',
   'Create a new team': '新しいチームを作成',
   'Create a new user': '新しいユーザーを作成',
   // Command center: organization navigation
@@ -735,6 +740,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search messages': 'メッセージを検索',
   'Search topics': 'トピックを検索',
   'Search providers': 'プロバイダーを検索',
+  'Search videos': '動画を検索',
   'Search projects': 'プロジェクトを検索',
   'Find a database by name or ID': '名前または ID でデータベースを検索',
   'Find a user by name, email or ID':
@@ -747,6 +753,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Find a message by content or ID': '内容または ID でメッセージを検索',
   'Find a topic by name or ID': '名前または ID でトピックを検索',
   'Find a provider by name or ID': '名前または ID でプロバイダーを検索',
+  'Find a video by name or ID': '名前または ID で動画を検索',
   'Find a project in this organization': 'この組織のプロジェクトを検索',
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'すべてのキーボードショートカットを表示',
@@ -792,6 +799,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'User (optional)': 'ユーザー (任意)',
   'Topic (optional)': 'トピック (任意)',
   'Provider (optional)': 'プロバイダー (任意)',
+  'Video (optional)': '動画 (任意)',
   'Resource (optional)': 'リソース (任意)',
   'Table (optional)': 'テーブル (任意)',
   'File (optional)': 'ファイル (任意)',

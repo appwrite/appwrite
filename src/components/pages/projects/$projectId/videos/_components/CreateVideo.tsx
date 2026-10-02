@@ -27,12 +27,15 @@ interface CreateVideoProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
+  /** Prefills the source file each time the dialog opens. */
+  initialSource?: StorageFileSelection
 }
 
 export function CreateVideo({
   open,
   onOpenChange,
   projectId,
+  initialSource,
 }: CreateVideoProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -42,10 +45,13 @@ export function CreateVideo({
   const createMutation = useCreateVideo(projectId)
 
   useEffect(() => {
-    if (open) return
+    if (open) {
+      if (initialSource) setSource(initialSource)
+      return
+    }
     setName('')
     setSource(null)
-  }, [open])
+  }, [open, initialSource])
 
   const { data: sourceFile } = useQuery({
     queryKey: [

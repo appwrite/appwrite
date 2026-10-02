@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useParams } from '@tanstack/react-router'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearch,
+} from '@tanstack/react-router'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { ChevronLeft, ChevronRight, Layers, Plus } from 'lucide-react'
@@ -37,7 +43,14 @@ import {
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
+import {
+  queryParamToMap,
+  videosFilterColumns,
+  type CompactFilterKey,
+  type FilterMap,
+} from '@/lib/table-filters'
 import { useT } from '@/lib/i18n/translate'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DatabaseSidebarTableSearch } from '../../databases/_components/DatabaseSidebarTableSearch'
 import { CreateVideo } from './CreateVideo'
 import { VideoContextMenu } from './VideoContextMenu'
@@ -86,6 +99,26 @@ export function VideosSidebar() {
     VIDEOS_DEFAULT_SORT_ORDER,
   )
   const [createOpen, setCreateOpen] = useState(false)
+  const [filterMap, setFilterMap] = useState<FilterMap>(() => new Map())
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterQueries = useMemo(
+    () => (filterMap.size > 0 ? Array.from(filterMap.values()) : undefined),
+    [filterMap],
+  )
+  const navigate = useNavigate()
+  const createParam = (useSearch({ strict: false }) as { create?: string })
+    .create
+
+  useEffect(() => {
+    if (createParam !== 'video') return
+    setCreateOpen(true)
+    navigate({
+      to: '/projects/$projectId/videos/',
+      params: { projectId },
+      search: {},
+      replace: true,
+    })
+  }, [createParam, navigate, projectId])
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -97,7 +130,7 @@ export function VideosSidebar() {
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, sortBy, sortOrder])
+  }, [debouncedSearch, sortBy, sortOrder, filterMap])
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -110,7 +143,7 @@ export function VideosSidebar() {
       page - 1,
       VIDEOS_SIDEBAR_PAGE_SIZE,
       debouncedSearch || undefined,
-      undefined,
+      filterQueries,
       sortBy,
       sortOrder,
     ),
@@ -123,6 +156,28 @@ export function VideosSidebar() {
   const total = data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / VIDEOS_SIDEBAR_PAGE_SIZE))
   const hasSearch = debouncedSearch.length > 0
+  const hasFilters = filterMap.size > 0
+
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
+    setFilterMap((prev) => {
+      const next = new Map(prev)
+      if (replaceKey) next.delete(replaceKey)
+      next.set(compactKey, queryStr)
+      return next
+    })
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    setFilterMap((prev) => {
+      const next = new Map(prev)
+      next.delete(compactKey)
+      return next
+    })
+  }
 
   const { data: profilesData } = useVideoProfiles(projectId)
   const profilesActive = location.pathname.endsWith('/videos/profiles')
@@ -170,49 +225,67 @@ export function VideosSidebar() {
         </div>
 
         <div className="shrink-0 border-b border-border px-3 pb-3 pt-2.5">
-          <DatabaseSidebarTableSearch
-            value={search}
-            onChange={setSearch}
-            placeholder={t('Search videos...')}
-            clearAriaLabel={t('Clear search')}
-            isFetching={isFetching}
-            onRefresh={() => void refetch()}
-            sortAriaLabel={t('Sort videos')}
-            sortTooltip={t('Sort by attribute and direction')}
-            sortMenu={
-              <DropdownMenuContent align="end" className="w-60">
-                <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {t('Sort videos')}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={`${sortBy}:${sortOrder}`}
-                  onValueChange={(value) => {
-                    const option = SORT_OPTIONS.find(
-                      (o) => `${o.by}:${o.order}` === value,
-                    )
-                    if (!option) return
-                    setSortBy(option.by)
-                    setSortOrder(option.order)
-                  }}
-                >
-                  {SORT_OPTIONS.map((option, index) => (
-                    <div key={`${option.by}:${option.order}`}>
-                      {index > 0 && index % 2 === 0 ? (
-                        <DropdownMenuSeparator />
-                      ) : null}
-                      <DropdownMenuRadioItem
-                        value={`${option.by}:${option.order}`}
-                        className="text-[13px]"
-                      >
-                        {t(option.label)}
-                      </DropdownMenuRadioItem>
-                    </div>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            }
-          />
+          <div className="flex items-center gap-2">
+            <DatabaseSidebarTableSearch
+              value={search}
+              onChange={setSearch}
+              placeholder={t('Search videos...')}
+              clearAriaLabel={t('Clear search')}
+              isFetching={isFetching}
+              onRefresh={() => void refetch()}
+              sortAriaLabel={t('Sort videos')}
+              sortTooltip={t('Sort by attribute and direction')}
+              sortMenu={
+                <DropdownMenuContent align="end" className="w-60">
+                  <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('Sort videos')}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup
+                    value={`${sortBy}:${sortOrder}`}
+                    onValueChange={(value) => {
+                      const option = SORT_OPTIONS.find(
+                        (o) => `${o.by}:${o.order}` === value,
+                      )
+                      if (!option) return
+                      setSortBy(option.by)
+                      setSortOrder(option.order)
+                    }}
+                  >
+                    {SORT_OPTIONS.map((option, index) => (
+                      <div key={`${option.by}:${option.order}`}>
+                        {index > 0 && index % 2 === 0 ? (
+                          <DropdownMenuSeparator />
+                        ) : null}
+                        <DropdownMenuRadioItem
+                          value={`${option.by}:${option.order}`}
+                          className="text-[13px]"
+                        >
+                          {t(option.label)}
+                        </DropdownMenuRadioItem>
+                      </div>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              }
+            />
+            <FiltersPopover
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              columns={videosFilterColumns}
+              filterMap={filterMap}
+              onRemoveFilter={removeFilter}
+              onClearAll={() => setFilterMap(new Map())}
+              onApplyFilter={applyFilter}
+              resourceLabel={t('videos')}
+              filterScope="videos"
+              onApplyQuery={(queryParam) =>
+                setFilterMap(queryParamToMap(queryParam ?? null))
+              }
+              teamId={project?.teamId}
+              triggerClassName="h-8"
+            />
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -222,9 +295,11 @@ export function VideosSidebar() {
             </div>
           ) : videos.length === 0 ? (
             <div className="px-3 py-4 text-center text-[12px] text-muted-foreground">
-              {hasSearch
-                ? t('No videos match your search.')
-                : t('No videos yet. Create one from a Storage file.')}
+              {hasFilters
+                ? t('No videos match your filters.')
+                : hasSearch
+                  ? t('No videos match your search.')
+                  : t('No videos yet. Create one from a Storage file.')}
             </div>
           ) : (
             <div role="table" aria-label={t('On demand')}>

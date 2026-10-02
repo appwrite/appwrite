@@ -378,6 +378,7 @@ export const jaVideosDictionary: Record<string, string> = {
   'Stream it': 'ストリーミング',
   'Sort videos': '動画を並べ替え',
   'No videos match your search.': '検索に一致する動画はありません。',
+  'No videos match your filters.': 'フィルターに一致する動画はありません。',
   'No videos yet. Create one from a Storage file.':
     'まだ動画がありません。ストレージのファイルから作成してください。',
   'Live streaming is coming soon. Ingest a live feed and deliver it with the same HLS and DASH outputs.':

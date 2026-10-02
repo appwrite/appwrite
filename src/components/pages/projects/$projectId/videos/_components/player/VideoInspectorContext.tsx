@@ -58,7 +58,7 @@ export function VideoInspectorProvider({ children }: { children: ReactNode }) {
       ),
     )
   }, [t])
-  const popout = usePopoutWindow({ onBlocked })
+  const popout = usePopoutWindow({ onBlocked, widthRatio: 1 })
   const { open: openWindow, close, container } = popout
 
   const open = useCallback(

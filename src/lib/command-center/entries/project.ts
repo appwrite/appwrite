@@ -31,8 +31,10 @@ import {
   canShowProjectSettings,
   canSeeUsageNav,
   canSeeActivityNav,
+  canSeeProjectNavItem,
 } from '@/lib/console-access-checks'
 import { loadDebugOverrides } from '@/lib/debug-overrides'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -180,6 +182,20 @@ const PROJECT_NAV: CommandEntry[] = [
     shortcut: 'G M',
     keywords: ['notifications', 'push', 'sms', 'email', 'topics', 'providers'],
     to: (ctx) => `/projects/${ctx.projectId}/messaging`,
+  },
+  {
+    id: 'project.nav.videos',
+    scopes: ['project'],
+    kind: 'navigation',
+    label: 'Videos',
+    description: 'Adaptive video streaming, renditions and subtitles',
+    icon: VIDEOS_PRODUCT_ICON,
+    shortcut: 'G V',
+    keywords: ['video', 'streaming', 'hls', 'dash', 'renditions', 'subtitles'],
+    available: (ctx) =>
+      Boolean(ctx.features.videos) &&
+      canSeeProjectNavItem(ctx.access, ctx.features, 'videos'),
+    to: (ctx) => `/projects/${ctx.projectId}/videos`,
   },
   {
     id: 'project.nav.sites',

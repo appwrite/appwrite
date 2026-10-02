@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 type PopoutOptions = {
   title?: string
   width?: number
+  /** Fraction of the current screen's available width; overrides `width`. */
+  widthRatio?: number
   height?: number
   onBlocked?: () => void
 }
@@ -43,8 +45,24 @@ async function openChildWindow(w: number, h: number): Promise<Window | null> {
       // Fall through to a regular popup.
     }
   }
-  const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
-  const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+  const screen = window.screen as Screen & {
+    availLeft?: number
+    availTop?: number
+  }
+  const minLeft = screen.availLeft ?? 0
+  const minTop = screen.availTop ?? 0
+  const left = Math.round(
+    Math.min(
+      Math.max(window.screenX + (window.outerWidth - w) / 2, minLeft),
+      minLeft + screen.availWidth - w,
+    ),
+  )
+  const top = Math.round(
+    Math.min(
+      Math.max(window.screenY + (window.outerHeight - h) / 2, minTop),
+      minTop + screen.availHeight - h,
+    ),
+  )
   return window.open(
     'about:blank',
     '_blank',
@@ -72,6 +90,7 @@ async function openChildWindow(w: number, h: number): Promise<Window | null> {
 export function usePopoutWindow({
   title,
   width = 1360,
+  widthRatio,
   height = 880,
   onBlocked,
 }: PopoutOptions) {
@@ -94,7 +113,9 @@ export function usePopoutWindow({
         windowRef.current.focus()
         return
       }
-      const w = Math.min(width, window.screen.availWidth)
+      const w = widthRatio
+        ? Math.round(window.screen.availWidth * widthRatio)
+        : Math.min(width, window.screen.availWidth)
       const h = Math.min(height, window.screen.availHeight)
       const popup = await openChildWindow(w, h)
       if (!popup) {
@@ -155,7 +176,7 @@ export function usePopoutWindow({
       }
       setContainer(root)
     },
-    [title, width, height, onBlocked],
+    [title, width, widthRatio, height, onBlocked],
   )
 
   useEffect(() => close, [close])

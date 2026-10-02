@@ -719,6 +719,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Open': '開く',
   'Open in Connect': 'Connect で開く',
   'Open in new tab': '新しいタブで開く',
+  'Open in Videos': '動画で開く',
   'Open in new window': '新しいウィンドウで開く',
   'Open preview': 'プレビューを開く',
   'Open your': 'あなたの',

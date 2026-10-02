@@ -12,3 +12,4 @@ export type CreateResourceType =
   | 'team'
   | 'function'
   | 'site'
+  | 'video'

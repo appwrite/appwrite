@@ -738,6 +738,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Open': 'פתיחה',
   'Open in Connect': 'פתיחה ב-Connect',
   'Open in new tab': 'פתיחה בכרטיסייה חדשה',
+  'Open in Videos': 'פתיחה בסרטונים',
   'Open in new window': 'פתיחה בחלון חדש',
   'Open preview': 'פתחו תצוגה מקדימה',
   'Open your': 'פתחו את',
