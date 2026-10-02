@@ -232,6 +232,35 @@ export const GET: APIRoute = async ({ request }) => {
 ```
 {% /tabsitem %}
 
+{% tabsitem #jaspr title="Jaspr" %}
+Add the Dart server SDK with `dart pub add dart_appwrite`. Async components run only on the server, so they can read request headers and await Appwrite calls before the page renders.
+
+```dart
+// lib/pages/users.dart
+import 'dart:io';
+
+import 'package:dart_appwrite/dart_appwrite.dart' show Client, Users;
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/server.dart';
+
+class UsersPage extends AsyncStatelessComponent {
+  const UsersPage({super.key});
+
+  @override
+  Future<Component> build(BuildContext context) async {
+    final key = context.headers['x-appwrite-key']!;
+    final client = Client()
+        .setEndpoint(Platform.environment['APPWRITE_SITE_API_ENDPOINT']!)
+        .setProject(Platform.environment['APPWRITE_SITE_PROJECT_ID']!)
+        .setKey(key);
+
+    final users = await Users(client).list();
+    return p([text('${users.total} users')]);
+  }
+}
+```
+{% /tabsitem %}
+
 {% /tabs %}
 
 # Project dependencies
@@ -333,6 +362,15 @@ Your site's dependencies should be managed by the package manager of each langua
 - `flutter pub get`
 - `flutter build web --release -t lib/main.dart`
 - `./build/web`
+
+---
+
+- {% icon icon="jaspr" size="m" /%}
+- **Jaspr**
+- `pub`
+- `dart pub get`
+- `jaspr build`
+- `./build/jaspr`
 
 ---
 

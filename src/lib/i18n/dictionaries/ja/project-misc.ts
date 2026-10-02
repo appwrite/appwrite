@@ -2611,6 +2611,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'API、Functions、Sites へのトラフィックに到達する前に適用されるプロジェクトルール。',
   'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
     'API、Functions、サイトに届く前に、リクエストを拒否、レート制限、リダイレクト、またはチャレンジできます。',
+  'This one is harmless. Firewall stops the rest before they reach your API, Functions, or Sites.':
+    'このクモは無害です。それ以外は API、Functions、サイトに届く前に Firewall が止めます。',
+  'Block this crawler': 'このクローラーをブロック',
+  'Blocked by Firewall': 'Firewall によりブロック',
+  'Keep unwanted bots out of your app': '不要なボットをアプリから締め出す',
+  'Deny crawlers and scrapers': 'クローラーやスクレイパーを拒否',
+  'Return a 403 to any request that matches your conditions.':
+    '条件に一致するリクエストに 403 を返します。',
+  'Rate limit noisy clients': '過剰なリクエストをレート制限',
+  'Throttle each client IP and return a 429 once it goes over quota.':
+    'クライアント IP ごとにリクエストを抑制し、上限を超えると 429 を返します。',
+  'Preview impact first': '事前に影響をプレビュー',
+  'See how much recent traffic a rule would match before you enable it.':
+    'ルールを有効にする前に、最近のトラフィックのうち一致する量を確認できます。',
   Rules: 'ルール',
   Analytics: 'アナリティクス',
   Logs: 'ログ',

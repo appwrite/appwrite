@@ -48,8 +48,11 @@ import {
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
+import { ImageFilePicker } from '@/components/global/shared/ImageFilePicker'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import { bumpUserPhotoVersion } from '@/lib/user-photo'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
@@ -100,6 +103,124 @@ export function AccountIdSection() {
         </p>
         <CopyableId id={account.$id} size="md" maxWidth={240} />
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// PROFILE PHOTO SECTION
+// ============================================================================
+
+const PROFILE_PHOTO_ACCEPT =
+  'image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp'
+const PROFILE_PHOTO_MIME_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+])
+/** Mirrors the API limit so oversized files fail before the upload starts. */
+const PROFILE_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+
+export function ProfilePhotoSection() {
+  const { account } = useAuth()
+  const queryClient = useQueryClient()
+  const t = useT()
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return await sdk.forConsole.avatars.updatePhoto({ file })
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+      bumpUserPhotoVersion()
+      toast.success(t('Profile photo updated'))
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, t('Failed to update profile photo')))
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      return await sdk.forConsole.avatars.deletePhoto()
+    },
+    onSuccess: () => {
+      bumpUserPhotoVersion()
+      setRemoveDialogOpen(false)
+      toast.success(t('Profile photo removed'))
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, t('Failed to remove profile photo')))
+    },
+  })
+
+  const handleFile = (file: File) => {
+    if (!PROFILE_PHOTO_MIME_TYPES.has(file.type)) {
+      toast.error(t('Photo must be a PNG, JPEG, or WebP image'))
+      return
+    }
+    if (file.size > PROFILE_PHOTO_MAX_BYTES) {
+      toast.error(t('Photo must be at most 5MB'))
+      return
+    }
+    uploadMutation.mutate(file)
+  }
+
+  return (
+    <div
+      data-card-id="photo"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Profile photo')}
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          {t(
+            'Shown next to your name across the Console and to the members of your organizations.',
+          )}
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <ImageFilePicker
+          preview={
+            <PhotoAvatar
+              userId={account?.$id}
+              useCurrentUser={!account?.$id}
+              name={account?.name || account?.email}
+              isCurrentUser
+              placeholder="blank"
+              size="xl"
+            />
+          }
+          accept={PROFILE_PHOTO_ACCEPT}
+          description={t(
+            'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.',
+          )}
+          uploadLabel={t('Upload photo')}
+          removeLabel={t('Remove photo')}
+          onRemove={() => setRemoveDialogOpen(true)}
+          onFile={handleFile}
+          uploading={uploadMutation.isPending}
+          disabled={removeMutation.isPending}
+        />
+      </div>
+      <ConfirmActionDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        title={t('Remove profile photo')}
+        description={t(
+          'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.',
+        )}
+        confirmLabel={t('Remove')}
+        confirmVariant="destructive"
+        onConfirm={() => removeMutation.mutate()}
+        isConfirming={removeMutation.isPending}
+      />
     </div>
   )
 }
