@@ -191,10 +191,6 @@ class User extends Document
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
     }
 
-    /**
-     * Delete sessions (optionally keeping the current one) and outstanding MFA
-     * challenges so a password change or recovery cannot leave a pending 2FA.
-     */
     public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void
     {
         foreach ($user->getAttribute('sessions', []) as $session) {
@@ -212,14 +208,8 @@ class User extends Document
             return;
         }
 
-        $challenges = $dbForProject->find('challenges', [
+        $dbForProject->deleteDocuments('challenges', [
             Query::equal('userInternalId', [$sequence]),
-            Query::limit(APP_LIMIT_COUNT),
-            Query::orderAsc(),
         ]);
-
-        foreach ($challenges as $challenge) {
-            $dbForProject->deleteDocument('challenges', $challenge->getId());
-        }
     }
 }
