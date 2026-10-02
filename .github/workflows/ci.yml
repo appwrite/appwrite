@@ -195,7 +195,7 @@ jobs:
       - name: Run Locale check
         run: node .github/workflows/static-analysis/locale/index.js
 
-  static-  rules:
+  static-rules:
     name: Checks / Rules
     runs-on: ubuntu-24.04
     permissions:
