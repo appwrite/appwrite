@@ -226,7 +226,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Appwrite migration sources also accept the entries of _APP_MIGRATIONS_ALLOWED_HOSTS. Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Appwrite migration sources also accept the entries of _APP_MIGRATIONS_ALLOWED_HOSTS, the only list that takes hostnames. Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.3.1',
                 'default' => '',
                 'required' => false,

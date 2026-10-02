@@ -27,21 +27,20 @@ class Endpoint
     private array $hostnames = [];
 
     /**
-     * @param string ...$allowlists Comma-separated addresses, CIDR ranges and hostnames, combined
+     * @param string $addresses Comma-separated addresses and CIDR ranges (_APP_ALLOWED_INTERNAL_ADDRESSES)
+     * @param string $hosts Comma-separated addresses, CIDR ranges and hostnames allowed by name (_APP_MIGRATIONS_ALLOWED_HOSTS)
      *
-     * @throws InvalidArgumentException When an entry is a malformed range
+     * @throws InvalidArgumentException When an entry of $addresses is not an address or range, or one of $hosts is a malformed range
      */
-    public function __construct(Lookup $lookup, string ...$allowlists)
+    public function __construct(Lookup $lookup, string $addresses = '', string $hosts = '')
     {
-        $ranges = [];
+        $ranges = \array_map(fn (string $range): IPRange => new IPRange($range), $this->entries($addresses));
 
-        foreach ($allowlists as $allowlist) {
-            foreach (\array_filter(\array_map('trim', \explode(',', $allowlist))) as $entry) {
-                if (\filter_var(\explode('/', $entry, 2)[0], FILTER_VALIDATE_IP) !== false) {
-                    $ranges[] = new IPRange($entry);
-                } else {
-                    $this->hostnames[] = $this->normalize($entry);
-                }
+        foreach ($this->entries($hosts) as $entry) {
+            if (\filter_var(\explode('/', $entry, 2)[0], FILTER_VALIDATE_IP) !== false) {
+                $ranges[] = new IPRange($entry);
+            } else {
+                $this->hostnames[] = $this->normalize($entry);
             }
         }
 
@@ -110,6 +109,14 @@ class Endpoint
         $address = $this->hostname->address($host);
 
         return \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false ? $address : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function entries(string $list): array
+    {
+        return \array_values(\array_filter(\array_map('trim', \explode(',', $list))));
     }
 
     private function normalize(string $hostname): string

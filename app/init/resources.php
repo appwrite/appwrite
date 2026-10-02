@@ -128,8 +128,9 @@ $container->set('publicHostname', function () {
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
 
-// Appwrite migration sources: public addresses, plus the addresses, CIDR ranges and hostnames
-// that _APP_ALLOWED_INTERNAL_ADDRESSES and _APP_MIGRATIONS_ALLOWED_HOSTS list. A malformed range throws.
+// Appwrite migration sources: public addresses, plus the addresses and CIDR ranges of
+// _APP_ALLOWED_INTERNAL_ADDRESSES and the addresses, CIDR ranges and hostnames of
+// _APP_MIGRATIONS_ALLOWED_HOSTS. A malformed entry throws, as publicHostname does.
 $container->set('migrationEndpoint', function () {
     $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
 

@@ -102,7 +102,6 @@ final class EndpointTest extends TestCase
         yield 'internal address' => ['127.0.0.1', '', 'http://127.0.0.1/v1'];
         yield 'internal IPv6 address' => ['::1', '', 'http://[::1]/v1'];
         yield 'internal range' => ['10.0.0.0/8', '', 'https://rebind.example.com/v1'];
-        yield 'internal hostname' => ['appwrite', '', 'http://appwrite/v1'];
         yield 'migrations address' => ['', '127.0.0.1', 'http://127.0.0.1/v1'];
         yield 'migrations range' => ['', '10.0.0.0/8', 'https://rebind.example.com/v1'];
         yield 'migrations IPv6 range' => ['', 'fd00::/8', 'http://[fd12::1]/v1'];
@@ -137,11 +136,34 @@ final class EndpointTest extends TestCase
         }
     }
 
-    public function testMalformedRangeIsRefused(): void
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function malformed(): iterable
+    {
+        yield 'internal range' => ['10.0.0.0/33', ''];
+        yield 'internal hostname next to an address' => ['172.16.238.0/24, appwrite', ''];
+        yield 'migrations range' => ['', '10.0.0.0/33'];
+    }
+
+    #[DataProvider('malformed')]
+    public function testMalformedEntryIsRefused(string $internal, string $migrations): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->endpoint('10.0.0.0/33');
+        $this->endpoint($internal, $migrations);
+    }
+
+    public function testHostnameInInternalAddressesIsNotAnAllowance(): void
+    {
+        $this->endpoint('', 'appwrite')->validate('http://appwrite/v1');
+
+        try {
+            $this->endpoint('appwrite', '');
+            $this->fail('Accepted a hostname in _APP_ALLOWED_INTERNAL_ADDRESSES');
+        } catch (\InvalidArgumentException $exception) {
+            $this->assertStringContainsString('appwrite', $exception->getMessage());
+        }
     }
 
     private function endpoint(string $internal = '', string $migrations = ''): Endpoint
