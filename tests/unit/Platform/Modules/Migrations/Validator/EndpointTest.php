@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Migrations\Validator;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 
 final class EndpointTest extends TestCase
 {
@@ -94,6 +97,43 @@ final class EndpointTest extends TestCase
 
         foreach (['http://10.0.0.1/v1', 'http://[fd00::1]/v1', 'http://[fd12::2]/v1', 'http://10.0.0.6/v1'] as $endpoint) {
             $this->assertFalse($validator->isValid($endpoint), "Expected {$endpoint} to be rejected");
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolveReturnsTheCheckedAddresses(): void
+    {
+        \putenv('_APP_MIGRATIONS_ALLOWED_HOSTS=127.0.0.0/8,::1');
+        $validator = new Endpoint();
+        $resolve = null;
+
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run(function () use ($validator, &$resolve): void {
+            $resolve = $validator->resolve('http://localhost:8080/v1/users?limit=1');
+        });
+
+        $this->assertIsArray($resolve);
+        $this->assertCount(1, $resolve);
+        $this->assertMatchesRegularExpression('/^localhost:8080:(127\.\d+\.\d+\.\d+|\[::1\])(,(127\.\d+\.\d+\.\d+|\[::1\]))*$/', $resolve[0]);
+    }
+
+    public function testResolveIsEmptyForIpLiterals(): void
+    {
+        $this->assertSame([], (new Endpoint())->resolve('https://1.1.1.1/v1/users'));
+    }
+
+    public function testResolveRefusesInvalidEndpoints(): void
+    {
+        $validator = new Endpoint();
+
+        foreach ($this->rejectedEndpoints() as $endpoint) {
+            try {
+                $validator->resolve($endpoint);
+                $this->fail("Expected {$endpoint} to be refused");
+            } catch (Exception $error) {
+                $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $error->getType(), $endpoint);
+                $this->assertSame('Invalid `endpoint`: ' . $validator->getDescription(), $error->getMessage(), $endpoint);
+            }
         }
     }
 

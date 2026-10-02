@@ -150,7 +150,7 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/config": "1.*",
         "utopia-php/database": "^7.4.0",
-        "utopia-php/migration": "^2.0.0",
+        "utopia-php/migration": "dev-feat/source-request-controls-2.0.x as 2.0.9",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
