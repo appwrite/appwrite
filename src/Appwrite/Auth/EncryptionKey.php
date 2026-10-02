@@ -2,6 +2,7 @@
 
 namespace Appwrite\Auth;
 
+use Utopia\Auth\Proofs\Token;
 use Utopia\Console;
 
 /**
@@ -19,6 +20,20 @@ final class EncryptionKey
     public static function isInsecure(?string $key): bool
     {
         return $key === null || $key === '' || $key === self::PLACEHOLDER;
+    }
+
+    /**
+     * An existing key is kept as-is, because replacing it would make its
+     * encrypted data unreadable; only a fresh install swaps an insecure value
+     * for a generated one.
+     */
+    public static function resolve(string $key, bool $generate): string
+    {
+        if (!$generate || !self::isInsecure($key)) {
+            return $key;
+        }
+
+        return (new Token())->generate();
     }
 
     /**

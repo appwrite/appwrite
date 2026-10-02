@@ -7,6 +7,7 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
+use Appwrite\Installer\Secret;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -14,7 +15,6 @@ use Appwrite\Platform\Installer\Validator\AppDomain;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
@@ -407,12 +407,12 @@ class Install extends Action
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
         // (otherwise the backgrounded process holds the pipe open and exec() hangs)
-        $secret = bin2hex(random_bytes(32));
+        $secret = Secret::generate()->value;
         $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
         \exec(
-            'APPWRITE_INSTALLER_SECRET=' . \escapeshellarg($secret)
+            Secret::ENVIRONMENT . '=' . \escapeshellarg($secret)
             . " php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!",
             $output
         );
@@ -447,7 +447,6 @@ class Install extends Action
     {
         $input = [];
         $password = new Password();
-        $token = new Token();
 
         // Start with all defaults
         foreach ($vars as $var) {
@@ -482,7 +481,7 @@ class Install extends Action
             }
             $name = $var['name'];
             $value = $input[$name] ?? '';
-            $input[$name] = $this->tokenEnvironmentValue(is_string($value) ? $value : '', $shouldGenerateSecrets, $token);
+            $input[$name] = EncryptionKey::resolve(is_string($value) ? $value : '', $shouldGenerateSecrets);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
@@ -502,15 +501,6 @@ class Install extends Action
         }
 
         return $input;
-    }
-
-    private function tokenEnvironmentValue(string $value, bool $shouldGenerateSecrets, Token $token): string
-    {
-        if (!$shouldGenerateSecrets || !EncryptionKey::isInsecure($value)) {
-            return $value;
-        }
-
-        return $token->generate();
     }
 
     public function hasExistingConfig(): bool

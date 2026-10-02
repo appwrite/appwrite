@@ -28,6 +28,43 @@ final class EncryptionKeyTest extends TestCase
         yield 'unique' => ['a-unique-generated-secret', false];
     }
 
+    #[DataProvider('insecureInstallKeys')]
+    public function testResolveGeneratesOnFreshInstall(string $key): void
+    {
+        $resolved = EncryptionKey::resolve($key, generate: true);
+
+        $this->assertFalse(EncryptionKey::isInsecure($resolved));
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string}>
+     */
+    public static function insecureInstallKeys(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'placeholder' => [EncryptionKey::PLACEHOLDER];
+    }
+
+    public function testResolveKeepsUniqueKey(): void
+    {
+        $this->assertSame('operator-chosen-secret', EncryptionKey::resolve('operator-chosen-secret', generate: true));
+    }
+
+    #[DataProvider('existingKeys')]
+    public function testResolveKeepsExistingKeyOnUpgrade(string $key): void
+    {
+        $this->assertSame($key, EncryptionKey::resolve($key, generate: false), 'Rewriting an existing key would make its encrypted data unreadable');
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string}>
+     */
+    public static function existingKeys(): \Iterator
+    {
+        yield 'placeholder' => [EncryptionKey::PLACEHOLDER];
+        yield 'unique' => ['existing-installation-secret'];
+    }
+
     public function testAssertProductionAllowsPlaceholder(): void
     {
         EncryptionKey::assertProduction('production', EncryptionKey::PLACEHOLDER);

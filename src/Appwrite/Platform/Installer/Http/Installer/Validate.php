@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer;
 
+use Appwrite\Installer\Secret;
 use Appwrite\Platform\Installer\Server;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
@@ -60,9 +61,6 @@ class Validate extends Action
 
     public static function validateSecret(Request $request): bool
     {
-        $secret = Server::installerSecret();
-        $header = $request->getHeaderLine(Server::INSTALLER_SECRET_HEADER);
-
-        return $secret !== '' && $header !== '' && hash_equals($secret, $header);
+        return Server::secret()->matches($request->getHeaderLine(Secret::HEADER));
     }
 }

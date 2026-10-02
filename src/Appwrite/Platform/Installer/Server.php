@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer;
 
+use Appwrite\Installer\Secret;
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
@@ -36,9 +37,8 @@ class Server
     public const string STATUS_ERROR = 'error';
 
     public const string CSRF_COOKIE = 'appwrite-installer-csrf';
-    public const string INSTALLER_SECRET_HEADER = 'x-appwrite-installer-secret';
 
-    private static string $installerSecret = '';
+    private static ?Secret $secret = null;
 
     public const array INSTALLER_CSP = [
         "default-src 'self'",
@@ -123,44 +123,29 @@ class Server
             $this->startDockerInstaller($opts);
         }
 
-        self::issueInstallerSecret();
+        self::$secret = Secret::fromEnvironment();
         $this->printInstallerSecret();
         $this->printInstallerUrl($host, $port);
         $this->startSwooleServer($host, (int) $port, $readyFile);
     }
 
-    public static function installerSecret(): string
+    public static function secret(): Secret
     {
-        return self::$installerSecret;
-    }
-
-    public static function setInstallerSecret(string $secret): void
-    {
-        self::$installerSecret = $secret;
-    }
-
-    public static function issueInstallerSecret(): string
-    {
-        $fromEnv = getenv('APPWRITE_INSTALLER_SECRET');
-        self::$installerSecret = (is_string($fromEnv) && $fromEnv !== '')
-            ? $fromEnv
-            : bin2hex(random_bytes(32));
-
-        return self::$installerSecret;
+        return self::$secret ??= new Secret('');
     }
 
     private function printInstallerSecret(): void
     {
         fwrite(STDOUT, PHP_EOL);
-        fwrite(STDOUT, 'Installer secret: ' . self::$installerSecret . PHP_EOL);
-        fwrite(STDOUT, 'Provide it as the x-appwrite-installer-secret header, or open the URL below.' . PHP_EOL);
+        fwrite(STDOUT, 'Installer secret: ' . self::secret()->value . PHP_EOL);
+        fwrite(STDOUT, 'Provide it as the ' . Secret::HEADER . ' header, or open the URL below.' . PHP_EOL);
         fwrite(STDOUT, PHP_EOL);
     }
 
     private function printInstallerUrl(string $host, string $port): void
     {
         $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
-        $url = "http://$displayHost:$port/?secret=" . self::$installerSecret;
+        $url = "http://$displayHost:$port/?secret=" . self::secret()->value;
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
