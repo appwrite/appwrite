@@ -2,6 +2,10 @@
 
 namespace Appwrite\Network\Validator;
 
+use Appwrite\Network\Allowlist;
+use Swoole\Coroutine;
+use Swoole\Coroutine\System;
+use Swoole\Runtime;
 use Utopia\Validator;
 
 /**
@@ -15,9 +19,8 @@ use Utopia\Validator;
  * Distinct from Utopia\Validator\Hostname, which only checks string format
  * and an optional allow-list and does not touch DNS.
  *
- * Known limitation: there is a TOCTOU window between this DNS lookup and the
- * subsequent HTTP fetch. To fully prevent DNS rebinding the caller must pin
- * curl to a verified IP via CURLOPT_RESOLVE.
+ * Callers that go on to fetch the host reuse the resolved addresses through
+ * getResolve() instead of resolving it a second time.
  */
 class PublicHostname extends Validator
 {
@@ -43,7 +46,7 @@ class PublicHostname extends Validator
      * smuggle private IPv4 destinations past an IPv6-only check.
      */
     private const PRIVATE_IPV6_CIDRS = [
-        '::/128',               // Unspecified
+        '::/96',                // Unspecified and IPv4-compatible (e.g. ::7f00:1)
         '::ffff:0:0/96',        // IPv4-mapped (e.g. ::ffff:127.0.0.1)
         '64:ff9b::/96',         // IPv4/IPv6 translation
         '64:ff9b:1::/48',       // Local-use IPv4/IPv6 translation
@@ -51,10 +54,23 @@ class PublicHostname extends Validator
         '2001::/32',            // Teredo
         '2001:db8::/32',        // Documentation
         '2002::/16',            // 6to4 (covers 2002:7f00::/24 → 127.0.0.0/8 etc.)
+        'fec0::/10',            // Site-local (deprecated)
         'ff00::/8',             // Multicast
     ];
 
     private string $reason = '';
+
+    private string $hostname = '';
+
+    /**
+     * @var array<string>
+     */
+    private array $addresses = [];
+
+    public function __construct(
+        private readonly Allowlist $allowlist = new Allowlist(),
+    ) {
+    }
 
     public function getDescription(): string
     {
@@ -76,6 +92,8 @@ class PublicHostname extends Validator
     public function isValid(mixed $value): bool
     {
         $this->reason = '';
+        $this->hostname = '';
+        $this->addresses = [];
 
         if (!\is_string($value) || $value === '') {
             $this->reason = 'Hostname is empty.';
@@ -86,14 +104,18 @@ class PublicHostname extends Validator
 
         // IP literals are checked directly, no DNS round-trip.
         if (\filter_var($hostname, FILTER_VALIDATE_IP) !== false) {
-            if (!self::isPublicIp($hostname)) {
+            if (!$this->isAllowedAddress($hostname)) {
                 $this->reason = "Address {$hostname} is in a private or reserved range.";
                 return false;
             }
             return true;
         }
 
-        $addresses = self::resolve($hostname);
+        if ($this->allowlist->hasHostname($hostname)) {
+            return true;
+        }
+
+        $addresses = static::resolve($hostname);
 
         if (empty($addresses)) {
             $this->reason = "Hostname {$hostname} does not resolve.";
@@ -101,13 +123,37 @@ class PublicHostname extends Validator
         }
 
         foreach ($addresses as $ip) {
-            if (!self::isPublicIp($ip)) {
+            if (!$this->isAllowedAddress($ip)) {
                 $this->reason = "Hostname {$hostname} resolves to private or reserved address {$ip}.";
                 return false;
             }
         }
 
+        $this->hostname = $hostname;
+        $this->addresses = $addresses;
+
         return true;
+    }
+
+    /**
+     * CURLOPT_RESOLVE entries mapping the last valid hostname to the addresses
+     * it resolved to, so curl reuses them instead of resolving the hostname
+     * again. Empty for IP literals, which curl never resolves.
+     *
+     * @return array<string>
+     */
+    public function getResolve(int $port): array
+    {
+        if (empty($this->addresses)) {
+            return [];
+        }
+
+        $addresses = \array_map(
+            fn (string $ip) => \str_contains($ip, ':') ? "[{$ip}]" : $ip,
+            $this->addresses
+        );
+
+        return ["{$this->hostname}:{$port}:" . \implode(',', $addresses)];
     }
 
     /**
@@ -117,6 +163,19 @@ class PublicHostname extends Validator
      */
     public static function resolve(string $hostname): array
     {
+        // Swoole 6.2 hooks dns_get_record() through a RemoteObject client that is
+        // created per call and never released (~140 KiB each), so coroutines with
+        // hooked network functions resolve natively. Unhooked coroutines keep the
+        // blocking lookup: getaddrinfo() yields, which stalls a caller that waits in
+        // an unhooked usleep() loop, as GraphQL resolvers do. getaddrinfo() needs a
+        // service; any port works for address lookup.
+        if (Coroutine::getCid() > 0 && (Runtime::getHookFlags() & SWOOLE_HOOK_NET_FUNCTION) !== 0) {
+            $ipv4 = System::getaddrinfo($hostname, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+            $ipv6 = System::getaddrinfo($hostname, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
+
+            return \array_values(\array_unique([...$ipv4, ...$ipv6]));
+        }
+
         $ipv4 = [];
         $ipv6 = [];
 
@@ -134,6 +193,35 @@ class PublicHostname extends Validator
         }
 
         return \array_values(\array_unique([...$ipv4, ...$ipv6]));
+    }
+
+    /**
+     * Decimal, octal, hex and shortened forms that inet_aton(), and therefore
+     * curl, reads as IPv4 addresses but FILTER_VALIDATE_IP does not.
+     */
+    public static function isNumericAddress(string $value): bool
+    {
+        $value = \strtolower($value);
+
+        if (\str_ends_with($value, '.')) {
+            $value = \substr($value, 0, -1);
+        }
+
+        $parts = \explode('.', $value);
+
+        if (\count($parts) > 4) {
+            return false;
+        }
+
+        foreach ($parts as $part) {
+            $hex = \str_starts_with($part, '0x') && ($part === '0x' || \ctype_xdigit(\substr($part, 2)));
+
+            if (!$hex && !\ctype_digit($part)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -161,6 +249,11 @@ class PublicHostname extends Validator
         }
 
         return true;
+    }
+
+    private function isAllowedAddress(string $address): bool
+    {
+        return self::isPublicIp($address) || $this->allowlist->hasAddress($address);
     }
 
     /**

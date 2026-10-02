@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Allowlist;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 
 final class PublicHostnameTest extends TestCase
 {
@@ -78,6 +81,10 @@ final class PublicHostnameTest extends TestCase
         yield '6to4 imds' => ['2002:a9fe:a9fe::'];
         yield 'teredo' => ['2001:0:1::1'];
         yield 'documentation' => ['2001:db8::1'];
+        yield 'ipv4-compatible loopback' => ['::7f00:1'];
+        yield 'ipv4-compatible link-local' => ['::a9fe:a9fe'];
+        yield 'site-local' => ['fec0::1'];
+        yield 'site-local upper bound' => ['feff:ffff::1'];
     }
 
     #[DataProvider('publicIpAddresses')]
@@ -154,5 +161,265 @@ final class PublicHostnameTest extends TestCase
         $this->assertFalse(PublicHostname::isPublicIp('100.127.255.255'));
         $this->assertTrue(PublicHostname::isPublicIp('100.128.0.0'));
         $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
+    }
+
+    #[DataProvider('numericAddresses')]
+    public function testDetectsNumericAddressSpellings(string $value, bool $expected): void
+    {
+        $this->assertSame($expected, PublicHostname::isNumericAddress($value), $value);
+    }
+
+    public static function numericAddresses(): \Iterator
+    {
+        yield 'decimal' => ['2130706433', true];
+        yield 'octal' => ['0177.0.0.1', true];
+        yield 'hex dotted' => ['0x7f.0.0.1', true];
+        yield 'hex' => ['0x7F000001', true];
+        yield 'shortened' => ['127.1', true];
+        yield 'trailing dot' => ['127.0.0.1.', true];
+        yield 'bare hex prefix' => ['0x', true];
+        yield 'five parts' => ['1.2.3.4.5', false];
+        yield 'two trailing dots' => ['127.0.0.1..', false];
+        yield 'empty part' => ['127..1', false];
+        yield 'empty' => ['', false];
+        yield 'bad hex' => ['0xg1', false];
+        yield 'hostname' => ['example.com', false];
+        yield 'leading digit label' => ['1password.com', false];
+        yield 'ipv6' => ['::1', false];
+    }
+
+    public function testResolveSendsRequestToCheckedAddresses(): void
+    {
+        $listener = $this->listen('127.0.0.1');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname(Allowlist::parse('127.0.0.0/8,::1'));
+
+        $this->assertTrue($validator->isValid('loopback.invalid'), $validator->getDescription());
+        $this->assertSame(["loopback.invalid:{$port}:127.0.0.1,[::1]"], $validator->getResolve($port));
+        $request = $this->capture($listener, "http://loopback.invalid:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: loopback.invalid:{$port}\r\n", $request);
+    }
+
+    public function testResolveSendsRequestToCheckedIpv6Address(): void
+    {
+        $listener = $this->listen('[::1]');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname(Allowlist::parse('::1'));
+
+        $this->assertTrue($validator->isValid('loopback6.invalid'), $validator->getDescription());
+        $request = $this->capture($listener, "http://loopback6.invalid:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: loopback6.invalid:{$port}\r\n", $request);
+    }
+
+    public function testResolveKeepsTrailingDot(): void
+    {
+        $listener = $this->listen('127.0.0.1');
+        $port = $this->port($listener);
+        $validator = new LoopbackHostname(Allowlist::parse('127.0.0.0/8,::1'));
+
+        $this->assertTrue($validator->isValid('Loopback.INVALID.'), $validator->getDescription());
+        $request = $this->capture($listener, "http://loopback.invalid.:{$port}/", $validator->getResolve($port));
+
+        $this->assertStringContainsString("Host: loopback.invalid.:{$port}\r\n", $request);
+    }
+
+    public function testResolveIsEmptyForIpLiterals(): void
+    {
+        $validator = new PublicHostname();
+
+        $this->assertTrue($validator->isValid('8.8.8.8'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
+    public function testResolveResetsAfterRejection(): void
+    {
+        $validator = new LoopbackHostname(Allowlist::parse('127.0.0.0/8,::1'));
+
+        $this->assertTrue($validator->isValid('loopback.invalid'));
+        $this->assertFalse($validator->isValid('missing.invalid'));
+        $this->assertSame([], $validator->getResolve(80));
+    }
+
+    public function testAcceptsIpv4LiteralInAllowedSubnet(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+
+        $this->assertTrue($validator->isValid('10.1.2.3'));
+        $this->assertFalse($validator->isValid('192.168.1.1'));
+        $this->assertFalse($validator->isValid('127.0.0.1'));
+    }
+
+    public function testAcceptsIpv6LiteralInAllowedSubnet(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('fd00::/8'));
+
+        $this->assertTrue($validator->isValid('fd12::1'));
+        $this->assertTrue($validator->isValid('[fd12::1]'));
+        $this->assertFalse($validator->isValid('fe80::1'));
+        $this->assertFalse($validator->isValid('::1'));
+    }
+
+    public function testAcceptsAllowedHostnameWithoutLookup(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('a-hostname-that-does-not-exist.invalid'));
+
+        $this->assertTrue($validator->isValid('a-hostname-that-does-not-exist.invalid'));
+        $this->assertSame([], $validator->getResolve(80));
+        $this->assertTrue($validator->isValid('A-HOSTNAME-THAT-DOES-NOT-EXIST.INVALID.'));
+        $this->assertFalse($validator->isValid('x.a-hostname-that-does-not-exist.invalid'));
+    }
+
+    public function testAcceptsHostnameResolvingIntoAllowedSubnet(): void
+    {
+        $validator = new LoopbackHostname(Allowlist::parse('127.0.0.0/8,::1'));
+
+        $this->assertTrue($validator->isValid('loopback.invalid'), $validator->getDescription());
+        $this->assertFalse((new LoopbackHostname())->isValid('loopback.invalid'));
+    }
+
+    public function testRejectsHostnameResolvingOutsideAllowedSubnet(): void
+    {
+        $this->assertFalse((new LoopbackHostname(Allowlist::parse('127.0.0.0/8')))->isValid('loopback.invalid'));
+        $this->assertFalse((new LoopbackHostname(Allowlist::parse('10.0.0.0/8')))->isValid('loopback.invalid'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvesHostnameInsideCoroutine(): void
+    {
+        $validator = new PublicHostname();
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
+        $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
+    }
+
+    #[RunInSeparateProcess]
+    public function testAcceptsHostnameResolvingIntoAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('127.0.0.0/8,::1'));
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertTrue($valid, $validator->getDescription());
+        $this->assertNotSame([], $validator->getResolve(80));
+    }
+
+    #[RunInSeparateProcess]
+    public function testRejectsHostnameResolvingOutsideAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicHostname(Allowlist::parse('10.0.0.0/8'));
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('localhost');
+        });
+
+        $this->assertFalse($valid);
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvingInsideCoroutineRetainsNoMemoryPerLookup(): void
+    {
+        $validator = new PublicHostname();
+        $lookups = 200;
+        $growth = null;
+
+        $this->inHookedCoroutine(function () use ($validator, $lookups, &$growth): void {
+            $validator->isValid('localhost');
+            \gc_collect_cycles();
+            $before = \memory_get_usage();
+
+            for ($i = 0; $i < $lookups; $i++) {
+                $validator->isValid('localhost');
+            }
+
+            \gc_collect_cycles();
+            $growth = \memory_get_usage() - $before;
+        });
+
+        // The hooked dns_get_record() retained ~140 KiB per lookup.
+        $this->assertLessThan(4 * 1024, $growth / $lookups);
+    }
+
+    #[RunInSeparateProcess]
+    public function testResolvesWithoutYieldingInsideUnhookedCoroutine(): void
+    {
+        $resolved = null;
+
+        Coroutine::set(['hook_flags' => 0]);
+        Coroutine\run(function () use (&$resolved): void {
+            $addresses = null;
+
+            Coroutine::create(function () use (&$addresses): void {
+                $addresses = PublicHostname::resolve('localhost');
+            });
+
+            $resolved = $addresses !== null;
+        });
+
+        $this->assertTrue($resolved, 'Resolving inside an unhooked coroutine must not yield to a caller that waits in an unhooked loop');
+    }
+
+    private function inHookedCoroutine(callable $callback): void
+    {
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run($callback);
+    }
+
+    /**
+     * Listens on a free port and never answers.
+     *
+     * @return resource
+     */
+    private function listen(string $address)
+    {
+        $listener = @\stream_socket_server("tcp://{$address}:0");
+
+        if ($listener === false) {
+            $this->markTestSkipped("Cannot listen on {$address}.");
+        }
+
+        return $listener;
+    }
+
+    /**
+     * @param resource $listener
+     */
+    private function port($listener): int
+    {
+        $name = (string) \stream_socket_get_name($listener, false);
+
+        return (int) \substr($name, \strrpos($name, ':') + 1);
+    }
+
+    /**
+     * Sends a GET with the given CURLOPT_RESOLVE entries and returns the raw
+     * request that reached the listener.
+     *
+     * @param resource $listener
+     * @param array<string> $resolve
+     */
+    private function capture($listener, string $url, array $resolve): string
+    {
+        $curl = \curl_init($url);
+        \curl_setopt($curl, CURLOPT_RESOLVE, $resolve);
+        \curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($curl, CURLOPT_TIMEOUT_MS, 250);
+        \curl_exec($curl);
+
+        $connection = @\stream_socket_accept($listener, 1);
+        $this->assertNotFalse($connection, "No request reached the listener for {$url}.");
+        \stream_set_timeout($connection, 1);
+
+        return (string) \fread($connection, 8192);
     }
 }

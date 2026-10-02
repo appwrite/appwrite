@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Migrations;
 
+use Appwrite\Database\Factory;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Depends;
@@ -9,6 +10,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Tests\E2E\Services\Realtime\RealtimeBase;
+use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,6 +21,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use WebSocket\ConnectionException;
@@ -254,6 +260,196 @@ trait MigrationsBase
 
         $webhookCounts = $response['statusCounters'][Resource::TYPE_WEBHOOK];
         $this->assertEquals(0, $webhookCounts['error']);
+    }
+
+    public function testGetAppwriteReport(): void
+    {
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+        $this->assertIsInt($report['body'][Resource::TYPE_USER]);
+    }
+
+    public function testAppwriteMigrationRejectsPrivateEndpoints(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::1]/v1', 'http://localhost/v1', 'gopher://appwrite.test/'] as $endpoint) {
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectID' => $this->getProject()['$id'],
+                'key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame(400, $report['headers']['status-code'], "Report accepted {$endpoint}");
+            $this->assertSame('general_argument_invalid', $report['body']['type']);
+
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame(400, $migration['headers']['status-code'], "Migration accepted {$endpoint}");
+            $this->assertSame('general_argument_invalid', $migration['body']['type']);
+        }
+    }
+
+    public function testRetryAppwriteMigrationWithStoredPrivateEndpoint(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        foreach (['http://169.254.169.254/v1', 'http://[::1]/v1'] as $endpoint) {
+            $migrationId = ID::unique();
+
+            $this->createMigrationFixture($this->getDestinationProject()['$id'], new Document([
+                '$id' => $migrationId,
+                'status' => 'failed',
+                'stage' => 'finished',
+                'source' => Appwrite::getName(),
+                'destination' => Appwrite::getName(),
+                'credentials' => [
+                    'endpoint' => $endpoint,
+                    'projectId' => $this->getProject()['$id'],
+                    'apiKey' => $this->getProject()['apiKey'],
+                ],
+                'resources' => [Resource::TYPE_USER],
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+                'options' => [],
+            ]));
+
+            $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, $headers);
+            $this->assertSame(204, $retry['headers']['status-code'], "Retry refused for {$endpoint}");
+
+            $migration = [];
+            $this->assertEventually(function () use ($migrationId, &$migration) {
+                $migration = $this->getMigrationStatus($migrationId);
+
+                $this->assertNotSame([], $migration['errors']);
+            }, 60_000, 1_000);
+
+            $this->assertSame('failed', $migration['status'], $endpoint);
+            $this->assertSame('finished', $migration['stage'], $endpoint);
+            $this->assertStringContainsString('Invalid `endpoint`', \implode(',', $migration['errors']), $endpoint);
+        }
+    }
+
+    public function testGetAppwriteReportWithSubnetEndpoint(): void
+    {
+        $source = $this->getProject(true);
+        $this->createSourceUser($source);
+
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectID' => $source['$id'],
+            'key' => $source['apiKey'],
+        ]);
+
+        $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+        $this->assertSame(1, $report['body'][Resource::TYPE_USER]);
+    }
+
+    public function testCreateAppwriteMigrationWithSubnetEndpoint(): void
+    {
+        $source = $this->getProject(true);
+        $user = $this->createSourceUser($source);
+
+        $migration = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $source['$id'],
+            'apiKey' => $source['apiKey'],
+        ]);
+
+        $this->assertSame(1, $migration['statusCounters'][Resource::TYPE_USER]['success']);
+        $this->assertSame(0, $migration['statusCounters'][Resource::TYPE_USER]['error']);
+
+        $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $migrated['headers']['status-code']);
+        $this->assertSame($user['email'], $migrated['body']['email']);
+    }
+
+    /**
+     * @param array<string, mixed> $project
+     * @return array<string, mixed>
+     */
+    private function createSourceUser(array $project): array
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code'], \json_encode($user['body']));
+
+        return $user['body'];
+    }
+
+    /**
+     * Stores a migration the way one created before endpoint validation was
+     * introduced would be stored, bypassing the create route that now refuses it.
+     */
+    private function createMigrationFixture(string $projectId, Document $migration): void
+    {
+        $seed = function () use ($projectId, $migration): void {
+            global $register;
+            $pools = $register->get('pools');
+            $cache = new Cache(new Sharding(\array_map(
+                fn (string $name) => new CachePool($pools->get($name)),
+                Config::getParam('pools-cache', []),
+            )));
+            $authorization = new Authorization();
+            $factory = new Factory($pools, $cache, $authorization);
+
+            $authorization->skip(function () use ($factory, $projectId, $migration): void {
+                $project = $factory->platform()->getDocument('projects', $projectId);
+                $this->assertFalse($project->isEmpty(), "Project {$projectId} not found");
+
+                $factory->project($project)->createDocument('migrations', $migration);
+            });
+        };
+
+        if (\Swoole\Coroutine::getCid() >= 0) {
+            $seed();
+        } else {
+            \Swoole\Coroutine\run($seed);
+        }
     }
 
     /**

@@ -15,6 +15,12 @@ webapp.com {
         fallthrough
     }
 
+    template IN A {
+        match "^screenshot\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN A 203.0.0.1"
+        fallthrough
+    }
+
     template IN CNAME {
         match "^stage-site\.webapp\.com\.$"
         answer "{{ .Name }} 60 IN CNAME sites.localhost."
