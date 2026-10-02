@@ -233,6 +233,18 @@ class Update extends Base
             $repositoryInternalId = '';
         }
 
+        // Normalize before VCS connect side effects so a bad root cannot leave
+        // behind a repositories document / webhook. Preserving a legacy stored
+        // path that contains ".." must not block unrelated attribute updates.
+        $storedRootDirectory = $function->getAttribute('providerRootDirectory', '');
+        try {
+            $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+        } catch (Exception $error) {
+            if ($providerRootDirectory !== $storedRootDirectory) {
+                throw $error;
+            }
+        }
+
         // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
@@ -269,13 +281,21 @@ class Update extends Base
 
         $live = true;
 
-        $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+        $rootDirectoryUnchanged = false;
+        try {
+            $rootDirectoryUnchanged = Deployments::normalizeRootDirectory($storedRootDirectory) === $providerRootDirectory;
+        } catch (Exception) {
+            // Invalid legacy stored root: only "unchanged" when the raw value
+            // is still what we are writing back (preserve), so a valid
+            // replacement can repair it.
+            $rootDirectoryUnchanged = $storedRootDirectory === $providerRootDirectory;
+        }
 
         if (
             $function->getAttribute('name') !== $name ||
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
-            Deployments::normalizeRootDirectory($function->getAttribute('providerRootDirectory', '')) !== $providerRootDirectory ||
+            !$rootDirectoryUnchanged ||
             $function->getAttribute('runtime') !== $runtime
         ) {
             $live = false;

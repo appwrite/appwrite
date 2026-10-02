@@ -250,6 +250,18 @@ class Update extends Base
             $repositoryInternalId = '';
         }
 
+        // Normalize before VCS connect side effects so a bad root cannot leave
+        // behind a repositories document / webhook. Preserving a legacy stored
+        // path that contains ".." must not block unrelated attribute updates.
+        $storedRootDirectory = $site->getAttribute('providerRootDirectory', '');
+        try {
+            $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+        } catch (Exception $error) {
+            if ($providerRootDirectory !== $storedRootDirectory) {
+                throw $error;
+            }
+        }
+
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
@@ -284,7 +296,12 @@ class Update extends Base
 
         $live = true;
 
-        $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+        $rootDirectoryUnchanged = false;
+        try {
+            $rootDirectoryUnchanged = Deployments::normalizeRootDirectory($storedRootDirectory) === $providerRootDirectory;
+        } catch (Exception) {
+            $rootDirectoryUnchanged = $storedRootDirectory === $providerRootDirectory;
+        }
 
         if (
             $site->getAttribute('name') !== $name ||
@@ -292,7 +309,7 @@ class Update extends Base
             $site->getAttribute('installCommand') !== $installCommand ||
             $site->getAttribute('startCommand') !== $startCommand ||
             $site->getAttribute('outputDirectory') !== $outputDirectory ||
-            Deployments::normalizeRootDirectory($site->getAttribute('providerRootDirectory', '')) !== $providerRootDirectory ||
+            !$rootDirectoryUnchanged ||
             $site->getAttribute('framework') !== $framework
         ) {
             $live = false;

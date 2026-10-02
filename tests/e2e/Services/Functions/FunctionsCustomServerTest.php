@@ -368,6 +368,63 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable3['headers']['status-code']);
     }
 
+    public function testProviderRootDirectoryNormalization(): void
+    {
+        /**
+         * Test for SUCCESS
+         * Console Select stores a leading "./"; create must persist the plain path.
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Root Dir Normalize',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => './functions/brevo',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertSame('functions/brevo', $function['body']['providerRootDirectory']);
+        $functionId = $function['body']['$id'];
+
+        $updated = $this->updateFunction($functionId, [
+            'name' => 'Root Dir Normalize',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => './',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['providerRootDirectory']);
+
+        /**
+         * Test for FAILURE
+         * Traversal segments are rejected without requiring a VCS connection.
+         */
+        $rejected = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Root Dir Traversal',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => 'foo/../bar',
+        ]);
+
+        $this->assertEquals(400, $rejected['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $rejected['body']['type']);
+        $this->assertStringContainsString('..', (string) $rejected['body']['message']);
+
+        $rejectedUpdate = $this->updateFunction($functionId, [
+            'name' => 'Root Dir Normalize',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => '../etc',
+        ]);
+
+        $this->assertEquals(400, $rejectedUpdate['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $rejectedUpdate['body']['type']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testListFunctions(): void
     {
         $data = $this->setupTestFunction();
