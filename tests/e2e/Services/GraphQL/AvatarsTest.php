@@ -139,6 +139,43 @@ final class AvatarsTest extends Scope
         return $favicon['body'];
     }
 
+    public function testGetRemoteURLNotPublic(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $queries = [
+            self::GET_IMAGE_FROM_URL,
+            self::GET_FAVICON,
+            self::GET_SCREENSHOT,
+        ];
+        $urls = [
+            'http://127.0.0.1/',
+            'http://169.254.169.254/latest/meta-data/',
+            'http://[::1]/',
+            'http://localhost/',
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ($queries as $query) {
+            foreach ($urls as $url) {
+                $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                ], $this->getHeaders()), [
+                    'query' => $this->getQuery($query),
+                    'variables' => [
+                        'url' => $url,
+                    ],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertArrayHasKey('errors', $response['body'], "{$query} should reject {$url}");
+                $this->assertStringContainsString('Invalid `url` param', (string) $response['body']['errors'][0]['message']);
+            }
+        }
+    }
+
     public function testGetQRCode()
     {
         $projectId = $this->getProject()['$id'];
