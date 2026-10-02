@@ -6239,7 +6239,7 @@ final class AccountCustomClientTest extends Scope
     /**
      * Enables TOTP MFA on the account and leaves a challenge pending on a second session.
      *
-     * @return array{totp: \OTPHP\TOTP, current: array<string, string>, other: array<string, string>, challengeId: string}
+     * @return array{totp: \OTPHP\TOTP, current: array<string, string>, other: array<string, string>, otherId: string, challengeId: string}
      */
     protected function createPendingMFAChallenge(array $data): array
     {
@@ -6266,19 +6266,39 @@ final class AccountCustomClientTest extends Scope
         $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $current, ['mfa' => true]);
         $this->assertEquals(200, $mfa['headers']['status-code']);
 
-        $other = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+        $other = $this->createSessionCookie($data['email'], $data['password']);
 
-        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $other, [
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $other['headers'], [
             'factor' => 'totp',
         ]);
         $this->assertEquals(201, $challenge['headers']['status-code']);
 
+        $this->assertEqualsCanonicalizing([$data['sessionId'], $other['id']], $this->listUserSessionIds($data['id']));
+
         return [
             'totp' => $totp,
             'current' => $current,
-            'other' => $other,
+            'other' => $other['headers'],
+            'otherId' => $other['id'],
             'challengeId' => $challenge['body']['$id'],
         ];
+    }
+
+    /**
+     * Session IDs as stored, read with the server key so a session blocked on MFA still shows up.
+     *
+     * @return array<string>
+     */
+    protected function listUserSessionIds(string $userId): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return \array_column($response['body']['sessions'], '$id');
     }
 
     public function testUpdatePasswordInvalidatesSessionsAndMFAChallenges(): void
@@ -6299,12 +6319,14 @@ final class AccountCustomClientTest extends Scope
          */
         $current = $this->client->call(Client::METHOD_GET, '/account', $mfa['current']);
         $this->assertEquals(200, $current['headers']['status-code']);
+        $this->assertSame([$data['sessionId']], $this->listUserSessionIds($data['id']));
 
         /**
          * Test for FAILURE
          */
         $other = $this->client->call(Client::METHOD_GET, '/account', $mfa['other']);
         $this->assertEquals(401, $other['headers']['status-code']);
+        $this->assertNotEquals('user_more_factors_required', $other['body']['type'], 'The second session must be revoked, not just waiting on MFA');
 
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
@@ -6353,6 +6375,9 @@ final class AccountCustomClientTest extends Scope
 
         $other = $this->client->call(Client::METHOD_GET, '/account', $mfa['other']);
         $this->assertEquals(401, $other['headers']['status-code']);
+        $this->assertNotEquals('user_more_factors_required', $other['body']['type'], 'The second session must be revoked, not just waiting on MFA');
+
+        $this->assertSame([], $this->listUserSessionIds($data['id']));
 
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
