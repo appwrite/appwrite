@@ -109,7 +109,7 @@ Root catch-alls are common in CMS-driven sites, where one `[...slug]` route rend
 
 The remaining medium severity bugs are about content reaching people who should not see it.
 
-## Metadata image routes ignore `dynamicParams`
+# Metadata image routes ignore `dynamicParams`
 
 **CVE-2026-94485 /** [GHSA-f87g-xv8r-7p7x](https://github.com/vercel/next.js/security/advisories/GHSA-f87g-xv8r-7p7x)
 
