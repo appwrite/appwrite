@@ -146,20 +146,6 @@ If that overlapping request prerenders a page, the draft content can be persiste
 
 Production deployments do not serve this endpoint. The risk is to developer machines, so update local environments too, not just your deployed apps.
 
-# How to check if your Next.js app is affected
-
-Every app on an unpatched version should upgrade. Use this checklist to decide how urgently, and which mitigations to apply while the upgrade rolls out.
-
-A practical rollout looks like this:
-
-1. Run `npm ls next` in each repository to confirm which version is actually installed.
-2. Bump `next` to `16.3.8` or `15.5.27` and commit the lockfile.
-3. Run your test suite, focusing on pages that use ISR, Draft Mode, and remote images.
-4. Deploy, then revalidate or purge cached pages so any poisoned entries are replaced.
-5. Update local environments so `next dev` picks up the MCP fix.
-
-Step four is easy to miss. Patching stops new cache poisoning, but entries that were already poisoned keep serving until they are revalidated.
-
 # Self-hosted Next.js security: what changes for you
 
 The SSG and ISR cache poisoning advisory (CVE-2026-94543) explicitly states that **Vercel deployments are not affected**, and several others live in the response cache and image optimizer that a managed platform runs for you. That is not a reason to avoid self-hosting. It is a reminder that when you run the Next.js server yourself, the response cache, image optimizer, and patch cadence are your responsibility.
@@ -175,14 +161,17 @@ That shared responsibility model is the same one covered in our post on [backend
 
 [Appwrite Sites](/docs/products/sites) runs Next.js in a container-based Node.js runtime with full [SSR support](/docs/products/sites/rendering/ssr), rather than translating it into serverless functions. That gives you full Next.js server behavior, including ISR and Image Optimization, without adapters.
 
-On Appwrite Sites, patching is a dependency bump and a push:
+To patch a Next.js app on Appwrite Sites:
 
-1. Update `next` to `16.3.8` or `15.5.27` and commit the lockfile.
-2. Push to your connected branch. [Git deployments](/docs/products/sites/deploy-from-git) build and activate the new version automatically.
-3. Use [preview deployments](/docs/products/sites/previews) to check ISR, Draft Mode, and image routes on a branch before merging.
-4. If anything regresses, [instant rollbacks](/docs/products/sites/instant-rollbacks) let you switch back to a previous ready deployment with zero downtime while you investigate.
+1. Run `npm ls next` to confirm which version is installed.
+2. Update `next` to `16.3.8` or `15.5.27` and commit the lockfile.
+3. Run your test suite, focusing on ISR, Draft Mode, and remote images.
+4. Push to your connected branch. [Git deployments](/docs/products/sites/deploy-from-git) build and activate the new version automatically.
+5. Use [preview deployments](/docs/products/sites/previews) to verify ISR, Draft Mode, and image routes before merging.
+6. After deployment, revalidate or purge cached pages so any previously poisoned entries are replaced.
+7. Update local environments so `next dev` also picks up the MCP fix.
 
-On Appwrite Sites, your application controls its Next.js dependency, so keep `next` updated to a patched version. What you get in exchange is a standard Node.js runtime, no adapter layer between your app and the framework, and your backend in the same project. If you are choosing an output mode, [Next.js output modes](/blog/post/nextjs-output-modes) explains why standalone builds are a good default.
+If anything regresses, [instant rollbacks](/docs/products/sites/instant-rollbacks) let you switch back to a previous ready deployment with zero downtime while you investigate.
 
 # Getting started with secure Next.js deployments on Appwrite
 
