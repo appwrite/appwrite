@@ -4360,11 +4360,9 @@ Http::put('/v1/account/recovery')
 
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
-            if ($document->isEmpty()) {
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
             }
-
-            $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
                 [
@@ -4739,11 +4737,9 @@ Http::put('/v1/account/recovery/otp')
 
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
-            if ($document->isEmpty()) {
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
             }
-
-            $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
                 [
