@@ -80,13 +80,12 @@ final class EndpointTest extends TestCase
 
         $this->assertIsArray($resolve);
         $this->assertCount(1, $resolve);
-        $this->assertStringStartsWith('localhost:8080:', $resolve[0]);
-        $this->assertStringContainsString('127.0.0.1', $resolve[0]);
+        $this->assertMatchesRegularExpression('/^localhost:8080:(127\.\d+\.\d+\.\d+|\[::1\])(,(127\.\d+\.\d+\.\d+|\[::1\]))*$/', $resolve[0]);
     }
 
     public function testResolveIsEmptyForIpLiterals(): void
     {
-        $this->assertSame([], (new Endpoint())->resolve('https://1.1.1.1/v1'));
+        $this->assertSame([], (new Endpoint())->resolve('https://1.1.1.1/v1/users'));
     }
 
     public function testResolveRefusesInvalidEndpoints(): void
@@ -98,8 +97,8 @@ final class EndpointTest extends TestCase
                 $validator->resolve($endpoint);
                 $this->fail("Expected {$endpoint} to be refused");
             } catch (Exception $error) {
-                $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $error->getType());
-                $this->assertSame('Invalid `endpoint`: ' . $validator->getDescription(), $error->getMessage());
+                $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $error->getType(), $endpoint);
+                $this->assertSame('Invalid `endpoint`: ' . $validator->getDescription(), $error->getMessage(), $endpoint);
             }
         }
     }

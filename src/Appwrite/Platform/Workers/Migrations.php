@@ -319,7 +319,7 @@ class Migrations extends Action
     /**
      * @throws \Exception
      */
-    protected function getInternalEndpoint(): string
+    private function getInternalEndpoint(): string
     {
         $host = System::getEnv('_APP_MIGRATION_HOST');
         if (empty($host)) {

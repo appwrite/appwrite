@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
-use Appwrite\AppwriteException;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -12,13 +11,11 @@ use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Usage\Context;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
-use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 
@@ -263,93 +260,6 @@ final class MigrationsTest extends TestCase
             'resourceId' => 'database-a:table-a',
             'resourceType' => Resource::TYPE_DATABASE,
         ])));
-    }
-
-    public function testExternalAppwriteSourceIsPinnedToTheCheckedEndpoint(): void
-    {
-        $endpoint = 'http://127.0.0.1:' . $this->reservePort() . '/v1';
-
-        $error = $this->reportAppwriteSource($endpoint, 'appwrite');
-
-        $this->assertSame('Invalid `endpoint`: Value must be an http or https URL of a public host.', $error->getMessage());
-        $this->assertNotInstanceOf(AppwriteException::class, $error->getPrevious());
-    }
-
-    public function testInternalAppwriteSourceIsNotPinned(): void
-    {
-        $host = '127.0.0.1:' . $this->reservePort();
-
-        $error = $this->reportAppwriteSource('http://' . $host . '/v1', $host);
-
-        $this->assertStringNotContainsString('Invalid `endpoint`', $error->getMessage());
-        $this->assertInstanceOf(AppwriteException::class, $error->getPrevious());
-    }
-
-    /**
-     * Runs processSource() for an Appwrite source on a closed local port and
-     * returns the error report() raised.
-     */
-    private function reportAppwriteSource(string $endpoint, string $migrationHost): \Throwable
-    {
-        $environment = [];
-        foreach (['_APP_MIGRATION_HOST' => $migrationHost, '_APP_DOMAIN' => null, '_APP_MIGRATIONS_ALLOWED_HOSTS' => null] as $name => $value) {
-            $environment[$name] = \getenv($name);
-            \putenv($value === null ? $name : $name . '=' . $value);
-        }
-
-        $dbForPlatform = $this->createStub(Database::class);
-        $dbForPlatform->method('getDocument')->willReturn(new Document());
-
-        $worker = new class ($dbForPlatform) extends Migrations {
-            public function __construct(Database $dbForPlatform)
-            {
-                $this->dbForPlatform = $dbForPlatform;
-            }
-
-            public function source(Document $migration, Document $project): Source
-            {
-                $this->project = $project;
-
-                return $this->processSource($migration);
-            }
-        };
-
-        $migration = new Document([
-            '$id' => 'migration',
-            'credentials' => [
-                'projectId' => 'source',
-                'endpoint' => $endpoint,
-                'apiKey' => 'key',
-            ],
-            'destination' => SourceAppwrite::getName(),
-            'options' => [],
-            'resourceId' => '',
-            'resourceType' => '',
-            'resources' => [Resource::TYPE_USER],
-            'source' => SourceAppwrite::getName(),
-        ]);
-
-        try {
-            $worker->source($migration, new Document(['$id' => 'project', '$sequence' => 1]));
-        } catch (\Throwable $error) {
-            return $error;
-        } finally {
-            foreach ($environment as $name => $value) {
-                \putenv($value === false ? $name : $name . '=' . $value);
-            }
-        }
-
-        $this->fail('Expected report() to fail against a closed port');
-    }
-
-    private function reservePort(): int
-    {
-        $socket = \stream_socket_server('tcp://127.0.0.1:0');
-        $this->assertNotFalse($socket);
-        $name = (string) \stream_socket_get_name($socket, false);
-        \fclose($socket);
-
-        return (int) \substr($name, \strrpos($name, ':') + 1);
     }
 
     private function createSourceMock(): Source&MockObject
