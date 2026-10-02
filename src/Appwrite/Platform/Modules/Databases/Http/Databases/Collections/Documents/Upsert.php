@@ -150,8 +150,6 @@ class Upsert extends Action
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
             if ($transactionId !== null) {
@@ -268,13 +266,22 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collectionTableId, $newDocument) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                return $this->withRelationshipTransaction(
+                    $dbForDatabases,
+                    $collection,
                     [$newDocument],
-                    onNext: function (Document $document) use (&$upserted) {
-                        $upserted[] = $document;
-                    },
+                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                        $upserted = [];
+
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use (&$upserted) {
+                                $upserted[] = $document;
+                            },
+                        );
+                    }
                 );
             });
         } catch (ConflictException) {

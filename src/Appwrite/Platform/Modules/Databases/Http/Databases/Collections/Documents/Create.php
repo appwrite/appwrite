@@ -33,7 +33,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -228,12 +227,7 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $hasRelationships = \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
-        );
-
-        if ($isBulk && $hasRelationships) {
+        if ($isBulk && $this->hasRelationships($collection)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() . ' with relationship ' . $this->getStructureContext());
         }
 
@@ -394,15 +388,23 @@ class Create extends Action
         $writes = Operations::writes($collection, $documents, fn (string $id): Document => $authorization->skip(
             fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
         ));
+        $created = [];
         try {
-            $created = [];
             $dbForDatabases->withPreserveDates(
-                function () use (&$created, $dbForDatabases, $collectionTableId, $documents) {
-                    $dbForDatabases->createDocuments(
-                        $collectionTableId,
+                function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
+                    $this->withRelationshipTransaction(
+                        $dbForDatabases,
+                        $collection,
                         $documents,
-                        onNext: function ($doc) use (&$created) {
-                            $created[] = $doc;
+                        function (array $documents) use (&$created, $dbForDatabases, $collectionTableId) {
+                            $created = [];
+                            $dbForDatabases->createDocuments(
+                                $collectionTableId,
+                                $documents,
+                                onNext: function (Document $document) use (&$created) {
+                                    $created[] = $document;
+                                }
+                            );
                         }
                     );
                 }

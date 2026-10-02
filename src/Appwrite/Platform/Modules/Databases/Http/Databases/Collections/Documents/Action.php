@@ -11,6 +11,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Query\Schema\ColumnType;
 
 abstract class Action extends DatabasesAction
 {
@@ -217,6 +218,34 @@ abstract class Action extends DatabasesAction
                 throw new Exception($this->getStructureException(), $validator->getDescription());
             }
         }
+    }
+
+    protected function hasRelationships(Document $collection): bool
+    {
+        return \array_any(
+            $collection->getAttribute('attributes', []),
+            fn (Document $attribute): bool => $attribute->getAttribute('type') === ColumnType::Relationship->value
+        );
+    }
+
+    /**
+     * Each attempt writes fresh clones: the database mutates the documents it writes and retries the transaction.
+     *
+     * @template T
+     *
+     * @param array<Document> $documents
+     * @param callable(array<Document>): T $write
+     * @return T
+     */
+    protected function withRelationshipTransaction(Database $database, Document $collection, array $documents, callable $write): mixed
+    {
+        if (!$this->hasRelationships($collection)) {
+            return $write($documents);
+        }
+
+        return $database->withTransaction(
+            fn (): mixed => $write(\array_map(fn (Document $document): Document => clone $document, $documents))
+        );
     }
 
     /**

@@ -9269,6 +9269,296 @@ trait DatabasesBase
         $this->assertNotSame('987654321', $artist['body']['$sequence'], 'a client must not choose the internal sequence of a related document');
     }
 
+    public function testNestedCreateAndUpsertWriteEveryLevel(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $createdId = ID::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+            $this->getRecordIdParam() => $createdId,
+            'data' => [
+                'name' => 'Author 1',
+                'books' => [
+                    ['$id' => 'book1', 'name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1'], ['name' => 'Chapter 2']]],
+                    ['$id' => 'book2', 'name' => 'Book 2', 'chapters' => [['name' => 'Chapter 3']]],
+                ],
+            ],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code'], 'a create with related documents two levels deep must succeed');
+        $this->assertSame(['Book 1', 'Book 2'], $this->relatedNames($databaseId, $fixture['authorsId'], $createdId, 'books'));
+        $this->assertSame(['Chapter 1', 'Chapter 2'], $this->relatedNames($databaseId, $fixture['booksId'], 'book1', 'chapters'));
+        $this->assertSame(['Chapter 3'], $this->relatedNames($databaseId, $fixture['booksId'], 'book2', 'chapters'));
+
+        $upsertedId = ID::unique();
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $upsertedId), $headers, [
+            'data' => [
+                'name' => 'Author 2',
+                'books' => [
+                    ['$id' => 'book3', 'name' => 'Book 3', 'chapters' => [['name' => 'Chapter 4']]],
+                ],
+            ],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code'], 'an upsert with related documents two levels deep must succeed');
+        $this->assertSame(['Book 3'], $this->relatedNames($databaseId, $fixture['authorsId'], $upsertedId, 'books'));
+        $this->assertSame(['Chapter 4'], $this->relatedNames($databaseId, $fixture['booksId'], 'book3', 'chapters'));
+
+        $this->assertSame(3, $this->countRecords($databaseId, $fixture['booksId']));
+        $this->assertSame(4, $this->countRecords($databaseId, $fixture['chaptersId']));
+    }
+
+    public function testFailedNestedCreateLeavesNoRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $invalidName = \str_repeat('a', 129);
+
+        $failures = [
+            'an invalid second related document' => [
+                ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+                ['name' => $invalidName],
+            ],
+            'an invalid related document two levels deep' => [
+                ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+                ['name' => 'Book 2', 'chapters' => [['name' => 'Chapter 2'], ['name' => $invalidName]]],
+            ],
+        ];
+
+        foreach ($failures as $failure => $books) {
+            $authorId = ID::unique();
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+                $this->getRecordIdParam() => $authorId,
+                'data' => ['name' => 'Author', 'books' => $books],
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], "create with {$failure}");
+            $this->assertSame($this->getStructureExceptionType(), $created['body']['type'], "create with {$failure}");
+            $this->assertRecordMissing($databaseId, $fixture['authorsId'], $authorId, "create with {$failure}");
+            $this->assertSame(0, $this->countRecords($databaseId, $fixture['booksId']), "create with {$failure} must not leave related documents written before the failure");
+            $this->assertSame(0, $this->countRecords($databaseId, $fixture['chaptersId']), "create with {$failure} must not leave nested related documents written before the failure");
+        }
+    }
+
+    public function testFailedNestedUpsertLeavesNoRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $books = [
+            ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+            ['name' => 'Book 2', 'chapters' => [['name' => \str_repeat('a', 129)]]],
+        ];
+
+        $newId = ID::unique();
+        $inserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $newId), $headers, [
+            'data' => ['name' => 'Author', 'books' => $books],
+        ]);
+        $this->assertSame(400, $inserted['headers']['status-code'], 'an upsert that inserts');
+        $this->assertSame($this->getStructureExceptionType(), $inserted['body']['type']);
+        $this->assertRecordMissing($databaseId, $fixture['authorsId'], $newId, 'an upsert that inserts');
+
+        $existingId = ID::unique();
+        $existing = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => ['name' => 'Author'],
+        ]);
+        $this->assertSame(201, $existing['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $existingId), $headers, [
+            'data' => ['name' => 'Author renamed', 'books' => $books],
+        ]);
+        $this->assertSame(400, $updated['headers']['status-code'], 'an upsert that updates');
+        $this->assertSame($this->getStructureExceptionType(), $updated['body']['type']);
+
+        $author = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $fixture['authorsId'], $existingId), $this->getServerHeaders());
+        $this->assertSame(200, $author['headers']['status-code']);
+        $this->assertSame('Author', $author['body']['name'], 'a failed upsert must not change the stored document');
+        $this->assertSame([], $this->relatedNames($databaseId, $fixture['authorsId'], $existingId, 'books'));
+
+        $this->assertSame(0, $this->countRecords($databaseId, $fixture['booksId']), 'a failed upsert must not leave related documents written before the failure');
+        $this->assertSame(0, $this->countRecords($databaseId, $fixture['chaptersId']), 'a failed upsert must not leave nested related documents written before the failure');
+    }
+
+    public function testWritesWithoutRelationshipsAreUnchanged(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'notes',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, 'name');
+        }
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => 'note1',
+            'data' => ['name' => 'Note 1'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame('Note 1', $created['body']['name']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, 'note2'), $headers, [
+            'data' => ['name' => 'Note 2'],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+        $this->assertSame('Note 2', $upserted['body']['name']);
+
+        $bulk = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            $this->getRecordResource() => [
+                ['$id' => 'note3', 'name' => 'Note 3'],
+                ['$id' => 'note4', 'name' => 'Note 4'],
+            ],
+        ]);
+        $this->assertSame(201, $bulk['headers']['status-code']);
+        $this->assertSame(2, $bulk['body']['total']);
+        $this->assertSame(['note3', 'note4'], \array_column($bulk['body'][$this->getRecordResource()], '$id'));
+
+        $bulkUpserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            $this->getRecordResource() => [
+                ['$id' => 'note4', 'name' => 'Note 4 renamed'],
+                ['$id' => 'note5', 'name' => 'Note 5'],
+            ],
+        ]);
+        $this->assertSame(200, $bulkUpserted['headers']['status-code']);
+        $this->assertSame(2, $bulkUpserted['body']['total']);
+
+        $this->assertSame(5, $this->countRecords($databaseId, $collectionId));
+    }
+
+    /**
+     * @return array{databaseId: string, authorsId: string, booksId: string, chaptersId: string}
+     */
+    private function setupAuthorBookChapterRelationship(): array
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        $ids = [];
+        foreach (['authors', 'books', 'chapters'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                $this->getSecurityParam() => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                ],
+            ]);
+            $this->assertSame(201, $collection['headers']['status-code']);
+            $ids[$name] = $collection['body']['$id'];
+
+            $attribute = $this->createAttribute($databaseId, $ids[$name], 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$name], 'name');
+        }
+
+        foreach ([['authors', 'books'], ['books', 'chapters']] as [$parent, $child]) {
+            $relationship = $this->createAttribute($databaseId, $ids[$parent], 'relationship', [
+                $this->getRelatedIdParam() => $ids[$child],
+                'type' => RelationType::OneToMany->value,
+                'key' => $child,
+                'twoWay' => false,
+                'onDelete' => ForeignKeyAction::SetNull->value,
+            ]);
+            $this->assertSame(202, $relationship['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$parent], $child);
+        }
+
+        return ['databaseId' => $databaseId, 'authorsId' => $ids['authors'], 'booksId' => $ids['books'], 'chaptersId' => $ids['chapters']];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getServerHeaders(): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+    }
+
+    private function getStructureExceptionType(): string
+    {
+        return $this->getRecordResource() === 'rows'
+            ? Exception::ROW_INVALID_STRUCTURE
+            : Exception::DOCUMENT_INVALID_STRUCTURE;
+    }
+
+    private function countRecords(string $databaseId, string $collectionId): int
+    {
+        $records = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertSame(200, $records['headers']['status-code']);
+
+        return $records['body']['total'];
+    }
+
+    private function assertRecordMissing(string $databaseId, string $collectionId, string $recordId, string $message): void
+    {
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $this->getServerHeaders());
+        $this->assertSame(404, $record['headers']['status-code'], "{$message} must not write the document");
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function relatedNames(string $databaseId, string $collectionId, string $recordId, string $key): array
+    {
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $this->getServerHeaders(), [
+            'queries' => [Query::select(['name', $key . '.*'])->toString()],
+        ]);
+        $this->assertSame(200, $record['headers']['status-code']);
+
+        $names = \array_column($record['body'][$key] ?? [], 'name');
+        \sort($names);
+
+        return $names;
+    }
+
     /**
      * @return array{databaseId: string, albumsId: string, artistsId: string}
      */
