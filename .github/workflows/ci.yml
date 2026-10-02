@@ -195,12 +195,13 @@ jobs:
       - name: Run Locale check
         run: node .github/workflows/static-analysis/locale/index.js
 
-  static-rules:
+  static-  rules:
     name: Checks / Rules
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       security-events: write
+      pull-requests: write
     env:
       SEMGREP_SEND_METRICS: 'off'
     steps:
@@ -213,6 +214,9 @@ jobs:
       - name: Validate rule fixtures
         run: semgrep test .semgrep
 
+      - name: Prove ERROR classes on scratch snippets
+        run: bash .semgrep/prove.sh
+
       - name: Run custom Semgrep rules
         run: >-
           semgrep scan
@@ -221,6 +225,17 @@ jobs:
           --exclude .semgrep
           --error
           --severity ERROR
+          src/Appwrite app/controllers app/init
+
+      - name: Write Semgrep JSON
+        if: always()
+        run: >-
+          semgrep scan
+          --config .semgrep
+          --metrics=off
+          --exclude .semgrep
+          --json
+          --output semgrep.json
           src/Appwrite app/controllers app/init
 
       - name: Write Semgrep SARIF
@@ -233,6 +248,14 @@ jobs:
           --sarif
           --output semgrep.sarif
           src/Appwrite app/controllers app/init
+
+      - name: Comment WARNING findings on the PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const comment = require('./.github/workflows/semgrep-comment.js');
+            await comment({ github, context, core });
 
       - name: Upload Semgrep results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3

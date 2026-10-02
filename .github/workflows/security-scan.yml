@@ -68,6 +68,9 @@ jobs:
       - name: Validate rule fixtures
         run: semgrep test .semgrep
 
+      - name: Prove ERROR classes on scratch snippets
+        run: bash .semgrep/prove.sh
+
       - name: Run custom Semgrep rules
         run: >-
           semgrep scan
