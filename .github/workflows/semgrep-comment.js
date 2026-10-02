@@ -1,10 +1,12 @@
 const fs = require('fs');
 const nodePath = require('path');
+const baseline = require('../../.semgrep/baseline.js');
 
 const marker = '<!-- semgrep-rules-comment -->';
 // GitHub issue comments cap at 65536. Leave headroom for the footer and marker.
 const COMMENT_LIMIT = 60000;
 const SNIPPET_LIMIT = 160;
+const footer = '_Posted by `Checks / Rules`. Re-runs update this comment in place. Rule details and baseline: `.semgrep/README.md`._';
 
 module.exports = async ({ github, context, core }) => {
     const findings = readFindings('semgrep.json', core);
@@ -21,11 +23,11 @@ module.exports = async ({ github, context, core }) => {
     try {
         await upsertComment(github, context, pullRequest.number, body);
     } catch (error) {
-        core.warning(`Could not post Semgrep comment: ${error.message}`);
+        core.warning(`Could not post security rules comment: ${error.message}`);
     }
 };
 
-function readFindings(path, core, root = process.cwd()) {
+function readFindings(path, core, root = process.cwd(), entries = baseline.load()) {
     if (!fs.existsSync(path)) {
         core?.warning(`Semgrep JSON not found at ${path}`);
         return [];
@@ -44,7 +46,9 @@ function readFindings(path, core, root = process.cwd()) {
     };
 
     const data = JSON.parse(fs.readFileSync(path, 'utf8'));
-    return (data.results || []).map((result) => {
+    const results = data.results || [];
+    const known = new Set(baseline.partition(results, entries, root).known);
+    return results.map((result) => {
         const id = String(result.check_id || '').replace(/^semgrep\./, '');
         const finding = {
             severity: String(result.extra?.severity || '').toUpperCase(),
@@ -54,6 +58,7 @@ function readFindings(path, core, root = process.cwd()) {
             line: result.start?.line,
             endLine: result.end?.line,
             message: String(result.extra?.message || '').replace(/\s+/g, ' ').trim(),
+            baselined: known.has(result),
         };
         const lines = source(result.path);
         const found = lines ? inspect(lines, result) : {};
@@ -455,15 +460,20 @@ function explain(finding, found) {
 }
 
 function buildComment(findings, options = {}) {
-    const errors = findings.filter((item) => item.severity === 'ERROR');
-    const warnings = findings.filter((item) => item.severity === 'WARNING');
+    const known = findings.filter((item) => item.baselined);
+    const current = findings.filter((item) => !item.baselined);
+    const errors = current.filter((item) => item.severity === 'ERROR');
+    const warnings = current.filter((item) => item.severity === 'WARNING');
 
-    if (findings.length === 0) {
+    if (current.length === 0) {
         return [
             marker,
-            '## Custom Semgrep rules',
+            '## Security rules',
             '',
-            'No WARNING or ERROR findings from custom Semgrep rules.',
+            'No new WARNING or ERROR findings from security rules.',
+            '',
+            ...summarizeKnown(known),
+            footer,
             '',
         ].join('\n');
     }
@@ -472,7 +482,7 @@ function buildComment(findings, options = {}) {
     const shownWarnings = warnings.slice();
     let omitted = 0;
 
-    const render = () => assembleComment(shownErrors, shownWarnings, errors.length, warnings.length, omitted, options);
+    const render = () => assembleComment(shownErrors, shownWarnings, errors.length, warnings.length, omitted, known, options);
 
     while (shownErrors.length + shownWarnings.length > 0 && render().length > COMMENT_LIMIT) {
         if (shownWarnings.length > 0) {
@@ -486,21 +496,40 @@ function buildComment(findings, options = {}) {
     return render();
 }
 
-function assembleComment(errors, warnings, errorTotal, warningTotal, omitted, options) {
+function summarizeKnown(known) {
+    if (known.length === 0) {
+        return [];
+    }
+    const counts = new Map();
+    for (const row of known) {
+        counts.set(row.id, (counts.get(row.id) || 0) + 1);
+    }
+    return [
+        '<details>',
+        `<summary>${known.length} existing finding${known.length === 1 ? '' : 's'} tracked in <code>.semgrep/baseline.json</code></summary>`,
+        '',
+        ...[...counts].sort((a, b) => a[0].localeCompare(b[0])).map(([id, total]) => `- \`${id}\` (${total})`),
+        '',
+        '</details>',
+        '',
+    ];
+}
+
+function assembleComment(errors, warnings, errorTotal, warningTotal, omitted, known, options) {
     const lines = [
         marker,
-        '## Custom Semgrep rules',
+        '## Security rules',
         '',
     ];
 
     if (errorTotal > 0) {
-        lines.push(`**ERROR** (${errorTotal}) — this check fails until these are resolved.`, '');
+        lines.push(`**ERROR** (${errorTotal} new) — this check fails until these are resolved.`, '');
         lines.push(...listFindings(errors, options));
         lines.push('');
     }
 
     if (warningTotal > 0) {
-        lines.push(`**WARNING** (${warningTotal}) — review signal only; does not fail the job.`, '');
+        lines.push(`**WARNING** (${warningTotal} new) — review signal only; does not fail the job.`, '');
         lines.push(...listFindings(warnings, options));
         lines.push('');
     }
@@ -510,7 +539,8 @@ function assembleComment(errors, warnings, errorTotal, warningTotal, omitted, op
         lines.push('');
     }
 
-    lines.push('_Posted by `Checks / Rules`. Re-runs update this comment in place. Rule details: `.semgrep/README.md`._');
+    lines.push(...summarizeKnown(known));
+    lines.push(footer);
     lines.push('');
     return lines.join('\n');
 }
