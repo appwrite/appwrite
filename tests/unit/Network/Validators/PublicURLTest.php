@@ -7,7 +7,9 @@ namespace Tests\Unit\Network\Validators;
 use Appwrite\Network\Allowlist;
 use Appwrite\Network\Validator\PublicURL;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
 
 final class PublicURLTest extends TestCase
 {
@@ -58,23 +60,6 @@ final class PublicURLTest extends TestCase
         $this->assertSame([], $validator->getResolve());
 
         $this->assertFalse($validator->isValid('http://127.0.0.1/'));
-        $this->assertSame([], $validator->getResolve());
-    }
-
-    public function testResolveUsesTheURLPort(): void
-    {
-        $validator = new PublicURL(Allowlist::parse('127.0.0.0/8,::1'));
-
-        $this->assertTrue($validator->isValid('http://localhost:8080/v1'), $validator->getDescription());
-        $this->assertStringStartsWith('localhost:8080:', $validator->getResolve()[0] ?? '');
-
-        $this->assertTrue($validator->isValid('http://localhost/v1'), $validator->getDescription());
-        $this->assertStringStartsWith('localhost:80:', $validator->getResolve()[0] ?? '');
-
-        $this->assertTrue($validator->isValid('https://localhost/v1'), $validator->getDescription());
-        $this->assertStringStartsWith('localhost:443:', $validator->getResolve()[0] ?? '');
-
-        $this->assertFalse($validator->isValid('http://10.0.0.5/v1'));
         $this->assertSame([], $validator->getResolve());
     }
 
@@ -139,6 +124,38 @@ final class PublicURLTest extends TestCase
         yield 'gopher scheme' => ['gopher://10.0.0.5/', 'valid URL'];
     }
 
+    #[RunInSeparateProcess]
+    public function testAcceptsHostnameResolvingIntoAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicURL(Allowlist::parse('127.0.0.0/8,::1'));
+        $results = [];
+
+        $this->inHookedCoroutine(function () use ($validator, &$results): void {
+            foreach (['http://localhost/', 'https://localhost/', 'http://localhost:8080/'] as $url) {
+                $results[$url] = [$validator->isValid($url), $validator->getResolve()];
+            }
+        });
+
+        $this->assertTrue($results['http://localhost/'][0], $validator->getDescription());
+        $this->assertCount(1, $results['http://localhost/'][1]);
+        $this->assertStringStartsWith('localhost:80:', $results['http://localhost/'][1][0]);
+        $this->assertStringStartsWith('localhost:443:', $results['https://localhost/'][1][0]);
+        $this->assertStringStartsWith('localhost:8080:', $results['http://localhost:8080/'][1][0]);
+    }
+
+    #[RunInSeparateProcess]
+    public function testRejectsHostnameResolvingOutsideAllowedSubnetInsideCoroutine(): void
+    {
+        $validator = new PublicURL(Allowlist::parse('10.0.0.0/8'));
+        $valid = null;
+
+        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
+            $valid = $validator->isValid('http://localhost/');
+        });
+
+        $this->assertFalse($valid);
+    }
+
     public function testDescriptionResetsBetweenCalls(): void
     {
         $validator = new PublicURL();
@@ -147,5 +164,11 @@ final class PublicURLTest extends TestCase
         $validator->isValid('unknown-address');
 
         $this->assertStringNotContainsString('127.0.0.1', $validator->getDescription());
+    }
+
+    private function inHookedCoroutine(callable $callback): void
+    {
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
+        Coroutine\run($callback);
     }
 }
