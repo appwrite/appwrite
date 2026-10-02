@@ -10,7 +10,6 @@ use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
@@ -119,12 +118,9 @@ class Install extends Action
         $opensslKey = trim($opensslKey);
         $assistantOpenAIKey = trim($assistantOpenAIKey);
 
+        // Empty never overrides the installed key; prepareEnvironmentVariables generates one only on a fresh install.
         if (EncryptionKey::isInsecure($opensslKey)) {
-            if ($config->isUpgrade()) {
-                $opensslKey = '';
-            } else {
-                $opensslKey = (new Token())->generate();
-            }
+            $opensslKey = '';
         }
 
         $account = [];
