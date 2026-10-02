@@ -84,7 +84,7 @@ Each `*.yml` rule has a sibling `*.php` file with `// ruleid:` and `// ok:` anno
 
 ## PR comment
 
-On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->` listing ERROR and WARNING findings (`file:line`, rule id, message). Re-runs edit that comment. Zero findings updates it to an all-clear. Same-repo PRs only (forks have no write token).
+On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->` as a bullet list (`file:line`, rule id, full message). Re-runs edit that comment. Zero findings updates it to an all-clear. Same-repo PRs only (forks have no write token).
 
 ## Deferred
 

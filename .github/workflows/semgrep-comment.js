@@ -1,6 +1,8 @@
 const fs = require('fs');
 
 const marker = '<!-- semgrep-rules-comment -->';
+// GitHub issue comments cap at 65536. Leave headroom for the footer and marker.
+const COMMENT_LIMIT = 60000;
 
 module.exports = async ({ github, context, core }) => {
     const findings = readFindings('semgrep.json', core);
@@ -47,27 +49,56 @@ function readFindings(path, core) {
 function buildComment(findings) {
     const errors = findings.filter((item) => item.severity === 'ERROR');
     const warnings = findings.filter((item) => item.severity === 'WARNING');
+
+    if (findings.length === 0) {
+        return [
+            marker,
+            '## Custom Semgrep rules',
+            '',
+            'No WARNING or ERROR findings from custom Semgrep rules.',
+            '',
+        ].join('\n');
+    }
+
+    const shownErrors = errors.slice();
+    const shownWarnings = warnings.slice();
+    let omitted = 0;
+
+    const render = () => assembleComment(shownErrors, shownWarnings, errors.length, warnings.length, omitted);
+
+    while (shownErrors.length + shownWarnings.length > 0 && render().length > COMMENT_LIMIT) {
+        if (shownWarnings.length > 0) {
+            shownWarnings.pop();
+        } else {
+            shownErrors.pop();
+        }
+        omitted = (errors.length - shownErrors.length) + (warnings.length - shownWarnings.length);
+    }
+
+    return render();
+}
+
+function assembleComment(errors, warnings, errorTotal, warningTotal, omitted) {
     const lines = [
         marker,
         '## Custom Semgrep rules',
         '',
     ];
 
-    if (findings.length === 0) {
-        lines.push('No WARNING or ERROR findings from custom Semgrep rules.');
-        lines.push('');
-        return lines.join('\n');
-    }
-
-    if (errors.length > 0) {
-        lines.push(`**ERROR** (${errors.length}) — this check fails until these are resolved.`, '');
-        lines.push(...table(errors));
+    if (errorTotal > 0) {
+        lines.push(`**ERROR** (${errorTotal}) — this check fails until these are resolved.`, '');
+        lines.push(...listFindings(errors));
         lines.push('');
     }
 
-    if (warnings.length > 0) {
-        lines.push(`**WARNING** (${warnings.length}) — review signal only; does not fail the job.`, '');
-        lines.push(...table(warnings));
+    if (warningTotal > 0) {
+        lines.push(`**WARNING** (${warningTotal}) — review signal only; does not fail the job.`, '');
+        lines.push(...listFindings(warnings));
+        lines.push('');
+    }
+
+    if (omitted > 0) {
+        lines.push(`_${omitted} more finding${omitted === 1 ? '' : 's'} omitted to stay under the GitHub comment size limit._`);
         lines.push('');
     }
 
@@ -76,27 +107,20 @@ function buildComment(findings) {
     return lines.join('\n');
 }
 
-function table(rows) {
-    const lines = [
-        '| File | Rule | Message |',
-        '| --- | --- | --- |',
-    ];
+function listFindings(rows) {
+    const lines = [];
     for (const row of rows) {
         const location = row.line ? `${row.path}:${row.line}` : row.path;
-        lines.push(`| \`${escapeCell(location)}\` | \`${escapeCell(row.id)}\` | ${escapeCell(clip(row.message, 160))} |`);
+        lines.push(`- \`${location}\` — \`${row.id}\``);
+        if (row.message) {
+            lines.push(`  ${row.message}`);
+        }
+        lines.push('');
+    }
+    if (lines[lines.length - 1] === '') {
+        lines.pop();
     }
     return lines;
-}
-
-function clip(text, max) {
-    if (text.length <= max) {
-        return text;
-    }
-    return `${text.slice(0, max - 1)}…`;
-}
-
-function escapeCell(text) {
-    return String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
 async function upsertComment(github, context, issueNumber, body) {
@@ -126,3 +150,6 @@ async function upsertComment(github, context, issueNumber, body) {
         body,
     });
 }
+
+module.exports.readFindings = readFindings;
+module.exports.buildComment = buildComment;
