@@ -294,7 +294,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function exchange(RequestInterface $request, ?callable $sink, bool $suppressRedirectBody = false, ?string $address = null): ResponseInterface
+    private function exchange(RequestInterface $request, ?callable $sink, bool $suppressRedirectBody = false, ?string $address = null, ?float $started = null): ResponseInterface
     {
         $uri = $request->getUri();
 
@@ -306,7 +306,8 @@ class Client implements Adapter
         // delivers it undecoded — so a stream must ask for identity instead.
         $streaming = $sink !== null;
 
-        $started = \microtime(true);
+        // An IPv6 retry keeps the first attempt's start, so both share one connect timeout
+        $started ??= \microtime(true);
         $client = $this->connect($request, $streaming, $address);
 
         $settings = $this->settings + [self::SETTING_HTTP2 => false];
@@ -439,7 +440,7 @@ class Client implements Adapter
                 $ipv6 = System::dnsLookup($client->host, $remaining, AF_INET6);
 
                 if (\is_string($ipv6) && $ipv6 !== '') {
-                    return $this->exchange($request, $sink, $suppressRedirectBody, $ipv6);
+                    return $this->exchange($request, $sink, $suppressRedirectBody, $ipv6, $started);
                 }
             }
 
