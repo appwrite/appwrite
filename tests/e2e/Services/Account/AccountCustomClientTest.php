@@ -2226,6 +2226,55 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testUpdateAccountRecoveryConcurrently(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $email = uniqid() . 'concurrent-recovery@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        });
+        $secret = $this->extractQueryParamsFromEmailLink($lastEmail['html'])['secret'];
+
+        $responses = $this->client->callConcurrently(array_map(fn (int $attempt): array => [
+            Client::METHOD_PUT,
+            '/account/recovery',
+            $headers,
+            [
+                'userId' => $userId,
+                'secret' => $secret,
+                'password' => 'concurrent-recovery-' . $attempt,
+            ],
+        ], range(1, 8)));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent reset may consume the recovery token: ' . json_encode($statuses));
+        $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent reset must be rejected: ' . json_encode($statuses));
+    }
+
     public function testSessionAlert(): void
     {
         $email = uniqid() . 'session-alert@appwrite.io';
