@@ -294,7 +294,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function exchange(RequestInterface $request, ?callable $sink, bool $suppressRedirectBody = false): ResponseInterface
+    private function exchange(RequestInterface $request, ?callable $sink, bool $suppressRedirectBody = false, ?string $address = null): ResponseInterface
     {
         $uri = $request->getUri();
 
@@ -307,7 +307,7 @@ class Client implements Adapter
         $streaming = $sink !== null;
 
         $started = \microtime(true);
-        $client = $this->connect($request, $streaming);
+        $client = $this->connect($request, $streaming, $address);
 
         $settings = $this->settings + [self::SETTING_HTTP2 => false];
 
@@ -429,7 +429,21 @@ class Client implements Adapter
                 throw new TimeoutException($request, $message, $code);
             }
 
-            throw $this->networkException($request, $message, $code, $statusCode, null, $client->headers);
+            $exception = $this->networkException($request, $message, $code, $statusCode, null, $client->headers);
+
+            // Swoole opens an IPv4 socket for a hostname, so a name with only an AAAA record
+            // fails to resolve. Only then, and only once, ask Swoole's resolver for its IPv6
+            // address and dial that. A name that resolves pays nothing for this.
+            if ($address === null && $exception instanceof DnsException && $client->host === \trim($uri->getHost(), '[]')) {
+                $remaining = (\is_int($budget) || \is_float($budget)) && $budget > 0 ? \max(0.001, $budget - (\microtime(true) - $started)) : -1;
+                $ipv6 = System::dnsLookup($client->host, $remaining, AF_INET6);
+
+                if (\is_string($ipv6) && $ipv6 !== '') {
+                    return $this->exchange($request, $sink, $suppressRedirectBody, $ipv6);
+                }
+            }
+
+            throw $exception;
         }
 
         $statusCode = $client->statusCode;
@@ -539,7 +553,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function connect(RequestInterface $request, bool $streaming): SwooleClient
+    private function connect(RequestInterface $request, bool $streaming, ?string $address = null): SwooleClient
     {
         $uri = $request->getUri();
         $secure = $uri->getScheme() === 'https';
@@ -548,7 +562,7 @@ class Client implements Adapter
         $connection = $streaming ? $this->streamConnection : $this->connection;
         $connectionKey = $streaming ? $this->streamConnectionKey : $this->connectionKey;
 
-        if ($connection instanceof SwooleClient && $connectionKey === $key) {
+        if ($address === null && $connection instanceof SwooleClient && $connectionKey === $key) {
             $socket = $connection->socket ?? null;
             if ($secure && $socket instanceof Coroutine\Socket) {
                 // SSL_peek can fail with errno=0 after an abrupt TLS EOF. Swoole's
@@ -561,10 +575,11 @@ class Client implements Adapter
             }
 
             // A client built with a hostname re-resolves it itself when it reconnects. One built
-            // with a checked address would keep dialing that address after the host moved, so a
-            // pooled connection that must reconnect is rebuilt with a freshly checked one.
+            // with an address would keep dialing that address after the host moved, so a pooled
+            // connection that must reconnect is rebuilt with a fresh one.
             $socket = $connection->socket ?? null;
-            if (!$this->reuseConnections || $this->destinations instanceof Anywhere || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
+            $dialsHostname = $connection->host === \trim($uri->getHost(), '[]');
+            if (!$this->reuseConnections || $dialsHostname || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
                 return $connection;
             }
 
@@ -576,7 +591,7 @@ class Client implements Adapter
         // destinations allowed.
         $proxied = $this->destinations->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
         // Swoole dials a bare IPv6 address, so the URI's brackets come off; Host keeps them
-        $address = $proxied || $this->destinations instanceof Anywhere ? \trim($uri->getHost(), '[]') : $this->address($request);
+        $address ??= $proxied || $this->destinations instanceof Anywhere ? \trim($uri->getHost(), '[]') : $this->address($request);
 
         try {
             // Dial the address the destination allowed; TLS and Host stay on the hostname

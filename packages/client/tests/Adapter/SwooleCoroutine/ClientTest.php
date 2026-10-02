@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Client\Tests\Adapter\SwooleCoroutine;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Swoole\Coroutine;
 use Throwable;
 use Utopia\Client\Adapter;
@@ -41,6 +42,88 @@ final class ClientTest extends AdapterContract
         if ($failure instanceof Throwable) {
             throw $failure;
         }
+    }
+
+    /**
+     * Swoole opens an IPv4 socket for a hostname, so a name with only an AAAA record
+     * needs the adapter to find its IPv6 address. A separate process, because the
+     * resolver Swoole asks is a process-wide setting.
+     */
+    #[RunInSeparateProcess]
+    public function testItConnectsToAHostnameWithOnlyAnIpv6Address(): void
+    {
+        $status = null;
+        $body = null;
+        $queries = [];
+
+        $this->runAdapter(function () use (&$status, &$body, &$queries): void {
+            // A resolver that knows one name, and only its AAAA record
+            $resolver = new Coroutine\Socket(AF_INET, SOCK_DGRAM, 0);
+            $resolver->bind('127.0.0.1', 0);
+
+            Coroutine::create(static function () use ($resolver, &$queries): void {
+                while (true) {
+                    $peer = null;
+                    $query = $resolver->recvfrom($peer, 5.0);
+                    if (!\is_string($query) || \strlen($query) < 17 || !\is_array($peer)) {
+                        return;
+                    }
+
+                    $offset = 12;
+                    $labels = [];
+                    while (($length = \ord($query[$offset])) !== 0) {
+                        $labels[] = \substr($query, $offset + 1, $length);
+                        $offset += $length + 1;
+                    }
+
+                    $name = \implode('.', $labels);
+                    $unpacked = \unpack('n', \substr($query, $offset + 1, 2));
+                    $type = \is_array($unpacked) && \is_int($unpacked[1] ?? null) ? $unpacked[1] : 0;
+                    $queries[] = $name . '/' . $type;
+
+                    $known = $name === 'v6only.test';
+                    // A compressed-name AAAA record for ::1
+                    $answer = $known && $type === 28 ? "\xc0\x0c\x00\x1c\x00\x01\x00\x00\x00\x3c\x00\x10" . \inet_pton('::1') : '';
+                    $response = \substr($query, 0, 2)
+                        . ($known ? "\x81\x80" : "\x81\x83")
+                        . "\x00\x01" . \pack('n', $answer === '' ? 0 : 1) . "\x00\x00\x00\x00"
+                        . \substr($query, 12, $offset + 5 - 12)
+                        . $answer;
+
+                    $resolver->sendto($peer['address'], $peer['port'], $response);
+                }
+            });
+
+            $bound = $resolver->getsockname();
+            $port = \is_array($bound) && \is_int($bound['port'] ?? null) ? $bound['port'] : 0;
+            Coroutine::set(['dns_server' => '127.0.0.1:' . $port]);
+
+            $server = new Coroutine\Server('::1', 0, false, true);
+            $server->handle(static function (Coroutine\Server\Connection $connection): void {
+                $connection->recv(1.0);
+                $connection->send("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+                $connection->close();
+            });
+            Coroutine::create(static fn (): bool => $server->start());
+            Coroutine::sleep(0.05);
+
+            try {
+                $response = $this->createAdapter()->sendRequest(
+                    new Request\Factory()->createRequest(Method::GET, 'http://v6only.test:' . $server->port . '/'),
+                );
+                $status = $response->getStatusCode();
+                $body = (string) $response->getBody();
+            } finally {
+                $server->shutdown();
+                $resolver->close();
+            }
+        });
+
+        $this->assertSame(200, $status);
+        $this->assertSame('ok', $body);
+        // The IPv6 lookup happens only after the name failed to resolve as IPv4
+        $this->assertSame('v6only.test/1', $queries[0] ?? null);
+        $this->assertContains('v6only.test/28', $queries);
     }
 
     public function testItReconnectsBeforePostingToAnAbruptlyClosedIdleTlsConnection(): void
