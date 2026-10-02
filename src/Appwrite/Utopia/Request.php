@@ -40,7 +40,30 @@ class Request extends UtopiaRequest
             return $remoteAddr;
         }
 
-        return parent::getIP();
+        foreach ($this->trusted->ip as $header) {
+            $ips = [];
+            foreach (explode(',', $this->getHeaderLine($header)) as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
+                    $ips[] = $ip;
+                }
+            }
+
+            if ($ips === []) {
+                continue;
+            }
+
+            // Proxies that append keep client-supplied entries on the left, so the rightmost untrusted hop is the client.
+            foreach (array_reverse($ips) as $ip) {
+                if (!$this->trustedProxies->contains($ip)) {
+                    return $ip;
+                }
+            }
+
+            return $ips[0];
+        }
+
+        return $remoteAddr;
     }
 
     /**
