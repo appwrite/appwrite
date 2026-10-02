@@ -560,20 +560,22 @@ class Client implements Adapter
                 }
             }
 
-            // A pooled connection that must reconnect dials a freshly checked address: the
-            // host may have moved since the address this client was built with was checked
+            // A client built with a hostname re-resolves it itself when it reconnects. One built
+            // with a checked address would keep dialing that address after the host moved, so a
+            // pooled connection that must reconnect is rebuilt with a freshly checked one.
             $socket = $connection->socket ?? null;
-            if (!$this->reuseConnections || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
+            if (!$this->reuseConnections || $this->destinations instanceof Anywhere || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
                 return $connection;
             }
 
             $connection->close();
         }
 
-        // A permitted proxy resolves and reaches the target itself; otherwise dial an
-        // address the destination allowed
+        // Anywhere has nothing to check, and a permitted proxy resolves and reaches the target
+        // itself: both leave the hostname to Swoole. Otherwise dial an address the
+        // destinations allowed.
         $proxied = $this->destinations->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
-        $address = $proxied ? $uri->getHost() : $this->address($request);
+        $address = $proxied || $this->destinations instanceof Anywhere ? $uri->getHost() : $this->address($request);
 
         try {
             // Dial the address the destination allowed; TLS and Host stay on the hostname
