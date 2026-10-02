@@ -638,8 +638,8 @@ trait AvatarsBase
             'height' => 600,
             'userAgent' => str_repeat('a', 512),
             'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
             ],
         ]);
 
@@ -698,17 +698,17 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test with mixed array (some numeric keys) - Assoc validator allows this
-        // Mixed arrays are considered associative by the Assoc validator
+        // Mixed arrays pass the Assoc validator, but a numeric key is not an allowed header name
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
-            'headers' => ['User-Agent' => 'MyApp', 'value2', 'Accept' => 'text/html'], // Mixed array
+            'headers' => ['Accept-Language' => 'en-US', 'value2', 'Accept' => 'text/html'], // Mixed array
         ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
 
         // Test with empty array (should pass - empty associative array)
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
@@ -721,7 +721,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Test with valid headers object (should pass)
+        // Allowed header names are matched case-insensitively
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -729,29 +729,12 @@ trait AvatarsBase
             'width' => 800,
             'height' => 600,
             'headers' => [
-                'User-Agent' => 'MyApp/1.0',
-                'Accept' => 'text/html,application/xhtml+xml',
-                'Accept-Language' => 'en-US,en;q=0.9'
+                'accept' => 'text/html,application/xhtml+xml',
+                'ACCEPT-LANGUAGE' => 'fr-FR,fr;q=0.9',
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Test with headers containing special characters (should pass validation)
-        // Note: Authorization/Content-Type headers may cause the target site to respond differently,
-        // so the browser service may fail (404) even though parameter validation passes.
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
-            'width' => 800,
-            'height' => 600,
-            'headers' => [
-                'X-Custom-Header' => 'custom-value',
-                'Authorization' => 'Bearer token123',
-                'Content-Type' => 'application/json'
-            ],
-        ]);
-        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
 
         // Test with custom viewport width and height
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
@@ -817,16 +800,49 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Test for FAILURE - Headers that unlock cloud metadata services
+         * Test for FAILURE - Headers outside the allowlist, including those that unlock cloud metadata services
          */
-        foreach (['Metadata-Flavor' => 'Google', 'Metadata' => 'true', 'host' => 'metadata.google.internal'] as $name => $value) {
+        $disallowed = [
+            'Metadata-Flavor' => 'Google',
+            'Metadata' => 'true',
+            'host' => 'metadata.google.internal',
+            'X-aws-ec2-metadata-token' => 'token',
+            'Authorization' => 'Bearer Oracle',
+            'Cookie' => 'session=abc',
+            'User-Agent' => 'MyApp/1.0',
+            'X-Forwarded-For' => '127.0.0.1',
+            'X-Custom-Header' => 'custom-value',
+            'Content-Type' => 'application/json',
+        ];
+        foreach ($disallowed as $name => $value) {
             $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
                 'headers' => [$name => $value],
             ]);
-            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header '{$name}' should be rejected");
+            $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        }
+
+        /**
+         * Test for FAILURE - Allowed header names with unsafe values
+         */
+        $invalidValues = [
+            'crlf' => ['Accept-Language' => "en-US\r\nMetadata-Flavor: Google"],
+            'newline' => ['Accept' => "text/html\nHost: metadata.google.internal"],
+            'empty' => ['Accept' => ''],
+            'too long' => ['Accept-Language' => \str_repeat('a', 513)],
+            'array' => ['Accept' => ['text/html', 'application/json']],
+        ];
+        foreach ($invalidValues as $case => $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+                'headers' => $headers,
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header value case '{$case}' should be rejected");
             $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         }
 
