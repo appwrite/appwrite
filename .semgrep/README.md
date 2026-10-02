@@ -1,12 +1,12 @@
-# Custom Semgrep rules
+# Security rules
 
-In-repo rules for Appwrite PHP coding standards: route declarations (scope, `api` group, abuse limits), authorization skips and global disables, credential responses and sensitive output, guest-reachable input validation (URL, redirect, map params), outbound client settings, client IP and forwarded headers, nested document permissions, secrets and randomness, and process / filesystem / SQL / XML / dynamic-code use in request-serving code.
+In-repo Semgrep rules for Appwrite PHP coding standards: route declarations (scope, `api` group, abuse limits), authorization skips and global disables, credential responses and sensitive output, guest-reachable input validation (URL, redirect, map params), outbound client settings, client IP and forwarded headers, nested document permissions, secrets and randomness, and process / filesystem / SQL / XML / dynamic-code use in request-serving code.
 
 These run in CI (`Checks / Rules` in `.github/workflows/ci.yml`, and the scheduled `Scan Rules` job in `.github/workflows/security-scan.yml`). They do not replace PHPStan or Trivy.
 
-CI fails on **ERROR** findings only. WARNING rules are review signal for known debt: they are written to SARIF and posted as a single sticky PR comment (`<!-- semgrep-rules-comment -->`) that is updated in place on each run.
+CI fails on **new ERROR** findings only. New WARNING findings are review signal: they are posted as a single sticky PR comment (`<!-- semgrep-rules-comment -->`) that is updated in place on each run. Findings already recorded in [`baseline.json`](baseline.json) neither fail the job nor appear in detail on the comment. Every finding, baselined or not, is still written to SARIF.
 
-Rules are written as classes with allowlists, not per-file lists. When a class would flood the current tree it ships as WARNING with the debt visible in the PR comment, rather than path-excluding the offending files.
+Rules are written as classes with allowlists, not per-file lists. When a class would flood the current tree it ships as WARNING with the existing sites in the baseline, rather than path-excluding the offending files.
 
 ## Run locally
 
@@ -24,27 +24,51 @@ semgrep test .semgrep
 bash .semgrep/prove.sh
 ```
 
-CI-equivalent ERROR scan:
-
-```bash
-semgrep scan \
-  --config .semgrep \
-  --metrics=off \
-  --error \
-  --severity ERROR \
-  --exclude .semgrep \
-  src/Appwrite app/controllers app/init
-```
-
-Include WARNING rules:
+CI-equivalent scan and baseline check (exits 1 on any ERROR not in the baseline, and lists every new finding):
 
 ```bash
 semgrep scan \
   --config .semgrep \
   --metrics=off \
   --exclude .semgrep \
+  --json \
+  --output semgrep.json \
+  src/Appwrite app/controllers app/init
+node .semgrep/baseline.js check semgrep.json
+```
+
+Human-readable output for every finding, ignoring the baseline:
+
+```bash
+semgrep scan \
+  --config .semgrep \
+  --metrics=off \
+  --exclude .semgrep \
   src/Appwrite app/controllers app/init
 ```
+
+## Baseline
+
+[`baseline.json`](baseline.json) records the findings on the current tree so that adding or tightening a rule does not fail unrelated PRs. Semgrep OSS only offers a commit-diff baseline (`--baseline-commit`), so `baseline.js` filters the JSON output itself.
+
+Each entry is keyed on rule id, file path, and the matched source text with whitespace collapsed (extended to the next lines when the first line is short, such as a bare `$this`). The `line` field is informational. Edits elsewhere in the file that shift lines keep the entry matched, and identical lines in one file need one entry each. Editing the matched code itself makes it a new finding.
+
+`node .semgrep/baseline.js check semgrep.json` prints the total, how many are baselined, and the new ERROR / WARNING counts. It also lists baseline entries that no longer match, which is fine to leave until the next regeneration. Only new ERRORs fail the job.
+
+Regenerate after fixing baselined sites, or when a new rule or an intentional known site should be accepted:
+
+```bash
+semgrep scan \
+  --config .semgrep \
+  --metrics=off \
+  --exclude .semgrep \
+  --json \
+  --output semgrep.json \
+  src/Appwrite app/controllers app/init
+node .semgrep/baseline.js update semgrep.json
+```
+
+Review the `baseline.json` diff like code: an added ERROR entry should come with a reason in the PR. Fixing a baselined site and dropping its entry is always welcome.
 
 ## Writing rules
 
@@ -129,11 +153,13 @@ semgrep scan \
 
 Each `*.yml` rule has a sibling `*.php` file with `// ruleid:` and `// ok:` annotations. `semgrep test .semgrep` checks those, not production code.
 
-`bash .semgrep/prove.sh` writes short-lived snippets under `src/Appwrite/Platform/Modules/Databases/_semgrep_prove/` (gitignored, removed on exit). It runs the real CI ERROR scan on one known-bad snippet per ERROR rule, asserts the scan fails **with that rule id**, then asserts a file of house patterns (gated skip, allowlisted metadata skip, `PublicURL`, `redirectValidator`, `ALLOWED_HEADERS`, `getIP()`, `random_bytes`, safe `unserialize`, bound SQL, `basename`, httponly cookie, event-payload `showSensitive`) produces no ERROR.
+`bash .semgrep/prove.sh` writes short-lived snippets under `src/Appwrite/Platform/Modules/Databases/_semgrep_prove/` (gitignored, removed on exit). It runs an ERROR-only scan (no baseline) on one known-bad snippet per ERROR rule, asserts the scan fails **with that rule id**, then asserts a file of house patterns (gated skip, allowlisted metadata skip, `PublicURL`, `redirectValidator`, `ALLOWED_HEADERS`, `getIP()`, `random_bytes`, safe `unserialize`, bound SQL, `basename`, httponly cookie, event-payload `showSensitive`) produces no ERROR.
 
 ## PR comment
 
-On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->`. Re-runs edit that comment. Zero findings updates it to an all-clear. Same-repo PRs only (forks have no write token).
+On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->`. Re-runs edit that comment. Same-repo PRs only (forks have no write token).
+
+Only findings outside the baseline are listed in detail. Baselined findings are summarized as per-rule counts in a collapsed `<details>` block. With no new findings the comment becomes an all-clear plus that summary.
 
 Findings are grouped by rule (full rule message once per group). `semgrep.json` carries no source lines or metavariables without a Semgrep login, so `.github/workflows/semgrep-comment.js` reads the matched file from the checkout and, per finding, prints:
 
@@ -149,4 +175,4 @@ New rules should add an entry to `explainers` in that script; without one the fi
 - Dynamic table names (`database_*_collection_*`, `bucket_*`) and variable collection arguments. Common, usually followed by document ACL on the loaded row.
 - Cross-site request checks on console routes. Origin and platform validation is centralized in `app/controllers/general.php`, not per route, so there is no per-route shape to match.
 - Taint from a guest `url` param to a distant outbound client call. The param-level `guest-url-without-publicurl` and `redirect-param-without-validator` rules cover the declaration instead.
-- Promoting the WARNING classes to ERROR. Each has live debt on the current tree (listed in the PR comment); promote once that debt is cleared.
+- Promoting the WARNING classes to ERROR. Each has live debt on the current tree (tracked in `baseline.json`); promote once that debt is cleared.
