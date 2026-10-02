@@ -1,0 +1,1 @@
+List the pending installation requests of the current project. A request is created when an organization member asks the owners to approve the Git provider app installation, and becomes ready once an owner approves it on the provider.

@@ -28,6 +28,9 @@ use Appwrite\Platform\Modules\VCS\Http\Installations\XList as ListInstallations;
 use Appwrite\Platform\Modules\VCS\Http\Origin\Authorize\Get as GetOriginAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Origin\Callback\Get as GetOriginCallback;
 use Appwrite\Platform\Modules\VCS\Http\Origin\Events\Create as CreateOriginEvent;
+use Appwrite\Platform\Modules\VCS\Http\Requests\Delete as DeleteRequest;
+use Appwrite\Platform\Modules\VCS\Http\Requests\Update as UpdateRequest;
+use Appwrite\Platform\Modules\VCS\Http\Requests\XList as ListRequests;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -62,6 +65,11 @@ class Http extends Service
         $this->addAction(ListInstallations::getName(), new ListInstallations());
         $this->addAction(DeleteInstallation::getName(), new DeleteInstallation());
         $this->addAction(ListNamespaces::getName(), new ListNamespaces());
+
+        // Installation requests
+        $this->addAction(ListRequests::getName(), new ListRequests());
+        $this->addAction(UpdateRequest::getName(), new UpdateRequest());
+        $this->addAction(DeleteRequest::getName(), new DeleteRequest());
 
         // Repositories
         $this->addAction(CreateRepository::getName(), new CreateRepository());
