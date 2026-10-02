@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
+use Utopia\Validator\Subnet;
 
 final class EndpointTest extends TestCase
 {
@@ -114,7 +115,17 @@ final class EndpointTest extends TestCase
 
         $this->assertIsArray($resolve);
         $this->assertCount(1, $resolve);
-        $this->assertMatchesRegularExpression('/^localhost:8080:(127\.\d+\.\d+\.\d+|\[::1\])(,(127\.\d+\.\d+\.\d+|\[::1\]))*$/', $resolve[0]);
+
+        [$host, $port, $addresses] = \explode(':', $resolve[0], 3);
+        $this->assertSame('localhost', $host);
+        $this->assertSame('8080', $port);
+
+        $loopback = [new Subnet('127.0.0.0/8'), new Subnet('::1')];
+
+        foreach (\explode(',', $addresses) as $address) {
+            $address = \trim($address, '[]');
+            $this->assertTrue(\array_any($loopback, fn (Subnet $subnet): bool => $subnet->isValid($address)), "Expected {$address} to be a loopback address");
+        }
     }
 
     public function testResolveIsEmptyForIpLiterals(): void
