@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
 
 trait AvatarsBase
 {
@@ -1790,6 +1791,133 @@ trait AvatarsBase
                 ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
                 "Pixel at {$x},{$y} does not match the expected avatar background."
             );
+        }
+    }
+
+    /**
+     * A user of its own, so a photo never leaks into tests that expect the default chain.
+     *
+     * @return array<string, string>
+     */
+    private function createPhotoUser(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = \uniqid('photo-', true) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'User Name',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
+    /**
+     * Random pixels don't compress, so the PNG size follows the dimensions.
+     */
+    private function createNoiseImage(int $width, int $height): string
+    {
+        $image = new \Imagick();
+        $image->newImage($width, $height, '#808080');
+        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+        $image->setImageDepth(8);
+        $image->setImageFormat('png24');
+
+        return $image->getImageBlob();
+    }
+
+    private function createImage(string $color, string $format): string
+    {
+        $image = new \Imagick();
+        $image->newImage(64, 64, $color);
+        $image->setImageFormat($format);
+        $image->setImageCompressionQuality(100);
+
+        if ($format === 'webp') {
+            $image->setOption('webp:lossless', 'true');
+        }
+
+        return $image->getImageBlob();
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $extra
+     * @return array<string, mixed>
+     */
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ], $extra), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getPhoto(array $headers): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body'];
+    }
+
+    /**
+     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
+     */
+    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
+    {
+        $expectedImage = new \Imagick();
+        $expectedImage->readImageBlob($expected);
+        $actualImage = new \Imagick();
+        $actualImage->readImageBlob($actual);
+
+        $width = $expectedImage->getImageWidth();
+        $height = $expectedImage->getImageHeight();
+
+        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
+
+        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
+            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
+            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
+
+            foreach (['r', 'g', 'b'] as $channel) {
+                $this->assertLessThanOrEqual(
+                    $tolerance,
+                    \abs($expectedColor[$channel] - $actualColor[$channel]),
+                    "Pixel at {$x},{$y} differs from the uploaded photo."
+                );
+            }
         }
     }
 }

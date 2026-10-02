@@ -1,12 +1,17 @@
 <?php
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Coroutine;
 use Swoole\Runtime;
+use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -20,6 +25,8 @@ use Utopia\DSN\DSN;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -177,6 +184,27 @@ $container->set('getRedis', fn () => function (): \Redis {
     return $ctx['redis'] = $redis;
 }, []);
 
+if (!$container->has('publisherForUsage')) {
+    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
+        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+        $publisherPoolName = 'publisher';
+
+        if (!empty($statsUsageConnection)) {
+            try {
+                $pools->get('publisher_' . $statsUsageConnection);
+                $publisherPoolName = 'publisher_' . $statsUsageConnection;
+            } catch (\Throwable) {
+                // Fallback to the default publisher pool when the custom one is unavailable.
+            }
+        }
+
+        return new UsagePublisher(
+            new BrokerPool(publisher: $pools->get($publisherPoolName)),
+            new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', QueueEvent::STATS_USAGE_QUEUE_NAME)),
+        );
+    }, ['pools']);
+}
+
 // Register the CONNECT authenticator and per-SUBSCRIBE authorizer on the global container
 // (see app/init/mqtt/connection.php). The CONNECT/SUBSCRIBE handlers inject them by name,
 // resolved through the packet container that inherits from this one.
@@ -204,7 +232,48 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 // Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
-$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register): void {
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container): void {
+    // Flush accumulated per-project usage (connections, deliveries) to the stats-usage queue.
+    Timer::tick(60000, function () use ($mqtt, $container): void {
+        $usage = $mqtt->flushUsage();
+        if ($usage === []) {
+            return;
+        }
+
+        go(function () use ($usage, $container): void {
+            try {
+                /** @var UsagePublisher $publisherForUsage */
+                $publisherForUsage = $container->get('publisherForUsage');
+                $getConsoleDB = $container->get('getConsoleDB');
+                $dbForPlatform = $getConsoleDB();
+
+                foreach ($usage as $projectId => $counts) {
+                    $project = $dbForPlatform->getAuthorization()->skip(
+                        fn () => $dbForPlatform->getDocument('projects', $projectId)
+                    );
+                    if ($project->isEmpty()) {
+                        continue;
+                    }
+
+                    $context = new UsageContext();
+                    if (($counts['connections'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_CONNECTIONS, (int) $counts['connections']);
+                    }
+                    if (($counts['delivered'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_MESSAGES_DELIVERED, (int) $counts['delivered']);
+                    }
+
+                    $publisherForUsage->enqueue(new UsageMessage(
+                        project: $project,
+                        metrics: $context->getMetrics(),
+                    ));
+                }
+            } catch (\Throwable $error) {
+                Console::warning('Failed to publish MQTT usage: ' . $error->getMessage());
+            }
+        });
+    });
+
     go(function () use ($server, $handler, $mqtt, $register): void {
         $attempts = 0;
         while ($attempts < 60) {
@@ -225,6 +294,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
                     $sequence = (int) ($event['sequence'] ?? 0);
+                    $publishedAt = (float) ($event['publishedAt'] ?? 0.0);
                     $message = base64_decode((string) ($event['payload'] ?? ''));
 
                     $span = Span::init('mqtt.deliver');
@@ -233,7 +303,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $span->set('mqtt.qos', $qos);
                     $span->set('mqtt.is_broker', true);
 
-                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence);
+                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence, $publishedAt);
 
                     $span->set('mqtt.subscribers', $delivered);
                     if ($delivered === 0) {
