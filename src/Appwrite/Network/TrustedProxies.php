@@ -4,7 +4,7 @@ namespace Appwrite\Network;
 
 final class TrustedProxies
 {
-    public const string DEFAULT = '127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16';
+    public const string DEFAULT = '127.0.0.1,::1,10.0.0.0/8,100.64.0.0/10,172.16.0.0/12,192.168.0.0/16';
 
     /**
      * @param list<string> $cidrs
@@ -34,11 +34,6 @@ final class TrustedProxies
         }
 
         return new self($cidrs);
-    }
-
-    public function isEmpty(): bool
-    {
-        return $this->cidrs === [];
     }
 
     public function contains(string $ip): bool

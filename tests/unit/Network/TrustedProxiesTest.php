@@ -14,7 +14,6 @@ final class TrustedProxiesTest extends TestCase
     {
         $proxies = TrustedProxies::parse('');
 
-        $this->assertTrue($proxies->isEmpty());
         $this->assertFalse($proxies->contains('10.0.0.1'));
         $this->assertFalse($proxies->contains('127.0.0.1'));
     }
@@ -27,8 +26,8 @@ final class TrustedProxiesTest extends TestCase
         try {
             $proxies = TrustedProxies::fromEnvironment();
 
-            $this->assertFalse($proxies->isEmpty());
             $this->assertTrue($proxies->contains('172.18.0.5'));
+            $this->assertTrue($proxies->contains('100.64.1.2'));
             $this->assertTrue($proxies->contains('127.0.0.1'));
             $this->assertFalse($proxies->contains('203.0.113.10'));
         } finally {
@@ -42,7 +41,10 @@ final class TrustedProxiesTest extends TestCase
         putenv('_APP_TRUSTED_PROXIES=');
 
         try {
-            $this->assertTrue(TrustedProxies::fromEnvironment()->isEmpty());
+            $proxies = TrustedProxies::fromEnvironment();
+
+            $this->assertFalse($proxies->contains('127.0.0.1'));
+            $this->assertFalse($proxies->contains('10.0.0.1'));
         } finally {
             putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
         }
