@@ -123,7 +123,8 @@ class Server
             $this->startDockerInstaller($opts);
         }
 
-        $this->issueInstallerSecret();
+        self::issueInstallerSecret();
+        $this->printInstallerSecret();
         $this->printInstallerUrl($host, $port);
         $this->startSwooleServer($host, (int) $port, $readyFile);
     }
@@ -138,9 +139,18 @@ class Server
         self::$installerSecret = $secret;
     }
 
-    private function issueInstallerSecret(): void
+    public static function issueInstallerSecret(): string
     {
-        self::$installerSecret = bin2hex(random_bytes(32));
+        $fromEnv = getenv('APPWRITE_INSTALLER_SECRET');
+        self::$installerSecret = (is_string($fromEnv) && $fromEnv !== '')
+            ? $fromEnv
+            : bin2hex(random_bytes(32));
+
+        return self::$installerSecret;
+    }
+
+    private function printInstallerSecret(): void
+    {
         fwrite(STDOUT, PHP_EOL);
         fwrite(STDOUT, 'Installer secret: ' . self::$installerSecret . PHP_EOL);
         fwrite(STDOUT, 'Provide it as the x-appwrite-installer-secret header, or open the URL below.' . PHP_EOL);

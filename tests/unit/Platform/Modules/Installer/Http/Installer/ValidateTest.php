@@ -47,6 +47,21 @@ final class ValidateTest extends TestCase
         )));
     }
 
+    public function testIssueInstallerSecretUsesEnvironment(): void
+    {
+        $previous = getenv('APPWRITE_INSTALLER_SECRET');
+        putenv('APPWRITE_INSTALLER_SECRET=from-parent');
+
+        try {
+            $this->assertSame('from-parent', Server::issueInstallerSecret());
+            $this->assertTrue(Validate::validateSecret($this->request(
+                headers: [Server::INSTALLER_SECRET_HEADER => 'from-parent'],
+            )));
+        } finally {
+            putenv($previous === false ? 'APPWRITE_INSTALLER_SECRET' : 'APPWRITE_INSTALLER_SECRET=' . $previous);
+        }
+    }
+
     /**
      * @param array<string, string> $cookies
      * @param array<string, string> $headers

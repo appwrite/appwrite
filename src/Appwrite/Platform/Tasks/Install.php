@@ -244,7 +244,6 @@ class Install extends Action
         // Skip the web installer when explicit CLI params are provided
         if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
-            Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
@@ -408,10 +407,15 @@ class Install extends Action
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
         // (otherwise the backgrounded process holds the pipe open and exec() hangs)
+        $secret = bin2hex(random_bytes(32));
         $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
-        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
+        \exec(
+            'APPWRITE_INSTALLER_SECRET=' . \escapeshellarg($secret)
+            . " php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!",
+            $output
+        );
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {
@@ -430,6 +434,9 @@ class Install extends Action
             Console::warning('Web installer did not respond in time. Please refresh the browser.');
             return;
         }
+
+        Console::info('Installer secret: ' . $secret);
+        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
 
         if ($this->isInstallationComplete($port)) {
             Console::success('Installation completed.');
