@@ -21,25 +21,22 @@ class Request extends UtopiaRequest
     private array $filters = [];
     private ?Route $route = null;
     private ?array $filteredParams = null;
+    private readonly TrustedProxies $trustedProxies;
 
     public function __construct(SwooleRequest $request)
     {
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
+        $this->trustedProxies = TrustedProxies::fromEnvironment();
 
         parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
     }
 
-    /**
-     * Client address. X-Forwarded-For and other trusted IP headers are used
-     * only when the connection `remote_addr` is in `_APP_TRUSTED_PROXIES`.
-     * An empty list ignores client forwarding headers (safe for direct exposure).
-     */
     #[\Override]
     public function getIP(): string
     {
         $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
 
-        if (!TrustedProxies::fromEnv()->contains($remoteAddr)) {
+        if (!$this->trustedProxies->contains($remoteAddr)) {
             return $remoteAddr;
         }
 

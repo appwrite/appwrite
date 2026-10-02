@@ -2,13 +2,6 @@
 
 namespace Appwrite\Network;
 
-/**
- * Connection addresses that may supply client IP headers such as X-Forwarded-For.
- *
- * An unset `_APP_TRUSTED_PROXIES` trusts loopback and private networks, where
- * the bundled Traefik runs. An empty value trusts no hop: the connection
- * address is used and client-controlled forwarding headers are ignored.
- */
 final class TrustedProxies
 {
     public const string DEFAULT = '127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16';
@@ -21,15 +14,19 @@ final class TrustedProxies
     ) {
     }
 
-    public static function fromEnv(?string $value = null): self
+    public static function fromEnvironment(): self
     {
-        $raw = $value ?? getenv('_APP_TRUSTED_PROXIES');
-        if ($raw === false) {
-            $raw = self::DEFAULT;
-        }
+        // Not System::getEnv(): an empty value must trust no proxy rather than fall back to the default.
+        $value = getenv('_APP_TRUSTED_PROXIES');
+
+        return self::parse($value === false ? self::DEFAULT : $value);
+    }
+
+    public static function parse(string $value): self
+    {
         $cidrs = [];
 
-        foreach (explode(',', $raw) as $part) {
+        foreach (explode(',', $value) as $part) {
             $part = trim($part);
             if ($part !== '') {
                 $cidrs[] = $part;

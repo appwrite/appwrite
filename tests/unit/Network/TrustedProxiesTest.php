@@ -12,7 +12,7 @@ final class TrustedProxiesTest extends TestCase
 {
     public function testEmptyListTrustsNobody(): void
     {
-        $proxies = TrustedProxies::fromEnv('');
+        $proxies = TrustedProxies::parse('');
 
         $this->assertTrue($proxies->isEmpty());
         $this->assertFalse($proxies->contains('10.0.0.1'));
@@ -25,7 +25,7 @@ final class TrustedProxiesTest extends TestCase
         putenv('_APP_TRUSTED_PROXIES');
 
         try {
-            $proxies = TrustedProxies::fromEnv();
+            $proxies = TrustedProxies::fromEnvironment();
 
             $this->assertFalse($proxies->isEmpty());
             $this->assertTrue($proxies->contains('172.18.0.5'));
@@ -42,15 +42,15 @@ final class TrustedProxiesTest extends TestCase
         putenv('_APP_TRUSTED_PROXIES=');
 
         try {
-            $this->assertTrue(TrustedProxies::fromEnv()->isEmpty());
+            $this->assertTrue(TrustedProxies::fromEnvironment()->isEmpty());
         } finally {
             putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
         }
     }
 
-    public function testFromEnvSplitsCidrs(): void
+    public function testParseSplitsCidrs(): void
     {
-        $proxies = TrustedProxies::fromEnv('10.0.0.0/8, 172.16.0.0/12');
+        $proxies = TrustedProxies::parse('10.0.0.0/8, 172.16.0.0/12');
 
         $this->assertTrue($proxies->contains('10.1.2.3'));
         $this->assertTrue($proxies->contains('172.18.0.5'));
@@ -59,7 +59,7 @@ final class TrustedProxiesTest extends TestCase
 
     public function testExactIpMatch(): void
     {
-        $proxies = TrustedProxies::fromEnv('203.0.113.7');
+        $proxies = TrustedProxies::parse('203.0.113.7');
 
         $this->assertTrue($proxies->contains('203.0.113.7'));
         $this->assertFalse($proxies->contains('203.0.113.8'));
@@ -68,7 +68,7 @@ final class TrustedProxiesTest extends TestCase
     #[DataProvider('cidrCases')]
     public function testCidrMatch(string $cidr, string $ip, bool $expected): void
     {
-        $this->assertSame($expected, TrustedProxies::fromEnv($cidr)->contains($ip));
+        $this->assertSame($expected, TrustedProxies::parse($cidr)->contains($ip));
     }
 
     /**
