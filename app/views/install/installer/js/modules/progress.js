@@ -342,7 +342,7 @@
             try {
                 const response = await fetch(
                     `/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`,
-                    { cache: 'no-store' }
+                    { cache: 'no-store', headers: withCsrfHeader() }
                 );
                 if (response.ok) {
                     const data = await response.json();
@@ -423,7 +423,8 @@
     const fetchInstallStatus = async (installId) => {
         if (!installId) return null;
         const response = await fetch(`/install/status?installId=${encodeURIComponent(installId)}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: withCsrfHeader()
         });
         if (!response.ok) return null;
         const json = await response.json();
