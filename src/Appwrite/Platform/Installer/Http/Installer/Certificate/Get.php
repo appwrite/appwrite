@@ -2,7 +2,9 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer\Certificate;
 
+use Appwrite\Platform\Installer\Http\Installer\Validate;
 use Appwrite\Platform\Installer\Validator\AppDomain;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Range;
@@ -24,12 +26,19 @@ class Get extends Action
             ->desc('Check if SSL certificate is ready for a domain')
             ->param('domain', '', new AppDomain(), 'Domain to check')
             ->param('port', 443, new Range(1, 65535), 'HTTPS port to check', true)
+            ->inject('request')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, int $port, Response $response): void
+    public function action(string $domain, int $port, Request $request, Response $response): void
     {
+        if (!Validate::validateSecret($request)) {
+            $response->setStatusCode(Response::STATUS_CODE_UNAUTHORIZED);
+            $response->json(['success' => false, 'message' => 'Invalid installer secret']);
+            return;
+        }
+
         $domain = trim($domain);
         if ($domain === '') {
             $response->json(['ready' => false]);

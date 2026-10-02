@@ -15,6 +15,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -146,13 +147,9 @@ class Update extends Action
             'hashOptions' => $user->getAttribute('hashOptions'),
         ]));
 
-        $sessions = $user->getAttribute('sessions', []);
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
+            User::invalidateAuthentication($dbForProject, $user);
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
