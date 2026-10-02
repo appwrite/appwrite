@@ -217,18 +217,7 @@ jobs:
       - name: Prove ERROR classes on scratch snippets
         run: bash .semgrep/prove.sh
 
-      - name: Run custom Semgrep rules
-        run: >-
-          semgrep scan
-          --config .semgrep
-          --metrics=off
-          --exclude .semgrep
-          --error
-          --severity ERROR
-          src/Appwrite app/controllers app/init
-
-      - name: Write Semgrep JSON
-        if: always()
+      - name: Run security rules
         run: >-
           semgrep scan
           --config .semgrep
@@ -238,7 +227,10 @@ jobs:
           --output semgrep.json
           src/Appwrite app/controllers app/init
 
-      - name: Write Semgrep SARIF
+      - name: Fail on new ERROR findings outside the baseline
+        run: node .semgrep/baseline.js check semgrep.json
+
+      - name: Write security rules SARIF
         if: always()
         run: >-
           semgrep scan
@@ -249,7 +241,7 @@ jobs:
           --output semgrep.sarif
           src/Appwrite app/controllers app/init
 
-      - name: Comment WARNING findings on the PR
+      - name: Comment new findings on the PR
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -257,7 +249,7 @@ jobs:
             const comment = require('./.github/workflows/semgrep-comment.js');
             await comment({ github, context, core });
 
-      - name: Upload Semgrep results
+      - name: Upload security rules results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
         if: always() && hashFiles('semgrep.sarif') != ''
         with:

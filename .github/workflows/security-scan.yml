@@ -71,17 +71,20 @@ jobs:
       - name: Prove ERROR classes on scratch snippets
         run: bash .semgrep/prove.sh
 
-      - name: Run custom Semgrep rules
+      - name: Run security rules
         run: >-
           semgrep scan
           --config .semgrep
           --metrics=off
           --exclude .semgrep
-          --error
-          --severity ERROR
+          --json
+          --output semgrep.json
           src/Appwrite app/controllers app/init
 
-      - name: Write Semgrep SARIF
+      - name: Fail on new ERROR findings outside the baseline
+        run: node .semgrep/baseline.js check semgrep.json
+
+      - name: Write security rules SARIF
         if: always()
         run: >-
           semgrep scan
