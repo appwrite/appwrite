@@ -31,6 +31,10 @@ type OAuth2AppInstallationsCardProps = {
   isLoading: boolean
   onDelete: (installationId: string) => Promise<unknown>
   isDeleting?: boolean
+  /** Another page of installations exists beyond the loaded ones. */
+  hasMore?: boolean
+  onLoadMore?: () => void
+  isLoadingMore?: boolean
   /** Label for the installing team ("Organization" for console apps, "Team" in projects). */
   teamLabel: string
   /** Compact paddings for use inside drawers. */
@@ -59,6 +63,9 @@ export function OAuth2AppInstallationsCard({
   isLoading,
   onDelete,
   isDeleting = false,
+  hasMore = false,
+  onLoadMore,
+  isLoadingMore = false,
   teamLabel,
   embedded = false,
   dialogClassName,
@@ -105,6 +112,7 @@ export function OAuth2AppInstallationsCard({
             {!isLoading && sorted.length > 0 ? (
               <Badge variant="info" className="text-[10px] shrink-0">
                 {sorted.length}
+                {hasMore ? '+' : ''}
               </Badge>
             ) : null}
           </div>
@@ -226,6 +234,20 @@ export function OAuth2AppInstallationsCard({
               })}
             </div>
           )}
+          {hasMore ? (
+            <div className="flex justify-center pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[12px]"
+                disabled={isLoadingMore}
+                onClick={onLoadMore}
+              >
+                {t('Load more')}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,8 @@ export function View() {
   return <OAuthClientSettings orgId={orgId} app={app} />
 }
 
+type OAuthClientCard = 'oauth' | 'installations'
+
 function OAuthClientSettings({
   orgId,
   app,
@@ -57,13 +59,26 @@ function OAuthClientSettings({
     app.installationRedirectUrl ?? '',
   )
 
+  // After a card is saved only its fields are re-read from the server, so the
+  // other card keeps its unsaved edits across the refetch.
+  const savedCardRef = useRef<OAuthClientCard | null>(null)
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
-    setClientType(app.type || 'confidential')
-    setDeviceFlow(app.deviceFlow ?? false)
-    setRedirectUris(app.redirectUris ?? [])
-    setPostLogoutRedirectUris(app.postLogoutRedirectUris ?? [])
-    setInstallationScopes(app.installationScopes ?? [])
-    setInstallationRedirectUrl(app.installationRedirectUrl ?? '')
+    if (syncedAppRef.current === app) return
+    syncedAppRef.current = app
+    const savedCard = savedCardRef.current
+    savedCardRef.current = null
+    if (savedCard !== 'installations') {
+      setClientType(app.type || 'confidential')
+      setDeviceFlow(app.deviceFlow ?? false)
+      setRedirectUris(app.redirectUris ?? [])
+      setPostLogoutRedirectUris(app.postLogoutRedirectUris ?? [])
+    }
+    if (savedCard !== 'oauth') {
+      setInstallationScopes(app.installationScopes ?? [])
+      setInstallationRedirectUrl(app.installationRedirectUrl ?? '')
+    }
   }, [app])
 
   const installationScopeOptions = useMemo(
@@ -91,22 +106,33 @@ function OAuthClientSettings({
     installationRedirectUrl.trim() !== (app.installationRedirectUrl ?? '')
 
   const handleUpdate = async () => {
-    await submit({
-      type: clientType,
-      deviceFlow,
-      redirectUris: nonEmptyList(redirectUris),
-      postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
-    })
+    savedCardRef.current = 'oauth'
+    try {
+      await submit({
+        type: clientType,
+        deviceFlow,
+        redirectUris: nonEmptyList(redirectUris),
+        postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
+      })
+    } catch {
+      // submit() already reported the error; nothing was saved.
+      savedCardRef.current = null
+    }
   }
 
   const handleUpdateInstallations = async () => {
-    await submit(
-      {
-        installationScopes,
-        installationRedirectUrl: installationRedirectUrl.trim(),
-      },
-      { successMessage: t('Installation settings updated') },
-    )
+    savedCardRef.current = 'installations'
+    try {
+      await submit(
+        {
+          installationScopes,
+          installationRedirectUrl: installationRedirectUrl.trim(),
+        },
+        { successMessage: t('Installation settings updated') },
+      )
+    } catch {
+      savedCardRef.current = null
+    }
   }
 
   return (

@@ -44,6 +44,10 @@ type OAuth2AppKeysCardProps = {
   onDelete: (keyId: string) => Promise<unknown>
   isCreating?: boolean
   isDeleting?: boolean
+  /** Another page of keys exists beyond the loaded ones. */
+  hasMore?: boolean
+  onLoadMore?: () => void
+  isLoadingMore?: boolean
   /** Compact paddings for use inside drawers. */
   embedded?: boolean
   /** Extra classes for nested dialogs, e.g. a z-index above a drawer. */
@@ -62,6 +66,9 @@ export function OAuth2AppKeysCard({
   onDelete,
   isCreating = false,
   isDeleting = false,
+  hasMore = false,
+  onLoadMore,
+  isLoadingMore = false,
   embedded = false,
   dialogClassName,
 }: OAuth2AppKeysCardProps) {
@@ -100,9 +107,18 @@ export function OAuth2AppKeysCard({
     }
   }
 
+  // The shared helper's toast is English only; show a translated one.
+  const copyKey = async (secret: string) => {
+    const copied = await copyToClipboard('App key', secret, {
+      showToast: false,
+    })
+    if (copied) toast.success(t('App key copied'))
+    return copied
+  }
+
   const handleCopyCreatedKey = async () => {
     if (!createdKey) return
-    await copyToClipboard('App key', createdKey.secret)
+    if (!(await copyKey(createdKey.secret))) return
     setCopiedCreatedKey(true)
     setTimeout(() => setCopiedCreatedKey(false), 2000)
   }
@@ -125,7 +141,8 @@ export function OAuth2AppKeysCard({
               </h3>
               {!isLoading && sorted.length > 0 ? (
                 <Badge variant="info" className="text-[10px] shrink-0">
-                  {sorted.length} {t('active')}
+                  {sorted.length}
+                  {hasMore ? '+' : ''} {t('active')}
                 </Badge>
               ) : null}
             </div>
@@ -234,9 +251,7 @@ export function OAuth2AppKeysCard({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() =>
-                          void copyToClipboard('App key', key.secret)
-                        }
+                        onClick={() => void copyKey(key.secret)}
                       >
                         <MenuItemContent icon={Copy}>
                           {t('Copy key')}
@@ -255,6 +270,20 @@ export function OAuth2AppKeysCard({
               ))}
             </div>
           )}
+          {hasMore ? (
+            <div className="flex justify-center pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[12px]"
+                disabled={isLoadingMore}
+                onClick={onLoadMore}
+              >
+                {t('Load more')}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
 

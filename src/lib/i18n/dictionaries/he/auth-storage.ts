@@ -1348,4 +1348,5 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'User code length must be between 6 and 12 characters.': 'אורך קוד המשתמש חייב להיות בין 6 ל-12 תווים.',
   'Verification URL': 'כתובת URL לאימות',
   'openid, profile, email, and phone are always included. Add up to 100 scopes in total, each up to 128 characters.': 'openid, profile, email ו-phone תמיד כלולים. הוסיפו עד 100 הרשאות גישה בסך הכול, כל אחת עד 128 תווים.',
+  'Could not load installation scopes. Existing scopes are kept.': 'לא ניתן היה לטעון את הרשאות הגישה להתקנה. ההרשאות הקיימות נשמרות.',
 }

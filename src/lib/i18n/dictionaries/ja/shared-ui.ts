@@ -1320,4 +1320,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'アプリはアプリキーで JWT に署名して自身を認証します (インストールアクセストークンの発行など)。キーを削除すると取り消されます。',
   'Self-registered': '自己登録',
   'Suggested app': 'おすすめアプリ',
+  'App key copied': 'アプリキーをコピーしました',
+  'Load more': 'さらに読み込む',
 }

@@ -133,6 +133,9 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
   const [selectedApp, setSelectedApp] = useState<Models.App | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Models.App | null>(null)
   const consumedDeepLinkRef = useRef<string | null>(null)
+  // `projectId:appId` of the lookup in flight, so a slow response cannot
+  // reopen the drawer after the user closed it or moved to another app.
+  const pendingDeepLinkRef = useRef<string | null>(null)
 
   const sortedApps = useMemo(
     () =>
@@ -159,17 +162,35 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     }
 
     // Not in the first page of the list; resolve it directly.
+    const lookup = `:`
+    pendingDeepLinkRef.current = lookup
     void fetchProjectOAuth2App(projectId, targetId, project?.region)
       .then((app) => {
+        if (pendingDeepLinkRef.current !== lookup) return
         setSelectedApp(app)
         setDrawerOpen(true)
       })
       .catch((error) => {
+        if (pendingDeepLinkRef.current !== lookup) return
         toast.error(getErrorMessage(error, t('OAuth2 app not found')))
+      })
+      .finally(() => {
+        if (pendingDeepLinkRef.current === lookup) {
+          pendingDeepLinkRef.current = null
+        }
       })
   }, [search.appId, isLoading, apps, projectId, project?.region, t])
 
+  // A new target, another project, or unmounting cancels the pending lookup.
+  useEffect(
+    () => () => {
+      pendingDeepLinkRef.current = null
+    },
+    [search.appId, projectId],
+  )
+
   const clearDeepLink = () => {
+    pendingDeepLinkRef.current = null
     if (!search.appId) return
     void navigate({
       to: '/projects/$projectId/auth/oauth2-server/apps',
@@ -180,6 +201,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
   }
 
   const openCreate = () => {
+    pendingDeepLinkRef.current = null
     openDialogAfterOverlayCloses(() => {
       setSelectedApp(null)
       setDrawerOpen(true)
@@ -187,6 +209,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
   }
 
   const openUpdate = (app: Models.App) => {
+    pendingDeepLinkRef.current = null
     openDialogAfterOverlayCloses(() => {
       setSelectedApp(app)
       setDrawerOpen(true)

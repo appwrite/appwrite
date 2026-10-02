@@ -1359,4 +1359,6 @@ export const heSharedUiDictionary: Record<string, string> = {
     'האפליקציה שלכם חותמת JWT עם מפתח אפליקציה כדי להזדהות בשם עצמה, למשל כדי להנפיק טוקני גישה להתקנה. מחקו מפתח כדי לבטל אותו.',
   'Self-registered': 'נרשמה עצמאית',
   'Suggested app': 'אפליקציה מומלצת',
+  'App key copied': 'מפתח האפליקציה הועתק',
+  'Load more': 'טעינת עוד',
 }

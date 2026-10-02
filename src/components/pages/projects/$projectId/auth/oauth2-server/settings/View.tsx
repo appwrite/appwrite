@@ -677,6 +677,13 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         projectQueryOptions(projectId).queryKey,
         response,
       )
+      if (section === 'installations') {
+        // The app drawer's scope picker reads a separate catalog query.
+        void queryClient.refetchQueries({
+          queryKey: ['oauth2-installation-scopes', 'project', projectId],
+          type: 'all',
+        })
+      }
       const message =
         section === 'status'
           ? t('Server status has been updated.')
@@ -828,10 +835,17 @@ export function View({ projectId }: OAuth2ServerViewProps) {
     ? t('Authorization URL is required when the server is enabled.')
     : undefined
 
+  // One save at a time: every request carries the whole configuration, so a
+  // second request built from the older server state would overwrite the first.
   const sectionFooter = (section: OAuth2ServerSection) => (
     <SectionUpdateButton
       pending={updateMutation.isPending && pendingSection === section}
-      disabled={!canEdit || !isDirty(section) || requiresAuthorizationUrl}
+      disabled={
+        !canEdit ||
+        !isDirty(section) ||
+        requiresAuthorizationUrl ||
+        updateMutation.isPending
+      }
       disabledTooltip={
         noEditPermissionTooltip ?? missingAuthorizationUrlTooltip
       }
@@ -857,7 +871,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         footer={
           <SectionUpdateButton
             pending={updateMutation.isPending && pendingSection === 'status'}
-            disabled={!canEdit || !isDirty('status')}
+            disabled={
+              !canEdit || !isDirty('status') || updateMutation.isPending
+            }
             disabledTooltip={noEditPermissionTooltip}
             onClick={() => handleUpdate('status')}
           />

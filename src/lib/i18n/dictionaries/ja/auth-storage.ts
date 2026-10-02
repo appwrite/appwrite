@@ -1343,4 +1343,5 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'User code length must be between 6 and 12 characters.': 'ユーザーコードの長さは 6 文字から 12 文字の間で指定してください。',
   'Verification URL': '検証 URL',
   'openid, profile, email, and phone are always included. Add up to 100 scopes in total, each up to 128 characters.': 'openid、profile、email、phone は常に含まれます。合計 100 件まで、各 128 文字以内のスコープを追加できます。',
+  'Could not load installation scopes. Existing scopes are kept.': 'インストールスコープを読み込めませんでした。既存のスコープはそのまま保持されます。',
 }

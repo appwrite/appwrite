@@ -6,7 +6,9 @@
  */
 
 import {
+  infiniteQueryOptions,
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -14,10 +16,11 @@ import {
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
+import { nextCursorAfter } from './cursor'
 
 export const PROJECT_OAUTH2_APPS_LIMIT = 100
-export const PROJECT_OAUTH2_APP_INSTALLATIONS_LIMIT = 100
-export const PROJECT_OAUTH2_APP_KEYS_LIMIT = 100
+export const PROJECT_OAUTH2_APP_INSTALLATIONS_PAGE_SIZE = 50
+export const PROJECT_OAUTH2_APP_KEYS_PAGE_SIZE = 50
 
 export type CreateProjectOAuth2AppInput = {
   name: string
@@ -135,35 +138,42 @@ export async function fetchProjectOAuth2InstallationScopes(
   return response.scopes ?? []
 }
 
+/** One cursor page of an app's installations, newest first. */
 export async function fetchProjectOAuth2AppInstallations(
   projectId: string,
   appId: string,
   region?: string,
+  cursor?: string,
 ) {
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(PROJECT_OAUTH2_APP_INSTALLATIONS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
   const response = await sdk
     .forProject(projectId, region)
-    .apps.listInstallations({
-      appId,
-      queries: [Query.limit(PROJECT_OAUTH2_APP_INSTALLATIONS_LIMIT)],
-      total: true,
-    })
-  return {
-    installations: response.installations ?? [],
-    total: response.total ?? 0,
-  }
+    .apps.listInstallations({ appId, queries, total: false })
+  return { installations: response.installations ?? [] }
 }
 
+/** One cursor page of an app's keys, newest first. */
 export async function fetchProjectOAuth2AppKeys(
   projectId: string,
   appId: string,
   region?: string,
+  cursor?: string,
 ) {
-  const response = await sdk.forProject(projectId, region).apps.listKeys({
-    appId,
-    queries: [Query.limit(PROJECT_OAUTH2_APP_KEYS_LIMIT)],
-    total: true,
-  })
-  return response.keys ?? []
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(PROJECT_OAUTH2_APP_KEYS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
+  const response = await sdk
+    .forProject(projectId, region)
+    .apps.listKeys({ appId, queries, total: false })
+  return { keys: response.keys ?? [] }
 }
 
 export function projectOAuth2AppsQueryOptions(
@@ -236,12 +246,12 @@ export function projectOAuth2InstallationScopesQueryOptions(
   })
 }
 
-export function projectOAuth2AppInstallationsQueryOptions(
+export function projectOAuth2AppInstallationsInfiniteQueryOptions(
   projectId: string | null | undefined,
   appId: string | null | undefined,
   region?: string,
 ) {
-  return queryOptions({
+  return infiniteQueryOptions({
     queryKey: [
       'oauth2-app',
       'project',
@@ -250,8 +260,14 @@ export function projectOAuth2AppInstallationsQueryOptions(
       'installations',
       region,
     ],
-    queryFn: () =>
-      fetchProjectOAuth2AppInstallations(projectId!, appId!, region),
+    queryFn: ({ pageParam }) =>
+      fetchProjectOAuth2AppInstallations(projectId!, appId!, region, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(
+        lastPage.installations,
+        PROJECT_OAUTH2_APP_INSTALLATIONS_PAGE_SIZE,
+      ),
     enabled: !!projectId && !!appId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -262,14 +278,18 @@ export function projectOAuth2AppInstallationsQueryOptions(
   })
 }
 
-export function projectOAuth2AppKeysQueryOptions(
+export function projectOAuth2AppKeysInfiniteQueryOptions(
   projectId: string | null | undefined,
   appId: string | null | undefined,
   region?: string,
 ) {
-  return queryOptions({
+  return infiniteQueryOptions({
     queryKey: ['oauth2-app', 'project', projectId, appId, 'keys', region],
-    queryFn: () => fetchProjectOAuth2AppKeys(projectId!, appId!, region),
+    queryFn: ({ pageParam }) =>
+      fetchProjectOAuth2AppKeys(projectId!, appId!, region, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(lastPage.keys, PROJECT_OAUTH2_APP_KEYS_PAGE_SIZE),
     enabled: !!projectId && !!appId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -356,13 +376,24 @@ export function useProjectOAuth2AppInstallations(
   appId: string | null | undefined,
   region?: string,
 ) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
-    projectOAuth2AppInstallationsQueryOptions(projectId, appId, region),
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    projectOAuth2AppInstallationsInfiniteQueryOptions(projectId, appId, region),
   )
 
   return {
-    installations: data?.installations ?? [],
-    total: data?.total ?? 0,
+    installations: data?.pages.flatMap((page) => page.installations) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
     isLoading,
     isFetching,
     error,
@@ -375,12 +406,24 @@ export function useProjectOAuth2AppKeys(
   appId: string | null | undefined,
   region?: string,
 ) {
-  const { data, isLoading, isFetching, error, refetch } = useQuery(
-    projectOAuth2AppKeysQueryOptions(projectId, appId, region),
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    projectOAuth2AppKeysInfiniteQueryOptions(projectId, appId, region),
   )
 
   return {
-    keys: data ?? [],
+    keys: data?.pages.flatMap((page) => page.keys) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
     isLoading,
     isFetching,
     error,

@@ -11,7 +11,8 @@ export function View() {
   const t = useT()
   const { appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
-  const { installations, isLoading } = useOrganizationAppInstallations(appId)
+  const { installations, isLoading, hasMore, loadMore, isLoadingMore } =
+    useOrganizationAppInstallations(appId)
   const deleteMutation = useDeleteOrganizationAppInstallation(appId)
 
   if (!app) return null
@@ -20,6 +21,9 @@ export function View() {
     <OAuth2AppInstallationsCard
       installations={installations}
       isLoading={isLoading}
+      hasMore={hasMore}
+      onLoadMore={loadMore}
+      isLoadingMore={isLoadingMore}
       onDelete={(installationId) => deleteMutation.mutateAsync(installationId)}
       isDeleting={deleteMutation.isPending}
       teamLabel={t('Organization')}

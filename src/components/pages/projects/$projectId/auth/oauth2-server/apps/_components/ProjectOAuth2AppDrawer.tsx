@@ -175,21 +175,33 @@ export function ProjectOAuth2AppDrawer({
     isEditing && source?.type !== 'public' ? source?.$id : null,
     region,
   )
-  const { keys, isLoading: keysLoading } = useProjectOAuth2AppKeys(
+  const {
+    keys,
+    isLoading: keysLoading,
+    hasMore: keysHaveMore,
+    loadMore: loadMoreKeys,
+    isLoadingMore: keysLoadingMore,
+  } = useProjectOAuth2AppKeys(projectId, isEditing ? source?.$id : null, region)
+  const {
+    installations,
+    isLoading: installationsLoading,
+    hasMore: installationsHaveMore,
+    loadMore: loadMoreInstallations,
+    isLoadingMore: installationsLoadingMore,
+  } = useProjectOAuth2AppInstallations(
     projectId,
     isEditing ? source?.$id : null,
     region,
   )
-  const { installations, isLoading: installationsLoading } =
-    useProjectOAuth2AppInstallations(
-      projectId,
-      isEditing ? source?.$id : null,
-      region,
-    )
   const {
     scopes: installationScopeCatalog,
     isLoading: installationScopesLoading,
+    error: installationScopesError,
   } = useProjectOAuth2InstallationScopes(isEditing ? projectId : null, region)
+  // Until the catalog has loaded (or when it failed) the stored scopes pass
+  // through untouched, so a save never drops them because of a bad request.
+  const installationScopeCatalogReady =
+    !installationScopesLoading && !installationScopesError
 
   const isPending =
     createMutation.isPending ||
@@ -294,13 +306,13 @@ export function ProjectOAuth2AppDrawer({
   )
   const droppedInstallationScopes = useMemo(
     () =>
-      installationScopesLoading
-        ? []
-        : (source?.installationScopes ?? []).filter(
+      installationScopeCatalogReady
+        ? (source?.installationScopes ?? []).filter(
             (scope) => !allowedInstallationScopes.has(scope),
-          ),
+          )
+        : [],
     [
-      installationScopesLoading,
+      installationScopeCatalogReady,
       source?.installationScopes,
       allowedInstallationScopes,
     ],
@@ -347,11 +359,11 @@ export function ProjectOAuth2AppDrawer({
           ...consentPayload,
           // Installation settings are only accepted on update; always send
           // them so the endpoint does not reset them.
-          installationScopes: installationScopesLoading
-            ? installationScopes
-            : installationScopes.filter((scope) =>
+          installationScopes: installationScopeCatalogReady
+            ? installationScopes.filter((scope) =>
                 allowedInstallationScopes.has(scope),
-              ),
+              )
+            : (source.installationScopes ?? []),
           installationRedirectUrl: installationRedirectUrl.trim(),
         })
         toast.success(t('App updated'))
@@ -616,9 +628,13 @@ export function ProjectOAuth2AppDrawer({
                           emptyMessage={
                             installationScopesLoading
                               ? t('Loading scopes...')
-                              : t(
-                                  'No installation scopes are configured for this project. Configure them on the Server tab first.',
-                                )
+                              : installationScopesError
+                                ? t(
+                                    'Could not load installation scopes. Existing scopes are kept.',
+                                  )
+                                : t(
+                                    'No installation scopes are configured for this project. Configure them on the Server tab first.',
+                                  )
                           }
                         />
                         {droppedInstallationScopes.length > 0 ? (
@@ -797,6 +813,9 @@ export function ProjectOAuth2AppDrawer({
                         dialogClassName={NESTED_DIALOG_CLASS}
                         keys={keys}
                         isLoading={keysLoading}
+                        hasMore={keysHaveMore}
+                        onLoadMore={loadMoreKeys}
+                        isLoadingMore={keysLoadingMore}
                         onCreate={() =>
                           createKeyMutation.mutateAsync(source.$id)
                         }
@@ -814,6 +833,9 @@ export function ProjectOAuth2AppDrawer({
                         dialogClassName={NESTED_DIALOG_CLASS}
                         installations={installations}
                         isLoading={installationsLoading}
+                        hasMore={installationsHaveMore}
+                        onLoadMore={loadMoreInstallations}
+                        isLoadingMore={installationsLoadingMore}
                         onDelete={(installationId) =>
                           deleteInstallationMutation.mutateAsync({
                             appId: source.$id,
