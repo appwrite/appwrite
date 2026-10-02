@@ -27,6 +27,7 @@ import {
   MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+  VIDEOS_SIDEBAR_BOUNDS,
 } from '@/lib/resizable-layout'
 import {
   CLI_SHELL_DEFAULT_HEIGHT_PX,
@@ -1713,6 +1714,27 @@ export function buildStorageSidebarWidthPrefs(widthPx: number): UserPrefs {
     USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH,
     widthPx,
   )
+}
+
+/**
+ * Full key: `console.videos.sidebarWidth` - videos list sidebar width in px.
+ */
+export const USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH = 'console.videos.sidebarWidth'
+
+export function parseVideosSidebarWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  const raw = Number(prefs?.[USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH] ?? NaN)
+  if (!Number.isFinite(raw) || raw <= 0) return null
+  return clampTableViewSidebarWidthPx(raw, VIDEOS_SIDEBAR_BOUNDS)
+}
+
+export function buildVideosSidebarWidthPrefs(widthPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH]: String(
+      clampTableViewSidebarWidthPx(widthPx, VIDEOS_SIDEBAR_BOUNDS),
+    ),
+  }
 }
 
 function parseSidebarWidthPxForKey(

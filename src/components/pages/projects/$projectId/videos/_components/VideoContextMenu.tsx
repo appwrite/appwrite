@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import {
-  Captions,
   Copy,
   ExternalLink,
   FileJson,
-  Layers,
   Link2,
-  MonitorPlay,
-  Settings,
+  Radio,
   Square,
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
+import { VIDEO_TABS, videoTabPath, type VideoTab } from './video-tabs'
+import { getVideoMasterManifestUrl } from '@/lib/videos/urls'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -47,15 +46,6 @@ import {
 } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
-export type VideoTab = 'overview' | 'renditions' | 'subtitles' | 'settings'
-
-export const VIDEO_TAB_ICONS = {
-  overview: MonitorPlay,
-  renditions: Layers,
-  subtitles: Captions,
-  settings: Settings,
-} as const
-
 interface VideoContextMenuProps {
   projectId: string
   video: { $id: string; name?: string | null }
@@ -69,6 +59,7 @@ export function VideoContextMenu({
 }: VideoContextMenuProps) {
   const t = useT()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeleteVideo(projectId)
   const { project } = useProject(projectId)
@@ -81,11 +72,8 @@ export function VideoContextMenu({
   )
 
   const navigateToTab = (tab: VideoTab) => {
-    const base = `/projects/${projectId}/videos/${video.$id}`
     navigate({
-      to: (tab === 'overview'
-        ? base
-        : `${base}/${tab}`) as '/projects/$projectId/videos/$videoId',
+      to: videoTabPath(tab),
       params: { projectId, videoId: video.$id },
     })
   }
@@ -95,6 +83,9 @@ export function VideoContextMenu({
     deleteMutation.mutate(video.$id, {
       onSuccess: () => {
         toast.success(t('Video deleted'))
+        if (pathname.split('/').includes(video.$id)) {
+          navigate({ to: '/projects/$projectId/videos', params: { projectId } })
+        }
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete video'))
@@ -102,12 +93,7 @@ export function VideoContextMenu({
     })
   }
 
-  const tabs: Array<{ id: VideoTab; label: string }> = [
-    { id: 'overview', label: t('Overview') },
-    { id: 'renditions', label: t('Renditions') },
-    { id: 'subtitles', label: t('Subtitles') },
-    ...(canWrite ? [{ id: 'settings' as const, label: t('Settings') }] : []),
-  ]
+  const tabs = VIDEO_TABS.filter((tab) => tab.id !== 'settings' || canWrite)
 
   return (
     <>
@@ -119,8 +105,8 @@ export function VideoContextMenu({
               key={tab.id}
               onSelect={() => navigateToTab(tab.id)}
             >
-              <ContextMenuIcon icon={VIDEO_TAB_ICONS[tab.id]} />
-              {tab.label}
+              <ContextMenuIcon icon={tab.icon} />
+              {t(tab.label)}
             </ContextMenuItem>
           ))}
           <ContextMenuSeparator />
@@ -149,6 +135,17 @@ export function VideoContextMenu({
               >
                 <ContextMenuIcon icon={Link2} />
                 {t('Copy link')}
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() =>
+                  copyToClipboard(
+                    t('HLS manifest URL'),
+                    getVideoMasterManifestUrl(projectId, video.$id, 'hls'),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={Radio} />
+                {t('Copy HLS manifest URL')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -190,7 +187,7 @@ export function VideoContextMenu({
       <ConfirmNameDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete video"
+        title={t('Delete video')}
         description={
           <>
             {t(
@@ -199,7 +196,7 @@ export function VideoContextMenu({
           </>
         }
         confirmValue={video.name?.trim() || video.$id}
-        confirmPlaceholder="Enter video name"
+        confirmPlaceholder={t('Enter video name')}
         onConfirm={handleConfirmDelete}
         isConfirming={deleteMutation.isPending}
       />

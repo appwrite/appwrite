@@ -81,6 +81,7 @@ import {
   USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX,
   USER_PREFS_KEY_USAGE_CHART_DATE_RANGE,
   USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
+  USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -316,6 +317,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH,
     description: 'Storage buckets sidebar width in pixels.',
     category: 'Storage',
+  },
+  {
+    id: 'videosSidebarWidth',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
+    description: 'Videos list sidebar width in pixels.',
+    category: 'Videos',
   },
   {
     id: 'storageFilesListColumnWidths',

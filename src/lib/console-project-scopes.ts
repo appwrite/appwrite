@@ -17,6 +17,7 @@ import {
   Network,
   Plug2,
   Bot,
+  Video,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -78,6 +79,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   if (/^(messages|topics|subscribers|targets|providers)\./.test(id)) {
     return 'Messaging'
   }
+  if (/^videos\./.test(id)) return 'Videos'
   if (/^(sites|log)\./.test(id)) return 'Sites'
   if (/^presences\./.test(id)) return 'Presences'
   if (/^apps\./.test(id)) return 'Apps'
@@ -114,6 +116,7 @@ const KNOWN_CATEGORY_ORDER = [
   'Functions',
   'Storage',
   'Messaging',
+  'Videos',
   'Sites',
   'Presences',
   'Domains',
@@ -193,6 +196,9 @@ export function getScopeCategoryIcon(
   if (c.includes('message') || c.includes('topic') || c.includes('provider')) {
     return MessageSquare
   }
+  if (c.includes('video')) {
+    return Video
+  }
   if (c.includes('site') || c.includes('log')) {
     return Globe
   }
@@ -233,6 +239,7 @@ export function getScopeCategoryIcon(
     ) {
       return MessageSquare
     }
+    if (/^videos\./.test(id)) return Video
     if (/^(sites|log)\./.test(id)) return Globe
     if (/^presences\./.test(id)) return UsersRound
     if (/^apps\./.test(id)) return Plug2

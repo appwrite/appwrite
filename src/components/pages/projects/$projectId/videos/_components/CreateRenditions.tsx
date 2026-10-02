@@ -25,6 +25,8 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
+import { VideoFormatLabel } from './VideoOutputBadge'
+import { VideoTermHint } from './VideoTermHint'
 
 const OUTPUT_LABELS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'HLS',
@@ -145,7 +147,10 @@ export function CreateRenditions({
         <div className="border-t border-border" />
         <div className="space-y-5 px-6 pb-4 pt-4">
           <div className="space-y-2">
-            <Label className="text-[13px]">{t('Output')}</Label>
+            <Label className="flex items-center gap-1 text-[13px]">
+              {t('Output')}
+              <VideoTermHint term="output" />
+            </Label>
             <RadioGroup
               value={output}
               onValueChange={(value) => setOutput(value as VideoOutput)}
@@ -165,7 +170,9 @@ export function CreateRenditions({
                       id={`video-output-${value}`}
                       value={value}
                     />
-                    {OUTPUT_LABELS[value]}
+                    <VideoFormatLabel format={value}>
+                      {OUTPUT_LABELS[value]}
+                    </VideoFormatLabel>
                   </span>
                   <span className="text-[12px] font-normal leading-snug text-muted-foreground">
                     {t(OUTPUT_DESCRIPTIONS[value])}
@@ -177,7 +184,10 @@ export function CreateRenditions({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-[13px]">{t('Profiles')}</Label>
+              <Label className="flex items-center gap-1 text-[13px]">
+                {t('Profiles')}
+                <VideoTermHint term="profile" />
+              </Label>
               <Link
                 to="/projects/$projectId/videos/profiles"
                 params={{ projectId }}
@@ -228,12 +238,15 @@ export function CreateRenditions({
                           {t('Exists')}
                         </Badge>
                       ) : isUpscale(profile) ? (
-                        <Badge
-                          variant="warning"
-                          className="text-[10px] shrink-0"
-                        >
-                          {t('Upscale')}
-                        </Badge>
+                        <span className="flex shrink-0 items-center gap-1">
+                          <Badge
+                            variant="warning"
+                            className="text-[10px] shrink-0"
+                          >
+                            {t('Upscale')}
+                          </Badge>
+                          <VideoTermHint term="upscale" />
+                        </span>
                       ) : null}
                     </label>
                   )

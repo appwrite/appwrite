@@ -1,46 +1,36 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/videos/View'
+import { VIDEOS_DESKTOP_MIN_WIDTH_PX } from '@/components/pages/projects/$projectId/videos/_components/WorkspaceLayout'
 import {
   projectQueryOptions,
-  videosQueryOptions,
-  VIDEOS_DEFAULT_SORT_BY,
-  VIDEOS_DEFAULT_SORT_ORDER,
+  videosSidebarQueryOptions,
 } from '@/lib/react-query/hooks'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const DEFAULT_PAGE = 1
 
 export const Route = createFileRoute('/_public/projects/$projectId/videos/')({
   head: () => ({ meta: [{ title: pageTitle('Videos') }] }),
-  validateSearch: listSearchSchema,
-  loaderDeps: ({ search }) => search,
-  loader: async ({ params, context, deps: routeSearch }) => {
+  loader: async ({ params, context, cause, preload }) => {
     if (typeof window === 'undefined') return
-
     const { projectId } = params
     const { queryClient } = context
-    if (!projectId) return
 
-    const { search, page, limit, filterQueries, sort } = parseListSearch(
-      routeSearch,
-      { page: DEFAULT_PAGE, limit: GRID_DEFAULT_PAGE_SIZE },
-    )
-
-    // Resolves the project region before project-scoped calls.
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await queryClient.ensureQueryData(
-      videosQueryOptions(
-        projectId,
-        page - 1,
-        limit,
-        search ?? undefined,
-        filterQueries,
-        sort?.sortBy ?? VIDEOS_DEFAULT_SORT_BY,
-        sort?.sortOrder ?? VIDEOS_DEFAULT_SORT_ORDER,
-      ),
+    const videos = await queryClient.fetchQuery(
+      videosSidebarQueryOptions(projectId),
     )
+
+    // On small screens the index is the videos list, so only desktop jumps to a video.
+    const isDesktop = window.matchMedia(
+      `(min-width: ${VIDEOS_DESKTOP_MIN_WIDTH_PX}px)`,
+    ).matches
+    const firstVideoId = videos.videos[0]?.$id
+    if (cause !== 'preload' && !preload && isDesktop && firstVideoId) {
+      throw redirect({
+        to: '/projects/$projectId/videos/$videoId',
+        params: { projectId, videoId: firstVideoId },
+        replace: true,
+      })
+    }
   },
   component: VideosIndexPage,
 })

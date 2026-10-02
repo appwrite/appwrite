@@ -15,7 +15,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { LucideIcon } from 'lucide-react'
 import {
   Database,
-  Film,
   FolderOpen,
   Globe,
   Loader2,
@@ -24,6 +23,7 @@ import {
   Terminal,
   User,
   Users,
+  Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -173,7 +173,7 @@ const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
   topic: MessageSquare,
   provider: Mail,
   domain: Globe,
-  video: Film,
+  video: Video,
 }
 
 function ResourceSearchListSkeleton({

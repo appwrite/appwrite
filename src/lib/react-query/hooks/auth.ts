@@ -54,6 +54,7 @@ import {
   buildSavedFiltersPrefs,
   buildSavedImageTransformPresetsPrefs,
   buildStorageSidebarWidthPrefs,
+  buildVideosSidebarWidthPrefs,
   DATABASES_SIDEBAR_DEFAULT_WIDTH_PX,
   MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
@@ -61,6 +62,7 @@ import {
   parseMysqlSqlEditorHeightPx,
   parsePostgresSqlEditorHeightPx,
   parseStorageSidebarWidthPx,
+  parseVideosSidebarWidthPx,
   parseSavedFilters,
   parseSavedImageTransformPresets,
   MAX_SAVED_FILTER_NAME_LENGTH,
@@ -1938,12 +1940,13 @@ export function useConnectProjectTab(
 // TABLE VIEW SIDEBAR WIDTH (DATABASES + STORAGE)
 // ============================================================================
 
-export type TableViewSidebarWidthScope = 'databases' | 'storage'
+export type TableViewSidebarWidthScope = 'databases' | 'storage' | 'videos'
 
 /**
  * Persisted sidebar width in px for `TableViewResizableLayout`.
  * - `databases`: `console.databases.sidebarWidth`
  * - `storage`: `console.storage.sidebarWidth`
+ * - `videos`: `console.videos.sidebarWidth`
  */
 export function useTableViewSidebarWidth(
   account: { prefs?: Record<string, unknown> } | undefined,
@@ -1953,11 +1956,15 @@ export function useTableViewSidebarWidth(
   const parse =
     scope === 'storage'
       ? parseStorageSidebarWidthPx
-      : parseDatabasesSidebarWidthPx
+      : scope === 'videos'
+        ? parseVideosSidebarWidthPx
+        : parseDatabasesSidebarWidthPx
   const build =
     scope === 'storage'
       ? buildStorageSidebarWidthPrefs
-      : buildDatabasesSidebarWidthPrefs
+      : scope === 'videos'
+        ? buildVideosSidebarWidthPrefs
+        : buildDatabasesSidebarWidthPrefs
 
   const widthPx =
     parse(account?.prefs as UserPrefs | undefined) ??

@@ -1,64 +1,56 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Models } from '@appwrite.io/console'
-import { BarChart3, Info, Loader2, RefreshCw } from 'lucide-react'
+import { Info, Loader2, SquareArrowOutUpRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import {
   isVideoRenditionActive,
   parseVideoProgress,
-  useCreateVideoTimeline,
   useVideoTimeline,
+  videoSourceHasAudio,
 } from '@/lib/react-query/hooks/videos'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
+import { VideoFormatLabel } from '../VideoOutputBadge'
+import {
+  getVideoPlayerViewportStyle,
+  resolveVideoViewportAspect,
+} from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
-import { BufferVisualizer } from './BufferVisualizer'
+import { cn } from '@/lib/utils'
 import { StreamDebugPanel, type StreamManifest } from './StreamDebugPanel'
+import {
+  VideoStreamPlayerControls,
+  type PlaybackOutput,
+} from './VideoStreamPlayerControls'
 import { useStreamPlayer, type PlayerSource } from './useStreamPlayer'
-
-const BUFFER_VIZ_STORAGE_KEY = 'console.videos.bufferVisualizer'
-
-type PlaybackOutput = 'hls' | 'dash' | 'cmaf' | 'source'
-
-const AUTO_LEVEL = '-1'
-const SUBTITLES_OFF = '-1'
+import { usePopoutWindow } from './usePopoutWindow'
 
 export interface VideoStreamPlayerProps {
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
-  canWrite: boolean
+  /** Show the stream inspector inline (the Debugger page). */
+  showDebugTools?: boolean
+  /** Rendition progress card above the player. */
+  showProcessing?: boolean
+  /** Overview layout: slightly shorter max height. */
+  variant?: 'default' | 'featured'
 }
 
 export function VideoStreamPlayer({
   projectId,
   video,
   renditions,
-  subtitles,
-  canWrite,
+  showDebugTools = true,
+  showProcessing = false,
+  variant = 'default',
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const featured = variant === 'featured'
 
   const readyIds = useMemo(() => {
     const byOutput: Record<string, string[]> = { hls: [], dash: [], cmaf: [] }
@@ -163,19 +155,32 @@ export function VideoStreamPlayer({
 
   const [loadedKey, setLoadedKey] = useState(outputReadyKey)
   const [reloadToken, setReloadToken] = useState(0)
-  const [bufferVisualizerEnabled, setBufferVisualizerEnabled] = useState(
-    () => {
-      if (typeof window === 'undefined') return false
-      return window.localStorage.getItem(BUFFER_VIZ_STORAGE_KEY) === 'true'
-    },
-  )
-  const playerSource: PlayerSource | null = useMemo(
-    () =>
-      activeManifestUrl
-        ? { url: activeManifestUrl, type: 'stream' }
-        : { url: sourceFileUrl, type: 'file' },
-    [activeManifestUrl, sourceFileUrl],
-  )
+  const onPopoutBlocked = useCallback(() => {
+    toast.error(
+      t(
+        'Your browser blocked the window. Allow pop-ups for this site to open the stream inspector.',
+      ),
+    )
+  }, [t])
+  const popout = usePopoutWindow({
+    name: `appwrite-video-inspector-${video.$id}`,
+    title: `${video.name} · ${t('Stream inspector')}`,
+    onBlocked: onPopoutBlocked,
+  })
+  const inspectorMode = popout.isOpen
+    ? 'window'
+    : showDebugTools
+      ? 'inline'
+      : 'closed'
+  const playerSource: PlayerSource | null = useMemo(() => {
+    if (!activeManifestUrl) {
+      return { url: sourceFileUrl, type: 'file' }
+    }
+    if (output === 'dash') {
+      return { url: activeManifestUrl, type: 'dash' }
+    }
+    return { url: activeManifestUrl, type: 'hls' }
+  }, [activeManifestUrl, sourceFileUrl, output])
 
   useEffect(() => {
     setLoadedKey(outputReadyKey)
@@ -196,14 +201,89 @@ export function VideoStreamPlayer({
     reloadToken,
   )
 
-  const [timelineRequested, setTimelineRequested] = useState(false)
-  const timelineQuery = useVideoTimeline(projectId, video.$id, {
-    pollWhileMissing: timelineRequested,
-  })
-  const createTimeline = useCreateVideoTimeline(projectId, video.$id)
+  const [mediaPixelSize, setMediaPixelSize] = useState<{
+    width: number
+    height: number
+  } | null>(null)
+
   useEffect(() => {
-    if (timelineQuery.data) setTimelineRequested(false)
-  }, [timelineQuery.data])
+    setMediaPixelSize(null)
+  }, [playerSource?.url, reloadToken])
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+
+    const syncMediaSize = () => {
+      if (el.videoWidth > 0 && el.videoHeight > 0) {
+        setMediaPixelSize({
+          width: el.videoWidth,
+          height: el.videoHeight,
+        })
+      }
+    }
+
+    el.addEventListener('loadedmetadata', syncMediaSize)
+    syncMediaSize()
+
+    return () => {
+      el.removeEventListener('loadedmetadata', syncMediaSize)
+    }
+  }, [playerSource?.url, reloadToken, state.loadStartedAt])
+
+  // `cqh` is the visible height of the VideoPage scroll area; the offset
+  // reserves room for the controls bar so the whole player stays on screen.
+  const playerMaxHeight = featured
+    ? 'max(200px, min(800px, calc(100cqh - 130px)))'
+    : 'max(240px, min(800px, calc(100cqh - 120px)))'
+  const viewportAspect = useMemo(() => {
+    if (mediaPixelSize) {
+      return mediaPixelSize
+    }
+    return resolveVideoViewportAspect(
+      video.width,
+      video.height,
+      video.aspectRatio,
+    )
+  }, [mediaPixelSize, video.width, video.height, video.aspectRatio])
+  const viewportStyle = useMemo(
+    () => getVideoPlayerViewportStyle(viewportAspect, playerMaxHeight),
+    [viewportAspect, playerMaxHeight],
+  )
+
+  const playerContainerRef = useRef<HTMLDivElement | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+
+  useEffect(() => {
+    const onChange = () => {
+      setFullscreen(
+        playerContainerRef.current != null &&
+          document.fullscreenElement === playerContainerRef.current,
+      )
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen()
+      return
+    }
+    const container = playerContainerRef.current
+    if (container?.requestFullscreen) {
+      void container.requestFullscreen()
+      return
+    }
+    // iPhone Safari only supports fullscreen on the video element itself.
+    const el = videoRef.current as
+      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void })
+      | null
+    el?.webkitEnterFullscreen?.()
+  }
+
+  const timelineQuery = useVideoTimeline(projectId, video.$id)
+  const timelineCues = timelineQuery.data?.cues
 
   const activeRenditions = renditions.filter((r) =>
     isVideoRenditionActive(r.status),
@@ -212,6 +292,11 @@ export function VideoStreamPlayer({
 
   const hasAdaptiveReady =
     readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
+
+  const sourceMissingAudio =
+    video.status === 'ready' &&
+    (video.duration ?? 0) > 0 &&
+    !videoSourceHasAudio(video)
 
   const outputOptions: Array<{
     id: PlaybackOutput
@@ -236,17 +321,36 @@ export function VideoStreamPlayer({
       disabledReason:
         readyIds.cmaf.length === 0 ? t('No ready CMAF renditions') : undefined,
     },
-    { id: 'source', label: t('Original file') },
+    { id: 'source', label: t('Source') },
   ]
 
-  const currentLevelValue =
-    state.stats && !state.stats.autoLevelEnabled
-      ? String(state.stats.currentLevel)
-      : AUTO_LEVEL
+  const streamLoading =
+    Boolean(playerSource) &&
+    !state.fatalError &&
+    state.firstFrameAt == null &&
+    state.loadStartedAt != null
+
+  const inspectorPanel = (detached: boolean) => (
+    <StreamDebugPanel
+      player={state}
+      activeManifestUrl={activeManifestUrl}
+      manifests={manifests}
+      onSeek={(seconds) => {
+        if (videoRef.current) videoRef.current.currentTime = seconds
+      }}
+      onSelectLevel={setLevel}
+      onClearEvents={clearEvents}
+      detached={detached}
+      portalContainer={detached ? (popout.container ?? undefined) : undefined}
+      onOpenWindow={detached ? undefined : popout.open}
+      onClose={detached ? popout.close : undefined}
+    />
+  )
 
   return (
-    <div className="space-y-4">
-      {activeRenditions.length > 0 || failedRenditions.length > 0 ? (
+    <div className="min-w-0 max-w-full space-y-4">
+      {showProcessing &&
+      (activeRenditions.length > 0 || failedRenditions.length > 0) ? (
         <div className="rounded-xl border border-border bg-card/50 px-6 py-4">
           <div className="flex items-center gap-2">
             {activeRenditions.length > 0 ? (
@@ -266,9 +370,12 @@ export function VideoStreamPlayer({
                 key={rendition.$id}
                 className="grid grid-cols-[minmax(0,160px)_1fr] items-center gap-3"
               >
-                <span className="truncate font-mono text-[12px] text-muted-foreground">
+                <VideoFormatLabel
+                  format={rendition.output}
+                  className="min-w-0 truncate font-mono text-[12px]"
+                >
                   {rendition.output.toUpperCase()} {rendition.height}p
-                </span>
+                </VideoFormatLabel>
                 {rendition.status === 'error' ? (
                   <span className="text-[12px] text-red-600 dark:text-red-400">
                     {t('Failed')}
@@ -285,174 +392,111 @@ export function VideoStreamPlayer({
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-black">
-        <div className="relative mx-auto aspect-video w-full max-h-[70dvh]">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-contain outline-none"
-            controls
-            playsInline
-            poster={posterUrl}
-            aria-label={video.name}
-          />
-          {state.fatalError ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
-              <p className="max-w-md text-[13px] text-white/80">
-                {state.fatalError}
-              </p>
-            </div>
-          ) : null}
+      {sourceMissingAudio ? (
+        <div className="rounded-xl border border-border bg-card/50 px-4 py-3 sm:px-6">
+          <div className="flex gap-2">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="text-[13px] text-muted-foreground">
+              {t(
+                'This video has no detected audio track after prepare. Adaptive streams and the original file will play without sound. Re-upload a file with an audio track or check the source in storage.',
+              )}
+            </p>
+          </div>
         </div>
-        {bufferVisualizerEnabled && state.stats ? (
-          <BufferVisualizer
-            stats={state.stats}
-            fragments={state.fragments}
-            levels={state.levels}
-            onSeek={(seconds) => {
-              if (videoRef.current) videoRef.current.currentTime = seconds
-            }}
+      ) : null}
+
+      <div
+        ref={playerContainerRef}
+        className={cn(
+          'min-w-0',
+          fullscreen && 'flex flex-col bg-background p-4 sm:p-6',
+        )}
+      >
+        <div
+          className={cn(
+            'flex w-full min-w-0 justify-center',
+            fullscreen && 'min-h-0 flex-1',
+          )}
+        >
+          <div
+            className={cn(
+              'relative shrink-0 overflow-hidden rounded-xl bg-black',
+              fullscreen && 'size-full',
+            )}
+            style={fullscreen ? undefined : viewportStyle}
+          >
+            <video
+              ref={videoRef}
+              className="size-full cursor-pointer object-contain outline-none"
+              playsInline
+              poster={posterUrl}
+              aria-label={video.name}
+              onClick={() => {
+                const el = videoRef.current
+                if (!el) return
+                if (el.paused) void el.play()
+                else el.pause()
+              }}
+              onDoubleClick={toggleFullscreen}
+            />
+            {state.fatalError ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
+                <p className="max-w-md text-[13px] text-white/80">
+                  {state.fatalError}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {!state.fatalError ? (
+          <VideoStreamPlayerControls
+            videoRef={videoRef}
+            output={output}
+            outputOptions={outputOptions}
+            onOutputChange={setChosenOutput}
+            playerState={state}
+            onSelectLevel={setLevel}
+            onSelectSubtitleTrack={setSubtitleTrack}
+            onReload={reload}
+            hasNewRenditions={hasNewRenditions}
+            isLoading={streamLoading}
+            scrubCues={timelineCues}
+            fullscreen={fullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            onOpenInspector={showDebugTools ? undefined : popout.open}
+            portalContainer={
+              fullscreen ? (playerContainerRef.current ?? undefined) : undefined
+            }
           />
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <TooltipProvider delayDuration={0}>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={output}
-            onValueChange={(value) => {
-              if (value) setChosenOutput(value as PlaybackOutput)
-            }}
-          >
-            {outputOptions.map((option) =>
-              option.disabledReason ? (
-                <Tooltip key={option.id}>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <ToggleGroupItem
-                        value={option.id}
-                        disabled
-                        className="h-8 px-3 text-[12px]"
-                      >
-                        {option.label}
-                      </ToggleGroupItem>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{option.disabledReason}</TooltipContent>
-                </Tooltip>
-              ) : (
-                <ToggleGroupItem
-                  key={option.id}
-                  value={option.id}
-                  className="h-8 px-3 text-[12px]"
-                >
-                  {option.label}
-                </ToggleGroupItem>
-              ),
-            )}
-          </ToggleGroup>
-        </TooltipProvider>
-
-        {state.engine === 'shaka' && state.levels.length > 0 ? (
-          <Select
-            value={currentLevelValue}
-            onValueChange={(value) => setLevel(Number(value))}
-          >
-            <SelectTrigger
-              className="h-8 w-[200px] text-[12px]"
-              aria-label={t('Quality')}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={AUTO_LEVEL} className="text-[12px]">
-                {t('Auto quality')}
-              </SelectItem>
-              {state.levels.map((level) => (
-                <SelectItem
-                  key={level.index}
-                  value={String(level.index)}
-                  className="text-[12px]"
-                >
-                  {formatResolution(level.width, level.height)} ·{' '}
-                  {formatBitrate(level.bitrate)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : null}
-
-        {state.subtitleTracks.length > 0 ? (
-          <Select
-            value={String(state.currentSubtitleTrack)}
-            onValueChange={(value) => setSubtitleTrack(Number(value))}
-          >
-            <SelectTrigger
-              className="h-8 w-[180px] text-[12px]"
-              aria-label={t('Subtitles')}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={SUBTITLES_OFF} className="text-[12px]">
-                {t('Subtitles off')}
-              </SelectItem>
-              {state.subtitleTracks.map((track) => (
-                <SelectItem
-                  key={track.id}
-                  value={String(track.id)}
-                  className="text-[12px]"
-                >
-                  {track.name}
-                  {track.lang ? ` (${track.lang})` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : null}
-
-        <div className="flex items-center gap-2 rounded-md border border-border bg-card/50 px-2.5 py-1.5">
-          <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-          <Label
-            htmlFor="buffer-visualizer"
-            className="cursor-pointer text-[12px] font-normal text-foreground"
-          >
-            {t('Buffer visualizer')}
-          </Label>
-          <Switch
-            id="buffer-visualizer"
-            checked={bufferVisualizerEnabled}
-            onCheckedChange={(checked) => {
-              setBufferVisualizerEnabled(checked)
-              if (typeof window !== 'undefined') {
-                window.localStorage.setItem(
-                  BUFFER_VIZ_STORAGE_KEY,
-                  checked ? 'true' : 'false',
-                )
-              }
-            }}
-          />
-        </div>
-
-        <div className="ms-auto flex items-center gap-2">
-          {hasNewRenditions ? (
-            <span className="text-[12px] text-muted-foreground">
-              {t('New renditions are ready.')}
-            </span>
-          ) : null}
+      {inspectorMode === 'window' ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-2">
+          <SquareArrowOutUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="min-w-0 flex-1 text-[12px] text-muted-foreground">
+            {t('The stream inspector is open in a separate window.')}
+          </span>
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-[12px]"
-            onClick={reload}
+            className="h-7 text-[12px]"
+            onClick={popout.open}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            {t('Reload stream')}
+            {t('Show window')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 text-[12px]"
+            onClick={popout.close}
+          >
+            {t('Close')}
           </Button>
         </div>
-      </div>
+      ) : null}
 
       {output === 'source' ? (
         <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -467,37 +511,10 @@ export function VideoStreamPlayer({
         </p>
       ) : null}
 
-      <StreamDebugPanel
-        video={video}
-        renditions={renditions}
-        subtitles={subtitles}
-        player={state}
-        activeManifestUrl={activeManifestUrl}
-        manifests={manifests}
-        timeline={timelineQuery.data}
-        timelineLoading={timelineQuery.isLoading}
-        timelinePending={timelineRequested || createTimeline.isPending}
-        canWrite={canWrite}
-        onGenerateTimeline={() =>
-          createTimeline.mutate(undefined, {
-            onSuccess: () => {
-              setTimelineRequested(true)
-              toast.success(t('Timeline generation started'))
-            },
-            onError: (error) =>
-              toast.error(
-                getErrorMessage(error) || t('Failed to generate timeline'),
-              ),
-          })
-        }
-        onSeek={(seconds) => {
-          const el = videoRef.current
-          if (!el) return
-          el.currentTime = seconds
-        }}
-        onSelectLevel={setLevel}
-        onClearEvents={clearEvents}
-      />
+      {inspectorMode === 'inline' ? inspectorPanel(false) : null}
+      {inspectorMode === 'window' && popout.container
+        ? createPortal(inspectorPanel(true), popout.container)
+        : null}
     </div>
   )
 }

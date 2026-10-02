@@ -40,6 +40,59 @@ export function formatResolution(
   return `${width}×${height}`
 }
 
+const DEFAULT_VIEWPORT_ASPECT = { width: 16, height: 9 } as const
+
+function parseAspectRatioLabel(
+  value: string | undefined | null,
+): { width: number; height: number } | null {
+  if (!value?.trim()) return null
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)$/)
+  if (!match) return null
+  const width = Number(match[1])
+  const height = Number(match[2])
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    return null
+  }
+  return { width, height }
+}
+
+/** Pixel dimensions for player layout (API metadata, then aspect ratio label). */
+export function resolveVideoViewportAspect(
+  width: number | undefined | null,
+  height: number | undefined | null,
+  aspectRatio?: string | null,
+): { width: number; height: number } {
+  if (width && height && width > 0 && height > 0) {
+    return { width, height }
+  }
+  return parseAspectRatioLabel(aspectRatio) ?? DEFAULT_VIEWPORT_ASPECT
+}
+
+/**
+ * Inline styles so the player frame matches video aspect ratio up to `maxHeight`.
+ * Width shrinks for tall/narrow sources when height hits the cap.
+ */
+export function getVideoPlayerViewportStyle(
+  aspect: { width: number; height: number },
+  maxHeight: string,
+): {
+  aspectRatio: string
+  maxHeight: string
+  width: string
+} {
+  const { width, height } = aspect
+  return {
+    aspectRatio: `${width} / ${height}`,
+    maxHeight,
+    width: `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
+  }
+}
+
 /** Elapsed time between two ISO datetimes, e.g. `1m 12s`. */
 export function formatElapsed(
   start: string | undefined | null,

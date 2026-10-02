@@ -1,62 +1,42 @@
 import { useMemo, useState } from 'react'
-import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { Models, VideoOutput } from '@appwrite.io/console'
-import { Copy, FileJson, Layers, RefreshCw, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { useVideoDetailActions } from '../../Layout'
-import { VideoStatusBadge } from '../../_components/VideoStatusBadge'
-import {
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
-import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { EmptyState } from '@/components/global/shared/EmptyState'
-import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
-import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Layers } from 'lucide-react'
+import { toast } from 'sonner'
+import { RenditionsSpreadsheet } from '../../_components/RenditionsSpreadsheet'
+import { VideoActionButton, VideoPage } from '../../_components/VideoPage'
+import { useVideoDetailActions } from '../../_components/video-detail-actions'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import { EmptyState } from '@/components/global/shared/EmptyState'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  isVideoRenditionActive,
-  parseVideoProgress,
   useDeleteVideoRendition,
-  useProjectVideo,
+  useProject,
+  useVideoProfiles,
   useVideoRenditions,
   videoKeys,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import {
+  encodeSort,
+  filterRecordsByCompactMap,
+  mapToQueryParam,
+  parseSort,
+  queryParamToMap,
+  videoRenditionsFilterColumns,
+  type CompactFilterKey,
+} from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  formatBitrate,
-  formatElapsed,
-  formatResolution,
-} from '@/lib/utils/video-format'
-
-const HEAD_CLASSNAME =
-  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
-const RETRYABLE_STATUSES = new Set(['error', 'aborted'])
+  compareVideoRenditions,
+  renditionToFilterRecord,
+  RENDITIONS_DEFAULT_SORT_BY,
+  RENDITIONS_DEFAULT_SORT_ORDER,
+  type RenditionSortColumn,
+} from '@/lib/videos/rendition-list-filters'
 
 type ViewProps = {
   initialData?: { renditions: Models.VideoRenditionList }
@@ -65,25 +45,122 @@ type ViewProps = {
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { projectId, videoId } = useParams({ strict: false }) as {
     projectId: string
     videoId: string
   }
-  const { openCreateRenditions, canWrite } = useVideoDetailActions()
-  const { data: video } = useProjectVideo(projectId, videoId)
+  const search = useSearch({ strict: false }) as {
+    query?: string
+    sort?: string
+  }
+  const parsedSort = parseSort(search?.sort)
+  const sortBy = parsedSort?.sortBy ?? RENDITIONS_DEFAULT_SORT_BY
+  const sortOrder = parsedSort?.sortOrder ?? RENDITIONS_DEFAULT_SORT_ORDER
+  const { project } = useProject(projectId)
+  const { openCreateRenditions, canWrite, writeDisabledReason } =
+    useVideoDetailActions()
   const { data } = useVideoRenditions(projectId, videoId)
+  const { data: profilesData } = useVideoProfiles(projectId)
   const deleteMutation = useDeleteVideoRendition(projectId, videoId)
   const [deleting, setDeleting] = useState<Models.VideoRendition | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const renditions = useMemo(
-    () =>
-      [...(data?.renditions ?? initialData?.renditions.renditions ?? [])].sort(
-        (a, b) =>
-          a.output.localeCompare(b.output) ||
-          b.width * b.height - a.width * a.height,
-      ),
+  const filterMap = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const profileNames = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const profile of profilesData?.profiles ?? []) {
+      map.set(profile.$id, profile.name)
+    }
+    return map
+  }, [profilesData?.profiles])
+
+  const allRenditions = useMemo(
+    () => [...(data?.renditions ?? initialData?.renditions.renditions ?? [])],
     [data?.renditions, initialData?.renditions.renditions],
   )
+
+  const renditions = useMemo(() => {
+    const records = allRenditions.map((rendition) =>
+      renditionToFilterRecord(rendition, profileNames.get(rendition.profileId)),
+    )
+    const filtered = filterRecordsByCompactMap(records, filterMap)
+    const ids = new Set(filtered.map((row) => row.$id))
+    const list = allRenditions.filter((rendition) => ids.has(rendition.$id))
+    return [...list].sort((a, b) =>
+      compareVideoRenditions(a, b, sortBy, sortOrder, profileNames),
+    )
+  }, [allRenditions, filterMap, profileNames, sortBy, sortOrder])
+
+  const buildRenditionsRouteSearch = (
+    overrides: { query?: string | null; sort?: string | null } = {},
+  ) => {
+    const searchParams: { query?: string; sort?: string } = {}
+    const query =
+      overrides.query === null ? undefined : (overrides.query ?? search?.query)
+    const sort =
+      overrides.sort === null ? undefined : (overrides.sort ?? search?.sort)
+    if (query) searchParams.query = query
+    if (sort) searchParams.sort = sort
+    return searchParams
+  }
+
+  const navigateRenditionsList = (
+    overrides: { query?: string | null; sort?: string | null } = {},
+  ) => {
+    navigate({
+      to: '/projects/$projectId/videos/$videoId/renditions',
+      params: { projectId, videoId },
+      search: buildRenditionsRouteSearch(overrides),
+      replace: true,
+    })
+  }
+
+  const navigateWithQuery = (query?: string) => {
+    navigateRenditionsList({ query: query ?? null })
+  }
+
+  const handleSortColumn = (columnKey: RenditionSortColumn) => {
+    let nextOrder: 'asc' | 'desc' = 'asc'
+    if (sortBy === columnKey) {
+      nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+    } else if (
+      columnKey === 'resolution' ||
+      columnKey === 'bitrate' ||
+      columnKey === 'encodingTime' ||
+      columnKey === 'created'
+    ) {
+      nextOrder = 'desc'
+    }
+    const isDefaultSort =
+      columnKey === RENDITIONS_DEFAULT_SORT_BY &&
+      nextOrder === RENDITIONS_DEFAULT_SORT_ORDER
+    navigateRenditionsList({
+      sort: isDefaultSort ? null : encodeSort(columnKey, nextOrder),
+    })
+  }
+
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
+    const next = new Map(filterMap)
+    if (replaceKey) next.delete(replaceKey)
+    next.set(compactKey, queryStr)
+    navigateWithQuery(mapToQueryParam(next) || undefined)
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(filterMap)
+    next.delete(compactKey)
+    navigateWithQuery(next.size > 0 ? mapToQueryParam(next) : undefined)
+  }
+
+  const clearAllFilters = () => navigateWithQuery(undefined)
 
   const retryMutation = useMutation({
     mutationFn: async (rendition: Models.VideoRendition) => {
@@ -119,187 +196,92 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
+  const filterToolbar =
+    allRenditions.length > 0 ? (
+      <FiltersPopover
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        columns={videoRenditionsFilterColumns}
+        filterMap={filterMap}
+        onRemoveFilter={removeFilter}
+        onClearAll={clearAllFilters}
+        onApplyFilter={applyFilter}
+        resourceLabel={t('renditions')}
+        filterScope={`videos.renditions.${videoId}`}
+        onApplyQuery={(queryParam) =>
+          navigateWithQuery(queryParam ?? undefined)
+        }
+        teamId={project?.teamId}
+      />
+    ) : undefined
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-6 sm:px-6">
-      {renditions.length === 0 ? (
-        <EmptyState
-          icon={Layers}
-          title={t('No renditions')}
-          description={t(
-            'Encode this video into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.',
-          )}
-          isEmpty
-          hasFilters={false}
-          variant="card"
-          action={
-            canWrite ? (
-              <Button
+    <VideoPage
+      title={t('Renditions')}
+      term="rendition"
+      spreadsheetContent
+      toolbar={filterToolbar}
+      createLabel={t('Create renditions')}
+      onCreate={openCreateRenditions}
+      createDisabled={Boolean(writeDisabledReason)}
+      createDisabledTooltip={writeDisabledReason ?? undefined}
+    >
+      {allRenditions.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <EmptyState
+            icon={Layers}
+            title={t('No renditions')}
+            description={t(
+              'Encode this video into HLS, DASH, or CMAF renditions to stream it with adaptive bitrate.',
+            )}
+            isEmpty
+            variant="centered"
+            iconSize="md"
+            action={
+              <VideoActionButton
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={openCreateRenditions}
+                disabledReason={writeDisabledReason}
               >
                 {t('Create renditions')}
-              </Button>
-            ) : undefined
-          }
-        />
-      ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className={HEAD_CLASSNAME}>
-                  {t('Rendition')}
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>{t('Output')}</TableHead>
-                <TableHead className={HEAD_CLASSNAME}>
-                  {t('Resolution')}
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>{t('Bitrate')}</TableHead>
-                <TableHead className={`${HEAD_CLASSNAME} min-w-[180px]`}>
-                  {t('Status')}
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>
-                  {t('Encoding time')}
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>{t('Created')}</TableHead>
-                <TableHead className={`${HEAD_CLASSNAME} text-end w-[60px]`} />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {renditions.map((rendition) => {
-                const active = isVideoRenditionActive(rendition.status)
-                return (
-                  <TableRow key={rendition.$id}>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-[13px] font-medium">
-                          {rendition.name}
-                        </span>
-                        <CopyableId
-                          id={rendition.$id}
-                          size="xs"
-                          maxWidth={140}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant="info" className="text-[10px] uppercase">
-                        {rendition.output}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[13px]">
-                      {formatResolution(rendition.width, rendition.height)}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
-                      {formatBitrate(rendition.videoBitRate, 'kbps')} /{' '}
-                      {formatBitrate(rendition.audioBitRate, 'kbps')}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-col gap-1.5">
-                        <VideoStatusBadge
-                          status={rendition.status}
-                          kind="rendition"
-                        />
-                        {active ? (
-                          <ProgressBarRow
-                            value={parseVideoProgress(rendition.progress)}
-                            className="mb-0 max-w-[160px]"
-                          />
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
-                      {rendition.startedAt
-                        ? formatElapsed(rendition.startedAt, rendition.endedAt)
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip date={rendition.$createdAt} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <RowActionsMenuTrigger
-                            aria-label={`${t('Actions for')} ${rendition.name}`}
-                          />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          {RETRYABLE_STATUSES.has(rendition.status) ? (
-                            <>
-                              <DropdownMenuItem
-                                disabled={!canWrite || retryMutation.isPending}
-                                onClick={() => retryMutation.mutate(rendition)}
-                              >
-                                <MenuItemContent icon={RefreshCw}>
-                                  {t('Retry')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                            </>
-                          ) : null}
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <MenuItemIcon icon={Copy} />
-                              {t('Copy')}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-44">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('ID'), rendition.$id)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy ID')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('Name'), rendition.name)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy name')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyResourceAsJson(
-                                    () =>
-                                      sdk
-                                        .forProject(projectId)
-                                        .videos.getRendition({
-                                          videoId,
-                                          renditionId: rendition.$id,
-                                        }),
-                                    { fallback: rendition },
-                                  )
-                                }
-                              >
-                                <MenuItemContent icon={FileJson}>
-                                  {t('Copy as JSON')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            disabled={!canWrite}
-                            onClick={() => setDeleting(rendition)}
-                          >
-                            <MenuItemContent icon={Trash2}>
-                              {t('Delete')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+              </VideoActionButton>
+            }
+          />
         </div>
+      ) : renditions.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <EmptyState
+            icon={Layers}
+            title={t('No renditions match your filters')}
+            description={t(
+              'Try adjusting or clearing filters to see more results',
+            )}
+            hasFilters
+            variant="centered"
+            iconSize="md"
+            action={
+              <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                {t('Clear filters')}
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        <RenditionsSpreadsheet
+          className="min-h-0 flex-1"
+          projectId={projectId}
+          videoId={videoId}
+          renditions={renditions}
+          profileNames={profileNames}
+          canWrite={canWrite}
+          retryPending={retryMutation.isPending}
+          onRetry={(rendition) => retryMutation.mutate(rendition)}
+          onDelete={setDeleting}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortColumn={handleSortColumn}
+        />
       )}
 
       <ConfirmActionDialog
@@ -314,6 +296,6 @@ export function View({ initialData }: ViewProps = {}) {
         onConfirm={confirmDelete}
         isConfirming={deleteMutation.isPending}
       />
-    </div>
+    </VideoPage>
   )
 }

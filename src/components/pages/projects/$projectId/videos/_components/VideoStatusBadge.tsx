@@ -11,15 +11,13 @@ type BadgeVariant =
   | 'pending'
   | 'processing'
 
-const SOURCE_STATUS: Record<string, { label: string; variant: BadgeVariant }> =
-  {
-    pending: { label: 'Pending', variant: 'pending' },
-    downloading: { label: 'Downloading', variant: 'processing' },
-    ready: { label: 'Ready', variant: 'success' },
-    removed: { label: 'Working copy released', variant: 'info' },
-    error: { label: 'Failed', variant: 'error' },
-    aborted: { label: 'Aborted', variant: 'warning' },
-  }
+/** Keyed by `VideoEncodingStatus` from `getVideoEncodingStatus`. */
+const VIDEO_STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
+  none: { label: 'Not encoded', variant: 'pending' },
+  encoding: { label: 'Encoding', variant: 'processing' },
+  ready: { label: 'Ready', variant: 'success' },
+  error: { label: 'Failed', variant: 'error' },
+}
 
 const RENDITION_STATUS: Record<
   string,
@@ -45,14 +43,14 @@ const SUBTITLE_STATUS: Record<
 }
 
 const STATUS_MAPS = {
-  source: SOURCE_STATUS,
+  video: VIDEO_STATUS,
   rendition: RENDITION_STATUS,
   subtitle: SUBTITLE_STATUS,
 }
 
 export function VideoStatusBadge({
   status,
-  kind = 'source',
+  kind = 'video',
   className,
 }: {
   status: string | undefined
@@ -69,7 +67,7 @@ export function VideoStatusBadge({
       variant={entry.variant}
       className={cn('text-[10px] shrink-0 gap-1', className)}
     >
-      {entry.variant === 'processing' ? (
+      {entry.variant === 'processing' && kind !== 'video' ? (
         <Loader2 className="h-2.5 w-2.5 animate-spin" />
       ) : null}
       {t(entry.label)}

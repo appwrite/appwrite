@@ -1,38 +1,15 @@
-import { useMemo, useState } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { Copy, FileJson, Layers, Pencil, Trash2 } from 'lucide-react'
+import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
-import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
-import { getVideosServiceTabs } from '../View'
 import { CreateProfile } from '../_components/CreateProfile'
-import {
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
+import { ProfilesSpreadsheet } from '../_components/ProfilesSpreadsheet'
+import { VideoActionButton, VideoPage } from '../_components/VideoPage'
+import { Button } from '@/components/ui/button'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateVideo } from '@/lib/console-access-checks'
 import {
@@ -42,24 +19,58 @@ import {
   useVideoProfiles,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
-
-const HEAD_CLASSNAME =
-  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
+import {
+  encodeSort,
+  filterRecordsByCompactMap,
+  mapToQueryParam,
+  MIN_SEARCH_LENGTH,
+  parseSort,
+  queryParamToMap,
+  videoProfilesFilterColumns,
+  type CompactFilterKey,
+} from '@/lib/table-filters'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
+import {
+  compareVideoProfiles,
+  profileToFilterRecord,
+  PROFILES_DEFAULT_SORT_BY,
+  PROFILES_DEFAULT_SORT_ORDER,
+  type ProfileSortColumn,
+} from '@/lib/videos/profile-list-filters'
 
 export function View() {
   const t = useT()
+  const navigate = useNavigate()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const [searchValue, setSearchValue] = useState('')
+  const routeSearch = useSearch({ strict: false }) as {
+    search?: string
+    query?: string
+    sort?: string
+  }
+  const urlSearch = routeSearch.search?.trim() || undefined
+  const filterMap = useMemo(
+    () => queryParamToMap(routeSearch.query ?? null),
+    [routeSearch.query],
+  )
+  const parsedSort = parseSort(routeSearch.sort)
+  const sortBy = parsedSort?.sortBy ?? PROFILES_DEFAULT_SORT_BY
+  const sortOrder = parsedSort?.sortOrder ?? PROFILES_DEFAULT_SORT_ORDER
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProfile, setEditingProfile] =
     useState<Models.VideoProfile | null>(null)
   const [deletingProfile, setDeletingProfile] =
     useState<Models.VideoProfile | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const { data, isLoading, error } = useVideoProfiles(projectId)
+  const { data, isLoading, isFetching, error, refetch } =
+    useVideoProfiles(projectId)
+  const apiError = error ? getAppwriteErrorInfo(error) : null
   const deleteMutation = useDeleteVideoProfile(projectId)
 
   const { project } = useProject(projectId)
@@ -67,27 +78,140 @@ export function View() {
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canCreateVideo(access, features)
 
-  const tabs: Tab[] = useMemo(
-    () =>
-      getVideosServiceTabs(projectId).map((tab) => ({
-        ...tab,
-        label: t(tab.label),
-      })),
-    [projectId, t],
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  const buildProfilesRouteSearch = (
+    overrides: {
+      search?: string | null
+      query?: string | null
+      sort?: string | null
+    } = {},
+  ) => {
+    const searchParams: {
+      search?: string
+      query?: string
+      sort?: string
+    } = {}
+    const search =
+      overrides.search === null ? undefined : (overrides.search ?? urlSearch)
+    const query =
+      overrides.query === null
+        ? undefined
+        : (overrides.query ?? routeSearch.query)
+    const sort =
+      overrides.sort === null ? undefined : (overrides.sort ?? routeSearch.sort)
+    if (search) searchParams.search = search
+    if (query) searchParams.query = query
+    if (sort) searchParams.sort = sort
+    return searchParams
+  }
+
+  const navigateProfilesList = (
+    overrides: {
+      search?: string | null
+      query?: string | null
+      sort?: string | null
+    } = {},
+  ) => {
+    navigate({
+      to: '/projects/$projectId/videos/profiles',
+      params: { projectId },
+      search: buildProfilesRouteSearch(overrides),
+      replace: true,
+    })
+  }
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigateProfilesList({
+        search: trimmed || null,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [
+    searchInput,
+    urlSearch,
+    routeSearch.query,
+    routeSearch.sort,
+    projectId,
+    navigate,
+  ])
+
+  const allProfiles = useMemo(
+    () => [...(data?.profiles ?? [])],
+    [data?.profiles],
   )
 
   const profiles = useMemo(() => {
-    const all = [...(data?.profiles ?? [])].sort(
-      (a, b) => b.width * b.height - a.width * a.height,
+    const records = allProfiles.map((profile) => profileToFilterRecord(profile))
+    const filtered = filterRecordsByCompactMap(records, filterMap)
+    const ids = new Set(filtered.map((row) => row.$id))
+    let list = allProfiles.filter((profile) => ids.has(profile.$id))
+
+    const query = searchInput.trim().toLowerCase()
+    if (query) {
+      list = list.filter(
+        (profile) =>
+          profile.name.toLowerCase().includes(query) ||
+          profile.$id.toLowerCase().includes(query),
+      )
+    }
+
+    return [...list].sort((a, b) =>
+      compareVideoProfiles(a, b, sortBy, sortOrder),
     )
-    const query = searchValue.trim().toLowerCase()
-    if (!query) return all
-    return all.filter(
-      (profile) =>
-        profile.name.toLowerCase().includes(query) ||
-        profile.$id.toLowerCase().includes(query),
-    )
-  }, [data?.profiles, searchValue])
+  }, [allProfiles, filterMap, searchInput, urlSearch, sortBy, sortOrder])
+
+  const navigateWithQuery = (query?: string) => {
+    navigateProfilesList({ query: query ?? null })
+  }
+
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
+    const next = new Map(filterMap)
+    if (replaceKey) next.delete(replaceKey)
+    next.set(compactKey, queryStr)
+    navigateWithQuery(mapToQueryParam(next) || undefined)
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(filterMap)
+    next.delete(compactKey)
+    navigateWithQuery(next.size > 0 ? mapToQueryParam(next) : undefined)
+  }
+
+  const clearAllFilters = () => navigateWithQuery(undefined)
+
+  const handleSortColumn = (columnKey: ProfileSortColumn) => {
+    let nextOrder: 'asc' | 'desc' = 'asc'
+    if (sortBy === columnKey) {
+      nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+    } else if (
+      columnKey === 'resolution' ||
+      columnKey === 'videoBitRate' ||
+      columnKey === 'audioBitRate' ||
+      columnKey === '$createdAt'
+    ) {
+      nextOrder = 'desc'
+    }
+    const isDefaultSort =
+      columnKey === PROFILES_DEFAULT_SORT_BY &&
+      nextOrder === PROFILES_DEFAULT_SORT_ORDER
+    navigateProfilesList({
+      sort: isDefaultSort ? null : encodeSort(columnKey, nextOrder),
+    })
+  }
 
   const openCreate = () => {
     setEditingProfile(null)
@@ -112,185 +236,179 @@ export function View() {
     })
   }
 
-  const totalProfiles = data?.profiles?.length ?? 0
+  const clearSearch = () => {
+    setSearchInput('')
+    navigateProfilesList({ search: null })
+  }
+
+  const totalProfiles = allProfiles.length
+
+  let body: ReactNode
+  if (error && totalProfiles === 0) {
+    body = (
+      <div className="flex flex-1 items-center justify-center px-6 py-12">
+        <div className="max-w-lg text-center">
+          <AlertCircle className="mx-auto h-5 w-5 text-muted-foreground" />
+          <p className="mt-3 text-[14px] font-medium text-foreground">
+            {t('Failed to load profiles')}
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-[13px] text-muted-foreground">
+            {getErrorMessage(error)}
+          </p>
+          <p className="mx-auto mt-3 text-[12px] leading-relaxed text-muted-foreground">
+            {t(
+              'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
+            )}
+          </p>
+          {apiError?.type || apiError?.code ? (
+            <p className="mx-auto mt-2 font-mono text-[11px] text-muted-foreground">
+              {apiError.code ? `HTTP ${apiError.code}` : null}
+              {apiError.code && apiError.type ? ' · ' : null}
+              {apiError.type ? (
+                <>
+                  {t('Error type:')} {apiError.type}
+                </>
+              ) : null}
+            </p>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4 h-8 text-[13px]"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
+            {t('Try again')}
+          </Button>
+        </div>
+      </div>
+    )
+  } else if (isLoading && totalProfiles === 0) {
+    body = (
+      <div className="flex flex-1 items-center justify-center px-6 py-12">
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading profiles...')}
+        </p>
+      </div>
+    )
+  } else if (profiles.length === 0) {
+    body =
+      totalProfiles > 0 ? (
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <EmptyState
+            icon={Layers}
+            title={
+              filterMap.size > 0
+                ? t('No profiles match your filters')
+                : t('No profiles match your search')
+            }
+            description={
+              filterMap.size > 0
+                ? t('Try adjusting or clearing filters.')
+                : t('Try a different search term or clear the search.')
+            }
+            isEmpty={false}
+            hasFilters
+            variant="centered"
+            iconSize="md"
+            action={
+              filterMap.size > 0 ? (
+                <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                  {t('Clear filters')}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  {t('Clear search')}
+                </Button>
+              )
+            }
+          />
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <EmptyState
+            icon={Layers}
+            title={t('No profiles')}
+            description={t(
+              'Create a profile to choose the resolution and bitrate of your renditions.',
+            )}
+            isEmpty
+            hasFilters={false}
+            variant="centered"
+            iconSize="md"
+            action={
+              <VideoActionButton
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={openCreate}
+                disabledReason={
+                  canWrite
+                    ? null
+                    : t("You don't have permission to manage video profiles.")
+                }
+              >
+                {t('Create profile')}
+              </VideoActionButton>
+            }
+          />
+        </div>
+      )
+  } else {
+    body = (
+      <ProfilesSpreadsheet
+        className="min-h-0 flex-1"
+        profiles={profiles}
+        canWrite={canWrite}
+        onUpdate={openUpdate}
+        onDelete={setDeletingProfile}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortColumn={handleSortColumn}
+      />
+    )
+  }
+
+  const filterToolbar =
+    totalProfiles > 0 ? (
+      <FiltersPopover
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        columns={videoProfilesFilterColumns}
+        filterMap={filterMap}
+        onRemoveFilter={removeFilter}
+        onClearAll={clearAllFilters}
+        onApplyFilter={applyFilter}
+        resourceLabel={t('profiles')}
+        filterScope="videos.profiles"
+        onApplyQuery={(queryParam) =>
+          navigateWithQuery(queryParam ?? undefined)
+        }
+        teamId={project?.teamId}
+      />
+    ) : undefined
 
   return (
-    <div className="flex flex-col">
-      <ServiceHeader
-        title={t('Videos')}
-        tabs={tabs}
-        activeTab="profiles"
-        searchPlaceholder={t('Search profiles...')}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        createLabel={t('Create profile')}
-        onCreate={openCreate}
-        createDisabled={!canWrite}
-        createDisabledTooltip={
-          !canWrite
-            ? t("You don't have permission to manage video profiles.")
-            : undefined
-        }
-        fullWidthBorder
-      />
-
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {error && totalProfiles === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              {getErrorMessage(error) || t('Failed to load profiles')}
-            </p>
-          </div>
-        ) : isLoading && totalProfiles === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              {t('Loading profiles...')}
-            </p>
-          </div>
-        ) : profiles.length === 0 ? (
-          totalProfiles > 0 ? (
-            <EmptyState
-              icon={Layers}
-              isEmpty={false}
-              hasFilters
-              variant="card"
-            />
-          ) : (
-            <EmptyState
-              icon={Layers}
-              title={t('No profiles')}
-              description={t(
-                'Create a profile to choose the resolution and bitrate of your renditions.',
-              )}
-              isEmpty
-              hasFilters={false}
-              variant="card"
-            />
-          )
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className={HEAD_CLASSNAME}>{t('Name')}</TableHead>
-                  <TableHead className={HEAD_CLASSNAME}>
-                    {t('Resolution')}
-                  </TableHead>
-                  <TableHead className={HEAD_CLASSNAME}>
-                    {t('Video codec')}
-                  </TableHead>
-                  <TableHead className={HEAD_CLASSNAME}>
-                    {t('Video bitrate')}
-                  </TableHead>
-                  <TableHead className={HEAD_CLASSNAME}>
-                    {t('Audio bitrate')}
-                  </TableHead>
-                  <TableHead className={HEAD_CLASSNAME}>
-                    {t('Created')}
-                  </TableHead>
-                  <TableHead
-                    className={`${HEAD_CLASSNAME} text-end w-[60px]`}
-                  />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {profiles.map((profile) => (
-                  <TableRow key={profile.$id}>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-[13px] font-medium">
-                          {profile.name}
-                        </span>
-                        <CopyableId id={profile.$id} size="xs" maxWidth={140} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[13px]">
-                      {formatResolution(profile.width, profile.height)}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[13px] uppercase">
-                      {(profile as Models.VideoProfile & { codec?: string })
-                        .codec || 'h264'}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[13px]">
-                      {formatBitrate(profile.videoBitRate, 'kbps')}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[13px]">
-                      {formatBitrate(profile.audioBitRate, 'kbps')}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip date={profile.$createdAt} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <RowActionsMenuTrigger
-                            aria-label={`${t('Actions for')} ${profile.name}`}
-                          />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuItem
-                            disabled={!canWrite}
-                            onClick={() => openUpdate(profile)}
-                          >
-                            <MenuItemContent icon={Pencil}>
-                              {t('Update')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <MenuItemIcon icon={Copy} />
-                              {t('Copy')}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-44">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('ID'), profile.$id)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy ID')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('Name'), profile.name)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy name')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyResourceAsJson(() => profile)
-                                }
-                              >
-                                <MenuItemContent icon={FileJson}>
-                                  {t('Copy as JSON')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            disabled={!canWrite}
-                            onClick={() => setDeletingProfile(profile)}
-                          >
-                            <MenuItemContent icon={Trash2}>
-                              {t('Delete')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
+    <VideoPage
+      title={t('Encoding profiles')}
+      term="profile"
+      spreadsheetContent
+      searchPlaceholder={t('Search profiles...')}
+      searchValue={searchInput}
+      onSearchChange={setSearchInput}
+      showRefresh
+      onRefresh={() => void refetch()}
+      isRefreshing={isFetching}
+      filterTrigger={filterToolbar}
+      createLabel={t('Create profile')}
+      onCreate={openCreate}
+      createDisabled={!canWrite}
+      createDisabledTooltip={
+        canWrite
+          ? undefined
+          : "You don't have permission to manage video profiles."
+      }
+    >
+      {body}
 
       <CreateProfile
         open={dialogOpen}
@@ -310,6 +428,6 @@ export function View() {
         onConfirm={confirmDelete}
         isConfirming={deleteMutation.isPending}
       />
-    </div>
+    </VideoPage>
   )
 }

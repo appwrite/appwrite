@@ -79,9 +79,7 @@ export function BufferVisualizer({
   const [history, setHistory] = useState<number[]>([])
 
   useEffect(() => {
-    setHistory((prev) =>
-      [...prev, stats.bufferedAhead].slice(-HISTORY_SAMPLES),
-    )
+    setHistory((prev) => [...prev, stats.bufferedAhead].slice(-HISTORY_SAMPLES))
   }, [stats])
 
   const { videoSegments, audioSegments, totalBytes, usedLevels } =
@@ -118,9 +116,7 @@ export function BufferVisualizer({
     <div
       className={cn(
         'bg-card',
-        compact
-          ? 'rounded-lg border border-border'
-          : 'border-t border-border',
+        compact ? 'rounded-lg border border-border' : 'border-t border-border',
         className,
       )}
     >
@@ -185,10 +181,18 @@ export function BufferVisualizer({
 function HealthBadge({ health }: { health: Health }) {
   const t = useT()
   const config = {
-    full: { variant: 'success', label: t('Fully buffered'), dot: 'bg-emerald-500' },
+    full: {
+      variant: 'success',
+      label: t('Fully buffered'),
+      dot: 'bg-emerald-500',
+    },
     healthy: { variant: 'success', label: t('Healthy'), dot: 'bg-emerald-500' },
     low: { variant: 'warning', label: t('Low buffer'), dot: 'bg-amber-500' },
-    critical: { variant: 'error', label: t('Buffer critical'), dot: 'bg-red-500' },
+    critical: {
+      variant: 'error',
+      label: t('Buffer critical'),
+      dot: 'bg-red-500',
+    },
   } as const
   const { variant, label, dot } = config[health]
   return (
@@ -202,7 +206,9 @@ function HealthBadge({ health }: { health: Health }) {
             )}
           />
         ) : null}
-        <span className={cn('relative inline-flex size-1.5 rounded-full', dot)} />
+        <span
+          className={cn('relative inline-flex size-1.5 rounded-full', dot)}
+        />
       </span>
       {label}
     </Badge>
@@ -339,7 +345,9 @@ function SegmentLane({
           style={{
             left: `${pct(seg.start, duration)}%`,
             width: `max(2px, calc(${pct(seg.duration, duration)}% - 1px))`,
-            background: audio ? 'var(--muted-foreground)' : levelColor(seg.level),
+            background: audio
+              ? 'var(--muted-foreground)'
+              : levelColor(seg.level),
           }}
           onPointerEnter={() => setHovered(seg)}
           onPointerLeave={() => setHovered(null)}
@@ -370,7 +378,8 @@ function SegmentLane({
               : `${levelLabel(hoveredLevel)} · ${formatBitrate(hoveredLevel?.bitrate)}`}
           </div>
           <div className="mt-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
-            {formatClock(hovered.start)} - {formatClock(hovered.start + hovered.duration)}
+            {formatClock(hovered.start)} -{' '}
+            {formatClock(hovered.start + hovered.duration)}
             {' · '}
             {formatBytes(hovered.bytes)}
             {' · '}
@@ -391,7 +400,11 @@ function Axis({ duration }: { duration: number }) {
           key={tick}
           className={cn(
             'absolute top-0 font-mono text-[10px] tabular-nums text-muted-foreground',
-            tick === 0 ? '' : tick === 1 ? '-translate-x-full' : '-translate-x-1/2',
+            tick === 0
+              ? ''
+              : tick === 1
+                ? '-translate-x-full'
+                : '-translate-x-1/2',
           )}
           style={{ left: `${tick * 100}%` }}
         >

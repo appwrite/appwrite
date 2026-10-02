@@ -37,6 +37,7 @@ import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import {
   LayoutDashboard,
   Database,
@@ -44,7 +45,6 @@ import {
   Folder,
   Zap,
   MessageSquare,
-  Film,
   Settings,
   BarChart3,
   Key,
@@ -213,7 +213,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'videos',
           label: sidebarCopy.items.videos,
-          icon: Film,
+          icon: VIDEOS_PRODUCT_ICON,
           path: `/projects/${projectId}/videos`,
         },
       ],

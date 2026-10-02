@@ -6,11 +6,13 @@ import {
   videoQueryOptions,
   videoRenditionsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { listSearchSchema } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/videos/$videoId/renditions',
 )({
+  validateSearch: listSearchSchema,
   head: () => ({ meta: [{ title: pageTitle('Renditions', 'Videos') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined

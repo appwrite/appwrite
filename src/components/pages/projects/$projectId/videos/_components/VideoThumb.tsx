@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Models } from '@appwrite.io/console'
-import { Film } from 'lucide-react'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { cn } from '@/lib/utils'
@@ -48,7 +48,7 @@ export function VideoThumb({
           onError={() => setFailed(true)}
         />
       ) : (
-        <Film className="h-5 w-5" />
+        <VIDEOS_PRODUCT_ICON className="h-5 w-5" />
       )}
       {showDuration && video.duration > 0 ? (
         <span className="absolute bottom-1.5 end-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] text-white">

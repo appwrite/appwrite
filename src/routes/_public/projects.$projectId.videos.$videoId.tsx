@@ -1,6 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Layout } from '@/components/pages/projects/$projectId/videos/Layout'
-import { projectQueryOptions, videoQueryOptions } from '@/lib/react-query/hooks'
+import {
+  projectQueryOptions,
+  videoQueryOptions,
+  videoRenditionsQueryOptions,
+  videoSubtitlesQueryOptions,
+  videoTimelineQueryOptions,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -18,9 +24,21 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const video = await queryClient
-      .ensureQueryData(videoQueryOptions(projectId, videoId))
-      .catch(() => null)
+    // Submenu counts (renditions, subtitles, timeline) load with the video.
+    const [video] = await Promise.all([
+      queryClient
+        .ensureQueryData(videoQueryOptions(projectId, videoId))
+        .catch(() => null),
+      queryClient
+        .ensureQueryData(videoRenditionsQueryOptions(projectId, videoId))
+        .catch(() => null),
+      queryClient
+        .ensureQueryData(videoSubtitlesQueryOptions(projectId, videoId))
+        .catch(() => null),
+      queryClient
+        .ensureQueryData(videoTimelineQueryOptions(projectId, videoId))
+        .catch(() => null),
+    ])
     return { video }
   },
   component: Layout,

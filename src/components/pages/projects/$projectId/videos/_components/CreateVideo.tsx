@@ -64,7 +64,7 @@ export function CreateVideo({
   })
 
   const isVideoFile =
-    !sourceFile || sourceFile.mimeType.toLowerCase().startsWith('video/')
+    !sourceFile || /^(video|audio)\//.test(sourceFile.mimeType.toLowerCase())
 
   const handleCreate = () => {
     if (!source) return
@@ -94,7 +94,7 @@ export function CreateVideo({
             <DialogTitle>{t('Create video')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.',
+                'Choose a video or audio file from Storage. The file stays in its bucket, and you can encode renditions for adaptive streaming.',
               )}
             </DialogDescription>
           </DialogHeader>
@@ -139,7 +139,7 @@ export function CreateVideo({
               {!isVideoFile ? (
                 <p className="text-[12px] text-amber-600 dark:text-amber-400">
                   {t(
-                    'This file does not look like a video. The server may reject it.',
+                    'This file does not look like video or audio. The server may reject it.',
                   )}
                 </p>
               ) : null}

@@ -38,6 +38,7 @@ import {
   getStorageFileIcon,
   isStoragePreviewSupportedMimeType,
   isStorageVideoPreviewSupportedMimeType,
+  STORAGE_VIDEO_PREVIEW_MAX_BYTES,
 } from '@/components/global/shared/StorageFilePreviewThumb'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -167,6 +168,7 @@ export function FileInspectorPanel({
   const videoSourceUrl = useMemo(() => {
     if (!file || !projectId || !bucketId) return null
     if (!isStorageVideoPreviewSupportedMimeType(file.mimeType)) return null
+    if (file.sizeOriginal > STORAGE_VIDEO_PREVIEW_MAX_BYTES) return null
     return buildAdminFileViewUrl(projectId, bucketId, file.$id)
   }, [file, projectId, bucketId])
 

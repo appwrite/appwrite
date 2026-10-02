@@ -11,6 +11,7 @@ import {
   useProjectVideo,
   useUpdateVideo,
 } from '@/lib/react-query/hooks'
+import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -19,6 +20,7 @@ type ViewProps = {
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { projectId, videoId } = useParams({ strict: false }) as {
     projectId: string
     videoId: string
@@ -29,11 +31,11 @@ export function View({ initialData }: ViewProps = {}) {
   if (!video) return null
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
+    <VideoPage title={t('Settings')} contentClassName="mx-auto max-w-4xl">
       <NameCard projectId={projectId} video={video} />
       <SourceCard projectId={projectId} video={video} />
       <DeleteCard projectId={projectId} video={video} />
-    </div>
+    </VideoPage>
   )
 }
 
@@ -111,19 +113,14 @@ function SourceCard({
 }) {
   const t = useT()
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Source file')}
-        </h3>
-        <p className="text-[13px] text-muted-foreground mt-2">
-          {t(
-            'The Storage file this video was created from. Deleting the video keeps the file.',
-          )}
-        </p>
-      </div>
-      <div className="border-t border-border" />
-      <div className="grid gap-4 px-6 py-4 sm:grid-cols-2">
+    <VideoSectionCard
+      title={t('Source')}
+      term="source"
+      description={t(
+        'The Storage file this video was created from. Deleting the video keeps the file.',
+      )}
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="min-w-0 space-y-1">
           <p className="text-[12px] text-muted-foreground">{t('Bucket')}</p>
           <Link
@@ -146,7 +143,7 @@ function SourceCard({
           </Link>
         </div>
       </div>
-    </div>
+    </VideoSectionCard>
   )
 }
 

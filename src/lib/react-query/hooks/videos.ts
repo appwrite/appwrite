@@ -58,6 +58,37 @@ export const VIDEO_OUTPUTS: VideoOutput[] = [
   VideoOutput.Cmaf,
 ]
 
+export type VideoEncodingStatus = 'none' | 'encoding' | 'ready' | 'error'
+
+/** Videos carry no status of their own; summarize their renditions instead. */
+export function getVideoEncodingStatus(
+  renditions: Pick<Models.VideoRendition, 'status'>[],
+): VideoEncodingStatus {
+  if (renditions.some((r) => isVideoRenditionActive(r.status))) {
+    return 'encoding'
+  }
+  if (renditions.some((r) => r.status === 'ready')) return 'ready'
+  if (renditions.some((r) => r.status === 'error' || r.status === 'aborted')) {
+    return 'error'
+  }
+  return 'none'
+}
+
+/** Sidebar list: first page, newest first (shared by the layout loader and sidebar). */
+export const VIDEOS_SIDEBAR_PAGE_SIZE = 50
+
+export function videosSidebarQueryOptions(projectId: string) {
+  return videosQueryOptions(
+    projectId,
+    0,
+    VIDEOS_SIDEBAR_PAGE_SIZE,
+    undefined,
+    undefined,
+    VIDEOS_DEFAULT_SORT_BY,
+    VIDEOS_DEFAULT_SORT_ORDER,
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Query keys
 // ---------------------------------------------------------------------------
@@ -439,7 +470,7 @@ export function useVideoCodecs(projectId: string | null | undefined) {
 // Mutations
 // ---------------------------------------------------------------------------
 
-/** Register a video from a Storage file (metadata is probed asynchronously). */
+/** Register a video from a Storage file. Metadata is probed by the first rendition or timeline job. */
 export function useCreateVideo(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -601,6 +632,8 @@ export function useUpdateVideoSubtitle(
   return useMutation({
     mutationFn: (input: {
       subtitleId: string
+      bucketId?: string
+      fileId?: string
       name?: string
       code?: string
       isDefault?: boolean
@@ -608,6 +641,8 @@ export function useUpdateVideoSubtitle(
       sdk.forProject(projectId!).videos.updateSubtitle({
         videoId: videoId!,
         subtitleId: input.subtitleId,
+        bucketId: input.bucketId,
+        fileId: input.fileId,
         name: input.name,
         code: input.code,
         xdefault: input.isDefault,
@@ -644,7 +679,15 @@ export type VideoProfileInput = {
   height: number
   videoBitRate: number
   audioBitRate: number
-  codec?: string
+}
+
+/** True when probe metadata includes an audio stream (after prepare / encode probe). */
+export function videoSourceHasAudio(
+  video: Pick<Models.Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
+): boolean {
+  if (!video) return false
+  if (video.audioCodec?.trim()) return true
+  return false
 }
 
 export function useSaveVideoProfile(projectId: string | null | undefined) {
@@ -652,8 +695,7 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
       const videos = sdk.forProject(projectId!).videos
-      const { profileId, codec = 'h264', ...values } = input
-      const payload = { ...values, codec }
+      const { profileId, ...payload } = input
       return profileId
         ? videos.updateProfile({ profileId, ...payload })
         : videos.createProfile(payload)

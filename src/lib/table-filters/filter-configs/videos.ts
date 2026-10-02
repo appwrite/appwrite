@@ -10,6 +10,8 @@ export const videosFilterColumns: FilterColumn[] = [
   { id: 'format', title: 'Format', type: 'string' },
   { id: 'videoCodec', title: 'Video codec', type: 'string' },
   { id: 'audioCodec', title: 'Audio codec', type: 'string' },
+  { id: 'videoBitRate', title: 'Video bitrate (bps)', type: 'integer' },
+  { id: 'audioBitRate', title: 'Audio bitrate (bps)', type: 'integer' },
   { id: 'duration', title: 'Duration (ms)', type: 'integer' },
   { id: 'width', title: 'Width', type: 'integer' },
   { id: 'height', title: 'Height', type: 'integer' },
