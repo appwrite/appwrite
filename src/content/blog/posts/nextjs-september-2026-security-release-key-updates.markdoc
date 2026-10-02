@@ -150,16 +150,6 @@ Production deployments do not serve this endpoint. The risk is to developer mach
 
 Every app on an unpatched version should upgrade. Use this checklist to decide how urgently, and which mitigations to apply while the upgrade rolls out.
 
-| If your app...                                              | Exposed to            |  Suggested patch priority          |
-| ----------------------------------------------------------- | --------------------- | ----------------- |
-| Configures `images.remotePatterns`                          | SSRF (CVE-2026-94483) | Patch immediately |
-| Is self-hosted and uses Pages Router SSG or ISR             | CVE-2026-94543        | High              |
-| Has a root `[...slug]` catch-all plus SSG or ISR routes     | CVE-2026-94484        | High              |
-| Uses Cache Components with Draft Mode previews              | CVE-2026-94544        | High              |
-| Uses nested `'use cache'` functions reading root params     | GHSA-h694-7cp9-m8p3   | Medium            |
-| Builds the App Router with webpack and uses `dynamicParams` | CVE-2026-94485        | Medium            |
-| Is developed locally with `next dev`                        | CVE-2026-94486        | Low               |
-
 A practical rollout looks like this:
 
 1. Run `npm ls next` in each repository to confirm which version is actually installed.
