@@ -133,7 +133,15 @@ Each `*.yml` rule has a sibling `*.php` file with `// ruleid:` and `// ok:` anno
 
 ## PR comment
 
-On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->` as a bullet list (`file:line`, rule id, full message). Re-runs edit that comment. Zero findings updates it to an all-clear. Same-repo PRs only (forks have no write token).
+On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->`. Re-runs edit that comment. Zero findings updates it to an all-clear. Same-repo PRs only (forks have no write token).
+
+Findings are grouped by rule (full rule message once per group). `semgrep.json` carries no source lines or metavariables without a Semgrep login, so `.github/workflows/semgrep-comment.js` reads the matched file from the checkout and, per finding, prints:
+
+- a `file:line` link to `blob/<GITHUB_SHA>/…#Lstart-Lend`, the commit that was scanned;
+- where it is: HTTP method + path + scope for module actions and `Http::*` routes, the shared hook and its groups, `Class::method()`, or the `app/init` resource name;
+- **What's wrong** and **How to fix** for that finding, built per rule from the matched code (for example the exact `hash_equals(...)` replacement, the env var and its default, or the route's missing label).
+
+New rules should add an entry to `explainers` in that script; without one the finding still lists with its location and the rule message.
 
 ## Deferred
 
