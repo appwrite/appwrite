@@ -237,7 +237,12 @@ final class ClientTest extends AdapterContract
                     $parts = \explode("\r\n\r\n", $request, 2);
                     $head = $parts[0];
                     $sent = $parts[1] ?? null;
-                    $expected = \preg_match('/^content-length:\s*(\d+)/mi', $head, $matches) === 1 ? (int) $matches[1] : 0;
+                    $expected = 0;
+                    foreach (\explode("\r\n", $head) as $line) {
+                        if (\stripos($line, 'content-length:') === 0) {
+                            $expected = (int) \trim(\substr($line, 15));
+                        }
+                    }
                 } while (\is_string($chunk) && $chunk !== '' && ($sent === null || \strlen($sent) < $expected));
 
                 $echo = \strtok($head, ' ') . ' ' . $sent;
