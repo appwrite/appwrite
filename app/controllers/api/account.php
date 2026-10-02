@@ -4361,7 +4361,7 @@ Http::put('/v1/account/recovery')
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
+                return;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -4377,6 +4377,11 @@ Http::put('/v1/account/recovery')
 
             return $document;
         });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $profile = $dbForProject->getDocument('users', $profile->getId());
         $profile->setAttribute('sessions', $sessions);
@@ -4738,7 +4743,7 @@ Http::put('/v1/account/recovery/otp')
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
-                throw new Exception(Exception::USER_INVALID_TOKEN);
+                return;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -4754,6 +4759,11 @@ Http::put('/v1/account/recovery/otp')
 
             return $document;
         });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $profile = $dbForProject->getDocument('users', $profile->getId());
         $profile->setAttribute('sessions', $sessions);
