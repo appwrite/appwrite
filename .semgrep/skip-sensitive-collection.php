@@ -7,7 +7,10 @@ $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transac
 $session = $authorization->skip(fn () => $dbForProject->getDocument('sessions', $sessionId));
 
 // ruleid: php.appwrite.skip-sensitive-collection
-$logs = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('transactions', []));
+$token = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('tokens', []));
+
+// ruleid: php.appwrite.skip-sensitive-collection
+$file = $authorization->skip(fn () => $dbForProject->findOne('files', []));
 
 // ok: php.appwrite.skip-sensitive-collection
 $transaction = ($isAPIKey || $isPrivilegedUser)

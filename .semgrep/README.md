@@ -1,8 +1,10 @@
 # Custom Semgrep rules
 
-In-repo rules for Appwrite PHP coding standards around authorization skips, token response fields, outbound request maps, header filtering, and nested document permissions.
+In-repo rules for Appwrite PHP coding standards around authorization skips, credential responses, outbound request maps, header filtering, nested document permissions, client IP, and URL fetch.
 
 These run in CI (`Checks / Rules` in `.github/workflows/ci.yml`, and the scheduled `Scan Rules` job in `.github/workflows/security-scan.yml`). They do not replace PHPStan or Trivy.
+
+CI fails on **ERROR** findings only. WARNING rules are review signal (SARIF) and do not fail the job.
 
 ## Run locally
 
@@ -19,7 +21,7 @@ Validate fixtures:
 semgrep test .semgrep
 ```
 
-Scan the tree the same way CI does (ERROR severity fails the job):
+CI-equivalent ERROR scan:
 
 ```bash
 semgrep scan \
@@ -28,20 +30,31 @@ semgrep scan \
   --error \
   --severity ERROR \
   --exclude .semgrep \
-  src/Appwrite app/controllers
+  src/Appwrite app/controllers app/init
 ```
 
-The screenshots action is path-excluded from the last two rules so current `main` stays green. Copying those patterns into a new action fails the job.
+Include WARNING rules:
+
+```bash
+semgrep scan \
+  --config .semgrep \
+  --metrics=off \
+  --exclude .semgrep \
+  src/Appwrite app/controllers app/init
+```
 
 ## Rules
 
 | ID | Severity | What it flags |
 | --- | --- | --- |
-| `php.appwrite.skip-sensitive-collection` | ERROR | Unconditional `Authorization::skip` / `$authorization->skip` when loading `transactions` or `sessions`. The house pattern is a ternary gated on API-key / privileged callers. |
-| `php.appwrite.account-token-secret-scope-gate` | ERROR | Account token / recovery handlers that inject `?Key $apiKey` and return `MODEL_TOKEN` without clearing `secret` for keys that lack `users.write`. |
-| `php.appwrite.related-permissions-helper` | ERROR | Nested relationship `$permissions` handling that does not call `validateRelatedPermissions()`. |
-| `php.appwrite.unbounded-map-to-outbound` | ERROR | Guest-reachable surfaces (`public`, `avatars.read`, `sessions.write`) that accept an `Assoc` `headers` / `query` map and forward it outbound without an allowlist. Existing screenshots route is path-excluded. |
-| `php.appwrite.header-blocklist-filter` | ERROR | Header / host filtering implemented as a short `BLOCKED_*` list instead of an allowlist (`FUNCTION_ALLOWLIST_HEADERS_*`). Existing screenshots route is path-excluded. |
+| `php.appwrite.skip-sensitive-collection` | ERROR | Ungated `skip()` around `getDocument`/`find`/`findOne` of `transactions`, `sessions`, `tokens`, or `files`. House pattern is a ternary gated on API-key / privileged callers. |
+| `php.appwrite.skip-ungated-userdata` | WARNING | Same shape for `users`, `memberships`, `identities`, `targets`. Many current sites are intentional (token verify, subscriber lookup). |
+| `php.appwrite.account-token-secret-scope-gate` | ERROR | Any handler that injects `Key`/`?Key` and returns `MODEL_TOKEN` or `MODEL_SESSION` without a `users.write` gate that clears `secret`. |
+| `php.appwrite.related-permissions-helper` | ERROR | `$permissions` on `$relation` / `$related` / `$nested` / `$child` / `$peer` without `validateRelatedPermissions()`. |
+| `php.appwrite.unbounded-map-to-outbound` | WARNING | Guest-reachable scopes plus an `Assoc` headers/query/cookies/options map that is forwarded to `sendRequest` / `Client` / curl. |
+| `php.appwrite.header-blocklist-filter` | WARNING | `BLOCKED_*` / `DENIED_*` / `DISALLOWED_*` / `FORBIDDEN_*` header or host constants. Prefer an allowlist. |
+| `php.appwrite.client-ip-header` | ERROR | Direct reads of `X-Forwarded-For` / `X-Real-IP` / `X-Client-IP`. Use `Request::getIP()`. |
+| `php.appwrite.default-secret-placeholder` | WARNING | `your-secret-key` literals in production PHP (Doctor is excluded). |
 
 ## Fixtures
 
@@ -49,6 +62,7 @@ Each `*.yml` rule has a sibling `*.php` file with `// ruleid:` and `// ok:` anno
 
 ## Deferred
 
-- Broad `skip()` around collection / database metadata loads (too common and usually followed by enabled / existence checks).
-- Verification and confirmation `MODEL_TOKEN` responses that do not inject `$apiKey` (session-scoped, not key-minted).
-- Inventing new product helpers; rules only enforce helpers that already exist on `main`.
+- Flagging every ungated `skip()` + metadata load (`databases`, `indexes`, `attributes`, `projects`, …). Hundreds of intentional sites.
+- Dynamic table names (`database_*_collection_*`, `bucket_*`) without a skip gate. Common, usually followed by document ACL on the loaded row.
+- `url` param + distant `sendRequest` without `PublicURL`. Semgrep cannot AND those two sites in one function/class without emptying the match range; stored URL params (`new URL()`) would false-positive.
+- Changing the screenshots header filter in product code (out of scope). WARNING rules surface it instead of path-excluding it.

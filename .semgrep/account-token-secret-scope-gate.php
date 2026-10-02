@@ -4,10 +4,16 @@ use Appwrite\Auth\Key;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 
-$bad = function (Document $token, Response $response, ?Key $apiKey) {
+$badToken = function (Document $token, Response $response, ?Key $apiKey) {
     $token->setAttribute('secret', 'minted');
     // ruleid: php.appwrite.account-token-secret-scope-gate
     $response->dynamic($token, Response::MODEL_TOKEN);
+};
+
+$badSession = function (Document $session, Response $response, Key $apiKey) {
+    $session->setAttribute('secret', 'minted');
+    // ruleid: php.appwrite.account-token-secret-scope-gate
+    $response->dynamic($session, Response::MODEL_SESSION);
 };
 
 $good = function (Document $token, Response $response, ?Key $apiKey) {

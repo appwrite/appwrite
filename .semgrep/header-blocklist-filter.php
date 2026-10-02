@@ -8,6 +8,11 @@ class HeaderBlocklistFixture
         'metadata',
     ];
 
+    // ruleid: php.appwrite.header-blocklist-filter
+    private const DISALLOWED_HOSTS = [
+        'localhost',
+    ];
+
     // ok: php.appwrite.header-blocklist-filter
     private const ALLOWED_HEADERS = [
         'accept',

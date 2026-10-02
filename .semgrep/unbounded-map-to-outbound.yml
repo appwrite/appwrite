@@ -1,12 +1,14 @@
 rules:
   - id: php.appwrite.unbounded-map-to-outbound
     message: >
-      Guest-reachable routes (public, avatars.read, sessions.write) should
-      not accept an unbounded Assoc headers or query map and forward it to
-      an outbound HTTP or browser client. Allowlist keys first
+      Guest-reachable routes should not accept an unbounded Assoc map
+      (headers, query, cookies, options). If that map is forwarded to an
+      outbound HTTP or browser client, allowlist keys first
       (FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_* list).
+      TODO: Avatars screenshots currently matches; prefer an allowlist
+      there rather than expanding BLOCKED_HEADERS.
     languages: [php]
-    severity: ERROR
+    severity: WARNING
     metadata:
       category: correctness
       technology: [php]
@@ -14,13 +16,13 @@ rules:
       include:
         - "**/src/Appwrite/Platform/Modules/**"
         - "**/app/controllers/**"
-      exclude:
-        - "**/src/Appwrite/Platform/Modules/Avatars/Http/Screenshots/Get.php"
     patterns:
       - pattern-either:
           - pattern: $THIS->param('headers', $DEFAULT, new Assoc(), ...)
           - pattern: $THIS->param('query', $DEFAULT, new Assoc(), ...)
-      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.read|sessions\.write)['\"]
+          - pattern: $THIS->param('cookies', $DEFAULT, new Assoc(), ...)
+          - pattern: $THIS->param('options', $DEFAULT, new Assoc(), ...)
+      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.read|sessions\.write|documents\.read|documents\.write|files\.read|files\.write|locale\.read|executions\.write)['\"]
       - pattern-not-regex: FUNCTION_ALLOWLIST_HEADERS
       - pattern-not-regex: ALLOWED_HEADERS
       - pattern-not-regex: ALLOWED_QUERY

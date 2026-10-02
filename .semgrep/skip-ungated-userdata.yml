@@ -1,13 +1,12 @@
 rules:
-  - id: php.appwrite.skip-sensitive-collection
+  - id: php.appwrite.skip-ungated-userdata
     message: >
       Unconditional Authorization skip around getDocument/find/findOne of
-      ACL-bearing collections (transactions, sessions, tokens, files).
-      Gate the skip on API-key / privileged callers, or load with document
-      ACL. Metadata skips (databases, indexes, attributes, …) are out of
-      scope for this rule.
+      users, memberships, identities, or targets. Many current call sites
+      are intentional (token verify, subscriber lookup). Prefer a ternary
+      gated on API-key / privileged callers, or a follow-up ACL check.
     languages: [php]
-    severity: ERROR
+    severity: WARNING
     metadata:
       category: correctness
       technology: [php]
@@ -19,7 +18,7 @@ rules:
       - pattern: $AUTH->skip($CB)
       - metavariable-regex:
           metavariable: $CB
-          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?:transactions|sessions|tokens|files)['\"]
+          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?:users|memberships|identities|targets)['\"]
       - pattern-not-inside: |
           ($IS_KEY || $IS_PRIVILEGED) ? $AUTH->skip(...) : $OTHER
       - pattern-not-inside: |

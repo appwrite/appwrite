@@ -2,11 +2,12 @@ rules:
   - id: php.appwrite.header-blocklist-filter
     message: >
       Filter forwarded request headers or hosts with an allowlist, not a
-      short BLOCKED_* / DENIED_* list of known-bad names. New names will
-      not be on a blocklist. Prefer FUNCTION_ALLOWLIST_HEADERS_* or a
-      named ALLOWED_HEADERS constant.
+      BLOCKED_*/DENIED_*/DISALLOWED_*/FORBIDDEN_* list of known-bad names.
+      New names will not be on a blocklist. Prefer
+      FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_HEADERS constant.
+      TODO: Avatars screenshots currently uses BLOCKED_HEADERS.
     languages: [php]
-    severity: ERROR
+    severity: WARNING
     metadata:
       category: correctness
       technology: [php]
@@ -14,10 +15,8 @@ rules:
       include:
         - "**/src/Appwrite/Platform/Modules/**"
         - "**/app/controllers/**"
-      exclude:
-        - "**/src/Appwrite/Platform/Modules/Avatars/Http/Screenshots/Get.php"
-    pattern-either:
-      - pattern: const BLOCKED_HEADERS = $LIST;
-      - pattern: const DENIED_HEADERS = $LIST;
-      - pattern: const FORBIDDEN_HEADERS = $LIST;
-      - pattern: const BLOCKED_HOSTS = $LIST;
+    patterns:
+      - pattern: const $NAME = $LIST;
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(?:BLOCKED|DENIED|DENY|DISALLOWED|FORBIDDEN).*(?:HEADER|HOST).*

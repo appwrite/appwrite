@@ -221,7 +221,7 @@ jobs:
           --exclude .semgrep
           --error
           --severity ERROR
-          src/Appwrite app/controllers
+          src/Appwrite app/controllers app/init
 
       - name: Write Semgrep SARIF
         if: always()
@@ -232,7 +232,7 @@ jobs:
           --exclude .semgrep
           --sarif
           --output semgrep.sarif
-          src/Appwrite app/controllers
+          src/Appwrite app/controllers app/init
 
       - name: Upload Semgrep results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3

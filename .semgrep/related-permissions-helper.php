@@ -2,7 +2,7 @@
 
 class RelatedPermissionsFixture
 {
-    public function bad($relation, $authorization): void
+    public function badRead($relation, $authorization): void
     {
         // ruleid: php.appwrite.related-permissions-helper
         $permissions = $relation->getAttribute('$permissions');
@@ -11,10 +11,16 @@ class RelatedPermissionsFixture
         }
     }
 
-    public function alsoBad(array $relation): void
+    public function badWrite($related): void
     {
         // ruleid: php.appwrite.related-permissions-helper
-        $permissions = $relation['$permissions'] ?? null;
+        $related->setAttribute('$permissions', ['read("any")']);
+    }
+
+    public function badArray(array $nested): void
+    {
+        // ruleid: php.appwrite.related-permissions-helper
+        $permissions = $nested['$permissions'] ?? null;
         $this->writeRelated($permissions);
     }
 
@@ -24,11 +30,13 @@ class RelatedPermissionsFixture
         $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $current, $authorization);
     }
 
-    public function parentPermissions(array $data, array $operation): void
+    public function parentPermissions(array $data, $document, $collection): void
     {
         // ok: php.appwrite.related-permissions-helper
         $data['$permissions'] = [];
         // ok: php.appwrite.related-permissions-helper
-        $permissions = $operation['data']['$permissions'];
+        $document->setAttribute('$permissions', []);
+        // ok: php.appwrite.related-permissions-helper
+        $collection->setAttribute('$permissions', []);
     }
 }

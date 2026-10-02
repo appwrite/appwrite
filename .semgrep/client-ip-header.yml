@@ -1,0 +1,25 @@
+rules:
+  - id: php.appwrite.client-ip-header
+    message: >
+      Do not read X-Forwarded-For / X-Real-IP / X-Client-IP directly for
+      authz, rate limits, or audit IP. Use Request::getIP(), which applies
+      the trusted-header helper configured by _APP_TRUSTED_HEADERS.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: $REQ->getHeader('x-forwarded-for', ...)
+      - pattern: $REQ->getHeader('X-Forwarded-For', ...)
+      - pattern: $REQ->getHeader('x-real-ip', ...)
+      - pattern: $REQ->getHeader('X-Real-IP', ...)
+      - pattern: $REQ->getHeader('x-client-ip', ...)
+      - pattern: $REQ->getHeader('X-Client-IP', ...)
+      - pattern: $REQ->getHeaders()['x-forwarded-for']
+      - pattern: $REQ->getHeaders()['X-Forwarded-For']

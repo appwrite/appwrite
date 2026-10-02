@@ -5,7 +5,7 @@ use Utopia\Validator\WhiteList;
 
 class UnboundedMapFixture
 {
-    public function bad(): void
+    public function badHeaders(): void
     {
         $this
             // ruleid: php.appwrite.unbounded-map-to-outbound
@@ -13,15 +13,15 @@ class UnboundedMapFixture
             ->param('headers', [], new Assoc(), 'HTTP headers to send.');
     }
 
-    public function alsoBad(): void
+    public function badCookies(): void
     {
         $this
             // ruleid: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'public')
-            ->param('query', [], new Assoc(), 'Query bag.');
+            ->param('cookies', [], new Assoc(), 'Cookie bag.');
     }
 
-    public function allowlisted(): void
+    public function allowlistedValidator(): void
     {
         $this
             // ok: php.appwrite.unbounded-map-to-outbound
