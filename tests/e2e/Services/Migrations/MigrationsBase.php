@@ -34,6 +34,8 @@ trait MigrationsBase
     use FunctionsBase;
     use RealtimeBase;
 
+    private const string SUBNET_ENDPOINT = 'http://traefik/v1';
+
     /**
      * @var array
      */
@@ -286,6 +288,23 @@ trait MigrationsBase
         $this->assertEquals(0, $webhookCounts['error']);
     }
 
+    public function testGetAppwriteReport(): void
+    {
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+        $this->assertIsInt($report['body'][Resource::TYPE_USER]);
+    }
+
     public function testAppwriteMigrationRejectsPrivateEndpoints(): void
     {
         $headers = [
@@ -294,7 +313,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::1]/v1', 'gopher://appwrite.test/'] as $endpoint) {
+        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::1]/v1', 'http://localhost/v1', 'gopher://appwrite.test/'] as $endpoint) {
             $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
                 'resources' => [Resource::TYPE_USER],
                 'endpoint' => $endpoint,
@@ -360,6 +379,72 @@ trait MigrationsBase
             $this->assertSame('finished', $migration['stage'], $endpoint);
             $this->assertStringContainsString('Invalid `endpoint`', \implode(',', $migration['errors']), $endpoint);
         }
+    }
+
+    public function testGetAppwriteReportWithSubnetEndpoint(): void
+    {
+        $source = $this->getProject(true);
+        $this->createSourceUser($source);
+
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => self::SUBNET_ENDPOINT,
+            'projectID' => $source['$id'],
+            'key' => $source['apiKey'],
+        ]);
+
+        $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+        $this->assertSame(1, $report['body'][Resource::TYPE_USER]);
+    }
+
+    public function testCreateAppwriteMigrationWithSubnetEndpoint(): void
+    {
+        $source = $this->getProject(true);
+        $user = $this->createSourceUser($source);
+
+        $migration = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => self::SUBNET_ENDPOINT,
+            'projectId' => $source['$id'],
+            'apiKey' => $source['apiKey'],
+        ]);
+
+        $this->assertSame(1, $migration['statusCounters'][Resource::TYPE_USER]['success']);
+        $this->assertSame(0, $migration['statusCounters'][Resource::TYPE_USER]['error']);
+
+        $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertSame(200, $migrated['headers']['status-code']);
+        $this->assertSame($user['email'], $migrated['body']['email']);
+    }
+
+    /**
+     * @param array<string, mixed> $project
+     * @return array<string, mixed>
+     */
+    private function createSourceUser(array $project): array
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code'], \json_encode($user['body']));
+
+        return $user['body'];
     }
 
     /**
