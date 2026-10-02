@@ -151,27 +151,6 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
  */
 export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
   {
-    prefix: 'partners/guides',
-    parent: {
-      href: '/docs/partners',
-      label: 'Guides',
-    },
-    navigation: [
-      {
-        items: [
-          {
-            label: "Manage a customer's project",
-            href: '/docs/partners/guides/oauth-connect',
-          },
-          {
-            label: 'Give every customer a backend',
-            href: '/docs/partners/guides/white-label',
-          },
-        ],
-      },
-    ],
-  },
-  {
     prefix: 'partners/oauth-connect',
     parent: {
       href: '/docs/partners',

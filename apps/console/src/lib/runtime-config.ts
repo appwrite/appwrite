@@ -45,6 +45,7 @@ const EMPTY_CONFIG: RuntimeConfig = {
   databasePitrRestore: '',
   extraVcsOAuth: '',
   usageStats: '',
+  partnersDocs: '',
   preLaunch: '',
 }
 

@@ -37,6 +37,8 @@ export interface RuntimeConfig {
   extraVcsOAuth: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
+  /** Override for the partner documentation hub ('' = profile default, off). */
+  partnersDocs: string
   /**
    * Pre-launch lock: only `/init` (and sign-in) is public; `/` redirects to `/init`.
    * '' = enabled; `false` / `0` / `disabled` turns it off.
@@ -130,6 +132,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
+    partnersDocs: read('VITE_CONSOLE_PARTNERS_DOCS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }
 }

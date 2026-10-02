@@ -524,7 +524,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_BROWSER_ALERTS, VITE_CONSOLE_PARTNERS_DOCS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -558,6 +558,10 @@ function applyEnvFeatureOverrides(
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {
     next = { ...next, browserAlerts }
+  }
+  const partnersDocs = parseEnvFeatureOverride(config.partnersDocs)
+  if (partnersDocs !== null) {
+    next = { ...next, partnersDocs }
   }
   const usageStatsOverride = parseEnvFeatureOverride(config.usageStats)
   if (usageStatsOverride !== null) {

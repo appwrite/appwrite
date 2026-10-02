@@ -11,13 +11,13 @@ Each customer still gets a backend of their own, with separate users, files, and
 # The product you are building {% #product %}
 
 {% only_dark %}
-![The Studyhall operations console listing two schools, each with its own address, region, and project](/images/docs/partners/guides/white-label/dark/operator-schools.avif)
+![The Studyhall operations console listing three schools, each with its own address, region, and project](/images/docs/partners/guides/white-label/dark/operator-schools.avif)
 {% /only_dark %}
 {% only_light %}
-![The Studyhall operations console listing two schools, each with its own address, region, and project](/images/docs/partners/guides/white-label/operator-schools.avif)
+![The Studyhall operations console listing three schools, each with its own address, region, and project](/images/docs/partners/guides/white-label/operator-schools.avif)
 {% /only_light %}
 
-Studyhall sells a course platform to schools and training businesses. A school signs up, gets an address like `northgate.studyhall.app`, and starts enrolling learners. Their staff upload handouts, and their learners read lessons and sit quizzes. Every row and file stays inside that school's project.
+Studyhall sells a course platform to schools and training businesses. A school signs up, gets an address like `northgate.studyhall.app`, and starts enrolling learners. Their courses, handouts, and quizzes are written from the operations console, and their learners read and sit them in the classroom. Every row and file stays inside that school's project.
 
 The platform is two apps. Studyhall operations is the console the Studyhall team uses, and the only place the Partners key lives. Classroom is what a school's learners see, built once and deployed into every school's project.
 
@@ -99,6 +99,13 @@ Store the returned ID on your own customer record. Every later call in this guid
 
 # Borrow a key instead of keeping one {% #keys %}
 
+{% only_dark %}
+![A course in the operations console, with its lessons, its quiz, and the school's handouts](/images/docs/partners/guides/white-label/dark/operator-course.avif)
+{% /only_dark %}
+{% only_light %}
+![A course in the operations console, with its lessons, its quiz, and the school's handouts](/images/docs/partners/guides/white-label/operator-course.avif)
+{% /only_light %}
+
 Studyhall has to work inside the project it just created. Creating a long-lived key and storing it works, but it leaves your database holding one non-expiring credential per customer, each of which opens that customer's entire backend.
 
 Ask for a key when a job starts instead. An ephemeral project key carries only the scopes you name and expires after the `duration` you set, up to 3600 seconds, so there is no stored credential to revoke later.
@@ -134,12 +141,13 @@ export const SETUP_SCOPES = [
   'rules.write',
 ]
 
+export const CONTENT_SCOPES = ['rows.read', 'rows.write']
 export const MATERIAL_SCOPES = ['rows.read', 'rows.write', 'files.read', 'files.write']
 export const ENROLMENT_SCOPES = ['users.read', 'users.write']
 export const USAGE_SCOPES = ['usage.read']
 ```
 
-Uploading a handout or a recorded session for a school is one of those jobs. The file goes into that school's bucket, and a row points the course at it:
+Writing a course, a lesson, or a quiz question is one of those jobs, and it never touches storage, so `CONTENT_SCOPES` is enough. Uploading a handout or a recorded session needs both: the file goes into that school's bucket, and a row points the course at it.
 
 ```server-nodejs
 const key = await borrowKey(tenant.projectId, MATERIAL_SCOPES, 300)
@@ -413,7 +421,7 @@ const learners = latest('users.mau')
 const storageBytes = latest('files.storage')
 ```
 
-`users.mau` is the number of learners with a session in the current month, and `files.storage` counts the files in the school's buckets. Recordings are what move that number. Northgate's 35 MB is one 29 MB session and four PDFs. `deployments.storage` and `builds.storage` measure your own build output, so leave them out when you bill only for what the school stores.
+`users.mau` is the number of learners with a session in the current month, and `files.storage` counts the files in the school's buckets. Recordings are what move that number. A single 31 MB session accounts for nearly all of Northgate's 35 MB, and their four PDFs come to under 3 MB together. `deployments.storage` and `builds.storage` measure your own build output, so leave them out when you bill only for what the school stores.
 
 `files.storage` is a gauge. It reports the bytes held at the moment you read it rather than a total accumulated across the period, so read it when the billing period closes and bill that figure.
 
