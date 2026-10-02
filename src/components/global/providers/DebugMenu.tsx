@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Megaphone,
   Trash2,
-  Plus,
   RotateCcw,
   Image,
   Palette,
@@ -18,7 +17,6 @@ import {
   AlertTriangle,
   Check,
   Minus,
-  Columns2,
   Braces,
   CalendarDays,
   Ticket,
@@ -80,7 +78,6 @@ import {
 } from '@/lib/favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  setDebugProfileOverride,
   setDebugProfileFeatureOverride,
   resetDebugProfileFeatureOverrides,
   resetDebugProfileFeatureOverride,
@@ -90,12 +87,7 @@ import {
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
-import {
-  setDebugEndpointOverride,
-  removeCustomDebugEndpoint,
-  ENDPOINT_PRESETS,
-  type EndpointPresetId,
-} from '@/lib/debug-endpoint'
+import { ENDPOINT_PRESETS } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import {
   getEnvMcpEndpointUrl,
@@ -127,6 +119,7 @@ import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel
 import { DebugMenuLocalePanel } from '@/components/global/providers/DebugMenuLocalePanel'
 import { DebugMenuDemosPanel } from '@/components/global/providers/DebugMenuDemosPanel'
 import { DebugMenuAgentSetupPanel } from '@/components/global/providers/DebugMenuAgentSetupPanel'
+import { DebugMenuTargetPanel } from '@/components/global/providers/DebugMenuTargetPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -243,6 +236,7 @@ interface MenuItem {
     | 'localeStatus'
     | 'demos'
     | 'agentSetup'
+    | 'targetPicker'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -708,7 +702,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'clientIp' ||
     variant === 'localeStatus' ||
     variant === 'demos' ||
-    variant === 'agentSetup'
+    variant === 'agentSetup' ||
+    variant === 'targetPicker'
   )
 }
 
@@ -796,7 +791,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'clientIp' ||
     item.submenuVariant === 'localeStatus' ||
     item.submenuVariant === 'demos' ||
-    item.submenuVariant === 'agentSetup'
+    item.submenuVariant === 'agentSetup' ||
+    item.submenuVariant === 'targetPicker'
   )
 }
 
@@ -1380,47 +1376,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           ]?.label ?? mcpEndpointPreset
 
     const activeProfileLabel = CONSOLE_PROFILES[profileId].label
-    const activeProfileDescription = profileFromOverride
-      ? `${activeProfileLabel} (debug override)`
-      : `${activeProfileLabel} (VITE_CONSOLE_PROFILE → ${CONSOLE_PROFILES[envProfileId].label})`
-
-    const profileOptions: MenuItem[] = [
-      {
-        label: 'Cloud',
-        description: CONSOLE_PROFILES.cloud.description,
-        active: profileFromOverride && profileId === 'cloud',
-        icon: <Cloud className="h-3 w-3" />,
-        onClick: () => {
-          applyOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
-        },
-      },
-      {
-        label: 'Self-hosted',
-        description: CONSOLE_PROFILES['self-hosted'].description,
-        active: profileFromOverride && profileId === 'self-hosted',
-        icon: <Server className="h-3 w-3" />,
-        onClick: () => {
-          applyOverrideAndGoHome(() =>
-            setDebugProfileOverride('self-hosted'),
-          )
-        },
-      },
-      {
-        label: 'Use env var',
-        description: `Current env: ${CONSOLE_PROFILES[envProfileId].label}`,
-        active: !profileFromOverride,
-        onClick: () => {
-          applyOverrideAndGoHome(() => setDebugProfileOverride(null))
-        },
-        icon: <RotateCcw className="h-3 w-3" />,
-      },
-      {
-        label: 'Compare profiles',
-        description: 'Canonical Cloud vs self-hosted feature flags',
-        icon: <Columns2 className="h-3 w-3" />,
-        submenuVariant: 'profileComparison',
-      },
-    ]
+    const activeTargetDescription = `${activeProfileLabel}${
+      profileFromOverride ? '' : ' (env)'
+    } · ${activeEndpointBadge}: ${activeEndpointUrl}`
 
     const lowPowerAnimationOptions: MenuItem[] = (
       [
@@ -2021,8 +1979,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <Globe className="h-3.5 w-3.5" />,
         items: [
           {
-            label: 'Console profile',
-            description: activeProfileDescription,
+            label: 'Profile & endpoint',
+            description: activeTargetDescription,
             badge: activeProfileLabel,
             icon:
               profileId === 'cloud' ? (
@@ -2030,109 +1988,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : (
                 <Server className="h-3 w-3" />
               ),
-            submenu: profileOptions,
+            submenuVariant: 'targetPicker',
           },
-          (() => {
-            const customEndpointItems: MenuItem[] = endpointCustomEndpoints.map(
-              (url) => {
-                let hostLabel = url
-                try {
-                  hostLabel = new URL(url).host
-                } catch {
-                  // keep full URL as label
-                }
-                return {
-                  label: hostLabel,
-                  description: url,
-                  onClick: () => {
-                    applyOverrideAndGoHome(() =>
-                      setDebugEndpointOverride('custom', url),
-                    )
-                  },
-                  active:
-                    endpointPreset === 'custom' && endpointCustomUrl === url,
-                  icon: <Globe className="h-3 w-3" />,
-                  removeLabel: 'Remove custom endpoint',
-                  onRemove: () => {
-                    const wasActive = removeCustomDebugEndpoint(url)
-                    if (wasActive) {
-                      // Override already cleared; reload so clients pick up env endpoint.
-                      applyOverrideAndGoHome(() => undefined)
-                    }
-                  },
-                }
-              },
-            )
-
-            const endpointOptions: MenuItem[] = [
-              ...(
-                Object.entries(ENDPOINT_PRESETS) as [
-                  Exclude<EndpointPresetId, 'custom'>,
-                  (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
-                ][]
-              ).map(([id, { label, url, description }]) => ({
-                label,
-                description: `${url} · ${description}`,
-                onClick: () => {
-                  applyOverrideAndGoHome(() => setDebugEndpointOverride(id))
-                },
-                active: endpointPreset === id,
-                icon: <Globe className="h-3 w-3" />,
-              })),
-              ...customEndpointItems,
-              {
-                label: 'Add custom...',
-                description: 'Save a custom API URL to this list',
-                onClick: () => {
-                  void prompt({
-                    title: 'Custom API endpoint',
-                    fields: [
-                      {
-                        name: 'url',
-                        label: 'API endpoint URL',
-                        placeholder: 'https://my-appwrite.example/v1',
-                        defaultValue:
-                          endpointPreset === 'custom' && endpointCustomUrl
-                            ? endpointCustomUrl
-                            : activeEndpointUrl !== '—'
-                              ? activeEndpointUrl
-                              : 'http://localhost:9601/v1',
-                      },
-                    ],
-                    confirmLabel: 'Use endpoint',
-                  }).then((values) => {
-                    const url = values?.url.trim()
-                    if (url) {
-                      applyOverrideAndGoHome(() =>
-                        setDebugEndpointOverride('custom', url),
-                      )
-                    }
-                  })
-                },
-                icon: <Plus className="h-3 w-3" />,
-                rowClassName:
-                  'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
-              },
-              {
-                label: 'Use env var',
-                description: endpointEnvUrl
-                  ? `VITE_APPWRITE_ENDPOINT → ${endpointEnvUrl}`
-                  : 'Reset to VITE_APPWRITE_ENDPOINT',
-                onClick: () => {
-                  applyOverrideAndGoHome(() => setDebugEndpointOverride(null))
-                },
-                active: !endpointPreset,
-                icon: <RotateCcw className="h-3 w-3" />,
-              },
-            ]
-            return {
-              label: 'Server endpoint',
-              description: activeEndpointUrl,
-              badge: activeEndpointBadge,
-              icon: <Globe className="h-3 w-3" />,
-              submenu: endpointOptions,
-            }
-          })(),
           (() => {
             const envMcpUrl = getEnvMcpEndpointUrl()
             const mcpEndpointOptions: MenuItem[] = [
@@ -2640,7 +2497,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'demos' ||
               currentSubmenu?.submenuVariant === 'agentSetup'
                 ? 'w-[min(92vw,720px)]'
-                : 'w-80',
+                : currentSubmenu?.submenuVariant === 'targetPicker'
+                  ? 'w-[min(92vw,520px)]'
+                  : 'w-80',
           )}
           onWheelCapture={(event) => {
             event.stopPropagation()
@@ -2784,6 +2643,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuDemosPanel onLaunchDemo={() => setIsOpen(false)} />
               ) : currentSubmenu.submenuVariant === 'agentSetup' ? (
                 <DebugMenuAgentSetupPanel />
+              ) : currentSubmenu.submenuVariant === 'targetPicker' ? (
+                <DebugMenuTargetPanel
+                  onApply={applyOverrideAndGoHome}
+                  comparisonTable={
+                    <ConsoleProfileComparisonTable
+                      activeProfileId={profileId}
+                    />
+                  }
+                />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (
