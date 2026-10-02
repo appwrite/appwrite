@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -318,10 +319,28 @@ class Migrations extends Action
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
+        if ($isAppwriteSource && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
+            $migrationSource->setResolver((new Endpoint())->resolve(...));
+        }
+
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function getInternalEndpoint(): string
+    {
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        return 'http://' . $host . '/v1';
     }
 
     /**
@@ -341,7 +360,7 @@ class Migrations extends Action
         }
 
         $client = (new Client())
-            ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+            ->setEndpoint($this->getInternalEndpoint())
             ->setProject($projectId)
             ->setKey($key);
 
@@ -565,17 +584,20 @@ class Migrations extends Action
         $aggregatedResources = [];
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
+        $endpoint = $this->getInternalEndpoint();
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                if (\array_key_exists('endpoint', $credentials) && $credentials['endpoint'] !== $endpoint) {
+                    $validator = new Endpoint();
+
+                    if (!$validator->isValid($credentials['endpoint'])) {
+                        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `endpoint`: ' . $validator->getDescription());
+                    }
+                }
+
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
