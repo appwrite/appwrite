@@ -448,9 +448,7 @@ class Install extends Action
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
 
-            if ($filter === 'token') {
-                $input[$var['name']] = $this->tokenEnvironmentValue(is_string($default) ? $default : '', $shouldGenerateSecrets, $token);
-            } elseif ($filter === 'password') {
+            if ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
@@ -476,10 +474,8 @@ class Install extends Action
                 continue;
             }
             $name = $var['name'];
-            $current = $input[$name] ?? '';
-            if (EncryptionKey::isInsecure(is_string($current) ? $current : null)) {
-                $input[$name] = $shouldGenerateSecrets ? $token->generate() : '';
-            }
+            $value = $input[$name] ?? '';
+            $input[$name] = $this->tokenEnvironmentValue(is_string($value) ? $value : '', $shouldGenerateSecrets, $token);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
@@ -501,13 +497,13 @@ class Install extends Action
         return $input;
     }
 
-    private function tokenEnvironmentValue(string $default, bool $shouldGenerateSecrets, Token $token): string
+    private function tokenEnvironmentValue(string $value, bool $shouldGenerateSecrets, Token $token): string
     {
-        if (!EncryptionKey::isInsecure($default)) {
-            return $default;
+        if (!$shouldGenerateSecrets || !EncryptionKey::isInsecure($value)) {
+            return $value;
         }
 
-        return $shouldGenerateSecrets ? $token->generate() : '';
+        return $token->generate();
     }
 
     public function hasExistingConfig(): bool

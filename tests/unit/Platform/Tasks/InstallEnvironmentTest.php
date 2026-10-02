@@ -87,4 +87,36 @@ final class InstallEnvironmentTest extends TestCase
 
         $this->assertSame('operator-chosen-secret', $input['_APP_OPENSSL_KEY_V1']);
     }
+
+    public function testExistingPlaceholderIsKeptOnUpgrade(): void
+    {
+        $install = new Install();
+        $vars = [
+            [
+                'name' => '_APP_OPENSSL_KEY_V1',
+                'default' => EncryptionKey::PLACEHOLDER,
+                'filter' => 'token',
+            ],
+        ];
+
+        $input = $install->prepareEnvironmentVariables([], $vars, shouldGenerateSecrets: false);
+
+        $this->assertSame(EncryptionKey::PLACEHOLDER, $input['_APP_OPENSSL_KEY_V1'], 'Rewriting an existing key would make its encrypted data unreadable');
+    }
+
+    public function testExistingKeyIsKeptOnUpgrade(): void
+    {
+        $install = new Install();
+        $vars = [
+            [
+                'name' => '_APP_OPENSSL_KEY_V1',
+                'default' => 'existing-installation-secret',
+                'filter' => 'token',
+            ],
+        ];
+
+        $input = $install->prepareEnvironmentVariables([], $vars, shouldGenerateSecrets: false);
+
+        $this->assertSame('existing-installation-secret', $input['_APP_OPENSSL_KEY_V1']);
+    }
 }
