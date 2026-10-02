@@ -5,31 +5,48 @@ namespace Appwrite\Platform\Modules\Migrations;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use InvalidArgumentException;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\DNS\Lookup;
 use Utopia\Validator\URL;
 
 /**
  * Where an Appwrite migration source may be: an http or https URL whose host is allowed by
- * name, or passes the migrations destination policy. Holds no per-call state, so one
- * instance can be shared by concurrent requests.
+ * name, or passes the destination policy: public addresses plus the allowed addresses and
+ * CIDR ranges. Holds no per-call state, so one instance can be shared by concurrent requests.
  */
 class Endpoint
 {
     private URL $url;
 
+    private PublicHostname $hostname;
+
     /**
      * @var list<string>
      */
-    private array $hostnames;
+    private array $hostnames = [];
 
     /**
-     * @param list<string> $hostnames Hosts allowed by name, wherever they resolve
+     * @param string ...$allowlists Comma-separated addresses, CIDR ranges and hostnames, combined
+     *
+     * @throws InvalidArgumentException When an entry is a malformed range
      */
-    public function __construct(
-        private readonly PublicHostname $hostname,
-        array $hostnames = [],
-    ) {
+    public function __construct(Lookup $lookup, string ...$allowlists)
+    {
+        $ranges = [];
+
+        foreach ($allowlists as $allowlist) {
+            foreach (\array_filter(\array_map('trim', \explode(',', $allowlist))) as $entry) {
+                if (\filter_var(\explode('/', $entry, 2)[0], FILTER_VALIDATE_IP) !== false) {
+                    $ranges[] = new IPRange($entry);
+                } else {
+                    $this->hostnames[] = $this->normalize($entry);
+                }
+            }
+        }
+
         $this->url = new URL(['http', 'https']);
-        $this->hostnames = \array_values(\array_map($this->normalize(...), $hostnames));
+        $this->hostname = new PublicHostname(new PublicInternet(...$ranges), $lookup);
     }
 
     /**

@@ -365,7 +365,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        foreach (['http://169.254.169.254/v1', 'http://127.0.0.1/v1', 'http://[::1]/v1', 'http://localhost/v1', 'gopher://appwrite.test/'] as $endpoint) {
+        foreach (['http://169.254.169.254/v1', 'http://10.0.0.1/v1', 'http://[fd00::1]/v1', 'http://[::ffff:127.0.0.1]/v1', 'gopher://appwrite.test/'] as $endpoint) {
             $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
                 'resources' => [Resource::TYPE_USER],
                 'endpoint' => $endpoint,
@@ -396,7 +396,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        foreach (['http://169.254.169.254/v1', 'http://[::1]/v1'] as $endpoint) {
+        foreach (['http://169.254.169.254/v1', 'http://[fd00::1]/v1'] as $endpoint) {
             $migrationId = ID::unique();
 
             $this->createMigrationFixture($this->getDestinationProject()['$id'], new Document([

@@ -128,22 +128,16 @@ $container->set('publicHostname', function () {
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
 
-// Appwrite migration sources: public addresses, plus the addresses and CIDR ranges
-// _APP_MIGRATIONS_ALLOWED_HOSTS lists, and its hostnames by name. A malformed range throws.
+// Appwrite migration sources: public addresses, plus the addresses, CIDR ranges and hostnames
+// that _APP_ALLOWED_INTERNAL_ADDRESSES and _APP_MIGRATIONS_ALLOWED_HOSTS list. A malformed range throws.
 $container->set('migrationEndpoint', function () {
     $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
 
-    $ranges = [];
-    $hostnames = [];
-    foreach (\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_MIGRATIONS_ALLOWED_HOSTS', '')))) as $entry) {
-        if (\filter_var(\explode('/', $entry, 2)[0], FILTER_VALIDATE_IP) !== false) {
-            $ranges[] = new IPRange($entry);
-        } else {
-            $hostnames[] = $entry;
-        }
-    }
-
-    return new MigrationEndpoint(new PublicHostname(new PublicInternet(...$ranges), new Recursive($servers)), $hostnames);
+    return new MigrationEndpoint(
+        new Recursive($servers),
+        System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', ''),
+        System::getEnv('_APP_MIGRATIONS_ALLOWED_HOSTS', ''),
+    );
 }, []);
 
 $container->set('jobs', function () {

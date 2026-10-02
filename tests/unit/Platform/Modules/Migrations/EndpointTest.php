@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Modules\Migrations;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Migrations\Endpoint;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\FixedLookup;
-use Utopia\Client\Destinations\IPRange;
-use Utopia\Client\Destinations\PublicInternet;
 
 final class EndpointTest extends TestCase
 {
@@ -63,7 +60,9 @@ final class EndpointTest extends TestCase
     #[DataProvider('refused')]
     public function testRefusesAnEndpointOutsideThePolicy(string $url, string $reason): void
     {
-        foreach ([$this->endpoint()->resolve(...), $this->endpoint()->validate(...)] as $check) {
+        $endpoint = $this->endpoint('', 'appwrite');
+
+        foreach ([$endpoint->resolve(...), $endpoint->validate(...)] as $check) {
             try {
                 $check($url);
                 $this->fail("Accepted {$url}");
@@ -77,7 +76,7 @@ final class EndpointTest extends TestCase
 
     public function testAllowedRangeAdmitsAPrivateAddress(): void
     {
-        $endpoint = $this->endpoint(new IPRange('172.16.238.0/24'));
+        $endpoint = $this->endpoint('', '172.16.238.0/24');
 
         $this->assertSame(['appwrite.test:80:172.16.238.10'], $endpoint->resolve('http://appwrite.test/v1'));
         $this->assertSame([], $endpoint->resolve('http://172.16.238.10/v1'));
@@ -88,7 +87,7 @@ final class EndpointTest extends TestCase
 
     public function testHostAllowedByNameIsNotPinned(): void
     {
-        $endpoint = $this->endpoint(hostnames: ['Appwrite.']);
+        $endpoint = $this->endpoint('', ' Appwrite. ');
 
         $this->assertSame([], $endpoint->resolve('http://appwrite/v1'));
         $this->assertSame([], $endpoint->resolve('http://APPWRITE./v1'));
@@ -96,9 +95,56 @@ final class EndpointTest extends TestCase
     }
 
     /**
-     * @param list<string> $hostnames
+     * @return iterable<string, array{string, string, string}>
      */
-    private function endpoint(?IPRange $range = null, array $hostnames = []): Endpoint
+    public static function allowedByOneList(): iterable
+    {
+        yield 'internal address' => ['127.0.0.1', '', 'http://127.0.0.1/v1'];
+        yield 'internal IPv6 address' => ['::1', '', 'http://[::1]/v1'];
+        yield 'internal range' => ['10.0.0.0/8', '', 'https://rebind.example.com/v1'];
+        yield 'internal hostname' => ['appwrite', '', 'http://appwrite/v1'];
+        yield 'migrations address' => ['', '127.0.0.1', 'http://127.0.0.1/v1'];
+        yield 'migrations range' => ['', '10.0.0.0/8', 'https://rebind.example.com/v1'];
+        yield 'migrations IPv6 range' => ['', 'fd00::/8', 'http://[fd12::1]/v1'];
+        yield 'migrations hostname' => ['', 'appwrite', 'http://appwrite/v1'];
+    }
+
+    #[DataProvider('allowedByOneList')]
+    public function testEntryFromEitherListIsAllowed(string $internal, string $migrations, string $url): void
+    {
+        $this->endpoint($internal, $migrations)->validate($url);
+
+        $this->expectException(Exception::class);
+        $this->endpoint()->validate($url);
+    }
+
+    public function testBothListsApplyAtOnce(): void
+    {
+        $endpoint = $this->endpoint('172.16.238.0/24, 127.0.0.1', 'appwrite, 10.0.0.0/8');
+
+        $this->assertSame(['appwrite.test:80:172.16.238.10'], $endpoint->resolve('http://appwrite.test/v1'));
+        $this->assertSame([], $endpoint->resolve('http://127.0.0.1/v1'));
+        $this->assertSame([], $endpoint->resolve('http://appwrite/v1'));
+        $this->assertSame(['rebind.example.com:443:93.184.215.14'], $endpoint->resolve('https://rebind.example.com/v1'));
+
+        foreach (['http://169.254.169.254/v1', 'http://[::1]/v1', 'http://192.168.1.1/v1'] as $url) {
+            try {
+                $endpoint->validate($url);
+                $this->fail("Accepted {$url}");
+            } catch (Exception $exception) {
+                $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $exception->getType());
+            }
+        }
+    }
+
+    public function testMalformedRangeIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->endpoint('10.0.0.0/33');
+    }
+
+    private function endpoint(string $internal = '', string $migrations = ''): Endpoint
     {
         $lookup = new FixedLookup([
             'example.com' => ['93.184.215.14'],
@@ -110,8 +156,6 @@ final class EndpointTest extends TestCase
             'appwrite' => ['172.16.238.20'],
         ]);
 
-        $destinations = $range === null ? new PublicInternet() : new PublicInternet($range);
-
-        return new Endpoint(new PublicHostname($destinations, $lookup), $hostnames);
+        return new Endpoint($lookup, $internal, $migrations);
     }
 }
