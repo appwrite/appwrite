@@ -7,41 +7,54 @@ class UnboundedMapFixture
 {
     public function badHeaders(): void
     {
+        // ruleid: php.appwrite.unbounded-map-to-outbound
         $this
-            // ruleid: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'avatars.read')
             ->param('headers', [], new Assoc(), 'HTTP headers to send.');
     }
 
     public function badCookies(): void
     {
+        // ruleid: php.appwrite.unbounded-map-to-outbound
         $this
-            // ruleid: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'public')
             ->param('cookies', [], new Assoc(), 'Cookie bag.');
     }
 
-    public function badRowsScope(): void
+    public function badAnyName(): void
     {
+        // ruleid: php.appwrite.unbounded-map-to-outbound
         $this
-            // ruleid: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'rows.write')
-            ->param('query', [], new Assoc(), 'Query bag.');
+            ->param('forward', [], new Assoc(), 'Arbitrary bag.');
     }
 
     public function allowlistedValidator(): void
     {
+        // ok: php.appwrite.unbounded-map-to-outbound
         $this
-            // ok: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'avatars.read')
             ->param('headers', [], new WhiteList(['accept', 'accept-language']), 'Allowed headers.');
     }
 
     public function privilegedScope(): void
     {
+        // ok: php.appwrite.unbounded-map-to-outbound
         $this
-            // ok: php.appwrite.unbounded-map-to-outbound
             ->label('scope', 'users.write')
             ->param('headers', [], new Assoc(), 'Server-only headers.');
+    }
+}
+
+class AllowlistedMapFixture
+{
+    private const ALLOWED_HEADERS = ['accept', 'accept-language'];
+
+    public function __construct()
+    {
+        // ok: php.appwrite.unbounded-map-to-outbound
+        $this
+            ->label('scope', 'avatars.read')
+            ->param('headers', [], new Assoc(), 'Filtered against ALLOWED_HEADERS.');
     }
 }

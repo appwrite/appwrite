@@ -5,10 +5,8 @@ rules:
       BLOCKED_*/DENIED_*/DISALLOWED_*/FORBIDDEN_* list of known-bad names.
       New names will not be on a blocklist. Prefer
       FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_HEADERS constant.
-      TODO: Avatars screenshots currently uses BLOCKED_HEADERS. This rule
-      is WARNING so that file stays reviewable; new copies still match.
     languages: [php]
-    severity: WARNING
+    severity: ERROR
     metadata:
       category: correctness
       technology: [php]

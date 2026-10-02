@@ -1,9 +1,11 @@
 rules:
   - id: php.appwrite.guest-url-without-publicurl
     message: >
-      Guest-reachable routes that accept a url parameter must validate it
-      with PublicURL (or PublicDomain / redirectValidator). A bare URL()
-      validator allows internal or non-public targets.
+      Guest-reachable routes (ROLE_GUESTS scopes) that accept a URL-like
+      parameter (url, uri, href, src, link, endpoint, webhook, callback,
+      redirect, *Url, *Uri) must validate it with PublicURL, PublicDomain,
+      or the injected redirectValidator / Host allowlist. Bare URL() or
+      Text() accepts internal and non-public targets.
     languages: [php]
     severity: ERROR
     metadata:
@@ -14,10 +16,17 @@ rules:
         - "**/src/Appwrite/Platform/Modules/**"
         - "**/app/controllers/**"
     patterns:
-      - pattern-either:
-          - pattern: $THIS->param('url', $DEFAULT, new URL(), ...)
-          - pattern: $THIS->param('url', $DEFAULT, new URL(...), ...)
-      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['\"]
-      - pattern-not-regex: PublicURL
-      - pattern-not-regex: PublicDomain
-      - pattern-not-regex: redirectValidator
+      - pattern: $ROUTE->param($NAME, $DEFAULT, $VALIDATOR, ...)
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: ^['"](?:url|uri|href|src|link|endpoint|webhook|callback|redirect|[a-z]+(?:Url|Uri|URL|Endpoint|Href))['"]$
+      - metavariable-pattern:
+          metavariable: $VALIDATOR
+          pattern-either:
+            - pattern: new URL(...)
+            - pattern: new \Utopia\Validator\URL(...)
+            - pattern: new Text(...)
+            - pattern: new \Utopia\Validator\Text(...)
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: (?s).*->label\(\s*['"]scope['"]\s*,\s*['"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['"]

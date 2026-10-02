@@ -3,14 +3,13 @@ rules:
     message: >
       Guest-reachable routes (ROLE_GUESTS scopes: public, avatars.*,
       sessions.write, documents/files/rows read-write, locale.read,
-      executions.write, …) should not accept an unbounded Assoc map
-      named headers, query, cookies, or options. If that map can be
-      forwarded to an outbound HTTP or browser client, allowlist keys
-      first (FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_* list).
-      TODO: Avatars screenshots currently matches; prefer an allowlist
-      there rather than expanding BLOCKED_HEADERS.
+      executions.write, …) accept an unbounded Assoc map. If any key of
+      that map can reach an outbound HTTP or browser client, filter it
+      against a named allowlist first: a class constant ALLOWED_* or
+      FUNCTION_ALLOWLIST_HEADERS_*. Classes that declare such an
+      allowlist are treated as filtered.
     languages: [php]
-    severity: WARNING
+    severity: ERROR
     metadata:
       category: correctness
       technology: [php]
@@ -20,11 +19,18 @@ rules:
         - "**/app/controllers/**"
     patterns:
       - pattern-either:
-          - pattern: $THIS->param('headers', $DEFAULT, new Assoc(), ...)
-          - pattern: $THIS->param('query', $DEFAULT, new Assoc(), ...)
-          - pattern: $THIS->param('cookies', $DEFAULT, new Assoc(), ...)
-          - pattern: $THIS->param('options', $DEFAULT, new Assoc(), ...)
-      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['\"]
-      - pattern-not-regex: FUNCTION_ALLOWLIST_HEADERS
-      - pattern-not-regex: ALLOWED_HEADERS
-      - pattern-not-regex: ALLOWED_QUERY
+          - pattern: $ROUTE->param($NAME, $DEFAULT, new Assoc(...), ...)
+          - pattern: $ROUTE->param($NAME, $DEFAULT, new \Utopia\Validator\Assoc(...), ...)
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: (?s).*->label\(\s*['"]scope['"]\s*,\s*['"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['"]
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_HEADERS = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_QUERY = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_COOKIES = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_OPTIONS = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_KEYS = $LIST; ... }
