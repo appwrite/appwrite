@@ -5,6 +5,7 @@ namespace Appwrite\Network\Validator;
 use Appwrite\Network\Allowlist;
 use Swoole\Coroutine;
 use Swoole\Coroutine\System;
+use Swoole\Runtime;
 use Utopia\Validator;
 
 /**
@@ -163,9 +164,12 @@ class PublicHostname extends Validator
     public static function resolve(string $hostname): array
     {
         // Swoole 6.2 hooks dns_get_record() through a RemoteObject client that is
-        // created per call and never released (~140 KiB each), so coroutines resolve
-        // natively. getaddrinfo() needs a service; any port works for address lookup.
-        if (Coroutine::getCid() > 0) {
+        // created per call and never released (~140 KiB each), so coroutines with
+        // hooked network functions resolve natively. Unhooked coroutines keep the
+        // blocking lookup: getaddrinfo() yields, which stalls a caller that waits in
+        // an unhooked usleep() loop, as GraphQL resolvers do. getaddrinfo() needs a
+        // service; any port works for address lookup.
+        if (Coroutine::getCid() > 0 && (Runtime::getHookFlags() & SWOOLE_HOOK_NET_FUNCTION) !== 0) {
             $ipv4 = System::getaddrinfo($hostname, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
             $ipv6 = System::getaddrinfo($hostname, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: [];
 

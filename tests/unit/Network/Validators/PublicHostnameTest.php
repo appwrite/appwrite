@@ -350,6 +350,25 @@ final class PublicHostnameTest extends TestCase
         $this->assertLessThan(4 * 1024, $growth / $lookups);
     }
 
+    #[RunInSeparateProcess]
+    public function testResolvesWithoutYieldingInsideUnhookedCoroutine(): void
+    {
+        $resolved = null;
+
+        Coroutine::set(['hook_flags' => 0]);
+        Coroutine\run(function () use (&$resolved): void {
+            $addresses = null;
+
+            Coroutine::create(function () use (&$addresses): void {
+                $addresses = PublicHostname::resolve('localhost');
+            });
+
+            $resolved = $addresses !== null;
+        });
+
+        $this->assertTrue($resolved, 'Resolving inside an unhooked coroutine must not yield to a caller that waits in an unhooked loop');
+    }
+
     private function inHookedCoroutine(callable $callback): void
     {
         Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
