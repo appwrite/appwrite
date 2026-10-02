@@ -5,14 +5,6 @@ namespace Appwrite\Auth;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Console;
 
-/**
- * Server encryption / JWT signing key (`_APP_OPENSSL_KEY_V1`).
- *
- * The historical installer default `your-secret-key` is public. Encrypted
- * attributes are always written with this key and there is no rotation yet,
- * so installs still on the placeholder are warned rather than refused: a new
- * key would make their encrypted data unreadable.
- */
 final class EncryptionKey
 {
     public const string PLACEHOLDER = 'your-secret-key';
@@ -22,11 +14,6 @@ final class EncryptionKey
         return $key === null || $key === '' || $key === self::PLACEHOLDER;
     }
 
-    /**
-     * An existing key is kept as-is, because replacing it would make its
-     * encrypted data unreadable; only a fresh install swaps an insecure value
-     * for a generated one.
-     */
     public static function resolve(string $key, bool $generate): string
     {
         if (!$generate || !self::isInsecure($key)) {

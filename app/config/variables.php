@@ -470,7 +470,7 @@ return [
             [
                 'name' => '_APP_TRUSTED_PROXIES',
                 'description' => 'Comma-separated CIDRs (or exact IPs) of reverse proxies that may set `_APP_TRUSTED_HEADERS` such as X-Forwarded-For. The default covers loopback and RFC1918 ranges used by Docker/Traefik. Direct clients whose connection address is not in this list are not trusted — their X-Forwarded-For is ignored. Set it to an empty value to always use the connection IP. If your load balancer has a public address, add that CIDR.',
-                'introduction' => '1.8.0',
+                'introduction' => '2.3.0',
                 'default' => TrustedProxies::DEFAULT,
                 'required' => false,
                 'question' => '',
