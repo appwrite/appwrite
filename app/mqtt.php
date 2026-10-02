@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -31,6 +32,16 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 
 require_once __DIR__ . '/init.php';
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 require_once __DIR__ . '/init/span.php';
 
