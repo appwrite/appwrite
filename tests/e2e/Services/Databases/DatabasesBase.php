@@ -8310,7 +8310,7 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $keyHeaders, [
             $this->getRelatedIdParam() => $childId,
-            'type' => Database::RELATION_ONE_TO_ONE,
+            'type' => RelationType::OneToOne->value,
             'key' => 'child',
         ]);
         $this->assertEquals(202, $relationship['headers']['status-code']);
