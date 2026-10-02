@@ -74,7 +74,8 @@ semgrep scan \
 | Guest-scoped POST/PUT/PATCH/DELETE with no `abuse-limit` (mock and `/v1/vcs/*/events` allowlisted) | **WARNING** `guest-write-without-abuse-limit` |
 | Any read of `X-Forwarded-For`, `X-Real-IP`, `Forwarded`, `CF-Connecting-IP`, `True-Client-IP`, `X-Forwarded-Host` / `-Proto`, … (`getHeader`, `getHeaderLine`, `getHeaders()[…]`, `getServer`, Swoole `header[…]`) | **ERROR** `client-ip-header` |
 | `Request::getIP()`, unrelated `x-*` headers | ok |
-| Placeholder secret literal (`your-secret-key`, `your-api-key`, `changeme`, `insecure-secret`, …) outside Doctor | **ERROR** `default-secret-placeholder` |
+| Placeholder secret literal (`your-secret-key`, `your-api-key`, `changeme`, `insecure-secret`, …) outside Doctor, or another class's `PLACEHOLDER` as a `getEnv` default | **ERROR** `default-secret-placeholder` |
+| `const PLACEHOLDER = '<placeholder>'`, comparing against it (`===` / `!==`), naming it in `Console::*` / `throw new …` | ok |
 | `getEnv('*SECRET*' / '*KEY*' / '*PASS*' / '*TOKEN*', '<non-empty>')` (DSN / URL / host / TTL names excluded) | **WARNING** `weak-secret-env-default` |
 | `rand` / `mt_rand` / `lcg_value` / `str_shuffle` / seeding, or `md5` / `sha1` / `hash` of `uniqid` / `time` / `microtime` | **ERROR** `insecure-random` |
 | `random_int`, `random_bytes`, `array_rand` for shard selection, `md5($content)` | ok |

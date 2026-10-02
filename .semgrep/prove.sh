@@ -175,6 +175,11 @@ expect_error default-secret-placeholder bad-placeholder <<'PHP'
 $key = System::getEnv('_APP_OPENSSL_KEY_V1', 'changeme');
 PHP
 
+expect_error default-secret-placeholder bad-placeholder-constant <<'PHP'
+<?php
+$key = System::getEnv('_APP_OPENSSL_KEY_V1', EncryptionKey::PLACEHOLDER);
+PHP
+
 expect_error unsafe-dynamic-code bad-unserialize <<'PHP'
 <?php
 $state = \unserialize($request->getCookie('state', ''));
@@ -276,6 +281,26 @@ class Create extends Action
         $response->addCookie('a_session', $secret, $expire, '/', $domain, true, true, null);
         $queueForEvents->setPayload($response->showSensitive(fn () => $response->output($token, Response::MODEL_TOKEN)), sensitive: ['secret']);
         $dsn = $databases[\array_rand($databases)];
+    }
+}
+PHP
+
+expect_clean ok-placeholder-rejection <<'PHP'
+<?php
+final class EncryptionKey
+{
+    public const string PLACEHOLDER = 'your-secret-key';
+
+    public static function isInsecure(?string $key): bool
+    {
+        return $key === null || $key === '' || $key === self::PLACEHOLDER;
+    }
+
+    public static function assertProduction(?string $key): void
+    {
+        if ($key === self::PLACEHOLDER) {
+            Console::warning('_APP_OPENSSL_KEY_V1 is the public default "' . self::PLACEHOLDER . '".');
+        }
     }
 }
 PHP
