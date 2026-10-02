@@ -265,6 +265,8 @@ import { Route as PublicOrganizationsOrgIdAgentSettingsModelsRouteImport } from 
 import { Route as PublicOrganizationsOrgIdAgentSettingsUsageRouteImport } from './routes/_public/organizations.$orgId.agent.settings.usage'
 import { Route as PublicOrganizationsOrgIdAppsAppIdIndexRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.index'
 import { Route as PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.branding'
+import { Route as PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.installations'
+import { Route as PublicOrganizationsOrgIdAppsAppIdKeysRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.keys'
 import { Route as PublicOrganizationsOrgIdAppsAppIdLegalRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.legal'
 import { Route as PublicOrganizationsOrgIdAppsAppIdOauthRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.oauth'
 import { Route as PublicOrganizationsOrgIdAppsAppIdSecretsRouteImport } from './routes/_public/organizations.$orgId.apps.$appId.secrets'
@@ -1870,6 +1872,18 @@ const PublicOrganizationsOrgIdAppsAppIdBrandingRoute =
     path: '/branding',
     getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
   } as any)
+const PublicOrganizationsOrgIdAppsAppIdInstallationsRoute =
+  PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport.update({
+    id: '/installations',
+    path: '/installations',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdAppsAppIdKeysRoute =
+  PublicOrganizationsOrgIdAppsAppIdKeysRouteImport.update({
+    id: '/keys',
+    path: '/keys',
+    getParentRoute: () => PublicOrganizationsOrgIdAppsAppIdRoute,
+  } as any)
 const PublicOrganizationsOrgIdAppsAppIdLegalRoute =
   PublicOrganizationsOrgIdAppsAppIdLegalRouteImport.update({
     id: '/legal',
@@ -3460,6 +3474,8 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -3865,6 +3881,8 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -4293,6 +4311,8 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/agent/settings/models': typeof PublicOrganizationsOrgIdAgentSettingsModelsRoute
   '/_public/organizations/$orgId/agent/settings/usage': typeof PublicOrganizationsOrgIdAgentSettingsUsageRoute
   '/_public/organizations/$orgId/apps/$appId/branding': typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  '/_public/organizations/$orgId/apps/$appId/installations': typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  '/_public/organizations/$orgId/apps/$appId/keys': typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   '/_public/organizations/$orgId/apps/$appId/legal': typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   '/_public/organizations/$orgId/apps/$appId/oauth': typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   '/_public/organizations/$orgId/apps/$appId/secrets': typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -4734,6 +4754,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/settings/models'
     | '/organizations/$orgId/agent/settings/usage'
     | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/installations'
+    | '/organizations/$orgId/apps/$appId/keys'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
     | '/organizations/$orgId/apps/$appId/secrets'
@@ -5139,6 +5161,8 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/agent/settings/models'
     | '/organizations/$orgId/agent/settings/usage'
     | '/organizations/$orgId/apps/$appId/branding'
+    | '/organizations/$orgId/apps/$appId/installations'
+    | '/organizations/$orgId/apps/$appId/keys'
     | '/organizations/$orgId/apps/$appId/legal'
     | '/organizations/$orgId/apps/$appId/oauth'
     | '/organizations/$orgId/apps/$appId/secrets'
@@ -5566,6 +5590,8 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/agent/settings/models'
     | '/_public/organizations/$orgId/agent/settings/usage'
     | '/_public/organizations/$orgId/apps/$appId/branding'
+    | '/_public/organizations/$orgId/apps/$appId/installations'
+    | '/_public/organizations/$orgId/apps/$appId/keys'
     | '/_public/organizations/$orgId/apps/$appId/legal'
     | '/_public/organizations/$orgId/apps/$appId/oauth'
     | '/_public/organizations/$orgId/apps/$appId/secrets'
@@ -7594,6 +7620,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
     }
+    '/_public/organizations/$orgId/apps/$appId/installations': {
+      id: '/_public/organizations/$orgId/apps/$appId/installations'
+      path: '/installations'
+      fullPath: '/organizations/$orgId/apps/$appId/installations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
+    '/_public/organizations/$orgId/apps/$appId/keys': {
+      id: '/_public/organizations/$orgId/apps/$appId/keys'
+      path: '/keys'
+      fullPath: '/organizations/$orgId/apps/$appId/keys'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdAppsAppIdKeysRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdAppsAppIdRoute
+    }
     '/_public/organizations/$orgId/apps/$appId/legal': {
       id: '/_public/organizations/$orgId/apps/$appId/legal'
       path: '/legal'
@@ -9172,6 +9212,8 @@ const PublicOrganizationsOrgIdAgentRouteWithChildren =
 
 interface PublicOrganizationsOrgIdAppsAppIdRouteChildren {
   PublicOrganizationsOrgIdAppsAppIdBrandingRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
+  PublicOrganizationsOrgIdAppsAppIdInstallationsRoute: typeof PublicOrganizationsOrgIdAppsAppIdInstallationsRoute
+  PublicOrganizationsOrgIdAppsAppIdKeysRoute: typeof PublicOrganizationsOrgIdAppsAppIdKeysRoute
   PublicOrganizationsOrgIdAppsAppIdLegalRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
   PublicOrganizationsOrgIdAppsAppIdOauthRoute: typeof PublicOrganizationsOrgIdAppsAppIdOauthRoute
   PublicOrganizationsOrgIdAppsAppIdSecretsRoute: typeof PublicOrganizationsOrgIdAppsAppIdSecretsRoute
@@ -9184,6 +9226,10 @@ const PublicOrganizationsOrgIdAppsAppIdRouteChildren: PublicOrganizationsOrgIdAp
   {
     PublicOrganizationsOrgIdAppsAppIdBrandingRoute:
       PublicOrganizationsOrgIdAppsAppIdBrandingRoute,
+    PublicOrganizationsOrgIdAppsAppIdInstallationsRoute:
+      PublicOrganizationsOrgIdAppsAppIdInstallationsRoute,
+    PublicOrganizationsOrgIdAppsAppIdKeysRoute:
+      PublicOrganizationsOrgIdAppsAppIdKeysRoute,
     PublicOrganizationsOrgIdAppsAppIdLegalRoute:
       PublicOrganizationsOrgIdAppsAppIdLegalRoute,
     PublicOrganizationsOrgIdAppsAppIdOauthRoute:
@@ -10809,6 +10855,7 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
 
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'

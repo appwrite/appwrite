@@ -1558,6 +1558,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Installation settings updated': 'インストール設定を更新しました',
+  'No installation scopes are available.': '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',

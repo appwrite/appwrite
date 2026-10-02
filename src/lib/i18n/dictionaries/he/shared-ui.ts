@@ -1324,4 +1324,42 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Created by': 'נוצר על ידי',
+  'Authorized resources': 'משאבים מורשים',
+  'No scopes granted': 'לא הוענקו הרשאות גישה',
+  Installations: 'התקנות',
+  'Installations appear here once a team installs this app.':
+    'התקנות יופיעו כאן ברגע שצוות יתקין את האפליקציה.',
+  'No installations': 'אין התקנות',
+  'Remove installation': 'הסרת התקנה',
+  'Installation removed': 'ההתקנה הוסרה',
+  'Failed to remove installation': 'הסרת ההתקנה נכשלה',
+  'Teams that installed this app and the scopes they granted. Removing an installation revokes its access tokens.':
+    'צוותים שהתקינו את האפליקציה והרשאות הגישה שהעניקו. הסרת התקנה מבטלת את טוקני הגישה שלה.',
+  'The app loses access to this team immediately and its installation tokens stop working. The team can install the app again later.':
+    'האפליקציה מאבדת מיד את הגישה לצוות הזה וטוקני ההתקנה שלה מפסיקים לעבוד. הצוות יוכל להתקין את האפליקציה שוב מאוחר יותר.',
+  'App keys': 'מפתחות אפליקציה',
+  'App key created': 'מפתח האפליקציה נוצר',
+  'App key deleted': 'מפתח האפליקציה נמחק',
+  'Create key': 'יצירת מפתח',
+  'Delete app key': 'מחיקת מפתח אפליקציה',
+  'Failed to create app key': 'יצירת מפתח האפליקציה נכשלה',
+  'Failed to delete app key': 'מחיקת מפתח האפליקציה נכשלה',
+  'Key value': 'ערך המפתח',
+  'No app keys': 'אין מפתחות אפליקציה',
+  'Create a key when your app needs to authenticate as itself, such as when it mints installation tokens.':
+    'צרו מפתח כשהאפליקציה צריכה להזדהות בשם עצמה, למשל כדי להנפיק טוקני התקנה.',
+  'Copy the key into your server environment. You can copy it again later from the keys list.':
+    'העתיקו את המפתח לסביבת השרת שלכם. אפשר להעתיק אותו שוב מאוחר יותר מרשימת המפתחות.',
+  'Never ship app keys in mobile apps, SPAs, or public repositories. Store them in a secrets manager.':
+    'לעולם אל תכללו מפתחות אפליקציה באפליקציות מובייל, ב-SPA או במאגרים ציבוריים. שמרו אותם במנהל סודות.',
+  'Requests signed with this key stop working immediately. This cannot be undone.':
+    'בקשות שנחתמו עם המפתח הזה יפסיקו לעבוד מיד. לא ניתן לבטל פעולה זו.',
+  'Your app signs a JWT with an app key to authenticate as itself, for example to mint installation access tokens. Delete a key to revoke it.':
+    'האפליקציה שלכם חותמת JWT עם מפתח אפליקציה כדי להזדהות בשם עצמה, למשל כדי להנפיק טוקני גישה להתקנה. מחקו מפתח כדי לבטל אותו.',
+  'Self-registered': 'נרשמה עצמאית',
+  'Suggested app': 'אפליקציה מומלצת',
+  'App key copied': 'מפתח האפליקציה הועתק',
+  'Load more': 'טעינת עוד',
+  'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
 }

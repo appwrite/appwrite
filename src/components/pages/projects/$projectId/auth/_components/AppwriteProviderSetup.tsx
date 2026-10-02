@@ -110,6 +110,10 @@ export function AppwriteProviderSetup({
       supportUrl: app.supportUrl,
       dataDeletionUrl: app.dataDeletionUrl,
       deviceFlow: app.deviceFlow,
+      // The update endpoint replaces the whole app; keep the installation
+      // settings the organization configured.
+      installationScopes: app.installationScopes,
+      installationRedirectUrl: app.installationRedirectUrl,
     })
   }
 

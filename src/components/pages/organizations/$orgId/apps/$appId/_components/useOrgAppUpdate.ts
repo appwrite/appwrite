@@ -18,6 +18,13 @@ export function listsEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
+/** Order-insensitive comparison for scope lists. */
+export function setsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const other = new Set(b)
+  return a.every((value) => other.has(value))
+}
+
 export function useOrgAppUpdate(
   organizationId: string,
   app: Models.App,
@@ -51,6 +58,8 @@ export function useOrgAppUpdate(
         postLogoutRedirectUris: app.postLogoutRedirectUris ?? [],
         type: app.type || 'confidential',
         deviceFlow: app.deviceFlow ?? false,
+        installationScopes: app.installationScopes ?? [],
+        installationRedirectUrl: app.installationRedirectUrl ?? '',
         ...fields,
       })
       toast.success(options?.successMessage ?? 'App updated')

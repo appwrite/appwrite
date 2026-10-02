@@ -1,5 +1,14 @@
 import type { SettingsLayoutNavItem } from '@/components/global/shared/settings-search/SettingsLayoutShell'
-import { FileText, Key, KeyRound, LifeBuoy, Palette, Scale } from 'lucide-react'
+import {
+  Blocks,
+  FileText,
+  Key,
+  KeyRound,
+  KeySquare,
+  LifeBuoy,
+  Palette,
+  Scale,
+} from 'lucide-react'
 
 export type OrgAppSettingsSectionId =
   | 'general'
@@ -7,6 +16,8 @@ export type OrgAppSettingsSectionId =
   | 'legal'
   | 'support'
   | 'secrets'
+  | 'keys'
+  | 'installations'
   | 'settings'
 
 export function buildOrgAppSettingsNavItems(
@@ -39,7 +50,15 @@ export function buildOrgAppSettingsNavItems(
       icon: KeyRound,
       to: '/organizations/$orgId/apps/$appId/oauth',
       params,
-      keywords: ['redirect', 'logout', 'pkce', 'device flow', 'public'],
+      keywords: [
+        'redirect',
+        'logout',
+        'pkce',
+        'device flow',
+        'public',
+        'installation',
+        'scopes',
+      ],
     },
   ]
 
@@ -55,6 +74,22 @@ export function buildOrgAppSettingsNavItems(
   }
 
   items.push(
+    {
+      id: 'keys',
+      label: 'App keys',
+      icon: KeySquare,
+      to: '/organizations/$orgId/apps/$appId/keys',
+      params,
+      keywords: ['key', 'jwt', 'installation', 'token', 'sign'],
+    },
+    {
+      id: 'installations',
+      label: 'Installations',
+      icon: Blocks,
+      to: '/organizations/$orgId/apps/$appId/installations',
+      params,
+      keywords: ['installed', 'organizations', 'scopes', 'remove', 'uninstall'],
+    },
     {
       id: 'legal',
       label: 'Legal',
@@ -103,6 +138,8 @@ export function getOrgAppSettingsSectionId(
   if (section === 'legal') return 'legal'
   if (section === 'support') return 'support'
   if (section === 'secrets') return 'secrets'
+  if (section === 'keys') return 'keys'
+  if (section === 'installations') return 'installations'
   if (section === 'settings') return 'settings'
   return 'general'
 }
