@@ -7,7 +7,7 @@ namespace Tests\Unit\AvatarPhotos\Providers;
 use Appwrite\AvatarPhotos\Providers\Libavatar;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Document;
 
@@ -29,6 +29,6 @@ final class LibavatarTest extends TestCase
     #[DataProvider('provideSupports')]
     public function testSupports(array $attributes, bool $expected): void
     {
-        $this->assertSame($expected, (new Libavatar(new Client(new CannedTransport(fn (): string => ''))))->supports(new Document($attributes)));
+        $this->assertSame($expected, (new Libavatar(new Client(new CurlAdapter())))->supports(new Document($attributes)));
     }
 }

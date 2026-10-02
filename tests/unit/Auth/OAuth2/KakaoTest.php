@@ -7,7 +7,7 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Kakao;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 
 final class KakaoTest extends TestCase
@@ -26,7 +26,7 @@ final class KakaoTest extends TestCase
     #[DataProvider('promptSecrets')]
     public function testLoginURLPrompt(string $secret, ?string $expected): void
     {
-        $kakao = new Kakao(new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback');
+        $kakao = new Kakao(new Client(new CurlAdapter()), 'client-id', $secret, 'https://example.com/callback');
 
         \parse_str((string) \parse_url($kakao->getLoginURL(), PHP_URL_QUERY), $query);
 
@@ -45,7 +45,7 @@ final class KakaoTest extends TestCase
     #[DataProvider('clientSecrets')]
     public function testAccessTokenSendsClientSecret(string $secret): void
     {
-        $kakao = new FakeKakao(new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback');
+        $kakao = new FakeKakao(new Client(new CurlAdapter()), 'client-id', $secret, 'https://example.com/callback');
 
         $this->assertSame('access-token', $kakao->getAccessToken('authorization-code'));
 

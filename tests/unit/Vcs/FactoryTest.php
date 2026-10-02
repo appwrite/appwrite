@@ -8,9 +8,9 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\Network\CannedTransport;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -56,14 +56,14 @@ final class FactoryTest extends TestCase
         $this->assertArrayHasKey('origin', $registry);
         $this->assertArrayNotHasKey('oauth2', $registry['origin']);
 
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), $registry);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('origin');
     }
 
     public function testOauth2FromProviderUnknownThrows(): void
     {
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('bitbucket');
@@ -74,7 +74,7 @@ final class FactoryTest extends TestCase
         \putenv('_APP_VCS_GITHUB_CLIENT_ID=client-id');
         \putenv('_APP_VCS_GITHUB_CLIENT_SECRET=client-secret');
 
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
         $oauth2 = $factory->oauth2FromProvider('github');
 
         $this->assertInstanceOf(OAuth2Github::class, $oauth2);
@@ -85,7 +85,7 @@ final class FactoryTest extends TestCase
 
     public function testFromProviderUnknownThrows(): void
     {
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->fromProvider('bitbucket');
@@ -93,14 +93,14 @@ final class FactoryTest extends TestCase
 
     public function testFromProviderBuildsAdapter(): void
     {
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->assertInstanceOf(GitHub::class, $factory->fromProvider('github'));
     }
 
     public function testFromInstallationEmptyDocumentThrows(): void
     {
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->fromInstallation(new Document());
@@ -108,7 +108,7 @@ final class FactoryTest extends TestCase
 
     public function testFromInstallationMissingProviderThrows(): void
     {
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Missing VCS provider');
@@ -126,7 +126,7 @@ final class FactoryTest extends TestCase
                 'token' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
             ],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['test' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['test' => $entry]);
 
         $this->assertFalse($factory->isConfigured('test'));
         $this->assertFalse($factory->isConfigured('unknown'));
@@ -144,7 +144,7 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         $adapter = $factory->fromProvider('gitlab');
         $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
@@ -157,7 +157,7 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
         $adapter = $factory->fromProvider('gitlab');
@@ -171,7 +171,7 @@ final class FactoryTest extends TestCase
             'browserEndpoint' => 'https://git.example.com',
             'variables' => ['endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_ENDPOINT']],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['gitea' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitea' => $entry]);
 
         \putenv('_APP_VCS_TEST_ENDPOINT=http://gitea:3000');
 
@@ -187,7 +187,7 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.example.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         $this->assertSame('https://gitlab.example.com/owner', $factory->fromProviderForBrowser('gitlab')->getOrganizationUrl('owner'));
     }
@@ -200,7 +200,7 @@ final class FactoryTest extends TestCase
                 'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
             ],
         ];
-        $factory = new Factory($this->cache(), new Client(new CannedTransport(fn (): string => '')), ['github' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $entry]);
 
         $this->assertSame('', $factory->getWebhookSecret('github'));
 

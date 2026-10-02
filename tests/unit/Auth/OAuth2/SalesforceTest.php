@@ -7,7 +7,7 @@ namespace Tests\Unit\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Salesforce;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\Network\CannedTransport;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 
 final class SalesforceTest extends TestCase
@@ -26,7 +26,7 @@ final class SalesforceTest extends TestCase
     #[DataProvider('promptSecrets')]
     public function testLoginURLPrompt(string $secret, ?string $expected): void
     {
-        $salesforce = new Salesforce(new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback');
+        $salesforce = new Salesforce(new Client(new CurlAdapter()), 'client-id', $secret, 'https://example.com/callback');
 
         \parse_str((string) \parse_url($salesforce->getLoginURL(), PHP_URL_QUERY), $query);
 
@@ -45,7 +45,7 @@ final class SalesforceTest extends TestCase
     #[DataProvider('clientSecrets')]
     public function testAccessTokenSendsClientSecret(string $secret): void
     {
-        $salesforce = new FakeSalesforce(new Client(new CannedTransport(fn (): string => '')), 'client-id', $secret, 'https://example.com/callback');
+        $salesforce = new FakeSalesforce(new Client(new CurlAdapter()), 'client-id', $secret, 'https://example.com/callback');
 
         $this->assertSame('access-token', $salesforce->getAccessToken('authorization-code'));
 
