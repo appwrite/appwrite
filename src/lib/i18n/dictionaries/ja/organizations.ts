@@ -171,6 +171,31 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'Advanced security': '高度なセキュリティ',
+  'Security add-on': 'セキュリティアドオン',
+  '+ more': '+ その他',
+  'Geolocation for Firewall rules': 'Firewall ルール用の位置情報',
+  'Geolocation for Firewall rules.': 'Firewall ルール用の位置情報。',
+  '{price}/mo, prorated.': '{price}/月、日割り請求。',
+  'Billed monthly, prorated.': '月額、日割り請求。',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'Firewall ルール用の位置情報 · {price}/月、日割り請求。',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'Firewall ルール用の位置情報 · 月額、日割り請求。',
+  'Optional security add-on': 'オプションのセキュリティアドオン',
+  'Advanced geolocation for access control': 'アクセス制御用の高度な位置情報',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    '都市、ISP、ASN、接続情報を各リクエストに付与し、Firewall ルールと地域別アクセス制御を強化します。',
+  'Prorated when you enable this add-on.': '有効化時は日割り請求されます。',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    '都市、ISP、ASN、接続コンテキストで各リクエストを拡張し、Firewall ルールで不正利用のブロック、地域別アクセス制限、不審なトラフィックへの的確な対応ができます。',
+  '{price}/month for this project. Prorated when enabled.':
+    'このプロジェクトは {price}/月。有効化時は日割り請求されます。',
+  'Billed monthly for this project, prorated when enabled.':
+    'このプロジェクトに対して月額請求。有効化時は日割りです。',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'プロジェクトは作成されましたが、セキュリティアドオンを有効にできませんでした。プロジェクト設定から Premium Geo DB を有効にしてください。',
+  'Enabling Premium Geo DB...': 'Premium Geo DB を有効にしています...',
   'Create secret': 'シークレットを作成',
   'Credit History': 'クレジット履歴',
   'Credit expiration': 'クレジットの有効期限',

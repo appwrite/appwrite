@@ -47,6 +47,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "september-product-update-native-sign-in-databases-and-more",
+    "href": "/blog/post/september-product-update-native-sign-in-databases-and-more",
+    "title": "September product update: Native sign-in, databases and more",
+    "description": "See what's new in Appwrite with native sign-in, databases across all regions, Resend setup, user photos, CLI config files, and more.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/september-product-update-native-sign-in-databases-and-more/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "tanstack-start-server-function-xss",
     "href": "/blog/post/tanstack-start-server-function-xss",
     "title": "TanStack Start XSS (CVE-2026-102989): what to do on Appwrite",

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
@@ -229,7 +229,9 @@ export function MembershipUpdateDrawer({
                         params={{ projectId, userId: membership.userId }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-4 py-3 transition-colors hover:bg-muted/50"
                       >
-                        <InitialsAvatar
+                        <PhotoAvatar
+                          projectId={projectId}
+                          userId={membership.userId}
                           name={
                             membership.userName ||
                             membership.userEmail ||

@@ -8,16 +8,57 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useT } from '@/lib/i18n/translate'
 
 type AuthAccountChipProps = {
   accountLabel: string
+  /**
+   * Signed-in console user ID for `avatars.getPhoto`. Omit for mock/demo
+   * labels (static switcher) to keep the plain initial box.
+   */
+  userId?: string
   onSwitchAccount: () => void | Promise<void>
   disabled?: boolean
 }
 
+function AccountChipAvatar({
+  userId,
+  accountLabel,
+  accountInitial,
+  size,
+}: {
+  userId?: string
+  accountLabel: string
+  accountInitial: string
+  size: 'xs' | 'sm'
+}) {
+  if (userId) {
+    return (
+      <PhotoAvatar
+        userId={userId}
+        name={accountLabel}
+        isCurrentUser
+        size={size}
+        className={size === 'sm' ? 'h-7 w-7 shrink-0' : 'shrink-0'}
+      />
+    )
+  }
+
+  return size === 'xs' ? (
+    <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
+      {accountInitial}
+    </span>
+  ) : (
+    <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
+      {accountInitial}
+    </span>
+  )
+}
+
 export function AuthAccountChip({
   accountLabel,
+  userId,
   onSwitchAccount,
   disabled = false,
 }: AuthAccountChipProps) {
@@ -35,18 +76,24 @@ export function AuthAccountChip({
             type="button"
             className="text-foreground border-border hover:bg-muted/50 flex max-w-full cursor-pointer items-center gap-1.5 rounded-lg border bg-muted/30 px-2.5 py-1.5 text-[12px] font-medium transition disabled:opacity-60"
           >
-            <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
-              {accountInitial}
-            </span>
+            <AccountChipAvatar
+              userId={userId}
+              accountLabel={accountLabel}
+              accountInitial={accountInitial}
+              size="xs"
+            />
             <span className="truncate">{accountLabel}</span>
             <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center" className="w-72">
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
-              {accountInitial}
-            </span>
+            <AccountChipAvatar
+              userId={userId}
+              accountLabel={accountLabel}
+              accountInitial={accountInitial}
+              size="sm"
+            />
             <span className="min-w-0 flex-1 truncate text-start text-[13px]">
               {accountLabel}
             </span>

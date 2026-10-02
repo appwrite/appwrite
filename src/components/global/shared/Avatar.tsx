@@ -26,6 +26,12 @@ interface PhotoAvatarProps {
    */
   userId?: string
   /**
+   * Resolve `userId` against this project's users (`sdk.forProject`) instead
+   * of the console project. Required for Auth users, team members, and
+   * activity actors; `useCurrentUser` is ignored in project scope.
+   */
+  projectId?: string
+  /**
    * Resolve via the signed-in console user (OAuth photo chain). Use only when
    * the account ID is not available yet; prefer `userId` when you have it.
    */
@@ -117,10 +123,12 @@ export function InitialsAvatar({
  * Profile photo via `avatars.getPhoto({ userId })`.
  *
  * Pass `userId` only. Calling `getPhoto` with no identity params resolves the
- * signed-in session user (`useCurrentUser`).
+ * signed-in session user (`useCurrentUser`). Add `projectId` to resolve a
+ * customer project's user instead of a console user.
  */
 export function PhotoAvatar({
   userId,
+  projectId,
   useCurrentUser = false,
   isCurrentUser = false,
   name,
@@ -130,6 +138,7 @@ export function PhotoAvatar({
   const [failed, setFailed] = useState(false)
   const [screenshotModeEpoch, setScreenshotModeEpoch] = useState(0)
   const trimmedUserId = userId?.trim() || ''
+  const trimmedProjectId = projectId?.trim() || ''
   const pixels = sizePixels[size]
 
   useEffect(() => {
@@ -139,23 +148,32 @@ export function PhotoAvatar({
   }, [])
 
   const src = useMemo(() => {
+    // Project users are never the console account: in project scope, ignore
+    // the console-current-user flags and the account ID comparison so the
+    // screenshot-mode demo photo never replaces a project user's avatar.
+    const consoleScoped = !trimmedProjectId
     const screenshotSrc = resolveScreenshotModeUserPhotoSrc({
       userId: trimmedUserId,
-      useCurrentUser,
-      isCurrentUser,
-      currentUserId: getConsoleAccountFromSingleton()?.$id,
+      useCurrentUser: consoleScoped && useCurrentUser,
+      isCurrentUser: consoleScoped && isCurrentUser,
+      currentUserId: consoleScoped
+        ? getConsoleAccountFromSingleton()?.$id
+        : undefined,
     })
     if (screenshotSrc) return screenshotSrc
 
     if (trimmedUserId) {
-      return sdk.forConsole.avatars.getPhoto({
+      const avatars = trimmedProjectId
+        ? sdk.forProject(trimmedProjectId).avatars
+        : sdk.forConsole.avatars
+      return avatars.getPhoto({
         width: pixels,
         height: pixels,
         userId: trimmedUserId,
       })
     }
 
-    if (useCurrentUser) {
+    if (useCurrentUser && !trimmedProjectId) {
       return sdk.forConsole.avatars.getPhoto({
         width: pixels,
         height: pixels,
@@ -163,7 +181,14 @@ export function PhotoAvatar({
     }
 
     return null
-  }, [pixels, trimmedUserId, useCurrentUser, isCurrentUser, screenshotModeEpoch])
+  }, [
+    pixels,
+    trimmedUserId,
+    trimmedProjectId,
+    useCurrentUser,
+    isCurrentUser,
+    screenshotModeEpoch,
+  ])
 
   const [loaded, setLoaded] = useState(() =>
     src ? loadedPhotoSrcs.has(src) : false,

@@ -1180,6 +1180,8 @@ export function View({ projectId, initialData }: ViewProps) {
                           <UserTypeAvatar
                             actorType={activity.actorType}
                             actorName={activity.actorName}
+                            actorId={activity.actorId}
+                            projectId={projectId}
                             className="shadow-none"
                           />
                           <div className="min-w-0">
@@ -1336,6 +1338,7 @@ export function View({ projectId, initialData }: ViewProps) {
       </div>
 
       <ActivityLogDrawer
+        projectId={projectId}
         open={drawerOpen}
         onOpenChange={(open) => {
           if (open) {

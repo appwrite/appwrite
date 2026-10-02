@@ -5013,7 +5013,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/frameworks",
     "title": "Frameworks",
     "description": "Discover which frameworks are supported out-of-the-box by Appwrite Sites.",
-    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you…",
+    "excerpt": "Appwrite Sites allows web apps developed with a variety of frameworks to be hosted and served to your users. When we say a framework is \"supported,\" it means Appwrite can automatically detect, build, and optimize deployments for that framework with minimal configuration from you. Zero-configuration approach Appwrite Sites uses a zero-config approach to make deployments as frictionless as possible. When you deploy a project, Appwrite: 1. Automatically detects your framework based on your package dependencies and configuration files (like ,…",
     "breadcrumbs": [
       "Sites",
       "Concepts",
@@ -5106,6 +5106,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Sites",
       "Start with Sites",
       "Deploy a Flutter Web app to Appwrite Sites"
+    ]
+  },
+  {
+    "slug": "products/sites/quick-start/jaspr",
+    "title": "Deploy a Jaspr app to Appwrite Sites",
+    "description": "Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.",
+    "excerpt": "Jaspr is a web framework for Dart that renders HTML and CSS from Dart components. Appwrite Sites runs Jaspr apps in **server mode**, which pre-renders your components on the server for each incoming request. Open your terminal, install the Jaspr CLI, and create a project in server mode. In case you have an existing Jaspr app, confirm that the section of your file sets server mode: Appwrite builds Jaspr sites on the Flutter 3.44 runtime, which ships with the Jaspr…",
+    "breadcrumbs": [
+      "Sites",
+      "Start with Sites",
+      "Deploy a Jaspr app to Appwrite Sites"
     ]
   },
   {

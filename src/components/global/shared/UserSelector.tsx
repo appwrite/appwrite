@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import {
   ResourceSearchPopover,
   type ResourceSearchListItem,
@@ -128,7 +128,9 @@ export function UserSelector({
         >
           <span className="flex min-w-0 items-center gap-2 truncate">
             {value && selectedLabel ? (
-              <InitialsAvatar
+              <PhotoAvatar
+                projectId={projectId ?? undefined}
+                userId={value}
                 name={selectedInitials || selectedLabel}
                 size="xs"
                 className="shrink-0"

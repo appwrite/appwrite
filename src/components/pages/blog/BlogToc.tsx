@@ -57,7 +57,7 @@ export function BlogToc({ items }: BlogTocProps) {
       className={cn(
         BELOW_ARTICLE_TOOLBAR_STICKY_TOP_CLASS,
         BELOW_ARTICLE_TOOLBAR_STICKY_MAX_HEIGHT_CLASS,
-        'z-10 hidden w-full min-w-0 max-w-[208px] shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
+        'z-10 hidden w-full min-w-0 shrink-0 self-start overflow-y-auto overscroll-y-contain pt-6 @[900px]:block',
       )}
     >
       {items.length > 0 ? (
@@ -74,6 +74,7 @@ export function BlogToc({ items }: BlogTocProps) {
                     title={label}
                     className={cn(
                       docsTocLinkClassName(activeId === item.id),
+                      'text-[13px]',
                       item.level > 2 && 'ps-4',
                     )}
                   >

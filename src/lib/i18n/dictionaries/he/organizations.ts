@@ -314,6 +314,31 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
   'Create project': 'יצירת פרויקט',
+  'Advanced security': 'אבטחה מתקדמת',
+  'Security add-on': 'תוסף אבטחה',
+  '+ more': '+ עוד',
+  'Geolocation for Firewall rules': 'מיקום עבור כללי Firewall',
+  'Geolocation for Firewall rules.': 'מיקום עבור כללי Firewall.',
+  '{price}/mo, prorated.': '{price}/חודש, חיוב יחסי.',
+  'Billed monthly, prorated.': 'חיוב חודשי, יחסי.',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'מיקום עבור כללי Firewall · {price}/חודש, חיוב יחסי.',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'מיקום עבור כללי Firewall · חיוב חודשי, יחסי.',
+  'Optional security add-on': 'תוסף אבטחה אופציונלי',
+  'Advanced geolocation for access control': 'מיקום מתקדם לבקרת גישה',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    'הוסיפו הקשר של עיר, ISP, ASN וסוג חיבור לכל בקשה, לכללי Firewall מדויקים וגישה אזורית בטוחה יותר.',
+  'Prorated when you enable this add-on.': 'חיוב יחסי בעת הפעלת התוסף.',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    'העשירו כל בקשה בהקשר של עיר, ISP, ASN וסוג חיבור, כדי שכללי Firewall יוכלו לחסום שימוש לרעה, לאכוף גישה אזורית ולהגיב לתעבורה חשודה בדיוק.',
+  '{price}/month for this project. Prorated when enabled.':
+    '{price}/חודש לפרויקט זה. חיוב יחסי בעת ההפעלה.',
+  'Billed monthly for this project, prorated when enabled.':
+    'חיוב חודשי לפרויקט זה, בחיוב יחסי בעת ההפעלה.',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'הפרויקט נוצר, אך לא ניתן היה להפעיל את תוסף האבטחה. ניתן להפעיל Premium Geo DB בהגדרות הפרויקט.',
+  'Enabling Premium Geo DB...': 'מפעילים את Premium Geo DB...',
   'Create secret': 'יצירת סוד',
   'Create your first domain to get started':
     'צרו את הדומיין הראשון שלכם כדי להתחיל',

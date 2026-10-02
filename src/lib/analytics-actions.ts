@@ -229,10 +229,21 @@ export const ANALYTICS_ACTIONS = {
     'Native OAuth Promo Banner Learn More Clicked',
   'firewall-promo-banner-learn-more':
     'Firewall Promo Banner Learn More Clicked',
+  'premium-geo-overview-promo-learn-more':
+    'Premium Geo Overview Promo Learn More Clicked',
   'firewall-promo-banner-open-firewall':
     'Firewall Promo Banner Open Firewall Clicked',
   'firewall-promo-banner-skip': 'Firewall Promo Banner Skip Clicked',
   'firewall-promo-banner-sound': 'Firewall Promo Banner Sound Toggled',
+  'firewall-spider-promo-block': 'Firewall Spider Promo Block Clicked',
+  'firewall-spider-promo-learn-more':
+    'Firewall Spider Promo Learn More Clicked',
+  'firewall-spider-promo-dismiss': 'Firewall Spider Promo Dismissed',
+  'firewall-spider-promo-create-rule':
+    'Firewall Spider Promo Create Rule Clicked',
+  'firewall-spider-promo-modal-learn-more':
+    'Firewall Spider Promo Modal Learn More Clicked',
+  'firewall-spider-promo-sound': 'Firewall Spider Promo Sound Toggled',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
