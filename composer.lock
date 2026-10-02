@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c21d724c0c22bafb51ec3c4902d5dab4",
+    "content-hash": "80ba67e16ef8d3cb0cdcea1c072359b6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2958,12 +2958,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "43d0bd11b3159423ca9406257a54cefc7b86773b"
+                "reference": "d96e33d203ac45c390d8aa2feae2fb9251560c50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/43d0bd11b3159423ca9406257a54cefc7b86773b",
-                "reference": "43d0bd11b3159423ca9406257a54cefc7b86773b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d96e33d203ac45c390d8aa2feae2fb9251560c50",
+                "reference": "d96e33d203ac45c390d8aa2feae2fb9251560c50",
                 "shasum": ""
             },
             "require": {
@@ -3024,7 +3024,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-09-30T15:56:03+00:00"
+            "time": "2026-10-02T08:03:01+00:00"
         },
         {
             "name": "utopia-php/migration",
