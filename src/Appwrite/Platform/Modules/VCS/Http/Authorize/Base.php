@@ -11,6 +11,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -39,7 +41,7 @@ abstract class Base extends Action
      * endpoint (which may differ from the server-side API endpoint in
      * containerized setups) since the login URL is opened by the browser.
      */
-    abstract protected function createOAuth2(string $callback, array $state): OAuth2;
+    abstract protected function createOAuth2(Client $client, string $callback, array $state): OAuth2;
 
     public function __construct()
     {
@@ -116,7 +118,8 @@ abstract class Base extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
         }
 
-        $oauth2 = $this->createOAuth2($callback, $state);
+        // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback, $state);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

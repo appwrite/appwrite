@@ -55,6 +55,17 @@ class Create extends Action
                 group: 'messages',
                 name: 'createEmail',
                 description: '/docs/references/messaging/create-email.md',
+                requestExamples: [
+                    'draft' => [
+                        'summary' => 'Create an email draft without sending it',
+                        'value' => [
+                            'messageId' => '<MESSAGE_ID>',
+                            'subject' => 'Welcome',
+                            'content' => 'Welcome to our app.',
+                            'draft' => true,
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

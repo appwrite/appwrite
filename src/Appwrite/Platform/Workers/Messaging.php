@@ -653,6 +653,9 @@ class Messaging extends Action
 
         $usage = new UsageContext();
         $usage
+            ->setResource(METRIC_MESSAGES_RESOURCE_TYPE)
+            ->setResourceId($message->getId())
+            ->setResourceInternalId((string) $message->getSequence())
             ->addMetric(METRIC_MESSAGES, $recipients)
             ->addMetric(METRIC_MESSAGES_SENT, $delivered)
             ->addMetric(METRIC_MESSAGES_FAILED, $failed)
@@ -1177,6 +1180,7 @@ class Messaging extends Action
         $contentAvailable = $message['data']['contentAvailable'] ?? null;
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
+        $channelId = $message['data']['channelId'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1204,7 +1208,8 @@ class Messaging extends Action
             $badge,
             $contentAvailable,
             $critical,
-            $priority
+            $priority,
+            $channelId
         );
     }
 

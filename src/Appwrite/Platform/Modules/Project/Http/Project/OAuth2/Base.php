@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -346,6 +347,7 @@ abstract class Base extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($prompt ? $this->updateWithPrompt(...) : $this->action(...));
     }
 
@@ -375,6 +377,7 @@ abstract class Base extends Action
             'yandex' => Yandex\Update::class,
             'x' => X\Update::class,
             'wordpress' => WordPress\Update::class,
+            'webflow' => Webflow\Update::class,
             'twitch' => Twitch\Update::class,
             'stripe' => Stripe\Update::class,
             'spotify' => Spotify\Update::class,
@@ -503,6 +506,7 @@ abstract class Base extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        Client $clientForOAuth2,
         ?string $clientId,
         ?string $clientSecret,
         ?bool $enabled,
@@ -565,7 +569,7 @@ abstract class Base extends Action
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $providerInstance = new $providerClass(client: $clientForOAuth2, appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
@@ -598,9 +602,10 @@ abstract class Base extends Action
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $clientSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $clientSecret, $enabled);
 
         $queueForEvents->setParam('providerId', static::getProviderId());
 
@@ -623,7 +628,8 @@ abstract class Base extends Action
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -646,7 +652,7 @@ abstract class Base extends Action
             $encodedSecret = \json_encode($secret);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled);
 
         $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
     }

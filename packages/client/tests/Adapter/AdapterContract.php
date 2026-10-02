@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Utopia\Client\Tests\Adapter;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Utopia\Client\Adapter;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\InvalidResponseException;
 use Utopia\Client\Exception\InvalidUriException;
@@ -38,7 +44,22 @@ abstract class AdapterContract extends TestCase
     /**
      * @param array<string|int, mixed> $transportOptions
      */
-    abstract protected function createAdapter(array $transportOptions = []): Adapter;
+    /**
+     * The adapter under test, as constructed: connecting anywhere.
+     *
+     * @param array<string|int, mixed> $transportOptions
+     */
+    abstract protected function newAdapter(array $transportOptions = []): Adapter;
+
+    /**
+     * @param array<string|int, mixed> $transportOptions
+     */
+    protected function createAdapter(array $transportOptions = [], ?Destinations $destinations = null): Adapter
+    {
+        $adapter = $this->newAdapter($transportOptions);
+
+        return $destinations instanceof Destinations ? $adapter->withDestinations($destinations) : $adapter;
+    }
 
     abstract protected function runAdapter(callable $callback): void;
 
@@ -278,6 +299,50 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    public function testItAllowsRedirectHopsUpToACustomLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/5');
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('hopped', (string) $response->getBody());
+        });
+    }
+
+    public function testItRejectsRedirectHopsOverACustomLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/6');
+
+            $this->expectException(ProtocolException::class);
+
+            $this->send($client, $request);
+        });
+    }
+
+    public function testItRejectsAnyRedirectWithAZeroHopLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 0);
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/1');
+
+            $this->expectException(ProtocolException::class);
+
+            $this->send($client, $request);
+        });
+    }
+
+    public function testItRejectsANegativeRedirectHopLimit(): void
+    {
+        $this->expectException(ValueError::class);
+
+        $this->createAdapter()->withFollowRedirects(maxHops: -1);
+    }
+
     public function testItKeepsAuthorizationOnSameOriginRedirects(): void
     {
         Http::serve(function (int $port): void {
@@ -355,6 +420,45 @@ abstract class AdapterContract extends TestCase
             $this->assertSame(200, $response->getStatusCode());
             $this->assertSame("chunk0\nchunk1\nchunk2\nchunk3\nchunk4\n", $received);
             $this->assertGreaterThan(1, $chunks, 'Redirected non-GET responses must reach the sink incrementally.');
+            $this->assertSame('', (string) $response->getBody());
+        });
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function bodyPreservingRedirects(): array
+    {
+        return [
+            'temporary' => ['/redirect-307-body'],
+            'permanent' => ['/redirect-308-body'],
+        ];
+    }
+
+    #[DataProvider('bodyPreservingRedirects')]
+    public function testItResendsTheRequestBodyAcrossABodyPreservingRedirect(string $path): void
+    {
+        Http::serve(function (int $port) use ($path): void {
+            $body = json_encode(['url' => 'https://appwrite.io', 'width' => 1280], JSON_THROW_ON_ERROR);
+            $request = new Request\Factory()->body(Method::POST, 'http://127.0.0.1:' . $port . $path, $body, ContentType::JSON);
+            $client = $this->createAdapter()->withFollowRedirects(maxHops: 5);
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame(\strlen($body) . ':' . hash('sha256', $body), (string) $response->getBody());
+        });
+    }
+
+    public function testItSendsARawBodyWithoutAContentTypeItDidNotSet(): void
+    {
+        Http::serve(function (int $port): void {
+            $request = new Request\Factory()
+                ->createRequest(Method::POST, 'http://127.0.0.1:' . $port . '/content-type')
+                ->withBody(new Stream\Factory()->createStream('raw'));
+
+            $response = $this->send($this->createAdapter(), $request);
+
             $this->assertSame('', (string) $response->getBody());
         });
     }
@@ -654,6 +758,88 @@ abstract class AdapterContract extends TestCase
 
         $this->assertNotSame($client, $client->withFollowRedirects());
         $this->assertNotSame($client, $client->withFollowRedirects(false));
+    }
+
+    public function testItConnectsToAnIpv6Literal(): void
+    {
+        $listener = @\stream_socket_server('tcp://[::1]:0');
+        if ($listener === false) {
+            $this->markTestSkipped('IPv6 loopback is not available.');
+        }
+
+        $authority = (string) \stream_socket_get_name($listener, false);
+        $client = $this->createAdapter()->withTimeout(0.25);
+
+        try {
+            $this->send($client, new Request\Factory()->createRequest(Method::GET, 'http://' . $authority . '/'));
+        } catch (TimeoutException) {
+            // The listener never answers
+        }
+
+        $connection = @\stream_socket_accept($listener, 1);
+        $this->assertNotFalse($connection, 'The request never reached the IPv6 listener.');
+        \stream_set_timeout($connection, 1);
+        $received = (string) \fread($connection, 8192);
+
+        $this->assertStringStartsWith('GET / HTTP/1.1', $received);
+        $this->assertStringContainsStringIgnoringCase('Host: ' . $authority, $received);
+    }
+
+    public function testItRefusesAnAddressTheDestinationDoesNotAllow(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter(destinations: new PublicInternet());
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
+
+            try {
+                $this->send($client, $request);
+                $this->fail('A loopback address reached a public-internet destination . ');
+            } catch (DestinationException $destinationException) {
+                $this->assertStringContainsString('127.0.0.1', $destinationException->getMessage());
+            }
+        });
+    }
+
+    public function testItConnectsToAnAddressTheDestinationAllows(): void
+    {
+        Http::serve(function (int $port): void {
+            $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/final');
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('final', (string) $response->getBody());
+        });
+    }
+
+    public function testItChecksEveryRedirectHopAgainstTheDestination(): void
+    {
+        // Something listening on the redirect target, so only the destination can stop it
+        $target = \stream_socket_server('tcp://127.0.0.2:0');
+        $this->assertNotFalse($target);
+        $targetUrl = 'http://' . \stream_socket_get_name($target, false) . '/final';
+
+        Http::serve(function (int $port) use ($target, $targetUrl): void {
+            $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')))->withFollowRedirects();
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/redirect-to?to=' . \urlencode($targetUrl));
+
+            try {
+                $this->send($client, $request);
+                $this->fail('A redirect reached an address the destination does not allow . ');
+            } catch (DestinationException $destinationException) {
+                $this->assertStringContainsString('127.0.0.2', $destinationException->getMessage());
+            }
+
+            $connection = @\stream_socket_accept($target, 0.2);
+            $received = '';
+            if ($connection !== false) {
+                \stream_set_blocking($connection, false);
+                $received = (string) \fread($connection, 1024);
+            }
+
+            $this->assertSame('', $received);
+        });
     }
 
     public function testDefaultTimeoutsAllowReasonablySlowResponses(): void

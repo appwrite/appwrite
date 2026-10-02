@@ -4,9 +4,11 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -169,5 +171,45 @@ class User extends Document
 
         return $session->isSet('expire')
             && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Unix timestamp at which a session of the user expires, or null when the user
+     * has no such session or it has no expiry.
+     *
+     * Used by realtime, which holds a connection open past the request that
+     * authenticated it and so has to end it at this time.
+     */
+    public function getSessionExpiry(string $sessionId): ?int
+    {
+        $session = $this->find('$id', $sessionId, 'sessions');
+
+        if (empty($session) || !$session->isSet('expire')) {
+            return null;
+        }
+
+        return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void
+    {
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            if (!$session instanceof Document) {
+                continue;
+            }
+            if ($keepSessionId !== null && $session->getId() === $keepSessionId) {
+                continue;
+            }
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('challenges', [
+            Query::equal('userInternalId', [$sequence]),
+        ]);
     }
 }

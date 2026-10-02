@@ -355,6 +355,33 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['current']);
     }
 
+    public function testDeleteAccountSessionCurrentUnderJWT(): void
+    {
+        $data = $this->setupAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$data['id']}.sessions.{$data['sessionId']}.delete"));
+        $this->assertEquals($data['sessionId'], $webhook['data']['$id']);
+        $this->assertEquals(true, $webhook['data']['current']);
+        $this->assertIsString($webhook['data']['countryName']);
+    }
+
     public function testDeleteAccountSessions(): void
     {
         // Set up account with session

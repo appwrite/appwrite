@@ -228,6 +228,7 @@ final class AppwriteTest extends TestCase
         $this->assertSame('India vs Australia', $payload['notification']['body']);
         $this->assertSame(['matchId' => '42'], $payload['data']);
         $this->assertSame('high', $payload['priority']);
+        $this->assertSame('msg-1', $payload['messageId']);
     }
 
     public function testSequenceAdvancesPerPublish(): void

@@ -57,6 +57,15 @@ if ($path === '/redirect-stream-preserve') {
     return;
 }
 
+if ($path === '/redirect-307-body' || $path === '/redirect-308-body') {
+    http_response_code($path === '/redirect-307-body' ? 307 : 308);
+    header('Location: /body-info');
+    header('Content-Type: text/plain;charset=UTF-8');
+    echo 'redirect';
+
+    return;
+}
+
 if ($path === '/nested/parent') {
     http_response_code(302);
     header('Location: ../final');
@@ -88,6 +97,15 @@ if ($path === '/nested/final') {
     http_response_code(200);
     header('Content-Type: text/plain;charset=UTF-8');
     echo 'nested-final';
+
+    return;
+}
+
+if ($path === '/redirect-to') {
+    $to = $_GET['to'] ?? '';
+    http_response_code(302);
+    header('Location: ' . (is_string($to) ? $to : ''));
+    echo 'redirect';
 
     return;
 }
@@ -173,6 +191,14 @@ if (preg_match('#^/hops/(\d+)$#', $path, $matches) === 1) {
     header('Location: /hops/' . ($remaining - 1));
     header('Content-Type: text/plain;charset=UTF-8');
     echo 'redirect';
+
+    return;
+}
+
+if ($path === '/content-type') {
+    http_response_code(200);
+    header('Content-Type: text/plain;charset=UTF-8');
+    echo \is_string($_SERVER['CONTENT_TYPE'] ?? null) ? $_SERVER['CONTENT_TYPE'] : '';
 
     return;
 }
