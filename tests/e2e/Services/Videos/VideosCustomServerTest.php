@@ -393,6 +393,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $response['body']);
         $this->assertMatchesRegularExpression('/previews\/[a-zA-Z0-9]+#xywh=\d+,\d+,\d+,\d+/', $response['body']);
+
+        $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
+        $this->assertEquals(320, (int) $xywh[2], 'timeline thumbnails should be 320px wide');
     }
 
     // --------------------------------------------------------------- subtitles

@@ -63,37 +63,75 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Regression test: `videos.read` used to be granted to the guests role,
-     * which let an unauthenticated caller past the scope guard and into
-     * listVideos — and that endpoint reads with authorization skipped, because
-     * video documents are project-internal and carry no permissions of their
-     * own. The result was anonymous enumeration of every video in a project.
-     *
-     * Guests must now be rejected before any handler runs.
+     * Guests hold videos.read so public videos can play in any player, but
+     * listVideos reads with authorization skipped and must stay gated to
+     * admin/API-key callers, or every video in a project could be enumerated.
      */
-    public function testGuestsCannotReachVideos(): void
+    public function testGuestsCannotListVideos(): void
     {
         $anonymous = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ];
 
-        $paths = [
-            '/videos',
-            '/videos/codecs',
-            '/videos/profiles',
-            '/videos/someVideoId',
-            '/videos/someVideoId/timeline',
-            '/videos/someVideoId/subtitles',
-            '/videos/someVideoId/renditions',
-            '/videos/someVideoId/outputs/hls/master.m3u8',
+        $response = $this->client->call(Client::METHOD_GET, '/videos', $anonymous);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $response['body']['type']);
+    }
+
+    /**
+     * Guest access follows the source file: the fixture bucket is readable by
+     * anyone, so a guest can read the video; a bucket that grants nothing
+     * keeps it private.
+     */
+    public function testGuestsReadVideosByFilePermissions(): void
+    {
+        $anonymous = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ];
 
-        foreach ($paths as $path) {
-            $response = $this->client->call(Client::METHOD_GET, $path, $anonymous);
+        // Test for SUCCESS
+        $public = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $public['headers']['status-code']);
 
-            $this->assertEquals(401, $response['headers']['status-code'], $path . ' is reachable by guests');
-            $this->assertEquals('general_unauthorized_scope', $response['body']['type'], $path);
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $public['body']['$id'], $anonymous);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($public['body']['$id'], $response['body']['$id']);
+
+        // Test for FAILURE
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'Private guest videos bucket',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $private = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $bucket['body']['$id'],
+            'fileId' => $file['$id'],
+        ]);
+        $this->assertEquals(201, $private['headers']['status-code']);
+        $videoId = $private['body']['$id'];
+
+        foreach ([
+            '/videos/' . $videoId,
+            '/videos/' . $videoId . '/subtitles',
+            '/videos/' . $videoId . '/renditions',
+            '/videos/' . $videoId . '/timeline',
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $anonymous);
+            $this->assertEquals(401, $response['headers']['status-code'], $path . ' leaked a private video to guests');
         }
     }
 
@@ -254,13 +292,6 @@ final class VideosCustomClientTest extends Scope
 
     public function testSessionCanReadCodecs(): void
     {
-        $anonymous = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ];
-        $guest = $this->client->call(Client::METHOD_GET, '/videos/codecs', $anonymous);
-        $this->assertEquals(401, $guest['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_GET, '/videos/codecs', $this->sessionHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
