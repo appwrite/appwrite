@@ -45,6 +45,12 @@ interface PhotoAvatarProps {
   isCurrentUser?: boolean
   /** Used only for initials fallback when the photo is unavailable. */
   name?: string
+  /**
+   * What shows under the photo while it loads: the user's initials (default)
+   * or a plain surface. A photo that fails to load still falls back to
+   * initials either way.
+   */
+  placeholder?: 'initials' | 'blank'
   size?: AvatarSize
   className?: string
 }
@@ -142,6 +148,7 @@ export function PhotoAvatar({
   useCurrentUser = false,
   isCurrentUser = false,
   name,
+  placeholder = 'initials',
   size = 'md',
   className,
 }: PhotoAvatarProps) {
@@ -243,11 +250,13 @@ export function PhotoAvatar({
         className,
       )}
     >
-      <InitialsAvatar
-        name={name}
-        size={size}
-        className="pointer-events-none absolute inset-0 h-full w-full"
-      />
+      {placeholder === 'initials' ? (
+        <InitialsAvatar
+          name={name}
+          size={size}
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
+      ) : null}
       <img
         ref={imageRef}
         src={src}

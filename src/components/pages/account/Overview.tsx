@@ -193,6 +193,7 @@ export function ProfilePhotoSection() {
               useCurrentUser={!account?.$id}
               name={account?.name || account?.email}
               isCurrentUser
+              placeholder="blank"
               size="xl"
             />
           }
