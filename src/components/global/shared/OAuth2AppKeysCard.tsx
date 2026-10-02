@@ -48,6 +48,8 @@ type OAuth2AppKeysCardProps = {
   hasMore?: boolean
   onLoadMore?: () => void
   isLoadingMore?: boolean
+  /** The last Load more request failed; the button retries it. */
+  loadMoreFailed?: boolean
   /** Compact paddings for use inside drawers. */
   embedded?: boolean
   /** Extra classes for nested dialogs, e.g. a z-index above a drawer. */
@@ -69,6 +71,7 @@ export function OAuth2AppKeysCard({
   hasMore = false,
   onLoadMore,
   isLoadingMore = false,
+  loadMoreFailed = false,
   embedded = false,
   dialogClassName,
 }: OAuth2AppKeysCardProps) {
@@ -271,7 +274,12 @@ export function OAuth2AppKeysCard({
             </div>
           )}
           {hasMore ? (
-            <div className="flex justify-center pt-1">
+            <div className="flex flex-col items-center gap-2 pt-1">
+              {loadMoreFailed ? (
+                <p className="text-[12px] text-destructive">
+                  {t('Loading more failed. Try again.')}
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"

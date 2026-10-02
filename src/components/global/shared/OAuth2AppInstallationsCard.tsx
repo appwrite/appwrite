@@ -35,6 +35,8 @@ type OAuth2AppInstallationsCardProps = {
   hasMore?: boolean
   onLoadMore?: () => void
   isLoadingMore?: boolean
+  /** The last Load more request failed; the button retries it. */
+  loadMoreFailed?: boolean
   /** Label for the installing team ("Organization" for console apps, "Team" in projects). */
   teamLabel: string
   /** Compact paddings for use inside drawers. */
@@ -66,6 +68,7 @@ export function OAuth2AppInstallationsCard({
   hasMore = false,
   onLoadMore,
   isLoadingMore = false,
+  loadMoreFailed = false,
   teamLabel,
   embedded = false,
   dialogClassName,
@@ -235,7 +238,12 @@ export function OAuth2AppInstallationsCard({
             </div>
           )}
           {hasMore ? (
-            <div className="flex justify-center pt-3">
+            <div className="flex flex-col items-center gap-2 pt-3">
+              {loadMoreFailed ? (
+                <p className="text-[12px] text-destructive">
+                  {t('Loading more failed. Try again.')}
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"

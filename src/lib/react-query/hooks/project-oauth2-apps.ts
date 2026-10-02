@@ -385,6 +385,7 @@ export function useProjectOAuth2AppInstallations(
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useInfiniteQuery(
     projectOAuth2AppInstallationsInfiniteQueryOptions(projectId, appId, region),
   )
@@ -394,6 +395,7 @@ export function useProjectOAuth2AppInstallations(
     hasMore: hasNextPage,
     loadMore: () => void fetchNextPage(),
     isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
     isLoading,
     isFetching,
     error,
@@ -415,6 +417,7 @@ export function useProjectOAuth2AppKeys(
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useInfiniteQuery(
     projectOAuth2AppKeysInfiniteQueryOptions(projectId, appId, region),
   )
@@ -424,6 +427,7 @@ export function useProjectOAuth2AppKeys(
     hasMore: hasNextPage,
     loadMore: () => void fetchNextPage(),
     isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
     isLoading,
     isFetching,
     error,

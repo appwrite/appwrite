@@ -181,6 +181,7 @@ export function ProjectOAuth2AppDrawer({
     hasMore: keysHaveMore,
     loadMore: loadMoreKeys,
     isLoadingMore: keysLoadingMore,
+    loadMoreFailed: keysLoadMoreFailed,
   } = useProjectOAuth2AppKeys(projectId, isEditing ? source?.$id : null, region)
   const {
     installations,
@@ -188,6 +189,7 @@ export function ProjectOAuth2AppDrawer({
     hasMore: installationsHaveMore,
     loadMore: loadMoreInstallations,
     isLoadingMore: installationsLoadingMore,
+    loadMoreFailed: installationsLoadMoreFailed,
   } = useProjectOAuth2AppInstallations(
     projectId,
     isEditing ? source?.$id : null,
@@ -816,6 +818,7 @@ export function ProjectOAuth2AppDrawer({
                         hasMore={keysHaveMore}
                         onLoadMore={loadMoreKeys}
                         isLoadingMore={keysLoadingMore}
+                        loadMoreFailed={keysLoadMoreFailed}
                         onCreate={() =>
                           createKeyMutation.mutateAsync(source.$id)
                         }
@@ -836,6 +839,7 @@ export function ProjectOAuth2AppDrawer({
                         hasMore={installationsHaveMore}
                         onLoadMore={loadMoreInstallations}
                         isLoadingMore={installationsLoadingMore}
+                        loadMoreFailed={installationsLoadMoreFailed}
                         onDelete={(installationId) =>
                           deleteInstallationMutation.mutateAsync({
                             appId: source.$id,

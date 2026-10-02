@@ -1322,4 +1322,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Suggested app': 'おすすめアプリ',
   'App key copied': 'アプリキーをコピーしました',
   'Load more': 'さらに読み込む',
+  'Loading more failed. Try again.':
+    'さらに読み込めませんでした。もう一度お試しください。',
 }

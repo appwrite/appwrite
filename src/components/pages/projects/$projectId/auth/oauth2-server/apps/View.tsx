@@ -162,7 +162,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     }
 
     // Not in the first page of the list; resolve it directly.
-    const lookup = `:`
+    const lookup = `${projectId}:${targetId}`
     pendingDeepLinkRef.current = lookup
     void fetchProjectOAuth2App(projectId, targetId, project?.region)
       .then((app) => {

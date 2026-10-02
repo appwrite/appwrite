@@ -1361,4 +1361,5 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Suggested app': 'אפליקציה מומלצת',
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
+  'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
 }

@@ -884,6 +884,7 @@ export function useOrganizationAppInstallations(
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useInfiniteQuery(organizationAppInstallationsInfiniteQueryOptions(appId))
 
   return {
@@ -891,6 +892,7 @@ export function useOrganizationAppInstallations(
     hasMore: hasNextPage,
     loadMore: () => void fetchNextPage(),
     isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
     isLoading,
     isFetching,
     error,
@@ -908,6 +910,7 @@ export function useOrganizationAppKeys(appId: string | null | undefined) {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useInfiniteQuery(organizationAppKeysInfiniteQueryOptions(appId))
 
   return {
@@ -915,6 +918,7 @@ export function useOrganizationAppKeys(appId: string | null | undefined) {
     hasMore: hasNextPage,
     loadMore: () => void fetchNextPage(),
     isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
     isLoading,
     isFetching,
     error,

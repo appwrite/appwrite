@@ -11,8 +11,14 @@ export function View() {
   const t = useT()
   const { appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
-  const { installations, isLoading, hasMore, loadMore, isLoadingMore } =
-    useOrganizationAppInstallations(appId)
+  const {
+    installations,
+    isLoading,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+    loadMoreFailed,
+  } = useOrganizationAppInstallations(appId)
   const deleteMutation = useDeleteOrganizationAppInstallation(appId)
 
   if (!app) return null
@@ -24,6 +30,7 @@ export function View() {
       hasMore={hasMore}
       onLoadMore={loadMore}
       isLoadingMore={isLoadingMore}
+      loadMoreFailed={loadMoreFailed}
       onDelete={(installationId) => deleteMutation.mutateAsync(installationId)}
       isDeleting={deleteMutation.isPending}
       teamLabel={t('Organization')}
