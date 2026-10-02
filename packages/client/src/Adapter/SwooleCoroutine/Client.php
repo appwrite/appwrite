@@ -575,7 +575,8 @@ class Client implements Adapter
         // itself: both leave the hostname to Swoole. Otherwise dial an address the
         // destinations allowed.
         $proxied = $this->destinations->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
-        $address = $proxied || $this->destinations instanceof Anywhere ? $uri->getHost() : $this->address($request);
+        // Swoole dials a bare IPv6 address, so the URI's brackets come off; Host keeps them
+        $address = $proxied || $this->destinations instanceof Anywhere ? \trim($uri->getHost(), '[]') : $this->address($request);
 
         try {
             // Dial the address the destination allowed; TLS and Host stay on the hostname

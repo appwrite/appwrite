@@ -760,6 +760,31 @@ abstract class AdapterContract extends TestCase
         $this->assertNotSame($client, $client->withFollowRedirects(false));
     }
 
+    public function testItConnectsToAnIpv6Literal(): void
+    {
+        $listener = @\stream_socket_server('tcp://[::1]:0');
+        if ($listener === false) {
+            $this->markTestSkipped('IPv6 loopback is not available.');
+        }
+
+        $authority = (string) \stream_socket_get_name($listener, false);
+        $client = $this->createAdapter()->withTimeout(0.25);
+
+        try {
+            $this->send($client, new Request\Factory()->createRequest(Method::GET, 'http://' . $authority . '/'));
+        } catch (TimeoutException) {
+            // The listener never answers
+        }
+
+        $connection = @\stream_socket_accept($listener, 1);
+        $this->assertNotFalse($connection, 'The request never reached the IPv6 listener.');
+        \stream_set_timeout($connection, 1);
+        $received = (string) \fread($connection, 8192);
+
+        $this->assertStringStartsWith('GET / HTTP/1.1', $received);
+        $this->assertStringContainsStringIgnoringCase('Host: ' . $authority, $received);
+    }
+
     public function testItRefusesAnAddressTheDestinationDoesNotAllow(): void
     {
         Http::serve(function (int $port): void {
