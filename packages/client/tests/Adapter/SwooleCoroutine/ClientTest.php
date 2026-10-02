@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Client\Tests\Adapter\SwooleCoroutine;
 
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use Psr\Http\Message\StreamInterface;
 use Swoole\Coroutine;
 use Throwable;
 use Utopia\Client\Adapter;
@@ -45,29 +46,145 @@ final class ClientTest extends AdapterContract
     }
 
     /**
+     * An unrestricted client leaves the lookup to Swoole: this name exists only in the
+     * resolver Swoole is configured with, so a client that resolved it any other way
+     * would not find it.
+     */
+    #[RunInSeparateProcess]
+    public function testItLeavesAHostnameForSwooleToResolve(): void
+    {
+        $this->assertSame('GET ', $this->exchangeByName('v4only.test', [1 => '127.0.0.1'], '127.0.0.1', Method::GET));
+    }
+
+    /**
      * Swoole opens an IPv4 socket for a hostname, so a name with only an AAAA record
-     * needs the adapter to find its IPv6 address. A separate process, because the
-     * resolver Swoole asks is a process-wide setting.
+     * needs the adapter to find its IPv6 address.
      */
     #[RunInSeparateProcess]
     public function testItConnectsToAHostnameWithOnlyAnIpv6Address(): void
     {
-        $probe = @\stream_socket_server('tcp://[::1]:0');
-        if ($probe === false) {
-            $this->markTestSkipped('IPv6 loopback is not available.');
+        $this->assertSame('GET ', $this->exchangeByName('v6only.test', [28 => '::1'], '::1', Method::GET));
+    }
+
+    /**
+     * The second attempt sends what the first prepared, so a body that can be read
+     * only once still arrives.
+     */
+    #[RunInSeparateProcess]
+    public function testItSendsAOneShotBodyToAHostnameWithOnlyAnIpv6Address(): void
+    {
+        // A body that yields its bytes once, like a pipe or a socket
+        $body = new class () implements StreamInterface {
+            private string $remaining = 'payload';
+
+            public function __toString(): string
+            {
+                return $this->getContents();
+            }
+
+            public function close(): void
+            {
+            }
+
+            public function detach(): null
+            {
+                return null;
+            }
+
+            public function getSize(): ?int
+            {
+                return null;
+            }
+
+            public function tell(): int
+            {
+                throw new \RuntimeException('Not seekable.');
+            }
+
+            public function eof(): bool
+            {
+                return $this->remaining === '';
+            }
+
+            public function isSeekable(): bool
+            {
+                return false;
+            }
+
+            public function seek(int $offset, int $whence = SEEK_SET): void
+            {
+                throw new \RuntimeException('Not seekable.');
+            }
+
+            public function rewind(): void
+            {
+                throw new \RuntimeException('Not seekable.');
+            }
+
+            public function isWritable(): bool
+            {
+                return false;
+            }
+
+            public function write(string $string): int
+            {
+                throw new \RuntimeException('Not writable.');
+            }
+
+            public function isReadable(): bool
+            {
+                return true;
+            }
+
+            public function read(int $length): string
+            {
+                $chunk = \substr($this->remaining, 0, $length);
+                $this->remaining = \substr($this->remaining, \strlen($chunk));
+
+                return $chunk;
+            }
+
+            public function getContents(): string
+            {
+                return $this->read(\strlen($this->remaining));
+            }
+
+            public function getMetadata(?string $key = null)
+            {
+                return $key === null ? [] : null;
+            }
+        };
+
+        $this->assertSame('POST payload', $this->exchangeByName('v6only.test', [28 => '::1'], '::1', Method::POST, $body));
+    }
+
+    /**
+     * Sends one request to a hostname only a fake resolver knows, served by a listener
+     * on a loopback address that answers with the method and body it received. Callers
+     * run in a separate process, because the resolver Swoole asks is a process-wide setting.
+     *
+     * @param array<int, string> $records record type => address
+     */
+    private function exchangeByName(string $hostname, array $records, string $listen, string $method, ?StreamInterface $body = null): string
+    {
+        $ipv6 = \str_contains($listen, ':');
+
+        if ($ipv6) {
+            $probe = @\stream_socket_server('tcp://[::1]:0');
+            if ($probe === false) {
+                $this->markTestSkipped('IPv6 loopback is not available.');
+            }
+
+            \fclose($probe);
         }
 
-        \fclose($probe);
+        $received = '';
 
-        $status = null;
-        $body = null;
-
-        $this->runAdapter(function () use (&$status, &$body): void {
-            // A resolver that knows one name, and only its AAAA record
+        $this->runAdapter(function () use ($hostname, $records, $listen, $ipv6, $method, $body, &$received): void {
             $resolver = new Coroutine\Socket(AF_INET, SOCK_DGRAM, 0);
             $resolver->bind('127.0.0.1', 0);
 
-            Coroutine::create(static function () use ($resolver): void {
+            Coroutine::create(static function () use ($resolver, $hostname, $records): void {
                 while (true) {
                     $peer = null;
                     $query = $resolver->recvfrom($peer, 5.0);
@@ -82,13 +199,13 @@ final class ClientTest extends AdapterContract
                         $offset += $length + 1;
                     }
 
-                    $name = \implode('.', $labels);
                     $unpacked = \unpack('n', \substr($query, $offset + 1, 2));
                     $type = \is_array($unpacked) && \is_int($unpacked[1] ?? null) ? $unpacked[1] : 0;
 
-                    $known = $name === 'v6only.test';
-                    // A compressed-name AAAA record for ::1
-                    $answer = $known && $type === 28 ? "\xc0\x0c\x00\x1c\x00\x01\x00\x00\x00\x3c\x00\x10" . \inet_pton('::1') : '';
+                    $known = \implode('.', $labels) === $hostname;
+                    $address = $known && isset($records[$type]) ? (string) \inet_pton($records[$type]) : '';
+                    // A compressed-name record: NOERROR for the known name, NXDOMAIN otherwise
+                    $answer = $address === '' ? '' : "\xc0\x0c" . \pack('nnNn', $type, 1, 60, \strlen($address)) . $address;
                     $response = \substr($query, 0, 2)
                         . ($known ? "\x81\x80" : "\x81\x83")
                         . "\x00\x01" . \pack('n', $answer === '' ? 0 : 1) . "\x00\x00\x00\x00"
@@ -100,32 +217,52 @@ final class ClientTest extends AdapterContract
             });
 
             $bound = $resolver->getsockname();
-            $port = \is_array($bound) && \is_int($bound['port'] ?? null) ? $bound['port'] : 0;
-            Coroutine::set(['dns_server' => '127.0.0.1:' . $port]);
+            Coroutine::set(['dns_server' => '127.0.0.1:' . (\is_array($bound) && \is_int($bound['port'] ?? null) ? $bound['port'] : 0)]);
 
-            $server = new Coroutine\Server('::1', 0, false, true);
-            $server->handle(static function (Coroutine\Server\Connection $connection): void {
-                $connection->recv(1.0);
-                $connection->send("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+            // Listening before the request is sent, so nothing waits for the accept loop
+            $server = new Coroutine\Socket($ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
+            $server->bind($listen, 0);
+            $server->listen();
+
+            Coroutine::create(static function () use ($server): void {
+                $connection = $server->accept(5.0);
+                if (!$connection instanceof Coroutine\Socket) {
+                    return;
+                }
+
+                $request = '';
+                do {
+                    $chunk = $connection->recv(65536, 1.0);
+                    $request .= \is_string($chunk) ? $chunk : '';
+                    $parts = \explode("\r\n\r\n", $request, 2);
+                    $head = $parts[0];
+                    $sent = $parts[1] ?? null;
+                    $expected = \preg_match('/^content-length:\s*(\d+)/mi', $head, $matches) === 1 ? (int) $matches[1] : 0;
+                } while (\is_string($chunk) && $chunk !== '' && ($sent === null || \strlen($sent) < $expected));
+
+                $echo = \strtok($head, ' ') . ' ' . $sent;
+                $connection->sendAll("HTTP/1.1 200 OK\r\nContent-Length: " . \strlen($echo) . "\r\nConnection: close\r\n\r\n" . $echo);
                 $connection->close();
             });
-            Coroutine::create(static fn (): bool => $server->start());
-            Coroutine::sleep(0.05);
+
+            $bound = $server->getsockname();
+            $request = new Request\Factory()->createRequest($method, 'http://' . $hostname . ':' . (\is_array($bound) && \is_int($bound['port'] ?? null) ? $bound['port'] : 0) . '/');
+
+            if ($body instanceof StreamInterface) {
+                $request = $request->withHeader('Content-Length', '7')->withBody($body);
+            }
 
             try {
-                $response = $this->createAdapter()->sendRequest(
-                    new Request\Factory()->createRequest(Method::GET, 'http://v6only.test:' . $server->port . '/'),
-                );
-                $status = $response->getStatusCode();
-                $body = (string) $response->getBody();
+                $response = $this->createAdapter($this->timeoutOptions(3.0))->sendRequest($request);
+                $this->assertSame(200, $response->getStatusCode());
+                $received = (string) $response->getBody();
             } finally {
-                $server->shutdown();
+                $server->close();
                 $resolver->close();
             }
         });
 
-        $this->assertSame(200, $status);
-        $this->assertSame('ok', $body);
+        return $received;
     }
 
     public function testItReconnectsBeforePostingToAnAbruptlyClosedIdleTlsConnection(): void
