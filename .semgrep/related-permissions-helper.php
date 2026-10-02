@@ -24,6 +24,13 @@ class RelatedPermissionsFixture
         $this->writeRelated($permissions);
     }
 
+    public function badRelatedDoc($relatedDoc): void
+    {
+        // ruleid: php.appwrite.related-permissions-helper
+        $permissions = $relatedDoc->getAttribute('$permissions');
+        $this->writeRelated($permissions);
+    }
+
     public function good($relation, $current, $authorization): void
     {
         // ok: php.appwrite.related-permissions-helper

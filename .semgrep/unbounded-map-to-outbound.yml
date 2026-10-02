@@ -1,10 +1,12 @@
 rules:
   - id: php.appwrite.unbounded-map-to-outbound
     message: >
-      Guest-reachable routes should not accept an unbounded Assoc map
-      (headers, query, cookies, options). If that map is forwarded to an
-      outbound HTTP or browser client, allowlist keys first
-      (FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_* list).
+      Guest-reachable routes (ROLE_GUESTS scopes: public, avatars.*,
+      sessions.write, documents/files/rows read-write, locale.read,
+      executions.write, …) should not accept an unbounded Assoc map
+      named headers, query, cookies, or options. If that map can be
+      forwarded to an outbound HTTP or browser client, allowlist keys
+      first (FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_* list).
       TODO: Avatars screenshots currently matches; prefer an allowlist
       there rather than expanding BLOCKED_HEADERS.
     languages: [php]
@@ -22,7 +24,7 @@ rules:
           - pattern: $THIS->param('query', $DEFAULT, new Assoc(), ...)
           - pattern: $THIS->param('cookies', $DEFAULT, new Assoc(), ...)
           - pattern: $THIS->param('options', $DEFAULT, new Assoc(), ...)
-      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.read|sessions\.write|documents\.read|documents\.write|files\.read|files\.write|locale\.read|executions\.write)['\"]
+      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['\"]
       - pattern-not-regex: FUNCTION_ALLOWLIST_HEADERS
       - pattern-not-regex: ALLOWED_HEADERS
       - pattern-not-regex: ALLOWED_QUERY

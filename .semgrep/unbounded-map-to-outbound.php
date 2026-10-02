@@ -21,6 +21,14 @@ class UnboundedMapFixture
             ->param('cookies', [], new Assoc(), 'Cookie bag.');
     }
 
+    public function badRowsScope(): void
+    {
+        $this
+            // ruleid: php.appwrite.unbounded-map-to-outbound
+            ->label('scope', 'rows.write')
+            ->param('query', [], new Assoc(), 'Query bag.');
+    }
+
     public function allowlistedValidator(): void
     {
         $this

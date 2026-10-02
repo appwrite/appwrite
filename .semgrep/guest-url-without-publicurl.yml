@@ -1,0 +1,23 @@
+rules:
+  - id: php.appwrite.guest-url-without-publicurl
+    message: >
+      Guest-reachable routes that accept a url parameter must validate it
+      with PublicURL (or PublicDomain / redirectValidator). A bare URL()
+      validator allows internal or non-public targets.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern-either:
+          - pattern: $THIS->param('url', $DEFAULT, new URL(), ...)
+          - pattern: $THIS->param('url', $DEFAULT, new URL(...), ...)
+      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['\"]
+      - pattern-not-regex: PublicURL
+      - pattern-not-regex: PublicDomain
+      - pattern-not-regex: redirectValidator

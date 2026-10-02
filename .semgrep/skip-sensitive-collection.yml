@@ -2,10 +2,10 @@ rules:
   - id: php.appwrite.skip-sensitive-collection
     message: >
       Unconditional Authorization skip around getDocument/find/findOne of
-      ACL-bearing collections (transactions, sessions, tokens, files).
+      ACL-bearing collections (transactions, sessions, tokens, or files).
       Gate the skip on API-key / privileged callers, or load with document
-      ACL. Metadata skips (databases, indexes, attributes, …) are out of
-      scope for this rule.
+      ACL. Metadata skips are out of scope for this ERROR rule; see
+      skip-ungated-load for the broader WARNING class.
     languages: [php]
     severity: ERROR
     metadata:
@@ -16,7 +16,9 @@ rules:
         - "**/src/Appwrite/Platform/Modules/**"
         - "**/app/controllers/**"
     patterns:
-      - pattern: $AUTH->skip($CB)
+      - pattern-either:
+          - pattern: $AUTH->skip($CB)
+          - pattern: Authorization::skip($CB)
       - metavariable-regex:
           metavariable: $CB
           regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?:transactions|sessions|tokens|files)['\"]

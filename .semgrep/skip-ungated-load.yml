@@ -1,0 +1,36 @@
+rules:
+  - id: php.appwrite.skip-ungated-load
+    message: >
+      Unconditional Authorization skip whose body loads a document
+      (getDocument/find/findOne) from a variable collection or a named
+      collection outside the metadata allowlist. Gate the skip on API-key
+      / privileged callers, or follow with a document ACL check. Metadata
+      and generated table names (databases, indexes, cache, certificates,
+      transactionLogs, bucket_*, database_*, …) are allowlisted; this
+      rule is review signal, not a CI failure.
+    languages: [php]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern-either:
+          - pattern: $AUTH->skip($CB)
+          - pattern: Authorization::skip($CB)
+      - metavariable-regex:
+          metavariable: $CB
+          regex: (?s).*(?:getDocument|find|findOne)\(\s*(?:\$[A-Za-z_]|['\"](?!(?:databases|collections|attributes|indexes|tables|columns|projects|platforms|keys|webhooks|rules|buckets|functions|deployments|sites|builds|installations|repositories|vcsComments|schedules|variables|migrations|executions|topics|messages|providers|logs|cache|certificates|transactionLogs|notifications|bucket_|database_)['\"_])[^'\"]+['\"])
+      - pattern-not-inside: |
+          ($IS_KEY || $IS_PRIVILEGED) ? $AUTH->skip(...) : $OTHER
+      - pattern-not-inside: |
+          if ($IS_KEY || $IS_PRIVILEGED) {
+            ...
+            $AUTH->skip(...);
+            ...
+          } else {
+            ...
+          }

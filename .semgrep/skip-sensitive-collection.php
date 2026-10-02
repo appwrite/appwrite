@@ -12,6 +12,9 @@ $token = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('t
 // ruleid: php.appwrite.skip-sensitive-collection
 $file = $authorization->skip(fn () => $dbForProject->findOne('files', []));
 
+// ruleid: php.appwrite.skip-sensitive-collection
+$legacy = Authorization::skip(fn () => $dbForProject->getDocument('sessions', $sessionId));
+
 // ok: php.appwrite.skip-sensitive-collection
 $transaction = ($isAPIKey || $isPrivilegedUser)
     ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
