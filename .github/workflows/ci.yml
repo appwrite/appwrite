@@ -588,6 +588,12 @@ jobs:
             echo "_APP_DOMAIN_FUNCTIONS=functions.localhost," >> $GITHUB_ENV
           fi
 
+          # The GitHub callback suite takes its state from Authorize, which only
+          # needs an app name to build GitHub's URL; nothing contacts GitHub.
+          if [ "${{ matrix.service.name }}" = "VCSGitHub" ]; then
+            echo "_APP_VCS_GITHUB_APP_NAME=appwrite-test" >> $GITHUB_ENV
+          fi
+
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
             COMPOSE_PROFILES=mariadb
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
