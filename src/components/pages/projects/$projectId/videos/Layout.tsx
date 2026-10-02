@@ -7,7 +7,7 @@ import {
   useParams,
 } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { Check, Loader2, Minus } from 'lucide-react'
+import { Check, Loader2, Minus, SquareArrowOutUpRight } from 'lucide-react'
 import { CreateRenditions } from './_components/CreateRenditions'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
 import { CreateSubtitle } from './_components/CreateSubtitle'
@@ -20,6 +20,7 @@ import {
 } from './_components/video-detail-actions'
 import {
   getVideoTabDisabledReason,
+  VIDEO_INSPECTOR_ACTION,
   VIDEO_TAB_GROUP_LABELS,
   VIDEO_TABS,
   videoTabPath,
@@ -27,6 +28,7 @@ import {
   type VideoTabDefinition,
   type VideoTabGroup,
 } from './_components/video-tabs'
+import { useVideoInspector } from './_components/player/VideoInspectorContext'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   canCreateVideo,
@@ -81,6 +83,22 @@ export function Layout() {
   }, [location.pathname, videoId])
 
   const { data: video, isLoading } = useProjectVideo(projectId, videoId)
+  const inspector = useVideoInspector()
+  const openInspector = inspector
+    ? () => {
+        inspector.open({
+          projectId,
+          videoId,
+          videoName: video?.name ?? '',
+        })
+        if (activeTab !== 'overview') {
+          void navigate({
+            to: '/projects/$projectId/videos/$videoId',
+            params: { projectId, videoId },
+          })
+        }
+      }
+    : undefined
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
   const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
   const { data: timeline, isLoading: timelineLoading } = useVideoTimeline(
@@ -207,6 +225,10 @@ export function Layout() {
                           encodingStatus={encodingStatus}
                         />
                       ))}
+                      {group === VIDEO_INSPECTOR_ACTION.group &&
+                      openInspector ? (
+                        <InspectorNavButton onOpen={openInspector} />
+                      ) : null}
                     </div>
                   </div>
                 )
@@ -266,6 +288,20 @@ export function Layout() {
                     </Link>
                   )
                 })}
+                {openInspector ? (
+                  <button
+                    type="button"
+                    onClick={openInspector}
+                    className={secondarySidebarNavLinkClassName(
+                      false,
+                      'flex shrink-0 items-center gap-1.5',
+                    )}
+                  >
+                    <VIDEO_INSPECTOR_ACTION.icon className="h-3.5 w-3.5" />
+                    {t(VIDEO_INSPECTOR_ACTION.label)}
+                    <SquareArrowOutUpRight className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                ) : null}
               </nav>
             </div>
             <div className="min-h-0 flex-1 overflow-hidden">
@@ -393,6 +429,30 @@ function SubnavLink({
         encodingStatus={encodingStatus}
       />
     </Link>
+  )
+}
+
+function InspectorNavButton({ onOpen }: { onOpen: () => void }) {
+  const t = useT()
+  const Icon = VIDEO_INSPECTOR_ACTION.icon
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        secondarySidebarNavLinkClassName(false),
+        SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
+      )}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
+        {t(VIDEO_INSPECTOR_ACTION.label)}
+      </span>
+      <SquareArrowOutUpRight
+        aria-hidden
+        className="h-3 w-3 shrink-0 text-muted-foreground"
+      />
+    </button>
   )
 }
 

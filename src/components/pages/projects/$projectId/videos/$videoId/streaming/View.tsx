@@ -1,17 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import type { Models, VideoOutput } from '@appwrite.io/console'
-import { Info, Layers } from 'lucide-react'
-import {
-  VideoActionButton,
-  VideoPage,
-  VideoSectionCard,
-} from '../../_components/VideoPage'
+import { CodeXml, Info } from 'lucide-react'
+import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoTermHint } from '../../_components/VideoTermHint'
 import { VideoFormatLabel } from '../../_components/VideoOutputBadge'
 import { VideoUrlRow } from '../../_components/VideoUrlRow'
-import { useVideoDetailActions } from '../../_components/video-detail-actions'
-import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { NothingToStreamNotice } from '../../_components/NothingToStreamNotice'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -21,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -53,7 +48,6 @@ export function View() {
     projectId: string
     videoId: string
   }
-  const { openCreateRenditions, writeDisabledReason } = useVideoDetailActions()
   const { data: video } = useProjectVideo(projectId, videoId)
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
   const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
@@ -76,42 +70,28 @@ export function View() {
 
   if (!video) return null
 
-  const hlsUrl = getVideoMasterManifestUrl(projectId, videoId, 'hls')
-  const cmafHlsUrl = getVideoMasterManifestUrl(projectId, videoId, 'cmaf-hls')
-  const dashUrl = getVideoMasterManifestUrl(projectId, videoId, 'dash')
-  const cmafDashUrl = getVideoMasterManifestUrl(projectId, videoId, 'cmaf-dash')
-  const snippetHls =
-    readyByOutput.hls > 0 || readyByOutput.cmaf === 0 ? hlsUrl : cmafHlsUrl
-  const snippetDash =
-    readyByOutput.dash > 0 || readyByOutput.cmaf === 0 ? dashUrl : cmafDashUrl
-
   return (
-    <VideoPage title={t('Streaming')} term="manifest">
-      {!anyReady ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <Layers className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <div>
-              <p className="text-[14px] font-medium text-foreground">
-                {t('Nothing to stream yet')}
-              </p>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                {t(
-                  'Manifests become available as soon as the first rendition for that output is ready.',
-                )}
-              </p>
-            </div>
-          </div>
-          <VideoActionButton
-            size="sm"
-            className="h-9 shrink-0 text-[13px]"
-            onClick={openCreateRenditions}
-            disabledReason={writeDisabledReason}
+    <VideoPage
+      title={t('Streaming')}
+      term="manifest"
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-1.5 text-[13px]"
+          asChild
+        >
+          <Link
+            to="/projects/$projectId/videos/$videoId/install"
+            params={{ projectId, videoId }}
           >
-            {t('Create renditions')}
-          </VideoActionButton>
-        </div>
-      ) : null}
+            <CodeXml className="h-3.5 w-3.5" />
+            {t('Install a player')}
+          </Link>
+        </Button>
+      }
+    >
+      {!anyReady ? <NothingToStreamNotice /> : null}
 
       <VideoSectionCard
         title={t('Master manifests')}
@@ -162,67 +142,6 @@ export function View() {
           </Link>
         </p>
       </div>
-
-      <VideoSectionCard
-        title={t('Player setup')}
-        term="adaptive"
-        description={t(
-          'Copy a snippet into your app. The URLs below already point at this video.',
-        )}
-      >
-        <Tabs defaultValue="hlsjs">
-          <TabsList className="h-8">
-            <TabsTrigger value="hlsjs" className="text-[12px]">
-              hls.js
-            </TabsTrigger>
-            <TabsTrigger value="shaka" className="text-[12px]">
-              Shaka Player
-            </TabsTrigger>
-            <TabsTrigger value="native" className="text-[12px]">
-              {t('Native HTML')}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="hlsjs" className="mt-3">
-            <CodeBlock
-              language="javascript"
-              code={`import Hls from 'hls.js'
-
-const video = document.querySelector('video')
-const src = '${snippetHls}'
-
-if (Hls.isSupported()) {
-  const hls = new Hls()
-  hls.loadSource(src)
-  hls.attachMedia(video)
-} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-  // Safari plays HLS natively
-  video.src = src
-}`}
-            />
-          </TabsContent>
-          <TabsContent value="shaka" className="mt-3">
-            <CodeBlock
-              language="javascript"
-              code={`import shaka from 'shaka-player'
-
-const player = new shaka.Player()
-await player.attach(document.querySelector('video'))
-await player.load('${snippetDash}')`}
-            />
-          </TabsContent>
-          <TabsContent value="native" className="mt-3 space-y-2">
-            <CodeBlock
-              language="markup"
-              code={`<video controls playsinline src="${snippetHls}"></video>`}
-            />
-            <p className="text-[12px] text-muted-foreground">
-              {t(
-                'Safari and iOS play HLS natively. Other browsers need a library such as hls.js.',
-              )}
-            </p>
-          </TabsContent>
-        </Tabs>
-      </VideoSectionCard>
 
       <SubtitleUrlsCard
         projectId={projectId}

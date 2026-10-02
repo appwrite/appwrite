@@ -32,6 +32,20 @@ export function formatBitrate(
   return `${Math.round(bps)} bps`
 }
 
+/** Quality name and tier use the short edge, so portrait video gets the same labels. */
+export function formatQuality(width: number, height: number): string {
+  return `${Math.min(width, height)}p`
+}
+
+export function getQualityTier(width: number, height: number): string {
+  const edge = Math.min(width, height)
+  if (edge >= 2160) return '4K UHD'
+  if (edge >= 1440) return 'QHD'
+  if (edge >= 1080) return 'Full HD'
+  if (edge >= 720) return 'HD'
+  return 'SD'
+}
+
 export function formatResolution(
   width: number | undefined | null,
   height: number | undefined | null,

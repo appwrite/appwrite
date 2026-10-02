@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 type PopoutOptions = {
-  name: string
-  title: string
+  title?: string
   width?: number
   height?: number
   onBlocked?: () => void
@@ -24,16 +23,56 @@ function mirrorRootAttributes(target: Document) {
   target.body.className = body.className
 }
 
+type DocumentPictureInPicture = {
+  requestWindow: (options: { width: number; height: number }) => Promise<Window>
+}
+
+/**
+ * Chrome turns `window.open` popups into tabs while the browser is in macOS
+ * full screen. Document Picture-in-Picture still gets a separate window there,
+ * though Chrome caps its initial size (the user can resize it).
+ */
+async function openChildWindow(w: number, h: number): Promise<Window | null> {
+  const pip = (
+    window as Window & { documentPictureInPicture?: DocumentPictureInPicture }
+  ).documentPictureInPicture
+  if (pip && window.matchMedia('(display-mode: fullscreen)').matches) {
+    try {
+      return await pip.requestWindow({ width: w, height: h })
+    } catch {
+      // Fall through to a regular popup.
+    }
+  }
+  const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
+  const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+  return window.open(
+    'about:blank',
+    '_blank',
+    [
+      'popup=yes',
+      `width=${w}`,
+      `height=${h}`,
+      `left=${left}`,
+      `top=${top}`,
+      'toolbar=no',
+      'location=no',
+      'menubar=no',
+      'status=no',
+      'scrollbars=yes',
+      'resizable=yes',
+    ].join(','),
+  )
+}
+
 /**
  * Opens a same-origin child window and returns a container element inside it.
  * Render into it with `createPortal`: the content stays in this React tree, so
  * both windows share state, context, and callbacks without any messaging.
  */
 export function usePopoutWindow({
-  name,
   title,
-  width = 1100,
-  height = 760,
+  width = 1360,
+  height = 880,
   onBlocked,
 }: PopoutOptions) {
   const [container, setContainer] = useState<HTMLElement | null>(null)
@@ -48,91 +87,76 @@ export function usePopoutWindow({
     setContainer(null)
   }, [])
 
-  const open = useCallback(() => {
-    if (windowRef.current && !windowRef.current.closed) {
-      windowRef.current.focus()
-      return
-    }
-    const w = Math.min(width, window.screen.availWidth)
-    const h = Math.min(height, window.screen.availHeight)
-    const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
-    const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
-    // Explicit size, position, and no chrome make browsers open a standalone window instead of a tab.
-    const popup = window.open(
-      'about:blank',
-      name,
-      [
-        'popup=yes',
-        `width=${w}`,
-        `height=${h}`,
-        `left=${left}`,
-        `top=${top}`,
-        'toolbar=no',
-        'location=no',
-        'menubar=no',
-        'status=no',
-        'scrollbars=yes',
-        'resizable=yes',
-      ].join(','),
-    )
-    if (!popup) {
-      onBlocked?.()
-      return
-    }
-    windowRef.current = popup
-
-    const doc = popup.document
-    doc.title = title
-    doc.head.replaceChildren()
-    doc.body.replaceChildren()
-    for (const node of Array.from(document.head.childNodes)) {
-      if (isStyleNode(node)) doc.head.appendChild(node.cloneNode(true))
-    }
-    mirrorRootAttributes(doc)
-
-    const root = doc.createElement('div')
-    root.className = 'h-full'
-    doc.body.style.margin = '0'
-    doc.body.style.height = '100%'
-    doc.documentElement.style.height = '100%'
-    doc.body.appendChild(root)
-
-    // Keep styles (dev HMR) and theme / direction in sync with the main window.
-    const headObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of Array.from(mutation.addedNodes)) {
-          if (isStyleNode(node)) doc.head.appendChild(node.cloneNode(true))
-        }
+  const open = useCallback(
+    async (titleOverride?: string) => {
+      if (windowRef.current && !windowRef.current.closed) {
+        if (titleOverride) windowRef.current.document.title = titleOverride
+        windowRef.current.focus()
+        return
       }
-    })
-    headObserver.observe(document.head, { childList: true })
-    const rootObserver = new MutationObserver(() => {
+      const w = Math.min(width, window.screen.availWidth)
+      const h = Math.min(height, window.screen.availHeight)
+      const popup = await openChildWindow(w, h)
+      if (!popup) {
+        onBlocked?.()
+        return
+      }
+      windowRef.current = popup
+
+      const doc = popup.document
+      doc.title = titleOverride ?? title ?? ''
+      doc.head.replaceChildren()
+      doc.body.replaceChildren()
+      for (const node of Array.from(document.head.childNodes)) {
+        if (isStyleNode(node)) doc.head.appendChild(node.cloneNode(true))
+      }
       mirrorRootAttributes(doc)
+
+      const root = doc.createElement('div')
+      root.className = 'h-full'
       doc.body.style.margin = '0'
       doc.body.style.height = '100%'
       doc.documentElement.style.height = '100%'
-    })
-    rootObserver.observe(document.documentElement, { attributes: true })
-    rootObserver.observe(document.body, { attributes: true })
+      doc.body.appendChild(root)
 
-    const handlePopupClose = () => {
-      cleanupRef.current?.()
-      cleanupRef.current = null
-      windowRef.current = null
-      setContainer(null)
-    }
-    popup.addEventListener('pagehide', handlePopupClose)
-    const handleMainUnload = () => popup.close()
-    window.addEventListener('pagehide', handleMainUnload)
+      // Keep styles (dev HMR) and theme / direction in sync with the main window.
+      const headObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of Array.from(mutation.addedNodes)) {
+            if (isStyleNode(node)) doc.head.appendChild(node.cloneNode(true))
+          }
+        }
+      })
+      headObserver.observe(document.head, { childList: true })
+      const rootObserver = new MutationObserver(() => {
+        mirrorRootAttributes(doc)
+        doc.body.style.margin = '0'
+        doc.body.style.height = '100%'
+        doc.documentElement.style.height = '100%'
+      })
+      rootObserver.observe(document.documentElement, { attributes: true })
+      rootObserver.observe(document.body, { attributes: true })
 
-    cleanupRef.current = () => {
-      headObserver.disconnect()
-      rootObserver.disconnect()
-      popup.removeEventListener('pagehide', handlePopupClose)
-      window.removeEventListener('pagehide', handleMainUnload)
-    }
-    setContainer(root)
-  }, [name, title, width, height, onBlocked])
+      const handlePopupClose = () => {
+        cleanupRef.current?.()
+        cleanupRef.current = null
+        windowRef.current = null
+        setContainer(null)
+      }
+      popup.addEventListener('pagehide', handlePopupClose)
+      const handleMainUnload = () => popup.close()
+      window.addEventListener('pagehide', handleMainUnload)
+
+      cleanupRef.current = () => {
+        headObserver.disconnect()
+        rootObserver.disconnect()
+        popup.removeEventListener('pagehide', handlePopupClose)
+        window.removeEventListener('pagehide', handleMainUnload)
+      }
+      setContainer(root)
+    },
+    [title, width, height, onBlocked],
+  )
 
   useEffect(() => close, [close])
 

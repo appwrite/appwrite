@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { Check, ChevronDown, Circle, Info } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   VideoActionButton,
   VideoFact,
@@ -65,6 +66,12 @@ export function View({ initialData }: ViewProps = {}) {
   if (!video) return null
 
   const hasRenditions = renditions.length > 0
+  const hasReady = renditions.some((r) => r.status === 'ready')
+
+  const spacerClassName = cn(
+    'transition-[flex-grow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    hasRenditions ? 'grow-0' : 'grow',
+  )
 
   return (
     <VideoPage
@@ -89,41 +96,71 @@ export function View({ initialData }: ViewProps = {}) {
         </>
       }
       actions={<SourcePopover projectId={projectId} video={video} />}
-      contentClassName={
-        hasRenditions
-          ? undefined
-          : 'flex min-h-full flex-col items-center justify-center'
-      }
+      contentClassName="flex min-h-full flex-col space-y-0"
     >
-      {hasRenditions ? null : (
-        <div className="w-full max-w-xl">
-          <SetupChecklist
-            projectId={projectId}
-            video={video}
-            renditions={renditions}
-            subtitles={subtitles}
-          />
-        </div>
-      )}
-      {hasRenditions ? (
-        <>
-          <SetupChecklist
-            projectId={projectId}
-            video={video}
-            renditions={renditions}
-            subtitles={subtitles}
-          />
-          <VideoStreamPlayer
-            projectId={projectId}
-            video={video}
-            renditions={renditions}
-            showDebugTools={false}
-            showProcessing={false}
-            variant="featured"
-          />
-        </>
-      ) : null}
+      <div aria-hidden className={spacerClassName} />
+      <AnimatePresence initial={false}>
+        {hasReady ? null : (
+          <Collapse key="checklist">
+            <div
+              className={cn(
+                'mx-auto w-full pb-5 transition-[max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+                hasRenditions ? 'max-w-full' : 'max-w-xl',
+              )}
+            >
+              <SetupChecklist
+                projectId={projectId}
+                video={video}
+                renditions={renditions}
+                subtitles={subtitles}
+              />
+            </div>
+          </Collapse>
+        )}
+      </AnimatePresence>
+      <AnimatePresence initial={false}>
+        {hasRenditions ? (
+          <Collapse key="player">
+            <VideoStreamPlayer
+              projectId={projectId}
+              video={video}
+              renditions={renditions}
+              showProcessing={false}
+              variant="featured"
+            />
+          </Collapse>
+        ) : null}
+      </AnimatePresence>
+      <div aria-hidden className={spacerClassName} />
     </VideoPage>
+  )
+}
+
+const COLLAPSE_TRANSITION = {
+  duration: 0.5,
+  ease: [0.22, 1, 0.36, 1],
+} as const
+
+/** Grows in from zero height and collapses out, so siblings glide instead of jumping. */
+function Collapse({ children }: { children: ReactNode }) {
+  const reduceMotion = useReducedMotion()
+  // Starts unclipped: when AnimatePresence skips the initial animation, no
+  // completion callback fires. Enter starts at opacity 0, so nothing flashes.
+  const [animating, setAnimating] = useState(false)
+  return (
+    <motion.div
+      initial={{ gridTemplateRows: '0fr', opacity: 0 }}
+      animate={{ gridTemplateRows: '1fr', opacity: 1 }}
+      exit={{ gridTemplateRows: '0fr', opacity: 0 }}
+      transition={reduceMotion ? { duration: 0 } : COLLAPSE_TRANSITION}
+      onAnimationStart={() => setAnimating(true)}
+      onAnimationComplete={() => setAnimating(false)}
+      style={{ display: 'grid' }}
+    >
+      <div className={cn('min-h-0 min-w-0', animating && 'overflow-y-clip')}>
+        {children}
+      </div>
+    </motion.div>
   )
 }
 
@@ -383,7 +420,6 @@ function SetupChecklist({
     useVideoDetailActions()
 
   const hasReady = renditions.some((r) => r.status === 'ready')
-  if (hasReady) return null
 
   const linkButton = (to: DetailPath, label: string) => (
     <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>

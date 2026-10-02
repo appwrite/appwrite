@@ -82,6 +82,7 @@ import {
   USER_PREFS_KEY_USAGE_CHART_DATE_RANGE,
   USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
+  USER_PREFS_KEY_VIDEOS_PLAYER,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -169,7 +170,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'sidebarCollapsedLegacy',
     scope: 'account',
     key: 'sidebarCollapsed',
-    description: 'Legacy sidebar collapsed key (migrated to console.sidebarCollapsed).',
+    description:
+      'Legacy sidebar collapsed key (migrated to console.sidebarCollapsed).',
     category: 'Layout',
     legacy: true,
   },
@@ -264,7 +266,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'savedFilters',
     scope: 'both',
     prefix: USER_PREFS_KEY_SAVED_FILTERS_PREFIX,
-    description: 'Saved filter presets per list view scope (JSON SavedFilter[]).',
+    description:
+      'Saved filter presets per list view scope (JSON SavedFilter[]).',
     category: 'Filters',
   },
   {
@@ -323,6 +326,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
     description: 'Videos list sidebar width in pixels.',
+    category: 'Videos',
+  },
+  {
+    id: 'videosPlayer',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_PLAYER,
+    description:
+      'Video player settings (JSON): volume, mute, playback format, quality height, subtitle language.',
     category: 'Videos',
   },
   {
@@ -640,7 +651,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'initPresence',
     scope: 'account',
     prefix: INIT_PRESENCE_PREFS_KEY_PREFIX,
-    description: 'Per-event Init presence prefs (identity visibility, online list).',
+    description:
+      'Per-event Init presence prefs (identity visibility, online list).',
     category: 'Init',
   },
 
@@ -679,7 +691,9 @@ export function matchKnownPref(
   const candidates = PREFS_CATALOG.filter((entry) =>
     entryAppliesToScope(entry, scope),
   )
-  const exact = candidates.find((entry) => entry.key != null && entry.key === key)
+  const exact = candidates.find(
+    (entry) => entry.key != null && entry.key === key,
+  )
   if (exact) return exact
   return (
     candidates.find(
@@ -741,9 +755,11 @@ export function classifyPrefs(
   })
 }
 
-export function summarizePrefsClassification(
-  entries: ClassifiedPrefEntry[],
-): { known: number; unknown: number; total: number } {
+export function summarizePrefsClassification(entries: ClassifiedPrefEntry[]): {
+  known: number
+  unknown: number
+  total: number
+} {
   let known = 0
   let unknown = 0
   for (const entry of entries) {

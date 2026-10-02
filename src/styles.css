@@ -1058,6 +1058,42 @@ html:not([lang='en']):not([lang='he']) {
   will-change: transform;
 }
 
+/* Video play/pause feedback: pops in, then drifts larger while fading out */
+@keyframes video-toggle-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes video-toggle-flash-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-video-toggle-flash {
+  animation: video-toggle-flash 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-video-toggle-flash {
+    animation-name: video-toggle-flash-fade;
+  }
+}
+
 .upgrade-button-wrapper {
   position: relative;
   padding: 1px;

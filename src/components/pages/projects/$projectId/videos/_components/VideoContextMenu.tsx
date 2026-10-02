@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import {
   Copy,
   ExternalLink,
@@ -10,7 +10,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { VIDEO_TABS, videoTabPath, type VideoTab } from './video-tabs'
+import {
+  VIDEO_INSPECTOR_ACTION,
+  VIDEO_TABS,
+  videoTabPath,
+  type VideoTab,
+} from './video-tabs'
+import { useVideoInspector } from './player/VideoInspectorContext'
 import { getVideoMasterManifestUrl } from '@/lib/videos/urls'
 import {
   ContextMenu,
@@ -66,6 +72,7 @@ export function VideoContextMenu({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canShowVideoSettings(access, features)
+  const inspector = useVideoInspector()
 
   const videoHref = buildConsoleUrl(
     `/projects/${projectId}/videos/${video.$id}`,
@@ -76,6 +83,15 @@ export function VideoContextMenu({
       to: videoTabPath(tab),
       params: { projectId, videoId: video.$id },
     })
+  }
+
+  const openInspector = () => {
+    inspector?.open({
+      projectId,
+      videoId: video.$id,
+      videoName: video.name ?? '',
+    })
+    navigateToTab('overview')
   }
 
   const handleConfirmDelete = () => {
@@ -94,6 +110,9 @@ export function VideoContextMenu({
   }
 
   const tabs = VIDEO_TABS.filter((tab) => tab.id !== 'settings' || canWrite)
+  const lastInspectorGroupTab = [...tabs]
+    .reverse()
+    .find((tab) => tab.group === VIDEO_INSPECTOR_ACTION.group)
 
   return (
     <>
@@ -101,13 +120,18 @@ export function VideoContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           {tabs.map((tab) => (
-            <ContextMenuItem
-              key={tab.id}
-              onSelect={() => navigateToTab(tab.id)}
-            >
-              <ContextMenuIcon icon={tab.icon} />
-              {t(tab.label)}
-            </ContextMenuItem>
+            <Fragment key={tab.id}>
+              <ContextMenuItem onSelect={() => navigateToTab(tab.id)}>
+                <ContextMenuIcon icon={tab.icon} />
+                {t(tab.label)}
+              </ContextMenuItem>
+              {inspector && tab === lastInspectorGroupTab ? (
+                <ContextMenuItem onSelect={openInspector}>
+                  <ContextMenuIcon icon={VIDEO_INSPECTOR_ACTION.icon} />
+                  {t(VIDEO_INSPECTOR_ACTION.label)}
+                </ContextMenuItem>
+              ) : null}
+            </Fragment>
           ))}
           <ContextMenuSeparator />
           <ContextMenuSub>

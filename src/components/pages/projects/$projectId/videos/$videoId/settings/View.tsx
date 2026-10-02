@@ -31,7 +31,7 @@ export function View({ initialData }: ViewProps = {}) {
   if (!video) return null
 
   return (
-    <VideoPage title={t('Settings')} contentClassName="mx-auto max-w-4xl">
+    <VideoPage title={t('Settings')}>
       <NameCard projectId={projectId} video={video} />
       <SourceCard projectId={projectId} video={video} />
       <DeleteCard projectId={projectId} video={video} />

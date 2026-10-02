@@ -25,6 +25,15 @@ export const VIDEO_MASTER_MANIFESTS: Array<{
   },
 ]
 
+/** The SDK appends every client config param, including unset ones like `impersonateuserid=`. */
+function withoutEmptyParams(url: URL | string): string {
+  const parsed = new URL(String(url))
+  for (const [key, value] of [...parsed.searchParams.entries()]) {
+    if (value === '') parsed.searchParams.delete(key)
+  }
+  return parsed.toString()
+}
+
 /** Public master manifest URL, as a client app would request it. */
 export function getVideoMasterManifestUrl(
   projectId: string,
@@ -34,13 +43,13 @@ export function getVideoMasterManifestUrl(
   const videos = sdk.forProject(projectId).videos
   switch (kind) {
     case 'hls':
-      return String(videos.getHlsManifest({ videoId }))
+      return withoutEmptyParams(videos.getHlsManifest({ videoId }))
     case 'dash':
-      return String(videos.getDashManifest({ videoId }))
+      return withoutEmptyParams(videos.getDashManifest({ videoId }))
     case 'cmaf-hls':
-      return String(videos.getCmafHlsManifest({ videoId }))
+      return withoutEmptyParams(videos.getCmafHlsManifest({ videoId }))
     case 'cmaf-dash':
-      return String(videos.getCmafDashManifest({ videoId }))
+      return withoutEmptyParams(videos.getCmafDashManifest({ videoId }))
   }
 }
 
@@ -54,10 +63,12 @@ export function getVideoRenditionPlaylistUrl(
 ): string | null {
   const videos = sdk.forProject(projectId).videos
   if (output === 'hls') {
-    return String(videos.getStreamManifest({ videoId, renditionId, streamId }))
+    return withoutEmptyParams(
+      videos.getStreamManifest({ videoId, renditionId, streamId }),
+    )
   }
   if (output === 'cmaf') {
-    return String(
+    return withoutEmptyParams(
       videos.getCmafStreamManifest({ videoId, renditionId, streamId }),
     )
   }
@@ -70,7 +81,7 @@ export function getVideoSubtitleManifestUrl(
   subtitleId: string,
   output: string,
 ): string {
-  return String(
+  return withoutEmptyParams(
     sdk.forProject(projectId).videos.getSubtitleManifest({
       videoId,
       subtitleId,

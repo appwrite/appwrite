@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { StreamPlayerState } from './useStreamPlayer'
 
 const MAX_SAMPLES = 600
@@ -149,15 +149,17 @@ export function computeQoeMetrics(
 export function useQoeTracker(
   videoRef: RefObject<HTMLVideoElement | null>,
   player: StreamPlayerState,
-): QoeState {
+): { qoe: QoeState; reset: () => void } {
   const [qoe, setQoe] = useState<QoeState>(EMPTY)
   const lastTickRef = useRef<number | null>(null)
   const { loadStartedAt, firstFrameAt, stats, levels } = player
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     setQoe(EMPTY)
     lastTickRef.current = null
-  }, [loadStartedAt])
+  }, [])
+
+  useEffect(reset, [loadStartedAt, reset])
 
   useEffect(() => {
     const video = videoRef.current
@@ -273,5 +275,5 @@ export function useQoeTracker(
     })
   }, [stats, loadStartedAt, firstFrameAt, levels])
 
-  return qoe
+  return { qoe, reset }
 }

@@ -7,7 +7,6 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { ImageFormat } from '@appwrite.io/console'
 import {
   ChevronDown,
   ChevronLeft,
@@ -27,17 +26,12 @@ import { TimelineSpriteThumb } from '../../_components/player/TimelineSpriteThum
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   isVideoMetadataReady,
   useCreateVideoTimeline,
@@ -49,14 +43,6 @@ import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
-
-const PREVIEW_FORMATS: ImageFormat[] = [
-  ImageFormat.Webp,
-  ImageFormat.Jpeg,
-  ImageFormat.Png,
-  ImageFormat.Avif,
-  ImageFormat.Gif,
-]
 
 function publicUrl(url: string): string {
   try {
@@ -82,7 +68,6 @@ export function View() {
   })
   const createTimeline = useCreateVideoTimeline(projectId, videoId)
   const timeline = timelineQuery.data
-  const [selected, setSelected] = useState<VideoTimelineCue | null>(null)
 
   useEffect(() => {
     if (timeline) setRequested(false)
@@ -92,14 +77,17 @@ export function View() {
     () => new Set((timeline?.cues ?? []).map((cue) => cue.imageUrl)).size,
     [timeline?.cues],
   )
-  const previewIds = useMemo(() => {
-    const ids = new Set<string>()
-    for (const cue of timeline?.cues ?? []) {
-      const id = previewIdFromCue(cue)
-      if (id) ids.add(id)
-    }
-    return Array.from(ids)
-  }, [timeline?.cues])
+  const [chosenFrame, setChosenFrame] = useState<number | null>(null)
+  const defaultFrame = useMemo(() => {
+    const index = (timeline?.cues ?? []).findIndex(
+      (cue) => previewIdFromCue(cue) === video?.previewId,
+    )
+    return Math.max(0, index)
+  }, [timeline?.cues, video?.previewId])
+  const selectedFrame = Math.min(
+    chosenFrame ?? defaultFrame,
+    Math.max(0, (timeline?.cues.length ?? 1) - 1),
+  )
   const interval =
     timeline && timeline.cues.length > 0
       ? timeline.cues[0].end - timeline.cues[0].start
@@ -139,8 +127,8 @@ export function View() {
         </p>
       ) : !timeline ? (
         generating ? (
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-5 py-4">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <div className="flex items-start gap-3 rounded-xl border border-border bg-card/50 px-5 py-4">
+            <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
             <div>
               <p className="text-[14px] font-medium text-foreground">
                 {t('Generating timeline')}
@@ -180,7 +168,7 @@ export function View() {
             title={t('Thumbnails')}
             term="sprite"
             description={t(
-              'Scroll through the thumbnails and select one to see it larger. Each label shows where that frame starts.',
+              'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.',
             )}
           >
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
@@ -209,41 +197,18 @@ export function View() {
               ))}
             </dl>
 
-            {selected ? (
-              <div className="mt-4 flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center">
-                <TimelineSpriteThumb
-                  cue={selected}
-                  className="rounded-md sm:w-[320px]"
-                />
-                <dl className="space-y-2 text-[13px]">
-                  <div>
-                    <dt className="text-[12px] text-muted-foreground">
-                      {t('Time range')}
-                    </dt>
-                    <dd className="font-medium tabular-nums text-foreground">
-                      {formatPlaybackTime(selected.start)} -{' '}
-                      {formatPlaybackTime(selected.end)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[12px] text-muted-foreground">
-                      {t('Sprite region')}
-                    </dt>
-                    <dd className="font-mono text-[12px] text-foreground">
-                      #xywh={selected.x},{selected.y},{selected.width},
-                      {selected.height}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            ) : null}
-
             <ThumbnailStrip
               cues={timeline.cues}
-              selected={selected}
-              onSelect={setSelected}
+              selectedIndex={selectedFrame}
+              onSelect={setChosenFrame}
             />
           </VideoSectionCard>
+
+          <PreviewImageCard
+            cues={timeline.cues}
+            selectedIndex={selectedFrame}
+            onSelect={setChosenFrame}
+          />
 
           <VideoSectionCard
             title={t('Timeline file')}
@@ -264,12 +229,9 @@ export function View() {
         </>
       )}
 
-      <PreviewImageCard
-        projectId={projectId}
-        videoId={videoId}
-        previewIds={previewIds}
-        defaultPreviewId={video.previewId}
-      />
+      {timeline ? null : (
+        <PreviewImageCard cues={null} selectedIndex={0} onSelect={() => {}} />
+      )}
     </VideoPage>
   )
 }
@@ -299,12 +261,12 @@ function fitStrip(containerWidth: number, baseWidth: number) {
 
 function ThumbnailStrip({
   cues,
-  selected,
+  selectedIndex,
   onSelect,
 }: {
   cues: VideoTimelineCue[]
-  selected: VideoTimelineCue | null
-  onSelect: (cue: VideoTimelineCue | null) => void
+  selectedIndex: number
+  onSelect: (index: number) => void
 }) {
   const t = useT()
   const scrollerRef = useRef<HTMLDivElement | null>(null)
@@ -336,16 +298,21 @@ function ThumbnailStrip({
   }, [updateEdges, cues.length])
 
   useEffect(() => {
-    if (!selected) return
-    const index = cues.indexOf(selected)
-    scrollerRef.current
-      ?.querySelector<HTMLElement>(`[data-cue-index="${index}"]`)
-      ?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-      })
-  }, [selected, cues])
+    const el = scrollerRef.current
+    const thumb = el?.querySelector<HTMLElement>(
+      `[data-cue-index="${selectedIndex}"]`,
+    )
+    if (!el || !thumb) return
+    const view = el.getBoundingClientRect()
+    const rect = thumb.getBoundingClientRect()
+    const delta =
+      rect.left < view.left
+        ? rect.left - view.left
+        : rect.right > view.right
+          ? rect.right - view.right
+          : 0
+    if (delta !== 0) el.scrollBy({ left: delta, behavior: 'smooth' })
+  }, [selectedIndex])
 
   const scrollByPage = (direction: 1 | -1) => {
     const el = scrollerRef.current
@@ -361,14 +328,24 @@ function ThumbnailStrip({
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
     const rtl = getComputedStyle(event.currentTarget).direction === 'rtl'
     const forward = (event.key === 'ArrowRight') !== rtl
-    const current = selected ? cues.indexOf(selected) : -1
+    const current = Number(
+      (document.activeElement as HTMLElement | null)?.dataset.cueIndex ?? -1,
+    )
     const next = Math.min(
       cues.length - 1,
       Math.max(0, current + (forward ? 1 : -1)),
     )
     if (next === current) return
     event.preventDefault()
-    onSelect(cues[next])
+    const target = event.currentTarget.querySelector<HTMLElement>(
+      `[data-cue-index="${next}"]`,
+    )
+    target?.focus({ preventScroll: true })
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    })
   }
 
   return (
@@ -380,40 +357,55 @@ function ThumbnailStrip({
         className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ gap: STRIP_GAP }}
       >
-        {cues.map((cue, index) => {
-          const isSelected = selected === cue
-          return (
-            <button
-              key={`${cue.imageUrl}-${cue.start}`}
-              type="button"
-              data-cue-index={index}
-              onClick={() => onSelect(isSelected ? null : cue)}
-              aria-pressed={isSelected}
-              aria-label={formatPlaybackTime(cue.start)}
-              className={cn(
-                'group relative shrink-0 snap-start overflow-hidden rounded-md focus-visible:outline-none',
-              )}
-            >
-              <TimelineSpriteThumb
-                cue={cue}
-                width={thumbWidth}
-                className="transition-opacity group-hover:opacity-90"
-              />
-              <span
-                aria-hidden
-                className={cn(
-                  'pointer-events-none absolute inset-0 rounded-md ring-inset transition',
-                  isSelected
-                    ? 'ring-2 ring-foreground'
-                    : 'ring-1 ring-border group-hover:ring-foreground/40 group-focus-visible:ring-2 group-focus-visible:ring-ring',
-                )}
-              />
-              <span className="pointer-events-none absolute bottom-1 start-1 rounded bg-black/70 px-1 py-0.5 font-mono text-[10px] tabular-nums text-white">
-                {formatPlaybackTime(cue.start)}
-              </span>
-            </button>
-          )
-        })}
+        {cues.map((cue, index) => (
+          <Tooltip key={`${cue.imageUrl}-${cue.start}`}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                data-cue-index={index}
+                aria-label={formatPlaybackTime(cue.start)}
+                aria-pressed={index === selectedIndex}
+                onClick={() => onSelect(index)}
+                className="group relative shrink-0 snap-start overflow-hidden rounded-md focus-visible:outline-none"
+              >
+                <TimelineSpriteThumb
+                  cue={cue}
+                  width={thumbWidth}
+                  className="transition-opacity group-hover:opacity-90"
+                />
+                <span
+                  aria-hidden
+                  className={cn(
+                    'pointer-events-none absolute inset-0 rounded-md ring-inset transition group-focus-visible:ring-2 group-focus-visible:ring-ring',
+                    index === selectedIndex
+                      ? 'ring-2 ring-foreground'
+                      : 'ring-1 ring-border group-hover:ring-foreground/40',
+                  )}
+                />
+                <span className="pointer-events-none absolute bottom-1 start-1 rounded bg-black/70 px-1 py-0.5 font-mono text-[10px] tabular-nums text-white">
+                  {formatPlaybackTime(cue.start)}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent sideOffset={6} className="text-[12px]">
+              <dl className="space-y-1.5">
+                <div>
+                  <dt className="opacity-70">{t('Time range')}</dt>
+                  <dd className="font-medium tabular-nums">
+                    {formatPlaybackTime(cue.start)} -{' '}
+                    {formatPlaybackTime(cue.end)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="opacity-70">{t('Sprite region')}</dt>
+                  <dd className="font-mono">
+                    #xywh={cue.x},{cue.y},{cue.width},{cue.height}
+                  </dd>
+                </div>
+              </dl>
+            </TooltipContent>
+          </Tooltip>
+        ))}
       </div>
       {canScrollStart ? (
         <StripArrow
@@ -524,173 +516,92 @@ function previewIdFromCue(cue: VideoTimelineCue): string | null {
   }
 }
 
-/** Builds a `getPreview` URL with optional resize and format. */
+const PREVIEW_SAVE_UNAVAILABLE =
+  "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame."
+
 function PreviewImageCard({
-  projectId,
-  videoId,
-  previewIds,
-  defaultPreviewId,
+  cues,
+  selectedIndex,
+  onSelect,
 }: {
-  projectId: string
-  videoId: string
-  previewIds: string[]
-  defaultPreviewId: string
+  cues: VideoTimelineCue[] | null
+  selectedIndex: number
+  onSelect: (index: number) => void
 }) {
   const t = useT()
-  const [width, setWidth] = useState('1280')
-  const [height, setHeight] = useState('')
-  const [format, setFormat] = useState<ImageFormat>(ImageFormat.Webp)
-  const [chosenPreviewId, setChosenPreviewId] = useState<string | null>(null)
-
-  const options = useMemo(
-    () =>
-      defaultPreviewId && !previewIds.includes(defaultPreviewId)
-        ? [defaultPreviewId, ...previewIds]
-        : previewIds,
-    [defaultPreviewId, previewIds],
-  )
-  const previewId =
-    (chosenPreviewId && options.includes(chosenPreviewId)
-      ? chosenPreviewId
-      : null) ??
-    (defaultPreviewId || options[0] || '')
-
-  const url = useMemo(() => {
-    if (!previewId) return ''
-    const w = Number(width)
-    const h = Number(height)
-    return String(
-      sdk.forProject(projectId).videos.getPreview({
-        videoId,
-        previewId,
-        width: w > 0 ? w : undefined,
-        height: h > 0 ? h : undefined,
-        output: format,
-      }),
-    )
-  }, [projectId, videoId, previewId, width, height, format])
+  const cue = cues?.[selectedIndex]
 
   return (
     <VideoSectionCard
       title={t('Preview image')}
       term="preview"
       description={t(
-        'An image taken from the timeline. Use it as a poster or thumbnail. Set a size and format to get a ready-to-use URL.',
+        'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.',
       )}
     >
-      {!previewId ? (
+      {!cues || !cue ? (
         <p className="text-[13px] text-muted-foreground">
-          {t('Generate a timeline to create a preview image.')}
+          {t('Generate a timeline to choose a preview image.')}
         </p>
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="space-y-3">
-            {options.length > 1 ? (
-              <div className="space-y-1.5">
-                <Label className="text-[12px]">{t('Sprite sheet')}</Label>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
-                  {options.map((id, index) => {
-                    const isSelected = id === previewId
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setChosenPreviewId(id)}
-                        aria-pressed={isSelected}
-                        aria-label={`${t('Sprite sheet')} ${index + 1}`}
-                        className={cn(
-                          'relative overflow-hidden rounded-md bg-muted ring-1 ring-border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                          isSelected
-                            ? 'ring-2 ring-foreground'
-                            : 'hover:ring-foreground/40',
-                        )}
-                      >
-                        <img
-                          src={withAdminMode(
-                            String(
-                              sdk.forProject(projectId).videos.getPreview({
-                                videoId,
-                                previewId: id,
-                                width: 240,
-                              }),
-                            ),
-                          )}
-                          alt=""
-                          loading="lazy"
-                          className="aspect-video w-full object-cover"
-                        />
-                        <span className="pointer-events-none absolute bottom-1 start-1 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-white">
-                          {index + 1}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : null}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="preview-width" className="text-[12px]">
-                  {t('Width (px)')}
-                </Label>
-                <Input
-                  id="preview-width"
-                  type="number"
-                  min={0}
-                  value={width}
-                  onChange={(event) => setWidth(event.target.value)}
-                  placeholder={t('Original')}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="preview-height" className="text-[12px]">
-                  {t('Height (px)')}
-                </Label>
-                <Input
-                  id="preview-height"
-                  type="number"
-                  min={0}
-                  value={height}
-                  onChange={(event) => setHeight(event.target.value)}
-                  placeholder={t('Auto')}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[12px]">{t('Format')}</Label>
-                <Select
-                  value={format}
-                  onValueChange={(value) => setFormat(value as ImageFormat)}
-                >
-                  <SelectTrigger className="h-9 text-[13px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PREVIEW_FORMATS.map((option) => (
-                      <SelectItem
-                        key={option}
-                        value={option}
-                        className="text-[13px] uppercase"
-                      >
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="divide-y divide-border">
-              <VideoUrlRow label={t('Preview URL')} url={url} />
-            </div>
-          </div>
           <div className="overflow-hidden rounded-lg border border-border bg-muted">
-            <img
-              src={withAdminMode(url)}
-              alt={t('Preview image')}
-              className="aspect-video w-full object-contain"
-              loading="lazy"
-            />
+            <TimelineSpriteThumb cue={cue} className="w-full" />
+          </div>
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="text-[12px] text-muted-foreground">
+                {t('Selected frame')}
+              </p>
+              <p className="mt-0.5 font-mono text-[20px] font-semibold tabular-nums text-foreground">
+                {formatPlaybackTime(cue.start)}
+              </p>
+              <p className="text-[12px] tabular-nums text-muted-foreground">
+                {selectedIndex + 1} / {cues.length}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label={t('Previous frame')}
+                disabled={selectedIndex === 0}
+                onClick={() => onSelect(selectedIndex - 1)}
+              >
+                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+              </Button>
+              <Slider
+                aria-label={t('Preview frame')}
+                min={0}
+                max={Math.max(0, cues.length - 1)}
+                step={1}
+                value={[selectedIndex]}
+                onValueChange={([value]) => onSelect(value ?? 0)}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label={t('Next frame')}
+                disabled={selectedIndex >= cues.length - 1}
+                onClick={() => onSelect(selectedIndex + 1)}
+              >
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+              </Button>
+            </div>
+            <div className="mt-auto">
+              <VideoActionButton
+                size="sm"
+                className="h-9 w-full text-[13px]"
+                disabledReason={PREVIEW_SAVE_UNAVAILABLE}
+              >
+                {t('Set as preview')}
+              </VideoActionButton>
+            </div>
           </div>
         </div>
       )}

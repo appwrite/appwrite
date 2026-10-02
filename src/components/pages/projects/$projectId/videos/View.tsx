@@ -77,6 +77,7 @@ export function View() {
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <VideoActionButton
+            variant="brandCta"
             className="h-9 text-[13px]"
             onClick={() => setCreateOpen(true)}
             disabledReason={

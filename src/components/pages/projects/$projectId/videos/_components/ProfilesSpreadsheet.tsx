@@ -7,6 +7,7 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { Badge } from '@/components/ui/badge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   DropdownMenu,
@@ -20,7 +21,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
-import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
+import {
+  formatBitrate,
+  formatResolution,
+  getQualityTier,
+} from '@/lib/utils/video-format'
 import {
   SPREADSHEET_FILLER_CELL_CLASS,
   SPREADSHEET_FILLER_HEADER_CLASS,
@@ -30,6 +35,7 @@ import {
 } from '@/lib/layout/spreadsheet-sticky'
 import { useT } from '@/lib/i18n/translate'
 import type { ProfileSortColumn } from '@/lib/videos/profile-list-filters'
+import { isPresetSpec } from '@/lib/videos/profile-presets'
 
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
@@ -38,13 +44,15 @@ const bodyCellBorderClass = 'border-b border-e border-border'
 
 const ROWS_TABLE_EDGE_COL_PX = 40
 const PROFILES_COLUMN_MIN_PX = {
-  name: 220,
+  id: 200,
+  name: 240,
   resolution: 112,
   videoBitRate: 128,
   audioBitRate: 128,
   created: 120,
 } as const
 const PROFILES_COLUMN_ORDER = [
+  'id',
   'name',
   'resolution',
   'videoBitRate',
@@ -69,11 +77,13 @@ const stickyActionsCellBaseClass = cn(
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
 )
 
-const SORTABLE_COLUMNS: Array<{
-  key: ProfileSortColumn
+const COLUMNS: Array<{
+  key: ProfileSortColumn | '$id'
   labelKey: string
   term?: 'bitrate'
+  sortable?: false
 }> = [
+  { key: '$id', labelKey: 'ID', sortable: false },
   { key: 'name', labelKey: 'Name' },
   { key: 'resolution', labelKey: 'Resolution' },
   { key: 'videoBitRate', labelKey: 'Video bitrate', term: 'bitrate' },
@@ -128,7 +138,7 @@ export function ProfilesSpreadsheet({
             </colgroup>
             <thead className={stickyTheadClass}>
               <tr>
-                {SORTABLE_COLUMNS.map((col) => (
+                {COLUMNS.map((col) => (
                   <th
                     key={col.key}
                     className={cn(
@@ -140,7 +150,9 @@ export function ProfilesSpreadsheet({
                     <SpreadsheetColumnHeader
                       label={t(col.labelKey)}
                       term={col.term}
-                      sortColumnKey={col.key}
+                      sortColumnKey={
+                        col.sortable === false ? undefined : col.key
+                      }
                       sortBy={sortBy}
                       sortOrder={sortOrder}
                       onSortColumn={
@@ -166,22 +178,35 @@ export function ProfilesSpreadsheet({
                   className="group transition-colors hover:bg-muted/50"
                 >
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div className="min-w-0 w-fit max-w-full overflow-hidden">
+                      <CopyableId
+                        id={profile.$id}
+                        size="xs"
+                        constrainToContainer
+                      />
+                    </div>
+                  </td>
+                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                    <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate text-[13px] font-medium">
                         {profile.name}
                       </span>
-                      <div className="min-w-0 w-fit max-w-full overflow-hidden">
-                        <CopyableId
-                          id={profile.$id}
-                          size="xs"
-                          constrainToContainer
-                        />
-                      </div>
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        {getQualityTier(profile.width, profile.height)}
+                      </Badge>
+                      {isPresetSpec(profile) ? null : (
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 text-[10px]"
+                        >
+                          {t('Custom')}
+                        </Badge>
+                      )}
                     </div>
                   </td>
                   <td
                     className={cn(
-                      'px-3 py-2 font-mono text-[12px]',
+                      'px-3 py-2 font-mono text-[12px] text-muted-foreground',
                       bodyCellBorderClass,
                     )}
                   >

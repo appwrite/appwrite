@@ -202,9 +202,7 @@ function consoleHlsLoaderConfig(): {
   }
 }
 
-function ensurePlaybackAudio(video: HTMLVideoElement, hls: Hls | null) {
-  video.muted = false
-  if (video.volume === 0) video.volume = 1
+function ensurePlaybackAudio(hls: Hls | null) {
   if (!hls || hls.audioTracks.length === 0) return
   if (hls.audioTrack >= 0) return
   const defaultIndex = hls.audioTracks.findIndex((track) => track.default)
@@ -257,8 +255,6 @@ export function useHlsPlayer(
     video.addEventListener('loadeddata', onFirstFrame)
 
     if (sourceType === 'file') {
-      video.muted = false
-      if (video.volume === 0) video.volume = 1
       video.src = src
       setState((prev) => ({ ...prev, engine: 'native' }))
       pushEvent({ kind: 'info', name: 'LOAD_FILE', detail: src })
@@ -302,7 +298,7 @@ export function useHlsPlayer(
       const E = HlsClass.Events
 
       hls.on(E.MANIFEST_PARSED, (_event, data) => {
-        ensurePlaybackAudio(video, hls)
+        ensurePlaybackAudio(hls)
         setState((prev) => ({
           ...prev,
           manifestLoadedAt: Date.now(),
@@ -336,7 +332,7 @@ export function useHlsPlayer(
         })
       })
       hls.on(E.AUDIO_TRACKS_UPDATED, (_event, data) => {
-        ensurePlaybackAudio(video, hls)
+        ensurePlaybackAudio(hls)
         setState((prev) => ({
           ...prev,
           audioTracks: data.audioTracks.map(toTrackInfo),

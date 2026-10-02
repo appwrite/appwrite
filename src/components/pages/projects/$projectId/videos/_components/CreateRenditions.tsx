@@ -25,14 +25,8 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
-import { VideoFormatLabel } from './VideoOutputBadge'
+import { VideoOutputBadge } from './VideoOutputBadge'
 import { VideoTermHint } from './VideoTermHint'
-
-const OUTPUT_LABELS: Record<VideoOutput, string> = {
-  [VideoOutput.Hls]: 'HLS',
-  [VideoOutput.Dash]: 'DASH',
-  [VideoOutput.Cmaf]: 'CMAF',
-}
 
 const OUTPUT_DESCRIPTIONS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'MPEG-TS segments. Plays natively on Safari and iOS.',
@@ -105,6 +99,21 @@ export function CreateRenditions({
     setSelected(next)
   }
 
+  const selectable = profiles.filter(
+    (profile) => !existingProfileIds.has(profile.$id),
+  )
+  const allSelected =
+    selectable.length > 0 &&
+    selectable.every((profile) => selected.has(profile.$id))
+
+  const toggleAll = () => {
+    setSelected(
+      allSelected
+        ? new Set()
+        : new Set(selectable.map((profile) => profile.$id)),
+    )
+  }
+
   const handleSubmit = () => {
     if (selected.size === 0) return
     createMutation.mutate(
@@ -135,7 +144,7 @@ export function CreateRenditions({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl p-0 max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Create renditions')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -145,8 +154,8 @@ export function CreateRenditions({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        <div className="space-y-5 px-6 pb-4 pt-4">
-          <div className="space-y-2">
+        <div className="space-y-6 px-6 pb-6 pt-5">
+          <div className="space-y-2.5">
             <Label className="flex items-center gap-1 text-[13px]">
               {t('Output')}
               <VideoTermHint term="output" />
@@ -154,27 +163,24 @@ export function CreateRenditions({
             <RadioGroup
               value={output}
               onValueChange={(value) => setOutput(value as VideoOutput)}
-              className="grid gap-2 sm:grid-cols-3"
+              aria-label={t('Output')}
+              className="gap-0 divide-y divide-border overflow-hidden rounded-lg border border-border"
             >
               {VIDEO_OUTPUTS.map((value) => (
                 <Label
                   key={value}
                   htmlFor={`video-output-${value}`}
                   className={cn(
-                    'flex cursor-pointer flex-col items-start gap-1 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40',
-                    output === value && 'border-primary bg-muted/40',
+                    'flex cursor-pointer items-center gap-3 px-4 py-3 font-normal leading-5 transition-colors hover:bg-muted/40',
+                    output === value && 'bg-muted/40',
                   )}
                 >
-                  <span className="flex items-center gap-2 text-[13px] font-medium">
-                    <RadioGroupItem
-                      id={`video-output-${value}`}
-                      value={value}
-                    />
-                    <VideoFormatLabel format={value}>
-                      {OUTPUT_LABELS[value]}
-                    </VideoFormatLabel>
-                  </span>
-                  <span className="text-[12px] font-normal leading-snug text-muted-foreground">
+                  <RadioGroupItem id={`video-output-${value}`} value={value} />
+                  <VideoOutputBadge
+                    output={value}
+                    className="w-12 shrink-0 justify-center"
+                  />
+                  <span className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">
                     {t(OUTPUT_DESCRIPTIONS[value])}
                   </span>
                 </Label>
@@ -182,7 +188,7 @@ export function CreateRenditions({
             </RadioGroup>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-1 text-[13px]">
                 {t('Profiles')}
@@ -196,66 +202,120 @@ export function CreateRenditions({
                 {t('Manage profiles')}
               </Link>
             </div>
-            {profilesLoading ? (
-              <p className="py-4 text-center text-[13px] text-muted-foreground">
-                {t('Loading profiles...')}
-              </p>
-            ) : profiles.length === 0 ? (
-              <p className="py-4 text-center text-[13px] text-muted-foreground">
-                {t('No profiles. Create a profile first.')}
-              </p>
-            ) : (
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-                {profiles.map((profile) => {
-                  const exists = existingProfileIds.has(profile.$id)
-                  return (
-                    <label
-                      key={profile.$id}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2.5',
-                        exists
-                          ? 'cursor-not-allowed opacity-60'
-                          : 'cursor-pointer hover:bg-muted/40',
-                      )}
-                    >
-                      <Checkbox
-                        checked={exists || selected.has(profile.$id)}
-                        disabled={exists}
-                        onCheckedChange={() => toggle(profile.$id)}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium">
-                          {profile.name}
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="flex items-center gap-4 border-b border-border bg-muted/30 px-4 py-2.5 text-[12px] font-medium leading-5 text-muted-foreground">
+                <Checkbox
+                  aria-label={t('Select all')}
+                  checked={
+                    allSelected
+                      ? true
+                      : selected.size > 0
+                        ? 'indeterminate'
+                        : false
+                  }
+                  disabled={selectable.length === 0}
+                  onCheckedChange={toggleAll}
+                />
+                <span className="min-w-0 flex-1">{t('Profile')}</span>
+                <span className="w-[96px] shrink-0 text-end">
+                  {t('Resolution')}
+                </span>
+                <span className="w-[80px] shrink-0 text-end">{t('Video')}</span>
+                <span className="w-[72px] shrink-0 text-end">{t('Audio')}</span>
+              </div>
+              {profilesLoading ? (
+                <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
+                  {t('Loading profiles...')}
+                </p>
+              ) : profiles.length === 0 ? (
+                <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
+                  {t('No profiles. Create a profile first.')}
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {profiles.map((profile) => {
+                    const exists = existingProfileIds.has(profile.$id)
+                    const checked = selected.has(profile.$id)
+                    return (
+                      <label
+                        key={profile.$id}
+                        className={cn(
+                          'flex items-center gap-4 px-4 py-3 leading-5 transition-colors',
+                          exists
+                            ? 'cursor-not-allowed'
+                            : 'cursor-pointer hover:bg-muted/40',
+                          checked && 'bg-muted/40',
+                        )}
+                      >
+                        <Checkbox
+                          checked={exists || checked}
+                          disabled={exists}
+                          onCheckedChange={() => toggle(profile.$id)}
+                        />
+                        <span
+                          className={cn(
+                            'flex min-w-0 flex-1 items-center gap-2',
+                            exists && 'opacity-60',
+                          )}
+                        >
+                          <span className="truncate text-[13px] font-medium leading-5">
+                            {profile.name}
+                          </span>
+                          {exists ? (
+                            <Badge
+                              variant="info"
+                              className="text-[10px] shrink-0"
+                            >
+                              {t('Exists')}
+                            </Badge>
+                          ) : isUpscale(profile) ? (
+                            <span className="flex shrink-0 items-center gap-1">
+                              <Badge
+                                variant="warning"
+                                className="text-[10px] shrink-0"
+                              >
+                                {t('Upscale')}
+                              </Badge>
+                              <VideoTermHint term="upscale" />
+                            </span>
+                          ) : null}
                         </span>
-                        <span className="block font-mono text-[11px] text-muted-foreground">
-                          {formatResolution(profile.width, profile.height)} ·{' '}
-                          {formatBitrate(profile.videoBitRate, 'kbps')} ·{' '}
+                        <span
+                          className={cn(
+                            'w-[96px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                            exists && 'opacity-60',
+                          )}
+                        >
+                          {formatResolution(profile.width, profile.height)}
+                        </span>
+                        <span
+                          className={cn(
+                            'w-[80px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                            exists && 'opacity-60',
+                          )}
+                        >
+                          {formatBitrate(profile.videoBitRate, 'kbps')}
+                        </span>
+                        <span
+                          className={cn(
+                            'w-[72px] shrink-0 text-end font-mono text-[12px] text-muted-foreground',
+                            exists && 'opacity-60',
+                          )}
+                        >
                           {formatBitrate(profile.audioBitRate, 'kbps')}
                         </span>
-                      </span>
-                      {exists ? (
-                        <Badge variant="info" className="text-[10px] shrink-0">
-                          {t('Exists')}
-                        </Badge>
-                      ) : isUpscale(profile) ? (
-                        <span className="flex shrink-0 items-center gap-1">
-                          <Badge
-                            variant="warning"
-                            className="text-[10px] shrink-0"
-                          >
-                            {t('Upscale')}
-                          </Badge>
-                          <VideoTermHint term="upscale" />
-                        </span>
-                      ) : null}
-                    </label>
-                  )
-                })}
-              </div>
-            )}
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          <span className="text-[12px] text-muted-foreground sm:me-auto">
+            {selected.size} {t('selected')}
+          </span>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

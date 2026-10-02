@@ -21,7 +21,6 @@ export type ChartSeries = {
 export type ChartReference = { value: number; label: string }
 export type ChartBand = { start: number; end: number }
 
-const PAD_LEFT = 52
 const PAD_RIGHT = 8
 const PAD_TOP = 8
 const PAD_BOTTOM = 20
@@ -56,6 +55,7 @@ export function TimeSeriesChart({
   series,
   height = 160,
   yFormat,
+  axisFormat = yFormat,
   yMax: yMaxProp,
   references = [],
   bands = [],
@@ -65,6 +65,9 @@ export function TimeSeriesChart({
   series: ChartSeries[]
   height?: number
   yFormat: (value: number) => string
+  /** Shorter labels for the y-axis ticks; defaults to `yFormat`. */
+  axisFormat?: (value: number) => string
+  /** Values above it are drawn along the top edge; the tooltip still shows them. */
   yMax?: number
   references?: ChartReference[]
   bands?: ChartBand[]
@@ -74,13 +77,12 @@ export function TimeSeriesChart({
   const [ref, width] = useElementWidth<HTMLDivElement>()
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
-  const plotW = Math.max(0, width - PAD_LEFT - PAD_RIGHT)
   const plotH = height - PAD_TOP - PAD_BOTTOM
   const t0 = times[0] ?? 0
   const t1 = Math.max(times[times.length - 1] ?? 0, t0 + MIN_SPAN_MS)
 
   const yMax = useMemo(() => {
-    if (yMaxProp) return yMaxProp
+    if (yMaxProp) return yMaxProp * 1.15
     let max = 0
     for (const s of series) {
       for (const v of s.values) if (v != null && v > max) max = v
@@ -89,7 +91,14 @@ export function TimeSeriesChart({
     return max > 0 ? max * 1.15 : 1
   }, [series, references, yMaxProp])
 
-  const x = (t: number) => PAD_LEFT + ((t - t0) / (t1 - t0)) * plotW
+  const yTicks = [0, 0.5, 1].map((f) => (yMax / 1.15) * f)
+  const yLabels = yTicks.map(axisFormat)
+  const padLeft = Math.ceil(
+    Math.max(28, ...yLabels.map((label) => label.length * 6.1)) + 12,
+  )
+  const plotW = Math.max(0, width - padLeft - PAD_RIGHT)
+
+  const x = (t: number) => padLeft + ((t - t0) / (t1 - t0)) * plotW
   const y = (v: number) => PAD_TOP + plotH - (Math.min(v, yMax) / yMax) * plotH
 
   const paths = useMemo(
@@ -131,16 +140,28 @@ export function TimeSeriesChart({
         return { line: line.trim(), area: area.trim() }
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [series, times, plotW, plotH, yMax, t0, t1],
+    [series, times, padLeft, plotW, plotH, yMax, t0, t1],
   )
 
-  const yTicks = [0, 0.5, 1].map((f) => (yMax / 1.15) * f)
   const xTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => t0 + (t1 - t0) * f)
+
+  const labeledReferences = useMemo(() => {
+    const labeled = new Set<ChartReference>()
+    let lastY = Infinity
+    for (const r of [...references].sort((a, b) => a.value - b.value)) {
+      const ry = PAD_TOP + plotH - (Math.min(r.value, yMax) / yMax) * plotH
+      if (lastY - ry >= 11) {
+        labeled.add(r)
+        lastY = ry
+      }
+    }
+    return labeled
+  }, [references, plotH, yMax])
 
   const onPointerMove = (event: PointerEvent<SVGSVGElement>) => {
     if (times.length === 0 || plotW <= 0) return
     const rect = event.currentTarget.getBoundingClientRect()
-    const t = t0 + ((event.clientX - rect.left - PAD_LEFT) / plotW) * (t1 - t0)
+    const t = t0 + ((event.clientX - rect.left - padLeft) / plotW) * (t1 - t0)
     let best = 0
     let bestDist = Infinity
     times.forEach((time, i) => {
@@ -181,24 +202,24 @@ export function TimeSeriesChart({
             ))}
           </defs>
 
-          {yTicks.map((v) => (
+          {yTicks.map((v, i) => (
             <g key={v}>
               <line
-                x1={PAD_LEFT}
-                x2={PAD_LEFT + plotW}
+                x1={padLeft}
+                x2={padLeft + plotW}
                 y1={y(v)}
                 y2={y(v)}
                 stroke="var(--border)"
                 strokeOpacity={v === 0 ? 1 : 0.5}
               />
               <text
-                x={PAD_LEFT - 8}
+                x={padLeft - 8}
                 y={y(v)}
                 textAnchor="end"
                 dominantBaseline="middle"
                 className="fill-muted-foreground font-mono text-[10px]"
               >
-                {yFormat(v)}
+                {yLabels[i]}
               </text>
             </g>
           ))}
@@ -233,22 +254,24 @@ export function TimeSeriesChart({
           {references.map((r) => (
             <g key={`${r.label}-${r.value}`}>
               <line
-                x1={PAD_LEFT}
-                x2={PAD_LEFT + plotW}
+                x1={padLeft}
+                x2={padLeft + plotW}
                 y1={y(r.value)}
                 y2={y(r.value)}
                 stroke="var(--muted-foreground)"
                 strokeOpacity={0.45}
                 strokeDasharray="3 4"
               />
-              <text
-                x={PAD_LEFT + plotW - 2}
-                y={y(r.value) - 4}
-                textAnchor="end"
-                className="fill-muted-foreground font-mono text-[9px]"
-              >
-                {r.label}
-              </text>
+              {labeledReferences.has(r) ? (
+                <text
+                  x={padLeft + plotW - 2}
+                  y={y(r.value) - 4}
+                  textAnchor="end"
+                  className="fill-muted-foreground font-mono text-[9px]"
+                >
+                  {r.label}
+                </text>
+              ) : null}
             </g>
           ))}
 
@@ -343,7 +366,12 @@ export function TimeSeriesChart({
 export function ChartLegend({
   items,
 }: {
-  items: Array<{ label: string; color: string; dashed?: boolean }>
+  items: Array<{
+    label: string
+    color: string
+    dashed?: boolean
+    value?: string
+  }>
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
@@ -358,6 +386,11 @@ export function ChartLegend({
             }}
           />
           {item.label}
+          {item.value ? (
+            <span className="font-mono tabular-nums text-foreground">
+              {item.value}
+            </span>
+          ) : null}
         </span>
       ))}
     </div>

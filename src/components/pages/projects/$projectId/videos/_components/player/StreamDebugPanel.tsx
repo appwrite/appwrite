@@ -1,42 +1,63 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ComponentType } from 'react'
 import {
+  Activity,
   Check,
-  Copy,
-  ExternalLink,
-  FileText,
+  ClipboardCopy,
+  Download,
+  Eraser,
+  FileCode2,
+  Gauge,
+  Layers,
+  MonitorSmartphone,
+  Network,
+  Pause,
+  Play,
   RefreshCw,
+  RotateCcw,
+  ScrollText,
   SquareArrowOutUpRight,
   X,
 } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { MenuItemIcon } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/utils/mock-data'
-import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
+import { formatBitrate } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
-import { BufferVisualizer } from './BufferVisualizer'
+import { computeQoeMetrics, type QoeState } from './useQoeTracker'
+import type { StreamPlayerState } from './useStreamPlayer'
+import { EnvironmentSection } from './inspector/EnvironmentSection'
+import { EventsSection } from './inspector/EventsSection'
+import { ManifestsSection } from './inspector/ManifestsSection'
+import { NetworkSection } from './inspector/NetworkSection'
+import { OverviewSection } from './inspector/OverviewSection'
+import { QualitySection } from './inspector/QualitySection'
 import {
-  withConsoleVideoAccess,
-  type StreamPlayerState,
-} from './useStreamPlayer'
-
-const HEAD_CLASS =
-  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
-const CELL_CLASS = 'px-4 py-3 font-mono text-[12px]'
+  buildSessionReport,
+  buildSessionSummary,
+  type SessionContext,
+} from './inspector/session-report'
+import {
+  IconAction,
+  InspectorPortalContext,
+  TONE_DOT,
+  TONE_TEXT,
+  formatMs,
+  levelName,
+  scoreTone,
+  type Tone,
+} from './inspector/shared'
 
 export type StreamManifest = {
   id: string
@@ -47,11 +68,19 @@ export type StreamManifest = {
 
 export interface StreamDebugPanelProps {
   player: StreamPlayerState
+  qoe: QoeState
+  /** Physical pixel height of the video element, for upscaling checks. */
+  renderedHeight: number | null
+  context: SessionContext
   activeManifestUrl: string | null
   manifests: StreamManifest[]
   onSeek: (seconds: number) => void
   onSelectLevel: (level: number) => void
   onClearEvents: () => void
+  /** Drops collected events, segments, and QoE history; playback continues. */
+  onClearData: () => void
+  /** Reloads the stream so startup and everything after it is measured again. */
+  onRestartSession: () => void
   /** Rendered in a separate window: fill it and portal overlays into it. */
   detached?: boolean
   portalContainer?: HTMLElement
@@ -59,570 +88,694 @@ export interface StreamDebugPanelProps {
   onClose?: () => void
 }
 
-function IconAction({
-  label,
-  onClick,
-  portalContainer,
-  children,
-}: {
+type SectionId =
+  | 'overview'
+  | 'quality'
+  | 'network'
+  | 'events'
+  | 'manifests'
+  | 'environment'
+
+type SectionDef = {
+  id: SectionId
   label: string
-  onClick: () => void
-  portalContainer?: HTMLElement
-  children: ReactNode
+  description: string
+  icon: ComponentType<{ className?: string }>
+  badge?: { value: number; tone?: 'error' }
+}
+
+type PlaybackStatus = { label: string; tone: Tone; pulse: boolean }
+
+function ResetMenu({
+  container,
+  onClearData,
+  onRestartSession,
+}: {
+  container?: HTMLElement
+  onClearData: () => void
+  onRestartSession: () => void
 }) {
+  const t = useT()
+  const label = t('Reset session data')
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-          onClick={onClick}
-          aria-label={label}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent className="text-[12px]" container={portalContainer}>
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <DropdownMenu modal={false}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={label}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent className="text-[12px]" container={container}>
+          {label}
+        </TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end" container={container} className="w-64">
+        <DropdownMenuItem onSelect={onClearData} className="items-start">
+          <MenuItemIcon icon={Eraser} />
+          <span className="min-w-0 flex-1">
+            <span className="block">{t('Clear collected data')}</span>
+            <span className="block text-[11px] text-muted-foreground">
+              {t('Empties charts, segments, and events. Playback continues.')}
+            </span>
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onRestartSession} className="items-start">
+          <MenuItemIcon icon={RefreshCw} />
+          <span className="min-w-0 flex-1">
+            <span className="block">{t('Restart session')}</span>
+            <span className="block text-[11px] text-muted-foreground">
+              {t('Reloads the stream and measures everything from startup.')}
+            </span>
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
-function Empty({ children }: { children: ReactNode }) {
-  return (
-    <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-[12px] text-muted-foreground">
-      {children}
-    </p>
-  )
+function usePlaybackStatus(
+  player: StreamPlayerState,
+  qoe: QoeState,
+): PlaybackStatus {
+  const t = useT()
+  if (player.fatalError) {
+    return { label: t('Failed'), tone: 'poor', pulse: false }
+  }
+  if (!player.loadStartedAt) {
+    return { label: t('Idle'), tone: 'neutral', pulse: false }
+  }
+  if (player.firstFrameAt == null) {
+    return { label: t('Loading'), tone: 'fair', pulse: true }
+  }
+  if (qoe.stalled) {
+    return { label: t('Buffering'), tone: 'fair', pulse: true }
+  }
+  if (player.stats?.paused) {
+    return { label: t('Paused'), tone: 'neutral', pulse: false }
+  }
+  return { label: t('Playing'), tone: 'good', pulse: true }
 }
 
 export function StreamDebugPanel({
-  player,
+  player: livePlayer,
+  qoe: liveQoe,
+  renderedHeight,
+  context,
   activeManifestUrl,
   manifests,
   onSeek,
   onSelectLevel,
   onClearEvents,
+  onClearData,
+  onRestartSession,
   detached = false,
   portalContainer,
   onOpenWindow,
   onClose,
 }: StreamDebugPanelProps) {
   const t = useT()
-  const hasErrors = player.events.some((event) => event.kind === 'error')
+  const view = portalContainer?.ownerDocument.defaultView ?? window
+  const [section, setSection] = useState<SectionId>('overview')
+  const [frozen, setFrozen] = useState<{
+    player: StreamPlayerState
+    qoe: QoeState
+  } | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const player = frozen?.player ?? livePlayer
+  const qoe = frozen?.qoe ?? liveQoe
+  const metrics = useMemo(
+    () => computeQoeMetrics(qoe, player, renderedHeight),
+    [qoe, player, renderedHeight],
+  )
+  const status = usePlaybackStatus(player, qoe)
+
+  const errorCount = player.events.filter((e) => e.kind === 'error').length
+  const sections: SectionDef[] = [
+    {
+      id: 'overview',
+      label: t('Overview'),
+      description: t(
+        'Experience score, diagnostics, and live charts for this playback session.',
+      ),
+      icon: Gauge,
+    },
+    {
+      id: 'quality',
+      label: t('Quality'),
+      description: t(
+        'The bitrate ladder, which rendition is playing, and every adaptive switch.',
+      ),
+      icon: Layers,
+      badge: player.levels.length ? { value: player.levels.length } : undefined,
+    },
+    {
+      id: 'network',
+      label: t('Network'),
+      description: t(
+        'Every segment request with timing, throughput, and a waterfall.',
+      ),
+      icon: Network,
+      badge: player.fragments.length
+        ? { value: player.fragments.length }
+        : undefined,
+    },
+    {
+      id: 'events',
+      label: t('Events'),
+      description: t('The player event log, newest first.'),
+      icon: ScrollText,
+      badge: errorCount
+        ? { value: errorCount, tone: 'error' }
+        : player.events.length
+          ? { value: player.events.length }
+          : undefined,
+    },
+    {
+      id: 'manifests',
+      label: t('Manifests'),
+      description: t(
+        'Master and media playlists as the player fetched them, with syntax highlighting.',
+      ),
+      icon: FileCode2,
+    },
+    {
+      id: 'environment',
+      label: t('Device'),
+      description: t(
+        'What this browser and screen can decode and display, checked against this stream.',
+      ),
+      icon: MonitorSmartphone,
+    },
+  ]
+  const active = sections.find((s) => s.id === section) ?? sections[0]
+
+  useEffect(() => {
+    if (!detached) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (
+        target?.closest('input, textarea, select, [contenteditable="true"]')
+      ) {
+        return
+      }
+      const index = Number(event.key) - 1
+      const next = SECTION_ORDER[index]
+      if (next) {
+        event.preventDefault()
+        setSection(next)
+      }
+    }
+    view.addEventListener('keydown', onKeyDown)
+    return () => view.removeEventListener('keydown', onKeyDown)
+  }, [detached, view])
+
+  const toggleFrozen = () =>
+    setFrozen((current) =>
+      current ? null : { player: livePlayer, qoe: liveQoe },
+    )
+
+  const copySummary = async () => {
+    try {
+      await view.navigator.clipboard.writeText(
+        buildSessionSummary(context, player, metrics),
+      )
+      setCopied(true)
+      view.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  const exportSession = () => {
+    const report = buildSessionReport(
+      context,
+      player,
+      qoe,
+      metrics,
+      renderedHeight,
+    )
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = view.document.createElement('a')
+    anchor.href = url
+    anchor.download = `stream-session-${context.videoId}-${new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')}.json`
+    view.document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    view.setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  const actions = (
+    <div className="flex shrink-0 items-center gap-0.5">
+      <IconAction
+        label={frozen ? t('Resume live updates') : t('Pause live updates')}
+        onClick={toggleFrozen}
+      >
+        {frozen ? (
+          <Play className="h-3.5 w-3.5" />
+        ) : (
+          <Pause className="h-3.5 w-3.5" />
+        )}
+      </IconAction>
+      <IconAction label={t('Copy summary')} onClick={() => void copySummary()}>
+        {copied ? (
+          <Check className="h-3.5 w-3.5" />
+        ) : (
+          <ClipboardCopy className="h-3.5 w-3.5" />
+        )}
+      </IconAction>
+      <IconAction label={t('Export session')} onClick={exportSession}>
+        <Download className="h-3.5 w-3.5" />
+      </IconAction>
+      <ResetMenu
+        container={portalContainer}
+        onClearData={() => {
+          setFrozen(null)
+          onClearData()
+        }}
+        onRestartSession={() => {
+          setFrozen(null)
+          onRestartSession()
+        }}
+      />
+      {onOpenWindow ? (
+        <IconAction label={t('Open in new window')} onClick={onOpenWindow}>
+          <SquareArrowOutUpRight className="h-3.5 w-3.5" />
+        </IconAction>
+      ) : null}
+      {onClose ? (
+        <IconAction label={t('Close inspector')} onClick={onClose}>
+          <X className="h-3.5 w-3.5" />
+        </IconAction>
+      ) : null}
+    </div>
+  )
+
+  const content = (
+    <SectionContent
+      section={active.id}
+      player={player}
+      qoe={qoe}
+      metrics={metrics}
+      renderedHeight={renderedHeight}
+      activeManifestUrl={activeManifestUrl}
+      manifests={manifests}
+      onSeek={onSeek}
+      onSelectLevel={onSelectLevel}
+      onClearEvents={onClearEvents}
+    />
+  )
+
+  if (!detached) {
+    return (
+      <InspectorPortalContext.Provider value={portalContainer}>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card/50">
+          <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-2">
+            <StatusPill status={status} frozen={Boolean(frozen)} />
+            <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center gap-0.5">
+                {sections.map((item) => (
+                  <NavButton
+                    key={item.id}
+                    item={item}
+                    active={item.id === active.id}
+                    onSelect={() => setSection(item.id)}
+                    compact
+                  />
+                ))}
+              </div>
+            </div>
+            <ScoreChip
+              score={metrics.scores?.overall ?? null}
+              failed={Boolean(player.fatalError)}
+            />
+            {actions}
+          </div>
+          <div className="max-h-[min(75dvh,820px)] min-h-0 overflow-y-auto p-4">
+            {content}
+          </div>
+        </div>
+      </InspectorPortalContext.Provider>
+    )
+  }
+
+  const stats = player.stats
+  const level =
+    stats && stats.currentLevel >= 0
+      ? player.levels[stats.currentLevel]
+      : undefined
+  const transferred = player.fragments.reduce((sum, f) => sum + f.bytes, 0)
 
   return (
-    <div
-      className={cn(
-        'flex flex-col overflow-hidden bg-card/50',
-        detached ? 'h-full bg-background' : 'rounded-xl border border-border',
-      )}
-    >
-      <Tabs defaultValue="stats" className="min-h-0 flex-1 gap-0">
-        <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-          <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
-            <TabsList>
-              <TabsTrigger value="stats">{t('Stats')}</TabsTrigger>
-              <TabsTrigger value="levels">
-                {t('Levels')}
-                {player.levels.length > 0 ? ` (${player.levels.length})` : ''}
-              </TabsTrigger>
-              <TabsTrigger value="network">{t('Network')}</TabsTrigger>
-              <TabsTrigger value="events">
-                {t('Events')}
-                {hasErrors ? (
-                  <span className="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
-                ) : null}
-              </TabsTrigger>
-              <TabsTrigger value="manifests">{t('Manifests')}</TabsTrigger>
-            </TabsList>
+    <InspectorPortalContext.Provider value={portalContainer}>
+      <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
+        <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <Activity className="h-3.5 w-3.5" />
+            </span>
+            <span className="shrink-0 text-[13px] font-semibold">
+              {t('Inspector')}
+            </span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="min-w-0 truncate text-[13px] text-muted-foreground">
+              {context.videoName}
+            </span>
           </div>
-          {onOpenWindow ? (
-            <IconAction
-              label={t('Open in new window')}
-              onClick={onOpenWindow}
-              portalContainer={portalContainer}
-            >
-              <SquareArrowOutUpRight className="h-3.5 w-3.5" />
-            </IconAction>
-          ) : null}
-          {onClose ? (
-            <IconAction
-              label={t('Close stream inspector')}
-              onClick={onClose}
-              portalContainer={portalContainer}
-            >
-              <X className="h-3.5 w-3.5" />
-            </IconAction>
-          ) : null}
-        </div>
-        <div
-          className={cn(
-            'min-h-0 flex-1 overflow-y-auto p-4',
-            !detached && 'max-h-[min(60dvh,560px)]',
-          )}
-        >
-          <TabsContent value="stats">
-            <StatsTab player={player} onSeek={onSeek} />
-          </TabsContent>
-          <TabsContent value="levels">
-            <LevelsTab player={player} onSelectLevel={onSelectLevel} />
-          </TabsContent>
-          <TabsContent value="network">
-            <NetworkTab player={player} />
-          </TabsContent>
-          <TabsContent value="events">
-            <EventsTab player={player} onClear={onClearEvents} />
-          </TabsContent>
-          <TabsContent value="manifests">
-            <ManifestsTab
-              manifests={manifests}
-              activeManifestUrl={activeManifestUrl}
-              player={player}
-              portalContainer={portalContainer}
+          <StatusPill status={status} frozen={Boolean(frozen)} />
+          <span className="hidden shrink-0 rounded-md border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground md:inline">
+            {context.output.toUpperCase()}
+            {player.engine
+              ? ` · ${player.engine === 'native' ? t('Native') : player.engine} ${player.playerVersion ?? ''}`
+              : ''}
+          </span>
+          <div className="ms-auto flex items-center gap-3">
+            <ScoreChip
+              score={metrics.scores?.overall ?? null}
+              failed={Boolean(player.fatalError)}
             />
-          </TabsContent>
+            {actions}
+          </div>
+        </header>
+
+        <div className="flex min-h-0 flex-1">
+          <nav className="flex w-56 shrink-0 flex-col border-e border-border bg-card/30">
+            <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
+              {sections.map((item, index) => (
+                <NavButton
+                  key={item.id}
+                  item={item}
+                  active={item.id === active.id}
+                  onSelect={() => setSection(item.id)}
+                  shortcut={String(index + 1)}
+                />
+              ))}
+            </div>
+            <dl className="space-y-2.5 border-t border-border p-4">
+              <LiveMetric
+                label={t('Rendition')}
+                value={
+                  level
+                    ? levelName(level)
+                    : stats?.videoHeight
+                      ? `${stats.videoHeight}p`
+                      : '-'
+                }
+              />
+              <LiveMetric
+                label={t('Bandwidth')}
+                value={formatBitrate(stats?.bandwidthEstimate)}
+              />
+              <LiveMetric
+                label={t('Buffered ahead')}
+                value={stats ? `${stats.bufferedAhead.toFixed(1)} s` : '-'}
+              />
+              <LiveMetric
+                label={t('Watch time')}
+                value={formatMs(qoe.watchMs)}
+              />
+            </dl>
+          </nav>
+
+          <main className="min-w-0 flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[1400px] space-y-5 px-6 py-5">
+              <div>
+                <h2 className="text-[17px] font-semibold text-foreground">
+                  {active.label}
+                </h2>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  {active.description}
+                </p>
+              </div>
+              {content}
+            </div>
+          </main>
         </div>
-      </Tabs>
-    </div>
+
+        <footer className="flex h-8 shrink-0 items-center gap-4 overflow-x-auto border-t border-border px-4 font-mono text-[11px] text-muted-foreground [scrollbar-width:none]">
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            <span
+              className={cn('size-1.5 rounded-full', TONE_DOT[status.tone])}
+            />
+            {status.label}
+          </span>
+          <FooterItem
+            label={t('Session')}
+            value={
+              player.loadStartedAt
+                ? formatMs(Date.now() - player.loadStartedAt)
+                : '-'
+            }
+          />
+          <FooterItem
+            label={t('Segments')}
+            value={`${player.fragments.length} · ${formatBytes(transferred)}`}
+          />
+          <FooterItem label={t('Stalls')} value={String(metrics.stallCount)} />
+          <FooterItem
+            label={t('Dropped frames')}
+            value={stats ? String(stats.droppedFrames) : '-'}
+          />
+          {errorCount > 0 ? (
+            <FooterItem
+              label={t('Errors')}
+              value={String(errorCount)}
+              className="text-red-600 dark:text-red-400"
+            />
+          ) : null}
+          <span className="ms-auto hidden shrink-0 lg:inline">
+            {t('Press 1 to 6 to switch sections')}
+          </span>
+        </footer>
+      </div>
+    </InspectorPortalContext.Provider>
   )
 }
 
-function Metric({ label, value }: { label: string; value: ReactNode }) {
+const SECTION_ORDER: SectionId[] = [
+  'overview',
+  'quality',
+  'network',
+  'events',
+  'manifests',
+  'environment',
+]
+
+function SectionContent({
+  section,
+  player,
+  qoe,
+  metrics,
+  renderedHeight,
+  activeManifestUrl,
+  manifests,
+  onSeek,
+  onSelectLevel,
+  onClearEvents,
+}: {
+  section: SectionId
+  player: StreamPlayerState
+  qoe: QoeState
+  metrics: ReturnType<typeof computeQoeMetrics>
+  renderedHeight: number | null
+  activeManifestUrl: string | null
+  manifests: StreamManifest[]
+  onSeek: (seconds: number) => void
+  onSelectLevel: (level: number) => void
+  onClearEvents: () => void
+}) {
+  switch (section) {
+    case 'quality':
+      return (
+        <QualitySection
+          player={player}
+          qoe={qoe}
+          onSelectLevel={onSelectLevel}
+        />
+      )
+    case 'network':
+      return <NetworkSection player={player} />
+    case 'events':
+      return <EventsSection player={player} onClear={onClearEvents} />
+    case 'manifests':
+      return (
+        <ManifestsSection
+          manifests={manifests}
+          activeManifestUrl={activeManifestUrl}
+          player={player}
+        />
+      )
+    case 'environment':
+      return (
+        <EnvironmentSection player={player} renderedHeight={renderedHeight} />
+      )
+    default:
+      return (
+        <OverviewSection
+          player={player}
+          qoe={qoe}
+          metrics={metrics}
+          renderedHeight={renderedHeight}
+          onSeek={onSeek}
+        />
+      )
+  }
+}
+
+function NavButton({
+  item,
+  active,
+  onSelect,
+  shortcut,
+  compact = false,
+}: {
+  item: SectionDef
+  active: boolean
+  onSelect: () => void
+  shortcut?: string
+  compact?: boolean
+}) {
+  const Icon = item.icon
   return (
-    <div className="min-w-0 bg-card px-3 py-2.5">
-      <dt className="text-[11px] text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 truncate font-mono text-[12px] text-foreground">
-        {value === '' || value == null ? '-' : value}
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'group flex shrink-0 items-center gap-2 rounded-md text-[12px] font-medium transition-colors',
+        compact ? 'h-7 px-2' : 'h-8 w-full px-2.5',
+        active
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+      )}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className={cn('truncate', !compact && 'flex-1 text-start')}>
+        {item.label}
+      </span>
+      {item.badge ? (
+        <span
+          className={cn(
+            'rounded px-1 font-mono text-[10px] tabular-nums',
+            item.badge.tone === 'error'
+              ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+              : 'bg-muted-foreground/10 text-muted-foreground',
+          )}
+        >
+          {item.badge.value}
+        </span>
+      ) : null}
+      {shortcut ? (
+        <kbd className="hidden rounded border border-border px-1 font-mono text-[10px] text-muted-foreground/70 group-hover:inline">
+          {shortcut}
+        </kbd>
+      ) : null}
+    </button>
+  )
+}
+
+function StatusPill({
+  status,
+  frozen,
+}: {
+  status: PlaybackStatus
+  frozen: boolean
+}) {
+  const t = useT()
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium">
+      <span className="relative flex size-1.5">
+        {status.pulse && !frozen ? (
+          <span
+            className={cn(
+              'absolute inline-flex h-full w-full animate-ping rounded-full opacity-60',
+              TONE_DOT[status.tone],
+            )}
+          />
+        ) : null}
+        <span
+          className={cn(
+            'relative inline-flex size-1.5 rounded-full',
+            TONE_DOT[status.tone],
+          )}
+        />
+      </span>
+      <span className={TONE_TEXT[status.tone]}>{status.label}</span>
+      {frozen ? (
+        <span className="text-muted-foreground">· {t('Snapshot')}</span>
+      ) : null}
+    </span>
+  )
+}
+
+function ScoreChip({
+  score,
+  failed,
+}: {
+  score: number | null
+  failed: boolean
+}) {
+  const t = useT()
+  const value = failed ? 0 : score
+  const tone = failed ? 'poor' : scoreTone(value)
+  return (
+    <span
+      className="hidden shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground sm:inline-flex"
+      title={t('Experience score')}
+    >
+      <Gauge className="h-3.5 w-3.5" />
+      <span
+        className={cn(
+          'font-mono text-[13px] font-semibold tabular-nums',
+          TONE_TEXT[tone],
+        )}
+      >
+        {value ?? '-'}
+      </span>
+    </span>
+  )
+}
+
+function LiveMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <dt className="truncate text-[11px] text-muted-foreground">{label}</dt>
+      <dd className="shrink-0 font-mono text-[11px] tabular-nums text-foreground">
+        {value}
       </dd>
     </div>
   )
 }
 
-function StatsTab({
-  player,
-  onSeek,
+function FooterItem({
+  label,
+  value,
+  className,
 }: {
-  player: StreamPlayerState
-  onSeek: (seconds: number) => void
+  label: string
+  value: string
+  className?: string
 }) {
-  const t = useT()
-  const { stats } = player
-
-  if (!stats) {
-    return <Empty>{t('Start playback to collect stream statistics.')}</Empty>
-  }
-
-  const level =
-    stats.currentLevel >= 0 ? player.levels[stats.currentLevel] : undefined
-  const engine =
-    player.engine === 'shaka'
-      ? `Shaka ${player.playerVersion ?? ''}`
-      : player.engine === 'hls.js'
-        ? `hls.js ${player.playerVersion ?? ''}`
-        : player.engine === 'native'
-          ? t('Native video element')
-          : '-'
-  const firstFrame =
-    player.firstFrameAt && player.loadStartedAt
-      ? `${player.firstFrameAt - player.loadStartedAt} ms`
-      : '-'
-  const dropped =
-    stats.totalFrames > 0
-      ? `${stats.droppedFrames} (${((stats.droppedFrames / stats.totalFrames) * 100).toFixed(1)}%)`
-      : String(stats.droppedFrames)
-  const currentLevel = level
-    ? `${formatResolution(level.width, level.height)} · ${formatBitrate(level.bitrate)}`
-    : '-'
-
   return (
-    <div className="space-y-4">
-      {player.fatalError ? (
-        <div className="rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 font-mono text-[12px] text-red-600 dark:text-red-400">
-          {player.fatalError}
-        </div>
-      ) : null}
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
-        <Metric label={t('Engine')} value={engine} />
-        <Metric label={t('Time to first frame')} value={firstFrame} />
-        <Metric
-          label={t('Decoded resolution')}
-          value={formatResolution(stats.videoWidth, stats.videoHeight)}
-        />
-        <Metric
-          label={t('Current level')}
-          value={
-            level
-              ? `${currentLevel} (${stats.autoLevelEnabled ? t('Automatic') : t('Manual')})`
-              : '-'
-          }
-        />
-        <Metric
-          label={t('Bandwidth estimate')}
-          value={formatBitrate(stats.bandwidthEstimate)}
-        />
-        <Metric
-          label={t('Buffered ahead')}
-          value={`${stats.bufferedAhead.toFixed(1)} s`}
-        />
-        <Metric label={t('Dropped frames')} value={dropped} />
-        <Metric
-          label={t('Codecs')}
-          value={
-            level
-              ? [level.videoCodec, level.audioCodec].filter(Boolean).join(', ')
-              : '-'
-          }
-        />
-      </dl>
-      {Number.isFinite(stats.duration) && stats.duration > 0 ? (
-        <BufferVisualizer
-          stats={stats}
-          fragments={player.fragments}
-          levels={player.levels}
-          onSeek={onSeek}
-          compact
-        />
-      ) : null}
-    </div>
-  )
-}
-
-function LevelsTab({
-  player,
-  onSelectLevel,
-}: {
-  player: StreamPlayerState
-  onSelectLevel: (level: number) => void
-}) {
-  const t = useT()
-  if (player.levels.length === 0) {
-    return (
-      <Empty>
-        {player.engine === 'native'
-          ? t('Quality levels are only available for adaptive streams.')
-          : t('No levels parsed yet.')}
-      </Empty>
-    )
-  }
-  const current = player.stats?.currentLevel ?? -1
-  const auto = player.stats?.autoLevelEnabled ?? true
-
-  return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className={HEAD_CLASS}>{t('Resolution')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Bitrate')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Codecs')}</TableHead>
-            <TableHead className={cn(HEAD_CLASS, 'w-[100px] text-right')}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-[12px] normal-case tracking-normal"
-                disabled={auto}
-                onClick={() => onSelectLevel(-1)}
-              >
-                {t('Auto quality')}
-              </Button>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {player.levels.map((level) => {
-            const isCurrent = level.index === current
-            const locked = !auto && isCurrent
-            return (
-              <TableRow key={level.index}>
-                <TableCell className={CELL_CLASS}>
-                  {formatResolution(level.width, level.height)}
-                  {level.frameRate ? ` @ ${level.frameRate}fps` : ''}
-                  {isCurrent ? (
-                    <Badge
-                      variant="success"
-                      className="ms-2 text-[10px] shrink-0"
-                    >
-                      {t('Playing')}
-                    </Badge>
-                  ) : null}
-                </TableCell>
-                <TableCell className={CELL_CLASS}>
-                  {formatBitrate(level.bitrate)}
-                </TableCell>
-                <TableCell className={CELL_CLASS}>
-                  {[level.videoCodec, level.audioCodec]
-                    .filter(Boolean)
-                    .join(', ') || '-'}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[12px]"
-                    disabled={locked}
-                    onClick={() => onSelectLevel(level.index)}
-                  >
-                    {t('Lock')}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
-    </div>
-  )
-}
-
-function NetworkTab({ player }: { player: StreamPlayerState }) {
-  const t = useT()
-  if (player.fragments.length === 0) {
-    return <Empty>{t('No segments loaded yet.')}</Empty>
-  }
-  return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className={HEAD_CLASS}>{t('Type')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Level')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Start')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Size')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Load time')}</TableHead>
-            <TableHead className={HEAD_CLASS}>{t('Throughput')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {player.fragments.map((frag) => (
-            <TableRow key={`${frag.type}-${frag.level}-${frag.sn}-${frag.at}`}>
-              <TableCell className={CELL_CLASS} title={frag.url}>
-                {frag.type}
-              </TableCell>
-              <TableCell className={CELL_CLASS}>{frag.level}</TableCell>
-              <TableCell className={CELL_CLASS}>
-                {frag.start.toFixed(1)} s
-              </TableCell>
-              <TableCell className={CELL_CLASS}>
-                {formatBytes(frag.bytes)}
-              </TableCell>
-              <TableCell className={CELL_CLASS}>
-                {Math.round(frag.loadMs)} ms
-              </TableCell>
-              <TableCell className={CELL_CLASS}>
-                {frag.loadMs > 0
-                  ? formatBitrate((frag.bytes * 8 * 1000) / frag.loadMs)
-                  : '-'}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-}
-
-function EventsTab({
-  player,
-  onClear,
-}: {
-  player: StreamPlayerState
-  onClear: () => void
-}) {
-  const t = useT()
-  if (player.events.length === 0) {
-    return <Empty>{t('No events recorded yet.')}</Empty>
-  }
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-[12px]"
-          onClick={onClear}
-        >
-          {t('Clear')}
-        </Button>
-      </div>
-      <div className="rounded-lg border border-border bg-muted/20 font-mono text-[12px]">
-        {player.events.map((event, idx) => (
-          <div
-            key={`${event.at}-${idx}`}
-            className="flex gap-3 border-b border-border/60 px-3 py-1.5 last:border-b-0"
-          >
-            <span className="shrink-0 text-muted-foreground">
-              {new Date(event.at).toISOString().slice(11, 23)}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 font-semibold',
-                event.kind === 'error' && 'text-red-600 dark:text-red-400',
-                event.kind === 'warning' &&
-                  'text-amber-600 dark:text-amber-400',
-              )}
-            >
-              {event.name}
-            </span>
-            <span className="min-w-0 break-all text-muted-foreground">
-              {event.detail}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-type ManifestEntry = { label: string; url: string; available?: boolean }
-
-function ManifestsTab({
-  manifests,
-  activeManifestUrl,
-  player,
-  portalContainer,
-}: {
-  manifests: StreamManifest[]
-  activeManifestUrl: string | null
-  player: StreamPlayerState
-  portalContainer?: HTMLElement
-}) {
-  const t = useT()
-  const [viewing, setViewing] = useState<ManifestEntry | null>(null)
-  const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
-  const view = portalContainer?.ownerDocument.defaultView ?? window
-
-  const entries: ManifestEntry[] = useMemo(
-    () => [
-      ...manifests,
-      ...player.levels
-        .filter((level) => level.url)
-        .map((level) => ({
-          label: `${t('Level')} ${formatResolution(level.width, level.height)}`,
-          url: level.url,
-        })),
-    ],
-    [manifests, player.levels, t],
-  )
-
-  const load = async (entry: ManifestEntry) => {
-    setViewing(entry)
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await fetch(withConsoleVideoAccess(entry.url), {
-        credentials: 'include',
-      })
-      if (!response.ok) setError(`HTTP ${response.status}`)
-      setContent(await response.text())
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-      setContent('')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const copy = async (url: string) => {
-    try {
-      await view.navigator.clipboard.writeText(url)
-      setCopiedUrl(url)
-      view.setTimeout(() => setCopiedUrl(null), 1500)
-    } catch {
-      setError(t('Failed to copy'))
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-border">
-        {entries.map((entry) => (
-          <div
-            key={entry.url}
-            className={cn(
-              'flex items-center gap-2 border-b border-border px-3 py-2 last:border-b-0',
-              entry.available === false && 'opacity-50',
-            )}
-          >
-            <span className="w-28 shrink-0 truncate text-[12px] font-medium text-foreground">
-              {entry.label}
-            </span>
-            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">
-              {entry.url}
-            </span>
-            {entry.url === activeManifestUrl ? (
-              <Badge variant="success" className="text-[10px] shrink-0">
-                {t('Playing')}
-              </Badge>
-            ) : null}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 text-[12px]"
-              onClick={() => void load(entry)}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {t('View')}
-            </Button>
-            <IconAction
-              label={t('Copy URL')}
-              onClick={() => void copy(entry.url)}
-              portalContainer={portalContainer}
-            >
-              {copiedUrl === entry.url ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </IconAction>
-            <IconAction
-              label={t('Open in new tab')}
-              onClick={() =>
-                view.open(
-                  withConsoleVideoAccess(entry.url),
-                  '_blank',
-                  'noopener',
-                )
-              }
-              portalContainer={portalContainer}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </IconAction>
-          </div>
-        ))}
-      </div>
-      {viewing ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] font-semibold text-foreground">
-              {viewing.label}
-            </span>
-            <IconAction
-              label={t('Reload')}
-              onClick={() => void load(viewing)}
-              portalContainer={portalContainer}
-            >
-              <RefreshCw
-                className={cn('h-3.5 w-3.5', loading && 'animate-spin')}
-              />
-            </IconAction>
-          </div>
-          {error ? (
-            <p className="text-[12px] text-red-600 dark:text-red-400">
-              {error}
-            </p>
-          ) : null}
-          <pre className="overflow-auto rounded-lg border border-border bg-muted/30 p-3 font-mono text-[12px] leading-relaxed text-foreground">
-            {loading ? t('Loading...') : content || '-'}
-          </pre>
-        </div>
-      ) : null}
-    </div>
+    <span
+      className={cn('inline-flex shrink-0 items-center gap-1.5', className)}
+    >
+      <span className="text-muted-foreground/70">{label}</span>
+      <span className="tabular-nums text-foreground">{value}</span>
+    </span>
   )
 }

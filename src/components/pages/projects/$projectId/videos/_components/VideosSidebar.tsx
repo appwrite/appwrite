@@ -132,7 +132,44 @@ export function VideosSidebar() {
       <SidebarTabs />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-border px-2 py-2">
+        <div className="shrink-0 px-3 pt-3">
+          {noCreatePermission ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block w-full">
+                  <Button
+                    variant="brandCta"
+                    size="sm"
+                    className="h-9 w-full gap-1.5 text-[13px] font-medium"
+                    type="button"
+                    disabled
+                    {...analyticsAttrs('create-video')}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('Create video')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {t("You don't have permission to create videos.")}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="brandCta"
+              size="sm"
+              className="h-9 w-full gap-1.5 text-[13px] font-medium"
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              {...analyticsAttrs('create-video')}
+            >
+              <Plus className="h-4 w-4" />
+              {t('Create video')}
+            </Button>
+          )}
+        </div>
+
+        <div className="shrink-0 border-b border-border px-3 pb-3 pt-2.5">
           <DatabaseSidebarTableSearch
             value={search}
             onChange={setSearch}
@@ -178,43 +215,6 @@ export function VideosSidebar() {
           />
         </div>
 
-        <div className="shrink-0 px-2 py-2">
-          {noCreatePermission ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="block w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-full gap-1.5 text-[13px] font-medium"
-                    type="button"
-                    disabled
-                    {...analyticsAttrs('create-video')}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('Create video')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {t("You don't have permission to create videos.")}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-1.5 text-[13px] font-medium"
-              type="button"
-              onClick={() => setCreateOpen(true)}
-              {...analyticsAttrs('create-video')}
-            >
-              <Plus className="h-4 w-4" />
-              {t('Create video')}
-            </Button>
-          )}
-        </div>
-
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isFetching && videos.length === 0 ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
@@ -228,7 +228,7 @@ export function VideosSidebar() {
             </div>
           ) : (
             <div role="table" aria-label={t('On demand')}>
-              <div className="space-y-0.5 px-2 py-1">
+              <div className="space-y-1 px-3 py-2">
                 {videos.map((video) => (
                   <VideoContextMenu
                     key={video.$id}
@@ -241,12 +241,12 @@ export function VideosSidebar() {
                       params={{ projectId, videoId: video.$id }}
                       className={secondarySidebarNavLinkClassName(
                         activeVideoId === video.$id,
-                        cn(LIST_GRID_CLASS, 'px-2 font-normal'),
+                        cn(LIST_GRID_CLASS, 'px-2 py-2 font-normal'),
                       )}
                     >
                       <span
                         role="cell"
-                        className="flex min-w-0 items-center gap-2.5"
+                        className="flex min-w-0 items-center gap-3"
                       >
                         <VideoThumb
                           projectId={projectId}
@@ -274,7 +274,7 @@ export function VideosSidebar() {
           )}
         </div>
 
-        <div className="shrink-0 border-t border-border px-2 py-1.5">
+        <div className="shrink-0 border-t border-border px-3 py-2">
           <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
             <span className="shrink-0 tabular-nums">
               {total === 0
@@ -310,7 +310,7 @@ export function VideosSidebar() {
           </div>
         </div>
 
-        <div className="flex h-[54px] shrink-0 items-center border-t border-border px-2">
+        <div className="flex h-[54px] shrink-0 items-center border-t border-border px-3">
           <Link
             to="/projects/$projectId/videos/profiles"
             params={{ projectId }}
@@ -352,7 +352,7 @@ const CELL_CLASS =
 function SidebarTabs() {
   const t = useT()
   return (
-    <div className="shrink-0 border-b border-border px-2 py-2">
+    <div className="shrink-0 border-b border-border px-3 py-3">
       <ToggleGroup
         type="single"
         variant="outline"
@@ -363,7 +363,7 @@ function SidebarTabs() {
       >
         <ToggleGroupItem
           value="videos"
-          className="min-w-0 flex-1 px-2 text-[12px] font-medium"
+          className="min-w-0 flex-1 px-3 text-[12px] font-medium"
         >
           {t('On demand')}
         </ToggleGroupItem>
@@ -372,7 +372,7 @@ function SidebarTabs() {
             <ToggleGroupItem
               value="live"
               aria-disabled
-              className="min-w-0 flex-1 cursor-not-allowed gap-1.5 px-2 text-[12px] font-medium text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
+              className="min-w-0 flex-1 cursor-not-allowed gap-2 px-3 text-[12px] font-medium text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
             >
               {t('Live')}
               <Badge variant="info" className="h-4 px-1.5 text-[10px]">

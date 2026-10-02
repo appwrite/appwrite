@@ -1,6 +1,7 @@
 import {
-  Bug,
+  Activity,
   Captions,
+  CodeXml,
   GalleryHorizontal,
   Layers,
   MonitorPlay,
@@ -16,7 +17,7 @@ export type VideoTab =
   | 'subtitles'
   | 'timeline'
   | 'streaming'
-  | 'debugger'
+  | 'install'
   | 'settings'
 
 export type VideoTabGroup = 'video' | 'encoding' | 'delivery' | 'manage'
@@ -59,9 +60,16 @@ export const VIDEO_TABS: VideoTabDefinition[] = [
     group: 'delivery',
     term: 'manifest',
   },
-  { id: 'debugger', label: 'Debugger', icon: Bug, group: 'delivery' },
+  { id: 'install', label: 'Install', icon: CodeXml, group: 'delivery' },
   { id: 'settings', label: 'Settings', icon: Settings, group: 'manage' },
 ]
+
+/** Opens the inspector window; listed after the Playback tabs. */
+export const VIDEO_INSPECTOR_ACTION = {
+  label: 'Inspector',
+  icon: Activity,
+  group: 'delivery',
+} as const satisfies Omit<VideoTabDefinition, 'id'>
 
 export const VIDEO_TAB_GROUP_LABELS: Record<VideoTabGroup, string | null> = {
   video: null,
@@ -78,7 +86,7 @@ export function getVideoTabDisabledReason(
   tab: VideoTab,
   renditions: { status: string }[],
 ): string | null {
-  if (tab !== 'streaming' && tab !== 'debugger') return null
+  if (tab !== 'streaming') return null
   return renditions.some((r) => r.status === 'ready')
     ? null
     : VIDEO_TAB_NEEDS_READY_RENDITION

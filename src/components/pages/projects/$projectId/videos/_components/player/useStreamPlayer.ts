@@ -80,11 +80,12 @@ export function useStreamPlayer(
 
   const hls = useHlsPlayer(videoRef, hlsSource, reloadToken)
   const dash = useDashPlayer(videoRef, dashSource, reloadToken)
+  const hlsState = useMemo(() => mapHlsState(hls.state), [hls.state])
 
   if (source?.type === 'dash') return dash
 
   return {
     ...hls,
-    state: mapHlsState(hls.state),
+    state: hlsState,
   }
 }

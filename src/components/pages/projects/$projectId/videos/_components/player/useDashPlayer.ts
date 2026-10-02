@@ -372,8 +372,6 @@ export function useDashPlayer(
       .load(manifestUrl)
       .then(() => {
         if (cancelled) return
-        video.muted = false
-        if (video.volume === 0) video.volume = 1
         setState((prev) => ({ ...prev, manifestLoadedAt: Date.now() }))
         syncTracks(player!)
         const variants = variantTracks(player!)

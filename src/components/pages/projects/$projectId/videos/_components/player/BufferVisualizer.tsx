@@ -46,9 +46,26 @@ function formatClock(seconds: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`
 }
 
-function levelColor(level: number): string {
-  if (level < 0) return 'var(--muted-foreground)'
-  return `var(--chart-${(level % 5) + 1})`
+/**
+ * Segment colors encode quality, not identity: one hue, brighter for higher
+ * bitrates, so the lane reads as "how good was each downloaded piece".
+ */
+function qualityColors(levels: StreamVariantInfo[]): Map<number, string> {
+  const ranked = levels
+    .map((level, index) => ({ index, bitrate: level.bitrate }))
+    .sort((a, b) => a.bitrate - b.bitrate)
+  const colors = new Map<number, string>()
+  ranked.forEach(({ index }, rank) => {
+    const strength =
+      ranked.length > 1
+        ? 30 + Math.round((70 * rank) / (ranked.length - 1))
+        : 100
+    colors.set(
+      index,
+      `color-mix(in oklab, var(--chart-1) ${strength}%, var(--muted))`,
+    )
+  })
+  return colors
 }
 
 function levelLabel(level: StreamVariantInfo | undefined): string {
@@ -57,6 +74,13 @@ function levelLabel(level: StreamVariantInfo | undefined): string {
 }
 
 type Health = 'full' | 'healthy' | 'low' | 'critical'
+
+const HEALTH_FILL: Record<Health, string> = {
+  full: 'bg-emerald-500',
+  healthy: 'bg-emerald-500',
+  low: 'bg-amber-500',
+  critical: 'bg-red-500',
+}
 
 function bufferHealth(stats: PlaybackStats): Health {
   const end = stats.currentTime + stats.bufferedAhead
@@ -102,6 +126,20 @@ export function BufferVisualizer({
   if (!Number.isFinite(duration) || duration <= 0) return null
 
   const health = bufferHealth(stats)
+  const colors = qualityColors(levels)
+  const seconds = stats.bufferedAhead.toFixed(1)
+  const summary = {
+    full: t('The rest of the video is downloaded, so playback cannot stall.'),
+    healthy: t(
+      '{seconds} s is downloaded ahead of the playhead, enough to ride out network hiccups.',
+    ).replace('{seconds}', seconds),
+    low: t(
+      'Only {seconds} s is downloaded ahead. Playback may stall if the network slows down.',
+    ).replace('{seconds}', seconds),
+    critical: t(
+      'Almost nothing is downloaded ahead of the playhead. Playback is likely to stall.',
+    ),
+  }[health]
   const currentLevel =
     stats.currentLevel >= 0 ? levels[stats.currentLevel] : undefined
   const quality = currentLevel
@@ -121,15 +159,13 @@ export function BufferVisualizer({
       )}
     >
       <div className="flex flex-wrap items-center gap-x-7 gap-y-3 px-4 pt-3.5 pb-3">
-        <HealthBadge health={health} />
-        <Stat
-          label={t('Buffered ahead')}
-          value={
-            health === 'full'
-              ? t('Fully buffered')
-              : `${stats.bufferedAhead.toFixed(1)} s`
-          }
-        />
+        <div className="min-w-0 basis-full space-y-1.5 lg:basis-auto lg:max-w-[340px]">
+          <HealthBadge health={health} />
+          <p className="text-[12px] leading-snug text-muted-foreground">
+            {summary}
+          </p>
+        </div>
+        <Stat label={t('Buffered ahead')} value={`${seconds} s`} />
         <Stat label={t('Quality')} value={quality} />
         <Stat
           label={t('Bandwidth')}
@@ -148,13 +184,14 @@ export function BufferVisualizer({
 
       <div dir="ltr" className="space-y-2 px-4 pb-4">
         <Lane label={t('Buffer')}>
-          <BufferTrack stats={stats} onSeek={onSeek} />
+          <BufferTrack stats={stats} health={health} onSeek={onSeek} />
         </Lane>
         {hasSegments ? (
           <Lane label={hasAudioLane ? t('Video') : t('Segments')}>
             <SegmentLane
               segments={videoSegments}
               levels={levels}
+              colors={colors}
               duration={duration}
               position={stats.currentTime}
             />
@@ -165,6 +202,7 @@ export function BufferVisualizer({
             <SegmentLane
               segments={audioSegments}
               levels={levels}
+              colors={colors}
               duration={duration}
               position={stats.currentTime}
               audio
@@ -172,7 +210,12 @@ export function BufferVisualizer({
           </Lane>
         ) : null}
         <Axis duration={duration} />
-        <Legend levels={levels} usedLevels={usedLevels} />
+        <Legend
+          health={health}
+          levels={levels}
+          usedLevels={usedLevels}
+          colors={colors}
+        />
       </div>
     </div>
   )
@@ -241,9 +284,11 @@ function Lane({ label, children }: { label: string; children: ReactNode }) {
 
 function BufferTrack({
   stats,
+  health,
   onSeek,
 }: {
   stats: PlaybackStats
+  health: Health
   onSeek?: (seconds: number) => void
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -268,11 +313,11 @@ function BufferTrack({
       onPointerLeave={() => setHoverTime(null)}
       onClick={(e) => onSeek?.(timeAt(e.clientX))}
     >
-      <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-muted transition-[height] group-hover:h-2">
+      <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 overflow-hidden rounded-full bg-muted transition-[height] group-hover:h-2.5">
         {bufferedRanges.map(([start, end]) => (
           <div
             key={`${start}-${end}`}
-            className="absolute inset-y-0 bg-primary/25"
+            className="absolute inset-y-0 bg-emerald-500/30"
             style={{
               left: `${pct(start, duration)}%`,
               width: `${pct(end - start, duration)}%`,
@@ -281,7 +326,7 @@ function BufferTrack({
         ))}
         {aheadRange ? (
           <div
-            className="absolute inset-y-0 bg-primary/50"
+            className={cn('absolute inset-y-0', HEALTH_FILL[health])}
             style={{
               left: `${pct(currentTime, duration)}%`,
               width: `${pct(aheadRange[1] - currentTime, duration)}%`,
@@ -289,7 +334,7 @@ function BufferTrack({
           />
         ) : null}
         <div
-          className="absolute inset-y-0 left-0 bg-primary"
+          className="absolute inset-y-0 left-0 bg-foreground/45"
           style={{ width: `${pct(currentTime, duration)}%` }}
         />
       </div>
@@ -308,7 +353,7 @@ function BufferTrack({
         </>
       ) : null}
       <div
-        className="pointer-events-none absolute top-1/2 z-10 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-primary shadow-sm ring-4 ring-primary/15 transition-transform group-hover:scale-110"
+        className="pointer-events-none absolute top-1/2 z-10 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground shadow-sm ring-4 ring-foreground/15 transition-transform group-hover:scale-110"
         style={{ left: `${pct(currentTime, duration)}%` }}
       />
     </div>
@@ -318,12 +363,14 @@ function BufferTrack({
 function SegmentLane({
   segments,
   levels,
+  colors,
   duration,
   position,
   audio = false,
 }: {
   segments: StreamSegmentInfo[]
   levels: StreamVariantInfo[]
+  colors: Map<number, string>
   duration: number
   position: number
   audio?: boolean
@@ -331,6 +378,10 @@ function SegmentLane({
   const t = useT()
   const [hovered, setHovered] = useState<StreamSegmentInfo | null>(null)
   const hoveredLevel = hovered ? levels[hovered.level] : undefined
+  const colorOf = (seg: StreamSegmentInfo) =>
+    audio
+      ? 'var(--muted-foreground)'
+      : (colors.get(seg.level) ?? 'var(--muted-foreground)')
 
   return (
     <div className="relative h-4">
@@ -345,9 +396,7 @@ function SegmentLane({
           style={{
             left: `${pct(seg.start, duration)}%`,
             width: `max(2px, calc(${pct(seg.duration, duration)}% - 1px))`,
-            background: audio
-              ? 'var(--muted-foreground)'
-              : levelColor(seg.level),
+            background: colorOf(seg),
           }}
           onPointerEnter={() => setHovered(seg)}
           onPointerLeave={() => setHovered(null)}
@@ -367,11 +416,7 @@ function SegmentLane({
           <div className="flex items-center gap-1.5 font-medium">
             <span
               className="size-2 rounded-[2px]"
-              style={{
-                background: audio
-                  ? 'var(--muted-foreground)'
-                  : levelColor(hovered.level),
-              }}
+              style={{ background: colorOf(hovered) }}
             />
             {audio
               ? t('Audio')
@@ -416,28 +461,49 @@ function Axis({ duration }: { duration: number }) {
 }
 
 function Legend({
+  health,
   levels,
   usedLevels,
+  colors,
 }: {
+  health: Health
   levels: StreamVariantInfo[]
   usedLevels: number[]
+  colors: Map<number, string>
 }) {
   const t = useT()
+  const byQuality = [...usedLevels].sort(
+    (a, b) => (levels[b]?.bitrate ?? 0) - (levels[a]?.bitrate ?? 0),
+  )
   return (
-    <div className="ms-[68px] flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-[11px] text-muted-foreground">
-      <LegendSwatch className="bg-primary" label={t('Played')} />
-      <LegendSwatch className="bg-primary/50" label={t('Buffered ahead')} />
-      <LegendSwatch className="bg-primary/25" label={t('Buffered')} />
-      {usedLevels.length > 0 ? (
-        <span className="h-3 w-px bg-border" aria-hidden />
-      ) : null}
-      {usedLevels.map((level) => (
+    <div className="ms-[68px] space-y-1.5 pt-1 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <span className="font-medium text-foreground/80">{t('Buffer')}</span>
         <LegendSwatch
-          key={level}
-          color={levelColor(level)}
-          label={levelLabel(levels[level])}
+          className={HEALTH_FILL[health]}
+          label={t('Ready to play')}
         />
-      ))}
+        <LegendSwatch className="bg-emerald-500/30" label={t('Downloaded')} />
+        <LegendSwatch className="bg-foreground/45" label={t('Played')} />
+        <LegendSwatch className="bg-muted" label={t('Not downloaded')} />
+      </div>
+      {byQuality.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <span className="font-medium text-foreground/80">
+            {t('Segment quality')}
+          </span>
+          {byQuality.map((level) => (
+            <LegendSwatch
+              key={level}
+              color={colors.get(level)}
+              label={`${levelLabel(levels[level])} · ${formatBitrate(levels[level]?.bitrate)}`}
+            />
+          ))}
+          {byQuality.length > 1 ? (
+            <span>{t('Brighter means higher quality.')}</span>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -491,8 +557,16 @@ function Sparkline({ samples, label }: { samples: number[]; label: string }) {
       >
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+            <stop
+              offset="0%"
+              stopColor="var(--color-emerald-500)"
+              stopOpacity={0.35}
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--color-emerald-500)"
+              stopOpacity={0}
+            />
           </linearGradient>
         </defs>
         <line
@@ -508,7 +582,7 @@ function Sparkline({ samples, label }: { samples: number[]; label: string }) {
           <path
             d={line}
             fill="none"
-            stroke="var(--primary)"
+            stroke="var(--color-emerald-500)"
             strokeWidth={1.5}
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -519,7 +593,7 @@ function Sparkline({ samples, label }: { samples: number[]; label: string }) {
             cx={points[points.length - 1][0]}
             cy={points[points.length - 1][1]}
             r={2.5}
-            fill="var(--primary)"
+            fill="var(--color-emerald-500)"
           />
         ) : null}
       </svg>

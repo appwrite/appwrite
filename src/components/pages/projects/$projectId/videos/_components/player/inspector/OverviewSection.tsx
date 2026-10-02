@@ -29,6 +29,18 @@ import {
 } from './shared'
 
 const HEALTHY_BUFFER_SEC = 10
+/** Bandwidth chart scale, as a multiple of the highest rendition bitrate. */
+const BANDWIDTH_HEADROOM = 2.5
+
+function formatBitrateAxis(bps: number): string {
+  if (bps <= 0) return '0'
+  if (bps >= 1_000_000_000) return `${+(bps / 1_000_000_000).toFixed(1)} Gbps`
+  if (bps >= 1_000_000) {
+    const mbps = bps / 1_000_000
+    return `${+mbps.toFixed(mbps < 10 ? 1 : 0)} Mbps`
+  }
+  return `${Math.round(bps / 1000)} kbps`
+}
 
 type Finding = {
   tone: 'error' | 'warning' | 'info' | 'ok'
@@ -203,7 +215,7 @@ export function OverviewSection({
         <SectionCard
           title={t('Media timeline')}
           description={t(
-            'What is buffered and which rendition each segment came from. Select a point to seek.',
+            'How much video is downloaded ahead of the playhead, and the quality of every downloaded segment. Select a point on the buffer bar to seek.',
           )}
           bodyClassName="p-0"
         >
@@ -517,22 +529,36 @@ function BandwidthChart({
   const references = player.levels
     .filter((l) => l.bitrate > 0)
     .map((l) => ({ value: l.bitrate, label: levelName(l) }))
+  const bandwidths = qoe.samples.map((s) => s.bandwidth)
+  const bitrates = qoe.samples.map((s) => s.bitrate)
+  // Fast local networks report throughput orders of magnitude above any
+  // rendition, which would flatten the bitrate and rendition lines to zero.
+  const ceiling =
+    Math.max(
+      0,
+      ...references.map((r) => r.value),
+      ...bitrates.map((b) => b ?? 0),
+    ) * BANDWIDTH_HEADROOM
+  const peakBandwidth = Math.max(0, ...bandwidths.map((b) => b ?? 0))
+  const clipped = ceiling > 0 && peakBandwidth > ceiling
+  const latest = qoe.samples[qoe.samples.length - 1]
   const series = [
     {
       id: 'bandwidth',
       label: t('Bandwidth'),
       color: 'var(--chart-2)',
-      values: qoe.samples.map((s) => s.bandwidth),
+      values: bandwidths,
       area: true,
     },
     {
       id: 'bitrate',
       label: t('Playing bitrate'),
       color: 'var(--chart-1)',
-      values: qoe.samples.map((s) => s.bitrate),
+      values: bitrates,
       step: true,
     },
   ]
+  const latestValues = [latest?.bandwidth, latest?.bitrate]
   return (
     <SectionCard
       title={t('Bandwidth and bitrate')}
@@ -550,11 +576,24 @@ function BandwidthChart({
             references={references}
             bands={bands}
             yFormat={(v) => formatBitrate(v)}
+            axisFormat={formatBitrateAxis}
+            yMax={clipped ? ceiling : undefined}
             height={190}
           />
           <ChartLegend
-            items={series.map((s) => ({ label: s.label, color: s.color }))}
+            items={series.map((s, i) => ({
+              label: s.label,
+              color: s.color,
+              value: formatBitrate(latestValues[i]),
+            }))}
           />
+          {clipped ? (
+            <p className="text-[11px] text-muted-foreground">
+              {t(
+                'Bandwidth is far above your highest rendition, so it runs along the top of the chart. Hover to see exact values.',
+              )}
+            </p>
+          ) : null}
         </div>
       )}
     </SectionCard>

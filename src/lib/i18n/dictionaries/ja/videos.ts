@@ -73,6 +73,13 @@ export const jaVideosDictionary: Record<string, string> = {
 
   // Profiles
   'Create profile': 'プロファイルを作成',
+  Presets: 'プリセット',
+  'Custom profile': 'カスタムプロファイル',
+  'Create custom profile': 'カスタムプロファイルを作成',
+  'Choose a preset to add a rendition quality. Video codec is chosen by the server when encoding.':
+    'プリセットを選んでレンディションの画質を追加します。動画コーデックはエンコード時にサーバーが選択します。',
+  'Set the resolution and bitrate of the rendition. Video codec is chosen by the server when encoding.':
+    'レンディションの解像度とビットレートを設定します。動画コーデックはエンコード時にサーバーが選択します。',
   'Update profile': 'プロファイルを更新',
   'Delete profile': 'プロファイルを削除',
   'Profile created': 'プロファイルを作成しました',
@@ -196,7 +203,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Enter video name': '動画名を入力',
 
   // Player
-  'Available once a rendition is ready.': 'レンディションの準備ができると利用できます。',
+  'Available once a rendition is ready.':
+    'レンディションの準備ができると利用できます。',
   Source: 'ソース',
   'Stream format': 'ストリーム形式',
   'Original file': '元のファイル',
@@ -215,6 +223,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Subtitles off': '字幕オフ',
   'New renditions are ready.': '新しいレンディションの準備ができました。',
   'Reload stream': 'ストリームを再読み込み',
+  'Go to start': '先頭に戻る',
+  'Go to end': '末尾に移動',
   Mute: 'ミュート',
   Unmute: 'ミュート解除',
   Volume: '音量',
@@ -242,13 +252,17 @@ export const jaVideosDictionary: Record<string, string> = {
   Lock: '固定',
   Reload: '再読み込み',
   Throughput: 'スループット',
-  'Stream inspector': 'ストリームインスペクター',
-  'Close stream inspector': 'ストリームインスペクターを閉じる',
+  'Waiting for the player': 'プレーヤーを待機中',
+  "The inspector follows the video playing on a video's Overview page. Open one to continue inspecting.":
+    'インスペクターは動画の概要ページで再生中の動画を追跡します。概要ページを開いて検査を続けてください。',
+  'Go to overview': '概要へ移動',
+  Inspector: 'インスペクター',
+  'Close inspector': 'インスペクターを閉じる',
   'Show window': 'ウィンドウを表示',
-  'The stream inspector is open in a separate window.':
-    'ストリームインスペクターは別ウィンドウで開いています。',
-  'Your browser blocked the window. Allow pop-ups for this site to open the stream inspector.':
-    'ブラウザーがウィンドウをブロックしました。ストリームインスペクターを開くには、このサイトのポップアップを許可してください。',
+  'The inspector is open in a separate window.':
+    'インスペクターは別ウィンドウで開いています。',
+  'Your browser blocked the window. Allow pop-ups for this site to open the inspector.':
+    'ブラウザーがウィンドウをブロックしました。インスペクターを開くには、このサイトのポップアップを許可してください。',
   'Fully buffered': 'すべてバッファ済み',
   'Buffer ahead, last 60s': '先読みバッファ (直近60秒)',
   Audio: '音声',
@@ -380,6 +394,19 @@ export const jaVideosDictionary: Record<string, string> = {
   'Timeline generated': 'タイムライン生成済み',
   'Time range': '時間範囲',
   'Sprite region': 'スプライト領域',
+  'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.':
+    'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域が表示されます。選択するとプレビュー画像として使用します。',
+  'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.':
+    '再生開始前に表示されるフレームです。上のサムネイルを選択するか、動画をスクラブして選んでください。',
+  'Generate a timeline to choose a preview image.':
+    'プレビュー画像を選ぶにはタイムラインを生成してください。',
+  'Selected frame': '選択中のフレーム',
+  'Previous frame': '前のフレーム',
+  'Next frame': '次のフレーム',
+  'Preview frame': 'プレビューフレーム',
+  'Set as preview': 'プレビューに設定',
+  "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame.":
+    'プレビューフレームの保存はまだ利用できません。Videos API はまだ動画のポスターフレームを設定できません。',
   'Sprite sheet': 'スプライトシート',
   'Ready to stream': 'ストリーミング可能',
   'HLS manifest URL': 'HLS マニフェスト URL',
@@ -422,8 +449,10 @@ export const jaVideosDictionary: Record<string, string> = {
     'レンディションは、1 つの出力形式における動画の 1 つの画質レベルです。プレーヤーは帯域幅に応じて切り替えます。',
   'All outputs': 'すべての出力',
   'All statuses': 'すべてのステータス',
-  'No renditions match your filters': 'フィルターに一致するレンディションはありません',
-  'Try a different output or status.': '別の出力またはステータスをお試しください。',
+  'No renditions match your filters':
+    'フィルターに一致するレンディションはありません',
+  'Try a different output or status.':
+    '別の出力またはステータスをお試しください。',
   Profile: 'プロファイル',
   'Segment length': 'セグメント長',
   'Media playlist URL': 'メディアプレイリスト URL',
@@ -467,8 +496,6 @@ export const jaVideosDictionary: Record<string, string> = {
   'Generate a timeline to get scrubbing thumbnails and a preview image for this video.':
     'タイムラインを生成すると、この動画のシーク用サムネイルとプレビュー画像を取得できます。',
   Thumbnails: 'サムネイル',
-  'Scroll through the thumbnails and select one to see it larger. Each label shows where that frame starts.':
-    'サムネイルをスクロールして選ぶと拡大表示されます。各ラベルはそのフレームの開始位置を示します。',
   'Sprite sheets': 'スプライトシート',
   'Thumbnail size': 'サムネイルサイズ',
   'Timeline file': 'タイムラインファイル',
@@ -477,10 +504,6 @@ export const jaVideosDictionary: Record<string, string> = {
   'Timeline URL': 'タイムライン URL',
   'First lines': '先頭の行',
   'Preview image': 'プレビュー画像',
-  'An image taken from the timeline. Use it as a poster or thumbnail. Set a size and format to get a ready-to-use URL.':
-    'タイムラインから取得した画像です。ポスターやサムネイルとして使えます。サイズと形式を指定すると、そのまま使える URL を取得できます。',
-  'Generate a timeline to create a preview image.':
-    'プレビュー画像を作成するにはタイムラインを生成してください。',
 
   // Streaming
   'Give a master manifest URL to any HLS or DASH player. It lists every ready rendition and subtitle, and the player picks the best quality for each viewer.':
@@ -495,12 +518,19 @@ export const jaVideosDictionary: Record<string, string> = {
   'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
     'マニフェスト、セグメント、字幕のリクエストには、ストレージ上のソースファイルの読み取り権限が使われます。公開再生には Any に、非公開の動画にはログイン済みユーザーに読み取り権限を付与してください。',
   'Open bucket': 'バケットを開く',
-  'Player setup': 'プレーヤーの設定',
-  'Copy a snippet into your app. The URLs below already point at this video.':
-    'スニペットをアプリにコピーしてください。以下の URL はすでにこの動画を指しています。',
   'Native HTML': 'ネイティブ HTML',
-  'Safari and iOS play HLS natively. Other browsers need a library such as hls.js.':
-    'Safari と iOS は HLS をネイティブで再生します。その他のブラウザでは hls.js などのライブラリが必要です。',
+  'Install a player': 'プレーヤーをインストール',
+  'Install {player}': '{player} をインストール',
+  '{player} documentation': '{player} のドキュメント',
+  'All streaming URLs': 'すべてのストリーミング URL',
+  'Add to build.gradle.kts (module)': 'build.gradle.kts (モジュール) に追加',
+  'Allow network access in AndroidManifest.xml':
+    'AndroidManifest.xml でネットワークアクセスを許可',
+  'Install the iOS pods': 'iOS の Pod をインストール',
+  'Nothing to install. Safari and iOS play HLS natively. Other browsers need a library such as hls.js.':
+    'インストールは不要です。Safari と iOS は HLS をネイティブで再生します。その他のブラウザでは hls.js などのライブラリが必要です。',
+  'Nothing to install. AVPlayer is part of AVKit on iOS, iPadOS, tvOS, visionOS, and macOS.':
+    'インストールは不要です。AVPlayer は iOS、iPadOS、tvOS、visionOS、macOS の AVKit に含まれています。',
   'Subtitle tracks': '字幕トラック',
   'Master manifests already include these. Use the direct URLs to load a track yourself. For DASH the URL returns the WebVTT file.':
     'マスターマニフェストにはすでに含まれています。トラックを直接読み込む場合はこれらの URL を使います。DASH の場合は WebVTT ファイルが返されます。',
@@ -510,7 +540,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Individual streams and segments': '個別のストリームとセグメント',
   'Advanced. Players reach these from the master manifest. Use them to debug one quality level or fetch a single segment.':
     '上級者向け。プレーヤーはマスターマニフェストからこれらにアクセスします。特定の画質レベルのデバッグや、単一セグメントの取得に使います。',
-  'Available once a rendition is ready.': 'レンディションの準備ができると利用できます。',
+  'Available once a rendition is ready.':
+    'レンディションの準備ができると利用できます。',
   'Stream index': 'ストリームインデックス',
   'Segment ID': 'セグメント ID',
   'From the media playlist': 'メディアプレイリストから',
@@ -595,4 +626,178 @@ export const jaVideosDictionary: Record<string, string> = {
     'エンコードプロファイルと出力形式を選択します。各プロファイルが 1 つの画質レベルになり、Appwrite は最初のジョブでファイルのメタデータを読み取ります。',
   'The Storage file this video was created from. Each rendition or timeline job downloads its own copy and deletes it when done.':
     'この動画の作成元となったストレージのファイルです。レンディションやタイムラインの各ジョブは独自のコピーをダウンロードし、完了後に削除します。',
+  'Bitrate ladder': 'ビットレートラダー',
+  'Every rendition in the manifest. The marker shows the current bandwidth estimate: renditions to its left fit the connection.':
+    'マニフェスト内のすべてのレンディションです。マーカーは現在の推定帯域幅を示し、その左側のレンディションが接続に収まります。',
+  Average: '平均',
+  'Watch time': '視聴時間',
+  'Time per rendition': 'レンディション別の時間',
+  'Share of watch time spent on each rendition.':
+    '各レンディションで再生された視聴時間の割合です。',
+  'Play the video to measure time per rendition.':
+    '動画を再生すると、レンディション別の時間を計測します。',
+  'Switch history': '切り替え履歴',
+  'Every rendition change, newest first.':
+    'すべてのレンディション切り替えを新しい順に表示します。',
+  'No rendition switches yet.': 'まだレンディションの切り替えはありません。',
+  Playlists: 'プレイリスト',
+  'Experience score': '体験スコア',
+  'How this session feels to a viewer, from 0 to 100.':
+    'このセッションが視聴者にとってどれだけ快適かを 0 から 100 で示します。',
+  Diagnostics: '診断',
+  'Issues detected in this session and how to fix them.':
+    'このセッションで検出された問題と、その解決方法です。',
+  Manifest: 'マニフェスト',
+  Rebuffering: 'リバッファリング',
+  Stalls: '停止',
+  'Average bitrate': '平均ビットレート',
+  'Share of top rendition': '最上位レンディション比',
+  'Quality switches': '画質の切り替え',
+  'Locked by you': '手動で固定',
+  Upscaling: 'アップスケール',
+  Seeks: 'シーク',
+  'Media timeline': 'メディアタイムライン',
+  'How much video is downloaded ahead of the playhead, and the quality of every downloaded segment. Select a point on the buffer bar to seek.':
+    '再生位置より先にどれだけダウンロード済みか、各セグメントがどの画質で取得されたかを示します。バッファバーをクリックするとその位置にシークします。',
+  'The rest of the video is downloaded, so playback cannot stall.':
+    '残りの動画はすべてダウンロード済みのため、再生が止まることはありません。',
+  '{seconds} s is downloaded ahead of the playhead, enough to ride out network hiccups.':
+    '再生位置より先に {seconds} 秒分がダウンロード済みで、一時的なネットワークの乱れにも耐えられます。',
+  'Only {seconds} s is downloaded ahead. Playback may stall if the network slows down.':
+    '先読みは {seconds} 秒分のみです。ネットワークが遅くなると再生が止まる可能性があります。',
+  'Almost nothing is downloaded ahead of the playhead. Playback is likely to stall.':
+    '再生位置より先がほとんどダウンロードされていません。再生が止まる可能性が高いです。',
+  'Ready to play': '再生可能',
+  'Not downloaded': '未ダウンロード',
+  'Segment quality': 'セグメントの画質',
+  'Brighter means higher quality.': '明るいほど高画質です。',
+  'Waiting for playback': '再生待ち',
+  'Playback failed': '再生に失敗しました',
+  Excellent: '非常に良い',
+  Good: '良い',
+  Fair: '普通',
+  Poor: '悪い',
+  Startup: '起動',
+  'Time until the first frame': '最初のフレームまでの時間',
+  Smoothness: 'スムーズさ',
+  'Stalls and time spent rebuffering': '停止回数とリバッファリング時間',
+  'Picture quality': '画質',
+  'Bitrate played and upscaling': '再生ビットレートとアップスケール',
+  Stability: '安定性',
+  'Frames dropped while decoding': 'デコード中のドロップフレーム',
+  'Slow startup': '起動が遅い',
+  'Viewers wait too long for the first frame. Shorter segments or a lower starting rendition help.':
+    '最初のフレームまでの待ち時間が長すぎます。セグメントを短くするか、開始レンディションを下げると改善します。',
+  'Playback stalled': '再生が停止しました',
+  'The buffer ran empty. Compare bandwidth with the bitrate below to see if the ladder needs a lower rung.':
+    'バッファが空になりました。下の帯域幅とビットレートを比較し、ラダーにより低い段が必要か確認してください。',
+  'Bandwidth below the lowest rendition':
+    '帯域幅が最低レンディションを下回っています',
+  'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
+    '最小のレンディションでもこの接続にはぎりぎりです。低速ネットワーク向けに、より低いビットレートのレンディションを追加してください。',
+  'Video is upscaled': '動画がアップスケールされています',
+  'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
+    'プレーヤーが受信しているレンディションより大きいため、映像がぼやけて見えます。より高解像度のレンディションを追加してください。',
+  'Frames are being dropped': 'フレームがドロップしています',
+  'This device struggles to decode the stream. A lower frame rate or a lighter codec helps.':
+    'このデバイスではストリームのデコードが追いついていません。フレームレートを下げるか、より軽いコーデックを使うと改善します。',
+  'Quality keeps dropping': '画質の低下が続いています',
+  'The player switched down several times. Closer bitrate steps between renditions make switches less visible.':
+    'プレーヤーが何度も画質を下げました。レンディション間のビットレート差を小さくすると、切り替えが目立ちにくくなります。',
+  'Single rendition': 'レンディションが 1 つだけ',
+  'With one rendition the player cannot adapt to the network. Add more renditions for adaptive streaming.':
+    'レンディションが 1 つだけだと、プレーヤーはネットワークに合わせて調整できません。アダプティブストリーミングのためにレンディションを追加してください。',
+  'Progressive playback': 'プログレッシブ再生',
+  'The original file plays as a single download, without adaptive bitrate.':
+    '元のファイルをアダプティブビットレートなしで、1 回のダウンロードとして再生します。',
+  'No issues detected': '問題は検出されませんでした',
+  'Startup, smoothness, and picture quality all look healthy.':
+    '起動、スムーズさ、画質のいずれも良好です。',
+  'Playing bitrate': '再生中のビットレート',
+  'Bandwidth and bitrate': '帯域幅とビットレート',
+  'Network throughput against the rendition being played. Dashed lines are your renditions; red marks stalls.':
+    '再生中のレンディションに対するネットワークのスループットです。破線はレンディション、赤は停止を示します。',
+  'Collecting samples...': 'サンプルを収集中...',
+  'Buffer health': 'バッファの状態',
+  'Seconds of video ready ahead of the playhead. Below the target line, stalls become likely.':
+    '再生位置より先に準備できている動画の秒数です。目標ラインを下回ると停止が起きやすくなります。',
+  'Rendered height': '表示上の高さ',
+  'Playback rate': '再生速度',
+  'Live latency': 'ライブ遅延',
+  'Audio tracks': '音声トラック',
+  'Session details': 'セッションの詳細',
+  Transferred: '転送量',
+  'Average throughput': '平均スループット',
+  'Median time to first byte': '最初のバイトまでの時間 (中央値)',
+  'Slowest 5% load time': '読み込み時間 (遅い 5%)',
+  'Waiting for first byte': '最初のバイト待ち',
+  'Media time': 'メディア時間',
+  'Time to first byte': '最初のバイトまでの時間',
+  Waterfall: 'ウォーターフォール',
+  'Request URL': 'リクエスト URL',
+  Playlist: 'プレイリスト',
+  'Select a manifest to view it.': 'マニフェストを選択すると内容を表示します。',
+  Lines: '行数',
+  'Copy contents': '内容をコピー',
+  'Filter events...': 'イベントを絞り込み...',
+  Info: '情報',
+  Warnings: '警告',
+  'Copy log': 'ログをコピー',
+  'No events match your filters.': '条件に一致するイベントはありません。',
+  'This stream on this device': 'このデバイスでのこのストリーム',
+  'The browser decoder checks each rendition: whether it can play it, play it without dropping frames, and play it with hardware acceleration.':
+    'ブラウザーのデコーダーで各レンディションを確認します。再生できるか、フレームを落とさずに再生できるか、ハードウェアアクセラレーションで再生できるかを調べます。',
+  'Rendition checks are only available for adaptive streams.':
+    'レンディションの確認はアダプティブストリームでのみ利用できます。',
+  'Some renditions cannot be decoded here. The player skips them, so viewers on this device never get that quality.':
+    '一部のレンディションはこのデバイスでデコードできません。プレーヤーはそれらをスキップするため、このデバイスの視聴者はその画質を受け取れません。',
+  'Some renditions may drop frames on this device. Consider a lighter codec profile or a lower frame rate.':
+    '一部のレンディションはこのデバイスでフレームがドロップする可能性があります。より軽いコーデックプロファイルや低いフレームレートを検討してください。',
+  Supported: '対応',
+  Smooth: 'スムーズ',
+  'Hardware decoding': 'ハードウェアデコード',
+  'Fits player': 'プレーヤーに収まる',
+  'Larger than the player': 'プレーヤーより大きい',
+  'Codec support': 'コーデック対応',
+  'Playback capabilities': '再生機能',
+  'Media Source Extensions': 'Media Source Extensions',
+  'Native HLS': 'ネイティブ HLS',
+  'Picture in picture': 'ピクチャーインピクチャー',
+  'Display and network': 'ディスプレイとネットワーク',
+  Screen: '画面',
+  'HDR display': 'HDR ディスプレイ',
+  'Wide color (P3)': '広色域 (P3)',
+  'Downlink estimate': '推定ダウンリンク',
+  'Round trip time': 'ラウンドトリップ時間',
+  'Data saver': 'データセーバー',
+  Browser: 'ブラウザー',
+  Buffering: 'バッファリング中',
+  'Experience score, diagnostics, and live charts for this playback session.':
+    'この再生セッションの体験スコア、診断、リアルタイムグラフです。',
+  'The bitrate ladder, which rendition is playing, and every adaptive switch.':
+    'ビットレートラダー、再生中のレンディション、すべてのアダプティブ切り替えです。',
+  'Every segment request with timing, throughput, and a waterfall.':
+    'すべてのセグメントリクエストのタイミング、スループット、ウォーターフォールです。',
+  'The player event log, newest first.':
+    'プレーヤーのイベントログを新しい順に表示します。',
+  'Master and media playlists as the player fetched them, with syntax highlighting.':
+    'プレーヤーが取得したマスタープレイリストとメディアプレイリストを、シンタックスハイライト付きで表示します。',
+  'What this browser and screen can decode and display, checked against this stream.':
+    'このブラウザーと画面でデコード・表示できる内容を、このストリームに照らして確認します。',
+  'Copy summary': '概要をコピー',
+  'Export session': 'セッションをエクスポート',
+  Native: 'ネイティブ',
+  'Press 1 to 6 to switch sections': '1〜6 キーでセクションを切り替え',
+  Snapshot: 'スナップショット',
+  Seek: 'シーク',
+  Play: '再生',
+  'Reset session data': 'セッションデータをリセット',
+  'Clear collected data': '収集したデータを消去',
+  'Empties charts, segments, and events. Playback continues.':
+    'グラフ、セグメント、イベントを空にします。再生は続行されます。',
+  'Restart session': 'セッションを再開始',
+  'Reloads the stream and measures everything from startup.':
+    'ストリームを再読み込みし、起動時からすべてを計測し直します。',
+  'Bandwidth is far above your highest rendition, so it runs along the top of the chart. Hover to see exact values.':
+    '帯域幅が最高画質のレンディションを大きく上回っているため、グラフの上端に沿って表示されます。正確な値はカーソルを合わせると確認できます。',
 }

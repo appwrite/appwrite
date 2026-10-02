@@ -4,6 +4,7 @@ import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { useT } from '@/lib/i18n/translate'
 import { TableViewResizableLayout } from '../../databases/_components/TableViewResizableLayout'
 import { VideosSidebar } from './VideosSidebar'
+import { VideoInspectorProvider } from './player/VideoInspectorContext'
 
 export const VIDEOS_DESKTOP_MIN_WIDTH_PX = 1024
 
@@ -12,6 +13,14 @@ export const VIDEOS_DESKTOP_MIN_WIDTH_PX = 1024
  * encoding profiles). On small screens the list is its own page.
  */
 export function WorkspaceLayout() {
+  return (
+    <VideoInspectorProvider>
+      <WorkspaceContent />
+    </VideoInspectorProvider>
+  )
+}
+
+function WorkspaceContent() {
   const t = useT()
   const showDesktopSidebar = useMediaMinWidth(VIDEOS_DESKTOP_MIN_WIDTH_PX)
   const { projectId, videoId } = useParams({ strict: false }) as {

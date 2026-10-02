@@ -69,6 +69,13 @@ export const heVideosDictionary: Record<string, string> = {
 
   // Profiles
   'Create profile': 'יצירת פרופיל',
+  Presets: 'תבניות מוכנות',
+  'Custom profile': 'פרופיל מותאם אישית',
+  'Create custom profile': 'יצירת פרופיל מותאם אישית',
+  'Choose a preset to add a rendition quality. Video codec is chosen by the server when encoding.':
+    'בחרו תבנית מוכנה כדי להוסיף איכות לגרסת הקידוד. קודק הווידאו נבחר על ידי השרת בזמן הקידוד.',
+  'Set the resolution and bitrate of the rendition. Video codec is chosen by the server when encoding.':
+    'הגדירו את הרזולוציה וקצב הסיביות של גרסת הקידוד. קודק הווידאו נבחר על ידי השרת בזמן הקידוד.',
   'Update profile': 'עדכון פרופיל',
   'Delete profile': 'מחיקת פרופיל',
   'Profile created': 'הפרופיל נוצר',
@@ -210,6 +217,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Subtitles off': 'ללא כתוביות',
   'New renditions are ready.': 'גרסאות קידוד חדשות מוכנות.',
   'Reload stream': 'טעינה מחדש של הסטרים',
+  'Go to start': 'חזרה להתחלה',
+  'Go to end': 'מעבר לסוף',
   Mute: 'השתקה',
   Unmute: 'ביטול השתקה',
   Volume: 'עוצמת קול',
@@ -237,13 +246,16 @@ export const heVideosDictionary: Record<string, string> = {
   Lock: 'נעילה',
   Reload: 'טעינה מחדש',
   Throughput: 'קצב העברה',
-  'Stream inspector': 'בודק סטרימינג',
-  'Close stream inspector': 'סגירת בודק הסטרימינג',
+  'Waiting for the player': 'ממתין לנגן',
+  "The inspector follows the video playing on a video's Overview page. Open one to continue inspecting.":
+    'הבודק עוקב אחרי הווידאו שמתנגן בדף הסקירה של הווידאו. פתחו אותו כדי להמשיך לבדוק.',
+  'Go to overview': 'מעבר לסקירה',
+  Inspector: 'בודק',
+  'Close inspector': 'סגירת הבודק',
   'Show window': 'הצגת החלון',
-  'The stream inspector is open in a separate window.':
-    'בודק הסטרימינג פתוח בחלון נפרד.',
-  'Your browser blocked the window. Allow pop-ups for this site to open the stream inspector.':
-    'הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר כדי לפתוח את בודק הסטרימינג.',
+  'The inspector is open in a separate window.': 'הבודק פתוח בחלון נפרד.',
+  'Your browser blocked the window. Allow pop-ups for this site to open the inspector.':
+    'הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר כדי לפתוח את הבודק.',
   'Fully buffered': 'נטען במלואו',
   'Buffer ahead, last 60s': 'באפר קדימה, 60 שניות אחרונות',
   Audio: 'אודיו',
@@ -374,6 +386,19 @@ export const heVideosDictionary: Record<string, string> = {
   'Timeline generated': 'ציר הזמן נוצר',
   'Time range': 'טווח זמן',
   'Sprite region': 'אזור ב-Sprite sheet',
+  'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.':
+    'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הספרייט שלה. בחרו אחת כדי להשתמש בה כתמונת התצוגה המקדימה.',
+  'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.':
+    'הפריים שמוצג לפני תחילת הניגון. בחרו תמונה ממוזערת למעלה או גללו לאורך הווידאו כדי לבחור אותו.',
+  'Generate a timeline to choose a preview image.':
+    'צרו ציר זמן כדי לבחור תמונת תצוגה מקדימה.',
+  'Selected frame': 'הפריים שנבחר',
+  'Previous frame': 'הפריים הקודם',
+  'Next frame': 'הפריים הבא',
+  'Preview frame': 'פריים לתצוגה מקדימה',
+  'Set as preview': 'הגדרה כתצוגה מקדימה',
+  "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame.":
+    'שמירת פריים לתצוגה מקדימה עדיין לא זמינה. ה-API של הווידאו עדיין לא תומך בהגדרת פריים פוסטר.',
   'Sprite sheet': 'Sprite sheet',
   'Ready to stream': 'מוכן לסטרימינג',
   'HLS manifest URL': 'כתובת מניפסט HLS',
@@ -460,8 +485,6 @@ export const heVideosDictionary: Record<string, string> = {
   'Generate a timeline to get scrubbing thumbnails and a preview image for this video.':
     'צרו ציר זמן כדי לקבל תמונות ממוזערות לגלילה ותמונת תצוגה מקדימה לסרטון.',
   Thumbnails: 'תמונות ממוזערות',
-  'Scroll through the thumbnails and select one to see it larger. Each label shows where that frame starts.':
-    'גללו בין התמונות הממוזערות ובחרו אחת כדי להגדיל אותה. כל תווית מציגה את נקודת ההתחלה של הפריים.',
   'Sprite sheets': 'Sprite sheets',
   'Thumbnail size': 'גודל תמונה ממוזערת',
   'Timeline file': 'קובץ ציר הזמן',
@@ -470,10 +493,6 @@ export const heVideosDictionary: Record<string, string> = {
   'Timeline URL': 'כתובת ציר הזמן',
   'First lines': 'שורות ראשונות',
   'Preview image': 'תמונת תצוגה מקדימה',
-  'An image taken from the timeline. Use it as a poster or thumbnail. Set a size and format to get a ready-to-use URL.':
-    'תמונה שנלקחה מציר הזמן. אפשר להשתמש בה כפוסטר או כתמונה ממוזערת. בחרו גודל ופורמט כדי לקבל כתובת מוכנה לשימוש.',
-  'Generate a timeline to create a preview image.':
-    'צרו ציר זמן כדי ליצור תמונת תצוגה מקדימה.',
 
   // Streaming
   'Give a master manifest URL to any HLS or DASH player. It lists every ready rendition and subtitle, and the player picks the best quality for each viewer.':
@@ -488,12 +507,19 @@ export const heVideosDictionary: Record<string, string> = {
   'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
     'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של קובץ המקור באחסון. תנו הרשאת קריאה ל-Any לניגון ציבורי, או למשתמשים מחוברים לסרטונים פרטיים.',
   'Open bucket': 'פתיחת הבאקט',
-  'Player setup': 'הגדרת נגן',
-  'Copy a snippet into your app. The URLs below already point at this video.':
-    'העתיקו קטע קוד לאפליקציה שלכם. הכתובות למטה כבר מצביעות על הסרטון הזה.',
   'Native HTML': 'HTML מובנה',
-  'Safari and iOS play HLS natively. Other browsers need a library such as hls.js.':
-    'Safari ו-iOS מנגנים HLS באופן מובנה. דפדפנים אחרים צריכים ספרייה כמו hls.js.',
+  'Install a player': 'התקנת נגן',
+  'Install {player}': 'התקנת {player}',
+  '{player} documentation': 'הדוקומנטציה של {player}',
+  'All streaming URLs': 'כל כתובות הסטרימינג',
+  'Add to build.gradle.kts (module)': 'הוספה ל-build.gradle.kts (מודול)',
+  'Allow network access in AndroidManifest.xml':
+    'מתן גישה לרשת ב-AndroidManifest.xml',
+  'Install the iOS pods': 'התקנת ה-pods של iOS',
+  'Nothing to install. Safari and iOS play HLS natively. Other browsers need a library such as hls.js.':
+    'אין צורך בהתקנה. Safari ו-iOS מנגנים HLS באופן מובנה. דפדפנים אחרים צריכים ספרייה כמו hls.js.',
+  'Nothing to install. AVPlayer is part of AVKit on iOS, iPadOS, tvOS, visionOS, and macOS.':
+    'אין צורך בהתקנה. AVPlayer הוא חלק מ-AVKit ב-iOS, iPadOS, tvOS, visionOS ו-macOS.',
   'Subtitle tracks': 'רצועות כתוביות',
   'Master manifests already include these. Use the direct URLs to load a track yourself. For DASH the URL returns the WebVTT file.':
     'המניפסטים הראשיים כבר כוללים אותן. השתמשו בכתובות הישירות כדי לטעון רצועה בעצמכם. ב-DASH הכתובת מחזירה את קובץ ה-WebVTT.',
@@ -588,4 +614,176 @@ export const heVideosDictionary: Record<string, string> = {
     'בחרו פרופילי קידוד ופורמט פלט. כל פרופיל הופך לרמת איכות אחת, ו-Appwrite קורא את המטא-דאטה של הקובץ במשימה הראשונה.',
   'The Storage file this video was created from. Each rendition or timeline job downloads its own copy and deletes it when done.':
     'קובץ האחסון שממנו נוצר הווידאו. כל משימת rendition או ציר זמן מורידה עותק משלה ומוחקת אותו בסיום.',
+  'Bitrate ladder': 'סולם קצבי סיביות',
+  'Every rendition in the manifest. The marker shows the current bandwidth estimate: renditions to its left fit the connection.':
+    'כל גרסאות הקידוד במניפסט. הסמן מציג את הערכת רוחב הפס הנוכחית: גרסאות משמאלו מתאימות לחיבור.',
+  Average: 'ממוצע',
+  'Watch time': 'זמן צפייה',
+  'Time per rendition': 'זמן לכל גרסת קידוד',
+  'Share of watch time spent on each rendition.':
+    'החלק מזמן הצפייה שעבר על כל גרסת קידוד.',
+  'Play the video to measure time per rendition.':
+    'הפעילו את הווידאו כדי למדוד זמן לכל גרסת קידוד.',
+  'Switch history': 'היסטוריית מעברים',
+  'Every rendition change, newest first.':
+    'כל מעבר בין גרסאות קידוד, מהחדש לישן.',
+  'No rendition switches yet.': 'עדיין אין מעברים בין גרסאות קידוד.',
+  Playlists: 'פלייליסטים',
+  'Experience score': 'ציון חוויה',
+  'How this session feels to a viewer, from 0 to 100.':
+    'איך הסשן הזה מרגיש לצופה, בסולם של 0 עד 100.',
+  Diagnostics: 'אבחון',
+  'Issues detected in this session and how to fix them.':
+    'בעיות שזוהו בסשן הזה ואיך לתקן אותן.',
+  Manifest: 'מניפסט',
+  Rebuffering: 'שיעור עצירות',
+  Stalls: 'עצירות',
+  'Average bitrate': 'קצב סיביות ממוצע',
+  'Share of top rendition': 'יחס לגרסה העליונה',
+  'Quality switches': 'מעברי איכות',
+  'Locked by you': 'ננעל על ידיכם',
+  Upscaling: 'הגדלת תמונה',
+  Seeks: 'דילוגים',
+  'Media timeline': 'ציר זמן מדיה',
+  'How much video is downloaded ahead of the playhead, and the quality of every downloaded segment. Select a point on the buffer bar to seek.':
+    'כמה וידאו כבר הורד לפני נקודת הניגון, ובאיזו איכות הורד כל סגמנט. בחרו נקודה בפס הבאפר כדי לדלג אליה.',
+  'The rest of the video is downloaded, so playback cannot stall.':
+    'שאר הווידאו כבר הורד, כך שהניגון לא ייעצר.',
+  '{seconds} s is downloaded ahead of the playhead, enough to ride out network hiccups.':
+    '{seconds} שניות הורדו מראש, מספיק כדי לעבור הפרעות קצרות ברשת.',
+  'Only {seconds} s is downloaded ahead. Playback may stall if the network slows down.':
+    'רק {seconds} שניות הורדו מראש. הניגון עלול להיעצר אם הרשת תאט.',
+  'Almost nothing is downloaded ahead of the playhead. Playback is likely to stall.':
+    'כמעט שום דבר לא הורד מראש. סביר שהניגון ייעצר.',
+  'Ready to play': 'מוכן לניגון',
+  'Not downloaded': 'לא הורד',
+  'Segment quality': 'איכות הסגמנטים',
+  'Brighter means higher quality.': 'בהיר יותר פירושו איכות גבוהה יותר.',
+  'Waiting for playback': 'ממתין להפעלה',
+  'Playback failed': 'ההפעלה נכשלה',
+  Excellent: 'מצוין',
+  Good: 'טוב',
+  Fair: 'סביר',
+  Poor: 'חלש',
+  Startup: 'זמן פתיחה',
+  'Time until the first frame': 'הזמן עד לפריים הראשון',
+  Smoothness: 'רציפות',
+  'Stalls and time spent rebuffering': 'עצירות וזמן המתנה לטעינה',
+  'Picture quality': 'איכות תמונה',
+  'Bitrate played and upscaling': 'קצב הסיביות שהתנגן והגדלת תמונה',
+  Stability: 'יציבות',
+  'Frames dropped while decoding': 'פריימים שנפלו בזמן פענוח',
+  'Slow startup': 'פתיחה איטית',
+  'Viewers wait too long for the first frame. Shorter segments or a lower starting rendition help.':
+    'הצופים מחכים יותר מדי לפריים הראשון. סגמנטים קצרים יותר או גרסת פתיחה נמוכה יותר יעזרו.',
+  'Playback stalled': 'ההפעלה נעצרה',
+  'The buffer ran empty. Compare bandwidth with the bitrate below to see if the ladder needs a lower rung.':
+    'הבאפר התרוקן. השוו את רוחב הפס לקצב הסיביות למטה כדי לבדוק אם הסולם צריך שלב נמוך יותר.',
+  'Bandwidth below the lowest rendition': 'רוחב הפס נמוך מהגרסה הנמוכה ביותר',
+  'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
+    'גם גרסת הקידוד הקטנה ביותר בקושי מתאימה לחיבור הזה. הוסיפו גרסה בקצב סיביות נמוך יותר לרשתות איטיות.',
+  'Video is upscaled': 'הווידאו מוגדל',
+  'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
+    'הנגן גדול מגרסת הקידוד שהוא מקבל, ולכן התמונה נראית רכה מדי. הוסיפו גרסה ברזולוציה גבוהה יותר.',
+  'Frames are being dropped': 'פריימים נופלים',
+  'This device struggles to decode the stream. A lower frame rate or a lighter codec helps.':
+    'המכשיר הזה מתקשה לפענח את הסטרים. קצב פריימים נמוך יותר או codec קל יותר יעזרו.',
+  'Quality keeps dropping': 'האיכות יורדת שוב ושוב',
+  'The player switched down several times. Closer bitrate steps between renditions make switches less visible.':
+    'הנגן ירד באיכות כמה פעמים. מרווחים קטנים יותר בין קצבי הסיביות של הגרסאות הופכים את המעברים לפחות מורגשים.',
+  'Single rendition': 'גרסת קידוד יחידה',
+  'With one rendition the player cannot adapt to the network. Add more renditions for adaptive streaming.':
+    'עם גרסת קידוד אחת הנגן לא יכול להסתגל לרשת. הוסיפו גרסאות נוספות לסטרימינג אדפטיבי.',
+  'Progressive playback': 'הפעלה פרוגרסיבית',
+  'The original file plays as a single download, without adaptive bitrate.':
+    'הקובץ המקורי מתנגן כהורדה אחת, בלי קצב סיביות אדפטיבי.',
+  'No issues detected': 'לא זוהו בעיות',
+  'Startup, smoothness, and picture quality all look healthy.':
+    'זמן הפתיחה, הרציפות ואיכות התמונה נראים תקינים.',
+  'Playing bitrate': 'קצב סיביות מתנגן',
+  'Bandwidth and bitrate': 'רוחב פס וקצב סיביות',
+  'Network throughput against the rendition being played. Dashed lines are your renditions; red marks stalls.':
+    'תפוקת הרשת מול גרסת הקידוד שמתנגנת. הקווים המקווקווים הם גרסאות הקידוד שלכם, והאדום מסמן עצירות.',
+  'Collecting samples...': 'אוסף דגימות...',
+  'Buffer health': 'מצב הבאפר',
+  'Seconds of video ready ahead of the playhead. Below the target line, stalls become likely.':
+    'שניות של וידאו מוכנות לפני ראש ההפעלה. מתחת לקו היעד, עצירות הופכות לסבירות.',
+  'Rendered height': 'גובה מוצג',
+  'Playback rate': 'מהירות הפעלה',
+  'Live latency': 'השהיית שידור חי',
+  'Audio tracks': 'רצועות אודיו',
+  'Session details': 'פרטי הסשן',
+  Transferred: 'הועבר',
+  'Average throughput': 'תפוקה ממוצעת',
+  'Median time to first byte': 'חציון זמן עד לבייט הראשון',
+  'Slowest 5% load time': 'זמן טעינה של 5% האיטיים',
+  'Waiting for first byte': 'המתנה לבייט הראשון',
+  'Media time': 'זמן מדיה',
+  'Time to first byte': 'זמן עד לבייט הראשון',
+  Waterfall: 'מפל בקשות',
+  'Request URL': 'כתובת הבקשה',
+  Playlist: 'פלייליסט',
+  'Select a manifest to view it.': 'בחרו מניפסט כדי לצפות בו.',
+  Lines: 'שורות',
+  'Copy contents': 'העתקת התוכן',
+  'Filter events...': 'סינון אירועים...',
+  Info: 'מידע',
+  Warnings: 'אזהרות',
+  'Copy log': 'העתקת הלוג',
+  'No events match your filters.': 'אין אירועים שתואמים לסינון.',
+  'This stream on this device': 'הסטרים הזה במכשיר הזה',
+  'The browser decoder checks each rendition: whether it can play it, play it without dropping frames, and play it with hardware acceleration.':
+    'מפענח הדפדפן בודק כל גרסת קידוד: אם הוא יכול לנגן אותה, לנגן אותה בלי לאבד פריימים ולנגן אותה עם האצת חומרה.',
+  'Rendition checks are only available for adaptive streams.':
+    'בדיקות גרסאות קידוד זמינות רק לסטרימים אדפטיביים.',
+  'Some renditions cannot be decoded here. The player skips them, so viewers on this device never get that quality.':
+    'חלק מגרסאות הקידוד לא ניתנות לפענוח כאן. הנגן מדלג עליהן, כך שצופים במכשיר הזה לא יקבלו את האיכות הזו.',
+  'Some renditions may drop frames on this device. Consider a lighter codec profile or a lower frame rate.':
+    'חלק מגרסאות הקידוד עלולות לאבד פריימים במכשיר הזה. שקלו פרופיל codec קל יותר או קצב פריימים נמוך יותר.',
+  Supported: 'נתמך',
+  Smooth: 'חלק',
+  'Hardware decoding': 'פענוח בחומרה',
+  'Fits player': 'מתאים לנגן',
+  'Larger than the player': 'גדול מהנגן',
+  'Codec support': 'תמיכה ב-Codecs',
+  'Playback capabilities': 'יכולות הפעלה',
+  'Media Source Extensions': 'Media Source Extensions',
+  'Native HLS': 'HLS מובנה',
+  'Picture in picture': 'תמונה בתוך תמונה',
+  'Display and network': 'תצוגה ורשת',
+  Screen: 'מסך',
+  'HDR display': 'תצוגת HDR',
+  'Wide color (P3)': 'צבע רחב (P3)',
+  'Downlink estimate': 'הערכת מהירות הורדה',
+  'Round trip time': 'זמן הלוך ושוב',
+  'Data saver': 'חיסכון בנתונים',
+  Browser: 'דפדפן',
+  Buffering: 'ממלא באפר',
+  'Experience score, diagnostics, and live charts for this playback session.':
+    'ציון חוויה, אבחון וגרפים חיים לסשן ההפעלה הזה.',
+  'The bitrate ladder, which rendition is playing, and every adaptive switch.':
+    'סולם קצבי הסיביות, איזו גרסת קידוד מתנגנת וכל מעבר אדפטיבי.',
+  'Every segment request with timing, throughput, and a waterfall.':
+    'כל בקשת סגמנט עם תזמון, תפוקה ומפל בקשות.',
+  'The player event log, newest first.': 'לוג האירועים של הנגן, מהחדש לישן.',
+  'Master and media playlists as the player fetched them, with syntax highlighting.':
+    'הפלייליסט הראשי ופלייליסטי המדיה כפי שהנגן הוריד אותם, עם הדגשת תחביר.',
+  'What this browser and screen can decode and display, checked against this stream.':
+    'מה הדפדפן והמסך האלה יכולים לפענח ולהציג, בבדיקה מול הסטרים הזה.',
+  'Copy summary': 'העתקת סיכום',
+  'Export session': 'ייצוא הסשן',
+  Native: 'מובנה',
+  'Press 1 to 6 to switch sections': 'הקישו 1 עד 6 כדי לעבור בין חלקים',
+  Snapshot: 'תמונת מצב',
+  Seek: 'דילוג',
+  Play: 'הפעלה',
+  'Reset session data': 'איפוס נתוני הסשן',
+  'Clear collected data': 'ניקוי הנתונים שנאספו',
+  'Empties charts, segments, and events. Playback continues.':
+    'מרוקן את התרשימים, הסגמנטים והאירועים. הניגון ממשיך.',
+  'Restart session': 'הפעלה מחדש של הסשן',
+  'Reloads the stream and measures everything from startup.':
+    'טוען מחדש את הסטרים ומודד הכול מרגע ההפעלה.',
+  'Bandwidth is far above your highest rendition, so it runs along the top of the chart. Hover to see exact values.':
+    'רוחב הפס גבוה בהרבה מגרסת הקידוד הגבוהה ביותר שלכם, ולכן הוא מוצג לאורך החלק העליון של התרשים. העבירו את העכבר כדי לראות ערכים מדויקים.',
 }
