@@ -73,7 +73,7 @@ class Update extends Action
                 description: <<<'EOT'
                 Update the profile photo of the currently authenticated user. The uploaded image takes priority over every other photo source, including OAuth2 identity photos, Gravatar, and Libravatar. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

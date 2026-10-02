@@ -117,6 +117,24 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals(400, $templates['headers']['status-code']);
     }
 
+    public function testListTemplatesTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', $headers, ['total' => true]);
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(\count($templates['body']['templates']), $templates['body']['total']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
+
+        $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', $headers, ['total' => false]);
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertEquals(0, $templates['body']['total']);
+        $this->assertNotEmpty($templates['body']['templates']);
+    }
+
     public function testListTemplatesHidesInternalFields()
     {
         $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', array_merge([

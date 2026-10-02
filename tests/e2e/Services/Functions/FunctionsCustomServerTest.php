@@ -2782,6 +2782,34 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('supports', $runtime);
     }
 
+    public function testListRuntimesAndSpecificationsTotal(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', $headers, ['total' => true]);
+        $this->assertEquals(200, $runtimes['headers']['status-code']);
+        $this->assertCount($runtimes['body']['total'], $runtimes['body']['runtimes']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
+
+        $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', $headers, ['total' => false]);
+        $this->assertEquals(200, $runtimes['headers']['status-code']);
+        $this->assertEquals(0, $runtimes['body']['total']);
+        $this->assertNotEmpty($runtimes['body']['runtimes']);
+
+        $specifications = $this->listSpecifications(['total' => true]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertCount($specifications['body']['total'], $specifications['body']['specifications']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+
+        $specifications = $this->listSpecifications(['total' => false]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertEquals(0, $specifications['body']['total']);
+        $this->assertNotEmpty($specifications['body']['specifications']);
+    }
+
 
     public function testEventTriggerWithFailingSubscribers(): void
     {

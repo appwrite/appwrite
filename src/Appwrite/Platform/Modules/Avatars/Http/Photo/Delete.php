@@ -52,7 +52,7 @@ class Delete extends Action
                 description: <<<'EOT'
                 Delete the custom profile photo of the currently authenticated user. Photo resolution falls back to the usual sources: OAuth2 identity photos, Gravatar, Libravatar, initials, and the static placeholder.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
