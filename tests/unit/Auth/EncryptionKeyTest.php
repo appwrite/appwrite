@@ -28,19 +28,25 @@ final class EncryptionKeyTest extends TestCase
         yield 'unique' => ['a-unique-generated-secret', false];
     }
 
-    public function testAssertProductionRejectsPlaceholder(): void
+    public function testAssertProductionAllowsPlaceholder(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('_APP_OPENSSL_KEY_V1');
-
         EncryptionKey::assertProduction('production', EncryptionKey::PLACEHOLDER);
+        $this->addToAssertionCount(1);
     }
 
     public function testAssertProductionRejectsEmpty(): void
     {
         $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('_APP_OPENSSL_KEY_V1');
 
         EncryptionKey::assertProduction('production', '');
+    }
+
+    public function testAssertProductionRejectsMissing(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        EncryptionKey::assertProduction('production', null);
     }
 
     public function testAssertProductionAllowsDevelopmentPlaceholder(): void

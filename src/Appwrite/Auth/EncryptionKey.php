@@ -2,11 +2,15 @@
 
 namespace Appwrite\Auth;
 
+use Utopia\Console;
+
 /**
  * Server encryption / JWT signing key (`_APP_OPENSSL_KEY_V1`).
  *
- * The historical installer default `your-secret-key` is public. Production
- * processes must not start with that placeholder or an empty value.
+ * The historical installer default `your-secret-key` is public. Encrypted
+ * attributes are always written with this key and there is no rotation yet,
+ * so installs still on the placeholder are warned rather than refused: a new
+ * key would make their encrypted data unreadable.
  */
 final class EncryptionKey
 {
@@ -26,8 +30,12 @@ final class EncryptionKey
             return;
         }
 
-        if (self::isInsecure($key)) {
-            throw new \RuntimeException('_APP_OPENSSL_KEY_V1 is missing or set to the insecure default. Set a unique secret before running in production.');
+        if ($key === null || $key === '') {
+            throw new \RuntimeException('_APP_OPENSSL_KEY_V1 is missing. Set a unique secret before running in production.');
+        }
+
+        if ($key === self::PLACEHOLDER) {
+            Console::warning('_APP_OPENSSL_KEY_V1 is the public default "' . self::PLACEHOLDER . '". Anyone can forge JWTs for this instance and decrypt its encrypted data.');
         }
     }
 }

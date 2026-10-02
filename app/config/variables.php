@@ -109,7 +109,7 @@ return [
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
-                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The installer generates a unique value. Production refuses to start when this is empty or the historical `your-secret-key` placeholder. **Keep it a secret and have a backup for it**.',
+                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The installer generates a unique value. Production refuses to start when this is empty, and warns when it is the public `your-secret-key` placeholder. Changing it makes existing encrypted data unreadable. **Keep it a secret and have a backup for it**.',
                 'introduction' => '',
                 'default' => '',
                 'required' => true,
