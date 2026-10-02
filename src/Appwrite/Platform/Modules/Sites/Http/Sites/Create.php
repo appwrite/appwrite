@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -198,7 +199,7 @@ class Create extends Base
             'repositoryId' => '',
             'repositoryInternalId' => '',
             'providerBranch' => $providerBranch,
-            'providerRootDirectory' => $providerRootDirectory,
+            'providerRootDirectory' => Deployments::normalizeRootDirectory($providerRootDirectory),
             'providerSilentMode' => $providerSilentMode,
             'providerBranches' => $providerBranches,
             'providerPaths' => $providerPaths,

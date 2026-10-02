@@ -284,13 +284,15 @@ class Update extends Base
 
         $live = true;
 
+        $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+
         if (
             $site->getAttribute('name') !== $name ||
             $site->getAttribute('buildCommand') !== $buildCommand ||
             $site->getAttribute('installCommand') !== $installCommand ||
             $site->getAttribute('startCommand') !== $startCommand ||
             $site->getAttribute('outputDirectory') !== $outputDirectory ||
-            $site->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
+            Deployments::normalizeRootDirectory($site->getAttribute('providerRootDirectory', '')) !== $providerRootDirectory ||
             $site->getAttribute('framework') !== $framework
         ) {
             $live = false;

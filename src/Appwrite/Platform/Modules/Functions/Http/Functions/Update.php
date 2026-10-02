@@ -269,11 +269,13 @@ class Update extends Base
 
         $live = true;
 
+        $providerRootDirectory = Deployments::normalizeRootDirectory($providerRootDirectory);
+
         if (
             $function->getAttribute('name') !== $name ||
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
-            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
+            Deployments::normalizeRootDirectory($function->getAttribute('providerRootDirectory', '')) !== $providerRootDirectory ||
             $function->getAttribute('runtime') !== $runtime
         ) {
             $live = false;

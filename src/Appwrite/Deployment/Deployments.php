@@ -128,7 +128,10 @@ readonly class Deployments
         // tag; codeload only understands one ref per tarball, not a range.
         $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
 
-        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory]);
+        return $this->submit($resource, $deployment, $timeout, [
+            'url' => $url,
+            'subdir' => self::normalizeRootDirectory($rootDirectory),
+        ]);
     }
 
     /**
@@ -147,7 +150,11 @@ readonly class Deployments
         string $rootDirectory = '',
         array $headers = [],
     ): Document {
-        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
+        return $this->submit($resource, $deployment, $timeout, [
+            'url' => $url,
+            'subdir' => self::normalizeRootDirectory($rootDirectory),
+            'headers' => $headers,
+        ]);
     }
 
     /**
@@ -168,6 +175,7 @@ readonly class Deployments
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        $rootDirectory = self::normalizeRootDirectory($rootDirectory);
         $deployment->setAttribute('providerRootDirectory', $rootDirectory);
 
         if ($vcs->supportsRepositoryArchives()) {
@@ -187,6 +195,35 @@ readonly class Deployments
             'subdir' => $rootDirectory,
             'headers' => $vcs->getRepositoryCloneHeaders(),
         ]);
+    }
+
+    /**
+     * Collapse console/template sentinels (`./`, `.`, empty segments) into the
+     * plain relative path the jobs-service archive/clone artifacts expect.
+     * Reject `..` so a stored root directory cannot escape the extracted tree.
+     *
+     * @throws Exception when any path segment is `..`
+     */
+    public static function normalizeRootDirectory(string $path): string
+    {
+        $segments = [];
+
+        foreach (\explode('/', $path) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+
+            if ($segment === '..') {
+                throw new Exception(
+                    Exception::GENERAL_ARGUMENT_INVALID,
+                    'Root directory must not contain ".." segments'
+                );
+            }
+
+            $segments[] = $segment;
+        }
+
+        return \implode('/', $segments);
     }
 
     private function submit(Document $resource, Document $deployment, int $timeout, ?array $source): Document
@@ -407,12 +444,14 @@ readonly class Deployments
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
         if (isset($source['clone'])) {
-            $subdir = \trim($source['subdir'] ?? '', '/');
+            // Callers normally pre-normalize; keep a choke-point here so a
+            // raw `./functions/api` from an older document still extracts.
+            $subdir = self::normalizeRootDirectory($source['subdir'] ?? '');
             $sourceArtifacts = [
                 new CloneArtifact(id: 'source', in: $source['clone'], out: 'source', ref: $source['ref'] ?? '', subdir: $subdir, headers: $source['headers'] ?? []),
             ];
         } elseif ($source !== null) {
-            $subdir = \trim($source['subdir'] ?? '', '/');
+            $subdir = self::normalizeRootDirectory($source['subdir'] ?? '');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
