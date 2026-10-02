@@ -76,20 +76,20 @@ final class AvatarsConsoleClientTest extends Scope
         $this->assertSamePhoto($blue, $this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — deleting falls back to the default chain
+         * Test for SUCCESS — deleting replaces the photo with the placeholder
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertPhotoInitials($this->getPhoto($headers));
+        $this->assertPhotoFallback($this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — deleting again is a no-op
+         * Test for SUCCESS — deleting again keeps the placeholder
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertPhotoInitials($this->getPhoto($headers));
+        $this->assertPhotoFallback($this->getPhoto($headers));
     }
 
     public function testUpdatePhotoUnauthorized(): void

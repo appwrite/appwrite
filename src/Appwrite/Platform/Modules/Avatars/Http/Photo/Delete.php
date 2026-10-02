@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
+use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,17 +12,17 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 
-class Delete extends Action
+class Delete extends Base
 {
-    use HTTP;
-
-    private const MAX_UPDATE_ATTEMPTS = 5;
+    /**
+     * Square edge of the stored placeholder in pixels — large enough that
+     * the usual avatar sizes only ever scale it down.
+     */
+    private const RESOLUTION = 1024;
 
     public static function getName(): string
     {
@@ -50,7 +50,7 @@ class Delete extends Action
                 group: null,
                 name: 'deletePhoto',
                 description: <<<'EOT'
-                Delete the custom profile photo of the currently authenticated user. Photo resolution falls back to the usual sources: OAuth2 identity photos, Gravatar, Libravatar, initials, and the static placeholder.
+                Delete the profile photo of the currently authenticated user and store the built-in static placeholder in its place. The placeholder is the user's photo from then on, so it takes priority over every other photo source — OAuth2 identity photos, Gravatar, Libravatar, and initials — until a new photo is uploaded with avatars.updatePhoto.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -80,45 +80,14 @@ class Delete extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $photoId = $user->getAttribute('photoId', '');
-
-        if ($photoId === '') {
-            $queueForEvents->reset();
-            $response->noContent();
-
-            return;
+        if (!\extension_loaded('imagick')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        // The file goes before the attributes, so a failure at either step is retried by calling again
-        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $user->getId() . '/' . $photoId);
+        // The placeholder becomes the user's own photo, so it shadows every other source — identity photos, Gravatar, Libravatar, initials — the way an upload does
+        $photo = (new Fallback())->render(self::RESOLUTION, self::RESOLUTION);
 
-        if ($deviceForFiles->exists($path) && !$deviceForFiles->delete($path)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove photo from storage');
-        }
-
-        // A concurrent upload may have replaced the photo since it was read, so it's only cleared while it's still this one
-        $current = $user;
-        $attempts = 0;
-
-        while ($current->getAttribute('photoId', '') === $photoId) {
-            try {
-                $dbForProject->withRequestTimestamp(
-                    new \DateTime($current->getUpdatedAt()),
-                    fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
-                        'photoId' => '',
-                        'photoSize' => 0,
-                    ]))
-                );
-
-                break;
-            } catch (ConflictException) {
-                if (++$attempts >= self::MAX_UPDATE_ATTEMPTS) {
-                    throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, 'Photo was changed by another request, please try again');
-                }
-
-                $current = $dbForProject->getDocument('users', $user->getId());
-            }
-        }
+        $this->replacePhoto($user, new Stream($photo), \strlen($photo), 'image/png', $dbForProject, $deviceForFiles);
 
         $queueForEvents->setParam('userId', $user->getId());
 
