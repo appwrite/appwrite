@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -69,6 +71,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -85,8 +88,19 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        PublicHostname $publicHostname
     ): void {
+        // Block a source endpoint or database host that resolves to a private or
+        // reserved address to prevent SSRF into the internal network. The migration
+        // worker connects to both, outside any curl guard.
+        $hostname = $publicHostname;
+        foreach ([\parse_url($endpoint, PHP_URL_HOST) ?? '', $databaseHost] as $host) {
+            if (!$hostname->isValid($host)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+            }
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',

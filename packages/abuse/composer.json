@@ -33,7 +33,9 @@
         "ext-redis": "*",
         "utopia-php/database": "^7.0.0",
         "utopia-php/pools": "2.*",
-        "appwrite/appwrite": "^27.1"
+        "appwrite/appwrite": "^27.1",
+        "utopia-php/client": "^0.5",
+        "utopia-php/psr7": "^0.2.1"
     },
     "require-dev": {
         "phpbench/phpbench": "1.*"

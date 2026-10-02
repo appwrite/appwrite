@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapters/ReCaptcha.php
-
-		-
 			message: '#^Method Utopia\\Abuse\\Adapters\\SlidingWindow\\RedisCluster\:\:getLogs\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
 			identifier: return.type
 			count: 1

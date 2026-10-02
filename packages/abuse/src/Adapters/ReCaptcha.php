@@ -3,7 +3,11 @@
 namespace Utopia\Abuse\Adapters;
 
 use Exception;
+use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Abuse\Adapter;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class ReCaptcha extends Adapter
 {
@@ -67,18 +71,16 @@ class ReCaptcha extends Adapter
             'remoteip' => \urlencode($this->remoteIP),
         ];
 
-        //open connection
-        $ch = \curl_init();
+        $request = new RequestFactory()->body('POST', $url, \http_build_query($fields), 'application/x-www-form-urlencoded');
 
-        //set the url, number of POST vars, POST data
-        \curl_setopt($ch, CURLOPT_URL, $url);
-        \curl_setopt($ch, CURLOPT_POST, \count($fields));
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, \http_build_query($fields));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        try {
+            $body = (string) new Client(new CurlAdapter())->sendRequest($request)->getBody();
+        } catch (ClientExceptionInterface) {
+            $body = '';
+        }
 
-        //execute post
         /** @var array<string, mixed> $result */
-        $result = \json_decode((string) \curl_exec($ch), true);
+        $result = \json_decode($body, true);
 
         if ($result['success'] && $result['score'] >= $score) {
             return true;

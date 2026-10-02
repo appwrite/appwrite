@@ -101,6 +101,15 @@ if ($path === '/nested/final') {
     return;
 }
 
+if ($path === '/redirect-to') {
+    $to = $_GET['to'] ?? '';
+    http_response_code(302);
+    header('Location: ' . (is_string($to) ? $to : ''));
+    echo 'redirect';
+
+    return;
+}
+
 if ($path === '/redirect-absolute') {
     $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1';
     $host = is_string($host) ? $host : '127.0.0.1';
