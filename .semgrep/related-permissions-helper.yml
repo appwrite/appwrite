@@ -1,0 +1,23 @@
+rules:
+  - id: php.appwrite.related-permissions-helper
+    message: >
+      Nested relationship $permissions must go through
+      validateRelatedPermissions() so a caller cannot grant roles they do
+      not hold. Do not reimplement this check inline on related documents.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/Databases/**"
+    patterns:
+      - pattern-either:
+          - pattern: $REL->getAttribute('$permissions')
+          - pattern: $REL['$permissions']
+      - metavariable-regex:
+          metavariable: $REL
+          regex: \$(?:relation|related)\b
+      - pattern-not-inside: |
+          $this->validateRelatedPermissions(...)

@@ -1,0 +1,23 @@
+rules:
+  - id: php.appwrite.header-blocklist-filter
+    message: >
+      Filter forwarded request headers or hosts with an allowlist, not a
+      short BLOCKED_* / DENIED_* list of known-bad names. New names will
+      not be on a blocklist. Prefer FUNCTION_ALLOWLIST_HEADERS_* or a
+      named ALLOWED_HEADERS constant.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+      exclude:
+        - "**/src/Appwrite/Platform/Modules/Avatars/Http/Screenshots/Get.php"
+    pattern-either:
+      - pattern: const BLOCKED_HEADERS = $LIST;
+      - pattern: const DENIED_HEADERS = $LIST;
+      - pattern: const FORBIDDEN_HEADERS = $LIST;
+      - pattern: const BLOCKED_HOSTS = $LIST;

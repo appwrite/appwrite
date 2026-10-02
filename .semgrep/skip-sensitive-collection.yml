@@ -1,0 +1,30 @@
+rules:
+  - id: php.appwrite.skip-sensitive-collection
+    message: >
+      Load transactions or sessions with document ACL, or gate Authorization
+      skip on API-key / privileged callers. Unconditional skip around these
+      collections drops the caller check that the rest of the module relies on.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern: $AUTH->skip($CB)
+      - metavariable-regex:
+          metavariable: $CB
+          regex: (?s).*(?:getDocument|find)\(\s*['\"](?:transactions|sessions)['\"].*
+      - pattern-not-inside: |
+          ($IS_KEY || $IS_PRIVILEGED) ? $AUTH->skip(...) : $OTHER
+      - pattern-not-inside: |
+          if ($IS_KEY || $IS_PRIVILEGED) {
+            ...
+            $AUTH->skip(...);
+            ...
+          } else {
+            ...
+          }

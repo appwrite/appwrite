@@ -1,0 +1,26 @@
+rules:
+  - id: php.appwrite.unbounded-map-to-outbound
+    message: >
+      Guest-reachable routes (public, avatars.read, sessions.write) should
+      not accept an unbounded Assoc headers or query map and forward it to
+      an outbound HTTP or browser client. Allowlist keys first
+      (FUNCTION_ALLOWLIST_HEADERS_* or a named ALLOWED_* list).
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+      exclude:
+        - "**/src/Appwrite/Platform/Modules/Avatars/Http/Screenshots/Get.php"
+    patterns:
+      - pattern-either:
+          - pattern: $THIS->param('headers', $DEFAULT, new Assoc(), ...)
+          - pattern: $THIS->param('query', $DEFAULT, new Assoc(), ...)
+      - pattern-regex: ->label\(\s*['\"]scope['\"]\s*,\s*['\"](?:public|avatars\.read|sessions\.write)['\"]
+      - pattern-not-regex: FUNCTION_ALLOWLIST_HEADERS
+      - pattern-not-regex: ALLOWED_HEADERS
+      - pattern-not-regex: ALLOWED_QUERY
