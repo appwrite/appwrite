@@ -520,6 +520,7 @@ export const jaVideosDictionary: Record<string, string> = {
   'Open bucket': 'バケットを開く',
   'Native HTML': 'ネイティブ HTML',
   'Install a player': 'プレーヤーをインストール',
+  '{index} of {total}': '{index} / {total}',
   'Install {player}': '{player} をインストール',
   '{player} documentation': '{player} のドキュメント',
   'All streaming URLs': 'すべてのストリーミング URL',

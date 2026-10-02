@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner'
 import {
   VideoActionButton,
+  VideoFact,
   VideoPage,
   VideoSectionCard,
 } from '../../_components/VideoPage'
@@ -236,8 +237,8 @@ export function View() {
   )
 }
 
-const STRIP_MAX_WIDTH = 280
-const STRIP_MAX_HEIGHT = 240
+const STRIP_MAX_WIDTH = 180
+const STRIP_MAX_HEIGHT = 140
 
 const STRIP_GAP = 8
 
@@ -538,29 +539,59 @@ function PreviewImageCard({
       description={t(
         'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.',
       )}
+      footer={
+        cues && cue ? (
+          <VideoActionButton
+            size="sm"
+            className="h-9 text-[13px]"
+            disabledReason={PREVIEW_SAVE_UNAVAILABLE}
+          >
+            {t('Set as preview')}
+          </VideoActionButton>
+        ) : undefined
+      }
     >
       {!cues || !cue ? (
         <p className="text-[13px] text-muted-foreground">
           {t('Generate a timeline to choose a preview image.')}
         </p>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="overflow-hidden rounded-lg border border-border bg-muted">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <div className="relative w-full max-w-[240px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
             <TimelineSpriteThumb cue={cue} className="w-full" />
+            <span className="pointer-events-none absolute bottom-1.5 start-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
+              {formatPlaybackTime(cue.start)}
+            </span>
           </div>
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-[12px] text-muted-foreground">
-                {t('Selected frame')}
-              </p>
-              <p className="mt-0.5 font-mono text-[20px] font-semibold tabular-nums text-foreground">
-                {formatPlaybackTime(cue.start)}
-              </p>
-              <p className="text-[12px] tabular-nums text-muted-foreground">
-                {selectedIndex + 1} / {cues.length}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
+
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+              <VideoFact
+                label={t('Selected frame')}
+                value={formatPlaybackTime(cue.start)}
+                mono
+              />
+              <VideoFact
+                label={t('Position')}
+                value={t('{index} of {total}')
+                  .replace('{index}', String(selectedIndex + 1))
+                  .replace('{total}', String(cues.length))}
+              />
+              <VideoFact
+                label={t('Time range')}
+                value={`${formatPlaybackTime(cue.start)} - ${formatPlaybackTime(cue.end)}`}
+                mono
+              />
+              <VideoFact
+                label={t('Size')}
+                value={
+                  cue.width > 0 ? `${cue.width} × ${cue.height}` : undefined
+                }
+                mono
+              />
+            </dl>
+
+            <div className="flex max-w-xl items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -592,15 +623,6 @@ function PreviewImageCard({
               >
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
-            </div>
-            <div className="mt-auto">
-              <VideoActionButton
-                size="sm"
-                className="h-9 w-full text-[13px]"
-                disabledReason={PREVIEW_SAVE_UNAVAILABLE}
-              >
-                {t('Set as preview')}
-              </VideoActionButton>
             </div>
           </div>
         </div>

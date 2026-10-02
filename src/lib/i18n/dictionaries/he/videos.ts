@@ -509,6 +509,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Open bucket': 'פתיחת הבאקט',
   'Native HTML': 'HTML מובנה',
   'Install a player': 'התקנת נגן',
+  '{index} of {total}': '{index} מתוך {total}',
   'Install {player}': 'התקנת {player}',
   '{player} documentation': 'הדוקומנטציה של {player}',
   'All streaming URLs': 'כל כתובות הסטרימינג',
