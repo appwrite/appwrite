@@ -423,6 +423,9 @@ class Install extends Action
                 @\posix_kill($pid, SIGTERM);
             }
         });
+        Console::info('Installer secret: ' . $secret);
+        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
+
         \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
@@ -434,9 +437,6 @@ class Install extends Action
             Console::warning('Web installer did not respond in time. Please refresh the browser.');
             return;
         }
-
-        Console::info('Installer secret: ' . $secret);
-        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
 
         if ($this->isInstallationComplete($port)) {
             Console::success('Installation completed.');
