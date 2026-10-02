@@ -279,6 +279,21 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כללי פרויקט שרצים לפני שהתעבורה מגיעה ל-API, לפונקציות או לאתרים שלכם.',
   'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
     'חסמו, הגבילו קצב, הפנו או אתגרו בקשות לפני שהן מגיעות ל-API, לפונקציות או לאתרים שלכם.',
+  'This one is harmless. Firewall stops the rest before they reach your API, Functions, or Sites.':
+    'העכביש הזה לא מזיק. Firewall עוצר את כל השאר לפני שהם מגיעים ל-API, לפונקציות או לאתרים שלכם.',
+  'Block this crawler': 'חסימת הסורק הזה',
+  'Blocked by Firewall': 'נחסם על ידי Firewall',
+  'Keep unwanted bots out of your app':
+    'הרחיקו בוטים לא רצויים מהאפליקציה שלכם',
+  'Deny crawlers and scrapers': 'חסימת סורקים וסקרייפרים',
+  'Return a 403 to any request that matches your conditions.':
+    'החזרת 403 לכל בקשה שתואמת לתנאים שהגדרתם.',
+  'Rate limit noisy clients': 'הגבלת קצב ללקוחות שמציפים בבקשות',
+  'Throttle each client IP and return a 429 once it goes over quota.':
+    'האטה לפי כתובת IP של כל לקוח והחזרת 429 כשהוא חורג מהמכסה.',
+  'Preview impact first': 'בדיקת ההשפעה מראש',
+  'See how much recent traffic a rule would match before you enable it.':
+    'ראו כמה מהתעבורה האחרונה תואמת לכלל לפני שאתם מפעילים אותו.',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',
