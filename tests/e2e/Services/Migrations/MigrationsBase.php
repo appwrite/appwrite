@@ -34,8 +34,6 @@ trait MigrationsBase
     use FunctionsBase;
     use RealtimeBase;
 
-    private const string SUBNET_ENDPOINT = 'http://traefik/v1';
-
     /**
      * @var array
      */
@@ -392,7 +390,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], [
             'resources' => [Resource::TYPE_USER],
-            'endpoint' => self::SUBNET_ENDPOINT,
+            'endpoint' => $this->webEndpoint,
             'projectID' => $source['$id'],
             'key' => $source['apiKey'],
         ]);
@@ -408,7 +406,7 @@ trait MigrationsBase
 
         $migration = $this->performMigrationSync([
             'resources' => [Resource::TYPE_USER],
-            'endpoint' => self::SUBNET_ENDPOINT,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $source['$id'],
             'apiKey' => $source['apiKey'],
         ]);
