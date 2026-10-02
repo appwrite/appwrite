@@ -306,9 +306,17 @@ class Client implements Adapter
         // delivers it undecoded — so a stream must ask for identity instead.
         $streaming = $sink !== null;
 
+        $started = \microtime(true);
         $client = $this->connect($request, $streaming);
 
         $settings = $this->settings + [self::SETTING_HTTP2 => false];
+
+        // Resolving the host in connect() spends part of the connect timeout; the socket
+        // gets what is left, so a slow lookup and a slow connect cannot each take it whole
+        $budget = $settings[self::SETTING_CONNECT_TIMEOUT];
+        if ((\is_int($budget) || \is_float($budget)) && $budget > 0) {
+            $settings[self::SETTING_CONNECT_TIMEOUT] = \max(0.001, $budget - (\microtime(true) - $started));
+        }
 
         // Through a proxy the connected address is the proxy's, so drop any proxy
         // unless the destination permits one.

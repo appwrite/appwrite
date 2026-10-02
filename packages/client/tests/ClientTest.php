@@ -43,18 +43,37 @@ final class ClientTest extends TestCase
             $this->assertStringContainsString('127.0.0.1', $destinationException->getMessage());
         }
 
+        // curl connects before it checks the address, so the refused attempt left a connection: it carried no request
+        $this->assertSame('', $this->received($listener));
+
         // Changing it on a configured client reaches the adapter too
-        $response = new Client(new CurlClient(), new PublicInternet())
+        $client = new Client(new CurlClient(), new PublicInternet())
             ->withDestinations(new Anywhere())
             ->withTimeout(0.25);
         try {
-            $response->sendRequest($request);
+            $client->sendRequest($request);
         } catch (TimeoutException) {
-            // The listener accepts but never answers: the request got through
+            // The listener never answers
         }
 
+        $this->assertStringStartsWith('GET / HTTP/1.1', $this->received($listener));
+    }
+
+    /**
+     * What the next connection to the listener sent, or nothing when none arrives.
+     *
+     * @param resource $listener
+     */
+    private function received($listener): string
+    {
         $connection = @\stream_socket_accept($listener, 1);
-        $this->assertNotFalse($connection, 'The request never reached the listener.');
+        if ($connection === false) {
+            return '';
+        }
+
+        \stream_set_timeout($connection, 1);
+
+        return (string) \fread($connection, 8192);
     }
 
     public function testItDecoratesConfigurableAdapters(): void
