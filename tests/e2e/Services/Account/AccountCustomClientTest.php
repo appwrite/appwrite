@@ -6236,6 +6236,133 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $checkJWT['headers']['status-code']);
     }
 
+    /**
+     * Enables TOTP MFA on the account and leaves a challenge pending on a second session.
+     *
+     * @return array{totp: \OTPHP\TOTP, current: array<string, string>, other: array<string, string>, challengeId: string}
+     */
+    protected function createPendingMFAChallenge(array $data): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $current = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $current);
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $current, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $current, ['mfa' => true]);
+        $this->assertEquals(200, $mfa['headers']['status-code']);
+
+        $other = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $other, [
+            'factor' => 'totp',
+        ]);
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        return [
+            'totp' => $totp,
+            'current' => $current,
+            'other' => $other,
+            'challengeId' => $challenge['body']['$id'],
+        ];
+    }
+
+    public function testUpdatePasswordInvalidatesSessionsAndMFAChallenges(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $this->updateProjectinvalidateSessionsProperty(true);
+        $mfa = $this->createPendingMFAChallenge($data);
+        $newPassword = 'new-password';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', $mfa['current'], [
+            'password' => $newPassword,
+            'oldPassword' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $current = $this->client->call(Client::METHOD_GET, '/account', $mfa['current']);
+        $this->assertEquals(200, $current['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $other = $this->client->call(Client::METHOD_GET, '/account', $mfa['other']);
+        $this->assertEquals(401, $other['headers']['status-code']);
+
+        $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
+        $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
+            'challengeId' => $mfa['challengeId'],
+            'otp' => $mfa['totp']->now(),
+        ]);
+        $this->assertEquals(401, $pending['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $pending['body']['type']);
+    }
+
+    public function testUpdateRecoveryInvalidatesSessionsAndMFAChallenges(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $this->updateProjectinvalidateSessionsProperty(true);
+        $mfa = $this->createPendingMFAChallenge($data);
+        $newPassword = 'recovered-password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $data['email'],
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($data['email'], function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        });
+        $secret = $this->extractQueryParamsFromEmailLink($lastEmail['html'])['secret'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+            'password' => $newPassword,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $current = $this->client->call(Client::METHOD_GET, '/account', $mfa['current']);
+        $this->assertEquals(401, $current['headers']['status-code']);
+
+        $other = $this->client->call(Client::METHOD_GET, '/account', $mfa['other']);
+        $this->assertEquals(401, $other['headers']['status-code']);
+
+        $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
+        $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
+            'challengeId' => $mfa['challengeId'],
+            'otp' => $mfa['totp']->now(),
+        ]);
+        $this->assertEquals(401, $pending['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $pending['body']['type']);
+    }
+
     public function testCreatePushTargetReplacesRotatedTokenUnderJWT(): void
     {
         $data = $this->createFreshAccountWithSession();
