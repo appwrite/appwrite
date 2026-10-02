@@ -366,14 +366,6 @@ class Client implements Adapter
         }
 
         try {
-            if ($client->set($settings) === false) {
-                throw new InvalidArgumentException('Unable to configure Swoole client settings.');
-            }
-
-            if ($client->setMethod($request->getMethod()) === false) {
-                throw new InvalidArgumentException('Unable to configure Swoole request method.');
-            }
-
             $body = $request->getBody();
             $multipart = $body instanceof Body && $this->streamableMultipart($body) ? $body : null;
 
@@ -389,47 +381,78 @@ class Client implements Adapter
                 $headers = $this->withoutContentType($headers);
             }
 
-            if ($client->setHeaders($headers) === false) {
-                throw new InvalidArgumentException('Unable to configure Swoole request headers.');
-            }
-
-            // Swoole never clears requestBody and only clears uploadFiles after a
-            // successful response, so clear whichever this request omits.
-            if ($multipart instanceof \Utopia\Psr7\Request\Multipart\Body) {
-                $client->requestBody = null;
-                $this->attachMultipart($client, $multipart);
-            } else {
-                $client->uploadFiles = null;
-                $data = (string) $body;
-
-                if ($data === '') {
-                    $client->requestBody = null;
-                } elseif ($client->setData($data) === false) {
-                    throw new InvalidArgumentException('Unable to configure Swoole request body.');
-                }
-            }
-        } catch (InvalidArgumentException $invalidArgumentException) {
-            throw $invalidArgumentException;
+            // Read once: an IPv6 retry sends the same bytes, and a stream may not rewind
+            $data = $multipart instanceof \Utopia\Psr7\Request\Multipart\Body ? '' : (string) $body;
         } catch (Throwable $throwable) {
             throw new InvalidArgumentException($throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }
 
-        try {
-            $result = $client->execute($this->path($request));
-        } catch (Throwable $throwable) {
-            throw $this->networkException($request, $throwable->getMessage(), (int) $throwable->getCode(), null, $throwable);
-        }
+        $send = function (SwooleClient $client, array $settings) use ($request, $headers, $multipart, $data): bool {
+            try {
+                if ($client->set($settings) === false) {
+                    throw new InvalidArgumentException('Unable to configure Swoole client settings.');
+                }
 
-        if ($result === false) {
-            $message = \is_string($client->errMsg) && $client->errMsg !== '' ? $client->errMsg : 'Swoole request failed.';
-            $code = \is_int($client->errCode) ? $client->errCode : 0;
-            $statusCode = $client->statusCode;
+                if ($client->setMethod($request->getMethod()) === false) {
+                    throw new InvalidArgumentException('Unable to configure Swoole request method.');
+                }
 
-            if ($this->isTimeout($message, $code, $statusCode)) {
-                throw new TimeoutException($request, $message, $code);
+                if ($client->setHeaders($headers) === false) {
+                    throw new InvalidArgumentException('Unable to configure Swoole request headers.');
+                }
+
+                // Swoole never clears requestBody and only clears uploadFiles after a
+                // successful response, so clear whichever this request omits.
+                if ($multipart instanceof \Utopia\Psr7\Request\Multipart\Body) {
+                    $client->requestBody = null;
+                    $this->attachMultipart($client, $multipart);
+                } else {
+                    $client->uploadFiles = null;
+
+                    if ($data === '') {
+                        $client->requestBody = null;
+                    } elseif ($client->setData($data) === false) {
+                        throw new InvalidArgumentException('Unable to configure Swoole request body.');
+                    }
+                }
+            } catch (InvalidArgumentException $invalidArgumentException) {
+                throw $invalidArgumentException;
+            } catch (Throwable $throwable) {
+                throw new InvalidArgumentException($throwable->getMessage(), (int) $throwable->getCode(), $throwable);
             }
 
-            throw $this->networkException($request, $message, $code, $statusCode, null, $client->headers);
+            try {
+                return $client->execute($this->path($request)) !== false;
+            } catch (Throwable $throwable) {
+                throw $this->networkException($request, $throwable->getMessage(), (int) $throwable->getCode(), null, $throwable);
+            }
+        };
+
+        if (!$send($client, $settings)) {
+            $exception = $this->failure($request, $client);
+
+            // Swoole opens an IPv4 socket for a hostname, so a name with only an AAAA record
+            // fails to resolve. Only then, and only once, ask Swoole's resolver for its IPv6
+            // address and send the same prepared request there, within what is left of the
+            // connect timeout. A name that resolves pays nothing for this.
+            $remaining = (\is_int($budget) || \is_float($budget)) && $budget > 0 ? \max(0.001, $budget - (\microtime(true) - $started)) : -1;
+            $ipv6 = $exception instanceof DnsException && $client->host === \trim($uri->getHost(), '[]')
+                ? System::dnsLookup($client->host, $remaining, AF_INET6)
+                : false;
+
+            if (!\is_string($ipv6) || $ipv6 === '') {
+                throw $exception;
+            }
+
+            $client = $this->connect($request, $streaming, $ipv6);
+
+            if ($remaining > 0) {
+                $settings[self::SETTING_CONNECT_TIMEOUT] = \max(0.001, $budget - (\microtime(true) - $started));
+            }
+
+            if (!$send($client, $settings)) {
+                throw $this->failure($request, $client);
+            }
         }
 
         $statusCode = $client->statusCode;
@@ -539,7 +562,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function connect(RequestInterface $request, bool $streaming): SwooleClient
+    private function connect(RequestInterface $request, bool $streaming, ?string $address = null): SwooleClient
     {
         $uri = $request->getUri();
         $secure = $uri->getScheme() === 'https';
@@ -548,7 +571,7 @@ class Client implements Adapter
         $connection = $streaming ? $this->streamConnection : $this->connection;
         $connectionKey = $streaming ? $this->streamConnectionKey : $this->connectionKey;
 
-        if ($connection instanceof SwooleClient && $connectionKey === $key) {
+        if ($address === null && $connection instanceof SwooleClient && $connectionKey === $key) {
             $socket = $connection->socket ?? null;
             if ($secure && $socket instanceof Coroutine\Socket) {
                 // SSL_peek can fail with errno=0 after an abrupt TLS EOF. Swoole's
@@ -560,20 +583,24 @@ class Client implements Adapter
                 }
             }
 
-            // A pooled connection that must reconnect dials a freshly checked address: the
-            // host may have moved since the address this client was built with was checked
+            // A client built with a hostname re-resolves it itself when it reconnects. One built
+            // with an address would keep dialing that address after the host moved, so a pooled
+            // connection that must reconnect is rebuilt with a fresh one.
             $socket = $connection->socket ?? null;
-            if (!$this->reuseConnections || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
+            $dialsHostname = $connection->host === \trim($uri->getHost(), '[]');
+            if (!$this->reuseConnections || $dialsHostname || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
                 return $connection;
             }
 
             $connection->close();
         }
 
-        // A permitted proxy resolves and reaches the target itself; otherwise dial an
-        // address the destination allowed
+        // Anywhere has nothing to check, and a permitted proxy resolves and reaches the target
+        // itself: both leave the hostname to Swoole. Otherwise dial an address the
+        // destinations allowed.
         $proxied = $this->destinations->permitsProxy() && (isset($this->settings['http_proxy_host']) || isset($this->settings['socks5_host']));
-        $address = $proxied ? $uri->getHost() : $this->address($request);
+        // Swoole dials a bare IPv6 address, so the URI's brackets come off; Host keeps them
+        $address ??= $proxied || $this->destinations instanceof Anywhere ? \trim($uri->getHost(), '[]') : $this->address($request);
 
         try {
             // Dial the address the destination allowed; TLS and Host stay on the hostname
@@ -713,6 +740,21 @@ class Client implements Adapter
             'SOCKET_ETIMEDOUT',
             'SWOOLE_ERROR_SOCKET_POLL_TIMEOUT',
         ], [110]), true);
+    }
+
+    /**
+     * The exception for a request the native client could not complete.
+     */
+    private function failure(RequestInterface $request, SwooleClient $client): TimeoutException|NetworkException
+    {
+        $message = \is_string($client->errMsg) && $client->errMsg !== '' ? $client->errMsg : 'Swoole request failed.';
+        $code = \is_int($client->errCode) ? $client->errCode : 0;
+
+        if ($this->isTimeout($message, $code, $client->statusCode)) {
+            return new TimeoutException($request, $message, $code);
+        }
+
+        return $this->networkException($request, $message, $code, $client->statusCode, null, $client->headers);
     }
 
     private function networkException(RequestInterface $request, string $message, int $code, mixed $statusCode = null, ?Throwable $previous = null, mixed $headers = null): NetworkException
