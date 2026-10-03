@@ -1,0 +1,16 @@
+{
+  "name": "relationship-event-fanout",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "node-appwrite": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  }
+}
