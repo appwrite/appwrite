@@ -571,4 +571,16 @@ export const heSitesDictionary: Record<string, string> = {
   "Couldn't open preview": 'לא ניתן היה לפתוח את התצוגה המקדימה',
   'Something went wrong while checking your access to this preview. Try again in a moment.':
     'משהו השתבש בבדיקת הגישה שלכם לתצוגה המקדימה הזו. נסו שוב בעוד רגע.',
+  'Create your first site': 'יצירת האתר הראשון שלכם',
+  'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
+    'פרסו אפליקציות ווב מ-Git או מתבנית. כל Push מקבל Build, כתובת תצוגה מקדימה והפצה גלובלית מהירה.',
+  'Connect a repository': 'חיבור מאגר',
+  'Deploy on every push to your production branch, with a preview URL for every other branch.':
+    'פריסה בכל Push ל-Branch של הפרודקשן, עם כתובת תצוגה מקדימה לכל Branch אחר.',
+  'Pick a framework': 'בחירת Framework',
+  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
+    'Appwrite מזהה את TanStack Start,‏ Next.js,‏ Nuxt,‏ SvelteKit ועוד, ומגדיר עבורכם את ה-Build.',
+  'Go live': 'עלייה לאוויר',
+  'Get an appwrite.network URL right away, then add your own domain.':
+    'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
 }

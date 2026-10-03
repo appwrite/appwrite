@@ -54,6 +54,7 @@ import { MessageContextMenu } from './_components/MessageContextMenu'
 import { TopicContextMenu } from './_components/TopicContextMenu'
 import { ProviderContextMenu } from './_components/ProviderContextMenu'
 import { MessagingCreateControls } from './_components/MessagingCreateControls'
+import { MessagingEmptyState } from './_components/MessagingEmptyState'
 
 function formatDeliveryErrors(
   deliveryErrors: unknown,
@@ -285,6 +286,9 @@ export function View() {
         ? t("You don't have permission to create topics.")
         : t("You don't have permission to create providers.")
     : undefined
+
+  const showsFirstRunEmptyState =
+    !searchValue && !activeFetching && (currentData.items ?? []).length === 0
 
   // Clear selection when navigating or searching
   useEffect(() => {
@@ -529,6 +533,7 @@ export function View() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         fullWidthBorder
+        hideToolbar={showsFirstRunEmptyState}
         beforeCreateButtons={
           <MessagingCreateControls
             projectId={projectId}
@@ -1014,32 +1019,21 @@ export function View() {
                 itemLabel={t(activeTab)}
               />
             </>
-          ) : (
+          ) : searchValue ? (
             <EmptyState
               icon={MessageSquare}
-              title={
-                searchValue
-                  ? undefined
-                  : activeTab === 'messages'
-                    ? t('No messages yet') // pragma: allowlist secret
-                    : activeTab === 'topics'
-                      ? t('No topics yet')
-                      : t('No providers yet')
-              }
-              description={
-                searchValue
-                  ? undefined
-                  : activeTab === 'messages'
-                    ? t('Create your first message to start sending notifications')
-                    : activeTab === 'topics'
-                      ? t('Create your first topic to organize subscribers')
-                      : t('Create your first provider to send messages') // pragma: allowlist secret
-              }
-              isEmpty={!searchValue}
-              hasFilters={!!searchValue}
+              isEmpty={false}
+              hasFilters
               variant="card"
             />
-          )}
+          ) : showsFirstRunEmptyState && projectId ? (
+            <MessagingEmptyState
+              projectId={projectId}
+              tab={activeTab as 'messages' | 'topics' | 'providers'}
+              createDisabled={noCreatePermission}
+              createDisabledTooltip={createPermissionTooltip}
+            />
+          ) : null}
 
         {/* Bulk Delete Action Bar */}
         {selectedItems.size > 0 && (

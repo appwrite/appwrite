@@ -8,39 +8,13 @@
  * code look the same in both themes without any highlighter running in the
  * reader's browser.
  *
- * Import this module lazily (see renderBlogPostBodies) so the grammars stay
- * out of the initial client bundle.
+ * The loader also runs in the browser on client-side navigation, so grammars
+ * load through the shared registry in `@/lib/prism-languages`; call
+ * `loadFenceGrammars` before `highlightCode`.
  */
 
-import Prism from 'prismjs'
-import 'prismjs/components/prism-markup'
-import 'prismjs/components/prism-markup-templating'
-import 'prismjs/components/prism-typescript'
-import 'prismjs/components/prism-jsx'
-import 'prismjs/components/prism-tsx'
-import 'prismjs/components/prism-bash'
-import 'prismjs/components/prism-json'
-import 'prismjs/components/prism-dart'
-import 'prismjs/components/prism-swift'
-import 'prismjs/components/prism-kotlin'
-import 'prismjs/components/prism-java'
-import 'prismjs/components/prism-php'
-import 'prismjs/components/prism-python'
-import 'prismjs/components/prism-ruby'
-import 'prismjs/components/prism-go'
-import 'prismjs/components/prism-csharp'
-import 'prismjs/components/prism-rust'
-import 'prismjs/components/prism-graphql'
-import 'prismjs/components/prism-sql'
-import 'prismjs/components/prism-http'
-import 'prismjs/components/prism-yaml'
-import 'prismjs/components/prism-toml'
-import 'prismjs/components/prism-docker'
-import 'prismjs/components/prism-diff'
-import 'prismjs/components/prism-powershell'
-import 'prismjs/components/prism-hcl'
-import 'prismjs/components/prism-css'
 import { resolveFenceCodeLanguage } from '@/lib/code-language'
+import { loadPrismLanguage, Prism } from '@/lib/prism-languages'
 
 export type HighlightedCode = {
   html: string
@@ -62,7 +36,7 @@ const RUNTIME_TO_PRISM: Record<string, string> = {
   tsx: 'tsx',
 }
 
-function resolvePrismLanguage(fenceLanguage: string): string | null {
+function resolvePrismLanguageId(fenceLanguage: string): string | null {
   const normalized = fenceLanguage.toLowerCase().trim()
   // Platform fences such as `client-flutter` or `server-nodejs` are aliased
   // in full, so resolve the whole name before falling back to the bare
@@ -76,7 +50,19 @@ function resolvePrismLanguage(fenceLanguage: string): string | null {
       : (RUNTIME_TO_PRISM[platform] ?? resolveFenceCodeLanguage(platform)))
   const language = RUNTIME_TO_PRISM[candidate] ?? candidate
   if (language === 'plaintext' || language === 'env') return null
-  return Prism.languages[language] ? language : null
+  return language
+}
+
+/** Loads the Prism grammars for the given fence languages. */
+export async function loadFenceGrammars(
+  fenceLanguages: Iterable<string>,
+): Promise<void> {
+  const ids = new Set<string>()
+  for (const fence of fenceLanguages) {
+    const id = resolvePrismLanguageId(fence)
+    if (id) ids.add(id)
+  }
+  await Promise.all([...ids].map((id) => loadPrismLanguage(id)))
 }
 
 /**
@@ -87,8 +73,8 @@ export function highlightCode(
   code: string,
   fenceLanguage: string,
 ): HighlightedCode | null {
-  const language = resolvePrismLanguage(fenceLanguage)
-  if (!language) return null
+  const language = resolvePrismLanguageId(fenceLanguage)
+  if (!language || !Prism.languages[language]) return null
   return {
     html: Prism.highlight(code, Prism.languages[language], language),
     language,

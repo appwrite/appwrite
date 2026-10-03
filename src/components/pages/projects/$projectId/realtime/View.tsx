@@ -18,10 +18,8 @@ import {
   ListCollapse,
   ListTree,
   Loader2,
-  MessagesSquare,
   Pause,
   Play,
-  Radio,
   Trash2,
   Unplug,
   X,
@@ -36,7 +34,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -47,6 +44,7 @@ import { MessageDirectionIcon } from './_components/MessageDirectionIcon'
 import { ReconnectBanner } from './_components/ReconnectBanner'
 import { ConfigurationPanel } from './_components/ConfigurationPanel'
 import { InsertSampleMessageMenu } from './_components/InsertSampleMessageMenu'
+import { MessagesEmptyState } from './_components/MessagesEmptyState'
 import { useRealtimeDebuggerConfig } from '@/hooks/use-realtime-debugger-config'
 import { useProjectUsers } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -359,55 +357,6 @@ function messageTypeVariant(
   if (type === 'close') return 'warning'
   if (direction === 'out') return 'info'
   return 'info'
-}
-
-function MessagesEmptyState({
-  isConnected,
-  hasSubscriptions,
-}: {
-  isConnected: boolean
-  hasSubscriptions: boolean
-}) {
-  const t = useT()
-  if (!isConnected) {
-    return (
-      <EmptyState
-        variant="centered"
-        icon={MessagesSquare}
-        iconSize="md"
-        title={t('No messages yet') /* pragma: allowlist secret */}
-        description={t('Connect as guest or a project user, then subscribe to channels to inspect WebSocket traffic. You can also insert sample frames to preview payload structure.')}
-        isEmpty
-        className="w-full"
-      />
-    )
-  }
-
-  if (!hasSubscriptions) {
-    return (
-      <EmptyState
-        variant="centered"
-        icon={MessagesSquare}
-        iconSize="md"
-        title={t('Waiting for subscriptions')}
-        description={t('Add a channel subscription to start receiving and logging Realtime frames.')}
-        isEmpty
-        className="w-full"
-      />
-    )
-  }
-
-  return (
-    <EmptyState
-      variant="centered"
-      icon={Radio}
-      iconSize="md"
-      title={t('Listening for traffic')}
-      description={t('Incoming and outgoing WebSocket frames will appear here as they arrive.')}
-      isEmpty
-      className="w-full"
-    />
-  )
 }
 
 export function View() {
@@ -1204,7 +1153,7 @@ export function View() {
             <div className="flex-1 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
               {logs.length === 0 ? (
                 <div className="flex min-h-[200px] flex-1 items-center justify-center px-4 py-12">
-                  <div className="w-full max-w-sm">
+                  <div className="w-full max-w-md">
                     <MessagesEmptyState
                       isConnected={isConnected}
                       hasSubscriptions={configuredSubscriptions.length > 0}

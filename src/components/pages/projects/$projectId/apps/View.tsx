@@ -10,8 +10,8 @@ import {
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformContextMenu } from './_components/PlatformContextMenu'
+import { AppsEmptyState } from './_components/AppsEmptyState'
 import { PlatformIcon } from '@/components/global/shared/Icon'
-import { McpIcon } from '@/components/global/shared/McpIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
@@ -28,7 +28,6 @@ import {
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -39,16 +38,6 @@ export type AppsInitialData = {
 type ViewProps = {
   initialData?: AppsInitialData
 }
-
-const supportedPlatforms = [
-  { id: 'web', platform: 'web' },
-  { id: 'react-native', platform: 'react-native' },
-  { id: 'flutter', platform: 'flutter' },
-  { id: 'apple', platform: 'apple' },
-  { id: 'android', platform: 'android' },
-  { id: 'windows', platform: 'windows' },
-  { id: 'linux', platform: 'linux' },
-] as const
 
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
@@ -121,6 +110,7 @@ export function View({ initialData }: ViewProps = {}) {
         }
         showFilters={false}
         fullWidthBorder
+        hideToolbar={!showLoading && platforms.length === 0}
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -143,62 +133,16 @@ export function View({ initialData }: ViewProps = {}) {
           </div>
         ) : filteredPlatforms.length === 0 ? (
           platforms.length === 0 ? (
-            <EmptyState icon={Plug2} variant="card" isEmpty={true}>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Plug2 className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  {t('No apps connected')}
-                </h3>
-                <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  {t(
-                    'Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.', // pragma: allowlist secret
-                  )}
-                </p>
-                <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="font-medium text-foreground/80">
-                    {t('Connect with your stack')}
-                  </span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <div className="flex w-full flex-wrap justify-center gap-2">
-                  {supportedPlatforms.map(({ id, platform }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => goToAddAppWizard(id as AddAppKind)}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      <PlatformIcon platform={platform} size="sm" />
-                      <span>{getPlatformDisplayName(platform)}</span>
-                    </button>
-                  ))}
-                </div>
-                {projectConnect ? (
-                  <>
-                    <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="font-medium text-foreground/80">
-                        {t('or')}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="gap-1.5"
-                      onClick={() => projectConnect.openConnect('mcp')}
-                    >
-                      <McpIcon className="h-4 w-4" />
-                      {t('Build with an agent')}
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </EmptyState>
+            <AppsEmptyState
+              onAdd={goToAddAppWizard}
+              onBuildWithAgent={
+                projectConnect
+                  ? () => projectConnect.openConnect('mcp')
+                  : undefined
+              }
+              addDisabled={noCreatePermission}
+              addDisabledTooltip={t("You don't have permission to add apps.")}
+            />
           ) : (
             <EmptyState
               icon={Plug2}

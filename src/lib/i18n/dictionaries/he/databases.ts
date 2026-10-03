@@ -2187,4 +2187,46 @@ export const heDatabasesDictionary: Record<string, string> = {
     'הזמן הזה מוקדם מנקודת השחזור המוקדמת ביותר.',
   'This time is after the latest recovery point.':
     'הזמן הזה מאוחר מנקודת השחזור המאוחרת ביותר.',
+  'Create your first database': 'יצירת מסד הנתונים הראשון שלכם',
+  'Store, query, and sync your app data with tables, columns, and indexes built into Appwrite.':
+    'אחסנו, שלפו וסנכרנו את נתוני האפליקציה שלכם עם טבלאות, עמודות ואינדקסים שמובנים ב-Appwrite.',
+  'Start with TablesDB, a managed database built into Appwrite.':
+    'התחילו עם TablesDB, מסד נתונים מנוהל שמובנה ב-Appwrite.',
+  'Define your schema': 'הגדרת הסכמה',
+  'Add tables, columns, and indexes, then set permissions for each table.':
+    'הוסיפו טבלאות, עמודות ואינדקסים, ואז הגדירו הרשאות לכל טבלה.',
+  'Query from your app': 'שליפת נתונים מהאפליקציה',
+  'Read and write rows with the Appwrite SDKs and subscribe to changes in realtime.':
+    'קראו וכתבו שורות עם ה-SDK של Appwrite והירשמו לשינויים בזמן אמת.',
+  'Available on paid plans': 'זמין בתוכניות בתשלום',
+  'Available on paid plans, with monthly database credits.':
+    'זמין בתוכניות בתשלום, עם קרדיטים חודשיים למסדי נתונים.',
+  'Store, query, and sync your app data with Appwrite. Not sure which type to pick? Start with TablesDB.':
+    'אחסנו, שלפו וסנכרנו את נתוני האפליקציה שלכם עם Appwrite. לא בטוחים באיזה סוג לבחור? התחילו עם TablesDB.',
+  'Fully managed and built into Appwrite. Read and write from your app with the SDKs.':
+    'מנוהל במלואו ומובנה ב-Appwrite. קראו וכתבו מהאפליקציה שלכם עם ה-SDK.',
+  'Your own PostgreSQL or MySQL server, run by Appwrite. Connect with any SQL client or ORM.':
+    'שרת PostgreSQL או MySQL משלכם, שמופעל על ידי Appwrite. התחברו עם כל לקוח SQL או ORM.',
+  'Rows and columns with a defined schema. A good fit for most apps: users, orders, posts.':
+    'שורות ועמודות עם סכמה מוגדרת. מתאים לרוב האפליקציות: משתמשים, הזמנות, פוסטים.',
+  'JSON documents that can each have a different shape. Good for content and fast-changing data.':
+    'מסמכי JSON שלכל אחד מהם יכול להיות מבנה שונה. מתאים לתוכן ולנתונים שמשתנים מהר.',
+  'Stores embeddings and finds similar items. Good for AI search and recommendations.':
+    'שומר הטמעות ומוצא פריטים דומים. מתאים לחיפוש AI ולהמלצות.',
+  'A dedicated PostgreSQL server with full SQL. Good if you already use Postgres tools.':
+    'שרת PostgreSQL ייעודי עם SQL מלא. מתאים אם אתם כבר משתמשים בכלי Postgres.',
+  'A dedicated MySQL server with full SQL. Good for moving an existing MySQL app.':
+    'שרת MySQL ייעודי עם SQL מלא. מתאים להעברת אפליקציית MySQL קיימת.',
+  'Schedule a policy': 'תזמון מדיניות',
+  'Pick how often to back up and how long to keep each copy. Appwrite runs it for you from then on.':
+    'בחרו באיזו תדירות לגבות וכמה זמן לשמור כל עותק. מכאן והלאה Appwrite מריץ את זה בשבילכם.',
+  'Back up on demand': 'גיבוי לפי דרישה',
+  'Take a manual backup before a risky migration or a big import, alongside your scheduled ones.':
+    'צרו גיבוי ידני לפני מיגרציה מסוכנת או ייבוא גדול, בנוסף לגיבויים המתוזמנים.',
+  'Restore in a few clicks': 'שחזור בכמה קליקים',
+  'Bring any backup back as a new database, so you can check the data before you switch over.':
+    'שחזרו כל גיבוי כמסד נתונים חדש, כדי שתוכלו לבדוק את הנתונים לפני המעבר.',
+  'Keep this database safe': 'שמרו על מסד הנתונים הזה',
+  'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
+    'גבו לפי לוח זמנים, שמרו עותקים כמה זמן שצריך, ושחזרו כל אחד מהם כשמשהו משתבש.',
 }

@@ -15,14 +15,14 @@ const SCALE_QUOTE = {
 function ScaleQuoteBelowChart() {
   const t = useT()
   return (
-    <figure className="mx-auto flex w-full max-w-[21rem] flex-col items-center text-center sm:max-w-[24rem]">
+    <figure className="mx-auto flex w-full max-w-[21rem] flex-col items-center text-center sm:max-w-[28rem]">
       <span
         className="font-aeonik-pro text-[3.5rem] leading-none text-muted-foreground/30 sm:text-[4rem]"
         aria-hidden
       >
         &ldquo;
       </span>
-      <blockquote className="mt-3 text-sm leading-snug text-muted-foreground sm:text-[15px] sm:leading-6">
+      <blockquote className="mt-3 text-[15px] leading-6 text-foreground/80 sm:text-[17px] sm:leading-7">
         <span className="block">{t(SCALE_QUOTE.lineOne)}</span>
         <span className="mt-1 block">{t(SCALE_QUOTE.lineTwo)}</span>
       </blockquote>
@@ -74,12 +74,12 @@ function ScaleStatCard({
 }) {
   const t = useT()
   return (
-    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 px-2.5 py-2.5 sm:px-3 sm:py-3">
-      <p className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-lg lg:text-xl">
+    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-card/45 px-3 py-3 transition-colors duration-300 hover:bg-accent/15 sm:px-3.5 sm:py-3.5">
+      <p className="font-aeonik-pro text-[20px] leading-none tabular-nums tracking-tight text-foreground sm:text-[22px] lg:text-[24px]">
         {value}
-        {suffix}
+        <span className="text-muted-foreground">{suffix}</span>
       </p>
-      <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+      <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
         {t(label)}
       </p>
     </div>
@@ -160,7 +160,7 @@ function ScaleStatCards() {
 function ScaleChart() {
   return (
     <div className="relative left-1/2 w-[100dvw] -translate-x-1/2">
-      <div className="relative min-h-[22rem] w-full overflow-hidden bg-transparent sm:min-h-[26rem] lg:min-h-[28rem]">
+      <div className="relative min-h-[22rem] w-full overflow-hidden bg-transparent [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] sm:min-h-[26rem] lg:min-h-[28rem]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <ScaleChartBackground />
           <ScaleAreaCurve className="scale-area-curve" />
@@ -179,7 +179,7 @@ export function ScaleSection() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-          {t('Over half a million developers scale with Appwrite')} {/* pragma: allowlist secret */}
+          {t('Over half a million developers scale with Appwrite') /* pragma: allowlist secret */}
           <span className="text-[var(--brand-cta)]">_</span>
         </h2>
 

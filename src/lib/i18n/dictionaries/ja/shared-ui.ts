@@ -1293,4 +1293,43 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Created by': '作成者',
+  'Authorized resources': '認可済みリソース',
+  'No scopes granted': '付与されたスコープはありません',
+  Installations: 'インストール一覧',
+  'Installations appear here once a team installs this app.':
+    'チームがこのアプリをインストールすると、ここに表示されます。',
+  'No installations': 'インストールはありません',
+  'Remove installation': 'インストールを削除',
+  'Installation removed': 'インストールを削除しました',
+  'Failed to remove installation': 'インストールの削除に失敗しました',
+  'Teams that installed this app and the scopes they granted. Removing an installation revokes its access tokens.':
+    'このアプリをインストールしたチームと、付与されたスコープです。インストールを削除すると、そのアクセストークンは取り消されます。',
+  'The app loses access to this team immediately and its installation tokens stop working. The team can install the app again later.':
+    'アプリはこのチームへのアクセスを直ちに失い、インストールトークンは動作しなくなります。チームは後で再度インストールできます。',
+  'App keys': 'アプリキー',
+  'App key created': 'アプリキーを作成しました',
+  'App key deleted': 'アプリキーを削除しました',
+  'Create key': 'キーを作成',
+  'Delete app key': 'アプリキーを削除',
+  'Failed to create app key': 'アプリキーの作成に失敗しました',
+  'Failed to delete app key': 'アプリキーの削除に失敗しました',
+  'Key value': 'キーの値',
+  'No app keys': 'アプリキーはありません',
+  'Create a key when your app needs to authenticate as itself, such as when it mints installation tokens.':
+    'アプリ自身として認証する必要があるとき (インストールトークンを発行するときなど) にキーを作成します。',
+  'Copy the key into your server environment. You can copy it again later from the keys list.':
+    'キーをサーバー環境にコピーしてください。後からキー一覧で再度コピーできます。',
+  'Never ship app keys in mobile apps, SPAs, or public repositories. Store them in a secrets manager.':
+    'アプリキーをモバイルアプリ、SPA、公開リポジトリに含めないでください。シークレットマネージャーに保存してください。',
+  'Requests signed with this key stop working immediately. This cannot be undone.':
+    'このキーで署名されたリクエストは直ちに動作しなくなります。この操作は取り消せません。',
+  'Your app signs a JWT with an app key to authenticate as itself, for example to mint installation access tokens. Delete a key to revoke it.':
+    'アプリはアプリキーで JWT に署名して自身を認証します (インストールアクセストークンの発行など)。キーを削除すると取り消されます。',
+  'Self-registered': '自己登録',
+  'Suggested app': 'おすすめアプリ',
+  'App key copied': 'アプリキーをコピーしました',
+  'Load more': 'さらに読み込む',
+  'Loading more failed. Try again.':
+    'さらに読み込めませんでした。もう一度お試しください。',
 }

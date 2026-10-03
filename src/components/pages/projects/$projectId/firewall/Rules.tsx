@@ -63,7 +63,6 @@ import {
 import {
   formatConditionSummary,
   parseFirewallConditions,
-  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
   buildConsoleUrl,
@@ -91,35 +90,9 @@ import {
 import { AttackModeButton } from './_components/AttackMode'
 import { AddFirewallPresets } from './_components/AddFirewallPresets'
 import { PriorityHint } from './_components/PriorityHint'
+import { RulesEmptyState } from './_components/RulesEmptyState'
 import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
-
-function emptyCopyForScope(scope: FirewallResourceType): {
-  title: string
-  description: string
-} {
-  switch (scope) {
-    case 'functions':
-      return {
-        title: 'No function firewall rules',
-        description:
-          'Create a firewall rule scoped to a function to control how it handles requests.',
-      }
-    case 'sites':
-      return {
-        title: 'No site firewall rules',
-        description:
-          'Create a firewall rule scoped to a site to control how it handles requests.',
-      }
-    case 'api':
-    default:
-      return {
-        title: 'No API firewall rules',
-        description:
-          'Create a firewall rule for your project API to protect it from malicious requests.',
-      }
-  }
-}
 
 interface RulesListProps {
   projectId: string
@@ -176,7 +149,8 @@ export function RulesList({
     (!canWrite
       ? t("You don't have permission to create firewall rules.")
       : t("You've reached the limit for this resource on your plan"))
-  const emptyCopy = emptyCopyForScope(resourceScope)
+  const showsFirstRunEmptyState =
+    !searchValue && !isLoading && scopedRules.length === 0
 
   const handleToggleEnabled = async (rule: Models.WafRule) => {
     const nextEnabled = !rule.enabled
@@ -273,6 +247,7 @@ export function RulesList({
           value={resourceSelection}
           onValueChange={onResourceSelectionChange}
         />
+        {!showsFirstRunEmptyState && (
         <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -282,7 +257,9 @@ export function RulesList({
             className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
           />
         </div>
+        )}
       </div>
+      {!showsFirstRunEmptyState && (
       <div className="flex shrink-0 items-center gap-2">
         <AttackModeButton
           projectId={projectId}
@@ -300,6 +277,7 @@ export function RulesList({
         />
         {createButton}
       </div>
+      )}
     </div>
   )
 
@@ -562,16 +540,24 @@ export function RulesList({
     <div className="space-y-4">
       {toolbarRow}
 
-      {scopedRules.length === 0 ? (
-        <EmptyState
-          icon={Shield}
-          title={searchValue ? undefined : t(emptyCopy.title)}
-          description={searchValue ? undefined : t(emptyCopy.description)}
-          isEmpty={!searchValue}
-          hasFilters={!!searchValue}
-          variant="card"
-          iconSize="md"
+      {showsFirstRunEmptyState ? (
+        <RulesEmptyState
+          scope={resourceScope}
+          onCreate={onCreate}
+          createDisabled={resolvedCreateDisabled}
+          createDisabledTooltip={resolvedCreateDisabledTooltip}
+          presets={
+            <AddFirewallPresets
+              projectId={projectId}
+              resourceSelection={resourceSelection}
+              canWrite={canWrite}
+              createDisabled={createDisabled}
+              createDisabledTooltip={resolvedCreateDisabledTooltip}
+            />
+          }
         />
+      ) : scopedRules.length === 0 ? (
+        <EmptyState icon={Shield} hasFilters variant="card" iconSize="md" />
       ) : (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <Table>

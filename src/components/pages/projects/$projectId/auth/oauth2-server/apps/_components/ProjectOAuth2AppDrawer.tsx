@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertTriangle,
@@ -8,6 +8,7 @@ import {
   Loader2,
   Lock,
   Plus,
+  ShieldCheck,
   Terminal,
   Trash2,
 } from 'lucide-react'
@@ -18,6 +19,13 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import {
+  isOAuth2AppReadOnly,
+  OAuth2AppLabelBadges,
+} from '@/components/global/shared/OAuth2AppLabelBadges'
+import { OAuth2AppInstallationsCard } from '@/components/global/shared/OAuth2AppInstallationsCard'
+import { OAuth2AppKeysCard } from '@/components/global/shared/OAuth2AppKeysCard'
+import { OAuth2ScopePicker } from '@/components/global/shared/OAuth2ScopePicker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +33,12 @@ import { Switch } from '@/components/ui/switch'
 import { InputTags } from '@/components/ui/input-tags'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { MarkdownEditor } from '@/components/global/shared/MarkdownEditor'
 import {
   OAUTH2_DEVICE_FLOW_DESCRIPTION,
@@ -45,13 +59,19 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   useCreateProjectOAuth2App,
+  useCreateProjectOAuth2AppKey,
   useCreateProjectOAuth2AppSecret,
   useDeleteProjectOAuth2App,
+  useDeleteProjectOAuth2AppInstallation,
+  useDeleteProjectOAuth2AppKey,
   useDeleteProjectOAuth2AppSecret,
   useDeleteProjectOAuth2AppTokens,
   useProject,
   useProjectOAuth2App,
+  useProjectOAuth2AppInstallations,
+  useProjectOAuth2AppKeys,
   useProjectOAuth2AppSecrets,
+  useProjectOAuth2InstallationScopes,
   useUpdateProjectOAuth2App,
 } from '@/lib/react-query/hooks'
 import { copyToClipboard } from '@/lib/utils/context-menu'
@@ -60,6 +80,9 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { AppLogoFilePicker } from '@/components/pages/organizations/$orgId/apps/_components/AppLogoFilePicker'
 import { AppImagesPicker } from '@/components/pages/organizations/$orgId/apps/_components/AppImagesPicker'
+
+/** Nested dialogs must stack above the drawer overlay. */
+const NESTED_DIALOG_CLASS = 'z-[130]'
 
 function nonEmptyList(values: string[]): string[] {
   return values.map((v) => v.trim()).filter(Boolean)
@@ -83,7 +106,9 @@ function DrawerSection({
       <div className="px-4 py-3">
         <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
         {description ? (
-          <p className="mt-1 text-[12px] text-muted-foreground">{description}</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       <div className="border-t border-border" />
@@ -113,7 +138,7 @@ export function ProjectOAuth2AppDrawer({
 }: ProjectOAuth2AppDrawerProps) {
   const t = useT()
   const isEditing = !!app
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const teamId = project?.teamId ?? ''
 
   const { app: fullApp } = useProjectOAuth2App(
@@ -122,6 +147,7 @@ export function ProjectOAuth2AppDrawer({
     region,
   )
   const source = fullApp ?? app
+  const readOnly = isEditing && isOAuth2AppReadOnly(source?.labels)
 
   const createMutation = useCreateProjectOAuth2App(projectId, region)
   const updateMutation = useUpdateProjectOAuth2App(projectId, region)
@@ -138,11 +164,46 @@ export function ProjectOAuth2AppDrawer({
     projectId,
     region,
   )
+  const createKeyMutation = useCreateProjectOAuth2AppKey(projectId, region)
+  const deleteKeyMutation = useDeleteProjectOAuth2AppKey(projectId, region)
+  const deleteInstallationMutation = useDeleteProjectOAuth2AppInstallation(
+    projectId,
+    region,
+  )
   const { secrets, isLoading: secretsLoading } = useProjectOAuth2AppSecrets(
     projectId,
     isEditing && source?.type !== 'public' ? source?.$id : null,
     region,
   )
+  const {
+    keys,
+    isLoading: keysLoading,
+    hasMore: keysHaveMore,
+    loadMore: loadMoreKeys,
+    isLoadingMore: keysLoadingMore,
+    loadMoreFailed: keysLoadMoreFailed,
+  } = useProjectOAuth2AppKeys(projectId, isEditing ? source?.$id : null, region)
+  const {
+    installations,
+    isLoading: installationsLoading,
+    hasMore: installationsHaveMore,
+    loadMore: loadMoreInstallations,
+    isLoadingMore: installationsLoadingMore,
+    loadMoreFailed: installationsLoadMoreFailed,
+  } = useProjectOAuth2AppInstallations(
+    projectId,
+    isEditing ? source?.$id : null,
+    region,
+  )
+  const {
+    scopes: installationScopeCatalog,
+    isLoading: installationScopesLoading,
+    error: installationScopesError,
+  } = useProjectOAuth2InstallationScopes(isEditing ? projectId : null, region)
+  // Until the catalog has loaded (or when it failed) the stored scopes pass
+  // through untouched, so a save never drops them because of a bad request.
+  const installationScopeCatalogReady =
+    !installationScopesLoading && !installationScopesError
 
   const isPending =
     createMutation.isPending ||
@@ -163,6 +224,8 @@ export function ProjectOAuth2AppDrawer({
   const [postLogoutRedirectUris, setPostLogoutRedirectUris] = useState<
     string[]
   >([])
+  const [installationScopes, setInstallationScopes] = useState<string[]>([])
+  const [installationRedirectUrl, setInstallationRedirectUrl] = useState('')
   const [clientUri, setClientUri] = useState('')
   const [logoUri, setLogoUri] = useState('')
   const [images, setImages] = useState<string[]>([])
@@ -189,6 +252,8 @@ export function ProjectOAuth2AppDrawer({
       setDeviceFlow(false)
       setRedirectUris([])
       setPostLogoutRedirectUris([])
+      setInstallationScopes([])
+      setInstallationRedirectUrl('')
       setClientUri('')
       setLogoUri('')
       setImages([])
@@ -212,6 +277,8 @@ export function ProjectOAuth2AppDrawer({
       setDeviceFlow(source.deviceFlow ?? false)
       setRedirectUris(source.redirectUris ?? [])
       setPostLogoutRedirectUris(source.postLogoutRedirectUris ?? [])
+      setInstallationScopes(source.installationScopes ?? [])
+      setInstallationRedirectUrl(source.installationRedirectUrl ?? '')
       setClientUri(source.clientUri ?? '')
       setLogoUri(source.logoUri ?? '')
       setImages(source.images ?? [])
@@ -223,6 +290,41 @@ export function ProjectOAuth2AppDrawer({
     }
   }, [open, source])
 
+  // The project decides which installation scopes an app may request; the
+  // update endpoint rejects anything outside that list.
+  const installationScopeOptions = useMemo(
+    () =>
+      installationScopeCatalog.map((scope) => ({
+        value: scope.value,
+        description: scope.description || undefined,
+        category: scope.category || undefined,
+        deprecated: scope.deprecated,
+      })),
+    [installationScopeCatalog],
+  )
+  const allowedInstallationScopes = useMemo(
+    () => new Set(installationScopeCatalog.map((scope) => scope.value)),
+    [installationScopeCatalog],
+  )
+  const droppedInstallationScopes = useMemo(
+    () =>
+      installationScopeCatalogReady
+        ? (source?.installationScopes ?? []).filter(
+            (scope) => !allowedInstallationScopes.has(scope),
+          )
+        : [],
+    [
+      installationScopeCatalogReady,
+      source?.installationScopes,
+      allowedInstallationScopes,
+    ],
+  )
+
+  // Device flow needs a project-level verification URL (Server tab). Apps
+  // that already have it on can still turn it off.
+  const deviceFlowConfigured = !!projectData?.oAuth2ServerVerificationUrl
+  const deviceFlowLocked = !deviceFlowConfigured && !deviceFlow
+
   const handleOpenChange = (next: boolean) => {
     if (!isPending) onOpenChange(next)
   }
@@ -230,7 +332,7 @@ export function ProjectOAuth2AppDrawer({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const uris = nonEmptyList(redirectUris)
-    if (!name.trim() || isPending) return
+    if (!name.trim() || isPending || readOnly) return
 
     const consentPayload = {
       tagline: tagline.trim(),
@@ -257,6 +359,14 @@ export function ProjectOAuth2AppDrawer({
           appId: source.$id,
           name: name.trim(),
           ...consentPayload,
+          // Installation settings are only accepted on update; always send
+          // them so the endpoint does not reset them.
+          installationScopes: installationScopeCatalogReady
+            ? installationScopes.filter((scope) =>
+                allowedInstallationScopes.has(scope),
+              )
+            : (source.installationScopes ?? []),
+          installationRedirectUrl: installationRedirectUrl.trim(),
         })
         toast.success(t('App updated'))
         handleOpenChange(false)
@@ -345,7 +455,17 @@ export function ProjectOAuth2AppDrawer({
     window.setTimeout(() => onDelete(source), 0)
   }
 
-  const canSubmit = !!name.trim()
+  const canSubmit = !!name.trim() && !readOnly
+  const fieldsDisabled = isPending || readOnly
+
+  const deviceFlowSwitch = (
+    <Switch
+      id="oauth2-app-device-flow"
+      checked={deviceFlow}
+      disabled={fieldsDisabled || deviceFlowLocked}
+      onCheckedChange={setDeviceFlow}
+    />
+  )
 
   return (
     <>
@@ -355,7 +475,9 @@ export function ProjectOAuth2AppDrawer({
         title={isEditing ? t('Update app') : t('Create OAuth2 app')}
         description={
           isEditing
-            ? t('OAuth2 client settings, consent screen, and marketplace details.')
+            ? t(
+                'OAuth2 client settings, consent screen, and marketplace details.',
+              )
             : t(
                 "Register a client that can authenticate users through this project's OAuth2 server.",
               )
@@ -371,12 +493,29 @@ export function ProjectOAuth2AppDrawer({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="space-y-5 px-6 py-6">
                 <div className="space-y-4">
+                  {readOnly ? (
+                    <Alert className="border-border bg-muted/30">
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                      <AlertTitle className="text-[12px] font-medium">
+                        {t('Managed by Appwrite')}
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-muted-foreground">
+                        {t(
+                          'Official apps are maintained by Appwrite and cannot be changed here.',
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+
                   {isEditing && source ? (
                     <div className="space-y-2">
                       <Label className="text-[12px] font-medium">
                         {t('Client ID')}
                       </Label>
-                      <CopyableId id={source.$id} />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CopyableId id={source.$id} />
+                        <OAuth2AppLabelBadges labels={source.labels} />
+                      </div>
                     </div>
                   ) : null}
 
@@ -397,7 +536,7 @@ export function ProjectOAuth2AppDrawer({
                     <Switch
                       id="oauth2-app-enabled"
                       checked={enabled}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                       onCheckedChange={setEnabled}
                     />
                   </div>
@@ -405,7 +544,7 @@ export function ProjectOAuth2AppDrawer({
                   <OAuth2ClientTypePicker
                     value={clientType}
                     onChange={setClientType}
-                    disabled={isPending}
+                    disabled={fieldsDisabled}
                   />
 
                   <div className="space-y-2">
@@ -417,7 +556,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={setRedirectUris}
                       splitOnComma
                       placeholder={t('Add redirect URI and press Enter')}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
 
@@ -430,7 +569,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={setPostLogoutRedirectUris}
                       splitOnComma
                       placeholder={t('Add post-logout URI and press Enter')}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
 
@@ -446,13 +585,96 @@ export function ProjectOAuth2AppDrawer({
                         {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
                       </p>
                     </div>
-                    <Switch
-                      id="oauth2-app-device-flow"
-                      checked={deviceFlow}
-                      disabled={isPending}
-                      onCheckedChange={setDeviceFlow}
-                    />
+                    {deviceFlowLocked ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex">
+                              {deviceFlowSwitch}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-[12px]">
+                            {t(
+                              'Set a verification URL on the Server tab to enable the device authorization grant.',
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      deviceFlowSwitch
+                    )}
                   </div>
+
+                  {isEditing ? (
+                    <div className="space-y-3 rounded-lg border border-border p-3">
+                      <div>
+                        <h4 className="text-[13px] font-semibold text-foreground">
+                          {t('Installation settings')}
+                        </h4>
+                        <p className="mt-1 text-[12px] text-muted-foreground">
+                          {t(
+                            'Teams in this project can install the app to let it act on their behalf with the scopes below.',
+                          )}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[12px] font-medium">
+                          {t('Installation scopes')}
+                        </Label>
+                        <OAuth2ScopePicker
+                          idPrefix="oauth2-app-installation-scope"
+                          options={installationScopeOptions}
+                          value={installationScopes}
+                          onChange={setInstallationScopes}
+                          disabled={fieldsDisabled}
+                          emptyMessage={
+                            installationScopesLoading
+                              ? t('Loading scopes...')
+                              : installationScopesError
+                                ? t(
+                                    'Could not load installation scopes. Existing scopes are kept.',
+                                  )
+                                : t(
+                                    'No installation scopes are configured for this project. Configure them on the Server tab first.',
+                                  )
+                          }
+                        />
+                        {droppedInstallationScopes.length > 0 ? (
+                          <p className="text-[12px] text-amber-600 dark:text-amber-400">
+                            {t(
+                              'Some granted scopes are no longer allowed by the project and will be removed on update:',
+                            )}{' '}
+                            <code className="font-mono">
+                              {droppedInstallationScopes.join(', ')}
+                            </code>
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="oauth2-app-installation-redirect-url"
+                          className="text-[12px] font-medium"
+                        >
+                          {t('Installation redirect URL')}
+                        </Label>
+                        <Input
+                          id="oauth2-app-installation-redirect-url"
+                          value={installationRedirectUrl}
+                          onChange={(e) =>
+                            setInstallationRedirectUrl(e.target.value)
+                          }
+                          placeholder="https://example.com/installed"
+                          className="h-9 text-[13px]"
+                          disabled={fieldsDisabled}
+                        />
+                        <p className="text-[12px] text-muted-foreground">
+                          {t(
+                            'Optional. Users land here after creating or updating an installation.',
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {isEditing && clientType !== 'public' ? (
                     <div className="space-y-3 rounded-lg border border-border overflow-hidden">
@@ -482,7 +704,7 @@ export function ProjectOAuth2AppDrawer({
                           size="sm"
                           variant="outline"
                           className="h-8 shrink-0 text-[12px]"
-                          disabled={isPending}
+                          disabled={fieldsDisabled}
                           onClick={handleCreateSecret}
                         >
                           <Plus className="me-1.5 h-3.5 w-3.5" />
@@ -531,13 +753,33 @@ export function ProjectOAuth2AppDrawer({
                                   <p className="font-mono text-[12px] font-medium truncate">
                                     secret_{secret.hint}
                                   </p>
-                                  <p className="mt-1 text-[11px] text-muted-foreground">
-                                    {t('Created')}{' '}
-                                    <DateTooltip
-                                      date={secret.$createdAt}
-                                      className="text-[11px] text-muted-foreground"
-                                    />
-                                  </p>
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                                    <span className="whitespace-nowrap">
+                                      {t('Created')}{' '}
+                                      <DateTooltip
+                                        date={secret.$createdAt}
+                                        className="text-[11px] text-muted-foreground"
+                                      />
+                                    </span>
+                                    {secret.createdByName ? (
+                                      <span className="whitespace-nowrap">
+                                        {t('Created by')} {secret.createdByName}
+                                      </span>
+                                    ) : null}
+                                    <span className="whitespace-nowrap">
+                                      {secret.lastAccessedAt ? (
+                                        <>
+                                          {t('Last used')}{' '}
+                                          <DateTooltip
+                                            date={secret.lastAccessedAt}
+                                            className="text-[11px] text-muted-foreground"
+                                          />
+                                        </>
+                                      ) : (
+                                        t('Never used')
+                                      )}
+                                    </span>
+                                  </div>
                                   <code className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">
                                     {maskClientSecret(secret.hint)}
                                   </code>
@@ -564,6 +806,50 @@ export function ProjectOAuth2AppDrawer({
                         )}
                       </div>
                     </div>
+                  ) : null}
+
+                  {isEditing && source ? (
+                    <>
+                      <OAuth2AppKeysCard
+                        embedded
+                        dialogClassName={NESTED_DIALOG_CLASS}
+                        keys={keys}
+                        isLoading={keysLoading}
+                        hasMore={keysHaveMore}
+                        onLoadMore={loadMoreKeys}
+                        isLoadingMore={keysLoadingMore}
+                        loadMoreFailed={keysLoadMoreFailed}
+                        onCreate={() =>
+                          createKeyMutation.mutateAsync(source.$id)
+                        }
+                        onDelete={(keyId) =>
+                          deleteKeyMutation.mutateAsync({
+                            appId: source.$id,
+                            keyId,
+                          })
+                        }
+                        isCreating={createKeyMutation.isPending || readOnly}
+                        isDeleting={deleteKeyMutation.isPending}
+                      />
+                      <OAuth2AppInstallationsCard
+                        embedded
+                        dialogClassName={NESTED_DIALOG_CLASS}
+                        installations={installations}
+                        isLoading={installationsLoading}
+                        hasMore={installationsHaveMore}
+                        onLoadMore={loadMoreInstallations}
+                        isLoadingMore={installationsLoadingMore}
+                        loadMoreFailed={installationsLoadMoreFailed}
+                        onDelete={(installationId) =>
+                          deleteInstallationMutation.mutateAsync({
+                            appId: source.$id,
+                            installationId,
+                          })
+                        }
+                        isDeleting={deleteInstallationMutation.isPending}
+                        teamLabel={t('Team')}
+                      />
+                    </>
                   ) : null}
 
                   {isEditing ? (
@@ -599,9 +885,7 @@ export function ProjectOAuth2AppDrawer({
 
                 <DrawerSection
                   title={t('Branding')}
-                  description={t(
-                    'May appear on the OAuth2 consent screen.',
-                  )}
+                  description={t('May appear on the OAuth2 consent screen.')}
                 >
                   <div className="space-y-2">
                     <Label
@@ -616,7 +900,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t('My application')}
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
 
@@ -630,7 +914,7 @@ export function ProjectOAuth2AppDrawer({
                         region={region ?? project?.region}
                         value={logoUri}
                         onChange={setLogoUri}
-                        disabled={isPending}
+                        disabled={fieldsDisabled}
                       />
                     ) : (
                       <Input
@@ -638,7 +922,7 @@ export function ProjectOAuth2AppDrawer({
                         onChange={(e) => setLogoUri(e.target.value)}
                         placeholder="https://example.com/logo.png"
                         className="h-9 text-[13px]"
-                        disabled={isPending}
+                        disabled={fieldsDisabled}
                       />
                     )}
                   </div>
@@ -656,7 +940,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setTagline(e.target.value)}
                       placeholder={t('Short summary for the consent screen')}
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                 </DrawerSection>
@@ -681,7 +965,7 @@ export function ProjectOAuth2AppDrawer({
                       placeholder={t(
                         'Optional description for the marketplace listing',
                       )}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                       rows={5}
                     />
                   </div>
@@ -695,7 +979,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setClientUri(e.target.value)}
                       placeholder="https://example.com"
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
 
@@ -708,7 +992,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={setTags}
                       splitOnComma
                       placeholder={t('Add tag and press Enter')}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                     <p className="text-[12px] text-muted-foreground">
                       {t('Optional labels for marketplace discovery.')}
@@ -725,7 +1009,7 @@ export function ProjectOAuth2AppDrawer({
                         region={region ?? project?.region}
                         value={images}
                         onChange={setImages}
-                        disabled={isPending}
+                        disabled={fieldsDisabled}
                       />
                     ) : (
                       <p className="text-[12px] text-muted-foreground">
@@ -752,7 +1036,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
                       placeholder="https://example.com/privacy"
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -764,7 +1048,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setTermsUrl(e.target.value)}
                       placeholder="https://example.com/terms"
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -776,7 +1060,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setDataDeletionUrl(e.target.value)}
                       placeholder="https://example.com/delete-data"
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -788,7 +1072,7 @@ export function ProjectOAuth2AppDrawer({
                       onChange={(e) => setSupportUrl(e.target.value)}
                       placeholder="https://example.com/support"
                       className="h-9 text-[13px]"
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -801,7 +1085,7 @@ export function ProjectOAuth2AppDrawer({
                       validateEmail
                       splitOnComma
                       placeholder={t('Add email and press Enter')}
-                      disabled={isPending}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                 </DrawerSection>
@@ -815,7 +1099,7 @@ export function ProjectOAuth2AppDrawer({
                   variant="outline"
                   size="sm"
                   className="h-9 text-[13px]"
-                  disabled={isPending}
+                  disabled={fieldsDisabled}
                   onClick={handleRequestDelete}
                 >
                   <Trash2 className="me-1.5 h-3.5 w-3.5" />
@@ -852,8 +1136,11 @@ export function ProjectOAuth2AppDrawer({
         }}
       >
         <DialogContent
-          className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden z-[130]"
-          overlayClassName="z-[130]"
+          className={cn(
+            'sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden',
+            NESTED_DIALOG_CLASS,
+          )}
+          overlayClassName={NESTED_DIALOG_CLASS}
         >
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('OAuth secret created')}</DialogTitle>
@@ -932,8 +1219,8 @@ export function ProjectOAuth2AppDrawer({
         }}
       >
         <DialogContent
-          className="sm:max-w-md p-0 z-[130]"
-          overlayClassName="z-[130]"
+          className={cn('sm:max-w-md p-0', NESTED_DIALOG_CLASS)}
+          overlayClassName={NESTED_DIALOG_CLASS}
         >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete OAuth secret')}</DialogTitle>
@@ -964,8 +1251,8 @@ export function ProjectOAuth2AppDrawer({
 
       <Dialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
         <DialogContent
-          className="sm:max-w-md p-0 z-[130]"
-          overlayClassName="z-[130]"
+          className={cn('sm:max-w-md p-0', NESTED_DIALOG_CLASS)}
+          overlayClassName={NESTED_DIALOG_CLASS}
         >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Revoke all tokens')}</DialogTitle>

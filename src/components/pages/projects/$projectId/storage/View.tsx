@@ -14,8 +14,11 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canCreateBucket } from '@/lib/console-access-checks'
+import { BucketsEmptyState } from './_components/BucketsEmptyState'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CreateBucket } from './_components/CreateBucket'
@@ -98,8 +101,48 @@ export function View() {
     },
   })
 
-  const showPlanLimitLine =
-    total === 0 && bucketsLimit > 0 && project?.teamId
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateBucket(access, features)
+  const isCreateDisabled =
+    noCreatePermission || (bucketsLimit > 0 && total >= bucketsLimit)
+
+  const openCreate = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev: Record<string, unknown>) => ({
+        ...(prev ?? {}),
+        create: 'bucket',
+      }),
+      replace: true,
+    })
+  }
+
+  if (total === 0) {
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+        <div className="mx-auto my-auto w-full max-w-4xl px-6 py-12 sm:py-16">
+          <BucketsEmptyState
+            onCreate={openCreate}
+            createDisabled={isCreateDisabled}
+            createDisabledTooltip={
+              noCreatePermission
+                ? t("You don't have permission to create buckets.")
+                : undefined
+            }
+          />
+        </div>
+        <CreateBucket
+          open={createOpen}
+          onOpenChange={(open) => {
+            if (!open) closeCreate()
+          }}
+          onCreate={(data) => createMutation.mutate(data)}
+          isLoading={createMutation.isPending}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -110,33 +153,13 @@ export function View() {
               <HardDrive className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="mb-2 text-[15px] font-medium text-foreground">
-              {total === 0 ? t('Create your first bucket') : t('Select a bucket')}
+              {t('Select a bucket')}
             </h3>
-            <p
-              className={
-                showPlanLimitLine
-                  ? 'mb-2 max-w-sm text-[13px] text-muted-foreground'
-                  : 'mb-6 max-w-sm text-[13px] text-muted-foreground'
-              }
-            >
-              {total === 0
-                ? t(
-                    'Buckets isolate files, permissions, and delivery rules. Create one from the sidebar to start uploading.',
-                  )
-                : t(
-                    'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.',
-                  )}
+            <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
+              {t(
+                'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.',
+              )}
             </p>
-            {showPlanLimitLine ? (
-              <p className="mb-6 max-w-sm text-[12px] text-muted-foreground">
-                {t('Plan limit:')} {total} {t('of')} {bucketsLimit}{' '}
-                {t('buckets')} ·{' '}
-                {resolveOrganizationPlanDisplayLabel({
-                  planName: organizationPlan?.name ?? null,
-                  planId: organizationPlan?.$id,
-                })}
-              </p>
-            ) : null}
           </div>
         </EmptyState>
       </div>
