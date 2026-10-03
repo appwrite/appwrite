@@ -60,16 +60,21 @@ final class Distributed implements Lock
             return true;
         }
 
-        if ($timeout <= 0.0) {
+        if ($timeout === 0.0) {
             return false;
         }
 
-        $deadline = microtime(true) + $timeout;
+        $deadline = $timeout > 0.0 ? microtime(true) + $timeout : null;
         $delay = self::BACKOFF_MIN;
 
-        while (microtime(true) < $deadline) {
-            $remaining = $deadline - microtime(true);
-            $sleep = min($this->jitter($delay), $remaining);
+        while ($deadline === null || microtime(true) < $deadline) {
+            if ($deadline !== null) {
+                $remaining = $deadline - microtime(true);
+                $sleep = min($this->jitter($delay), $remaining);
+            } else {
+                $sleep = $this->jitter($delay);
+            }
+
             if ($sleep > 0.0) {
                 usleep((int) ($sleep * 1_000_000));
             }
