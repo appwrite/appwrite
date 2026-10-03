@@ -299,13 +299,22 @@ class Doctor extends Action
         try {
             if (Http::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
+                $context = \stream_context_create([
+                    'http' => [
+                        'method' => 'GET',
+                        'header' => 'User-Agent: Appwrite-Doctor',
+                        'timeout' => 5,
+                        'ignore_errors' => true,
+                    ],
+                ]);
+                $release = \json_decode(@\file_get_contents('https://api.github.com/repos/appwrite/appwrite/releases/latest', false, $context), true);
+                $latestVersion = $release['tag_name'] ?? null;
 
-                if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                if ($latestVersion) {
+                    if (\version_compare($latestVersion, System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
                         Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     } else {
-                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
+                        Console::info('A new version (' . $latestVersion . ') is available! 🥳' . "\n");
                     }
                 } else {
                     Console::error('Failed to check for a newer version' . "\n");
