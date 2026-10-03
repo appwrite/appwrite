@@ -69,7 +69,9 @@ class Google extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = $this->parseTokens($this->request(
                 'POST',
-                'https://oauth2.googleapis.com/token?' . \http_build_query([
+                'https://oauth2.googleapis.com/token',
+                [],
+                \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->getClientSecret(),
@@ -92,7 +94,9 @@ class Google extends OAuth2
     {
         $this->tokens = $this->parseTokens($this->request(
             'POST',
-            'https://oauth2.googleapis.com/token?' . \http_build_query([
+            'https://oauth2.googleapis.com/token',
+            [],
+            \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->getClientSecret(),

@@ -72,7 +72,9 @@ class Gitlab extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->getEndpoint() . '/oauth/token?' . \http_build_query([
+                $this->getEndpoint() . '/oauth/token',
+                [],
+                \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->getAppSecret()['clientSecret'],
@@ -94,7 +96,9 @@ class Gitlab extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->getEndpoint() . '/oauth/token?' . \http_build_query([
+            $this->getEndpoint() . '/oauth/token',
+            [],
+            \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->getAppSecret()['clientSecret'],
