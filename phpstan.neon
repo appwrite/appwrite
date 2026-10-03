@@ -18,3 +18,12 @@ parameters:
     -
       identifier: catch.neverThrown
       message: '#Dead catch - Utopia.Database.Exception.Query is never thrown#'
+    # The E2E harness talks to the stack under test, not to a destination a user chose
+    -
+      identifier: function.disallowedCurl
+      path: tests/*
+services:
+  -
+    class: Utopia\Client\PHPStan\DisallowRawCurlExtension
+    tags:
+      - phpstan.restrictedFunctionUsageExtension

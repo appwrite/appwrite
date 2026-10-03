@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Modules\Migrations\Report;
 use Appwrite\Platform\Modules\Migrations\Superseded;
@@ -69,6 +70,7 @@ class Migrations extends Action
     protected ?Document $project;
     protected ?Claim $claims = null;
     protected ?Document $terminal = null;
+    protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
 
@@ -111,6 +113,7 @@ class Migrations extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -133,6 +136,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
         callable $locks,
+        PublicHostname $publicHostname,
     ): void {
         $this->reset();
 
@@ -168,6 +172,7 @@ class Migrations extends Action
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
         $this->plan = $plan;
+        $this->publicHostname = $publicHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -198,6 +203,7 @@ class Migrations extends Action
         $this->claims = null;
         $this->terminal = null;
         $this->sourceProject = null;
+        $this->publicHostname = null;
         $this->getDatabasesDB = null;
         $this->getProjectDB = null;
         $this->plan = [];
@@ -294,7 +300,8 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+                $this->publicHostname->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],

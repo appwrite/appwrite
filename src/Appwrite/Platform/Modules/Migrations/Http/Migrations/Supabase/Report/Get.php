@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -57,6 +58,7 @@ class Get extends Action
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -68,10 +70,24 @@ class Get extends Action
         string $username,
         string $password,
         int $port,
-        Response $response
+        Response $response,
+        PublicHostname $publicHostname
     ): void {
+        // Block a source endpoint or database host that resolves to a private or reserved
+        // address to prevent SSRF into the internal network. Postgres connects to the address
+        // just checked, so DNS cannot answer differently.
+        $hostname = $publicHostname;
+        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
         try {
-            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, (string) $port);
+            $databaseAddress = $publicHostname->address($databaseHost);
+        } catch (\InvalidArgumentException $exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $exception->getMessage());
+        }
+
+        try {
+            $supabase = new Supabase($endpoint, $apiKey, $databaseAddress, 'postgres', $username, $password, (string) $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

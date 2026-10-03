@@ -21,7 +21,8 @@
         "psr/http-client": "^1.0",
         "utopia-php/client": "^0.5",
         "utopia-php/database": "^8.0",
-        "utopia-php/query": "0.6.*"
+        "utopia-php/query": "0.6.*",
+        "utopia-php/psr7": "^0.2.1"
     },
     "require-dev": {
         "utopia-php/cache": "^4.0"

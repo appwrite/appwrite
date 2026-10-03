@@ -19,6 +19,7 @@ use Utopia\Database\Query;
 use Utopia\Database\RelationType;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\Supabase;
 use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Query\Schema\IndexType;
 use WebSocket\ConnectionException;
@@ -336,6 +337,59 @@ trait MigrationsBase
         } finally {
             $realtime->close();
         }
+    }
+
+    /**
+     * A migration source is fetched by the migration worker, outside any curl guard, so
+     * its hosts are checked when the migration is created: a private or reserved
+     * address is refused, including Supabase's separate database host.
+     */
+    public function testMigrationSourceAtPrivateAddressIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $countMigrations = fn (): int => $this->client->call(Client::METHOD_GET, '/migrations', $headers)['body']['total'];
+        $before = $countMigrations();
+
+        // The cloud metadata address: link-local, and outside the dev allowlist
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+            'resources' => Appwrite::getSupportedResources(),
+            'endpoint' => 'http://169.254.169.254/v1',
+            'projectId' => 'any',
+            'apiKey' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/supabase', $headers, [
+            'resources' => Supabase::getSupportedResources(),
+            'endpoint' => 'https://example.com',
+            'apiKey' => 'any',
+            'databaseHost' => '169.254.169.254',
+            'username' => 'postgres',
+            'password' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        // The refusal names the database host, not the (public) endpoint
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations/supabase/report', $headers, [
+            'resources' => Supabase::getSupportedResources(),
+            'endpoint' => 'https://example.com',
+            'apiKey' => 'any',
+            'databaseHost' => '169.254.169.254',
+            'username' => 'postgres',
+            'password' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $this->assertSame($before, $countMigrations());
     }
 
     /**
@@ -1111,7 +1165,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals('completed', $first['status']);
 
-        // Re-run under Skip: nothing on source has changed. Destination
+        // Re-run under Skip: nothing on source has changed. Destinations
         // schema + rows are already correct — expect clean completion.
         $reRunSkip = $this->performMigrationSync([
             'resources' => $resources,
@@ -6868,7 +6922,7 @@ trait MigrationsBase
         // Ensure only expected counters exist (10 total)
         $this->assertCount(10, $result['statusCounters']);
 
-        // ====== Validate on destination: SQL Database resources ======
+        // ====== Validate on destinations: SQL Database resources ======
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $sqlDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6925,7 +6979,7 @@ trait MigrationsBase
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
 
-        // ====== Validate on destination: DocumentsDB resources ======
+        // ====== Validate on destinations: DocumentsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6971,7 +7025,7 @@ trait MigrationsBase
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
 
-        // ====== Validate on destination: VectorsDB resources ======
+        // ====== Validate on destinations: VectorsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
