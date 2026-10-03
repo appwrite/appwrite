@@ -383,6 +383,11 @@ class Client implements Adapter
 
             // Read once: an IPv6 retry sends the same bytes, and a stream may not rewind
             $data = $multipart instanceof \Utopia\Psr7\Request\Multipart\Body ? '' : (string) $body;
+
+            // An HTTP/1.1 origin may refuse a body-carrying method with no length (411)
+            if ($data === '' && !$multipart instanceof \Utopia\Psr7\Request\Multipart\Body && !$request->hasHeader(Header::CONTENT_LENGTH) && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+                $headers[Header::CONTENT_LENGTH] = '0';
+            }
         } catch (Throwable $throwable) {
             throw new InvalidArgumentException($throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }
