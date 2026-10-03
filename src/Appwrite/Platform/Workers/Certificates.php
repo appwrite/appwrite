@@ -19,6 +19,7 @@ use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -38,6 +39,14 @@ use Utopia\System\System;
 
 class Certificates extends Action
 {
+    /**
+     * Attempts a delayed issuance gets before the domain is reported failed.
+     * Issuance and TLS activation are both asynchronous and both fail for
+     * reasons that clear on their own, so the rule stays retryable until this
+     * runs out.
+     */
+    private const MAX_GENERATION_ATTEMPTS = 5;
+
     public static function getName(): string
     {
         return 'certificates';
@@ -306,6 +315,11 @@ class Certificates extends Action
         $date = \date('H:i:s');
         $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
 
+        // Set once the domain's own checks have passed and the only thing left is
+        // the provider finishing issuance and activation. A failure from there is
+        // transient and must not strand the rule -- see the catch below.
+        $awaitingProvider = false;
+
         try {
             $certificate->setAttribute('logs', $logs);
 
@@ -323,9 +337,22 @@ class Certificates extends Action
                     $this->validateDomain($rule, $domain, $validationDomain);
                 }
 
-                // If certificate exists already, double-check expiry date. Skip if job is forced
+                // If certificate exists already, double-check expiry date. Skip if job is forced.
+                // A delayed provider can already hold an issued certificate that still needs a
+                // TLS activation before the hostname is safe to call verified.
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    Console::info("Skipping, renew isn't required");
+                    if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+                        Console::info("Skipping, renew isn't required");
+                        return;
+                    }
+
+                    $awaitingProvider = true;
+
+                    if ($this->finishWhenReady($certificates, $rule, $certificate, $domain->get(), $domainType, $logs)) {
+                        return;
+                    }
+
+                    Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
                     return;
                 }
             }
@@ -337,6 +364,11 @@ class Certificates extends Action
             $date = \date('H:i:s');
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+                $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
+            } elseif ($this->isReady($this->statusWhileAwaiting($certificates, $domain->get(), $domainType, $awaitingProvider))) {
+                // Delayed providers return here once issuance and TLS activation have both finished.
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
@@ -364,11 +396,24 @@ class Certificates extends Action
                 'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
             ]);
 
-            // Mark rule as 'unverified'
-            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+            // A failure while we were only waiting on the provider is transient:
+            // the certificate may well be issued and simply not attached yet.
+            // 'unverified' would strand it -- the guard above accepts only
+            // generating or verified, and the interval requeues only generating
+            // -- so hold it on generating until the attempts run out.
+            $exhausted = $attempts >= self::MAX_GENERATION_ATTEMPTS;
+            $retryable = $awaitingProvider && !$exhausted;
 
-            // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+            $rule->setAttribute(
+                'status',
+                $retryable ? RULE_STATUS_CERTIFICATE_GENERATING : RULE_STATUS_CERTIFICATE_GENERATION_FAILED,
+            );
+
+            // Only once it has actually failed. A mail per retry would make the
+            // security address useless.
+            if (!$retryable) {
+                $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+            }
 
             throw $e;
         } finally {
@@ -381,6 +426,63 @@ class Certificates extends Action
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
         }
+    }
+
+    /**
+     * Mark a delayed certificate verified once the provider reports it issued.
+     *
+     * Issued includes the TLS activation. A provider that cannot activate throws,
+     * and the caller records a retryable failure instead of verified. A certificate
+     * that is still pending stays on generating.
+     */
+    private function finishWhenReady(
+        Provider $certificates,
+        Document $rule,
+        Document $certificate,
+        string $domain,
+        ?string $domainType,
+        string &$logs,
+    ): bool {
+        if (!$this->isReady($certificates->getCertificateStatus($domain, $domainType))) {
+            $date = \date('H:i:s');
+            $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+            $certificate->setAttribute('logs', $logs);
+
+            return false;
+        }
+
+        $renewDate = $certificates->issueCertificate(ID::unique(), $domain, $domainType);
+        $date = \date('H:i:s');
+        $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+        $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+        $certificate->setAttribute('logs', $logs);
+        $certificate->setAttributes([
+            'attempts' => 0,
+            'issueDate' => $certificate->getAttribute('issueDate') ?? DateTime::now(),
+            'renewDate' => $renewDate ?? $certificate->getAttribute('renewDate') ?? DateTime::now(),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * The provider's status, with the caller marked as waiting on the provider
+     * so a failure from here is treated as retryable rather than terminal.
+     */
+    private function statusWhileAwaiting(
+        Provider $certificates,
+        string $domain,
+        ?string $domainType,
+        bool &$awaitingProvider,
+    ): string {
+        $awaitingProvider = true;
+
+        return $certificates->getCertificateStatus($domain, $domainType);
+    }
+
+    private function isReady(string $status): bool
+    {
+        return $status === Status::ISSUED || $status === Status::RENEWING;
     }
 
     /**

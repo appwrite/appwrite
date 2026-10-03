@@ -84,7 +84,14 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ]
+            ],
+            [
+                'name' => 'certificateGeneration',
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->generateCertificate($dbForPlatform, $publisherForCertificates);
+                },
+                'interval' => $intervalDomainVerification * 1000,
+            ],
         ];
     }
 
@@ -134,5 +141,67 @@ class Interval extends Action
 
         Span::add("interval.domain_verification.processed", $processed);
         Span::add("interval.domain_verification.failed", $failed);
+    }
+
+    /**
+     * Ask again about certificates that are still generating.
+     *
+     * Issuance is asynchronous. The first job often runs while the certificate
+     * is still pending, and nothing else would come back to attach it to the
+     * TLS configuration once it is issued. DNS already passed when the rule
+     * entered this status, so the follow-up does not run that check again.
+     *
+     * $updatedAt is only written when a job finishes, so the age threshold has
+     * to be comfortably longer than a job takes or a tick would enqueue the
+     * same hostname while the previous attempt is still running. Five minutes
+     * is well past that for every provider, and still well inside what a
+     * customer waiting on issuance would notice.
+     */
+    private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
+    {
+        $before = DatabaseDateTime::format(new DateTime('-5 minutes'));
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATING]),
+            Query::lessThan('$updatedAt', $before),
+            Query::orderAsc('$updatedAt'),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::limit(100),
+        ]);
+
+        $scanned = \count($rules);
+        Span::add('scanned', $scanned);
+
+        if ($scanned === 0) {
+            Span::add('processed', 0);
+            Span::add('failed', 0);
+            return;
+        }
+
+        $processed = 0;
+        $failed = 0;
+
+        foreach ($rules as $rule) {
+            try {
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                    skipDomainValidation: true,
+                ));
+                $processed++;
+            } catch (\Throwable) {
+                $failed++;
+            }
+        }
+
+        Span::add('processed', $processed);
+        Span::add('failed', $failed);
     }
 }
