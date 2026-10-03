@@ -264,13 +264,6 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testCreateVideo')]
     public function testVideoIsProbedByJob(string $videoId): string
     {
-        $before = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $this->assertSame(0, (int) ($before['body']['duration'] ?? 0));
-
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
-
         $body = $this->waitForVideoProbed($videoId);
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
@@ -292,9 +285,6 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
-
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
 
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -380,14 +370,11 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * The sprite timeline is produced after createTimeline is called.
+     * The sprite timeline is produced when the video is created.
      */
     #[Depends('testVideoIsProbedByJob')]
     public function testTimelineAvailable(string $videoId): void
     {
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
-
         $response = $this->waitForTimeline($videoId);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1065,7 +1052,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<SegmentURL', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $cmafMpd['body']);
 
-        $this->createTimeline($videoId);
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
@@ -1096,7 +1082,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        $this->createTimeline($videoId);
         $this->waitForTimeline($videoId);
         $embedded = $this->waitForEmbeddedSubtitle($videoId);
         $this->assertNotNull($embedded, 'Expected an auto-extracted subtitle after timeline');
@@ -1175,10 +1160,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-                $this->createTimeline($videoId);
         $this->waitForVideoProbed($videoId, 180);
 
-        $embedded = null;$embedded = null;
+        $embedded = null;
         $lastList = [];
         $deadline = \time() + 60;
         while (\time() < $deadline) {
@@ -1241,7 +1225,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        $this->createTimeline($videoId);
         $this->waitForTimeline($videoId);
         $embedded = $this->waitForEmbeddedSubtitles($videoId, 2);
         $this->assertCount(2, $embedded, 'Expected eng and fra auto-extracted subtitles');
@@ -1388,7 +1371,6 @@ final class VideosCustomServerTest extends Scope
         $ready = $this->createReadyVideo($this->getVideoFileWithSubtitles(), 'Original name');
         $videoId = $ready['$id'];
 
-        $this->createTimeline($videoId);
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
@@ -1424,10 +1406,10 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Audio-only sources are accepted for timeline; the job probes duration
-     * with zero dimensions and produces no WebVTT.
+     * Audio-only sources are accepted; the create job probes duration with
+     * zero dimensions and produces no WebVTT.
      */
-    public function testCreateTimelineAudioOnlyProducesNoVtt(): void
+    public function testAudioOnlyVideoProducesNoVtt(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -1435,9 +1417,6 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
-
-        $timeline = $this->createTimeline($videoId);
-        $this->assertEquals(202, $timeline['headers']['status-code']);
 
         $probed = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, (int) $probed['duration']);
@@ -1455,16 +1434,18 @@ final class VideosCustomServerTest extends Scope
     public function testVideoCreateAndLookupErrors(): void
     {
         $unknown = 'doesnotexist';
-        foreach (['/timeline', '/renditions'] as $suffix) {
-            $response = $this->client->call(
-                Client::METHOD_POST,
-                '/videos/' . $unknown . $suffix,
-                $this->headers(),
-                $suffix === '/renditions' ? ['profileId' => 'x', 'output' => 'hls'] : []
-            );
-            $this->assertEquals(404, $response['headers']['status-code'], $suffix);
-            $this->assertEquals('video_not_found', $response['body']['type'], $suffix);
-        }
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $unknown . '/renditions',
+            $this->headers(),
+            ['profileId' => 'x', 'output' => 'hls']
+        );
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('video_not_found', $response['body']['type']);
+
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $unknown . '/timeline', $this->headers());
+        $this->assertEquals(404, $timeline['headers']['status-code']);
+        $this->assertEquals('video_not_found', $timeline['body']['type']);
 
         $missingBucket = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => 'doesnotexist',

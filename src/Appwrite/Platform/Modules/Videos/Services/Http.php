@@ -29,7 +29,6 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Create as CreateSubti
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Delete as DeleteSubtitle;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Update as UpdateSubtitle;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\XList as ListSubtitles;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Create as CreateTimeline;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Get as GetTimeline;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
@@ -49,7 +48,6 @@ class Http extends Service
         $this->addAction(DeleteVideo::getName(), new DeleteVideo());
 
         // Timeline and previews
-        $this->addAction(CreateTimeline::getName(), new CreateTimeline());
         $this->addAction(GetTimeline::getName(), new GetTimeline());
         $this->addAction(GetPreview::getName(), new GetPreview());
 

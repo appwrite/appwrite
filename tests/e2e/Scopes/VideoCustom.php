@@ -434,19 +434,10 @@ trait VideoCustom
         return $embedded;
     }
 
-    public function createTimeline(string $videoId, array $headers = []): array
-    {
-        return $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/timeline', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $headers !== [] ? $headers : $this->getHeaders()));
-    }
-
     /**
-     * Create a video and wait until a job has probed its metadata (duration > 0).
-     *
-     * Enqueues a timeline by default so duration is written without requiring a
-     * profile. Callers that need a video track get one via that same job.
+     * Create a video and wait until the timeline job has probed its metadata
+     * (duration > 0). Creating a video queues that job, so callers do not
+     * enqueue it themselves.
      *
      * @return array<string, mixed> video document after probe
      */
@@ -470,9 +461,6 @@ trait VideoCustom
         $videoId = $create['body']['$id'];
         $this->assertArrayNotHasKey('status', $create['body']);
         $this->assertSame(0, (int) ($create['body']['duration'] ?? 0));
-
-        $timeline = $this->createTimeline($videoId, $headers);
-        $this->assertEquals(202, $timeline['headers']['status-code']);
 
         $ready = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, (int) $ready['duration'], 'Video was not probed');

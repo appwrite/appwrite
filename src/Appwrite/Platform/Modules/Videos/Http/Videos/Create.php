@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Videos\Http\Videos;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Video as VideoMessage;
+use Appwrite\Event\Message\VideoAction;
+use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
@@ -59,9 +62,11 @@ class Create extends Base
             ->param('name', '', new Text(128), 'Video name. Defaults to the source file name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('publisherForVideos')
             ->callback($this->action(...));
     }
 
@@ -71,9 +76,11 @@ class Create extends Base
         string $name,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
-        Event $queueForEvents
+        Event $queueForEvents,
+        VideoPublisher $publisherForVideos
     ): void {
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
@@ -110,6 +117,12 @@ class Create extends Base
         ])));
 
         $queueForEvents->setParam('videoId', $video->getId());
+
+        $publisherForVideos->enqueue(new VideoMessage(
+            project: $project,
+            action: VideoAction::Timeline,
+            video: $video,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
