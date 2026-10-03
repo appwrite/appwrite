@@ -5,6 +5,7 @@ import { functionsProductContent } from '@/lib/products/content/functions'
 import { messagingProductContent } from '@/lib/products/content/messaging'
 import { sitesProductContent } from '@/lib/products/content/sites'
 import { storageProductContent } from '@/lib/products/content/storage'
+import { videosProductContent } from '@/lib/products/content/videos'
 import type { ProductId, ProductPageContent } from '@/lib/products/types'
 
 const PRODUCT_CONTENT: Record<ProductId, ProductPageContent> = {
@@ -13,6 +14,7 @@ const PRODUCT_CONTENT: Record<ProductId, ProductPageContent> = {
   storage: storageProductContent,
   functions: functionsProductContent,
   messaging: messagingProductContent,
+  videos: videosProductContent,
   sites: sitesProductContent,
   firewall: firewallProductContent,
 }

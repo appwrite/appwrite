@@ -373,6 +373,7 @@ export const heCatalog: EnCatalog = {
         storage: 'אחסון',
         functions: 'פונקציות',
         messaging: 'הודעות',
+        videos: 'סרטונים',
         sites: 'אתרים',
       },
       explore: {
@@ -400,6 +401,7 @@ export const heCatalog: EnCatalog = {
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',
+          videosTagline: 'סטרימינג אדפטיבי ב-HLS, DASH ו-CMAF עם כתוביות.',
           sitesTagline: 'פריסות סטטיות, SSR ו-CSR מ-Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',

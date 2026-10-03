@@ -32,12 +32,13 @@ export function ProductFeatureSection({
   const hideDocsLink = feature.hideDocsLink
   const flushBottom = feature.flushBottom
 
-  const docsLink = (
-    <DocsRouteLink href={feature.docsHref} className={productFeatureDocsLinkClassName}>
-      {t(feature.docsLabel)}
-      <ArrowUpRight className="size-3.5" aria-hidden />
-    </DocsRouteLink>
-  )
+  const docsLink =
+    feature.docsHref && feature.docsLabel ? (
+      <DocsRouteLink href={feature.docsHref} className={productFeatureDocsLinkClassName}>
+        {t(feature.docsLabel)}
+        <ArrowUpRight className="size-3.5" aria-hidden />
+      </DocsRouteLink>
+    ) : null
 
   return (
     <section
@@ -62,7 +63,9 @@ export function ProductFeatureSection({
               <p className="mt-4 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
                 {t(feature.description)}
               </p>
-              {!hideVisual && !companion ? <div className="mt-6">{docsLink}</div> : null}
+              {docsLink && !hideVisual && !companion ? (
+                <div className="mt-6">{docsLink}</div>
+              ) : null}
             </div>
 
             {companion && !flushBottom ? (
@@ -80,7 +83,7 @@ export function ProductFeatureSection({
               </div>
             ) : null}
 
-            {!hideDocsLink && (hideVisual || companion) ? (
+            {docsLink && !hideDocsLink && (hideVisual || companion) ? (
               <div className="mt-8 text-center">{docsLink}</div>
             ) : null}
           </>
@@ -110,7 +113,7 @@ export function ProductFeatureSection({
                   {t(feature.description)}
                 </p>
                 {companion}
-                <div className="mt-6">{docsLink}</div>
+                {docsLink ? <div className="mt-6">{docsLink}</div> : null}
               </div>
             ) : null}
 

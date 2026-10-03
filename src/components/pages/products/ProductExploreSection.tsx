@@ -2,6 +2,8 @@
 
 import { ArrowRight } from 'lucide-react'
 import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isProductReleased } from '@/lib/products/availability'
 import { scrollMarketingMainToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { PRODUCT_IDS, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductId } from '@/lib/products/types'
@@ -22,6 +24,7 @@ type ProductNavigationItemsCopy = {
   storageTagline: string
   functionsTagline: string
   messagingTagline: string
+  videosTagline: string
   sitesTagline: string
   firewallTagline: string
 }
@@ -51,9 +54,11 @@ function ProductExploreCard({
             ? productNavigationItemsCopy.functionsTagline
             : productId === 'messaging'
               ? productNavigationItemsCopy.messagingTagline
-              : productId === 'firewall'
-                ? productNavigationItemsCopy.firewallTagline
-                : productNavigationItemsCopy.sitesTagline
+              : productId === 'videos'
+                ? productNavigationItemsCopy.videosTagline
+                : productId === 'firewall'
+                  ? productNavigationItemsCopy.firewallTagline
+                  : productNavigationItemsCopy.sitesTagline
 
   const cardClassName = cn(
     'group flex items-start gap-3 rounded-xl border p-4 text-start transition-colors',
@@ -100,6 +105,11 @@ export function ProductExploreSection({ currentProductId }: ProductExploreSectio
   const exploreCopy = catalog.website.products.explore
   const productNamesCopy = catalog.website.products.productNames
   const productNavigationItemsCopy = catalog.website.products.navigation.items
+  const { features } = useConsoleProfile()
+  const productIds = PRODUCT_IDS.filter(
+    (productId) =>
+      productId === currentProductId || isProductReleased(productId, features),
+  )
 
   return (
     <section className="border-t border-border bg-muted/20 py-16 sm:py-20">
@@ -111,7 +121,7 @@ export function ProductExploreSection({ currentProductId }: ProductExploreSectio
         />
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {PRODUCT_IDS.map((productId) => (
+          {productIds.map((productId) => (
             <div
               key={productId}
               className="w-full sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]"

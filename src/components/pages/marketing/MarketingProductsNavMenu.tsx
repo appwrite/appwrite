@@ -20,6 +20,7 @@ import {
   isProductId,
   type ProductNavCategory,
 } from '@/lib/products/registry'
+import { isProductReleased } from '@/lib/products/availability'
 import { isProductNavItemNew } from '@/lib/products/new-badge'
 import type { ProductNavItemId } from '@/lib/products/types'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -46,6 +47,7 @@ type ProductNamesCopy = {
   storage: string
   functions: string
   messaging: string
+  videos: string
   sites: string
 }
 
@@ -55,6 +57,7 @@ type ProductNavigationItemsCopy = {
   storageTagline: string
   functionsTagline: string
   messagingTagline: string
+  videosTagline: string
   sitesTagline: string
   realtimeName: string
   realtimeTagline: string
@@ -94,10 +97,10 @@ function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
           if (id === 'firewall') return isCloud
           if (id === 'domains') return isCloud
           if (id === 'agent') return features.agent
-          return true
+          return isProductReleased(id, features)
         }),
       })).filter((category) => category.productIds.length > 0),
-    [features.agent, isCloud],
+    [features, isCloud],
   )
 }
 
@@ -121,6 +124,7 @@ function getLocalizedProductNavItemName(
   if (navItemId === 'storage') return productNamesCopy.storage
   if (navItemId === 'functions') return productNamesCopy.functions
   if (navItemId === 'messaging') return productNamesCopy.messaging
+  if (navItemId === 'videos') return productNamesCopy.videos
   if (navItemId === 'sites') return productNamesCopy.sites
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeName
   if (navItemId === 'agent') return navigationItemsCopy.agentName
@@ -140,6 +144,7 @@ function getLocalizedProductNavItemTagline(
   if (navItemId === 'storage') return navigationItemsCopy.storageTagline
   if (navItemId === 'functions') return navigationItemsCopy.functionsTagline
   if (navItemId === 'messaging') return navigationItemsCopy.messagingTagline
+  if (navItemId === 'videos') return navigationItemsCopy.videosTagline
   if (navItemId === 'sites') return navigationItemsCopy.sitesTagline
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeTagline
   if (navItemId === 'agent') return navigationItemsCopy.agentTagline

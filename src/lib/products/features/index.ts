@@ -6,6 +6,7 @@ import { messagingProductFeatures } from '@/lib/products/features/messaging'
 import { sitesProductFeatures } from '@/lib/products/features/sites'
 import { storageProductFeatures } from '@/lib/products/features/storage'
 import type { ProductFeatureContent } from '@/lib/products/features/types'
+import { videosProductFeatures } from '@/lib/products/features/videos'
 import type { ProductId } from '@/lib/products/types'
 
 export function getProductFeatures(productId: ProductId): ProductFeatureContent[] | null {
@@ -20,6 +21,8 @@ export function getProductFeatures(productId: ProductId): ProductFeatureContent[
       return functionsProductFeatures
     case 'messaging':
       return messagingProductFeatures
+    case 'videos':
+      return videosProductFeatures
     case 'sites':
       return sitesProductFeatures
     case 'firewall':

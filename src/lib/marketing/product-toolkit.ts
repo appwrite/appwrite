@@ -1,4 +1,5 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isProductReleased } from '@/lib/products/availability'
 import {
   PRODUCT_NAV_REGISTRY,
   isProductNavItemComingSoon,
@@ -17,6 +18,7 @@ const MARKETING_TOOLKIT_NAV_IDS = {
     'storage',
     'functions',
     'messaging',
+    'videos',
     'realtime',
     'agent',
   ],
@@ -30,7 +32,7 @@ const MARKETING_TOOLKIT_NAV_IDS = {
 function isToolkitNavItemVisible(id: ProductNavItemId): boolean {
   if (isProductNavItemComingSoon(id)) return false
   if (id === 'agent') return getActiveProfileFeatures().agent
-  return true
+  return isProductReleased(id, getActiveProfileFeatures())
 }
 
 function toToolkitItems(ids: readonly ProductNavItemId[]) {

@@ -6,8 +6,9 @@ export type ProductFeatureContent = {
   id: string
   title: string
   description: string
-  docsHref: string
-  docsLabel: string
+  /** Omitted until the product has published docs. */
+  docsHref?: string
+  docsLabel?: string
   layout?: ProductFeatureLayout
   /** Centered stacked layout: title, companion, and a compact visual below. */
   centered?: boolean
