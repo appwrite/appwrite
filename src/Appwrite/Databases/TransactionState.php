@@ -2,6 +2,7 @@
 
 namespace Appwrite\Databases;
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -55,14 +56,15 @@ class TransactionState
         string $collectionId,
         string $documentId,
         ?string $transactionId = null,
-        array $queries = []
+        array $queries = [],
+        bool $resolveRelationships = true
     ): Document {
         $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+            return $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId, $resolveRelationships);
 
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
@@ -77,7 +79,7 @@ class TransactionState
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 // Merge with committed version
-                $committedDoc = $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+                $committedDoc = $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
                 if (!$committedDoc->isEmpty()) {
                     foreach ($docState['document']->getAttributes() as $key => $value) {
                         if ($key !== '$id') {
@@ -91,7 +93,18 @@ class TransactionState
                 }
             }
         }
-        return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
+        return $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
+    }
+
+    /**
+     * Read a committed document without expanding relationships for internal
+     * write previews: parent update permission does not grant related-row reads.
+     */
+    private function readDocument(Database $db, string $collectionId, string $documentId, array $queries, bool $resolveRelationships): Document
+    {
+        return $resolveRelationships
+            ? $db->getDocument($collectionId, $documentId, $queries)
+            : $db->skipRelationships(fn () => $db->getDocument($collectionId, $documentId, $queries));
     }
 
     /**
@@ -118,7 +131,7 @@ class TransactionState
             return $dbForDatabases->find($collectionId, $queries);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
         $committedDocs = $dbForDatabases->find($collectionId, $queries);
         $documentMap = [];
 
@@ -180,7 +193,7 @@ class TransactionState
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
         $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
 
         if (!isset($state[$collectionId])) {
@@ -339,7 +352,7 @@ class TransactionState
      * @throws Exception\Query
      * @throws Timeout
      */
-    private function getTransactionState(string $transactionId): array
+    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId, bool $resolveRelationships = true): array
     {
         $roles = $this->authorization->getRoles();
 
@@ -363,6 +376,9 @@ class TransactionState
             $databaseInternalId = $operation['databaseInternalId'];
             $collectionInternalId = $operation['collectionInternalId'];
             $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
+            if ($collectionId !== $targetCollectionId) {
+                continue;
+            }
             $documentId = $operation['documentId'];
             $action = $operation['action'];
             $data = $operation['data'];
@@ -429,13 +445,39 @@ class TransactionState
 
                 case 'increment':
                 case 'decrement':
-                    $attribute = $data['attribute'] ?? null;
+                    $attribute = $data['attribute'] ?? $data['column'] ?? null;
                     $value = $data['value'] ?? 1;
 
                     if ($attribute) {
+                        if (isset($state[$collectionId][$documentId]) && !$state[$collectionId][$documentId]['exists']) {
+                            break;
+                        }
+
+                        // Numeric operations are deltas, not replacement values. Start
+                        // from the committed row unless this transaction created it.
+                        $currentState = $state[$collectionId][$documentId] ?? null;
+                        if ($currentState === null || $currentState['action'] !== 'create') {
+                            $dbForDatabases = ($this->getDatabasesDB)($database);
+                            $document = $this->readDocument($dbForDatabases, $collectionId, $documentId, [], $resolveRelationships);
+                            if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
+                                break;
+                            }
+                            if ($currentState !== null) {
+                                $document->setAttributes($currentState['document']->getArrayCopy());
+                            }
+                            $state[$collectionId][$documentId] = [
+                                'action' => $currentState['action'] ?? 'update',
+                                'document' => $document,
+                                'exists' => true,
+                            ];
+                        }
+
                         if (isset($state[$collectionId][$documentId])) {
                             $existingDocument = $state[$collectionId][$documentId]['document'];
                             $currentValue = $existingDocument->getAttribute($attribute, 0);
+                            if (!is_int($currentValue) && !is_float($currentValue)) {
+                                throw new AppwriteException(AppwriteException::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+                            }
                             $newValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
                             $existingDocument->setAttribute($attribute, $newValue);
 
@@ -443,13 +485,6 @@ class TransactionState
                             if ($currentAction !== 'create' && $currentAction !== 'upsert') {
                                 $state[$collectionId][$documentId]['action'] = 'update';
                             }
-                        } else {
-                            $newValue = $action === 'increment' ? $value : -$value;
-                            $state[$collectionId][$documentId] = [
-                                'action' => 'update',
-                                'document' => new Document([$attribute => $newValue]),
-                                'exists' => true
-                            ];
                         }
                     }
                     break;
