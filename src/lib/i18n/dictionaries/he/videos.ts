@@ -788,4 +788,15 @@ export const heVideosDictionary: Record<string, string> = {
     'טוען מחדש את הסטרים ומודד הכול מרגע ההפעלה.',
   'Bandwidth is far above your highest rendition, so it runs along the top of the chart. Hover to see exact values.':
     'רוחב הפס גבוה בהרבה מגרסת הקידוד הגבוהה ביותר שלכם, ולכן הוא מוצג לאורך החלק העליון של התרשים. העבירו את העכבר כדי לראות ערכים מדויקים.',
+  'Start from a preset': 'התחלה מתבנית מוכנה',
+  'Pick a ready-made rung like 1080p or 720p, or set the width, height, and bitrates yourself.':
+    'בחרו דרגה מוכנה כמו 1080p או 720p, או הגדירו בעצמכם רוחב, גובה ו-Bitrate.',
+  'Each profile produces one rendition of a video. Combine several to build a quality ladder.':
+    'כל פרופיל מפיק גרסת קידוד אחת של הסרטון. שלבו כמה פרופילים כדי לבנות סולם איכויות.',
+  'Stream adaptively': 'הזרמה אדפטיבית',
+  'Players switch between renditions as bandwidth changes, so playback stays smooth on any network.':
+    'הנגנים עוברים בין גרסאות הקידוד לפי רוחב הפס, כך שהניגון נשאר חלק בכל רשת.',
+  'Define your quality ladder': 'הגדרת סולם האיכויות',
+  'Encoding profiles set the resolution and bitrate of every rendition, so each viewer gets the best quality their connection can handle.':
+    'פרופילי קידוד קובעים את הרזולוציה וה-Bitrate של כל גרסת קידוד, כך שכל צופה מקבל את האיכות הטובה ביותר שהחיבור שלו מאפשר.',
 }

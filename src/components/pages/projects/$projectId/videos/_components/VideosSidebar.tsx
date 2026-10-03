@@ -157,6 +157,8 @@ export function VideosSidebar() {
   const totalPages = Math.max(1, Math.ceil(total / VIDEOS_SIDEBAR_PAGE_SIZE))
   const hasSearch = debouncedSearch.length > 0
   const hasFilters = filterMap.size > 0
+  const isFirstRunEmpty =
+    data?.total === 0 && !search.trim() && !hasSearch && !hasFilters
 
   const applyFilter = (
     compactKey: CompactFilterKey,
@@ -187,106 +189,110 @@ export function VideosSidebar() {
       <SidebarTabs />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 px-3 pt-3">
-          {noCreatePermission ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="block w-full">
-                  <Button
-                    variant="brandCta"
-                    size="sm"
-                    className="h-9 w-full gap-1.5 text-[13px] font-medium"
-                    type="button"
-                    disabled
-                    {...analyticsAttrs('create-video')}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('Create video')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {t("You don't have permission to create videos.")}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="brandCta"
-              size="sm"
-              className="h-9 w-full gap-1.5 text-[13px] font-medium"
-              type="button"
-              onClick={() => setCreateOpen(true)}
-              {...analyticsAttrs('create-video')}
-            >
-              <Plus className="h-4 w-4" />
-              {t('Create video')}
-            </Button>
-          )}
-        </div>
+        {isFirstRunEmpty ? null : (
+          <>
+            <div className="shrink-0 px-3 pt-3">
+              {noCreatePermission ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="block w-full">
+                      <Button
+                        variant="brandCta"
+                        size="sm"
+                        className="h-9 w-full gap-1.5 text-[13px] font-medium"
+                        type="button"
+                        disabled
+                        {...analyticsAttrs('create-video')}
+                      >
+                        <Plus className="h-4 w-4" />
+                        {t('Create video')}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {t("You don't have permission to create videos.")}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button
+                  variant="brandCta"
+                  size="sm"
+                  className="h-9 w-full gap-1.5 text-[13px] font-medium"
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  {...analyticsAttrs('create-video')}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('Create video')}
+                </Button>
+              )}
+            </div>
 
-        <div className="shrink-0 border-b border-border px-3 pb-3 pt-2.5">
-          <div className="flex items-center gap-2">
-            <DatabaseSidebarTableSearch
-              value={search}
-              onChange={setSearch}
-              placeholder={t('Search videos...')}
-              clearAriaLabel={t('Clear search')}
-              isFetching={isFetching}
-              onRefresh={() => void refetch()}
-              sortAriaLabel={t('Sort videos')}
-              sortTooltip={t('Sort by attribute and direction')}
-              sortMenu={
-                <DropdownMenuContent align="end" className="w-60">
-                  <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {t('Sort videos')}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup
-                    value={`${sortBy}:${sortOrder}`}
-                    onValueChange={(value) => {
-                      const option = SORT_OPTIONS.find(
-                        (o) => `${o.by}:${o.order}` === value,
-                      )
-                      if (!option) return
-                      setSortBy(option.by)
-                      setSortOrder(option.order)
-                    }}
-                  >
-                    {SORT_OPTIONS.map((option, index) => (
-                      <div key={`${option.by}:${option.order}`}>
-                        {index > 0 && index % 2 === 0 ? (
-                          <DropdownMenuSeparator />
-                        ) : null}
-                        <DropdownMenuRadioItem
-                          value={`${option.by}:${option.order}`}
-                          className="text-[13px]"
-                        >
-                          {t(option.label)}
-                        </DropdownMenuRadioItem>
-                      </div>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              }
-            />
-            <FiltersPopover
-              open={filtersOpen}
-              onOpenChange={setFiltersOpen}
-              columns={videosFilterColumns}
-              filterMap={filterMap}
-              onRemoveFilter={removeFilter}
-              onClearAll={() => setFilterMap(new Map())}
-              onApplyFilter={applyFilter}
-              resourceLabel={t('videos')}
-              filterScope="videos"
-              onApplyQuery={(queryParam) =>
-                setFilterMap(queryParamToMap(queryParam ?? null))
-              }
-              teamId={project?.teamId}
-              triggerClassName="h-8"
-            />
-          </div>
-        </div>
+            <div className="shrink-0 border-b border-border px-3 pb-3 pt-2.5">
+              <div className="flex items-center gap-2">
+                <DatabaseSidebarTableSearch
+                  value={search}
+                  onChange={setSearch}
+                  placeholder={t('Search videos...')}
+                  clearAriaLabel={t('Clear search')}
+                  isFetching={isFetching}
+                  onRefresh={() => void refetch()}
+                  sortAriaLabel={t('Sort videos')}
+                  sortTooltip={t('Sort by attribute and direction')}
+                  sortMenu={
+                    <DropdownMenuContent align="end" className="w-60">
+                      <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {t('Sort videos')}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuRadioGroup
+                        value={`${sortBy}:${sortOrder}`}
+                        onValueChange={(value) => {
+                          const option = SORT_OPTIONS.find(
+                            (o) => `${o.by}:${o.order}` === value,
+                          )
+                          if (!option) return
+                          setSortBy(option.by)
+                          setSortOrder(option.order)
+                        }}
+                      >
+                        {SORT_OPTIONS.map((option, index) => (
+                          <div key={`${option.by}:${option.order}`}>
+                            {index > 0 && index % 2 === 0 ? (
+                              <DropdownMenuSeparator />
+                            ) : null}
+                            <DropdownMenuRadioItem
+                              value={`${option.by}:${option.order}`}
+                              className="text-[13px]"
+                            >
+                              {t(option.label)}
+                            </DropdownMenuRadioItem>
+                          </div>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  }
+                />
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={videosFilterColumns}
+                  filterMap={filterMap}
+                  onRemoveFilter={removeFilter}
+                  onClearAll={() => setFilterMap(new Map())}
+                  onApplyFilter={applyFilter}
+                  resourceLabel={t('videos')}
+                  filterScope="videos"
+                  onApplyQuery={(queryParam) =>
+                    setFilterMap(queryParamToMap(queryParam ?? null))
+                  }
+                  teamId={project?.teamId}
+                  triggerClassName="h-8"
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isFetching && videos.length === 0 ? (

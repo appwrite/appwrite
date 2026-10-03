@@ -802,4 +802,15 @@ export const jaVideosDictionary: Record<string, string> = {
     'ストリームを再読み込みし、起動時からすべてを計測し直します。',
   'Bandwidth is far above your highest rendition, so it runs along the top of the chart. Hover to see exact values.':
     '帯域幅が最高画質のレンディションを大きく上回っているため、グラフの上端に沿って表示されます。正確な値はカーソルを合わせると確認できます。',
+  'Start from a preset': 'プリセットから始める',
+  'Pick a ready-made rung like 1080p or 720p, or set the width, height, and bitrates yourself.':
+    '1080p や 720p などの既製の段階を選ぶか、幅、高さ、ビットレートを自分で設定します。',
+  'Each profile produces one rendition of a video. Combine several to build a quality ladder.':
+    '各プロファイルから動画のレンディションが 1 つ作成されます。複数を組み合わせて画質のラダーを構成できます。',
+  'Stream adaptively': 'アダプティブに配信する',
+  'Players switch between renditions as bandwidth changes, so playback stays smooth on any network.':
+    'プレーヤーは帯域幅の変化に応じてレンディションを切り替えるため、どのネットワークでも再生がスムーズです。',
+  'Define your quality ladder': '画質のラダーを定義',
+  'Encoding profiles set the resolution and bitrate of every rendition, so each viewer gets the best quality their connection can handle.':
+    'エンコードプロファイルは各レンディションの解像度とビットレートを決めるため、視聴者は回線に合った最適な画質で視聴できます。',
 }

@@ -3,9 +3,10 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
+import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
 import { CreateProfile } from '../_components/CreateProfile'
 import { ProfilesSpreadsheet } from '../_components/ProfilesSpreadsheet'
-import { VideoActionButton, VideoPage } from '../_components/VideoPage'
+import { VideoPage } from '../_components/VideoPage'
 import { Button } from '@/components/ui/button'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -291,68 +292,53 @@ export function View() {
         </p>
       </div>
     )
+  } else if (totalProfiles === 0) {
+    body = (
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6">
+        <ProfilesEmptyState
+          onCreate={openCreate}
+          createDisabled={!canWrite}
+          createDisabledTooltip={
+            canWrite
+              ? undefined
+              : t("You don't have permission to manage video profiles.")
+          }
+        />
+      </div>
+    )
   } else if (profiles.length === 0) {
-    body =
-      totalProfiles > 0 ? (
-        <div className="flex flex-1 items-center justify-center px-6 py-12">
-          <EmptyState
-            icon={Layers}
-            title={
-              filterMap.size > 0
-                ? t('No profiles match your filters')
-                : t('No profiles match your search')
-            }
-            description={
-              filterMap.size > 0
-                ? t('Try adjusting or clearing filters.')
-                : t('Try a different search term or clear the search.')
-            }
-            isEmpty={false}
-            hasFilters
-            variant="centered"
-            iconSize="md"
-            action={
-              filterMap.size > 0 ? (
-                <Button variant="outline" size="sm" onClick={clearAllFilters}>
-                  {t('Clear filters')}
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={clearSearch}>
-                  {t('Clear search')}
-                </Button>
-              )
-            }
-          />
-        </div>
-      ) : (
-        <div className="flex flex-1 items-center justify-center px-6 py-12">
-          <EmptyState
-            icon={Layers}
-            title={t('No profiles')}
-            description={t(
-              'Create a profile to choose the resolution and bitrate of your renditions.',
-            )}
-            isEmpty
-            hasFilters={false}
-            variant="centered"
-            iconSize="md"
-            action={
-              <VideoActionButton
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={openCreate}
-                disabledReason={
-                  canWrite
-                    ? null
-                    : t("You don't have permission to manage video profiles.")
-                }
-              >
-                {t('Create profile')}
-              </VideoActionButton>
-            }
-          />
-        </div>
-      )
+    body = (
+      <div className="flex flex-1 items-center justify-center px-6 py-12">
+        <EmptyState
+          icon={Layers}
+          title={
+            filterMap.size > 0
+              ? t('No profiles match your filters')
+              : t('No profiles match your search')
+          }
+          description={
+            filterMap.size > 0
+              ? t('Try adjusting or clearing filters.')
+              : t('Try a different search term or clear the search.')
+          }
+          isEmpty={false}
+          hasFilters
+          variant="centered"
+          iconSize="md"
+          action={
+            filterMap.size > 0 ? (
+              <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                {t('Clear filters')}
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={clearSearch}>
+                {t('Clear search')}
+              </Button>
+            )
+          }
+        />
+      </div>
+    )
   } else {
     body = (
       <ProfilesSpreadsheet
@@ -399,6 +385,7 @@ export function View() {
       onRefresh={() => void refetch()}
       isRefreshing={isFetching}
       filterTrigger={filterToolbar}
+      hideToolbar={!error && !isLoading && totalProfiles === 0}
       createLabel={t('Create profile')}
       onCreate={openCreate}
       createDisabled={!canWrite}

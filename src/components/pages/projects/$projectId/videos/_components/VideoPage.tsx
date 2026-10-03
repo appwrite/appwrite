@@ -41,6 +41,7 @@ export function VideoPage({
   className,
   contentClassName,
   spreadsheetContent = false,
+  hideToolbar = false,
 }: {
   title: ReactNode
   term?: VideoGlossaryTerm
@@ -66,6 +67,8 @@ export function VideoPage({
   contentClassName?: string
   /** Full-bleed spreadsheet body (no padded scroll area). */
   spreadsheetContent?: boolean
+  /** Hides search, filters, and actions (e.g. on a first-run empty state). */
+  hideToolbar?: boolean
 }) {
   const { projectId, videoId } = useParams({ strict: false }) as {
     projectId: string
@@ -76,15 +79,17 @@ export function VideoPage({
     showVideoId ? videoId : undefined,
   )
 
-  const showToolbar = Boolean(
-    toolbar ||
-      onSearchChange ||
-      filterTrigger ||
-      showFilters ||
-      showRefresh ||
-      actions ||
-      (createLabel && onCreate),
-  )
+  const showToolbar =
+    !hideToolbar &&
+    Boolean(
+      toolbar ||
+        onSearchChange ||
+        filterTrigger ||
+        showFilters ||
+        showRefresh ||
+        actions ||
+        (createLabel && onCreate),
+    )
 
   const titleNode = (
     <div className="flex min-w-0 items-center gap-2">
@@ -127,6 +132,7 @@ export function VideoPage({
         onCreate={onCreate}
         createDisabled={createDisabled}
         createDisabledTooltip={createDisabledTooltip}
+        hideToolbar={hideToolbar}
         showToolbarBottomBorder={showToolbar && !spreadsheetContent}
       />
       <div
