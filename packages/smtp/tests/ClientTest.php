@@ -159,6 +159,39 @@ final class ClientTest extends TestCase
         $this->assertContains('RSET', $transport->commands());
     }
 
+    public function testNamesEachRecipientsRefusalWhenEveryOneIsRefused(): void
+    {
+        $transport = $this->transport(['250 Sender ok', '550 5.1.1 No such user', '450 4.2.1 Mailbox busy', '250 Reset ok']);
+        $client = new Client($transport, encryption: Encryption::None);
+        $envelope = new Envelope('sender@example.test', ['gone@example.test', 'busy@example.test']);
+
+        try {
+            $client->sendRaw($envelope, 'Body');
+            $this->fail('Expected the send to fail');
+        } catch (TransactionException $exception) {
+            $this->assertSame(['gone@example.test', 'busy@example.test'], \array_keys($exception->rejected));
+            $this->assertSame('5.1.1', $exception->rejected['gone@example.test']->status);
+            $this->assertSame('4.2.1', $exception->rejected['busy@example.test']->status);
+        }
+    }
+
+    public function testKeepsEachRecipientsRefusalWhenTheResetIsRefusedToo(): void
+    {
+        $transport = $this->transport(['250 Sender ok', '550 5.1.1 No such user', '450 4.2.1 Mailbox busy', '554 5.5.1 No RSET for you']);
+        $client = new Client($transport, encryption: Encryption::None);
+        $envelope = new Envelope('sender@example.test', ['gone@example.test', 'busy@example.test']);
+
+        try {
+            $client->sendRaw($envelope, 'Body');
+            $this->fail('Expected the send to fail');
+        } catch (TransactionException $exception) {
+            $this->assertSame('Every recipient was refused', $exception->getMessage());
+            $this->assertSame('4.2.1', $exception->rejected['busy@example.test']->status);
+        }
+
+        $this->assertInfinite($client->idle(), 'A session that refused RSET must not be reused');
+    }
+
     public function testUpgradesWhenTheServerOffersStartTls(): void
     {
         $transport = $this->transport(['220 Ready to start TLS', '250 mail.example.test', ...$this->transaction()], 'STARTTLS');

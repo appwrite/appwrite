@@ -12,6 +12,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -218,11 +219,6 @@ class Mails extends Action
             };
 
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
-
-            if (($result['deliveredTo'] ?? 0) === 0) {
-                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
-                throw new Exception($error);
-            }
         } catch (InvalidArgumentException $error) {
             // The address or name can never be delivered, so a retry cannot help.
             Span::add('mail.status', 'skipped');
@@ -237,6 +233,27 @@ class Mails extends Action
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+        }
+
+        if (($result['deliveredTo'] ?? 0) === 0) {
+            Span::add('mail.status', 'failure');
+
+            $failure = $result['results'][0] ?? [];
+            $error = 'Error sending mail: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error'));
+
+            // A project's own server that refused for good -- a 535 for its
+            // credentials, a 550 for its unverified domain, a 554 in place of
+            // the greeting -- answers every attempt the same way. Retrying only
+            // repeats the failed login from the shared egress IP, which a
+            // provider then throttles for every project behind it, and delivers
+            // a one-time code minutes after it stopped being useful. Appwrite's
+            // own provider refusing is an incident on our side, so that keeps
+            // its retries.
+            if ($type === 'smtp' && ($failure['permanent'] ?? false) === true) {
+                throw new PermanentFailure($error, 401);
+            }
+
+            throw new Exception($error, $type === 'smtp' ? 401 : 500);
         }
 
         Span::add('mail.status', 'success');

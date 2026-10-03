@@ -97,10 +97,16 @@ final class Client
 
         if ($refusal instanceof \Utopia\SMTP\Reply && $accepted === []) {
             if ($this->ready) {
-                $this->reset();
+                try {
+                    $this->reset();
+                } catch (SmtpException) {
+                    // A session that will not reset is not one to reuse, and
+                    // its refusal of RSET says nothing about the recipients.
+                    $this->discard();
+                }
             }
 
-            throw new TransactionException($refusal, 'Every recipient was refused');
+            throw new TransactionException($refusal, 'Every recipient was refused', $rejected);
         }
 
         $this->command('DATA', [354]);
