@@ -173,6 +173,10 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        Span::add('storage.file.id', $file->getId());
+        Span::add('storage.bucket.id', $bucketId);
+        Span::add('storage.file.size_bytes', $file->getAttribute('sizeActual'));
+
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
@@ -195,6 +199,10 @@ class Get extends Action
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceForFiles = $deviceForLocal;
+        }
+
+        if (!empty($type)) {
+            Span::add('storage.file.extension', $type);
         }
 
         if (!$deviceForFiles->exists($path)) {
@@ -245,12 +253,18 @@ class Get extends Action
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
+        Span::add('storage.timing.download_seconds', $downloadTime);
+        Span::add('storage.timing.decryption_seconds', $decryptionTime);
+        Span::add('storage.timing.decompression_seconds', $decompressionTime);
+
         $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
         $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
         $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
         $dimensions = \getimagesizefromstring($source);
         if ($dimensions !== false) {
             [$sourceWidth, $sourceHeight] = $dimensions;
+            Span::add('storage.file.width', $sourceWidth);
+            Span::add('storage.file.height', $sourceHeight);
             if (
                 ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
                 ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
@@ -277,6 +291,12 @@ class Get extends Action
         }
 
         $focalPoint = null;
+        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+            Span::add('storage.transform.crop.width', $width);
+            Span::add('storage.transform.crop.height', $height);
+            Span::add('storage.transform.crop.gravity', $gravity);
+        }
+
         if (
             $gravity === self::GRAVITY_AUTO
             && $width > 0
@@ -284,18 +304,23 @@ class Get extends Action
             && isset($sourceWidth, $sourceHeight)
             && \abs($width / $height - $sourceWidth / $sourceHeight) > 0.000001
         ) {
-            $focalPoint = $autogravity
-                ->get($source)
-                ->unrotate($this->getAutogravityRotation($source));
+            try {
+                $focalPoint = $autogravity
+                    ->get($source)
+                    ->unrotate($this->getAutogravityRotation($source));
+                Span::add('autogravity.x', $focalPoint->x);
+                Span::add('autogravity.y', $focalPoint->y);
+            } catch (Exception $e) {
+                throw $e;
+            } catch (\Throwable $e) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage(), previous: $e);
+            }
             $gravity = Image::GRAVITY_CENTER;
         } elseif ($gravity === self::GRAVITY_AUTO) {
             $gravity = Image::GRAVITY_CENTER;
         }
 
         if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
-            Span::add('storage.transform.crop.width', $width);
-            Span::add('storage.transform.crop.height', $height);
-            Span::add('storage.transform.crop.gravity', $gravity);
             $image->crop($width, $height, $gravity, x: $focalPoint?->x, y: $focalPoint?->y);
         }
 
@@ -335,15 +360,6 @@ class Get extends Action
 
         $totalTime = \microtime(true) - $startTime;
 
-        Span::add('storage.file.id', $file->getId());
-        Span::add('storage.bucket.id', $bucketId);
-        Span::add('storage.file.size_bytes', $file->getAttribute('sizeActual'));
-        if (!empty($type)) {
-            Span::add('storage.file.extension', $type);
-        }
-        Span::add('storage.timing.download_seconds', $downloadTime);
-        Span::add('storage.timing.decryption_seconds', $decryptionTime);
-        Span::add('storage.timing.decompression_seconds', $decompressionTime);
         Span::add('storage.timing.rendering_seconds', $renderingTime);
         Span::add('storage.timing.total_seconds', $totalTime);
 
