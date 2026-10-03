@@ -87,6 +87,7 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
+    public const string USER_PASSWORD_EMPTY = 'user_password_empty';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
     public const string USER_UNAUTHORIZED = 'user_unauthorized';
