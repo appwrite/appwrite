@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
 
@@ -1100,6 +1102,10 @@ class Deletes extends Action
 
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+
+        // Delete photos, including files a racing upload or delete left behind.
+        // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
+        getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())->deletePath(APP_STORAGE_PHOTOS . '/' . $userId . '/');
     }
 
     /**
@@ -1575,6 +1581,15 @@ class Deletes extends Action
     {
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
+
+        // A build canceled or deleted before it completed never had its staged
+        // source moved (see Deployments::payload()). Unlinking follows
+        // symlinked parent directories the build could plant, so clean up only
+        // inside the builds tree.
+        $staged = Deployments::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
 
         if (empty($buildPath)) {
             Console::info("No build files for deployment " . $deploymentId);

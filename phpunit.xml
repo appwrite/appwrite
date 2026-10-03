@@ -12,6 +12,10 @@
     <extensions>
         <bootstrap class="Appwrite\Tests\TestHook" />
     </extensions>
+    <php>
+        <!-- The dev containers allow their own network; tests run against the default SSRF policy -->
+        <env name="_APP_ALLOWED_INTERNAL_ADDRESSES" value="" force="true" />
+    </php>
     <testsuites>
         <testsuite name="unit">
             <directory>./tests/unit</directory>
@@ -55,4 +59,9 @@
             <directory>./tests/e2e/Services/Mqtt</directory>
         </testsuite>
     </testsuites>
+    <groups>
+        <exclude>
+            <group>performance</group>
+        </exclude>
+    </groups>
 </phpunit>

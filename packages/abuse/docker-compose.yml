@@ -1,0 +1,40 @@
+name: utopia-abuse
+
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "13308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ppassword"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "16386:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  # The cluster advertises the addresses clients dial, so its published ports
+  # match the ones inside the container.
+  redis-cluster:
+    image: grokzen/redis-cluster:7.0.10
+    environment:
+      IP: 127.0.0.1
+      INITIAL_PORT: 17010
+    ports:
+      - "17010-17015:17010-17015"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 17010 cluster info | grep -q cluster_state:ok"]
+      interval: 2s
+      timeout: 3s
+      retries: 60

@@ -10,6 +10,8 @@ use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
@@ -54,14 +56,14 @@ final class FactoryTest extends TestCase
         $this->assertArrayHasKey('origin', $registry);
         $this->assertArrayNotHasKey('oauth2', $registry['origin']);
 
-        $factory = new Factory($this->cache(), $registry);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('origin');
     }
 
     public function testOauth2FromProviderUnknownThrows(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('bitbucket');
@@ -72,7 +74,7 @@ final class FactoryTest extends TestCase
         \putenv('_APP_VCS_GITHUB_CLIENT_ID=client-id');
         \putenv('_APP_VCS_GITHUB_CLIENT_SECRET=client-secret');
 
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
         $oauth2 = $factory->oauth2FromProvider('github');
 
         $this->assertInstanceOf(OAuth2Github::class, $oauth2);
@@ -83,7 +85,7 @@ final class FactoryTest extends TestCase
 
     public function testFromProviderUnknownThrows(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->fromProvider('bitbucket');
@@ -91,14 +93,14 @@ final class FactoryTest extends TestCase
 
     public function testFromProviderBuildsAdapter(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->assertInstanceOf(GitHub::class, $factory->fromProvider('github'));
     }
 
     public function testFromInstallationEmptyDocumentThrows(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $factory->fromInstallation(new Document());
@@ -106,7 +108,7 @@ final class FactoryTest extends TestCase
 
     public function testFromInstallationMissingProviderThrows(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $this->githubEntry()]);
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Missing VCS provider');
@@ -124,7 +126,7 @@ final class FactoryTest extends TestCase
                 'token' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
             ],
         ];
-        $factory = new Factory($this->cache(), ['test' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['test' => $entry]);
 
         $this->assertFalse($factory->isConfigured('test'));
         $this->assertFalse($factory->isConfigured('unknown'));
@@ -142,7 +144,7 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         $adapter = $factory->fromProvider('gitlab');
         $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
@@ -155,7 +157,7 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
         $adapter = $factory->fromProvider('gitlab');
@@ -169,7 +171,7 @@ final class FactoryTest extends TestCase
             'browserEndpoint' => 'https://git.example.com',
             'variables' => ['endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_ENDPOINT']],
         ];
-        $factory = new Factory($this->cache(), ['gitea' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitea' => $entry]);
 
         \putenv('_APP_VCS_TEST_ENDPOINT=http://gitea:3000');
 
@@ -185,20 +187,25 @@ final class FactoryTest extends TestCase
             'endpoint' => 'https://gitlab.example.com',
             'variables' => [],
         ];
-        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         $this->assertSame('https://gitlab.example.com/owner', $factory->fromProviderForBrowser('gitlab')->getOrganizationUrl('owner'));
     }
 
     public function testGetWebhookSecret(): void
     {
-        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+        $entry = [
+            'adapter' => GitHub::class,
+            'variables' => [
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
+            ],
+        ];
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['github' => $entry]);
 
         $this->assertSame('', $factory->getWebhookSecret('github'));
 
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET=hunter2');
+        \putenv('_APP_VCS_TEST_TOKEN=hunter2');
         $this->assertSame('hunter2', $factory->getWebhookSecret('github'));
-        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET');
     }
 
     protected function cache(): Cache
@@ -213,14 +220,14 @@ final class FactoryTest extends TestCase
     {
         return [
             'adapter' => GitHub::class,
-            'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($clientId, $clientSecret, ''),
+            'oauth2' => fn (Client $client, string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($client, $clientId, $clientSecret, ''),
             'variables' => [
                 'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
                 'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],
                 'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
                 'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
                 'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
-                'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
+                'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
             ],
         ];
     }

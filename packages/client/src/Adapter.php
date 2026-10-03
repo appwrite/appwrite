@@ -13,6 +13,12 @@ use Utopia\Client\Psr18\StreamingClientInterface;
  */
 interface Adapter extends ClientInterface, StreamingClientInterface
 {
+    /**
+     * Where requests may connect; Anywhere unless set. The adapter must check the address each
+     * connection actually reaches (every connection, every redirect hop).
+     */
+    public function withDestinations(Destinations $destinations): static;
+
     public function withTimeout(float $seconds): static;
 
     public function withConnectTimeout(float $seconds): static;
@@ -36,6 +42,7 @@ interface Adapter extends ClientInterface, StreamingClientInterface
     /**
      * Follow HTTP Location redirects until the final non-redirect response.
      * Off by default, so a 3xx response is returned with its Location header.
+     * A chain longer than $maxHops redirects fails with a ProtocolException.
      */
-    public function withFollowRedirects(bool $enabled = true): static;
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static;
 }
