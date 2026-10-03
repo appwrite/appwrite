@@ -27,7 +27,8 @@ final readonly class PublicInternet implements Destinations
         '203.0.113.0/24',       // TEST-NET-3
         '224.0.0.0/4',          // Multicast
         '255.255.255.255/32',   // Broadcast
-        '::/128',               // Unspecified
+        '::/96',                // Unspecified and IPv4-compatible (::7f00:1 is 127.0.0.1)
+        'fec0::/10',            // Deprecated site-local
         '::ffff:0:0/96',        // IPv4-mapped (::ffff:127.0.0.1)
         '64:ff9b::/96',         // IPv4/IPv6 translation
         '64:ff9b:1::/48',       // Local-use IPv4/IPv6 translation

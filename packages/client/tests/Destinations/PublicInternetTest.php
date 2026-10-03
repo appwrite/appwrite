@@ -42,6 +42,10 @@ final class PublicInternetTest extends TestCase
         yield 'ipv4-mapped loopback' => ['::ffff:127.0.0.1'];
         yield 'ipv4-mapped private' => ['::ffff:10.0.0.1'];
         yield 'ipv4-mapped metadata' => ['::ffff:169.254.169.254'];
+        yield 'ipv4-compatible loopback' => ['::7f00:1'];
+        yield 'ipv4-compatible private' => ['::10.0.0.1'];
+        yield 'ipv6 site-local' => ['fec0::1'];
+        yield 'ipv6 site-local upper bound' => ['feff:ffff::1'];
         yield '6to4 loopback' => ['2002:7f00:1::'];
         yield '6to4 metadata' => ['2002:a9fe:a9fe::'];
         yield 'teredo' => ['2001:0:1::1'];

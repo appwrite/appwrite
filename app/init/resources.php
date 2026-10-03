@@ -25,6 +25,7 @@ use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
+use Appwrite\Platform\Modules\Migrations\Endpoint as MigrationEndpoint;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -126,6 +127,19 @@ $container->set('publicHostname', function () {
 }, []);
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
+// Appwrite migration sources: public addresses, plus the addresses and CIDR ranges of
+// _APP_ALLOWED_INTERNAL_ADDRESSES and the addresses, CIDR ranges and hostnames of
+// _APP_MIGRATIONS_ALLOWED_HOSTS. A malformed entry throws, as publicHostname does.
+$container->set('migrationEndpoint', function () {
+    $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
+
+    return new MigrationEndpoint(
+        new Recursive($servers),
+        System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', ''),
+        System::getEnv('_APP_MIGRATIONS_ALLOWED_HOSTS', ''),
+    );
+}, []);
 
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
