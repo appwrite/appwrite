@@ -43,13 +43,25 @@ class Oidc extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->getAuthorizationEndpoint() . '?' . \http_build_query([
+        $params = [
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
             'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
-        ]);
+        ];
+
+        $prompt = $this->getPrompt();
+        if (!empty($prompt)) {
+            $params['prompt'] = $prompt;
+        }
+
+        $maxAge = $this->getMaxAge();
+        if ($maxAge !== null) {
+            $params['max_age'] = $maxAge;
+        }
+
+        return $this->getAuthorizationEndpoint() . '?' . \http_build_query($params);
     }
 
     /**
@@ -194,6 +206,40 @@ class Oidc extends OAuth2
         $secret = $this->getAppSecret();
 
         return $secret['clientSecret'] ?? '';
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret.
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+        $prompt = $secret['prompt'] ?? [];
+
+        if (!\is_array($prompt)) {
+            $prompt = [$prompt];
+        }
+
+        return \implode(' ', $prompt);
+    }
+
+    /**
+     * Extracts the max_age value from the JSON stored in appSecret.
+     *
+     * @return int|null
+     */
+    protected function getMaxAge(): ?int
+    {
+        $secret = $this->getAppSecret();
+        $maxAge = $secret['maxAge'] ?? null;
+
+        if ($maxAge === null || $maxAge === '') {
+            return null;
+        }
+
+        return (int) $maxAge;
     }
 
     /**
