@@ -50,6 +50,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as UpsertDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Explanation\Get as GetExplanation;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as GetDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Upsert as UpsertDocument;
@@ -125,6 +126,7 @@ class Legacy extends Base
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
+        $service->addAction(GetExplanation::getName(), new GetExplanation());
         $service->addAction(IncrementDocumentAttribute::getName(), new IncrementDocumentAttribute());
         $service->addAction(DecrementDocumentAttribute::getName(), new DecrementDocumentAttribute());
 
