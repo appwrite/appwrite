@@ -87,6 +87,11 @@ class Connection
             namespace: 'projects',
             database: ltrim($dsn->getPath(), '/'),
             sharedTables: true,
+            // Server-side batching: inserts are declared best-effort and are not
+            // retried, so fire-and-forget async inserts coalesce parts without
+            // changing semantics. Matches cloud's adapter construction.
+            asyncInserts: true,
+            asyncInsertWait: false,
             retention: $this->retention > 0 ? $this->retention : null,
         );
 
