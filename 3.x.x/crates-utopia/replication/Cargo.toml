@@ -1,0 +1,31 @@
+[package]
+name = "utopia-replication"
+description = "MySQL binlog replication client for Utopia (Rust port of utopia-php/replication)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["mysql", "binlog", "replication", "cdc", "utopia"]
+categories = ["database"]
+
+[dependencies]
+hex = { workspace = true }
+native-tls = "0.2"
+rand = { workspace = true }
+rsa = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+hex = { workspace = true }
+
+[[bench]]
+name = "replication"
+harness = false
+
+[lints]
+workspace = true

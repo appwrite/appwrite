@@ -1,0 +1,36 @@
+[package]
+name = "utopia-abuse"
+description = "Rate limiting and abuse control for Utopia (Rust port of utopia-php/abuse)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["abuse", "rate-limit", "redis", "recaptcha", "utopia"]
+categories = ["web-programming"]
+
+[dependencies]
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+parking_lot = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+redis = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-client = { workspace = true }
+utopia-database = { workspace = true }
+utopia-pools = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "abuse"
+harness = false
+
+[lints]
+workspace = true

@@ -1,0 +1,34 @@
+[package]
+name = "utopia-compression"
+description = "Compression algorithms and Accept-Encoding negotiation (Rust port of utopia-php/compression)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["compression", "gzip", "brotli", "zstd", "utopia"]
+categories = ["compression"]
+
+[features]
+default = ["gzip", "deflate", "brotli", "zstd"]
+gzip = ["dep:flate2"]
+deflate = ["dep:flate2"]
+brotli = ["dep:brotli"]
+zstd = ["dep:zstd"]
+
+[dependencies]
+flate2 = { workspace = true, optional = true }
+brotli = { workspace = true, optional = true }
+zstd = { workspace = true, optional = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+
+[[bench]]
+name = "compression"
+harness = false
+
+[lints]
+workspace = true

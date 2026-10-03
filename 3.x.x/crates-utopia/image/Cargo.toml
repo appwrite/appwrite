@@ -1,0 +1,48 @@
+[package]
+name = "utopia-image"
+description = "Image manipulation library (Rust port of utopia-php/image)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["image", "resize", "crop", "webp", "heic", "utopia"]
+categories = ["multimedia::images"]
+
+[features]
+default = ["jpeg", "png", "gif", "webp", "avif", "heic", "jpeg-turbo"]
+jpeg = []
+# Fast JPEG encode/decode via system libjpeg-turbo (falls back to `image` jpeg if disabled).
+jpeg-turbo = ["dep:turbojpeg"]
+png = []
+gif = []
+webp = ["dep:webp"]
+# Prefer libheif+AOM when `heic` is also enabled; else ravif speed 10 (+ nasm).
+avif = ["image/avif", "image/nasm"]
+# Requires system libheif + HEVC plugins; also unlocks fast libheif AV1 encode for AVIF.
+heic = ["dep:libheif-rs", "dep:tempfile"]
+
+[dependencies]
+image = { workspace = true }
+fast_image_resize = { workspace = true }
+kamadak-exif = { workspace = true }
+thiserror = { workspace = true }
+webp = { workspace = true, optional = true }
+parking_lot = { workspace = true }
+libheif-rs = { workspace = true, optional = true }
+tempfile = { workspace = true, optional = true }
+rayon = { workspace = true }
+turbojpeg = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+webp = { workspace = true }
+
+[[bench]]
+name = "transforms"
+harness = false
+
+[lints]
+workspace = true

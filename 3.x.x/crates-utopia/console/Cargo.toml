@@ -1,0 +1,28 @@
+[package]
+name = "utopia-console"
+description = "CLI helpers for Utopia (Rust port of utopia-php/console)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["console", "cli", "command", "utopia"]
+categories = ["command-line-interface"]
+
+[dependencies]
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+regex = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bench]]
+name = "console"
+harness = false
+
+[lints]
+workspace = true

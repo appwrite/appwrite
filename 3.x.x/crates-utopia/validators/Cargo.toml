@@ -1,0 +1,25 @@
+[package]
+name = "utopia-validators"
+description = "Input validators for Utopia (Rust port of utopia-php/validators)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["validation", "utopia", "validators"]
+categories = ["parsing", "web-programming"]
+
+[dependencies]
+serde_json = { workspace = true }
+regex = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+
+[[bench]]
+name = "validators"
+harness = false
+
+[lints]
+workspace = true

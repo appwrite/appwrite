@@ -1,0 +1,44 @@
+# cargo-deny configuration for supply-chain / license checks.
+# https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "aarch64-unknown-linux-gnu" },
+]
+all-features = true
+
+[advisories]
+yanked = "warn"
+# Unmaintained crates are noisy across the ecosystem; keep as warn.
+unmaintained = "workspace"
+# Note: CI currently runs `licenses bans sources` only - cargo-deny 0.18.x
+# cannot parse CVSS 4.0 advisory entries (needs newer deny + rustc).
+
+[licenses]
+confidence-threshold = 0.8
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "OpenSSL",
+    "CC0-1.0",
+    "MPL-2.0",
+    "CDLA-Permissive-2.0",
+    "Unlicense",
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,23 @@
+[package]
+name = "utopia-user-agent"
+description = "User-agent parsing for Utopia (Rust port of utopia-php/user-agent)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["user-agent", "browser", "device", "utopia"]
+categories = ["web-programming", "parsing"]
+
+[dependencies]
+regex = { workspace = true }
+serde = { workspace = true }
+
+[[bench]]
+name = "user_agent"
+harness = false
+
+[lints]
+workspace = true

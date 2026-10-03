@@ -1,0 +1,46 @@
+[package]
+name = "utopia-queue"
+description = "Task queue server, brokers, and adapters for Utopia (Rust port of utopia-php/queue)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["queue", "jobs", "redis", "nats", "utopia"]
+categories = ["asynchronous", "web-programming"]
+
+[features]
+default = []
+redis = ["dep:redis"]
+nats = ["dep:async-nats", "dep:sha2", "dep:hex", "dep:futures"]
+
+[dependencies]
+utopia-di = { workspace = true }
+utopia-lock = { workspace = true }
+utopia-pools = { workspace = true }
+utopia-servers = { workspace = true }
+utopia-validators = { workspace = true }
+utopia-telemetry = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+parking_lot = { workspace = true }
+tokio = { workspace = true }
+redis = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+async-nats = { workspace = true, optional = true }
+
+[dev-dependencies]
+utopia-validators = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+
+[[bench]]
+name = "queue"
+harness = false
+
+[lints]
+workspace = true

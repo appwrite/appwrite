@@ -1,0 +1,27 @@
+use crate::error::Result;
+use crate::resolver::proxy::Proxy;
+
+/// Cloudflare public DNS (1.1.1.1 / 1.0.0.1). PHP `Utopia\DNS\Resolver\Cloudflare`.
+///
+/// Matches PHP: this is a UDP proxy, not DNS-over-HTTPS.
+#[derive(Debug)]
+pub struct Cloudflare(Proxy);
+
+impl Cloudflare {
+    pub fn new(use_backup: bool) -> Result<Self> {
+        let ip = if use_backup { "1.0.0.1" } else { "1.1.1.1" };
+        Ok(Self(Proxy::new(ip, 53)?))
+    }
+
+    /// Forward through a custom nameserver (tests / private resolvers).
+    /// PHP always uses `1.1.1.1:53` / `1.0.0.1:53`.
+    pub fn with_nameserver(host: impl Into<String>, port: u16) -> Result<Self> {
+        Ok(Self(Proxy::new(host, port)?))
+    }
+}
+
+impl crate::resolver::Resolver for Cloudflare {
+    fn resolve(&self, query: &crate::query::Query) -> Result<crate::Message> {
+        self.0.resolve(query)
+    }
+}

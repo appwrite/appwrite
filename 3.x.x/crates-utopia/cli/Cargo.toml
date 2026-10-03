@@ -1,0 +1,26 @@
+[package]
+name = "utopia-cli"
+description = "Command-line task runner for Utopia (Rust port of utopia-php/cli)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["cli", "command", "tasks", "utopia"]
+categories = ["command-line-interface"]
+
+[dependencies]
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+utopia-di = { workspace = true }
+utopia-servers = { workspace = true }
+utopia-validators = { workspace = true }
+
+[[bench]]
+name = "cli"
+harness = false
+
+[lints]
+workspace = true

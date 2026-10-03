@@ -1,0 +1,30 @@
+[package]
+name = "utopia-span"
+description = "Span tracing for Utopia (Rust port of utopia-php/span)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["tracing", "span", "sentry", "opentelemetry", "utopia"]
+categories = ["development-tools::debugging", "web-programming"]
+
+[dependencies]
+parking_lot = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[[bench]]
+name = "span"
+harness = false
+
+[lints]
+workspace = true

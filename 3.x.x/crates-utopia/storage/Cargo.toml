@@ -1,0 +1,55 @@
+[package]
+name = "utopia-storage"
+description = "Storage devices and file validators for Utopia (Rust port of utopia-php/storage)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["storage", "filesystem", "upload", "utopia"]
+categories = ["filesystem"]
+
+[features]
+default = ["s3", "telemetry", "validators"]
+s3 = ["dep:utopia-client", "dep:http", "dep:quick-xml", "dep:sha2", "dep:hmac", "dep:hex", "dep:base64", "dep:url", "dep:time", "dep:md-5", "dep:bytes"]
+telemetry = ["dep:utopia-telemetry"]
+# Integrate file validators with the utopia-validators `Validator` trait.
+validators = ["dep:utopia-validators", "dep:serde_json"]
+
+[dependencies]
+thiserror = { workspace = true }
+mime_guess = { workspace = true }
+serde_json = { workspace = true, optional = true }
+utopia-validators = { workspace = true, optional = true }
+utopia-telemetry = { workspace = true, optional = true }
+utopia-client = { workspace = true, optional = true }
+http = { workspace = true, optional = true }
+quick-xml = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+hmac = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
+time = { workspace = true, features = ["formatting", "parsing", "macros"], optional = true }
+md-5 = { workspace = true, optional = true }
+bytes = { workspace = true, optional = true }
+fs2 = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "storage_local_write_read"
+harness = false
+
+[[bench]]
+name = "storage_s3_big_upload"
+harness = false
+required-features = ["s3"]
+
+[lints]
+workspace = true
