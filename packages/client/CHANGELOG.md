@@ -25,6 +25,10 @@ This project follows semantic versioning.
 - Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remained available as aliases in 0.5.
 - Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
 
+### Fixed
+
+- The cURL adapter sends `Content-Length: 0` on a `POST`, `PUT` or `PATCH` with an empty body. Without it, servers that require the header over HTTP/1.1 refuse the request; Google answers `411 Length Required`.
+
 ### Added
 
 - `withFollowRedirects()` takes an optional `int $maxHops` (default `Redirect::MAX_HOPS`, 50) that caps how many redirects are followed before a `ProtocolException`. Callers need no change; custom `Adapter` implementations must add the parameter to their `withFollowRedirects()` signature.
