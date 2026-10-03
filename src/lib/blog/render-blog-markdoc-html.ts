@@ -385,12 +385,27 @@ export function renderBlogMarkdocHtml(
   }
 }
 
+const FENCE_LANGUAGE_PATTERN = /^[ \t]*(?:```|~~~)[ \t]*([^\s`{]+)/gm
+
+function fenceLanguages(sources: string[]): Set<string> {
+  const languages = new Set<string>()
+  for (const source of sources) {
+    for (const match of source.matchAll(FENCE_LANGUAGE_PATTERN)) {
+      languages.add(match[1])
+    }
+  }
+  return languages
+}
+
 export async function renderBlogPostBodies(post: {
   content: string
   faqs?: Array<{ question: string; answer: string }>
 }) {
-  // Prism and its grammars load as their own chunk, only when a post renders.
-  const { highlightCode } = await import('./highlight-code')
+  // Prism and its grammars load as their own chunks, only when a post renders.
+  const { highlightCode, loadFenceGrammars } = await import('./highlight-code')
+  await loadFenceGrammars(
+    fenceLanguages([post.content, ...(post.faqs ?? []).map((faq) => faq.answer)]),
+  )
   const options = { highlight: highlightCode }
   return {
     contentHtml: renderBlogMarkdocHtml(post.content, options),
