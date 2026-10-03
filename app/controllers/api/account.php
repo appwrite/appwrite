@@ -1,5 +1,5 @@
 <?php
-
+use Appwrite\Extend\Exception;
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
@@ -453,7 +453,16 @@ Http::post('/v1/account')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            if ($name === null || trim($name) === '') {
+    throw new Exception(
+        Exception::GENERAL_ARGUMENT_INVALID,
+        'Invalid "name" param'
+    );
+}
+
+$user = $authorization->skip(
+    fn () => $dbForProject->createDocument('users', $user)
+);
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
