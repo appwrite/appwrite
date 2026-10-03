@@ -3,6 +3,7 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
+use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -20,7 +21,15 @@ class Targets
                 Query::orderAsc()
             ],
             Database::DELETE_BATCH_SIZE,
-            fn (Document $target) => self::deleteSubscribers($database, $target)
+            fn (Document $target) => self::deleteSubscribers($database, $target),
+            // A project database created before `targets` existed never got it, and
+            // nothing backfills one. Without a sink here the sweep does not skip that
+            // database -- it fails the whole maintenance run on it, every run, and the
+            // sweeps queued behind this one never happen. Matches the sinks the other
+            // maintenance sweeps in Workers\Deletes already pass.
+            onError: function (Throwable $th) use ($database): void {
+                Console::warning("Skipped the targets sweep on {$database->getDatabase()}: {$th->getMessage()}");
+            }
         );
     }
 
