@@ -10,6 +10,7 @@ use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Modules\Migrations\Superseded;
 use Appwrite\Platform\Workers\Migrations;
@@ -17,8 +18,10 @@ use Appwrite\Usage\Context;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
+use Tests\Unit\Network\FixedLookup;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
@@ -469,6 +472,7 @@ final class MigrationsTest extends TestCase
                 plan: [],
                 authorization: new Authorization(),
                 locks: $locks,
+                publicHostname: new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
         }
 
@@ -569,6 +573,7 @@ final class MigrationsTest extends TestCase
                 plan: [],
                 authorization: new Authorization(),
                 locks: $locks,
+                publicHostname: new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
         };
 
@@ -741,6 +746,7 @@ final class MigrationsTest extends TestCase
             plan: [],
             authorization: new Authorization(),
             locks: $locks,
+            publicHostname: new PublicHostname(new PublicInternet(), new FixedLookup()),
         );
 
         $this->assertSame(['progress', 'failure', 'ready'], $worker->refused);
@@ -1027,6 +1033,7 @@ final class MigrationsTest extends TestCase
             plan: [],
             authorization: new Authorization(),
             locks: $this->claimLocks(),
+            publicHostname: new PublicHostname(new PublicInternet(), new FixedLookup()),
         );
     }
 

@@ -8,11 +8,14 @@ use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Usage\Context;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\FixedLookup;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Collection;
@@ -496,6 +499,7 @@ final class MigrationsReportTest extends TestCase
             plan: [],
             authorization: new Authorization(),
             locks: static fn (string $key, int $ttl, callable $callback, float $timeout): mixed => $callback(),
+            publicHostname: new PublicHostname(new PublicInternet(), new FixedLookup()),
         );
     }
 }
