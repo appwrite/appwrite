@@ -684,4 +684,16 @@ export const jaFunctionsDictionary: Record<string, string> = {
   Key: 'キー',
   Value: '値',
   Errors: 'エラー',
+  'Create your first function': '最初の Function を作成',
+  'Run backend code without managing servers. Respond to HTTP requests, events in your project, and schedules.':
+    'サーバーを管理せずにバックエンドのコードを実行できます。HTTP リクエスト、プロジェクト内のイベント、スケジュールに応答します。',
+  'Start from a template': 'テンプレートから始める',
+  'Use a ready-made function, or pick a runtime like Node.js, Python, Dart, or Go.':
+    '既製の Function を使うか、Node.js、Python、Dart、Go などのランタイムを選択します。',
+  'Deploy your code': 'コードをデプロイ',
+  'Connect a Git repository to deploy on every push, or upload your code manually.':
+    'Git リポジトリを接続してプッシュごとにデプロイするか、コードを手動でアップロードします。',
+  'Trigger it': '実行する',
+  'Run it over HTTP, on events in your project, or on a schedule.':
+    'HTTP 経由、プロジェクト内のイベント、またはスケジュールで実行します。',
 }

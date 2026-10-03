@@ -133,12 +133,20 @@ function PricingTierCard({
   return (
     <article
       className={cn(
-        'group flex min-h-[280px] flex-col border-b border-border p-6 transition-colors last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-e sm:border-b-0 sm:p-7',
+        'group relative flex min-h-[280px] flex-col border-b border-border p-6 transition-colors duration-300 last:border-b-0 hover:bg-accent/15 sm:min-h-[300px] sm:border-e sm:border-b-0 sm:p-7',
         columnCount === 4
           ? 'sm:[&:nth-child(2n)]:border-e-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0'
           : 'sm:[&:nth-child(3n)]:border-e-0',
+        tier.popular &&
+          'bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--brand-cta)_6%,transparent),transparent_60%)]',
       )}
     >
+      {tier.popular ? (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-cta)] to-transparent opacity-70"
+          aria-hidden
+        />
+      ) : null}
       <div className="flex flex-1 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-[14px] font-semibold text-foreground">{t(tier.name)}</h3>
@@ -150,7 +158,7 @@ function PricingTierCard({
         </div>
 
         <p className="flex flex-wrap items-baseline gap-x-1.5">
-          <span className="font-aeonik-pro text-[40px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
+          <span className="font-aeonik-pro text-[40px] font-normal leading-none tabular-nums tracking-tight text-foreground sm:text-[44px]">
             {t(tier.price)}
           </span>
           {tier.priceSuffix ? (

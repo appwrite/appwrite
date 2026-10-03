@@ -1572,4 +1572,39 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'בחרו תוכנית חדשה כדי לשמור על הפרויקטים והנתונים שלכם.',
   'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
     'כשתוכנית Education תסתיים, הארגון שלכם יושבת והפרויקטים שבו יימחקו בהמשך. בחרו תוכנית עכשיו והכול יישאר בדיוק איפה שהשארתם.',
+  'Create a project': 'יצירת פרויקט',
+  'Name it and pick the region closest to your users. Each project keeps its data, keys, and settings apart.':
+    'תנו לו שם ובחרו את האזור הקרוב ביותר למשתמשים שלכם. כל פרויקט שומר על הנתונים, המפתחות וההגדרות שלו בנפרד.',
+  'Add a web, mobile, or server platform and install an SDK. Your first request takes a few lines of code.':
+    'הוסיפו פלטפורמת ווב, מובייל או שרת והתקינו SDK. הבקשה הראשונה דורשת רק כמה שורות קוד.',
+  'Build with every product': 'בנייה עם כל המוצרים',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites are ready in every project, no setup required.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים זמינים בכל פרויקט, בלי הגדרות נוספות.',
+  'Create your first project': 'יצירת הפרויקט הראשון שלכם',
+  'A project is the backend for one app: its users, data, files, and code, hosted in the region you choose.':
+    'פרויקט הוא ה-backend של אפליקציה אחת: המשתמשים, הנתונים, הקבצים והקוד שלה, מתארחים באזור שתבחרו.',
+  'Bring or buy a domain': 'הוספה או רכישה של דומיין',
+  'Add a domain you already own, transfer it in, or buy a new one without leaving the console.':
+    'הוסיפו דומיין שכבר בבעלותכם, העבירו אותו ל-Appwrite או רכשו דומיין חדש בלי לצאת מהקונסול.',
+  'Manage DNS in one place': 'ניהול DNS במקום אחד',
+  'Point your nameservers to Appwrite, then add records or apply presets for email and verification.':
+    'הפנו את שרתי השמות ל-Appwrite, ואז הוסיפו רשומות או החילו תבניות מוכנות לאימייל ולאימות.',
+  'Connect it everywhere': 'חיבור לכל מקום',
+  'Use the domain and its subdomains for sites, functions, and project APIs across the organization.':
+    'השתמשו בדומיין ובתתי-הדומיינים שלו עבור אתרים, פונקציות ו-APIs של פרויקטים בכל הארגון.',
+  'Your domains, managed by Appwrite': 'הדומיינים שלכם, בניהול Appwrite',
+  'Register, transfer, and manage domains for your whole organization. Configure DNS once and connect it to your sites, functions, and APIs.':
+    'רשמו, העבירו ונהלו דומיינים לכל הארגון. הגדירו DNS פעם אחת וחברו אותו לאתרים, לפונקציות ול-APIs שלכם.',
+  'Create your app': 'יצירת האפליקציה',
+  'Add a name, logo, and redirect URIs so users recognize your app on the consent screen.':
+    'הוסיפו שם, לוגו וכתובות הפניה כדי שהמשתמשים יזהו את האפליקציה שלכם במסך ההסכמה.',
+  'Request scoped access': 'בקשת גישה מוגבלת בהרשאות',
+  'Users pick the projects and organizations your app can reach, and can revoke access at any time.':
+    'המשתמשים בוחרים לאילו פרויקטים וארגונים האפליקציה שלכם תוכל לגשת, ויכולים לבטל את הגישה בכל עת.',
+  'Publish to the marketplace': 'פרסום במרקטפלייס',
+  'List the app so teams across Appwrite can discover it and connect it to their projects.':
+    'פרסמו את האפליקציה כדי שצוותים ב-Appwrite יוכלו לגלות אותה ולחבר אותה לפרויקטים שלהם.',
+  'Build on top of Appwrite': 'בנו על גבי Appwrite',
+  'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
+    'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
@@ -31,6 +31,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DomainsEmptyState } from './_components/DomainsEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
@@ -46,11 +47,18 @@ import { domainUrl } from '@/lib/domains/url'
 interface DomainsProps {
   projectId: string
   searchValue?: string
+  onFirstRunEmptyChange?: (empty: boolean) => void
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
 export function Domains({
   projectId,
-  searchValue: searchValueProp = ''}: DomainsProps) {
+  searchValue: searchValueProp = '',
+  onFirstRunEmptyChange,
+  createDisabled = false,
+  createDisabledTooltip,
+}: DomainsProps) {
   const t = useT()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
@@ -132,6 +140,13 @@ export function Domains({
     return apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
   }
 
+  const showsFirstRunEmptyState =
+    !isLoading && !searchValueProp.trim() && rules.length === 0
+  useEffect(() => {
+    onFirstRunEmptyChange?.(showsFirstRunEmptyState)
+    return () => onFirstRunEmptyChange?.(false)
+  }, [onFirstRunEmptyChange, showsFirstRunEmptyState])
+
   // Filter rules by search
   const filteredRules = useMemo(() => {
     if (!searchValueProp.trim()) return rules
@@ -157,19 +172,19 @@ export function Domains({
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : paginatedRules.length === 0 ? (
-        <EmptyState
-          icon={ExternalLink}
-          title={searchValueProp ? undefined : t('No domains yet')}
-          description={
-            searchValueProp
-              ? undefined
-              : t('Add a custom domain to serve your Appwrite API on your own domain') // pragma: allowlist secret
+      ) : showsFirstRunEmptyState ? (
+        <DomainsEmptyState
+          onAdd={() =>
+            navigate({
+              to: '/projects/$projectId/settings/domains/add',
+              params: { projectId },
+            })
           }
-          isEmpty={!searchValueProp}
-          hasFilters={!!searchValueProp}
-          variant="card"
+          addDisabled={createDisabled}
+          addDisabledTooltip={createDisabledTooltip}
         />
+      ) : paginatedRules.length === 0 ? (
+        <EmptyState icon={ExternalLink} hasFilters variant="card" />
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card">

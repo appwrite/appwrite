@@ -1349,4 +1349,49 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Verification URL': 'כתובת URL לאימות',
   'openid, profile, email, and phone are always included. Add up to 100 scopes in total, each up to 128 characters.': 'openid, profile, email ו-phone תמיד כלולים. הוסיפו עד 100 הרשאות גישה בסך הכול, כל אחת עד 128 תווים.',
   'Could not load installation scopes. Existing scopes are kept.': 'לא ניתן היה לטעון את הרשאות הגישה להתקנה. ההרשאות הקיימות נשמרות.',
+  'Create your first user': 'יצירת המשתמש הראשון שלכם',
+  'Sign users up from your app with the Appwrite SDKs, or create one here to test your auth flows.':
+    'רשמו משתמשים מהאפליקציה שלכם עם ה-SDK של Appwrite, או צרו משתמש כאן כדי לבדוק את תהליכי האימות.',
+  'Choose sign-in methods': 'בחירת שיטות התחברות',
+  'Turn on email and password, magic URL, phone, or anonymous sign-in.':
+    'הפעילו התחברות עם אימייל וסיסמה, Magic URL, טלפון או התחברות אנונימית.',
+  'Connect OAuth providers': 'חיבור ספקי OAuth',
+  'Let people sign in with Google, GitHub, Apple, and more.':
+    'אפשרו התחברות עם Google, GitHub, Apple ועוד.',
+  'Set security policies': 'הגדרת מדיניות אבטחה',
+  'Control session length, password rules, and limits for your users.':
+    'קבעו את משך הסשן, כללי הסיסמה ומגבלות למשתמשים.',
+  'Create your first team': 'יצירת הצוות הראשון שלכם',
+  'Teams let groups of users share access to your data. Use them for multi-tenancy, workspaces, organizations, or any shared space in your app.':
+    'צוותים מאפשרים לקבוצות של משתמשים לשתף גישה לנתונים שלכם. השתמשו בהם לריבוי לקוחות (Multi-tenancy), לסביבות עבודה, לארגונים או לכל מרחב משותף באפליקציה.',
+  'Group users who share access, like a workspace or an organization in your app.':
+    'קבצו משתמשים שחולקים גישה, כמו סביבת עבודה או ארגון באפליקציה שלכם.',
+  'Invite members': 'הזמנת חברים',
+  'Add users by email and give them roles such as owner or editor.':
+    'הוסיפו משתמשים לפי אימייל והקצו להם תפקידים כמו בעלים או עורך.',
+  'Grant access': 'מתן גישה',
+  'Use team roles in permissions on rows, files, and functions.':
+    'השתמשו בתפקידי הצוות בהרשאות על שורות, קבצים ופונקציות.',
+  'Store images, videos, documents, and any other files. Control who can access them and serve them anywhere.':
+    'אחסנו תמונות, סרטונים, מסמכים וכל קובץ אחר. שלטו במי שיכול לגשת אליהם והגישו אותם מכל מקום.',
+  'Each bucket has its own permissions, size limit, and allowed file types.':
+    'לכל באקט יש הרשאות, מגבלת גודל וסוגי קבצים מותרים משלו.',
+  'Upload from the console or from your app with the SDKs. Large files upload in chunks.':
+    'העלו מהקונסול או מהאפליקציה שלכם עם ה-SDK. קבצים גדולים מועלים בחלקים.',
+  'Transform images': 'המרת תמונות',
+  'Resize, crop, and convert images on the fly with preview URLs.':
+    'שנו גודל, חתכו והמירו תמונות בזמן אמת עם כתובות תצוגה מקדימה.',
+  'Register the client': 'רישום הלקוח',
+  'Name the app, add its redirect URIs, and create a secret for server-side clients.':
+    'תנו שם לאפליקציה, הוסיפו את כתובות ההפניה שלה וצרו סוד עבור לקוחות בצד השרת.',
+  'Send users to authorize': 'הפניית משתמשים לאישור',
+  'Users sign in with this project and approve the scopes the client asks for on a branded consent screen.':
+    'המשתמשים מתחברים עם הפרויקט הזה ומאשרים את ההרשאות שהלקוח מבקש במסך הסכמה ממותג.',
+  'Exchange the code': 'החלפת הקוד',
+  'The client trades the authorization code for tokens and reads the signed-in user from the userinfo endpoint.':
+    'הלקוח מחליף את קוד ההרשאה בטוקנים וקורא את פרטי המשתמש המחובר מה-Endpoint של userinfo.',
+  'Let other apps sign in with your project':
+    'התחברות לאפליקציות אחרות דרך הפרויקט שלכם',
+  'Register OAuth2 clients so other products can let users connect with this project. To let your users connect their Appwrite account with your application, create an app under your organization instead.':
+    'רשמו לקוחות OAuth2 כדי שמוצרים אחרים יוכלו לאפשר למשתמשים להתחבר עם הפרויקט הזה. כדי לאפשר למשתמשים שלכם לחבר את חשבון ה-Appwrite שלהם לאפליקציה שלכם, צרו אפליקציה תחת הארגון במקום זאת.',
 }
