@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Execution\Store;
+use Appwrite\Logs\Store as RuntimeLogStore;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
 use Utopia\Console;
@@ -20,10 +21,11 @@ class UsageSetup extends Action
             ->desc('Set up ClickHouse schemas')
             ->inject('usageConnection')
             ->inject('executionStore')
+            ->inject('runtimeLogStore')
             ->callback($this->action(...));
     }
 
-    public function action(Connection $usageConnection, Store $executionStore): void
+    public function action(Connection $usageConnection, Store $executionStore, RuntimeLogStore $runtimeLogStore): void
     {
         // An operator may run this before ClickHouse finishes starting, so
         // retry on the same ladder the boot-time setup uses.
@@ -47,6 +49,12 @@ class UsageSetup extends Action
                 $health = $executionStore->healthCheck();
                 if (($health['schemaReady'] ?? false) !== true) {
                     throw new \RuntimeException('Execution schema health check failed');
+                }
+
+                $runtimeLogStore->setup();
+                $health = $runtimeLogStore->healthCheck();
+                if (($health['schemaReady'] ?? false) !== true) {
+                    throw new \RuntimeException('Runtime log schema health check failed');
                 }
 
                 Console::success('ClickHouse schemas are ready');
