@@ -10,6 +10,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -21,6 +22,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 
@@ -68,11 +70,17 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
+            ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken): void
+    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, Authorization $authorization, User $authUser): void
     {
+        if (!$authUser->isKey($authorization->getRoles()) && !$authUser->isPrivileged($authorization->getRoles())) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
