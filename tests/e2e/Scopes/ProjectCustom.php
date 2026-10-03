@@ -178,6 +178,8 @@ trait ProjectCustom
                     'insights.write',
                     'reports.read',
                     'reports.write',
+                    'videos.read',
+                    'videos.write',
                 ],
             ]);
 

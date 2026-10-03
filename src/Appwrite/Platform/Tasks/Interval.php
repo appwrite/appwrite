@@ -84,7 +84,7 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ]
+            ],
         ];
     }
 

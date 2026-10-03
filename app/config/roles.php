@@ -37,6 +37,8 @@ $member = [
     'subscribers.read',
     'assistant.read',
     'rules.read',
+    'videos.read',
+    'videos.write',
 ];
 
 $admins = [
@@ -138,6 +140,8 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'videos.read',
+    'videos.write',
 ];
 
 return [

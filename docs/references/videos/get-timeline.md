@@ -1,0 +1,1 @@
+Get the WebVTT sprite timeline for a video, used to render scrubbing thumbnails in a player. Timeline generation is queued when the video is created. Poll this endpoint until it returns a WebVTT document. Audio-only sources produce no timeline and this endpoint returns `video_timeline_not_found`.
