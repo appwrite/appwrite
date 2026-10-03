@@ -412,6 +412,92 @@ class S3 extends Device
     }
 
     /**
+     * Whether the device root carries the bucket as its first segment.
+     *
+     * Endpoint-style setups address objects by their full root path, with the
+     * bucket prepended by the caller. Virtual-hosted devices address the
+     * bucket through the host instead, so a root that happens to repeat the
+     * bucket name is key space, not addressing, and must be left alone.
+     */
+    private function isBucketPrefixedRoot(): bool
+    {
+        if ($this->bucket === null || $this->bucket === '') {
+            return false;
+        }
+        if (str_starts_with($this->host, $this->bucket . '.')) {
+            return false;
+        }
+        $root = ltrim($this->root, '/');
+
+        return $root === $this->bucket || str_starts_with($root, $this->bucket . '/');
+    }
+
+    /**
+     * Key as callers address it on this device.
+     *
+     * Single-object calls take the full root path, so on bucket-prefixed
+     * roots a stripped listing key gains the bucket back: a listed path stays
+     * directly usable with read, delete and abort on the same device.
+     */
+    private function displayPath(string $key): string
+    {
+        $bucket = $this->bucket;
+        if ($bucket === null || $bucket === '' || ! $this->isBucketPrefixedRoot()) {
+            return $key;
+        }
+
+        return $bucket . '/' . ltrim($key, '/');
+    }
+
+    /**
+     * Request target for list-style operations.
+     *
+     * Single-object calls address the full root path directly, which services
+     * read path-style with the bucket as the first segment. List-style calls
+     * must instead hit `/<bucket>` with the bucket stripped from the prefix:
+     * against the service root the same request is answered as ListBuckets,
+     * whose response carries no objects. Any other device keeps the old target.
+     *
+     * @return array{string, string} Request URI and listing prefix
+     */
+    private function listTarget(string $prefix): array
+    {
+        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
+        if (! $this->isBucketPrefixedRoot()) {
+            return ['/', $prefix];
+        }
+        if ($prefix === $this->bucket) {
+            return ['/' . $this->bucket, ''];
+        }
+        $namespaced = $this->bucket . '/';
+        if (! str_starts_with($prefix, $namespaced)) {
+            return ['/', $prefix];
+        }
+
+        return ['/' . $this->bucket, substr($prefix, \strlen($namespaced))];
+    }
+
+    /**
+     * Object key without the leading bucket segment, when the path carries one.
+     *
+     * Endpoint-style devices address objects by their full root path, so the
+     * bucket would appear twice if reused verbatim in bucket-relative fields
+     * such as the copy source. Devices addressed by bare keys are untouched.
+     */
+    private function stripBucketPrefix(string $path): string
+    {
+        if (! $this->isBucketPrefixedRoot()) {
+            return $path;
+        }
+        $namespaced = $this->bucket . '/';
+        if (str_starts_with($path, $namespaced)) {
+            return substr($path, \strlen($namespaced));
+        }
+
+        return $path;
+    }
+
+    /**
      * Get list of objects in the given path.
      *
      * @return array<mixed>
@@ -424,8 +510,7 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' objects');
         }
 
-        $uri = '/';
-        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
+        [$uri, $prefix] = $this->listTarget($prefix);
         $parameters = [
             'list-type' => 2,
             'prefix' => $prefix,
@@ -474,7 +559,7 @@ class S3 extends Device
         $info = $this->getInfo($source);
         $size = (int) ($info['content-length'] ?? 0);
 
-        $copySource = '/' . $this->bucket . '/' . ltrim(str_replace('%2F', '/', rawurlencode($source)), '/');
+        $copySource = '/' . $this->bucket . '/' . $this->stripBucketPrefix(ltrim(str_replace('%2F', '/', rawurlencode($source)), '/'));
         $uri = $target !== '' ? '/' . str_replace(['%2F', '%3F'], ['/', '?'], rawurlencode($target)) : '/';
 
         if ($size <= self::MAX_COPY_OBJECT_SIZE) {
@@ -537,7 +622,7 @@ class S3 extends Device
     {
         $path = $this->getRoot() . '/' . $path;
 
-        $uri = '/';
+        [$uri] = $this->listTarget($path);
         $continuationToken = '';
         do {
             $objects = $this->listObjects($path, continuationToken: $continuationToken);
@@ -663,7 +748,7 @@ class S3 extends Device
             $modified = $object['LastModified'] ?? null;
             $etag = $object['ETag'] ?? null;
             $files[] = new FileInfo(
-                path: $object['Key'],
+                path: $this->displayPath($object['Key']),
                 size: is_numeric($size) ? (int) $size : 0,
                 modifiedAt: \is_string($modified) ? new \DateTimeImmutable($modified) : null,
                 etag: \is_string($etag) ? trim($etag, '"') : null,
@@ -697,9 +782,10 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' uploads');
         }
 
+        [$uri, $prefix] = $this->listTarget($prefix);
         $parameters = [
             'uploads' => '',
-            'prefix' => ltrim($prefix, '/'),
+            'prefix' => $prefix,
             'max-uploads' => $max,
         ];
 
@@ -712,7 +798,7 @@ class S3 extends Device
             $parameters['upload-id-marker'] = $markers['upload'];
         }
 
-        $response = $this->call(Method::GET, '/', '', $parameters, headers: ['content-type' => 'text/plain']);
+        $response = $this->call(Method::GET, $uri, '', $parameters, headers: ['content-type' => 'text/plain']);
 
         if (! \is_array($response->body)) {
             throw new RemoteException('Unexpected S3 upload listing response');
@@ -735,7 +821,7 @@ class S3 extends Device
             }
             $initiated = $entry['Initiated'] ?? null;
             $uploads[] = new UploadInfo(
-                path: $entry['Key'],
+                path: $this->displayPath($entry['Key']),
                 uploadId: $entry['UploadId'],
                 initiatedAt: \is_string($initiated) ? new \DateTimeImmutable($initiated) : null,
             );

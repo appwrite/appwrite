@@ -708,6 +708,120 @@ final class S3Test extends TestCase
         $this->assertNull($list->cursor);
     }
 
+    private function endpointDevice(ScriptedClient $client): S3
+    {
+        return new S3(
+            root: 'my-bucket/storage/uploads/app-1',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            bucket: 'my-bucket',
+            client: new Retry($client, new RetryStrategy(delay: 0.0)),
+        );
+    }
+
+    public function testListingScopesToBucketWhenRootCarriesIt(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated>'
+            . '<Contents><Key>storage/uploads/app-1/bkt-1/file.txt</Key><Size>11</Size><LastModified>2026-01-02T03:04:05.000Z</LastModified><ETag>&quot;abc123&quot;</ETag></Contents>'
+            . '</ListBucketResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+
+        $list = $this->endpointDevice($client)->listFiles('my-bucket/storage/uploads/app-1/bkt-1');
+
+        $this->assertCount(1, $list->files);
+        $this->assertSame('my-bucket/storage/uploads/app-1/bkt-1/file.txt', $list->files[0]->path, 'listed paths stay usable with read and delete on the same device');
+
+        $this->assertCount(1, $client->requests);
+        $request = $client->requests[0];
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('/my-bucket', $request->getUri()->getPath());
+        $this->assertStringContainsString('prefix=storage%2Fuploads%2Fapp-1%2Fbkt-1', $request->getUri()->getQuery());
+    }
+
+    public function testDeletePathScopesListAndBatchDeleteToBucket(): void
+    {
+        $page = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><MaxKeys>1000</MaxKeys><NextContinuationToken>tok-1</NextContinuationToken>'
+            . '<Contents><Key>storage/uploads/app-1/bkt-1/file.txt</Key><Size>11</Size><LastModified>2026-01-02T03:04:05.000Z</LastModified><ETag>&quot;abc123&quot;</ETag></Contents>'
+            . '</ListBucketResult>';
+        $empty = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>';
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream($page))->withHeader('content-type', 'application/xml'),
+            new Response(200),
+            new Response(200, body: new Stream($empty))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->assertTrue($this->endpointDevice($client)->deletePath('bkt-1'));
+
+        $this->assertCount(3, $client->requests);
+
+        $list = $client->requests[0];
+        $this->assertSame('GET', $list->getMethod());
+        $this->assertSame('/my-bucket', $list->getUri()->getPath());
+        $this->assertStringContainsString('prefix=storage%2Fuploads%2Fapp-1%2Fbkt-1', $list->getUri()->getQuery());
+
+        $batch = $client->requests[1];
+        $this->assertSame('POST', $batch->getMethod());
+        $this->assertSame('/my-bucket', $batch->getUri()->getPath());
+        $this->assertStringContainsString('delete', $batch->getUri()->getQuery());
+
+        $followUp = $client->requests[2];
+        $this->assertSame('GET', $followUp->getMethod());
+        $this->assertSame('/my-bucket', $followUp->getUri()->getPath());
+        $this->assertStringContainsString('continuation-token=tok-1', $followUp->getUri()->getQuery());
+    }
+
+    public function testListingKeepsServiceRootWithoutBucket(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+
+        $this->device($client)->listFiles('/root/testing');
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('/', $client->requests[0]->getUri()->getPath());
+    }
+
+    public function testEndpointStyleCopyUsesASingleBucketSegment(): void
+    {
+        $copyBody = '<?xml version="1.0" encoding="UTF-8"?><CopyObjectResult><ETag>&quot;etag-copy&quot;</ETag></CopyObjectResult>';
+        $client = new ScriptedClient([
+            (new Response(200))->withHeader('content-length', '5')->withHeader('content-type', 'text/plain'),
+            (new Response(200, body: new Stream($copyBody)))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $device = $this->endpointDevice($client);
+        $this->assertTrue($device->copy('my-bucket/storage/uploads/app-1/a.txt', 'my-bucket/storage/uploads/app-1/b.txt'));
+
+        $this->assertCount(2, $client->requests);
+        $copy = $client->requests[1];
+        $this->assertSame('PUT', $copy->getMethod());
+        $this->assertSame('/my-bucket/storage/uploads/app-1/b.txt', $copy->getUri()->getPath());
+        $this->assertSame('/my-bucket/storage/uploads/app-1/a.txt', $copy->getHeaderLine('x-amz-copy-source'));
+    }
+
+    public function testListingKeepsServiceRootForVirtualHostedRootsRepeatingTheBucket(): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>';
+        $client = new ScriptedClient([new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml')]);
+        $device = new S3(
+            root: 'my-bucket/backups',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://my-bucket.s3.us-east-1.amazonaws.com',
+            region: 'us-east-1',
+            bucket: 'my-bucket',
+            client: new Retry($client, new RetryStrategy(delay: 0.0)),
+        );
+
+        $device->listFiles('my-bucket/backups/daily');
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('/', $client->requests[0]->getUri()->getPath());
+        $this->assertStringContainsString('prefix=my-bucket%2Fbackups%2Fdaily', $client->requests[0]->getUri()->getQuery());
+    }
+
     public function testFinalizeCompletesOverAnExistingObject(): void
     {
         // The upload replaces whatever is at the path; an object already there is no reason to skip completion.
