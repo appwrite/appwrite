@@ -1671,7 +1671,7 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.4
+    image: appwrite/browser:0.3.5
     networks:
       - browser
     # Public resolvers only, so the browser cannot resolve internal service
