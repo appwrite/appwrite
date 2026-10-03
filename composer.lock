@@ -2958,12 +2958,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9ef7fc5e62c3b70fabf63c45cc770237a55214bf"
+                "reference": "4519cf6466406b5e2c2ba8253da6131e2579a2dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ef7fc5e62c3b70fabf63c45cc770237a55214bf",
-                "reference": "9ef7fc5e62c3b70fabf63c45cc770237a55214bf",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4519cf6466406b5e2c2ba8253da6131e2579a2dd",
+                "reference": "4519cf6466406b5e2c2ba8253da6131e2579a2dd",
                 "shasum": ""
             },
             "require": {
