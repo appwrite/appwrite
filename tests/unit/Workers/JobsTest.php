@@ -10,7 +10,7 @@ use Utopia\Config\Config;
 
 /**
  * Proves job resolution for combined and dedicated worker modes keeps the
- * databases queue at coroutines=1 — parallel schema jobs risk deadlocks.
+ * configured concurrency in combined mode and accepts dedicated overrides.
  */
 final class JobsTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class JobsTest extends TestCase
         $this->config = Config::getParam('workers');
     }
 
-    public function testCombinedModeKeepsDatabasesAtOneDespiteGlobalOverride(): void
+    public function testCombinedModeKeepsQueueCapsDespiteGlobalOverride(): void
     {
         $jobs = Jobs::resolve(
             \array_keys($this->config),
@@ -30,12 +30,12 @@ final class JobsTest extends TestCase
             $this->env(['_APP_WORKER_MAX_COROUTINES' => '61']),
         );
 
-        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(8, $jobs['databases']['coroutines']);
         $this->assertSame(8, $jobs['functions']['coroutines']);
-        $this->assertSame('database_db_main', $jobs['databases']['queue']);
+        $this->assertSame('v1-database', $jobs['databases']['queue']);
     }
 
-    public function testDedicatedDatabasesIgnoresGlobalOverride(): void
+    public function testDedicatedDatabasesAllowsGlobalOverride(): void
     {
         $jobs = Jobs::resolve(
             ['databases'],
@@ -44,7 +44,7 @@ final class JobsTest extends TestCase
         );
 
         $this->assertCount(1, $jobs);
-        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(99, $jobs['databases']['coroutines']);
     }
 
     public function testDedicatedNonDatabasesAllowsGlobalOverride(): void
@@ -58,7 +58,7 @@ final class JobsTest extends TestCase
         $this->assertSame(99, $jobs['functions']['coroutines']);
     }
 
-    public function testDedicatedDatabasesWithoutOverrideStaysAtOne(): void
+    public function testDedicatedDatabasesUsesConfiguredConcurrency(): void
     {
         $jobs = Jobs::resolve(
             ['databases'],
@@ -66,10 +66,10 @@ final class JobsTest extends TestCase
             $this->env([]),
         );
 
-        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(8, $jobs['databases']['coroutines']);
     }
 
-    public function testPartialCombinedStillPinsDatabases(): void
+    public function testPartialCombinedKeepsQueueCaps(): void
     {
         $jobs = Jobs::resolve(
             ['databases', 'functions'],
@@ -77,7 +77,7 @@ final class JobsTest extends TestCase
             $this->env(['_APP_WORKER_MAX_COROUTINES' => '50']),
         );
 
-        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(8, $jobs['databases']['coroutines']);
         $this->assertSame(8, $jobs['functions']['coroutines']);
     }
 
@@ -86,11 +86,17 @@ final class JobsTest extends TestCase
         $jobs = Jobs::resolve(
             ['databases'],
             $this->config,
-            $this->env(['_APP_QUEUE_NAME' => 'database_db_custom']),
+            $this->env(['_APP_DATABASE_QUEUE_NAME' => 'custom-ddl']),
         );
 
-        $this->assertSame('database_db_custom', $jobs['databases']['queue']);
-        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame('custom-ddl', $jobs['databases']['queue']);
+        $this->assertSame(8, $jobs['databases']['coroutines']);
+    }
+
+    public function testMultipleDatabaseProcessesAreRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Jobs::resolve(['databases'], $this->config, $this->env(['_APP_WORKERS_NUM' => '2']));
     }
 
     /**
