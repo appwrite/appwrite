@@ -142,6 +142,9 @@ final class ConsumerFetchLifecycleTest extends TestCase
         // Oversized pull throws MaxPayloadException after the inbox is open.
         // A dead socket on the cleanup UNSUB used to replace that diagnosis
         // with ConnectionException via PHP's finally semantics (#198).
+        // Inbox release on the throw path is covered by
+        // testFetchReleasesItsInboxSubscriptionWhenItThrows; this case only
+        // asserts the pull exception wins when cleanup also fails.
         $fake = new FakeTransport(['max_payload' => 4]);
         $fake->onWrite = static function (string $wire): void {
             if (\str_starts_with($wire, 'UNSUB ')) {
@@ -151,20 +154,12 @@ final class ConsumerFetchLifecycleTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $before = \count($this->subscriptions($conn));
-
         try {
             $consumer->fetch(1, 0.02);
             $this->fail('Expected the oversized pull request to raise');
         } catch (MaxPayloadException) {
             // expected — not ConnectionException from the dying unsubscribe
         }
-
-        $this->assertCount(
-            $before,
-            $this->subscriptions($conn),
-            'Cleanup must still drop the inbox even when UNSUB write fails',
-        );
     }
 
     public function testFetchSurfacesUnsubscribeFailureAfterASuccessfulPull(): void
