@@ -19,6 +19,7 @@ final class Cors
     public const string HEADER_ALLOW_CREDENTIALS = 'Access-Control-Allow-Credentials';
     public const string HEADER_EXPOSE_HEADERS    = 'Access-Control-Expose-Headers';
     public const string HEADER_MAX_AGE           = 'Access-Control-Max-Age';
+    public const string HEADER_VARY              = 'Vary';
 
     /**
      * @param array<string> $allowedHosts     Array of allowed hosts
@@ -48,6 +49,10 @@ final class Cors
     /**
      * Build CORS headers for a given request origin.
      *
+     * Vary: Origin is always included so shared caches do not reuse a response
+     * whose Access-Control-Allow-Origin was computed for a different caller
+     * (or for no Origin at all).
+     *
      * @return array<string, int|string>
      */
     public function headers(string $origin): array
@@ -58,17 +63,22 @@ final class Cors
             self::HEADER_EXPOSE_HEADERS    => implode(', ', $this->exposedHeaders),
             self::HEADER_ALLOW_CREDENTIALS => $this->allowCredentials ? 'true' : 'false',
             self::HEADER_MAX_AGE           => $this->maxAge,
+            self::HEADER_VARY              => 'Origin',
         ];
 
-        // Wildcard allow-all
-        if ($this->allowedHosts === ['*']) {
-            $headers[self::HEADER_ALLOW_ORIGIN] = $origin;
+        $origin = strtolower(trim($origin));
+
+        // Never emit Access-Control-Allow-Origin: '' — browsers reject it as
+        // an invalid CORS header. An empty Origin means there is nothing to
+        // echo; omit the header instead.
+        if ($origin === '') {
             return $headers;
         }
 
-        // Normal origin handling
-        $origin = strtolower(trim($origin));
-        if ($origin === '') {
+        // Wildcard allow-all: reflect the caller's origin (not "*") so
+        // credentialed responses stay valid.
+        if ($this->allowedHosts === ['*']) {
+            $headers[self::HEADER_ALLOW_ORIGIN] = $origin;
             return $headers;
         }
 

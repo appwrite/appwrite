@@ -225,6 +225,7 @@ jobs:
               { name: 'Sites',             runner: 'e2e',       functional: true,  processes: null },
               { name: 'Proxy',             runner: 'e2e',       functional: true,  processes: null },
               { name: 'Storage',           runner: 'e2e',       functional: true,  processes: null },
+              { name: 'S3',                runner: 'e2e',       functional: true,  processes: null },
               { name: 'Tokens',            runner: 'e2e',       functional: true,  processes: null },
               { name: 'Teams',             runner: 'e2e',       functional: true,  processes: null },
               { name: 'Usage',             runner: 'e2e',       functional: true,  processes: null },
