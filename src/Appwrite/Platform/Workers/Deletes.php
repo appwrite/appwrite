@@ -76,7 +76,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('locks');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -107,6 +108,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        callable $locks,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -140,6 +142,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $locks,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -233,6 +236,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        callable $locks,
     ): void {
         $payload = $message->getPayload();
 
@@ -263,7 +267,7 @@ class Deletes extends Action
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus, $locks);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
@@ -1622,12 +1626,36 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus, callable $locks): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
         $deploymentInternalId = $document->getSequence();
+
+        /**
+         * Repoint the resource's latest deployment, under the same lock as the delete endpoints
+         */
+        $collection = $document->getAttribute('resourceType');
+        $resourceId = $document->getAttribute('resourceId');
+        $locks($collection . ':deployments:' . $projectId . ':' . $resourceId, 30, function () use ($dbForProject, $collection, $resourceId, $deploymentId) {
+            $resource = $dbForProject->getDocument($collection, $resourceId);
+            if ($resource->getAttribute('latestDeploymentId') !== $deploymentId) {
+                return;
+            }
+
+            $latestDeployment = $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', [$collection]),
+                Query::equal('resourceInternalId', [$resource->getSequence()]),
+                Query::orderDesc('$createdAt'),
+            ]);
+            $dbForProject->updateDocument($collection, $resourceId, new Document([
+                'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+            ]));
+        }, 10.0);
 
         /**
          * Delete deployment files
@@ -1662,10 +1690,14 @@ class Deletes extends Action
         });
 
         /**
-         * Request executor to delete all deployment containers
+         * Request executor to delete this deployment's container
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+        try {
+            $executor->deleteRuntime($projectId, $deploymentId);
+        } catch (Throwable $th) {
+            Console::warning("Runtime for deployment {$deploymentId} skipped: " . $th->getMessage());
+        }
     }
 
     /**
