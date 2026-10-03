@@ -3,61 +3,20 @@
 namespace Utopia\Abuse\Adapters\TimeLimit;
 
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDB;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Index;
 use Utopia\Database\Query;
 
 class Database extends TimeLimit
 {
     public const COLLECTION = 'abuse';
-
-    public const ATTRIBUTES = [
-        [
-            '$id' => 'key',
-            'type' => UtopiaDB::VAR_STRING,
-            'size' => UtopiaDB::LENGTH_KEY,
-            'required' => true,
-            'signed' => true,
-            'array' => false,
-            'filters' => [],
-        ], [
-            '$id' => 'time',
-            'type' => UtopiaDB::VAR_DATETIME,
-            'size' => 0,
-            'required' => true,
-            'signed' => false,
-            'array' => false,
-            'filters' => ['datetime'],
-        ], [
-            '$id' => 'count',
-            'type' => UtopiaDB::VAR_INTEGER,
-            'size' => 11,
-            'required' => true,
-            'signed' => false,
-            'array' => false,
-            'filters' => [],
-        ],
-    ];
-
-    public const INDEXES = [
-        [
-            '$id' => 'unique1',
-            'type' => UtopiaDB::INDEX_UNIQUE,
-            'attributes' => ['key', 'time'],
-            'lengths' => [],
-            'orders' => [],
-        ], [
-            '$id' => 'index2',
-            'type' => UtopiaDB::INDEX_KEY,
-            'attributes' => ['time'],
-            'lengths' => [],
-            'orders' => [],
-        ],
-    ];
 
     /**
      * @var UtopiaDB
@@ -85,6 +44,29 @@ class Database extends TimeLimit
     }
 
     /**
+     * @return list<Attribute>
+     */
+    public static function attributes(): array
+    {
+        return [
+            Attribute::string(key: 'key', size: UtopiaDB::LENGTH_KEY, required: true),
+            Attribute::datetime(key: 'time', required: true, signed: false, filters: ['datetime']),
+            Attribute::integer(key: 'count', size: 11, required: true, signed: false),
+        ];
+    }
+
+    /**
+     * @return list<Index>
+     */
+    public static function indexes(): array
+    {
+        return [
+            Index::unique(key: 'unique1', attributes: ['key', 'time']),
+            Index::key(key: 'index2', attributes: ['time']),
+        ];
+    }
+
+    /**
      * @throws Duplicate
      * @throws \Exception
      */
@@ -94,20 +76,8 @@ class Database extends TimeLimit
             throw new \Exception('You need to create database before running timelimit setup');
         }
 
-        $attributes = \array_map(function ($attribute) {
-            return new Document($attribute);
-        }, self::ATTRIBUTES);
-
-        $indexes = \array_map(function ($index) {
-            return new Document($index);
-        }, self::INDEXES);
-
         try {
-            $this->db->createCollection(
-                self::COLLECTION,
-                $attributes,
-                $indexes
-            );
+            $this->db->createCollection(new Collection(id: self::COLLECTION, attributes: self::attributes(), indexes: self::indexes()));
         } catch (Duplicate) {
             // Collection already exists
         }

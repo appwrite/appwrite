@@ -614,6 +614,7 @@ class MetricTest extends TestCase
         $expected = [
             'path', 'method', 'status',
             'service', 'resourceType', 'resourceId', 'resourceInternalId',
+            'ordinal',
             'teamId', 'teamInternalId',
             'country', 'region', 'hostname', 'ip',
             'protocol', 'accept', 'acceptLanguage', 'queryKeys',
@@ -641,27 +642,35 @@ class MetricTest extends TestCase
     }
 
     /**
-     * The replica ordinal is a gauge-only dimension: present in GAUGE_COLUMNS,
-     * the gauge schema and gauge indexes, extracted from tags into its column,
-     * and readable via the typed accessor. Events must not carry it.
+     * The replica ordinal is a shared dimension: present in both EVENT_COLUMNS
+     * and GAUGE_COLUMNS, extracted from tags into its column, and readable via
+     * the typed accessor. Daily event rollups stay unsplit — they still group
+     * on resource identity only.
      */
-    public function testOrdinalIsGaugeOnly(): void
+    public function testOrdinalIsASharedDimension(): void
     {
         $this->assertContains('ordinal', Metric::GAUGE_COLUMNS);
-        $this->assertNotContains('ordinal', Metric::EVENT_COLUMNS);
+        $this->assertContains('ordinal', Metric::EVENT_COLUMNS);
 
         $gaugeIds = array_column(Metric::getGaugeSchema(), '$id');
         $this->assertContains('ordinal', $gaugeIds);
 
         $eventIds = array_column(Metric::getEventSchema(), '$id');
-        $this->assertNotContains('ordinal', $eventIds);
+        $this->assertContains('ordinal', $eventIds);
 
-        $indexIds = array_column(Metric::getGaugeIndexes(), '$id');
-        $this->assertContains('index-ordinal', $indexIds);
+        $gaugeIndexIds = array_column(Metric::getGaugeIndexes(), '$id');
+        $this->assertContains('index-ordinal', $gaugeIndexIds);
 
-        $columns = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge');
-        $this->assertSame('1', $columns['ordinal']);
-        $this->assertSame('db_a', $columns['resourceId']);
+        $eventIndexIds = array_column(Metric::getEventIndexes(), '$id');
+        $this->assertContains('index-ordinal', $eventIndexIds);
+
+        $gauge = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge');
+        $this->assertSame('1', $gauge['ordinal']);
+        $this->assertSame('db_a', $gauge['resourceId']);
+
+        $event = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 0], 'event');
+        $this->assertSame('0', $event['ordinal']);
+        $this->assertSame('db_a', $event['resourceId']);
 
         $metric = new Metric(['ordinal' => '2']);
         $this->assertSame('2', $metric->getOrdinal());
@@ -675,7 +684,7 @@ class MetricTest extends TestCase
     {
         $ids = array_column(Metric::getEventSchema(), '$id');
         foreach ([
-            'service', 'resourceInternalId', 'teamId', 'teamInternalId',
+            'service', 'resourceInternalId', 'ordinal', 'teamId', 'teamInternalId',
             'region', 'hostname', 'osCode', 'osName', 'osVersion',
             'clientType', 'clientCode', 'clientName', 'clientVersion',
             'clientEngine', 'clientEngineVersion',

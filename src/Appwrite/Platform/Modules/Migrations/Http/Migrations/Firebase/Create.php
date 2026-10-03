@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Firebase;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -62,6 +62,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -73,8 +74,12 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
+
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -85,28 +90,25 @@ class Create extends Action
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => Firebase::getName(),
-            'destination' => AppwriteSource::getName(),
-            'credentials' => [
-                'serviceAccount' => $serviceAccount,
-            ],
-            'resources' => $resources,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-        ]));
+        $migration = $claim->start(
+            project: $project,
+            migration: new Document([
+                '$id' => ID::unique(),
+                'source' => Firebase::getName(),
+                'destination' => AppwriteSource::getName(),
+                'credentials' => [
+                    'serviceAccount' => $serviceAccount,
+                ],
+                'resources' => $resources,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+            ]),
+            platform: $platform,
+            publisher: $publisherForMigrations,
+        );
 
         $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $publisherForMigrations->enqueue(new MigrationMessage(
-            project: $project,
-            migration: $migration,
-            platform: $platform,
-        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

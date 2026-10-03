@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\RelationshipValues;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -11,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -23,10 +25,12 @@ use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 
@@ -86,7 +90,7 @@ class Update extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
@@ -128,7 +132,7 @@ class Update extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         // Read permission should not be required for update
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -145,18 +149,18 @@ class Update extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -177,94 +181,10 @@ class Update extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
+        $data = (new RelationshipValues($dbForProject, $database, $authorization, $isAPIKey || $isPrivilegedUser ? null : $dbForDatabases))->prepare($data, $collection);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
+        $this->validateTimestamps($data);
         $newDocument = new Document($data);
-
-        $operations = 0;
-
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations, $authorization) {
-            $operations++;
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-
-                $isList = \is_array($related) && \array_values($related) === $related;
-
-                if ($isList) {
-                    $relations = $related;
-                } else {
-                    $relations = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = $authorization->skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($relations as &$relation) {
-                    // If the relation is an array it can be either update or create a child document.
-                    if (
-                        \is_array($relation)
-                        && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
-                    ) {
-                        $relation['$id'] = ID::unique();
-                        $relation = new Document($relation);
-                    }
-
-                    $this->validateRelationship($relation);
-
-                    if ($relation instanceof Document) {
-                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
-
-                        $oldDocument = $authorization->skip(fn () => $dbForProject->getDocument(
-                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                            $relation->getId()
-                        ));
-
-                        if (!$isAPIKey && !$isPrivilegedUser) {
-                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
-                        }
-
-                        // Attribute $collection is required for Utopia.
-                        $relation->setAttribute(
-                            '$collection',
-                            'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()
-                        );
-
-                        if ($oldDocument->isEmpty()) {
-                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
-                                $relation['$id'] = ID::unique();
-                            }
-                        }
-                        $setCollection($relatedCollection, $relation);
-                    }
-                }
-
-                if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
-                }
-            }
-        });
-
-        $setCollection($collection, $newDocument);
-
-        $usage
-            ->setResource('database')
-            ->setResourceId($database->getId())
-            ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1));
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -355,15 +275,14 @@ class Update extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-        );
+        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
+        $usage
+            ->setResource('database')
+            ->setResourceId($database->getId())
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), $writes);
 
         $response->dynamic($document, $this->getResponseModel());
 
@@ -371,7 +290,7 @@ class Update extends Action
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 

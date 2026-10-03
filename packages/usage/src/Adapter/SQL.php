@@ -2,7 +2,8 @@
 
 namespace Utopia\Usage\Adapter;
 
-use Utopia\Database\Document;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 use Utopia\Usage\Adapter;
 use Utopia\Usage\Metric;
 
@@ -58,14 +59,14 @@ abstract class SQL extends Adapter
     }
 
     /**
-     * Get attribute documents for a specific type.
+     * Get attribute models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Document>
+     * @return array<Attribute>
      */
     public function getAttributeDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $attribute) => new Document($attribute), $this->getAttributes($type));
+        return array_map(Attribute::fromArray(...), $this->getAttributes($type));
     }
 
     /**
@@ -100,14 +101,14 @@ abstract class SQL extends Adapter
     }
 
     /**
-     * Get index documents for a specific type.
+     * Get index models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Document>
+     * @return array<Index>
      */
     public function getIndexDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $index) => new Document($index), $this->getIndexes($type));
+        return array_map(Index::fromArray(...), $this->getIndexes($type));
     }
 
     /**

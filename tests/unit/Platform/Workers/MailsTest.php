@@ -75,6 +75,59 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
+    public function testGlobalSmtpAdapterIsTakenFromThePoolPerMessage(): void
+    {
+        $adapters = [];
+        $registry = new Registry();
+        $registry->set('smtp', static function () use (&$adapters): Pool {
+            return new Pool(new Stack(), 'smtp', 1, static function () use (&$adapters): SpyMailAdapter {
+                $adapter = new SpyMailAdapter();
+                $adapters[] = $adapter;
+
+                return $adapter;
+            }, 1.0);
+        });
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new Mails();
+            $message = new Message([
+                'pid' => 'pid',
+                'queue' => 'v1-mails',
+                'timestamp' => \time(),
+                'payload' => [
+                    'smtp' => [],
+                    'recipient' => 'fresh@example.test',
+                    'name' => 'Fresh Adapter',
+                    'subject' => 'Hello',
+                    'body' => 'Body',
+                    'bodyTemplate' => '',
+                    'variables' => [],
+                ],
+            ]);
+
+            $worker->action(
+                $message,
+                new Document(['$id' => 'project-x']),
+                $registry,
+                new None(),
+            );
+            $worker->action(
+                $message,
+                new Document(['$id' => 'project-x']),
+                $registry,
+                new None(),
+            );
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $this->assertCount(1, $adapters);
+        $this->assertSame(2, $adapters[0]->sendCount);
+    }
+
     public function testLegacyMailPayloadIsSentByMailsWorker(): void
     {
         $adapter = new SpyMailAdapter();

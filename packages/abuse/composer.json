@@ -10,7 +10,8 @@
         "abuse"
     ],
     "license": "MIT",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Utopia\\Abuse\\": "src/"
@@ -27,11 +28,12 @@
         "bench": "vendor/bin/phpbench run --report=aggregate"
     },
     "require": {
-        "php": ">=8.4.1",
+        "php": ">=8.5",
         "ext-pdo": "*",
         "ext-curl": "*",
         "ext-redis": "*",
-        "utopia-php/database": "^7.0.0",
+        "utopia-php/database": "^8.0",
+        "utopia-php/query": "^0.6",
         "utopia-php/pools": "2.*",
         "appwrite/appwrite": "^27.1",
         "utopia-php/client": "^0.5",

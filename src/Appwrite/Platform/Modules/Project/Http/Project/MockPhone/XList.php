@@ -71,8 +71,8 @@ class XList extends Action
         $auths = $project->getAttribute('auths', []);
         $mockNumbers = $auths['mockNumbers'] ?? [];
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? null;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? null;
+        $offset = $grouped->offset ?? 0;
 
         $total = $includeTotal ? \count($mockNumbers) : 0;
         $mockNumbers = \array_slice($mockNumbers, $offset, $limit);

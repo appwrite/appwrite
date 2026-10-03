@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
+use Utopia\Lock\Distributed;
 use Utopia\System\System;
 
 final class TeamsConsoleClientTest extends Scope
@@ -105,6 +106,49 @@ final class TeamsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/teams', $ownerHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(1, $response['body']['total']);
+    }
+
+    public function testCreateOrganizationRefusalDoesNotWaitForTheCreationLock(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders());
+
+        $this->createTeamFixture($headers, [
+            'teamId' => ID::unique(),
+            'name' => 'Existing organization',
+        ]);
+
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+
+        $lock = new Distributed($redis, 'console:organizations:create', 30);
+        $this->assertTrue($lock->acquire(10.0), 'Could not hold the organization creation lock');
+
+        try {
+            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+                'teamId' => ID::unique(),
+                'name' => 'Another organization',
+            ]);
+        } finally {
+            $lock->release();
+            $redis->close();
+        }
+
+        // An edition that lifts the organization limit never takes the lock.
+        if ($response['headers']['status-code'] === 201) {
+            $this->assertSame('Another organization', $response['body']['name']);
+            return;
+        }
+
+        $this->assertSame(403, $response['headers']['status-code'], 'A refused organization must be refused while another request holds the creation lock');
+        $this->assertSame('organization_creation_prohibited', $response['body']['type']);
     }
 
     public function testConsoleMembershipPrivacyDefaults(): void

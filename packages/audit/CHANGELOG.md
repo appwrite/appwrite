@@ -2,6 +2,28 @@
 
 All notable changes to `utopia-php/audit` are documented in this file.
 
+## 5.0.0 (unreleased) — utopia-php/database 8
+
+### Breaking changes
+
+- Requires utopia-php/database `^8.0` instead of `^7.0.0`. PHP `>=8.5` is
+  unchanged from 4.0.3.
+- `ClickHouse::getAttributes()`, `ClickHouse::getIndexes()`,
+  `SQL::getAttributes()` and `SQL::getIndexes()` return
+  `Utopia\Database\Attribute` and `Utopia\Database\Index` models instead of
+  arrays.
+- `SQL::getAttributeDocuments()` and `SQL::getIndexDocuments()` return those
+  same models (still `Document`s) instead of `Document`s built from the arrays.
+- `SQL::getAttribute()` declares `?Attribute` and returns `null` for an unknown
+  ID, instead of an untyped array or `null`.
+
+### Changed
+
+- `Utopia\Audit\Query`'s legacy `TYPE_*` constants take their values from
+  `Utopia\Query\Method`; the strings are the same.
+- `minimum-stability` is `dev` with `prefer-stable: true` until
+  utopia-php/database 8.0.0 is tagged; it returns to `stable` with the tag.
+
 ## Unreleased
 
 ### ClickHouse adapter — migrated to the utopia-php/query 0.6 builder

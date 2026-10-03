@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -108,32 +109,8 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
             }
 
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($files['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($files['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]);
-            }
+            $attributes = $files['attributes'];
+            $indexes = $files['indexes'];
 
             $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
@@ -158,7 +135,13 @@ class Create extends Action
             // so the document is committed first. A bucket without its collection
             // can never hold a file: remove it rather than leave an orphan.
             try {
-                $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
+                $dbForProject->createCollection(new Collection(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                    permissions: $permissions,
+                    documentSecurity: $fileSecurity,
+                ));
             } catch (\Throwable $th) {
                 $dbForProject->deleteDocument('buckets', $bucketId);
                 throw $th;

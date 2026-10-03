@@ -9,7 +9,8 @@ use Utopia\Audit\Log;
 use Utopia\Audit\Query;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Database\Database;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method as HttpMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -385,394 +386,65 @@ class ClickHouse extends SQL
      * Override getAttributes to provide extended attributes for ClickHouse.
      * Includes existing attributes from parent and adds new missing ones.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, Attribute>
      */
     #[\Override]
     public function getAttributes(): array
     {
         $parentAttributes = parent::getAttributes();
 
-        foreach ($parentAttributes as &$attribute) {
-            if (($attribute['$id'] ?? null) === 'userId') {
-                $attribute['$id'] = 'actorId';
+        foreach ($parentAttributes as $index => $attribute) {
+            if ($attribute->key === 'userId') {
+                $parentAttributes[$index] = new Attribute(
+                    key: 'actorId',
+                    type: $attribute->type,
+                    size: $attribute->size,
+                    required: $attribute->required,
+                    signed: $attribute->signed,
+                    array: $attribute->array,
+                    filters: $attribute->filters,
+                );
                 break;
             }
         }
-        unset($attribute);
 
         return [
             ...$parentAttributes,
-            [
-                '$id' => 'actorType',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => true,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'actorInternalId',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceParent',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceType',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => true,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceId',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => true,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceInternalId',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'country',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            // premium geo
-            [
-                '$id' => 'city',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'continentCode',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'subdivisions',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'isp',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'autonomousSystemNumber',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'autonomousSystemOrganization',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'connectionType',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'connectionUsageType',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'connectionOrganization',
-                'type' => Database::VAR_STRING,
-                'size' => Database::LENGTH_KEY,
-                'required' => false,
-                'default' => null,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'projectId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'projectInternalId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'teamId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'teamInternalId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'hostname',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'sdk',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'sdkVersion',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            // user-agent — parsed OS / client / device dimensions
-            [
-                '$id' => 'osCode',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'osName',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'osVersion',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientType',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientCode',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientName',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientVersion',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientEngine',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'clientEngineVersion',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'deviceName',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'deviceBrand',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'deviceModel',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
+            Attribute::string(key: 'actorType', required: true),
+            Attribute::string(key: 'actorInternalId'),
+            Attribute::string(key: 'resourceParent'),
+            Attribute::string(key: 'resourceType', required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId'),
+            Attribute::string(key: 'country'),
+            Attribute::string(key: 'city'),
+            Attribute::string(key: 'continentCode'),
+            Attribute::string(key: 'subdivisions'),
+            Attribute::string(key: 'isp'),
+            Attribute::string(key: 'autonomousSystemNumber'),
+            Attribute::string(key: 'autonomousSystemOrganization'),
+            Attribute::string(key: 'connectionType'),
+            Attribute::string(key: 'connectionUsageType'),
+            Attribute::string(key: 'connectionOrganization'),
+            Attribute::string(key: 'projectId', required: true),
+            Attribute::string(key: 'projectInternalId', required: true),
+            Attribute::string(key: 'teamId', required: true),
+            Attribute::string(key: 'teamInternalId', required: true),
+            Attribute::string(key: 'hostname', required: true),
+            Attribute::string(key: 'sdk'),
+            Attribute::string(key: 'sdkVersion'),
+            Attribute::string(key: 'osCode'),
+            Attribute::string(key: 'osName'),
+            Attribute::string(key: 'osVersion'),
+            Attribute::string(key: 'clientType'),
+            Attribute::string(key: 'clientCode'),
+            Attribute::string(key: 'clientName'),
+            Attribute::string(key: 'clientVersion'),
+            Attribute::string(key: 'clientEngine'),
+            Attribute::string(key: 'clientEngineVersion'),
+            Attribute::string(key: 'deviceName'),
+            Attribute::string(key: 'deviceBrand'),
+            Attribute::string(key: 'deviceModel'),
         ];
     }
 
@@ -780,80 +452,37 @@ class ClickHouse extends SQL
      * Override getIndexes to provide extended indexes for ClickHouse.
      * Includes existing indexes from parent and adds new missing ones.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, Index>
      */
     #[\Override]
     public function getIndexes(): array
     {
         $parentIndexes = parent::getIndexes();
 
-        foreach ($parentIndexes as &$index) {
-            if (($index['$id'] ?? null) === 'idx_userId_event') {
-                $index['$id'] = 'idx_actorId_event';
-                $index['attributes'] = ['actorId', 'event'];
+        foreach ($parentIndexes as $index => $definition) {
+            if ($definition->key === 'idx_userId_event') {
+                $parentIndexes[$index] = new Index(
+                    key: 'idx_actorId_event',
+                    type: $definition->type,
+                    attributes: ['actorId', 'event'],
+                    lengths: $definition->lengths,
+                    orders: $definition->orders,
+                    ttl: $definition->ttl,
+                );
                 break;
             }
         }
-        unset($index);
 
         return [
             ...$parentIndexes,
-            [
-                '$id' => '_key_actor_internal_and_event',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['actorInternalId', 'event'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_project_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_team_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['teamInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_actor_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['actorInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_actor_type',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['actorType'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_country',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['country'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_hostname',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['hostname'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_sdk',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['sdk'],
-                'lengths' => [],
-                'orders' => [],
-            ],
+            Index::key(key: '_key_actor_internal_and_event', attributes: ['actorInternalId', 'event']),
+            Index::key(key: '_key_project_internal_id', attributes: ['projectInternalId']),
+            Index::key(key: '_key_team_internal_id', attributes: ['teamInternalId']),
+            Index::key(key: '_key_actor_internal_id', attributes: ['actorInternalId']),
+            Index::key(key: '_key_actor_type', attributes: ['actorType']),
+            Index::key(key: '_key_country', attributes: ['country']),
+            Index::key(key: '_key_hostname', attributes: ['hostname']),
+            Index::key(key: '_key_sdk', attributes: ['sdk']),
         ];
     }
 
@@ -889,9 +518,7 @@ class ClickHouse extends SQL
         $map = ['id' => 'String'];
 
         foreach ($this->getAttributes() as $attribute) {
-            /** @var string $id */
-            $id = $attribute['$id'];
-            $map[$id] = ($attribute['type'] ?? null) === Database::VAR_DATETIME
+            $map[$attribute->key] = $attribute->type === ColumnType::Datetime
                 ? 'DateTime64(3)'
                 : 'String';
         }
@@ -1061,8 +688,7 @@ class ClickHouse extends SQL
         $table->string('id')->primary();
 
         foreach ($this->getAttributes() as $attribute) {
-            /** @var string $id */
-            $id = $attribute['$id'];
+            $id = $attribute->key;
 
             // Special handling for time column - must be NOT NULL for partition key
             if ($id === 'time') {
@@ -1071,13 +697,13 @@ class ClickHouse extends SQL
                 continue;
             }
 
-            $column = $table->addColumn($id, ($attribute['type'] ?? null) === Database::VAR_DATETIME
+            $column = $table->addColumn($id, $attribute->type === ColumnType::Datetime
                 ? ColumnType::Datetime
                 : ColumnType::String);
             if (\in_array($id, self::LOW_CARDINALITY_COLUMNS, true)) {
                 $column->lowCardinality();
             }
-            if (empty($attribute['required'])) {
+            if (! $attribute->required) {
                 $column->nullable();
             }
         }
@@ -1089,13 +715,9 @@ class ClickHouse extends SQL
         }
 
         foreach ($this->getIndexes() as $index) {
-            /** @var string $indexName */
-            $indexName = $index['$id'];
-            /** @var array<string> $attributes */
-            $attributes = $index['attributes'];
             $table->index(
-                columns: $attributes,
-                name: $indexName,
+                columns: $index->attributes,
+                name: $index->key,
                 algorithm: IndexAlgorithm::BloomFilter,
                 granularity: 1,
             );
@@ -1153,8 +775,7 @@ class ClickHouse extends SQL
     {
         $columns = [];
         foreach ($this->getAttributes() as $attribute) {
-            /** @var string $columnName */
-            $columnName = $attribute['$id'];
+            $columnName = $attribute->key;
             // Exclude id and tenant as they're handled separately
             if ($columnName !== 'id' && $columnName !== 'tenant') {
                 $columns[] = $columnName;
@@ -1198,7 +819,7 @@ class ClickHouse extends SQL
 
         // Check against defined attributes
         foreach ($this->getAttributes() as $attribute) {
-            if ($attribute['$id'] === $attributeName) {
+            if ($attribute->key === $attributeName) {
                 return true;
             }
         }
@@ -1958,7 +1579,7 @@ class ClickHouse extends SQL
 
                 // Get attribute metadata to determine if required
                 $attributeMetadata = $this->getAttribute($columnName);
-                $isRequiredAttribute = $attributeMetadata !== null && isset($attributeMetadata['required']) && $attributeMetadata['required'];
+                $isRequiredAttribute = $attributeMetadata->required ?? false;
 
                 if ($columnName === 'data') {
                     // Data column - encode remaining non-schema data as JSON
@@ -2099,8 +1720,7 @@ class ClickHouse extends SQL
 
         // Dynamically add all attribute columns except 'data'
         foreach ($this->getAttributes() as $attribute) {
-            $id = $attribute['$id'];
-            /** @var string $id */
+            $id = $attribute->key;
             if ($id !== 'data') {
                 $columns[] = $this->escapeIdentifier($id);
             }
@@ -2144,17 +1764,17 @@ class ClickHouse extends SQL
     {
         $attribute = $this->getAttribute($id);
 
-        if (!$attribute) {
+        if (! $attribute instanceof Attribute) {
             throw new Exception("Attribute {$id} not found");
         }
 
         // Dynamically determine type based on attribute metadata
         // DateTime attributes use DateTime64(3), all others use String
-        $type = (isset($attribute['type']) && $attribute['type'] === Database::VAR_DATETIME)
+        $type = $attribute->type === ColumnType::Datetime
             ? 'DateTime64(3)'
             : 'String';
 
-        $required = (bool) $attribute['required'];
+        $required = $attribute->required;
 
         if ($type === 'String' && \in_array($id, self::LOW_CARDINALITY_COLUMNS, true)) {
             $columnType = $required

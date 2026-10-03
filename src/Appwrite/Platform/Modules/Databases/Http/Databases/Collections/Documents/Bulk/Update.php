@@ -25,6 +25,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -126,7 +127,7 @@ class Update extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         if ($hasRelationships) {
@@ -149,6 +150,7 @@ class Update extends Action
         }
 
         $data = $this->removeReadonlyAttributes($data, privileged: true);
+        $this->validateTimestamps($data);
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -199,7 +201,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $documents = [];
 
         try {

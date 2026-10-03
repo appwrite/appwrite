@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\CSV\Exports;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -79,6 +79,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -101,8 +102,12 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        callable $locks,
     ): void {
+        $claim = new Claim($dbForProject, $locks);
+        $claim->assertReady();
+
         try {
             $parsedQueries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -146,43 +151,40 @@ class Create extends Action
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => AppwriteSource::getName(),
-            'destination' => CSV::getName(),
-            'resources' => $resources,
-            'resourceId' => $collection->getId(),
-            'resourceInternalId' => $collection->getSequence(),
-            'resourceType' => Resource::TYPE_COLLECTION,
-            'parentResourceId' => $database->getId(),
-            'parentResourceInternalId' => $database->getSequence(),
-            'parentResourceType' => $parentResourceType,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-            'options' => [
-                'bucketId' => 'default', // Always use internal bucket
-                'filename' => $filename,
-                'columns' => $columns,
-                'queries' => $queries,
-                'delimiter' => $delimiter,
-                'enclosure' => $enclosure,
-                'escape' => $escape,
-                'header' => $header,
-                'notify' => $notify,
-                'userInternalId' => $user->getSequence(),
-            ],
-        ]));
+        $migration = $claim->start(
+            project: $project,
+            migration: new Document([
+                '$id' => ID::unique(),
+                'source' => AppwriteSource::getName(),
+                'destination' => CSV::getName(),
+                'resources' => $resources,
+                'resourceId' => $collection->getId(),
+                'resourceInternalId' => $collection->getSequence(),
+                'resourceType' => Resource::TYPE_COLLECTION,
+                'parentResourceId' => $database->getId(),
+                'parentResourceInternalId' => $database->getSequence(),
+                'parentResourceType' => $parentResourceType,
+                'statusCounters' => '{}',
+                'resourceData' => '{}',
+                'errors' => [],
+                'options' => [
+                    'bucketId' => 'default', // Always use internal bucket
+                    'filename' => $filename,
+                    'columns' => $columns,
+                    'queries' => $queries,
+                    'delimiter' => $delimiter,
+                    'enclosure' => $enclosure,
+                    'escape' => $escape,
+                    'header' => $header,
+                    'notify' => $notify,
+                    'userInternalId' => $user->getSequence(),
+                ],
+            ]),
+            platform: $platform,
+            publisher: $publisherForMigrations,
+        );
 
         $queueForEvents->setParam('migrationId', $migration->getId());
-
-        $publisherForMigrations->enqueue(new MigrationMessage(
-            project: $project,
-            migration: $migration,
-            platform: $platform,
-        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

@@ -158,6 +158,116 @@ trait PlatformsBase
         $this->deletePlatform($platform['body']['$id']);
     }
 
+    public function testCreateAndUpdatePlatformsRejectBlankValues(): void
+    {
+        $blanks = [
+            'space' => ' ',
+            'spaces' => '   ',
+            'tab' => "\t",
+            'line feed' => "\n",
+            'no-break space' => "\u{00A0}",
+            'ideographic space' => "\u{3000}",
+            'zero width space' => "\u{200B}",
+        ];
+        $platforms = [
+            'android' => ['name' => 'My App', 'applicationId' => 'com.example.app'],
+            'apple' => ['name' => 'My App', 'bundleIdentifier' => 'com.example.app'],
+            'linux' => ['name' => 'My App', 'packageName' => 'com.example.app'],
+            'windows' => ['name' => 'My App', 'packageIdentifierName' => 'com.example.app'],
+            'web' => ['name' => 'My App', 'hostname' => 'app.example.com'],
+        ];
+        $creates = [
+            'android' => ['name', 'applicationId'],
+            'apple' => ['name', 'bundleIdentifier'],
+            'linux' => ['name', 'packageName'],
+            'windows' => ['name', 'packageIdentifierName'],
+            'web' => ['name', 'hostname', 'key', 'type'],
+        ];
+        $updates = [...$creates, 'web' => ['name', 'hostname', 'key']];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // Test for FAILURE
+        foreach ($creates as $type => $parameters) {
+            foreach ($parameters as $parameter) {
+                foreach ($blanks as $label => $blank) {
+                    $message = "POST /project/platforms/{$type} with a blank {$parameter} ({$label})";
+                    $platformId = ID::unique();
+
+                    $response = $this->client->call(Client::METHOD_POST, '/project/platforms/' . $type, $headers, [
+                        'platformId' => $platformId,
+                        ...$platforms[$type],
+                        $parameter => $blank,
+                    ]);
+
+                    $this->assertSame(400, $response['headers']['status-code'], $message);
+                    $this->assertSame(404, $this->getPlatform($platformId)['headers']['status-code'], $message);
+                }
+            }
+        }
+
+        $platformIds = [];
+        foreach ($platforms as $type => $values) {
+            $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/' . $type, $headers, [
+                'platformId' => ID::unique(),
+                ...$values,
+            ]);
+            $this->assertSame(201, $platform['headers']['status-code'], "POST /project/platforms/{$type}");
+            $platformIds[$type] = $platform['body']['$id'];
+        }
+
+        foreach ($updates as $type => $parameters) {
+            foreach ($parameters as $parameter) {
+                foreach ($blanks as $label => $blank) {
+                    $message = "PUT /project/platforms/{$type}/:platformId with a blank {$parameter} ({$label})";
+
+                    $response = $this->client->call(Client::METHOD_PUT, '/project/platforms/' . $type . '/' . $platformIds[$type], $headers, [
+                        ...$platforms[$type],
+                        'name' => 'Renamed App',
+                        $parameter => $blank,
+                    ]);
+
+                    $this->assertSame(400, $response['headers']['status-code'], $message);
+                }
+            }
+        }
+
+        foreach ($platforms as $type => $values) {
+            $message = "GET /project/platforms/:platformId of the {$type} platform";
+            $platform = $this->getPlatform($platformIds[$type]);
+
+            $this->assertSame(200, $platform['headers']['status-code'], $message);
+            foreach ($values as $parameter => $value) {
+                $this->assertSame($value, $platform['body'][$parameter], $message);
+            }
+        }
+
+        // Test for SUCCESS
+        foreach ($platforms as $type => $values) {
+            $message = "POST /project/platforms/{$type} with a padded name";
+            $created = $this->client->call(Client::METHOD_POST, '/project/platforms/' . $type, $headers, [
+                'platformId' => ID::unique(),
+                ...$values,
+                'name' => ' My App ',
+            ]);
+            $this->assertSame(201, $created['headers']['status-code'], $message);
+            $this->assertSame(' My App ', $created['body']['name'], $message);
+
+            $message = "PUT /project/platforms/{$type}/:platformId with a padded name";
+            $updated = $this->client->call(Client::METHOD_PUT, '/project/platforms/' . $type . '/' . $platformIds[$type], $headers, [
+                ...$values,
+                'name' => ' My App ',
+            ]);
+            $this->assertSame(200, $updated['headers']['status-code'], $message);
+            $this->assertSame(' My App ', $updated['body']['name'], $message);
+
+            $this->deletePlatform($created['body']['$id']);
+            $this->deletePlatform($platformIds[$type]);
+        }
+    }
+
     public function testCreateWebPlatformDuplicateId(): void
     {
         $platformId = ID::unique();

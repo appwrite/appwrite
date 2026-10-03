@@ -92,7 +92,7 @@ class Delete extends Action
             $ownersCount = $dbForProject->count(
                 collection: 'memberships',
                 queries: [
-                    Query::contains('roles', ['owner']),
+                    Query::containsAny('roles', ['owner']),
                     Query::equal('teamInternalId', [$team->getSequence()])
                 ],
                 max: 2

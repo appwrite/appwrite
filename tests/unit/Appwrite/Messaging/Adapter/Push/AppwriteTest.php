@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -106,19 +108,31 @@ final class AppwriteTest extends TestCase
 
         // The topic counter (`sequence`, incremented per publish) plus the `name` the adapter
         // resolves from the id and fans out under (subscribers match on the name, not the id).
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, false);
+        $this->database->createCollection(new Collection(
+            id: 'topics',
+            attributes: [
+                Attribute::integer(key: 'sequence', default: 0),
+                Attribute::string(key: 'name', size: 255),
+            ],
+            permissions: $any,
+            documentSecurity: false,
+        ));
 
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
-        $this->database->createCollection('pushLedger', [], [], $any, false);
-        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'messageInternalId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection(new Collection(
+            id: 'pushLedger',
+            attributes: [
+                Attribute::string(key: 'topic', size: 255, required: true),
+                Attribute::string(key: 'data', size: 65535, required: true),
+                Attribute::string(key: 'messageId', size: 255),
+                Attribute::string(key: 'messageInternalId', size: 255),
+                Attribute::integer(key: 'sequence', required: true),
+            ],
+            permissions: $any,
+            documentSecurity: false,
+        ));
     }
 
     /** Seed a topic row with a starting sequence (the current tail) and its subscriber-facing name. */

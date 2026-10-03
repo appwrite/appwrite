@@ -1936,7 +1936,7 @@ class ClickHouse extends SQL
             'timeZone', 'weatherCode',
             // sdk identity
             'sdk', 'sdkVersion',
-            // gauge replica ordinal
+            // replica ordinal (events and gauges)
             'ordinal',
         ];
 
@@ -2488,7 +2488,7 @@ class ClickHouse extends SQL
         }
 
         if ($samples !== [] && $expectedStart != $range->intervalEnd) {
-            $last = $samples[array_key_last($samples)];
+            $last = array_last($samples);
             $discontinuities[] = $last->sequence;
         }
 

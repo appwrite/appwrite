@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -145,15 +146,15 @@ final class V25Test extends TestCase
                 continue;
             }
             $attributes = $id === 'topics'
-                ? \array_filter($collection['attributes'], fn (array $attribute) => !\in_array($attribute['$id'], $added, true))
+                ? \array_filter($collection['attributes'], fn (Document $attribute) => !\in_array($attribute->getId(), $added, true))
                 : $collection['attributes'];
-            $database->createCollection(
-                $id,
-                \array_map(fn (array $attribute) => new Document($attribute), \array_values($attributes)),
-                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
-            );
+            $database->createCollection(new Collection(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
         }
-        $database->createCollection('audit');
+        $database->createCollection(new Collection(id: 'audit'));
 
         $migration = new V25();
         $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
@@ -193,5 +194,6 @@ final class V25Test extends TestCase
             '$createdAt' => '2026-01-03T00:00:00.000+00:00',
         ]), $document));
         $this->assertFalse($migration->isCandidate(new Document(), $document));
+        $this->assertFalse($migration->isCandidate($document, new Document()));
     }
 }

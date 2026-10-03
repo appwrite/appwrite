@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
+use Appwrite\Database\Provisioner;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Utopia\Database\Validator\ProjectId;
@@ -12,7 +13,7 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -54,12 +55,13 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
+            ->inject('databaseFactory')
             ->inject('pools')
             ->inject('hooks')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Provisioner $databaseFactory, Group $pools, Hooks $hooks)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -191,13 +193,7 @@ class Create extends Action
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
 
         if ($projectTables) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $dbForProject = new Database($adapter, $cache);
-            $dbForProject
-                ->setDatabase(APP_DATABASE)
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+            $dbForProject = $databaseFactory->provisioning($project);
 
             $create = true;
 
@@ -220,11 +216,15 @@ class Create extends Action
                         continue;
                     }
 
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                    $attributes = $collection['attributes'];
+                    $indexes = $collection['indexes'];
 
                     try {
-                        $dbForProject->createCollection($key, $attributes, $indexes);
+                        $dbForProject->createCollection(new Collection(
+                            id: $key,
+                            attributes: $attributes,
+                            indexes: $indexes,
+                        ));
                     } catch (Duplicate) {
                         // Collection already exists
                     }

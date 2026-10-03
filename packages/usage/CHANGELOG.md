@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.17.0 (unreleased) — utopia-php/database 8
+
+### Added
+
+- Events carry an `ordinal` dimension: the replica ordinal of a multi-node
+  resource, `0` for the first member. Counters such as dedicated-database
+  inbound, outbound and compute can now tell members apart the way gauges
+  already could. `setup()` adds the column to an existing event table, and the
+  daily materialized view still groups by resource identity, so billing sums
+  every member.
+
+### Breaking
+
+- Requires PHP 8.5 and utopia-php/database 8. The Docker test image builds
+  on `php:8.5.8-cli-alpine`.
+
+### Changed
+
+- The Database adapter creates its collection through the utopia-php/database
+  8 schema API (`Collection`, `Attribute` and `Index` models). The collection
+  is unchanged: the same columns, in the same order, with the same types,
+  sizes, flags and indexes as 0.16 (on MariaDB the table is identical).
+  `setup()` still leaves an existing collection alone, so a collection
+  created by 0.16 is reused as it is.
+- `SQL::getAttributeDocuments()` and `SQL::getIndexDocuments()` return
+  `Utopia\Database\Attribute` and `Utopia\Database\Index` models, which are
+  still `Document`s. The index models no longer carry the ClickHouse-only
+  `indexType` hint; the ClickHouse adapter reads it from
+  `Metric::getEventIndexes()` / `Metric::getGaugeIndexes()` as before.
+- The Database adapter compiles `contains()` through `containsString()`
+  instead of the deprecated `contains()` factory. Matching is unchanged: a
+  substring match on the column.
+- `utopia-php/database` is required as `^8.0`, replacing the temporary
+  `dev-feat-query-lib as 7.0.0` root alias. The branch resolves through its
+  own `8.0.x-dev` branch alias, so `minimum-stability` is `dev` with
+  `prefer-stable: true` until database 8.0.0 is tagged; `stable` is restored
+  with that tag.
+- Requires `utopia-php/client` 0.5 (`^0.5`). The ClickHouse adapter
+  imports `Utopia\Client\Client`, where client 0.5 moved the class.
+- `extra.branch-alias` maps `dev-feat-query-lib` and `dev-main` to
+  `0.17.x-dev`, so a consumer can require the branch before 0.17.0 is tagged.
+
 ## Unreleased — query 0.6.x builder
 
 ### Added

@@ -111,7 +111,7 @@ class Update extends Action
                 ->setAttribute('search', \implode(' ', [$collectionId, $searchName]))
         );
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
 
         $queueForEvents
@@ -120,7 +120,7 @@ class Update extends Action
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
         if ($purge) {
-            $this->purgeListCache($dbForProject, $collectionId);
+            $this->purgeListCache($dbForProject, $database, $collectionId);
         }
 
         $this->addRowBytesInfo($collection, $dbForProject);

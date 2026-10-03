@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Platform\Modules\Migrations\Report;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
@@ -131,9 +132,9 @@ class Migration extends Model
             ])
             ->addRule('resourceData', [
                 'type' => self::TYPE_JSON,
-                'description' => 'An array of objects containing the report data of the resources that were migrated.',
+                'description' => 'An array of objects containing the report data of the resources that were migrated. Large migrations keep only the resources that did not succeed, errors first, with messages truncated to ' . Report::MESSAGE_LIMIT . ' characters; per-type totals are in `statusCounters`.',
                 'default' => [],
-                'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
+                'example' => '[{"resource":"database","id":"public","status":"success","message":""}]',
                 'array' => true,
             ])
             ->addRule('errors', [

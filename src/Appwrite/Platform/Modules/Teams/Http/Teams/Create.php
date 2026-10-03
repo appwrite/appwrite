@@ -81,15 +81,19 @@ class Create extends Action
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
         $limited = $this->isOrganizationLimited($project);
 
-        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
-            // The seeded total only holds if the owner membership lands with the team.
-            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited) {
-                if ($limited) {
-                    $organization = $authorization->skip(fn () => $dbForProject->findOne('teams'));
+        $refuseSecondOrganization = function () use ($dbForProject, $authorization): void {
+            $organization = $authorization->skip(fn () => $dbForProject->findOne('teams'));
 
-                    if (!$organization->isEmpty()) {
-                        throw new Exception(Exception::ORGANIZATION_CREATION_PROHIBITED);
-                    }
+            if (!$organization->isEmpty()) {
+                throw new Exception(Exception::ORGANIZATION_CREATION_PROHIBITED);
+            }
+        };
+
+        $create = function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited, $refuseSecondOrganization) {
+            // The seeded total only holds if the owner membership lands with the team.
+            return $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $teamId, $name, $roles, $user, $isPrivilegedUser, $isAppUser, $limited, $refuseSecondOrganization) {
+                if ($limited) {
+                    $refuseSecondOrganization();
                 }
 
                 $team = $authorization->skip(fn () => $dbForProject->createDocument('teams', new Document([
@@ -146,6 +150,8 @@ class Create extends Action
                 if ($user->isEmpty()) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
+
+                $refuseSecondOrganization();
 
                 // Serialize the instance-wide check and commit across accounts and adapters.
                 // Unlike best-effort request locks, failure must not bypass this limit.

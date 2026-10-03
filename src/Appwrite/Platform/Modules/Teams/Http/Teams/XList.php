@@ -88,7 +88,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $results = $dbForProject->find('teams', $queries);
             $total = $includeTotal ? $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT) : 0;

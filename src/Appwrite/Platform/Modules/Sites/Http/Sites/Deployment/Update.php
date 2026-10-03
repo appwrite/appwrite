@@ -115,6 +115,7 @@ class Update extends Base
         $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
         $branches = $isBranchBuild ? ['', $branch] : [''];
 
+        /** @var list<Query> $queries */
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
@@ -124,23 +125,24 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries) {
-            $updatedRules = [];
-
+        /** @var list<array<string, mixed>> $updatedRules */
+        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries): array {
+            $collected = [];
             foreach ($dbForPlatform->iterate('rules', $queries) as $rule) {
                 $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                     'deploymentId' => $deployment->getId(),
                     'deploymentInternalId' => $deployment->getSequence(),
                 ]));
-
-                $updatedRules[] = $rule->getArrayCopy();
+                $collected[] = $rule->getArrayCopy();
             }
 
-            return $updatedRules;
+            return $collected;
         });
 
-        foreach ($updatedRules as $rule) {
-            $bus->dispatch(new RuleUpdated($rule));
+        if ($updatedRules !== []) {
+            foreach ($updatedRules as $rule) {
+                $bus->dispatch(new RuleUpdated($rule));
+            }
         }
 
         $queueForEvents

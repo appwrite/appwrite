@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\B
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Create as CreateRow;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Delete as DeleteRow;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Get as GetRow;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Queries\Create as CreateDocumentsQuery;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Update as UpdateRow;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Upsert as UpsertRow;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\XList as ListRows;
@@ -83,6 +84,7 @@ class DocumentsDB extends Base
         $service->addAction(DeleteRow::getName(), new DeleteRow());
         $service->addAction(DeleteRows::getName(), new DeleteRows());
         $service->addAction(ListRows::getName(), new ListRows());
+        $service->addAction(CreateDocumentsQuery::getName(), new CreateDocumentsQuery());
         $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
         $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
     }
