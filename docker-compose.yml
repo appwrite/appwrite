@@ -85,6 +85,8 @@ services:
       - appwrite-geo
       - appwrite-autogravity
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -258,6 +260,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
@@ -329,6 +332,8 @@ services:
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -460,6 +465,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -693,6 +700,8 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
@@ -1409,6 +1418,8 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1472,6 +1483,8 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1758,6 +1771,7 @@ services:
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro
     ulimits:
       nofile:
         soft: 262144

@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -51,12 +52,13 @@ class XList extends Action
                 )
             ))
             ->param('queries', [], new Transactions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries).', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
         try {
             $queries = Query::parseQueries($queries);
@@ -66,7 +68,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'transactions' => $dbForProject->find('transactions', $queries),
-            'total' => $dbForProject->count('transactions', $queries),
+            'total' => $includeTotal ? $dbForProject->count('transactions', $queries) : 0,
         ]), UtopiaResponse::MODEL_TRANSACTION_LIST);
     }
 }

@@ -764,7 +764,11 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -783,7 +787,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -839,7 +846,11 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -858,7 +869,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -913,7 +927,11 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -931,7 +949,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.attributes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -986,7 +1007,11 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.columns.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -1004,7 +1029,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.columns.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);

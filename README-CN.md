@@ -73,13 +73,13 @@ Appwrite 是面向 MCP 与智能体的开源平台，用于构建和扩展应用
 
 Appwrite 从一开始就为自托管而设计。你可以在任何能运行 [Docker CLI](https://www.docker.com/products/docker-desktop) 的操作系统上安装并运行 Appwrite。从终端运行一条命令即可启动服务器。
 
-运行安装命令之前，请确保机器上已安装 [Docker](https://www.docker.com/products/docker-desktop)。安装向导监听 **20080** 端口；如果在远程主机上安装，请在安装完成前开放该端口。
+运行安装命令之前，请确保机器上已安装 [Docker](https://www.docker.com/products/docker-desktop)。安装向导监听 **20080** 端口，且仅发布到本机。终端会打印一次性安装密钥 — 请打开打印出的 URL（或发送 `x-appwrite-installer-secret`）完成安装。远程主机请通过 SSH 隧道访问 `127.0.0.1:20080`，不要把该端口发布到所有网卡。
 
 ### Unix
 
 ```bash
 docker run -it --rm \
-    --publish 20080:20080 \
+    --publish 127.0.0.1:20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
@@ -92,7 +92,7 @@ docker run -it --rm \
 
 ```cmd
 docker run -it --rm ^
-    --publish 20080:20080 ^
+    --publish 127.0.0.1:20080:20080 ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
@@ -103,14 +103,14 @@ docker run -it --rm ^
 
 ```powershell
 docker run -it --rm `
-    --publish 20080:20080 `
+    --publish 127.0.0.1:20080:20080 `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
     appwrite/appwrite:2.3.0
 ```
 
-安装程序运行后，打开 http://localhost:20080 完成安装向导。安装完成后，访问 http://localhost 即可从浏览器进入 Appwrite 控制台。请注意，在非 Linux 本机主机上，安装完成后服务器可能需要几分钟才能启动。
+安装程序运行后，打开终端打印出的 URL（其中包含一次性密钥）完成安装向导。安装完成后，访问 http://localhost 即可从浏览器进入 Appwrite 控制台。请注意，在非 Linux 本机主机上，安装完成后服务器可能需要几分钟才能启动。
 
 ### Docker API 版本不匹配
 
@@ -119,7 +119,7 @@ docker run -it --rm `
 ```bash
 docker run -it --rm \
     --env DOCKER_API_VERSION=1.42 \
-    --publish 20080:20080 \
+    --publish 127.0.0.1:20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \

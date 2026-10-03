@@ -37,7 +37,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "utopia-php/client": "^0.5",
-        "utopia-php/balancer": "^0.4.1"
+        "utopia-php/balancer": "^0.4.1",
+        "utopia-php/psr7": "^0.2.1"
     },
     "config": {
         "platform": {
