@@ -174,6 +174,42 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v1', $payload['environment']['MY-VAR']);
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('rootDirectoryProvider')]
+    public function testNormalizeRootDirectory(string $input, string $expected): void
+    {
+        $this->assertSame($expected, Deployments::normalizeRootDirectory($input));
+    }
+
+    public static function rootDirectoryProvider(): \Iterator
+    {
+        yield 'empty' => ['', ''];
+        yield 'dot' => ['.', ''];
+        yield 'dot slash' => ['./', ''];
+        yield 'leading slash' => ['/src/', 'src'];
+        yield 'console select prefix' => ['./functions/brevo', 'functions/brevo'];
+        yield 'template nested' => ['./lynx/starter', 'lynx/starter'];
+        yield 'nested preserved' => ['src/app', 'src/app'];
+        yield 'dotfile segment preserved' => ['src/.env.local', 'src/.env.local'];
+        yield 'repeated dots collapse' => ['././functions/api', 'functions/api'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('traversalRootDirectoryProvider')]
+    public function testNormalizeRootDirectoryRejectsTraversal(string $input): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Root directory must not contain ".." segments');
+
+        Deployments::normalizeRootDirectory($input);
+    }
+
+    public static function traversalRootDirectoryProvider(): \Iterator
+    {
+        yield 'parent' => ['..'];
+        yield 'leading parent' => ['../etc'];
+        yield 'embedded parent' => ['foo/../bar'];
+        yield 'dot slash parent' => ['./../etc'];
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments

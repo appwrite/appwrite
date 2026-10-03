@@ -184,7 +184,7 @@ class Create extends Base
                 // directory. Remote-source builds never store a tarball, so
                 // these coordinates are all a redeploy has.
                 'providerBranch' => $ref,
-                'providerRootDirectory' => $rootDirectory,
+                'providerRootDirectory' => Deployments::normalizeRootDirectory($rootDirectory),
                 'type' => 'vcs',
                 'activate' => $activate,
             ]),
