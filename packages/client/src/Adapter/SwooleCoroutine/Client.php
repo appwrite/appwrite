@@ -383,6 +383,11 @@ class Client implements Adapter
 
             // Read once: an IPv6 retry sends the same bytes, and a stream may not rewind
             $data = $multipart instanceof \Utopia\Psr7\Request\Multipart\Body ? '' : (string) $body;
+
+            // Without a body Swoole sends no Content-Length, and over HTTP/1.1 servers may refuse that (Google answers 411)
+            if ($data === '' && $multipart === null && !$request->hasHeader(Header::CONTENT_LENGTH) && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+                $headers[Header::CONTENT_LENGTH] = '0';
+            }
         } catch (Throwable $throwable) {
             throw new InvalidArgumentException($throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }

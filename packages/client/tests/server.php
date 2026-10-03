@@ -203,6 +203,14 @@ if ($path === '/content-type') {
     return;
 }
 
+if ($path === '/content-length') {
+    http_response_code(200);
+    header('Content-Type: text/plain;charset=UTF-8');
+    echo \is_string($_SERVER['CONTENT_LENGTH'] ?? null) ? $_SERVER['CONTENT_LENGTH'] : 'none';
+
+    return;
+}
+
 if ($path === '/headers') {
     http_response_code(204);
     header('X-Trace: one', false);

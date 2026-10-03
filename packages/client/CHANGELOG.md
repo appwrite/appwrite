@@ -27,7 +27,7 @@ This project follows semantic versioning.
 
 ### Fixed
 
-- The cURL adapter sends `Content-Length: 0` on a `POST`, `PUT` or `PATCH` with an empty body. Without it, servers that require the header over HTTP/1.1 refuse the request; Google answers `411 Length Required`.
+- The cURL and Swoole adapters send `Content-Length: 0` on a `POST`, `PUT` or `PATCH` with an empty body. Without it, servers that require the header over HTTP/1.1 refuse the request; Google answers `411 Length Required`.
 
 ### Added
 

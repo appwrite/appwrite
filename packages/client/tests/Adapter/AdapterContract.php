@@ -463,6 +463,30 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function bodyMethods(): array
+    {
+        return [
+            'post' => [Method::POST],
+            'put' => [Method::PUT],
+            'patch' => [Method::PATCH],
+        ];
+    }
+
+    #[DataProvider('bodyMethods')]
+    public function testItSendsAZeroContentLengthWithAnEmptyBody(string $method): void
+    {
+        Http::serve(function (int $port) use ($method): void {
+            $request = new Request\Factory()->createRequest($method, 'http://127.0.0.1:' . $port . '/content-length');
+
+            $response = $this->send($this->createAdapter(), $request);
+
+            $this->assertSame('0', (string) $response->getBody());
+        });
+    }
+
     public function testItPreservesDuplicateMixedCaseHeadersAndBinaryBodies(): void
     {
         Http::serve(function (int $port): void {
