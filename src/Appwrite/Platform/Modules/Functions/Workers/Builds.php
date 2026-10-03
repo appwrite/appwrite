@@ -35,6 +35,28 @@ class Builds extends Action
     }
 
     /**
+     * Normalize a build root directory and reject path traversal.
+     *
+     * Collapses a leading "./" and surrounding slashes, then rejects any
+     * remaining ".." segment so the value cannot escape the build directory
+     * once it is interpolated into filesystem and shell paths downstream.
+     *
+     * @throws Exception when the path contains a ".." segment
+     */
+    public static function normalizeRootDirectory(string $rootDirectory): string
+    {
+        $rootDirectory = \rtrim($rootDirectory, '/');
+        $rootDirectory = \ltrim($rootDirectory, '.');
+        $rootDirectory = \ltrim($rootDirectory, '/');
+
+        if (\in_array('..', \explode('/', $rootDirectory), true)) {
+            throw new \Exception('Invalid root directory');
+        }
+
+        return $rootDirectory;
+    }
+
+    /**
      * Truncate build logs to the length allowed by the deployments "buildLogs"
      * attribute. Large site builds (heavy prerender/bundle output) can exceed
      * it, which makes persisting the deployment throw a Structure exception and
@@ -276,10 +298,7 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-            $rootDirectory = \rtrim($rootDirectory, '/');
-            $rootDirectory = \ltrim($rootDirectory, '.');
-            $rootDirectory = \ltrim($rootDirectory, '/');
+            $rootDirectory = self::normalizeRootDirectory($resource->getAttribute('providerRootDirectory', ''));
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -334,10 +353,7 @@ class Builds extends Action
             $templateReferenceType = $template->getAttribute('referenceType', '');
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-            $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+            $templateRootDirectory = self::normalizeRootDirectory($template->getAttribute('rootDirectory', ''));
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
