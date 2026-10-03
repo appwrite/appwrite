@@ -339,7 +339,14 @@ class Client implements Adapter
         // Stream the body through a read callback so it is never fully held in
         // memory. cURL pulls it in chunks; we hand it the size when known so the
         // request carries Content-Length, and fall back to chunked otherwise.
-        if ($size !== null && $size !== 0 && $size <= self::TEMP_MEMORY && \in_array($body->getMetadata('uri'), ['php://temp', 'php://memory'], true)) {
+        if ($size === 0 && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+            // Without a body cURL sends no Content-Length, and over HTTP/1.1 servers may refuse that (Google answers 411)
+            $options[\CURLOPT_POSTFIELDS] = '';
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
+        } elseif ($size !== null && $size !== 0 && $size <= self::TEMP_MEMORY && \in_array($body->getMetadata('uri'), ['php://temp', 'php://memory'], true)) {
             // cURL keeps a copy of POSTFIELDS, so 307/308 redirects can resend it
             $options[\CURLOPT_POSTFIELDS] = (string) $body;
 
