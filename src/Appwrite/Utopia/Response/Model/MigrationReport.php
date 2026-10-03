@@ -155,6 +155,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 50,
             ])
+            ->addRule(Resource::TYPE_BACKUP_POLICY, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of backup policies to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Size of files to be migrated in mb.',
