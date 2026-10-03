@@ -148,8 +148,12 @@ class Increment extends Action
             ]))) {
                 throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
             }
+            $currentValue = $document->getAttribute($attribute, 0);
+            if (!is_int($currentValue) && !is_float($currentValue)) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+            }
             $document
-                ->setAttribute($attribute, $document->getAttribute($attribute, 0) + $value)
+                ->setAttribute($attribute, $currentValue + $value)
                 ->setAttribute('$databaseId', $databaseId)
                 ->setAttribute('$' . $this->getGroupId(), $collectionId);
 

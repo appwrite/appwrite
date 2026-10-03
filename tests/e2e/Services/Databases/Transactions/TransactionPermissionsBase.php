@@ -232,12 +232,21 @@ trait TransactionPermissionsBase
                 'required' => true,
             ]);
             $this->assertEquals(202, $attribute['headers']['status-code']);
+            foreach (['name' => false, 'tags' => true] as $key => $array) {
+                $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), $admin, [
+                    'key' => $key,
+                    'size' => 255,
+                    'required' => false,
+                    'array' => $array,
+                ]);
+                $this->assertEquals(202, $attribute['headers']['status-code']);
+            }
             $this->waitForAllAttributes($databaseId, $collectionId);
         }
         $permissions = [Permission::update(Role::user($userId))];
         $writable = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $admin, [
             $this->getRecordIdParam() => ID::unique(),
-            'data' => ['balance' => 50],
+            'data' => ['balance' => 50, 'name' => 'Account', 'tags' => ['account']],
             'permissions' => $permissions,
         ]);
         $readonly = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $admin, [
@@ -272,12 +281,25 @@ trait TransactionPermissionsBase
             ]);
             $this->assertEquals(401, $response['headers']['status-code']);
         }
+        // Nonnumeric strings and arrays fail before another operation can be staged.
+        foreach (['name', 'tags'] as $attribute) {
+            foreach (['increment', 'decrement'] as $operation) {
+                $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']) . '/' . $attribute . '/' . $operation, $headers, [
+                    'value' => 5,
+                    'transactionId' => $transactionId,
+                ]);
+                $this->assertEquals(400, $response['headers']['status-code']);
+                $this->assertEquals('attribute_type_invalid', $response['body']['type']);
+            }
+        }
         $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
         $this->assertEquals(200, $status['headers']['status-code']);
         $this->assertEquals(2, $status['body']['operations']);
         $committed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $admin);
         $this->assertEquals(200, $committed['headers']['status-code']);
         $this->assertEquals(50, $committed['body']['balance']);
+        $this->assertEquals('Account', $committed['body']['name']);
+        $this->assertEquals(['account'], $committed['body']['tags']);
     }
 
     /**

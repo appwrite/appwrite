@@ -2,6 +2,7 @@
 
 namespace Appwrite\Databases;
 
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -474,6 +475,9 @@ class TransactionState
                         if (isset($state[$collectionId][$documentId])) {
                             $existingDocument = $state[$collectionId][$documentId]['document'];
                             $currentValue = $existingDocument->getAttribute($attribute, 0);
+                            if (!is_int($currentValue) && !is_float($currentValue)) {
+                                throw new AppwriteException(AppwriteException::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
+                            }
                             $newValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
                             $existingDocument->setAttribute($attribute, $newValue);
 
