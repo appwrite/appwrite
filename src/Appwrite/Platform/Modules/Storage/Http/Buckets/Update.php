@@ -117,7 +117,8 @@ class Update extends Action
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
             ->setAttribute('antivirus', $antivirus)
-            ->setAttribute('transformations', $transformations));
+            ->setAttribute('transformations', $transformations)
+            ->setAttribute('search', implode(' ', [$bucketId, $name])));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
