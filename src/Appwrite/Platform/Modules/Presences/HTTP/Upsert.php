@@ -184,7 +184,7 @@ class Upsert extends PlatformAction
             $dbForProject,
             $presenceDocument,
             $presenceId,
-            $userInternalId,
+            $resolvedUserId,
             fn () => $usage->addMetric(METRIC_USERS_PRESENCE, 1)
         );
         $queueForEvents->setParam('presenceId', $presence->getId());
