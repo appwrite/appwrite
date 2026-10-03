@@ -18,6 +18,7 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { SitesEmptyState } from './_components/SitesEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -637,6 +638,28 @@ export function View() {
     })
   }
 
+  const hasSiteFilters = Boolean(urlSearch || filterMap.size > 0)
+  const showsFirstRunEmptyState =
+    !showLoading && paginatedSites.length === 0 && !hasSiteFilters
+  const sitesEmptyState = hasSiteFilters ? (
+    <EmptyState icon={Globe} isEmpty={false} hasFilters variant="card" />
+  ) : (
+    <SitesEmptyState
+      onCreate={() => {
+        navigate({
+          to: '/projects/$projectId/sites/create',
+          params: { projectId: projectId! },
+        })
+      }}
+      createDisabled={isCreateDisabled}
+      createDisabledTooltip={
+        noCreatePermission
+          ? t("You don't have permission to create sites.")
+          : undefined
+      }
+    />
+  )
+
   const ViewToggle = () => (
     <ServiceListViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
   )
@@ -702,6 +725,7 @@ export function View() {
           />
         }
         fullWidthBorder
+        hideToolbar={showsFirstRunEmptyState}
         rightContent={<ViewToggle />}
         contentAfterBorder={
           project && totalSitesData !== undefined ? (
@@ -950,18 +974,7 @@ export function View() {
               />
             </>
           ) : (
-            <EmptyState
-              icon={Globe}
-              title={t('No sites yet')}
-              description={t('Create your first site to get started')}
-              isEmpty={
-                !(urlSearch && urlSearch.length > 0) && filterMap.size === 0
-              }
-              hasFilters={
-                (urlSearch && urlSearch.length > 0) || filterMap.size > 0
-              }
-              variant="card"
-            />
+            sitesEmptyState
           )
         ) : (
           <>
@@ -1138,14 +1151,7 @@ export function View() {
                 })}
               </div>
             ) : (
-              <EmptyState
-                icon={Globe}
-                title={t('No sites yet')}
-                description={t('Create your first site to get started')}
-                isEmpty={!(urlSearch || filterMap.size > 0)}
-                hasFilters={!!(urlSearch || filterMap.size > 0)}
-                variant="card"
-              />
+              sitesEmptyState
             )}
             {!showLoading && paginatedSites.length > 0 && (
               <Pagination

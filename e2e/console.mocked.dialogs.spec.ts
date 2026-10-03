@@ -270,9 +270,11 @@ test.describe('Debug dialogs (mocked API)', () => {
   test('prompt stays English and LTR and restores focus after cancellation', async ({
     page,
   }) => {
-    await page.getByRole('option', { name: /^Server endpoint\b/ }).click()
-    const trigger = page.getByRole('option', { name: /^Add custom\.\.\./ })
-    await trigger.hover()
+    await page.getByRole('option', { name: /^Profile & endpoint\b/ }).click()
+    const trigger = page.getByRole('button', {
+      name: 'Add custom',
+      exact: true,
+    })
     await trigger.focus()
     await page.keyboard.press('Enter')
 

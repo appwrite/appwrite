@@ -10,43 +10,56 @@ const PEERS = [
   { name: 'You', color: '#85DBD8' },
 ] as const
 
+/**
+ * Horizontal and vertical motion run on separate layers with different easing, so
+ * the combined movement traces an arc. The vertical curve overshoots past its start.
+ */
 function PeerCursor({
   name,
   color,
   className,
+  verticalClassName,
 }: {
   name: string
   color: string
   className?: string
+  verticalClassName?: string
 }) {
   return (
     <div
       className={cn(
-        'pointer-events-none absolute z-10 flex origin-top-start items-center gap-1 opacity-0 transition-all duration-700 ease-out',
+        'pointer-events-none absolute z-10 origin-top-start opacity-0 transition-[translate,opacity] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
         className,
       )}
     >
-      <svg
-        width="17"
-        height="20"
-        viewBox="0 0 24 28"
-        className="shrink-0 drop-shadow-[0_1px_4px_rgba(0,0,0,0.22)]"
-        aria-hidden
+      <div
+        className={cn(
+          'flex items-center gap-1 transition-[translate] duration-[900ms] motion-reduce:transition-none',
+          verticalClassName,
+        )}
       >
-        <path
-          d="M4 2.5v19.8c0 .55.66.82 1.04.43l5.9-5.7a.6.6 0 0 1 .42-.17h8.2c.55 0 .82-.66.43-1.04L5.47 2.07A.6.6 0 0 0 4 2.5Z"
-          fill={color}
-          stroke="white"
-          strokeWidth="1.75"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span
-        className="rounded-full px-2.5 py-1 text-[10px] font-semibold leading-none text-white shadow-[0_1px_4px_rgba(0,0,0,0.18)] sm:text-[11px]"
-        style={{ backgroundColor: color }}
-      >
-        {name.split(' ')[0]}
-      </span>
+        <svg
+          width="17"
+          height="20"
+          viewBox="0 0 24 28"
+          className="shrink-0 drop-shadow-[0_1px_4px_rgba(0,0,0,0.22)]"
+          aria-hidden
+        >
+          <path
+            d="M4 2.5v19.8c0 .55.66.82 1.04.43l5.9-5.7a.6.6 0 0 1 .42-.17h8.2c.55 0 .82-.66.43-1.04L5.47 2.07A.6.6 0 0 0 4 2.5Z"
+            fill={color}
+            stroke="white"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span
+          className="rounded-full px-2.5 py-1 text-[10px] font-semibold leading-none text-white shadow-[0_1px_4px_rgba(0,0,0,0.18)] sm:text-[11px]"
+          style={{ backgroundColor: color }}
+        >
+          {name.split(' ')[0]}
+        </span>
+      </div>
     </div>
   )
 }
@@ -109,12 +122,14 @@ export function RealtimeProductVisual() {
               <PeerCursor
                 name="Happy Quinn"
                 color={PEERS[0].color}
-                className="start-[4%] top-[14%] translate-x-0 translate-y-0 group-hover:translate-x-14 group-hover:translate-y-2 group-hover:opacity-100 motion-reduce:translate-x-14 motion-reduce:translate-y-2 motion-reduce:opacity-100"
+                className="start-[4%] top-[14%] group-hover:translate-x-16 group-hover:opacity-100 motion-reduce:translate-x-16 motion-reduce:opacity-100"
+                verticalClassName="ease-[cubic-bezier(0.25,-2.5,0.5,1)] group-hover:translate-y-3 motion-reduce:translate-y-3"
               />
               <PeerCursor
                 name="Paige Dineen"
                 color={PEERS[1].color}
-                className="start-[4%] top-[50%] translate-x-0 translate-y-0 delay-150 group-hover:translate-x-12 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
+                className="start-[4%] top-[50%] delay-150 group-hover:translate-x-12 group-hover:opacity-100 motion-reduce:translate-x-12 motion-reduce:opacity-100"
+                verticalClassName="delay-150 ease-[cubic-bezier(0.25,-2.5,0.5,1)] group-hover:-translate-y-2 motion-reduce:-translate-y-2"
               />
 
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">

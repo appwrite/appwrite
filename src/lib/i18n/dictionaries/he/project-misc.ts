@@ -3095,4 +3095,147 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Environment switched': 'הסביבה הוחלפה',
   'Create environment': 'יצירת סביבה',
   'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
+  'Send your first message': 'שליחת ההודעה הראשונה שלכם',
+  'Reach your users by email, SMS, and push notifications from one place.':
+    'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',
+  'Connect an email, SMS, or push provider like SendGrid, Twilio, or FCM.':
+    'חברו ספק אימייל, SMS או Push כמו SendGrid,‏ Twilio או FCM.',
+  'Group users into topics so you can reach all of them with one message.':
+    'קבצו משתמשים לנושאים כדי להגיע לכולם בהודעה אחת.',
+  'Send a message': 'שליחת הודעה',
+  'Write it once, then send it now or schedule it for later.':
+    'כתבו אותה פעם אחת, ואז שלחו מיד או תזמנו למועד מאוחר יותר.',
+  'Create your first topic': 'יצירת הנושא הראשון שלכם',
+  'Topics group subscribers so you can message everyone who opted in at once.':
+    'נושאים מקבצים מנויים כדי שתוכלו לשלוח הודעה לכל מי שנרשם, בבת אחת.',
+  'Name it after what people subscribe to, like product updates or alerts.':
+    'תנו לו שם לפי מה שאנשים נרשמים אליו, כמו עדכוני מוצר או התראות.',
+  'Subscribe users through their email, phone, or push targets.':
+    'רשמו משתמשים דרך יעדי האימייל, הטלפון או ה-Push שלהם.',
+  'Message the topic': 'שליחת הודעה לנושא',
+  'Choose the topic as the audience when you create a message.':
+    'בחרו את הנושא כקהל היעד כשאתם יוצרים הודעה.',
+  'Connect your first provider': 'חיבור הספק הראשון שלכם',
+  'Providers deliver your messages. Connect services like SendGrid, Twilio, or Firebase Cloud Messaging.':
+    'ספקים מעבירים את ההודעות שלכם ליעדן. חברו שירותים כמו SendGrid,‏ Twilio או Firebase Cloud Messaging.',
+  'Choose a channel': 'בחירת ערוץ',
+  'Pick email, SMS, or push, then a provider for it.':
+    'בחרו אימייל, SMS או Push, ואז ספק עבורו.',
+  'Add credentials': 'הוספת פרטי גישה',
+  'Paste the API key or credentials from your provider account.':
+    'הדביקו את מפתח ה-API או את פרטי הגישה מחשבון הספק שלכם.',
+  'Start sending': 'התחילו לשלוח',
+  'Messages on that channel go through the provider you enabled.':
+    'הודעות בערוץ הזה יישלחו דרך הספק שהפעלתם.',
+  'Every change is recorded': 'כל שינוי נרשם',
+  'Creates, updates, deletes, and sign-ins from the Console, SDKs, CLI, and API all land here.':
+    'יצירות, עדכונים, מחיקות והתחברויות מהקונסולה, מה-SDK, מה-CLI ומה-API מופיעים כאן.',
+  'Filter what matters': 'סינון לפי מה שחשוב',
+  'Narrow the log by actor, event, resource, or time range to answer who changed what.':
+    'צמצמו את הלוג לפי מבצע, אירוע, משאב או טווח זמן כדי לדעת מי שינה מה.',
+  'Inspect any entry': 'בדיקת כל רשומה',
+  'Open an event to see the IP address, location, device, and the full payload.':
+    'פתחו אירוע כדי לראות את כתובת ה-IP, המיקום, המכשיר ואת המידע המלא.',
+  'Your project audit trail': 'לוג הביקורת של הפרויקט',
+  'Every change to this project is logged here: who made it, from where, and when. New activity shows up as soon as you or your apps start working with the project.':
+    'כל שינוי בפרויקט נרשם כאן: מי ביצע אותו, מאיפה ומתי. פעילות חדשה תופיע ברגע שאתם או האפליקציות שלכם תתחילו לעבוד עם הפרויקט.',
+  'Pick the scopes': 'בחירת הרשאות',
+  'Grant only what your server needs, from reading users to writing rows. You can change scopes later.':
+    'הענקו רק את מה שהשרת שלכם צריך, מקריאת משתמשים ועד כתיבת שורות. אפשר לשנות את ההרשאות בהמשך.',
+  'Set an expiration': 'הגדרת תפוגה',
+  'Keys can live forever or expire on a date, so short-lived scripts never leave access behind.':
+    'מפתחות יכולים להיות קבועים או לפוג בתאריך מסוים, כך שסקריפטים זמניים לא משאירים גישה פתוחה.',
+  'Use it on your server': 'שימוש בשרת שלכם',
+  'Pass the secret to a server SDK or the CLI. Keep it out of browsers and mobile apps.':
+    'העבירו את הסוד ל-SDK של שרת או ל-CLI. אל תחשפו אותו בדפדפנים ובאפליקציות מובייל.',
+  'Create your first API key': 'יצירת מפתח ה-API הראשון שלכם',
+  'API keys let your servers, scripts, and CI talk to Appwrite with exactly the access you grant, without a user session.':
+    'מפתחות API מאפשרים לשרתים, לסקריפטים ול-CI שלכם לעבוד מול Appwrite עם הגישה המדויקת שהענקתם, בלי סשן של משתמש.',
+  'Register your app': 'רישום האפליקציה שלכם',
+  'Add its hostname, bundle ID, or package name so Appwrite accepts requests from it.':
+    'הוסיפו את שם המארח, ה-Bundle ID או שם החבילה כדי ש-Appwrite יקבל ממנה בקשות.',
+  'Install the SDK': 'התקנת ה-SDK',
+  'Pick the SDK for your stack and point it at this project with its ID and endpoint.':
+    'בחרו את ה-SDK המתאים לסטאק שלכם וחברו אותו לפרויקט הזה עם המזהה וה-Endpoint שלו.',
+  'Make your first request': 'שליחת הבקשה הראשונה',
+  'Ping Appwrite from your app to confirm the connection, then start using Auth, Databases, and more.':
+    'שלחו Ping ל-Appwrite מהאפליקציה כדי לאשר את החיבור, ואז התחילו להשתמש באימות, במסדי נתונים ועוד.',
+  'Connect your first app': 'חיבור האפליקציה הראשונה שלכם',
+  'Register the web, mobile, or desktop apps that talk to this project. Appwrite only accepts client requests from apps you add here.':
+    'רשמו את אפליקציות הווב, המובייל או הדסקטופ שעובדות מול הפרויקט הזה. Appwrite מקבל בקשות לקוח רק מאפליקציות שהוספתם כאן.',
+  'Connect to Realtime': 'התחברות ל-Realtime',
+  'Act as a guest or a project user, then press Connect.':
+    'בחרו לפעול כאורח או כמשתמש בפרויקט, ואז לחצו על חיבור.',
+  'Subscribe to a channel': 'הרשמה לערוץ',
+  'Pick channels such as rows, files, or account events.':
+    'בחרו ערוצים כמו שורות, קבצים או אירועי חשבון.',
+  'Watch frames arrive': 'צפייה בפריימים שמגיעים',
+  'Every event and heartbeat is logged here with its payload.':
+    'כל אירוע ו-heartbeat נרשם כאן יחד עם המידע שלו.',
+  'Match requests': 'התאמת בקשות',
+  'Target traffic by IP, country, path, method, headers, or user agent.':
+    'כוונו תעבורה לפי IP, מדינה, נתיב, מתודה, Headers או User agent.',
+  'Choose an action': 'בחירת פעולה',
+  'Deny, challenge, rate limit, redirect, or bypass whatever the rule matches.':
+    'חסמו, אתגרו, הגבילו קצב, הפנו או עקפו כל בקשה שהכלל תואם.',
+  'Set the priority': 'הגדרת עדיפות',
+  'Lower numbers run first, and the first rule that matches decides what happens to a request.':
+    'מספרים נמוכים רצים קודם, והכלל הראשון שתואם קובע מה יקרה לבקשה.',
+  'Protect your project API': 'הגנה על ה-API של הפרויקט',
+  'Firewall rules run on every request before it reaches Appwrite. Block countries, rate limit sign-ins, challenge bots, or allow only trusted IPs.':
+    'כללי Firewall רצים על כל בקשה לפני שהיא מגיעה ל-Appwrite. חסמו מדינות, הגבילו קצב התחברויות, אתגרו בוטים או אפשרו גישה רק מכתובות IP מהימנות.',
+  'Protect this function': 'הגנה על הפונקציה',
+  'Firewall rules run on every request to this function before your code executes, so abusive traffic never costs you an execution.':
+    'כללי Firewall רצים על כל בקשה לפונקציה הזו לפני שהקוד שלכם רץ, כך שתעבורה פוגענית לא עולה לכם בהרצה.',
+  'Protect this site': 'הגנה על האתר',
+  'Firewall rules run on every request to this site before it is served. Block scrapers, rate limit forms, or put the site behind a maintenance page.':
+    'כללי Firewall רצים על כל בקשה לאתר הזה לפני שהוא מוגש. חסמו סקרייפרים, הגבילו קצב שליחת טפסים או העבירו את האתר לדף תחזוקה.',
+  'Pick the events': 'בחירת אירועים',
+  'Subscribe to the changes you care about, from new users to uploaded files and finished executions.':
+    'הירשמו לשינויים שחשובים לכם, ממשתמשים חדשים ועד קבצים שהועלו והרצות שהסתיימו.',
+  'Point it at your endpoint': 'הפניה ל-Endpoint שלכם',
+  'Appwrite sends a POST request with the event payload to your URL as soon as the event happens.':
+    'Appwrite שולח בקשת POST עם תוכן האירוע לכתובת שלכם ברגע שהאירוע מתרחש.',
+  'Verify the signature': 'אימות החתימה',
+  'Check the X-Appwrite-Webhook-Signature header to confirm every request came from your project.':
+    'בדקו את הכותרת X-Appwrite-Webhook-Signature כדי לוודא שכל בקשה הגיעה מהפרויקט שלכם.',
+  'React to changes in your project': 'תגובה לשינויים בפרויקט',
+  'Webhooks notify your servers the moment something happens in your project, so you can sync data, send notifications, or kick off workflows.':
+    'Webhooks מעדכנים את השרתים שלכם ברגע שמשהו קורה בפרויקט, כדי שתוכלו לסנכרן נתונים, לשלוח התראות או להפעיל תהליכי עבודה.',
+  'Add your domain': 'הוספת הדומיין',
+  'Use a subdomain you own, like api.example.com, as the endpoint for your project.':
+    'השתמשו בתת-דומיין בבעלותכם, כמו api.example.com, כ-Endpoint של הפרויקט.',
+  'Update your DNS': 'עדכון ה-DNS',
+  'Add the CNAME record we show you at your DNS provider, then verify the domain.':
+    'הוסיפו את רשומת ה-CNAME שמוצגת לכם אצל ספק ה-DNS, ואז אמתו את הדומיין.',
+  'Get a certificate': 'קבלת תעודה',
+  'Appwrite issues a TLS certificate once the domain verifies, so traffic is served over HTTPS.':
+    'Appwrite מנפיק תעודת TLS לאחר אימות הדומיין, כך שהתעבורה מוגשת ב-HTTPS.',
+  'Serve your API on your own domain': 'ה-API שלכם על הדומיין שלכם',
+  'Point a domain you own at this project so your apps call your brand instead of a shared endpoint. Cookies stay first party, which keeps sessions working in every browser.':
+    'הפנו דומיין בבעלותכם לפרויקט הזה כדי שהאפליקציות שלכם יפנו למותג שלכם במקום ל-Endpoint משותף. העוגיות נשארות מצד ראשון, וכך הסשנים עובדים בכל דפדפן.',
+  'Connect a source': 'חיבור מקור',
+  'Choose another Appwrite project, Firebase, Supabase, or NHost and enter its access credentials.':
+    'בחרו פרויקט Appwrite אחר, Firebase,‏ Supabase או NHost והזינו את פרטי הגישה שלו.',
+  'Review the report': 'סקירת הדוח',
+  'See how many users, tables, files, and functions the source has before anything moves.':
+    'ראו כמה משתמשים, טבלאות, קבצים ופונקציות יש במקור לפני שמשהו עובר.',
+  'Pick what to import': 'בחירת מה לייבא',
+  'Select the resources you want and follow the progress here while the migration runs.':
+    'בחרו את המשאבים הרצויים ועקבו כאן אחר ההתקדמות בזמן שהמיגרציה רצה.',
+  'Bring your data to Appwrite': 'העבירו את הנתונים שלכם ל-Appwrite',
+  'Move users, databases, files, and functions from another Appwrite project or a different platform. Your source stays untouched while the import runs.':
+    'העבירו משתמשים, מסדי נתונים, קבצים ופונקציות מפרויקט Appwrite אחר או מפלטפורמה אחרת. המקור נשאר ללא שינוי בזמן הייבוא.',
+  'Create the app': 'יצירת האפליקציה',
+  'Pick the framework, from Flutter and React Native to native Android, iOS, or .NET MAUI, and the platforms you ship to.':
+    'בחרו את ה-framework, מ-Flutter ו-React Native ועד Android,‏ iOS או .NET MAUI נייטיב, ואת הפלטפורמות שאליהן אתם מפיצים.',
+  'Build every platform': 'בנייה לכל פלטפורמה',
+  'Each version gets its own build per platform, with status and duration tracked here.':
+    'כל גרסה מקבלת Build משלה לכל פלטפורמה, והסטטוס ומשך הזמן מוצגים כאן.',
+  'Submit to the stores': 'הגשה לחנויות',
+  'Send builds to Google Play, App Store Connect, and the Microsoft Store, or turn on auto submit.':
+    'שלחו Builds ל-Google Play,‏ App Store Connect ו-Microsoft Store, או הפעילו הגשה אוטומטית.',
+  'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
+  'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
+    'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
 }

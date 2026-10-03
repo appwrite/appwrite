@@ -19,6 +19,7 @@ import {
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { cn } from '@/lib/utils'
 import { FunctionExecutionsChartPreview } from './_components/FunctionExecutionsChartPreview'
+import { FunctionsEmptyState } from './_components/FunctionsEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -757,6 +758,7 @@ export function View() {
         }
         fullWidthBorder
         beforeCreateButtons={localEditorBeforeCreateButtons}
+        hideToolbar={!showLoading && !hasFunctions && !hasFilters}
         showFilters
         rightContent={viewToggle}
         filterTrigger={
@@ -832,20 +834,25 @@ export function View() {
                 variant="card"
               />
             ) : !hasFunctions ? (
-              <EmptyState
-                icon={Play}
-                title={hasFilters ? undefined : t('No functions yet')}
-                description={
-                  hasFilters
-                    ? undefined
-                    : t(
-                        'Create your first function to deploy and manage serverless functions',
-                      )
-                }
-                isEmpty={true}
-                hasFilters={hasFilters}
-                variant="card"
-              />
+              hasFilters ? (
+                <EmptyState
+                  icon={Play}
+                  isEmpty={false}
+                  hasFilters={hasFilters}
+                  variant="card"
+                />
+              ) : (
+                <FunctionsEmptyState
+                  projectId={projectId!}
+                  onCreate={handleCreateFunction}
+                  createDisabled={isCreateDisabled}
+                  createDisabledTooltip={
+                    noCreatePermission
+                      ? t("You don't have permission to create functions.")
+                      : undefined
+                  }
+                />
+              )
             ) : (
               <>
                 {viewMode === 'list' ? (

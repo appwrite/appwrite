@@ -48,6 +48,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { WebhookDrawer } from './webhooks/WebhookDrawer'
+import { WebhooksEmptyState } from './_components/WebhooksEmptyState'
 import { WebhookContextMenu } from './webhooks/WebhookContextMenu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -66,11 +67,18 @@ import type { Models } from '@appwrite.io/console'
 interface WebhooksProps {
   projectId: string
   searchValue?: string
+  onFirstRunEmptyChange?: (empty: boolean) => void
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
 export function Webhooks({
   projectId,
-  searchValue: searchValueProp = ''}: WebhooksProps) {
+  searchValue: searchValueProp = '',
+  onFirstRunEmptyChange,
+  createDisabled = false,
+  createDisabledTooltip,
+}: WebhooksProps) {
   const t = useT()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -84,6 +92,19 @@ export function Webhooks({
 
   const { webhooks, isLoading } = useProjectWebhooks(projectId)
   const deleteMutation = useDeleteWebhook(projectId)
+
+  const showsFirstRunEmptyState = !isLoading && webhooks.length === 0
+  useEffect(() => {
+    onFirstRunEmptyChange?.(showsFirstRunEmptyState)
+    return () => onFirstRunEmptyChange?.(false)
+  }, [onFirstRunEmptyChange, showsFirstRunEmptyState])
+
+  const openCreateDrawer = () => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedWebhook(null)
+      setDrawerOpen(true)
+    })
+  }
 
   // Listen for create event from ServiceHeader
   useEffect(() => {
@@ -160,17 +181,16 @@ export function Webhooks({
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
+      ) : showsFirstRunEmptyState ? (
+        <WebhooksEmptyState
+          onCreate={openCreateDrawer}
+          createDisabled={createDisabled}
+          createDisabledTooltip={createDisabledTooltip}
+        />
       ) : paginatedWebhooks.length === 0 ? (
         <EmptyState
           icon={WebhookIcon}
-          title={searchValueProp ? undefined : t('No webhooks yet')}
-          description={
-            searchValueProp
-              ? undefined
-              : t('Set up webhooks to receive real-time notifications about events in your project')
-          }
-          isEmpty={!searchValueProp}
-          hasFilters={!!searchValueProp}
+          hasFilters
           variant="card"
         />
       ) : (

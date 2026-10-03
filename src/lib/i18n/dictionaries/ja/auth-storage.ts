@@ -1344,4 +1344,48 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Verification URL': '検証 URL',
   'openid, profile, email, and phone are always included. Add up to 100 scopes in total, each up to 128 characters.': 'openid、profile、email、phone は常に含まれます。合計 100 件まで、各 128 文字以内のスコープを追加できます。',
   'Could not load installation scopes. Existing scopes are kept.': 'インストールスコープを読み込めませんでした。既存のスコープはそのまま保持されます。',
+  'Create your first user': '最初のユーザーを作成',
+  'Sign users up from your app with the Appwrite SDKs, or create one here to test your auth flows.':
+    'Appwrite SDK を使ってアプリからユーザーを登録するか、ここでユーザーを作成して認証フローをテストできます。',
+  'Choose sign-in methods': 'サインイン方法を選択',
+  'Turn on email and password, magic URL, phone, or anonymous sign-in.':
+    'メールとパスワード、Magic URL、電話番号、匿名サインインを有効にできます。',
+  'Connect OAuth providers': 'OAuth プロバイダーを接続',
+  'Let people sign in with Google, GitHub, Apple, and more.':
+    'Google、GitHub、Apple などでサインインできるようにします。',
+  'Set security policies': 'セキュリティポリシーを設定',
+  'Control session length, password rules, and limits for your users.':
+    'セッションの長さ、パスワードルール、ユーザーの上限を管理します。',
+  'Create your first team': '最初のチームを作成',
+  'Teams let groups of users share access to your data. Use them for multi-tenancy, workspaces, organizations, or any shared space in your app.':
+    'チームを使うと、ユーザーのグループでデータへのアクセスを共有できます。Multi-tenancy、ワークスペース、組織など、アプリ内の共有スペースに利用できます。',
+  'Group users who share access, like a workspace or an organization in your app.':
+    'ワークスペースや組織など、アクセスを共有するユーザーをまとめます。',
+  'Invite members': 'メンバーを招待',
+  'Add users by email and give them roles such as owner or editor.':
+    'メールアドレスでユーザーを追加し、オーナーや編集者などのロールを付与します。',
+  'Grant access': 'アクセスを付与',
+  'Use team roles in permissions on rows, files, and functions.':
+    '行、ファイル、Functions の権限にチームのロールを使用します。',
+  'Store images, videos, documents, and any other files. Control who can access them and serve them anywhere.':
+    '画像、動画、ドキュメントなど、あらゆるファイルを保存できます。アクセスできるユーザーを管理し、どこからでも配信できます。',
+  'Each bucket has its own permissions, size limit, and allowed file types.':
+    'バケットごとに権限、サイズ上限、許可するファイル形式を設定できます。',
+  'Upload from the console or from your app with the SDKs. Large files upload in chunks.':
+    'コンソールから、または SDK を使ってアプリからアップロードします。大きなファイルは分割してアップロードされます。',
+  'Transform images': '画像を変換',
+  'Resize, crop, and convert images on the fly with preview URLs.':
+    'プレビュー URL を使って、画像のサイズ変更、切り抜き、形式変換をその場で行えます。',
+  'Register the client': 'クライアントを登録する',
+  'Name the app, add its redirect URIs, and create a secret for server-side clients.':
+    'アプリに名前を付けてリダイレクト URI を追加し、サーバーサイドのクライアント用にシークレットを作成します。',
+  'Send users to authorize': 'ユーザーを認可に誘導する',
+  'Users sign in with this project and approve the scopes the client asks for on a branded consent screen.':
+    'ユーザーはこのプロジェクトでサインインし、ブランド付きの同意画面でクライアントが要求するスコープを承認します。',
+  'Exchange the code': 'コードを交換する',
+  'The client trades the authorization code for tokens and reads the signed-in user from the userinfo endpoint.':
+    'クライアントは認可コードをトークンと交換し、userinfo エンドポイントからサインイン中のユーザー情報を取得します。',
+  'Let other apps sign in with your project': '他のアプリからプロジェクトでサインイン',
+  'Register OAuth2 clients so other products can let users connect with this project. To let your users connect their Appwrite account with your application, create an app under your organization instead.':
+    'OAuth2 クライアントを登録すると、他のプロダクトでユーザーがこのプロジェクトと連携できるようになります。ユーザーの Appwrite アカウントをアプリケーションと連携させたい場合は、代わりに組織でアプリを作成してください。',
 }

@@ -31,6 +31,7 @@ import {
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DomainsEmptyState } from './_components/DomainsEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
@@ -409,6 +410,12 @@ export function View() {
   ])
 
   const showLoading = displayedLoading && apiDomains.length === 0
+  const showsFirstRunEmptyState =
+    !showLoading &&
+    apiDomains.length === 0 &&
+    !urlSearch &&
+    !searchInput.trim() &&
+    filterMap.size === 0
   const paginationTotal = displayedTotal ?? domainsTotal
 
   // Paginated data
@@ -546,6 +553,7 @@ export function View() {
   return (
     <div className="flex h-full flex-col">
       {/* Toolbar: Search + Filters + View Toggle (start) | Buy + Add (end) */}
+      {!showsFirstRunEmptyState && (
       <div className="mb-4 flex items-center gap-3">
         <div className="flex items-center gap-2">
           <div className="relative w-64">
@@ -675,6 +683,7 @@ export function View() {
           </TooltipProvider>
         </div>
       </div>
+      )}
 
       <div className="flex-1">
         {showLoading ? (
@@ -735,15 +744,31 @@ export function View() {
               />
             )}
           </>
-        ) : (
-          <EmptyState
-            icon={Globe}
-            title={t('No domains yet')}
-            description={t('Create your first domain to get started')}
-            isEmpty={!(urlSearch || filterMap.size > 0)}
-            hasFilters={!!(urlSearch || filterMap.size > 0)}
-            variant="card"
+        ) : showsFirstRunEmptyState ? (
+          <DomainsEmptyState
+            onAdd={() => setCreateDialogOpen(true)}
+            onBuy={
+              showBuyAndTransfer
+                ? () =>
+                    navigate({
+                      to: '/organizations/$orgId/domains/buy',
+                      params: { orgId: orgId! },
+                    })
+                : undefined
+            }
+            onTransfer={
+              showBuyAndTransfer
+                ? () =>
+                    navigate({
+                      to: '/organizations/$orgId/domains/transfer-in',
+                      params: { orgId: orgId! },
+                    })
+                : undefined
+            }
+            disabledTooltip={domainLimitTooltip}
           />
+        ) : (
+          <EmptyState icon={Globe} hasFilters variant="card" />
         )}
 
         {/* Bulk Delete Action Bar */}

@@ -80,6 +80,7 @@ import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
 import { ActivityLogRowContextMenu } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
+import { ActivityEmptyState } from '@/components/pages/projects/$projectId/activity/_components/ActivityEmptyState'
 import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
@@ -587,6 +588,11 @@ export function View({ projectId, initialData }: ViewProps) {
     !activitiesError &&
     (isLoading || isFetching || isPending)
   const showListError = events.length === 0 && !!activitiesError
+  const showsFirstRunEmptyState =
+    events.length === 0 &&
+    !showListLoading &&
+    !showListError &&
+    filterMap.size === 0
 
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
@@ -1016,6 +1022,7 @@ export function View({ projectId, initialData }: ViewProps) {
           fullWidthBorder
           fullWidth
           showToolbarBottomBorder
+          hideToolbar={showsFirstRunEmptyState}
         />
         {/* Plan upgrade notice for free tier */}
         {isFreePlan && (
@@ -1061,7 +1068,7 @@ export function View({ projectId, initialData }: ViewProps) {
           (sticky thead needs its nearest scroll ancestor to be the table area,
           not a parent that also wraps the pagination bar). */}
       <div className="flex flex-1 min-h-0 flex-col">
-        {showActivityChart && (
+        {showActivityChart && !showsFirstRunEmptyState && (
           <div className="shrink-0 pb-4">
             <ActivityLogVolumeChart
               rangeFrom={volumeChartRange.from}
@@ -1319,19 +1326,14 @@ export function View({ projectId, initialData }: ViewProps) {
               />
             </div>
           </>
+        ) : showsFirstRunEmptyState ? (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <ActivityEmptyState />
+          </div>
         ) : (
           <EmptyState
             icon={Activity}
-            title={
-              filterMap.size > 0 ? undefined : t('No activities yet')
-            }
-            description={
-              filterMap.size > 0
-                ? undefined
-                : t('Activity will appear here as you use your project')
-            }
-            isEmpty={filterMap.size === 0}
-            hasFilters={filterMap.size > 0}
+            hasFilters
             variant="centered"
           />
         )}
