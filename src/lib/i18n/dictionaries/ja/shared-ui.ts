@@ -367,6 +367,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
+  'This file type is not supported.': 'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',

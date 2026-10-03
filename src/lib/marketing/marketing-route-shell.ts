@@ -76,6 +76,9 @@ export function isExcludedMarketingSiteLayoutPath(
   }
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/reset') return true
+  if (normalized === '/player' || normalized.startsWith('/player/')) {
+    return true
+  }
   return false
 }
 

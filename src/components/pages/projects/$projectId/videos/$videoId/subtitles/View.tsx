@@ -1,76 +1,42 @@
-import { useState } from 'react'
-import { useParams } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import {
-  Captions,
-  Copy,
-  ExternalLink,
-  FileJson,
-  ListVideo,
-  Pencil,
-  Star,
-  StarOff,
-  Trash2,
-} from 'lucide-react'
+  useState,
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { CreateSubtitle } from '../../_components/CreateSubtitle'
+import { DeleteSubtitle } from '../../_components/DeleteSubtitle'
+import { SubtitleMenuItems } from '../../_components/SubtitleMenuItems'
+import { SubtitlesEmptyState } from '../../_components/SubtitlesEmptyState'
 import { VideoStatusBadge } from '../../_components/VideoStatusBadge'
 import { VideoActionButton, VideoPage } from '../../_components/VideoPage'
-import { VideoTermHint } from '../../_components/VideoTermHint'
 import { useVideoDetailActions } from '../../_components/video-detail-actions'
-import {
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
-import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Badge } from '@/components/ui/badge'
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import {
   useDeleteVideoSubtitle,
+  useDownloadVideoSubtitle,
   useUpdateVideoSubtitle,
   useVideoSubtitles,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import {
-  copyResourceAsJson,
-  copyToClipboard,
-  openInNewTab,
-} from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import type { SubtitleDownloadFormat } from '@/lib/videos/subtitle-download'
 import { getVideoSubtitleLanguage } from '@/lib/videos/subtitle-languages'
-import { getVideoSubtitleManifestUrl } from '@/lib/videos/urls'
-
-const HEAD_CLASSNAME =
-  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
-
-const SUBTITLE_OUTPUTS = [
-  { id: 'hls', label: 'Copy HLS subtitle URL' },
-  { id: 'dash', label: 'Copy DASH subtitle URL' },
-  { id: 'cmaf', label: 'Copy CMAF subtitle URL' },
-] as const
 
 type ViewProps = {
   initialData?: { subtitles: Models.VideoSubtitleList }
@@ -82,24 +48,34 @@ export function View({ initialData }: ViewProps = {}) {
     projectId: string
     videoId: string
   }
+  const navigate = useNavigate()
   const { openCreateSubtitle, canWrite, writeDisabledReason } =
     useVideoDetailActions()
   const { data } = useVideoSubtitles(projectId, videoId)
   const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
   const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
-  const [editing, setEditing] = useState<Models.VideoSubtitle | null>(null)
+  const downloadSubtitle = useDownloadVideoSubtitle(projectId, videoId)
   const [deleting, setDeleting] = useState<Models.VideoSubtitle | null>(null)
 
   const subtitles = data?.subtitles ?? initialData?.subtitles.subtitles ?? []
 
-  const setDefault = (subtitle: Models.VideoSubtitle, isDefault: boolean) => {
+  const toggleDefault = (subtitle: Models.VideoSubtitle) => {
     updateMutation.mutate(
-      { subtitleId: subtitle.$id, isDefault },
+      { subtitleId: subtitle.$id, isDefault: !subtitle.default },
       {
         onSuccess: () => toast.success(t('Default subtitle updated')),
         onError: (error) =>
           toast.error(getErrorMessage(error) || t('Failed to save subtitle')),
       },
+    )
+  }
+
+  const download = (
+    subtitle: Models.VideoSubtitle,
+    format: SubtitleDownloadFormat,
+  ) => {
+    downloadSubtitle(subtitle, format).catch((error: unknown) =>
+      toast.error(getErrorMessage(error) || t('Failed to download subtitles')),
     )
   }
 
@@ -116,128 +92,70 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
-  const addButton = (
+  const openEditor = (subtitleId?: string) =>
+    void navigate(
+      subtitleId
+        ? {
+            to: '/projects/$projectId/videos/$videoId/subtitles/$subtitleId',
+            params: { projectId, videoId, subtitleId },
+          }
+        : {
+            to: '/projects/$projectId/videos/$videoId/subtitles/create',
+            params: { projectId, videoId },
+          },
+    )
+
+  const importButton = (
     <VideoActionButton
+      variant="outline"
       size="sm"
       className="h-9 text-[13px]"
       onClick={openCreateSubtitle}
       disabledReason={writeDisabledReason}
     >
-      {t('Add subtitle')}
+      {t('Upload subtitle')}
     </VideoActionButton>
   )
+
+  const menuProps = (subtitle: Models.VideoSubtitle) => ({
+    projectId,
+    videoId,
+    subtitle,
+    canWrite,
+    onOpen: () => openEditor(subtitle.$id),
+    onToggleDefault: () => toggleDefault(subtitle),
+    onDownload: (format: SubtitleDownloadFormat) => download(subtitle, format),
+    onDelete: () => openDialogAfterOverlayCloses(() => setDeleting(subtitle)),
+  })
 
   return (
     <VideoPage
       title={t('Subtitles')}
-      createLabel={t('Add subtitle')}
-      onCreate={openCreateSubtitle}
+      actions={importButton}
+      createLabel={t('Create subtitle')}
+      onCreate={() => openEditor()}
       createDisabled={Boolean(writeDisabledReason)}
       createDisabledTooltip={writeDisabledReason ?? undefined}
+      hideToolbar={subtitles.length === 0}
     >
       {subtitles.length === 0 ? (
-        <EmptyState
-          icon={Captions}
-          title={t('No subtitles')}
-          description={t(
-            'Add WebVTT or SRT files from Storage. Tracks embedded in the source file are extracted automatically by the first rendition or timeline job.',
-          )}
-          isEmpty
-          hasFilters={false}
-          variant="card"
-          action={addButton}
+        <SubtitlesEmptyState
+          onCreate={() => openEditor()}
+          onUpload={openCreateSubtitle}
+          disabledReason={writeDisabledReason}
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className={HEAD_CLASSNAME}>{t('Name')}</TableHead>
-                <TableHead className={HEAD_CLASSNAME}>
-                  <span className="inline-flex items-center gap-1">
-                    {t('Language')}
-                    <VideoTermHint term="languageCode" />
-                  </span>
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>
-                  <span className="inline-flex items-center gap-1">
-                    {t('Source')}
-                    <VideoTermHint term="embedded" />
-                  </span>
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>
-                  <span className="inline-flex items-center gap-1">
-                    {t('Segment length')}
-                    <VideoTermHint term="targetDuration" />
-                  </span>
-                </TableHead>
-                <TableHead className={HEAD_CLASSNAME}>{t('Status')}</TableHead>
-                <TableHead className={HEAD_CLASSNAME}>{t('Created')}</TableHead>
-                <TableHead className={`${HEAD_CLASSNAME} text-end w-[60px]`} />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subtitles.map((subtitle) => {
-                const ready = subtitle.status === 'ready'
-                const hasFile = !subtitle.embedded && !!subtitle.fileId
-                return (
-                  <TableRow key={subtitle.$id}>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="flex min-w-0 items-center gap-1.5">
-                          <span className="truncate text-[13px] font-medium">
-                            {subtitle.name}
-                          </span>
-                          {subtitle.default ? (
-                            <Badge
-                              variant="success"
-                              className="text-[10px] shrink-0"
-                            >
-                              {t('Default')}
-                            </Badge>
-                          ) : null}
-                        </span>
-                        <CopyableId
-                          id={subtitle.$id}
-                          size="xs"
-                          maxWidth={140}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px]">
-                      {getVideoSubtitleLanguage(subtitle.code)?.name ??
-                        subtitle.code}{' '}
-                      <span className="font-mono text-[12px] text-muted-foreground">
-                        ({subtitle.code})
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                      {subtitle.embedded ? (
-                        t('Embedded in source')
-                      ) : (
-                        <span className="font-mono text-[12px]">
-                          {subtitle.fileId}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">
-                      {Number(subtitle.targetDuration) > 0
-                        ? `${subtitle.targetDuration}s`
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <VideoStatusBadge
-                        status={subtitle.status}
-                        kind="subtitle"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={subtitle.$createdAt}
-                        className="whitespace-nowrap text-[12px] font-normal text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+          {subtitles.map((subtitle) => (
+            <li key={subtitle.$id}>
+              <ContextMenu>
+                <ContextMenuTrigger asChild>
+                  <SubtitleRow
+                    projectId={projectId}
+                    videoId={videoId}
+                    subtitle={subtitle}
+                    onOpen={() => openEditor(subtitle.$id)}
+                    menu={
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <RowActionsMenuTrigger
@@ -245,152 +163,115 @@ export function View({ initialData }: ViewProps = {}) {
                           />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuItem
-                            disabled={!canWrite}
-                            onClick={() => setEditing(subtitle)}
-                          >
-                            <MenuItemContent icon={Pencil}>
-                              {t('Update')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!canWrite || updateMutation.isPending}
-                            onClick={() =>
-                              setDefault(subtitle, !subtitle.default)
-                            }
-                          >
-                            <MenuItemContent
-                              icon={subtitle.default ? StarOff : Star}
-                            >
-                              {subtitle.default
-                                ? t('Remove default')
-                                : t('Make default')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <MenuItemIcon icon={Copy} />
-                              {t('Copy')}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-60">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('ID'), subtitle.$id)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy ID')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(t('Name'), subtitle.name)
-                                }
-                              >
-                                <MenuItemContent icon={Copy}>
-                                  {t('Copy name')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              {SUBTITLE_OUTPUTS.map((output) => (
-                                <DropdownMenuItem
-                                  key={output.id}
-                                  disabled={!ready}
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      t('Subtitle URL'),
-                                      getVideoSubtitleManifestUrl(
-                                        projectId,
-                                        videoId,
-                                        subtitle.$id,
-                                        output.id,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <MenuItemContent icon={ListVideo}>
-                                    {t(output.label)}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyResourceAsJson(() => subtitle)
-                                }
-                              >
-                                <MenuItemContent icon={FileJson}>
-                                  {t('Copy as JSON')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                          {hasFile ? (
-                            <DropdownMenuItem
-                              onClick={() =>
-                                openInNewTab(
-                                  withAdminMode(
-                                    sdk
-                                      .forProject(projectId)
-                                      .storage.getFileView({
-                                        bucketId: subtitle.bucketId,
-                                        fileId: subtitle.fileId,
-                                      }),
-                                  ),
-                                )
-                              }
-                            >
-                              <MenuItemContent icon={ExternalLink}>
-                                {t('Open subtitle file')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          ) : null}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            disabled={!canWrite}
-                            onClick={() => setDeleting(subtitle)}
-                          >
-                            <MenuItemContent icon={Trash2}>
-                              {t('Delete')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
+                          <SubtitleMenuItems
+                            variant="dropdown"
+                            {...menuProps(subtitle)}
+                          />
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                    }
+                  />
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-56">
+                  <SubtitleMenuItems variant="context" {...menuProps(subtitle)} />
+                </ContextMenuContent>
+              </ContextMenu>
+            </li>
+          ))}
+        </ul>
       )}
 
-      <CreateSubtitle
-        open={!!editing}
-        onOpenChange={(open) => {
-          if (!open) setEditing(null)
-        }}
-        projectId={projectId}
-        videoId={videoId}
-        subtitle={editing}
-      />
-      <ConfirmActionDialog
+      <DeleteSubtitle
         open={!!deleting}
         onOpenChange={(open) => {
           if (!open) setDeleting(null)
         }}
-        title={t('Delete subtitle')}
-        description={`${t('Delete')} "${deleting?.name ?? ''}"? ${
-          deleting?.embedded
-            ? t(
-                'Embedded tracks are extracted only once, so this track will not come back. This action cannot be undone.',
-              )
-            : t('The Storage file is kept. This action cannot be undone.')
-        }`}
-        confirmLabel={t('Delete')}
-        confirmVariant="destructive"
+        subtitle={deleting}
         onConfirm={confirmDelete}
         isConfirming={deleteMutation.isPending}
       />
     </VideoPage>
+  )
+}
+
+function SubtitleRow({
+  projectId,
+  videoId,
+  subtitle,
+  onOpen,
+  menu,
+  ...triggerProps
+}: ComponentProps<'div'> & {
+  projectId: string
+  videoId: string
+  subtitle: Models.VideoSubtitle
+  onOpen: () => void
+  menu: ReactNode
+}) {
+  const t = useT()
+  const language = getVideoSubtitleLanguage(subtitle.code)
+  const languageLabel =
+    language && language.name !== subtitle.name ? language.name : null
+  const native =
+    language?.nativeName && language.nativeName !== language.name
+      ? language.nativeName
+      : null
+
+  // Menus render in portals, but their React events still bubble here.
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.target as Node)) return
+    if ((event.target as HTMLElement).closest('a, button')) return
+    onOpen()
+  }
+
+  return (
+    <div
+      {...triggerProps}
+      onClick={handleClick}
+      className="group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 data-[state=open]:bg-muted/40 sm:gap-4"
+    >
+      <div
+        aria-hidden
+        className="flex h-10 w-11 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-[11px] font-semibold uppercase text-muted-foreground"
+      >
+        <span className="truncate px-1">{subtitle.code || '-'}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            to="/projects/$projectId/videos/$videoId/subtitles/$subtitleId"
+            params={{ projectId, videoId, subtitleId: subtitle.$id }}
+            className="truncate text-[13px] font-medium text-foreground hover:underline"
+          >
+            {subtitle.name}
+          </Link>
+          {subtitle.default ? (
+            <Badge variant="success" className="text-[10px] shrink-0">
+              {t('Default')}
+            </Badge>
+          ) : null}
+        </div>
+        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
+          {languageLabel ? (
+            <span className="truncate">{languageLabel}</span>
+          ) : null}
+          {native ? (
+            <span dir="auto" className="truncate">
+              {native}
+            </span>
+          ) : null}
+          {languageLabel || native ? <span aria-hidden>·</span> : null}
+          <span className="shrink-0">
+            {subtitle.embedded ? t('Embedded in source') : t('Storage file')}
+          </span>
+        </p>
+      </div>
+      <VideoStatusBadge status={subtitle.status} kind="subtitle" />
+      <DateTooltip
+        date={subtitle.$createdAt}
+        className="hidden w-24 shrink-0 whitespace-nowrap text-end text-[12px] font-normal text-muted-foreground md:block"
+      />
+      <div className="shrink-0">{menu}</div>
+    </div>
   )
 }

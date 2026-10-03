@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import shaka from 'shaka-player'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import {
+  applyVideoStreamAccess,
+  type VideoStreamAccess,
+} from '@/lib/videos/video-stream-access'
 
 const MAX_EVENTS = 200
 const MAX_FRAGMENTS = 300
@@ -11,9 +14,9 @@ const STATS_INTERVAL_MS = 500
  * Console sessions need admin mode (the console user is not in the file's read
  * roles), so every playlist, segment, and init request is rewritten here.
  */
+/** @deprecated Use `applyVideoStreamAccess(url, 'console')` from `@/lib/videos/video-stream-access`. */
 export function withConsoleVideoAccess(url: string): string {
-  if (!url || url.includes('mode=admin')) return url
-  return withAdminMode(url)
+  return applyVideoStreamAccess(url, 'console')
 }
 
 export type StreamVariantInfo = {
@@ -211,6 +214,7 @@ export function useDashPlayer(
   videoRef: RefObject<HTMLVideoElement | null>,
   source: DashPlayerSource | null,
   reloadToken: number,
+  access: VideoStreamAccess = 'console',
 ) {
   const src = source?.url ?? null
   const sourceType = source?.type ?? null
@@ -298,7 +302,9 @@ export function useDashPlayer(
     const RequestType = shaka.net.NetworkingEngine.RequestType
 
     net?.registerRequestFilter((type, request) => {
-      request.uris = request.uris.map((uri) => withConsoleVideoAccess(uri))
+      request.uris = request.uris.map((uri) =>
+        applyVideoStreamAccess(uri, access),
+      )
       request.allowCrossSiteCredentials = true
     })
 
@@ -365,7 +371,7 @@ export function useDashPlayer(
       syncTracks(player!)
     })
 
-    const manifestUrl = withConsoleVideoAccess(src)
+    const manifestUrl = applyVideoStreamAccess(src, access)
     pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: manifestUrl })
 
     void player
@@ -398,7 +404,7 @@ export function useDashPlayer(
       video.removeAttribute('src')
       video.load()
     }
-  }, [videoRef, src, sourceType, reloadToken, pushEvent, syncTracks])
+  }, [videoRef, src, sourceType, reloadToken, pushEvent, syncTracks, access])
 
   useEffect(() => {
     if (!src) return

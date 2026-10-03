@@ -565,6 +565,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'This file type is not supported.': 'סוג קובץ זה אינו נתמך.',
   'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',

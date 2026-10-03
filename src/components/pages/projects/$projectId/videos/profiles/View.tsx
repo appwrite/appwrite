@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
 import { CreateProfile } from '../_components/CreateProfile'
-import { ProfilesSpreadsheet } from '../_components/ProfilesSpreadsheet'
-import { VideoPage } from '../_components/VideoPage'
+import { ProfilesListTable } from '../_components/ProfilesListTable'
+import { SpreadsheetBulkActionsBar } from '../_components/SpreadsheetBulkActionsBar'
+import { sdk } from '@/lib/appwrite/sdk'
+import { getVideosServiceTabs } from '../_components/videos-service-tabs'
+import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -18,6 +22,7 @@ import {
   useOrganizationScopes,
   useProject,
   useVideoProfiles,
+  videoKeys,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -39,11 +44,15 @@ import {
   profileToFilterRecord,
   PROFILES_DEFAULT_SORT_BY,
   PROFILES_DEFAULT_SORT_ORDER,
-  type ProfileSortColumn,
 } from '@/lib/videos/profile-list-filters'
+
+const isDefaultSort = (sortBy: string, sortOrder: 'asc' | 'desc') =>
+  sortBy === PROFILES_DEFAULT_SORT_BY &&
+  sortOrder === PROFILES_DEFAULT_SORT_ORDER
 
 export function View() {
   const t = useT()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const routeSearch = useSearch({ strict: false }) as {
@@ -68,6 +77,10 @@ export function View() {
   const [deletingProfile, setDeletingProfile] =
     useState<Models.VideoProfile | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [selectedProfileIds, setSelectedProfileIds] = useState<Set<string>>(
+    new Set(),
+  )
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
   const { data, isLoading, isFetching, error, refetch } =
     useVideoProfiles(projectId)
@@ -78,10 +91,43 @@ export function View() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canCreateVideo(access, features)
+  const createPermissionTooltip = canWrite
+    ? undefined
+    : t("You don't have permission to manage video profiles.")
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
   }, [urlSearch])
+
+  useEffect(() => {
+    setSelectedProfileIds(new Set())
+    setBulkDeleteDialogOpen(false)
+  }, [urlSearch, routeSearch.query, routeSearch.sort, projectId])
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (profileIds: string[]) => {
+      const videos = sdk.forProject(projectId).videos
+      await Promise.all(
+        profileIds.map((profileId) => videos.deleteProfile({ profileId })),
+      )
+    },
+    onSuccess: async (_data, profileIds) => {
+      await queryClient.refetchQueries({
+        queryKey: videoKeys.profiles(projectId),
+      })
+      const count = profileIds.length
+      toast.success(
+        count === 1
+          ? t('Profile deleted')
+          : `${t('Successfully deleted')} ${count} ${t('profiles')}`,
+      )
+      setSelectedProfileIds(new Set())
+      setBulkDeleteDialogOpen(false)
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err) || t('Failed to delete profiles'))
+    },
+  })
 
   const buildProfilesRouteSearch = (
     overrides: {
@@ -171,6 +217,28 @@ export function View() {
     )
   }, [allProfiles, filterMap, searchInput, urlSearch, sortBy, sortOrder])
 
+  const toggleProfileSelected = (profileId: string) => {
+    setSelectedProfileIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(profileId)) next.delete(profileId)
+      else next.add(profileId)
+      return next
+    })
+  }
+
+  const toggleAllProfilesSelected = (selectAll: boolean) => {
+    if (!selectAll) {
+      setSelectedProfileIds(new Set())
+      return
+    }
+    setSelectedProfileIds(new Set(profiles.map((profile) => profile.$id)))
+  }
+
+  const confirmBulkDeleteProfiles = () => {
+    if (selectedProfileIds.size === 0) return
+    bulkDeleteMutation.mutate(Array.from(selectedProfileIds))
+  }
+
   const navigateWithQuery = (query?: string) => {
     navigateProfilesList({ query: query ?? null })
   }
@@ -193,26 +261,6 @@ export function View() {
   }
 
   const clearAllFilters = () => navigateWithQuery(undefined)
-
-  const handleSortColumn = (columnKey: ProfileSortColumn) => {
-    let nextOrder: 'asc' | 'desc' = 'asc'
-    if (sortBy === columnKey) {
-      nextOrder = sortOrder === 'asc' ? 'desc' : 'asc'
-    } else if (
-      columnKey === 'resolution' ||
-      columnKey === 'videoBitRate' ||
-      columnKey === 'audioBitRate' ||
-      columnKey === '$createdAt'
-    ) {
-      nextOrder = 'desc'
-    }
-    const isDefaultSort =
-      columnKey === PROFILES_DEFAULT_SORT_BY &&
-      nextOrder === PROFILES_DEFAULT_SORT_ORDER
-    navigateProfilesList({
-      sort: isDefaultSort ? null : encodeSort(columnKey, nextOrder),
-    })
-  }
 
   const openCreate = () => {
     setEditingProfile(null)
@@ -244,10 +292,19 @@ export function View() {
 
   const totalProfiles = allProfiles.length
 
+  const tabs = useMemo(
+    () =>
+      getVideosServiceTabs(projectId).map((tab) => ({
+        ...tab,
+        label: t(tab.label),
+      })),
+    [projectId, t],
+  )
+
   let body: ReactNode
   if (error && totalProfiles === 0) {
     body = (
-      <div className="flex flex-1 items-center justify-center px-6 py-12">
+      <div className="flex items-center justify-center rounded-lg border border-border bg-card px-6 py-12">
         <div className="max-w-lg text-center">
           <AlertCircle className="mx-auto h-5 w-5 text-muted-foreground" />
           <p className="mt-3 text-[14px] font-medium text-foreground">
@@ -286,7 +343,7 @@ export function View() {
     )
   } else if (isLoading && totalProfiles === 0) {
     body = (
-      <div className="flex flex-1 items-center justify-center px-6 py-12">
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
         <p className="text-[13px] text-muted-foreground">
           {t('Loading profiles...')}
         </p>
@@ -294,22 +351,15 @@ export function View() {
     )
   } else if (totalProfiles === 0) {
     body = (
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6">
-        <ProfilesEmptyState
-          onCreate={openCreate}
-          createDisabled={!canWrite}
-          createDisabledTooltip={
-            canWrite
-              ? undefined
-              : t("You don't have permission to manage video profiles.")
-          }
-        />
-      </div>
+      <ProfilesEmptyState
+        onCreate={openCreate}
+        createDisabled={!canWrite}
+        createDisabledTooltip={createPermissionTooltip}
+      />
     )
   } else if (profiles.length === 0) {
     body = (
-      <div className="flex flex-1 items-center justify-center px-6 py-12">
-        <EmptyState
+      <EmptyState
           icon={Layers}
           title={
             filterMap.size > 0
@@ -323,7 +373,7 @@ export function View() {
           }
           isEmpty={false}
           hasFilters
-          variant="centered"
+          variant="card"
           iconSize="md"
           action={
             filterMap.size > 0 ? (
@@ -337,19 +387,17 @@ export function View() {
             )
           }
         />
-      </div>
     )
   } else {
     body = (
-      <ProfilesSpreadsheet
-        className="min-h-0 flex-1"
+      <ProfilesListTable
         profiles={profiles}
         canWrite={canWrite}
         onUpdate={openUpdate}
         onDelete={setDeletingProfile}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortColumn={handleSortColumn}
+        selectedIds={selectedProfileIds}
+        onToggleSelected={toggleProfileSelected}
+        onToggleAllSelected={toggleAllProfilesSelected}
       />
     )
   }
@@ -366,36 +414,57 @@ export function View() {
         onApplyFilter={applyFilter}
         resourceLabel={t('profiles')}
         filterScope="videos.profiles"
-        onApplyQuery={(queryParam) =>
-          navigateWithQuery(queryParam ?? undefined)
+        onApplyQuery={(queryParam, sortParam) =>
+          navigateProfilesList({
+            query: queryParam ?? null,
+            sort: sortParam ?? null,
+          })
+        }
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={(nextSortBy, nextSortOrder) =>
+          navigateProfilesList({
+            sort: isDefaultSort(nextSortBy, nextSortOrder)
+              ? null
+              : encodeSort(nextSortBy, nextSortOrder),
+          })
+        }
+        defaultSortParam={encodeSort(
+          PROFILES_DEFAULT_SORT_BY,
+          PROFILES_DEFAULT_SORT_ORDER,
+        )}
+        onReset={() =>
+          navigateProfilesList({ search: null, query: null, sort: null })
         }
         teamId={project?.teamId}
       />
     ) : undefined
 
   return (
-    <VideoPage
-      title={t('Encoding profiles')}
-      term="profile"
-      spreadsheetContent
-      searchPlaceholder={t('Search profiles...')}
-      searchValue={searchInput}
-      onSearchChange={setSearchInput}
-      showRefresh
-      onRefresh={() => void refetch()}
-      isRefreshing={isFetching}
-      filterTrigger={filterToolbar}
-      hideToolbar={!error && !isLoading && totalProfiles === 0}
-      createLabel={t('Create profile')}
-      onCreate={openCreate}
-      createDisabled={!canWrite}
-      createDisabledTooltip={
-        canWrite
-          ? undefined
-          : "You don't have permission to manage video profiles."
-      }
-    >
-      {body}
+    <div className="flex flex-col">
+      <ServiceHeader
+        title={t('Videos')}
+        tabs={tabs}
+        activeTab="profiles"
+        searchPlaceholder={t('Search profiles...')}
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        showRefresh
+        onRefresh={() => void refetch()}
+        isRefreshing={isFetching}
+        showFilters={Boolean(filterToolbar)}
+        filterTrigger={filterToolbar}
+        hideToolbar={!error && !isLoading && totalProfiles === 0}
+        createLabel={t('Create profile')}
+        onCreate={openCreate}
+        createDisabled={!canWrite}
+        createDisabledTooltip={createPermissionTooltip}
+        fullWidthBorder
+      />
+
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        {body}
+      </div>
 
       <CreateProfile
         open={dialogOpen}
@@ -415,6 +484,29 @@ export function View() {
         onConfirm={confirmDelete}
         isConfirming={deleteMutation.isPending}
       />
-    </VideoPage>
+      {canWrite ? (
+        <SpreadsheetBulkActionsBar
+          selectedCount={selectedProfileIds.size}
+          selectionBadge={
+            selectedProfileIds.size === 1
+              ? t('1 profile selected')
+              : `${selectedProfileIds.size} ${t('profiles selected')}`
+          }
+          onClearSelection={() => setSelectedProfileIds(new Set())}
+          deleteDialogOpen={bulkDeleteDialogOpen}
+          onDeleteDialogOpenChange={setBulkDeleteDialogOpen}
+          deleteDialogTitle={
+            selectedProfileIds.size === 1
+              ? t('Delete profile')
+              : t('Delete profiles')
+          }
+          deleteDialogDescription={`${t('Are you sure you want to delete')} ${selectedProfileIds.size} ${
+            selectedProfileIds.size === 1 ? t('profile') : t('profiles')
+          }? ${t('Renditions already encoded with these profiles stay playable. This action cannot be undone.')}`}
+          onConfirmDelete={confirmBulkDeleteProfiles}
+          isDeleting={bulkDeleteMutation.isPending}
+        />
+      ) : null}
+    </div>
   )
 }

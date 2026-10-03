@@ -8,7 +8,7 @@ import {
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/videos/$videoId/subtitles',
+  '/_public/projects/$projectId/videos/$videoId/subtitles/',
 )({
   head: () => ({ meta: [{ title: pageTitle('Subtitles', 'Videos') }] }),
   loader: async ({ params, context }) => {

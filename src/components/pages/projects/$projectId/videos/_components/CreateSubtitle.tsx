@@ -6,8 +6,10 @@ import { toast } from 'sonner'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
   StorageFileExplorerDialog,
+  STORAGE_FILE_ACCEPT_SUBTITLE,
   type StorageFileSelection,
 } from '@/components/global/shared/StorageFileExplorerDialog'
+import { isStorageSubtitleFile } from '@/lib/storage/file-accept'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,9 +33,7 @@ import {
   getVideoSubtitleLanguage,
   VIDEO_SUBTITLE_LANGUAGES,
 } from '@/lib/videos/subtitle-languages'
-
-const SUBTITLE_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip']
-const SUBTITLE_NAME_PATTERN = /^[A-Za-z0-9 \-.,()_']*$/
+import { VIDEO_SUBTITLE_NAME_PATTERN as SUBTITLE_NAME_PATTERN } from '@/lib/videos/subtitle-cues'
 
 type CreateSubtitleProps = {
   open: boolean
@@ -114,7 +114,7 @@ export function CreateSubtitle({
 
   const nameValid = name.trim().length > 0 && SUBTITLE_NAME_PATTERN.test(name)
   const fileLooksWrong =
-    !!source && !!file && !SUBTITLE_MIME_TYPES.includes(file.mimeType)
+    !!source && !!file && !isStorageSubtitleFile(file)
   const canSubmit = nameValid && !!code && (isUpdate || !!source) && !isPending
 
   const handleSubmit = () => {
@@ -168,7 +168,7 @@ export function CreateSubtitle({
         <DialogContent className="sm:max-w-md p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
-              {isUpdate ? t('Update subtitle') : t('Create subtitle')}
+              {isUpdate ? t('Update subtitle') : t('Upload subtitle')}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
@@ -292,6 +292,7 @@ export function CreateSubtitle({
           'Choose a bucket, then pick or upload a .vtt or .srt file.',
         )}
         confirmLabel={t('Select')}
+        accept={STORAGE_FILE_ACCEPT_SUBTITLE}
         onConfirm={(selection) => setSource(selection)}
       />
     </>

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { Check, ChevronDown, Circle, Info } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -12,6 +12,7 @@ import {
 import { VideoTermHint } from '../_components/VideoTermHint'
 import { useVideoDetailActions } from '../_components/video-detail-actions'
 import { VIDEO_TAB_NEEDS_READY_RENDITION } from '../_components/video-tabs'
+import { VideoPreviewEmbedMenu } from '../_components/VideoPreviewEmbedMenu'
 import { VideoStreamPlayer } from '../_components/player/VideoStreamPlayer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
@@ -95,7 +96,17 @@ export function View({ initialData }: ViewProps = {}) {
           />
         </>
       }
-      actions={<SourcePopover projectId={projectId} video={video} />}
+      actions={
+        <>
+          <VideoPreviewEmbedMenu
+            variant="toolbar"
+            projectId={projectId}
+            video={video}
+            renditions={renditions}
+          />
+          <SourcePopover projectId={projectId} video={video} />
+        </>
+      }
       contentClassName="flex min-h-full flex-col space-y-0"
     >
       <div aria-hidden className={spacerClassName} />
@@ -418,6 +429,7 @@ function SetupChecklist({
   const t = useT()
   const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =
     useVideoDetailActions()
+  const navigate = useNavigate()
 
   const hasReady = renditions.some((r) => r.status === 'ready')
 
@@ -450,19 +462,35 @@ function SetupChecklist({
     {
       id: 'subtitles',
       title: t('Add subtitles'),
-      description: t('Upload WebVTT or SRT files per language.'),
+      description: t('Upload WebVTT or SRT files per language, or write them in the editor.'),
       optional: true,
       done: subtitles.length > 0,
       action: (
-        <VideoActionButton
-          size="sm"
-          variant="outline"
-          className="h-8 text-[12px]"
-          onClick={openCreateSubtitle}
-          disabledReason={writeDisabledReason}
-        >
-          {t('Add subtitle')}
-        </VideoActionButton>
+        <div className="flex flex-wrap gap-2">
+          <VideoActionButton
+            size="sm"
+            variant="outline"
+            className="h-8 text-[12px]"
+            onClick={openCreateSubtitle}
+            disabledReason={writeDisabledReason}
+          >
+            {t('Upload subtitle')}
+          </VideoActionButton>
+          <VideoActionButton
+            size="sm"
+            variant="outline"
+            className="h-8 text-[12px]"
+            onClick={() =>
+              void navigate({
+                to: '/projects/$projectId/videos/$videoId/subtitles/create',
+                params: { projectId, videoId: video.$id },
+              })
+            }
+            disabledReason={writeDisabledReason}
+          >
+            {t('Create subtitle')}
+          </VideoActionButton>
+        </div>
       ),
     },
     {

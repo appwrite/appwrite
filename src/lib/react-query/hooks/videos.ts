@@ -14,9 +14,15 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Query, VideoOutput } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  clearTimelinePending,
+  markTimelinePending,
+  useTimelinePending,
+} from '@/lib/videos/pending-timelines'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
 
@@ -72,21 +78,6 @@ export function getVideoEncodingStatus(
     return 'error'
   }
   return 'none'
-}
-
-/** Sidebar list: first page, newest first (shared by the layout loader and sidebar). */
-export const VIDEOS_SIDEBAR_PAGE_SIZE = 50
-
-export function videosSidebarQueryOptions(projectId: string) {
-  return videosQueryOptions(
-    projectId,
-    0,
-    VIDEOS_SIDEBAR_PAGE_SIZE,
-    undefined,
-    undefined,
-    VIDEOS_DEFAULT_SORT_BY,
-    VIDEOS_DEFAULT_SORT_ORDER,
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -397,13 +388,20 @@ export function videoTimelineQueryOptions(
 export function useVideoTimeline(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
-  options: { pollWhileMissing?: boolean } = {},
 ) {
-  return useQuery({
+  const pending = useTimelinePending(projectId, videoId)
+  const query = useQuery({
     ...videoTimelineQueryOptions(projectId, videoId),
     refetchInterval: (query) =>
-      options.pollWhileMissing && query.state.data === null ? 3000 : false,
+      pending && query.state.data === null ? 3000 : false,
   })
+  const ready = Boolean(query.data)
+
+  useEffect(() => {
+    if (ready && projectId && videoId) clearTimelinePending(projectId, videoId)
+  }, [ready, projectId, videoId])
+
+  return { ...query, pending: pending && !ready }
 }
 
 export function useProjectVideos(
@@ -470,29 +468,6 @@ export function useVideoCodecs(projectId: string | null | undefined) {
 // Mutations
 // ---------------------------------------------------------------------------
 
-/** Register a video from a Storage file. Metadata is probed by the first rendition or timeline job. */
-export function useCreateVideo(projectId: string | null | undefined) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (input: {
-      bucketId: string
-      fileId: string
-      name?: string
-    }) => {
-      const videos = sdk.forProject(projectId!).videos
-      return await videos.create({
-        bucketId: input.bucketId,
-        fileId: input.fileId,
-        name: input.name?.trim() || undefined,
-      })
-    },
-    onSuccess: async (video) => {
-      queryClient.setQueryData(videoKeys.detail(projectId, video.$id), video)
-      await queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
-    },
-  })
-}
-
 export function useUpdateVideo(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
@@ -531,6 +506,7 @@ export function useCreateVideoTimeline(
     mutationFn: () =>
       sdk.forProject(projectId!).videos.createTimeline({ videoId: videoId! }),
     onSuccess: async () => {
+      markTimelinePending(projectId!, videoId!)
       await queryClient.invalidateQueries({
         queryKey: videoKeys.timeline(projectId, videoId),
       })

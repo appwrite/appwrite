@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type Hls from 'hls.js'
 import type { ErrorData, Level, LevelDetails, MediaPlaylist } from 'hls.js'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import {
+  applyVideoStreamAccess,
+  type VideoStreamAccess,
+} from '@/lib/videos/video-stream-access'
 
 const MAX_EVENTS = 200
 const MAX_FRAGMENTS = 60
 const STATS_INTERVAL_MS = 500
 
-/**
- * Manifests reference absolute `/v1/videos/...` paths carrying only `?project=`.
- * Console sessions need admin mode (the console user is not in the file's read
- * roles), so every playlist, segment, and init request is rewritten here.
- */
+/** @deprecated Use `applyVideoStreamAccess(url, 'console')` from `@/lib/videos/video-stream-access`. */
 export function withConsoleVideoAccess(url: string): string {
-  if (!url || url.includes('mode=admin')) return url
-  return withAdminMode(url)
+  return applyVideoStreamAccess(url, 'console')
 }
 
 export type HlsLevelInfo = {
@@ -184,19 +182,20 @@ function readBuffered(video: HTMLVideoElement): Array<[number, number]> {
 }
 
 /** hls.js 1.7+ uses FetchLoader in modern browsers; xhrSetup alone is not enough. */
-function consoleHlsLoaderConfig(): {
+function hlsLoaderConfig(access: VideoStreamAccess): {
   enableWorker: boolean
   fetchSetup: (context: { url: string }, initParams: RequestInit) => Request
   xhrSetup: (xhr: XMLHttpRequest, url: string) => void
 } {
+  const rewrite = (url: string) => applyVideoStreamAccess(url, access)
   return {
     enableWorker: true,
     fetchSetup: (context, initParams) => {
       initParams.credentials = 'include'
-      return new Request(withConsoleVideoAccess(context.url), initParams)
+      return new Request(rewrite(context.url), initParams)
     },
     xhrSetup: (xhr, url) => {
-      xhr.open('GET', withConsoleVideoAccess(url), true)
+      xhr.open('GET', rewrite(url), true)
       xhr.withCredentials = true
     },
   }
@@ -220,6 +219,7 @@ export function useHlsPlayer(
   videoRef: RefObject<HTMLVideoElement | null>,
   source: PlayerSource | null,
   reloadToken: number,
+  access: VideoStreamAccess = 'console',
 ) {
   const src = source?.url ?? null
   const sourceType = source?.type ?? null
@@ -255,7 +255,7 @@ export function useHlsPlayer(
     video.addEventListener('loadeddata', onFirstFrame)
 
     if (sourceType === 'file') {
-      video.src = src
+      video.src = applyVideoStreamAccess(src, access)
       setState((prev) => ({ ...prev, engine: 'native' }))
       pushEvent({ kind: 'info', name: 'LOAD_FILE', detail: src })
       return () => {
@@ -270,7 +270,7 @@ export function useHlsPlayer(
 
       if (!HlsClass.isSupported()) {
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = withConsoleVideoAccess(src)
+          video.src = applyVideoStreamAccess(src, access)
           setState((prev) => ({ ...prev, engine: 'native' }))
           pushEvent({
             kind: 'warning',
@@ -287,7 +287,7 @@ export function useHlsPlayer(
         return
       }
 
-      hls = new HlsClass(consoleHlsLoaderConfig())
+      hls = new HlsClass(hlsLoaderConfig(access))
       hlsRef.current = hls
       setState((prev) => ({
         ...prev,
@@ -396,7 +396,7 @@ export function useHlsPlayer(
       })
 
       hls.attachMedia(video)
-      hls.loadSource(withConsoleVideoAccess(src))
+      hls.loadSource(applyVideoStreamAccess(src, access))
       pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: src })
     })
 
@@ -408,7 +408,7 @@ export function useHlsPlayer(
       video.removeAttribute('src')
       video.load()
     }
-  }, [videoRef, src, sourceType, reloadToken, pushEvent])
+  }, [videoRef, src, sourceType, reloadToken, pushEvent, access])
 
   useEffect(() => {
     if (!src) return

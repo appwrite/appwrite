@@ -14,6 +14,8 @@ export const jaVideosDictionary: Record<string, string> = {
   Rendition: 'レンディション',
   Subtitles: '字幕',
   'Back to videos': '動画一覧に戻る',
+  'Switch video': '動画を切り替え',
+  'No videos found': '動画が見つかりません',
   'Untitled video': '無題の動画',
   'Video not found': '動画が見つかりません',
   "The video you're looking for doesn't exist or you don't have access to it.":
@@ -105,6 +107,15 @@ export const jaVideosDictionary: Record<string, string> = {
     '動画プロファイルを管理する権限がありません。',
   'Renditions already encoded with this profile stay playable. This action cannot be undone.':
     'このプロファイルでエンコード済みのレンディションは引き続き再生できます。この操作は元に戻せません。',
+  'Renditions already encoded with these profiles stay playable. This action cannot be undone.':
+    'これらのプロファイルでエンコード済みのレンディションは引き続き再生できます。この操作は元に戻せません。',
+  'Delete profiles': 'プロファイルを削除',
+  'Failed to delete profiles': 'プロファイルを削除できませんでした',
+  'Select all profiles': 'すべてのプロファイルを選択',
+  'Select profile': 'プロファイルを選択',
+  '1 profile selected': '1 件のプロファイルを選択中',
+  'profiles selected': '件のプロファイルを選択中',
+  profile: 'プロファイル',
   Width: '幅',
   Height: '高さ',
   Resolution: '解像度',
@@ -137,6 +148,12 @@ export const jaVideosDictionary: Record<string, string> = {
     'プロファイルがありません。先にプロファイルを作成してください。',
   Exists: '作成済み',
   Upscale: 'アップスケール',
+  '1 selected profile is larger than the source':
+    '選択したプロファイルのうち 1 件がソースより大きいサイズです',
+  'selected profiles are larger than the source':
+    '件の選択したプロファイルがソースより大きいサイズです',
+  'Upscaling adds size without adding detail.':
+    'アップスケールしてもディテールは増えず、ファイルサイズだけが大きくなります。',
   'MPEG-TS segments. Plays natively on Safari and iOS.':
     'MPEG-TS セグメント。Safari と iOS でネイティブ再生できます。',
   'MPEG-DASH with fragmented MP4 segments.':
@@ -153,6 +170,17 @@ export const jaVideosDictionary: Record<string, string> = {
   'Failed to retry rendition': 'レンディションを再試行できませんでした',
   'Its segments are removed and players stop receiving this quality. This action cannot be undone.':
     'セグメントが削除され、プレーヤーはこの画質を受信しなくなります。この操作は元に戻せません。',
+  'Their segments are removed and players stop receiving these qualities. This action cannot be undone.':
+    'セグメントが削除され、プレーヤーはこれらの画質を受信しなくなります。この操作は元に戻せません。',
+  'Delete renditions': 'レンディションを削除',
+  'Failed to delete renditions': 'レンディションを削除できませんでした',
+  'Failed to retry renditions': 'レンディションを再試行できませんでした',
+  'Select all renditions': 'すべてのレンディションを選択',
+  'Select rendition': 'レンディションを選択',
+  '1 rendition selected': '1 件のレンディションを選択中',
+  'renditions selected': '件のレンディションを選択中',
+  rendition: 'レンディション',
+  'Successfully deleted': '削除しました',
 
   // Subtitles
   'Create subtitle': '字幕を作成',
@@ -431,9 +459,9 @@ export const jaVideosDictionary: Record<string, string> = {
   'Pick profiles and an output format such as HLS.':
     'プロファイルと HLS などの出力形式を選びます。',
   'Add subtitles': '字幕を追加',
-  'Upload WebVTT or SRT files per language.':
-    '言語ごとに WebVTT または SRT ファイルをアップロードします。',
-  'Add subtitle': '字幕を追加',
+  'Upload WebVTT or SRT files per language, or write them in the editor.':
+    '言語ごとに WebVTT または SRT ファイルをアップロードするか、エディターで作成します。',
+  'Upload subtitle': '字幕をアップロード',
   'Generate a timeline': 'タイムラインを生成',
   'Thumbnails for scrubbing and poster images.':
     'シーク用のサムネイルとポスター画像です。',
@@ -620,8 +648,8 @@ export const jaVideosDictionary: Record<string, string> = {
     '最初のエンコードジョブでファイルから読み取られます。',
   'Metadata appears once the first rendition or timeline job reads the file.':
     '最初のレンディションまたはタイムラインのジョブがファイルを読み取ると、メタデータが表示されます。',
-  'Add WebVTT or SRT files from Storage. Tracks embedded in the source file are extracted automatically by the first rendition or timeline job.':
-    'ストレージから WebVTT または SRT ファイルを追加します。ソースファイルに埋め込まれたトラックは、最初のレンディションまたはタイムラインのジョブで自動的に抽出されます。',
+  'Write captions in the editor, or import WebVTT or SRT files from Storage. Tracks embedded in the source file are extracted automatically by the first rendition or timeline job.':
+    'エディターで字幕を作成するか、ストレージから WebVTT または SRT ファイルをインポートします。ソースファイルに埋め込まれたトラックは、最初のレンディションまたはタイムラインのジョブで自動的に抽出されます。',
   'Audio-only videos have no frames for a timeline.':
     '音声のみの動画にはタイムライン用のフレームがありません。',
   'Choose encoding profiles and an output format. Each profile becomes one quality level, and Appwrite reads the file metadata on the first job.':
@@ -813,4 +841,288 @@ export const jaVideosDictionary: Record<string, string> = {
   'Define your quality ladder': '画質のラダーを定義',
   'Encoding profiles set the resolution and bitrate of every rendition, so each viewer gets the best quality their connection can handle.':
     'エンコードプロファイルは各レンディションの解像度とビットレートを決めるため、視聴者は回線に合った最適な画質で視聴できます。',
+  'Video player': '動画プレーヤー',
+  'Loading video': '動画を読み込み中',
+  'This video does not exist or was removed. Check the link and try again.':
+    'この動画は存在しないか、削除されました。リンクを確認してもう一度お試しください。',
+  'Sign in required': 'サインインが必要です',
+  'You need permission to watch this video. Sign in with an account that can access it, or ask the owner to make the stream public.':
+    'この動画を視聴する権限が必要です。アクセスできるアカウントでサインインするか、所有者にストリームを公開してもらってください。',
+  'Access denied': 'アクセスが拒否されました',
+  'Your account cannot play this video. The owner may need to update bucket or video permissions.':
+    'このアカウントでは動画を再生できません。所有者がバケットまたは動画の権限を更新する必要がある場合があります。',
+  'Unable to play': '再生できません',
+  'Something went wrong while loading this video. Try again later.':
+    '動画の読み込み中に問題が発生しました。しばらくしてからもう一度お試しください。',
+  'Missing project': 'プロジェクトがありません',
+  'Add a project query parameter to this URL, for example ?project=yourProjectId.':
+    'URL に project クエリパラメータを追加してください。例: ?project=yourProjectId',
+  'Not ready to play': '再生の準備ができていません',
+  'This video is still being prepared. Try again in a few minutes.':
+    'この動画はまだ準備中です。数分後にもう一度お試しください。',
+  Player: 'プレーヤー',
+  Embed: '埋め込み',
+  'Embed code': '埋め込みコード',
+  'Embed code copied': '埋め込みコードをコピーしました',
+  'Embed video': '動画を埋め込む',
+  'Copy the iframe snippet below. Optionally set a start time for playback.':
+    '以下の iframe コードをコピーしてください。必要に応じて再生の開始時刻を指定できます。',
+  'Start time': '開始時刻',
+  'Custom start time': '開始時刻を指定',
+  'Embed plays from the beginning.': '埋め込みは最初から再生されます。',
+  'Playback begins at this time when the embed loads.':
+    '埋め込みの読み込み時、この時刻から再生を開始します。',
+  'Copy embed code': '埋め込みコードをコピー',
+  'Subtitle size': '字幕サイズ',
+  'Compact subtitles': 'コンパクト',
+  'Standard subtitles': '標準',
+  'Large subtitles': '大',
+  'The source file is still being probed. Try again when encoding starts or finishes.':
+    'ソースファイルをまだ解析中です。エンコードが開始または完了してからもう一度お試しください。',
+
+  // Create video wizard
+  'Encoding settings': 'エンコード設定',
+  'Review': '確認',
+  'Uploaded from your computer': 'コンピューターからアップロード',
+  'File in Storage': 'ストレージ内のファイル',
+  'Demo video by Blender Studio': 'Blender Studio のデモ動画',
+  'Timeline previews': 'タイムラインプレビュー',
+  'Bucket created': 'バケットを作成しました',
+  'Video created with issues': '動画は作成されましたが、一部の処理に失敗しました',
+  'Open the video to retry the steps that failed.': '動画を開いて、失敗した処理を再試行してください。',
+  'Video creation continues in the background.': '動画の作成はバックグラウンドで続行されます。',
+  'Open video': '動画を開く',
+  'Choose a source': 'ソースを選択',
+  'Every video starts from a file in Storage. Upload one, pick a file you already have, or start with a demo.':
+    'すべての動画はストレージ内のファイルから作成されます。ファイルをアップロードするか、既存のファイルを選択するか、デモ動画から始めましょう。',
+  'Configure encoding': 'エンコードを設定',
+  'Choose how the video is packaged for adaptive streaming. Encoding starts as soon as the source is ready.':
+    'アダプティブストリーミング用のパッケージ方法を選択します。ソースの準備が整うとすぐにエンコードが始まります。',
+  'Audio-only sources have no frames to preview.':
+    '音声のみのソースにはプレビューするフレームがありません。',
+  'Sprite sheet thumbnails and a WebVTT track for previews while scrubbing. Also sets the video poster.':
+    'シーク中のプレビュー用に、スプライトシートのサムネイルと WebVTT トラックを生成します。動画のポスター画像にも使用されます。',
+  'Clear every profile to skip encoding. You can create renditions later from the video page.':
+    'エンコードをスキップするには、すべてのプロファイルの選択を解除します。レンディションは後から動画ページで作成できます。',
+  'Review and create': '確認して作成',
+  'Name your video and confirm the details. You can rename it later.':
+    '動画に名前を付けて、内容を確認してください。名前は後から変更できます。',
+  'Destination bucket': '保存先バケット',
+  'No renditions. You can encode later.': 'レンディションなし。後からエンコードできます。',
+  'Too large for this bucket.': 'このバケットには大きすぎます。',
+  'Maximum file size:': '最大ファイルサイズ:',
+  'This bucket does not accept this file type.': 'このバケットはこのファイル形式を受け付けません。',
+  'Drop a file here or click to browse': 'ここにファイルをドロップするか、クリックして選択',
+  'MP4, MOV, WebM, MKV, and audio files': 'MP4、MOV、WebM、MKV、音声ファイル',
+  'Up to': '最大',
+  'Choose a video or audio file.': '動画または音声ファイルを選択してください。',
+  'The file stays in its bucket. Nothing is copied.':
+    'ファイルは元のバケットに残り、コピーされません。',
+  'Loading file...': 'ファイルを読み込み中...',
+  'Too large for the selected bucket.': '選択したバケットには大きすぎます。',
+  'Open movies by Blender Studio, served from Wikimedia Commons. The file is downloaded in your browser and uploaded to the selected bucket.':
+    'Blender Studio のオープンムービーを Wikimedia Commons から配信しています。ファイルはブラウザでダウンロードされ、選択したバケットにアップロードされます。',
+  'Create Videos bucket': 'Videos バケットを作成',
+  'The source file is stored in a Storage bucket. Create one to continue.':
+    'ソースファイルはストレージのバケットに保存されます。続行するにはバケットを作成してください。',
+  'The uploaded file is stored here and stays in Storage.':
+    'アップロードしたファイルはここに保存され、ストレージに残ります。',
+  'Drop a video or audio file from your computer.':
+    'コンピューターから動画または音声ファイルをドロップします。',
+  'Choose from Storage': 'ストレージから選択',
+  'Use a file that is already in a bucket.': 'バケット内の既存ファイルを使用します。',
+  'Try a demo video': 'デモ動画を試す',
+  'Import an open movie to explore Videos.': 'オープンムービーをインポートして動画機能を試せます。',
+  'No source selected': 'ソースが選択されていません',
+  'Preview unavailable': 'プレビューを利用できません',
+  'Audio only': '音声のみ',
+  'New video': '新しい動画',
+  'Choose a source to see a preview.': 'ソースを選択するとプレビューが表示されます。',
+  'Creating your video': '動画を作成しています',
+  'Video could not be created': '動画を作成できませんでした',
+  'Keep this window open while the file uploads. Once the video exists, you can open it and the remaining steps continue in the background.':
+    'ファイルのアップロード中はこのウィンドウを開いたままにしてください。動画が作成されたら開くことができ、残りの処理はバックグラウンドで続行されます。',
+  'The video was not created. Go back to adjust the source or try again.':
+    '動画は作成されませんでした。戻ってソースを変更するか、もう一度お試しください。',
+  'Download demo video': 'デモ動画をダウンロード',
+  'Fetch the open movie in your browser.': 'ブラウザでオープンムービーを取得します。',
+  'Upload to Storage': 'ストレージにアップロード',
+  'Store the source file in your bucket.': 'ソースファイルをバケットに保存します。',
+  'Register video': '動画を登録',
+  'Create the video from the source file.': 'ソースファイルから動画を作成します。',
+  'Prepare source': 'ソースを準備',
+  'Download, probe, and extract embedded subtitles.':
+    'ダウンロード、解析、埋め込み字幕の抽出を行います。',
+  'Queue sprite sheet thumbnails for scrubbing previews.':
+    'シークプレビュー用のスプライトシートサムネイルをキューに追加します。',
+  'Queue renditions': 'レンディションをキューに追加',
+  'Start encoding one rendition per selected profile.':
+    '選択したプロファイルごとに 1 つのレンディションのエンコードを開始します。',
+  'Short and light. The fastest way to try encoding.': '短くて軽量。エンコードを試すのに最適です。',
+  'Bright 16:9 cartoon with fast camera moves.':
+    '素早いカメラワークの鮮やかな 16:9 アニメーション。',
+  'Longer 16:9 short with detailed outdoor scenes.':
+    '精細な屋外シーンを含む、やや長めの 16:9 短編。',
+  'Ultrawide frame. Shows letterboxed renditions.':
+    'ウルトラワイド画角。レターボックス付きのレンディションを確認できます。',
+  'Fast action and rich color for bitrate tests.':
+    '激しい動きと豊かな色彩で、ビットレートのテストに最適です。',
+  'Ultrawide hybrid of 2D and 3D animation.':
+    '2D と 3D を組み合わせたウルトラワイドのアニメーション。',
+
+  // Subtitle editor
+  'Subtitle editor': '字幕エディター',
+  'New subtitle': '新しい字幕',
+  'Open in editor': 'エディターで開く',
+  'Back to subtitles': '字幕一覧に戻る',
+  'Subtitle created': '字幕を作成しました',
+  'Subtitle saved. The track is re-packaged in the background.':
+    '字幕を保存しました。トラックはバックグラウンドで再パッケージされます。',
+  'Subtitle not found': '字幕が見つかりません',
+  'This subtitle may have been deleted. Go back to the list to pick another track.':
+    'この字幕は削除された可能性があります。一覧に戻って別のトラックを選択してください。',
+  'Loading cues...': 'キューを読み込み中...',
+  "Couldn't load this track": 'このトラックを読み込めませんでした',
+  'Embedded tracks can be read once they are packaged.':
+    '埋め込みトラックはパッケージ後に読み込めます。',
+  'The subtitle file could not be read.': '字幕ファイルを読み込めませんでした。',
+  'Start from an empty track': '空のトラックから開始',
+  Cues: 'キュー',
+  'Failed to download subtitles': '字幕のダウンロードに失敗しました',
+  'No cues': 'キューがありません',
+  'No cues match your search': '検索に一致するキューはありません',
+  'Search cues...': 'キューを検索...',
+  'Only cues with issues': '問題のあるキューのみ',
+  'No cues yet. Play the video and press N to add a cue at the playhead, or import a WebVTT or SRT file.':
+    'キューはまだありません。動画を再生して N キーで再生位置にキューを追加するか、WebVTT または SRT ファイルをインポートしてください。',
+  'Select a cue in the list or on the timeline to update it.':
+    '一覧またはタイムラインでキューを選択すると更新できます。',
+  '{count} cues selected': '{count} 件のキューを選択中',
+  'Cue {index} of {total}': 'キュー {index} / {total}',
+  'Merge with next cue': '次のキューと結合',
+  'Delete cue': 'キューを削除',
+  'Set start to playhead': '開始を再生位置に設定',
+  'Set end to playhead': '終了を再生位置に設定',
+  'Use playhead': '再生位置を使用',
+  'Cue text': 'キューのテキスト',
+  '{value} chars/sec': '{value} 文字/秒',
+  'Longest line: {value}': '最長行: {value}',
+  'Lines: {value}': '行数: {value}',
+  'Empty cue': '空のキュー',
+  'Has errors': 'エラーあり',
+  'Has warnings': '警告あり',
+  'Showing now': '表示中',
+  'End time must be after the start time.':
+    '終了時刻は開始時刻より後にしてください。',
+  'Cue has no text.': 'キューにテキストがありません。',
+  'Overlaps the previous cue.': '前のキューと重なっています。',
+  'Ends after the video does.': '動画の終了後に終わります。',
+  'Reading speed is above 20 characters per second.':
+    '読み取り速度が 1 秒あたり 20 文字を超えています。',
+  'A line is longer than 42 characters.': '42 文字を超える行があります。',
+  'More than 2 lines.': '3 行以上あります。',
+  'Add cue at playhead': '再生位置にキューを追加',
+  'Split cue at playhead': '再生位置でキューを分割',
+  'Move the playhead inside a cue to split it.':
+    '分割するには、再生ヘッドをキューの範囲内に移動してください。',
+  'Back 1 second': '1 秒戻る',
+  'Forward 1 second': '1 秒進む',
+  'Playback speed': '再生速度',
+  'Drag cues to move them, drag their edges to retime. Hold Alt to turn off snapping.':
+    'キューをドラッグして移動し、端をドラッグしてタイミングを調整します。Alt キーを押している間はスナップが無効になります。',
+  Zoom: 'ズーム',
+  'Shift timings': 'タイミングをずらす',
+  'Move cues earlier or later to fix a track that is out of sync. Cues never move before 0:00.':
+    'キューを前後に移動して、ずれたトラックを修正します。キューが 0:00 より前に移動することはありません。',
+  Offset: 'オフセット',
+  'Seconds or a timestamp. Use a negative value to show cues earlier, e.g. -1.5 or -0:02.000.':
+    '秒数またはタイムスタンプを入力します。キューを早めるには負の値を使用します（例: -1.5、-0:02.000）。',
+  'All cues': 'すべてのキュー',
+  'Selected cues': '選択したキュー',
+  Shift: 'ずらす',
+  'Cue timings shifted': 'キューのタイミングをずらしました',
+  'Fix overlaps': '重なりを修正',
+  'No overlapping cues': '重なっているキューはありません',
+  'Trimmed {count} overlapping cues': '重なっていた {count} 件のキューを短縮しました',
+  'Remove empty cues': '空のキューを削除',
+  'No empty cues': '空のキューはありません',
+  'Removed {count} empty cues': '{count} 件の空のキューを削除しました',
+  'From your computer': 'コンピューターから',
+  'From Storage': 'ストレージから',
+  'Import subtitle file': '字幕ファイルをインポート',
+  'Choose a .vtt or .srt file. Its cues replace the cues in the editor.':
+    '.vtt または .srt ファイルを選択してください。エディター内のキューはファイルのキューに置き換わります。',
+  'No cues found in this file': 'このファイルにキューが見つかりません',
+  'Imported {count} cues. Undo to restore the previous cues.':
+    '{count} 件のキューをインポートしました。元に戻すと以前のキューを復元できます。',
+  'Failed to import subtitles': '字幕のインポートに失敗しました',
+  'Download WebVTT': 'WebVTT をダウンロード',
+  'Download SRT': 'SRT をダウンロード',
+  'Add at least one cue.': 'キューを 1 件以上追加してください。',
+  'Fix {count} cues with errors before saving.':
+    '保存する前に、エラーのある {count} 件のキューを修正してください。',
+  'Choose a language in Settings.': '設定で言語を選択してください。',
+  'Enter a valid name in Settings.': '設定で有効な名前を入力してください。',
+  'Choose a Storage bucket in Settings.':
+    '設定でストレージのバケットを選択してください。',
+  'The selected bucket does not accept .vtt files.':
+    '選択したバケットは .vtt ファイルを受け付けません。',
+  'Storage bucket': 'ストレージのバケット',
+  'This bucket only allows specific file extensions and .vtt is not one of them. Choose another bucket or allow .vtt in the bucket settings.':
+    'このバケットは特定の拡張子のみ許可しており、.vtt は含まれていません。別のバケットを選択するか、バケットの設定で .vtt を許可してください。',
+  'Embedded tracks have no file in Storage. Saving uploads the cues as a new WebVTT file to this bucket and links the track to it.':
+    '埋め込みトラックにはストレージ上のファイルがありません。保存すると、キューが新しい WebVTT ファイルとしてこのバケットにアップロードされ、トラックに関連付けられます。',
+  'Saving uploads a new WebVTT file to this bucket and re-packages the track. The previous file is kept.':
+    '保存すると、新しい WebVTT ファイルがこのバケットにアップロードされ、トラックが再パッケージされます。以前のファイルは保持されます。',
+  'Discard unsaved changes?': '保存されていない変更を破棄しますか？',
+  'Your subtitle changes have not been saved. Leaving this page discards them.':
+    '字幕の変更は保存されていません。このページを離れると変更は破棄されます。',
+  'Play or pause': '再生または一時停止',
+  'Seek 1 second (Shift: 5 seconds)': '1 秒移動（Shift: 5 秒）',
+  'Step one frame': '1 フレーム移動',
+  'Previous or next cue': '前または次のキュー',
+  'Update cue text': 'キューのテキストを更新',
+  'Delete selected cues': '選択したキューを削除',
+  'Read-only': '読み取り専用',
+  'Empty cues are left out of the file.': '空のキューはファイルに含まれません。',
+  'Previous cue': '前のキュー',
+  'Next cue': '次のキュー',
+  'Add cue': 'キューを追加',
+  '+{count} more': 'ほか {count} 件',
+  'Split cue': 'キューを分割',
+  'More actions': 'その他の操作',
+  'Mute or unmute': 'ミュートの切り替え',
+  Milliseconds: 'ミリ秒',
+  'Drag to adjust. Hold Shift for bigger steps or Alt for smaller ones.':
+    'ドラッグして調整します。Shift キーで大きく、Alt キーで細かく調整できます。',
+  'Click a cue to split it at the pointer. Hold Shift to keep splitting, press Esc to stop.':
+    'キューをクリックすると、ポインターの位置で分割します。Shift キーを押したままにすると続けて分割でき、Esc キーで終了します。',
+
+  // Renditions empty state
+  'Encode this video for streaming': 'この動画をストリーミング用にエンコード',
+  'Renditions are the quality levels a player switches between. Encode a few to stream this video smoothly on any device and connection.':
+    'レンディションは、プレーヤーが切り替える画質レベルです。いくつかエンコードしておくと、どのデバイスや回線でもこの動画をスムーズに配信できます。',
+  'Pick encoding profiles': 'エンコードプロファイルを選択',
+  'Each profile you select becomes one rendition at its own resolution and bitrate.':
+    '選択した各プロファイルが、それぞれの解像度とビットレートで 1 つのレンディションになります。',
+  'Choose an output format': '出力形式を選択',
+  'Package the renditions as HLS, DASH, or CMAF. Appwrite encodes them in the background.':
+    'レンディションを HLS、DASH、CMAF のいずれかでパッケージ化します。エンコードは Appwrite がバックグラウンドで行います。',
+  'Stream the manifest': 'マニフェストを配信',
+  'Point any player at the manifest URL. It switches renditions as bandwidth changes.':
+    '任意のプレーヤーにマニフェスト URL を指定します。帯域幅の変化に応じてレンディションが切り替わります。',
+
+  // Subtitles empty state
+  'Add subtitles to this video': 'この動画に字幕を追加',
+  'Make this video accessible in every language your viewers speak. Players show the tracks you add here alongside the stream.':
+    '視聴者が話すすべての言語でこの動画を楽しめるようにしましょう。ここで追加したトラックは、プレーヤーでストリームと一緒に表示されます。',
+  'Write in the editor': 'エディターで作成',
+  'Type captions while the video plays, then drag cues on the timeline to fine-tune their timing.':
+    '動画を再生しながら字幕を入力し、タイムライン上のキューをドラッグしてタイミングを微調整します。',
+  'Or import a file': 'ファイルをインポート',
+  'Bring WebVTT or SRT files from Storage. Tracks embedded in the source are extracted automatically.':
+    'ストレージから WebVTT または SRT ファイルを取り込みます。ソースに埋め込まれたトラックは自動で抽出されます。',
+  'Ship with every stream': 'すべてのストリームで配信',
+  'Subtitles are listed in the manifest, so viewers can pick a language in any player.':
+    '字幕はマニフェストに含まれるため、視聴者はどのプレーヤーでも言語を選択できます。',
 }

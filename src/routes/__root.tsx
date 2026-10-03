@@ -62,6 +62,8 @@ import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
+import { MarketingDisabledRedirect } from '@/components/global/auth/MarketingDisabledRedirect'
+import { MARKETING_DISABLED_BOOT_SCRIPT } from '@/lib/marketing/marketing-route-guard'
 import {
   isPreLaunchAllowedPath,
   isPreLaunchModeEnabled,
@@ -573,6 +575,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{getLocalePrefetchScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{PRE_LAUNCH_BOOT_SCRIPT}</ScriptOnce>
+        <ScriptOnce>{MARKETING_DISABLED_BOOT_SCRIPT}</ScriptOnce>
         {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
             auto-recover before the app module graph (and router listeners) load. */}
         <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
@@ -589,6 +592,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <RootConsoleScopesPrefetch />
           <ClientThemeProvider>
               <PreLaunchRedirect />
+              <MarketingDisabledRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>

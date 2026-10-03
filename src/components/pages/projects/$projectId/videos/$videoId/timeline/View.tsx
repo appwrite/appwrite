@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
+import { previewIdFromCue } from '@/lib/videos/timeline-cues'
 
 function publicUrl(url: string): string {
   try {
@@ -63,16 +64,9 @@ export function View() {
   }
   const { writeDisabledReason } = useVideoDetailActions()
   const { data: video } = useProjectVideo(projectId, videoId)
-  const [requested, setRequested] = useState(false)
-  const timelineQuery = useVideoTimeline(projectId, videoId, {
-    pollWhileMissing: requested,
-  })
+  const timelineQuery = useVideoTimeline(projectId, videoId)
   const createTimeline = useCreateVideoTimeline(projectId, videoId)
   const timeline = timelineQuery.data
-
-  useEffect(() => {
-    if (timeline) setRequested(false)
-  }, [timeline])
 
   const sheets = useMemo(
     () => new Set((timeline?.cues ?? []).map((cue) => cue.imageUrl)).size,
@@ -101,12 +95,11 @@ export function View() {
   const generateDisabledReason =
     writeDisabledReason ??
     (audioOnly ? t('Audio-only videos have no frames for a timeline.') : null)
-  const generating = requested || createTimeline.isPending
+  const generating = timelineQuery.pending || createTimeline.isPending
 
   const generate = () =>
     createTimeline.mutate(undefined, {
       onSuccess: () => {
-        setRequested(true)
         toast.success(t('Timeline generation started'))
       },
       onError: (error) =>
@@ -505,16 +498,6 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
       ) : null}
     </div>
   )
-}
-
-function previewIdFromCue(cue: VideoTimelineCue): string | null {
-  try {
-    const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('previews')
-    return index >= 0 ? (segments[index + 1] ?? null) || null : null
-  } catch {
-    return null
-  }
 }
 
 const PREVIEW_SAVE_UNAVAILABLE =

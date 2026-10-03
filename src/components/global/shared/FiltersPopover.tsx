@@ -17,6 +17,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { FiltersPopoverContent } from './FiltersPopoverContent'
 import { ToolbarCountBadge } from './ToolbarCountBadge'
 import {
@@ -57,6 +62,8 @@ export interface FiltersPopoverProps {
   /** Called when user clicks Reset. Omit to hide the reset control. */
   onReset?: () => void
   triggerClassName?: string
+  /** Compact ghost icon for sidebar search bars; default is toolbar outline button. */
+  triggerVariant?: 'toolbar' | 'icon'
 }
 
 export function FiltersPopover({
@@ -77,32 +84,63 @@ export function FiltersPopover({
   defaultSortParam,
   onReset,
   triggerClassName,
+  triggerVariant = 'toolbar',
 }: FiltersPopoverProps) {
   const t = useT()
+  const filtersLabel = t('Filters')
+  const iconTriggerButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className={cn(
+        'relative h-6 w-6 text-muted-foreground',
+        triggerClassName,
+      )}
+      aria-label={filtersLabel}
+    >
+      <Filter className="h-3 w-3" />
+      {filterMap.size > 0 ? (
+        <ToolbarCountBadge count={filterMap.size} placement="corner" />
+      ) : null}
+    </Button>
+  )
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={cn(
-            'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
-            serviceHeaderFiltersButton,
-            triggerClassName,
-          )}
-        >
-          <Filter className="h-3.5 w-3.5 shrink-0" />
-          <span className={serviceHeaderFiltersLabel}>{t('Filters')}</span>
-          {filterMap.size > 0 ? (
-            <ToolbarCountBadge
-              count={filterMap.size}
-              placement="inline"
-              inlineTone="emphasis"
-            />
-          ) : null}
-        </Button>
-      </PopoverTrigger>
+      {triggerVariant === 'icon' ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>{iconTriggerButton}</PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            {filtersLabel}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+              serviceHeaderFiltersButton,
+              triggerClassName,
+            )}
+          >
+            <Filter className="h-3.5 w-3.5 shrink-0" />
+            <span className={serviceHeaderFiltersLabel}>{filtersLabel}</span>
+            {filterMap.size > 0 ? (
+              <ToolbarCountBadge
+                count={filterMap.size}
+                placement="inline"
+                inlineTone="emphasis"
+              />
+            ) : null}
+          </Button>
+        </PopoverTrigger>
+      )}
       <PopoverContent
         className="max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
         align="start"

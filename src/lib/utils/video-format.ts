@@ -20,6 +20,22 @@ export function formatPlaybackTime(seconds: number | undefined | null): string {
   return `${minutes}:${rest.toFixed(3).padStart(6, '0')}`
 }
 
+/** User-facing player clock without milliseconds (`m:ss` or `h:mm:ss`). */
+export function formatPlayerClock(seconds: number | undefined | null): string {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) {
+    return '0:00'
+  }
+  const total = Math.floor(seconds)
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+  const ss = String(secs).padStart(2, '0')
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${ss}`
+  }
+  return `${minutes}:${ss}`
+}
+
 /** Probe and profile bitrates are in bits per second (probe) or kbps (profiles). */
 export function formatBitrate(
   value: number | undefined | null,
@@ -85,6 +101,26 @@ export function resolveVideoViewportAspect(
     return { width, height }
   }
   return parseAspectRatioLabel(aspectRatio) ?? DEFAULT_VIEWPORT_ASPECT
+}
+
+/** CSS `aspect-ratio` value for a video thumb (timeline frame size, then API metadata). */
+export function videoThumbAspectRatio(
+  video: {
+    width?: number | null
+    height?: number | null
+    aspectRatio?: string | null
+  },
+  cue?: { width: number; height: number } | null,
+): string {
+  if (cue && cue.width > 0 && cue.height > 0) {
+    return `${cue.width} / ${cue.height}`
+  }
+  const { width, height } = resolveVideoViewportAspect(
+    video.width,
+    video.height,
+    video.aspectRatio,
+  )
+  return `${width} / ${height}`
 }
 
 /**

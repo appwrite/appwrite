@@ -6,6 +6,10 @@
  */
 
 import {
+  parseVideoSubtitleSize,
+  type VideoSubtitleSize,
+} from '@/lib/videos/player-subtitle-display'
+import {
   clampRightPaneWidthPx,
   RIGHT_PANE_DEFAULT_WIDTH_PX,
   RIGHT_PANE_MAX_WIDTH_PX,
@@ -1743,6 +1747,8 @@ export type VideoPlayerPrefs = {
   quality: number | null
   /** Subtitle language (or track name when untagged); `'off'` disables; `null` keeps the player default. */
   subtitles: string | null
+  /** Native cue text scale in the stream player. */
+  subtitleSize: VideoSubtitleSize | null
 }
 
 export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
@@ -1751,6 +1757,7 @@ export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
   output: null,
   quality: null,
   subtitles: null,
+  subtitleSize: null,
 }
 
 const VIDEO_PLAYER_OUTPUTS: readonly VideoPlayerOutputPref[] = [
@@ -1791,6 +1798,7 @@ export function parseVideoPlayerPrefs(
       typeof parsed.subtitles === 'string' && parsed.subtitles
         ? parsed.subtitles.slice(0, 64)
         : null,
+    subtitleSize: parseVideoSubtitleSize(parsed.subtitleSize),
   }
 }
 
@@ -1806,6 +1814,7 @@ export function mergeVideoPlayerPrefsIntoPrefs(
       output: value.output,
       quality: value.quality,
       subtitles: value.subtitles,
+      subtitleSize: value.subtitleSize,
     }),
   }
 }

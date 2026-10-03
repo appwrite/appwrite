@@ -14,6 +14,8 @@ export const heVideosDictionary: Record<string, string> = {
   Rendition: 'גרסת קידוד',
   Subtitles: 'כתוביות',
   'Back to videos': 'חזרה לסרטונים',
+  'Switch video': 'החלפת סרטון',
+  'No videos found': 'לא נמצאו סרטונים',
   'Untitled video': 'סרטון ללא שם',
   'Video not found': 'הסרטון לא נמצא',
   "The video you're looking for doesn't exist or you don't have access to it.":
@@ -101,6 +103,15 @@ export const heVideosDictionary: Record<string, string> = {
     'אין לכם הרשאה לנהל פרופילי וידאו.',
   'Renditions already encoded with this profile stay playable. This action cannot be undone.':
     'גרסאות קידוד שכבר קודדו עם הפרופיל הזה ימשיכו להתנגן. לא ניתן לבטל פעולה זו.',
+  'Renditions already encoded with these profiles stay playable. This action cannot be undone.':
+    'גרסאות קידוד שכבר קודדו עם הפרופילים האלה ימשיכו להתנגן. לא ניתן לבטל פעולה זו.',
+  'Delete profiles': 'מחיקת פרופילים',
+  'Failed to delete profiles': 'מחיקת הפרופילים נכשלה',
+  'Select all profiles': 'בחירת כל הפרופילים',
+  'Select profile': 'בחירת פרופיל',
+  '1 profile selected': 'פרופיל אחד נבחר',
+  'profiles selected': 'פרופילים נבחרו',
+  profile: 'פרופיל',
   Width: 'רוחב',
   Height: 'גובה',
   Resolution: 'רזולוציה',
@@ -132,6 +143,11 @@ export const heVideosDictionary: Record<string, string> = {
   'No profiles. Create a profile first.': 'אין פרופילים. צרו פרופיל קודם.',
   Exists: 'קיים',
   Upscale: 'הגדלה',
+  '1 selected profile is larger than the source':
+    'פרופיל נבחר אחד גדול מהמקור',
+  'selected profiles are larger than the source': 'פרופילים נבחרים גדולים מהמקור',
+  'Upscaling adds size without adding detail.':
+    'הגדלה מוסיפה נפח בלי להוסיף פרטים.',
   'MPEG-TS segments. Plays natively on Safari and iOS.':
     'סגמנטים של MPEG-TS. מתנגן באופן מובנה ב-Safari וב-iOS.',
   'MPEG-DASH with fragmented MP4 segments.':
@@ -148,6 +164,17 @@ export const heVideosDictionary: Record<string, string> = {
   'Failed to retry rendition': 'ניסיון חוזר לגרסת הקידוד נכשל',
   'Its segments are removed and players stop receiving this quality. This action cannot be undone.':
     'הסגמנטים שלה יימחקו והנגנים יפסיקו לקבל את האיכות הזו. לא ניתן לבטל פעולה זו.',
+  'Their segments are removed and players stop receiving these qualities. This action cannot be undone.':
+    'הסגמנטים שלהן יימחקו והנגנים יפסיקו לקבל את האיכויות האלה. לא ניתן לבטל פעולה זו.',
+  'Delete renditions': 'מחיקת גרסאות קידוד',
+  'Failed to delete renditions': 'מחיקת גרסאות הקידוד נכשלה',
+  'Failed to retry renditions': 'ניסיון חוזר לגרסאות הקידוד נכשל',
+  'Select all renditions': 'בחירת כל גרסאות הקידוד',
+  'Select rendition': 'בחירת גרסת קידוד',
+  '1 rendition selected': 'גרסת קידוד אחת נבחרה',
+  'renditions selected': 'גרסאות קידוד נבחרו',
+  rendition: 'גרסת קידוד',
+  'Successfully deleted': 'נמחקו בהצלחה',
 
   // Subtitles
   'Create subtitle': 'יצירת כתובית',
@@ -423,9 +450,9 @@ export const heVideosDictionary: Record<string, string> = {
   'Pick profiles and an output format such as HLS.':
     'בחרו פרופילים ופורמט פלט כמו HLS.',
   'Add subtitles': 'הוספת כתוביות',
-  'Upload WebVTT or SRT files per language.':
-    'העלו קובצי WebVTT או SRT לכל שפה.',
-  'Add subtitle': 'הוספת כתובית',
+  'Upload WebVTT or SRT files per language, or write them in the editor.':
+    'העלו קובצי WebVTT או SRT לכל שפה, או כתבו אותם בעורך.',
+  'Upload subtitle': 'העלאת כתובית',
   'Generate a timeline': 'יצירת ציר זמן',
   'Thumbnails for scrubbing and poster images.':
     'תמונות ממוזערות לגלילה בציר הזמן ולתמונות פוסטר.',
@@ -608,8 +635,8 @@ export const heVideosDictionary: Record<string, string> = {
     'נקרא מהקובץ במהלך משימת הקידוד הראשונה.',
   'Metadata appears once the first rendition or timeline job reads the file.':
     'המטא-דאטה תופיע אחרי שמשימת ה-rendition או ציר הזמן הראשונה תקרא את הקובץ.',
-  'Add WebVTT or SRT files from Storage. Tracks embedded in the source file are extracted automatically by the first rendition or timeline job.':
-    'הוסיפו קובצי WebVTT או SRT מהאחסון. רצועות שמוטמעות בקובץ המקור מחולצות אוטומטית במשימת ה-rendition או ציר הזמן הראשונה.',
+  'Write captions in the editor, or import WebVTT or SRT files from Storage. Tracks embedded in the source file are extracted automatically by the first rendition or timeline job.':
+    'כתבו כתוביות בעורך, או ייבאו קובצי WebVTT או SRT מהאחסון. רצועות שמוטמעות בקובץ המקור מחולצות אוטומטית במשימת ה-rendition או ציר הזמן הראשונה.',
   'Audio-only videos have no frames for a timeline.':
     'בווידאו של אודיו בלבד אין פריימים לציר זמן.',
   'Choose encoding profiles and an output format. Each profile becomes one quality level, and Appwrite reads the file metadata on the first job.':
@@ -799,4 +826,291 @@ export const heVideosDictionary: Record<string, string> = {
   'Define your quality ladder': 'הגדרת סולם האיכויות',
   'Encoding profiles set the resolution and bitrate of every rendition, so each viewer gets the best quality their connection can handle.':
     'פרופילי קידוד קובעים את הרזולוציה וה-Bitrate של כל גרסת קידוד, כך שכל צופה מקבל את האיכות הטובה ביותר שהחיבור שלו מאפשר.',
+  'Video player': 'נגן וידאו',
+  'Loading video': 'טוען סרטון',
+  'This video does not exist or was removed. Check the link and try again.':
+    'הסרטון הזה לא קיים או שהוסר. בדקו את הקישור ונסו שוב.',
+  'Sign in required': 'נדרשת התחברות',
+  'You need permission to watch this video. Sign in with an account that can access it, or ask the owner to make the stream public.':
+    'נדרשת הרשאה לצפייה בסרטון. התחברו עם חשבון שיש לו גישה, או בקשו מהבעלים להפוך את הסטרים לציבורי.',
+  'Access denied': 'הגישה נדחתה',
+  'Your account cannot play this video. The owner may need to update bucket or video permissions.':
+    'החשבון שלכם לא יכול לנגן את הסרטון. ייתכן שהבעלים צריך לעדכן הרשאות באקט או בסרטון.',
+  'Unable to play': 'לא ניתן לנגן',
+  'Something went wrong while loading this video. Try again later.':
+    'משהו השתבש בטעינת הסרטון. נסו שוב מאוחר יותר.',
+  'Missing project': 'חסר פרויקט',
+  'Add a project query parameter to this URL, for example ?project=yourProjectId.':
+    'הוסיפו פרמטר project לכתובת, למשל ?project=yourProjectId.',
+  'Not ready to play': 'עדיין לא מוכן לניגון',
+  'This video is still being prepared. Try again in a few minutes.':
+    'הסרטון עדיין בהכנה. נסו שוב בעוד כמה דקות.',
+  Player: 'נגן',
+  Embed: 'הטמעה',
+  'Embed code': 'קוד הטמעה',
+  'Embed code copied': 'קוד ההטמעה הועתק',
+  'Embed video': 'הטמעת סרטון',
+  'Copy the iframe snippet below. Optionally set a start time for playback.':
+    'העתיקו את קוד ה-iframe למטה. אפשר להגדיר זמן התחלה לניגון.',
+  'Start time': 'זמן התחלה',
+  'Custom start time': 'זמן התחלה מותאם',
+  'Embed plays from the beginning.': 'ההטמעה מתחילה מההתחלה.',
+  'Playback begins at this time when the embed loads.':
+    'הניגון מתחיל בזמן זה כשההטמעה נטענת.',
+  'Copy embed code': 'העתקת קוד הטמעה',
+  'Subtitle size': 'גודל כתוביות',
+  'Compact subtitles': 'כתוביות קומפקטיות',
+  'Standard subtitles': 'כתוביות רגילות',
+  'Large subtitles': 'כתוביות גדולות',
+  'The source file is still being probed. Try again when encoding starts or finishes.':
+    'קובץ המקור עדיין נבדק. נסו שוב כשהקידוד מתחיל או מסתיים.',
+
+  // Create video wizard
+  'Encoding settings': 'הגדרות קידוד',
+  'Review': 'סקירה',
+  'Uploaded from your computer': 'הועלה מהמחשב שלכם',
+  'File in Storage': 'קובץ באחסון',
+  'Demo video by Blender Studio': 'סרטון הדגמה של Blender Studio',
+  'Timeline previews': 'תצוגות מקדימות בציר הזמן',
+  'Bucket created': 'הבאקט נוצר',
+  'Video created with issues': 'הסרטון נוצר עם בעיות',
+  'Open the video to retry the steps that failed.':
+    'פתחו את הסרטון כדי לנסות שוב את השלבים שנכשלו.',
+  'Video creation continues in the background.': 'יצירת הסרטון ממשיכה ברקע.',
+  'Open video': 'פתיחת הסרטון',
+  'Choose a source': 'בחירת מקור',
+  'Every video starts from a file in Storage. Upload one, pick a file you already have, or start with a demo.':
+    'כל סרטון מתחיל מקובץ באחסון. העלו קובץ, בחרו קובץ קיים או התחילו עם סרטון הדגמה.',
+  'Configure encoding': 'הגדרת קידוד',
+  'Choose how the video is packaged for adaptive streaming. Encoding starts as soon as the source is ready.':
+    'בחרו איך הסרטון ייארז לסטרימינג אדפטיבי. הקידוד מתחיל ברגע שהמקור מוכן.',
+  'Audio-only sources have no frames to preview.':
+    'למקורות שמע בלבד אין פריימים לתצוגה מקדימה.',
+  'Sprite sheet thumbnails and a WebVTT track for previews while scrubbing. Also sets the video poster.':
+    'תמונות ממוזערות בגיליון ספרייט ורצועת WebVTT לתצוגה מקדימה בזמן גלילה בסרטון. משמש גם כתמונת השער של הסרטון.',
+  'Clear every profile to skip encoding. You can create renditions later from the video page.':
+    'בטלו את הבחירה בכל הפרופילים כדי לדלג על הקידוד. אפשר ליצור גרסאות קידוד מאוחר יותר מדף הסרטון.',
+  'Review and create': 'סקירה ויצירה',
+  'Name your video and confirm the details. You can rename it later.':
+    'תנו שם לסרטון ואשרו את הפרטים. אפשר לשנות את השם מאוחר יותר.',
+  'Destination bucket': 'באקט יעד',
+  'No renditions. You can encode later.':
+    'ללא גרסאות קידוד. אפשר לקודד מאוחר יותר.',
+  'Too large for this bucket.': 'הקובץ גדול מדי עבור הבאקט הזה.',
+  'Maximum file size:': 'גודל קובץ מרבי:',
+  'This bucket does not accept this file type.':
+    'הבאקט הזה לא מקבל את סוג הקובץ הזה.',
+  'Drop a file here or click to browse': 'גררו קובץ לכאן או לחצו כדי לבחור',
+  'MP4, MOV, WebM, MKV, and audio files': 'קובצי MP4, MOV, WebM, MKV ושמע',
+  'Up to': 'עד',
+  'Choose a video or audio file.': 'בחרו קובץ וידאו או שמע.',
+  'The file stays in its bucket. Nothing is copied.':
+    'הקובץ נשאר בבאקט שלו ולא מועתק.',
+  'Loading file...': 'טוען קובץ...',
+  'Too large for the selected bucket.': 'גדול מדי עבור הבאקט שנבחר.',
+  'Open movies by Blender Studio, served from Wikimedia Commons. The file is downloaded in your browser and uploaded to the selected bucket.':
+    'סרטים פתוחים של Blender Studio שמוגשים מ-Wikimedia Commons. הקובץ יורד בדפדפן שלכם ומועלה לבאקט שנבחר.',
+  'Create Videos bucket': 'יצירת באקט Videos',
+  'The source file is stored in a Storage bucket. Create one to continue.':
+    'קובץ המקור נשמר בבאקט באחסון. צרו באקט כדי להמשיך.',
+  'The uploaded file is stored here and stays in Storage.':
+    'הקובץ שמועלה נשמר כאן ונשאר באחסון.',
+  'Drop a video or audio file from your computer.':
+    'גררו קובץ וידאו או שמע מהמחשב שלכם.',
+  'Choose from Storage': 'בחירה מהאחסון',
+  'Use a file that is already in a bucket.': 'שימוש בקובץ שכבר נמצא בבאקט.',
+  'Try a demo video': 'ניסיון עם סרטון הדגמה',
+  'Import an open movie to explore Videos.':
+    'ייבאו סרט פתוח כדי להכיר את שירות הסרטונים.',
+  'No source selected': 'לא נבחר מקור',
+  'Preview unavailable': 'תצוגה מקדימה לא זמינה',
+  'Audio only': 'שמע בלבד',
+  'New video': 'סרטון חדש',
+  'Choose a source to see a preview.': 'בחרו מקור כדי לראות תצוגה מקדימה.',
+  'Creating your video': 'יוצרים את הסרטון שלכם',
+  'Video could not be created': 'לא ניתן ליצור את הסרטון',
+  'Keep this window open while the file uploads. Once the video exists, you can open it and the remaining steps continue in the background.':
+    'השאירו את החלון פתוח בזמן שהקובץ עולה. אחרי שהסרטון נוצר אפשר לפתוח אותו, והשלבים הנותרים ימשיכו ברקע.',
+  'The video was not created. Go back to adjust the source or try again.':
+    'הסרטון לא נוצר. חזרו כדי לשנות את המקור או נסו שוב.',
+  'Download demo video': 'הורדת סרטון ההדגמה',
+  'Fetch the open movie in your browser.': 'הסרט הפתוח יורד בדפדפן שלכם.',
+  'Upload to Storage': 'העלאה לאחסון',
+  'Store the source file in your bucket.': 'קובץ המקור נשמר בבאקט שלכם.',
+  'Register video': 'רישום הסרטון',
+  'Create the video from the source file.': 'הסרטון נוצר מקובץ המקור.',
+  'Prepare source': 'הכנת המקור',
+  'Download, probe, and extract embedded subtitles.':
+    'הורדה, ניתוח וחילוץ של כתוביות מוטמעות.',
+  'Queue sprite sheet thumbnails for scrubbing previews.':
+    'הוספת תמונות ממוזערות לתור לטובת תצוגה מקדימה בגלילה.',
+  'Queue renditions': 'הוספת גרסאות קידוד לתור',
+  'Start encoding one rendition per selected profile.':
+    'התחלת קידוד של גרסה אחת לכל פרופיל שנבחר.',
+  'Short and light. The fastest way to try encoding.':
+    'קצר וקל. הדרך המהירה ביותר לנסות קידוד.',
+  'Bright 16:9 cartoon with fast camera moves.':
+    'סרט מצויר צבעוני ביחס 16:9 עם תנועות מצלמה מהירות.',
+  'Longer 16:9 short with detailed outdoor scenes.':
+    'סרט קצר וארוך יותר ביחס 16:9 עם סצנות חוץ מפורטות.',
+  'Ultrawide frame. Shows letterboxed renditions.':
+    'פריים רחב במיוחד. מדגים גרסאות קידוד עם פסים שחורים.',
+  'Fast action and rich color for bitrate tests.':
+    'אקשן מהיר וצבעים עשירים לבדיקות Bitrate.',
+  'Ultrawide hybrid of 2D and 3D animation.':
+    'שילוב רחב מסך של אנימציית 2D ו-3D.',
+
+  // Subtitle editor
+  'Subtitle editor': 'עורך כתוביות',
+  'New subtitle': 'כתובית חדשה',
+  'Open in editor': 'פתיחה בעורך',
+  'Back to subtitles': 'חזרה לכתוביות',
+  'Subtitle created': 'הכתובית נוצרה',
+  'Subtitle saved. The track is re-packaged in the background.':
+    'הכתובית נשמרה. הרצועה נארזת מחדש ברקע.',
+  'Subtitle not found': 'הכתובית לא נמצאה',
+  'This subtitle may have been deleted. Go back to the list to pick another track.':
+    'ייתכן שהכתובית נמחקה. חזרו לרשימה כדי לבחור רצועה אחרת.',
+  'Loading cues...': 'טוען קטעים...',
+  "Couldn't load this track": 'לא ניתן לטעון את הרצועה',
+  'Embedded tracks can be read once they are packaged.':
+    'אפשר לקרוא רצועות מוטמעות רק אחרי שהן נארזות.',
+  'The subtitle file could not be read.': 'לא ניתן לקרוא את קובץ הכתוביות.',
+  'Start from an empty track': 'התחלה מרצועה ריקה',
+  Cues: 'קטעים',
+  'Failed to download subtitles': 'הורדת הכתוביות נכשלה',
+  'No cues': 'אין קטעים',
+  'No cues match your search': 'אין קטעים התואמים לחיפוש',
+  'Search cues...': 'חיפוש קטעים...',
+  'Only cues with issues': 'רק קטעים עם בעיות',
+  'No cues yet. Play the video and press N to add a cue at the playhead, or import a WebVTT or SRT file.':
+    'עדיין אין קטעים. הפעילו את הסרטון והקישו N כדי להוסיף קטע במיקום הנוכחי, או ייבאו קובץ WebVTT או SRT.',
+  'Select a cue in the list or on the timeline to update it.':
+    'בחרו קטע ברשימה או בציר הזמן כדי לעדכן אותו.',
+  '{count} cues selected': '{count} קטעים נבחרו',
+  'Cue {index} of {total}': 'קטע {index} מתוך {total}',
+  'Merge with next cue': 'מיזוג עם הקטע הבא',
+  'Delete cue': 'מחיקת קטע',
+  'Set start to playhead': 'הגדרת ההתחלה למיקום הנוכחי',
+  'Set end to playhead': 'הגדרת הסיום למיקום הנוכחי',
+  'Use playhead': 'שימוש במיקום הנוכחי',
+  'Cue text': 'טקסט הקטע',
+  '{value} chars/sec': '{value} תווים לשנייה',
+  'Longest line: {value}': 'השורה הארוכה ביותר: {value}',
+  'Lines: {value}': 'שורות: {value}',
+  'Empty cue': 'קטע ריק',
+  'Has errors': 'יש שגיאות',
+  'Has warnings': 'יש אזהרות',
+  'Showing now': 'מוצג כעת',
+  'End time must be after the start time.': 'זמן הסיום חייב להיות אחרי זמן ההתחלה.',
+  'Cue has no text.': 'אין טקסט בקטע.',
+  'Overlaps the previous cue.': 'חופף לקטע הקודם.',
+  'Ends after the video does.': 'מסתיים אחרי סוף הסרטון.',
+  'Reading speed is above 20 characters per second.':
+    'מהירות הקריאה גבוהה מ-20 תווים לשנייה.',
+  'A line is longer than 42 characters.': 'יש שורה ארוכה מ-42 תווים.',
+  'More than 2 lines.': 'יותר משתי שורות.',
+  'Add cue at playhead': 'הוספת קטע במיקום הנוכחי',
+  'Split cue at playhead': 'פיצול הקטע במיקום הנוכחי',
+  'Move the playhead inside a cue to split it.':
+    'העבירו את סמן הניגון לתוך קטע כדי לפצל אותו.',
+  'Back 1 second': 'שנייה אחורה',
+  'Forward 1 second': 'שנייה קדימה',
+  'Playback speed': 'מהירות ניגון',
+  'Drag cues to move them, drag their edges to retime. Hold Alt to turn off snapping.':
+    'גררו קטעים כדי להזיז אותם, וגררו את הקצוות כדי לשנות את התזמון. החזיקו Alt כדי לבטל הצמדה.',
+  Zoom: 'זום',
+  'Shift timings': 'הזזת תזמונים',
+  'Move cues earlier or later to fix a track that is out of sync. Cues never move before 0:00.':
+    'הקדימו או אחרו קטעים כדי לתקן רצועה שאינה מסונכרנת. קטעים לא יוזזו לפני 0:00.',
+  Offset: 'היסט',
+  'Seconds or a timestamp. Use a negative value to show cues earlier, e.g. -1.5 or -0:02.000.':
+    'שניות או חותמת זמן. השתמשו בערך שלילי כדי להקדים קטעים, למשל -1.5 או -0:02.000.',
+  'All cues': 'כל הקטעים',
+  'Selected cues': 'הקטעים שנבחרו',
+  Shift: 'הזזה',
+  'Cue timings shifted': 'התזמונים הוזזו',
+  'Fix overlaps': 'תיקון חפיפות',
+  'No overlapping cues': 'אין קטעים חופפים',
+  'Trimmed {count} overlapping cues': '{count} קטעים חופפים קוצרו',
+  'Remove empty cues': 'הסרת קטעים ריקים',
+  'No empty cues': 'אין קטעים ריקים',
+  'Removed {count} empty cues': '{count} קטעים ריקים הוסרו',
+  'From your computer': 'מהמחשב',
+  'From Storage': 'מהאחסון',
+  'Import subtitle file': 'ייבוא קובץ כתוביות',
+  'Choose a .vtt or .srt file. Its cues replace the cues in the editor.':
+    'בחרו קובץ .vtt או .srt. הקטעים שבו יחליפו את הקטעים בעורך.',
+  'No cues found in this file': 'לא נמצאו קטעים בקובץ',
+  'Imported {count} cues. Undo to restore the previous cues.':
+    '{count} קטעים יובאו. בטלו את הפעולה כדי לשחזר את הקטעים הקודמים.',
+  'Failed to import subtitles': 'ייבוא הכתוביות נכשל',
+  'Download WebVTT': 'הורדת WebVTT',
+  'Download SRT': 'הורדת SRT',
+  'Add at least one cue.': 'הוסיפו לפחות קטע אחד.',
+  'Fix {count} cues with errors before saving.':
+    'תקנו {count} קטעים עם שגיאות לפני השמירה.',
+  'Choose a language in Settings.': 'בחרו שפה בהגדרות.',
+  'Enter a valid name in Settings.': 'הזינו שם תקין בהגדרות.',
+  'Choose a Storage bucket in Settings.': 'בחרו באקט אחסון בהגדרות.',
+  'The selected bucket does not accept .vtt files.':
+    'הבאקט שנבחר לא מקבל קובצי .vtt.',
+  'Storage bucket': 'באקט אחסון',
+  'This bucket only allows specific file extensions and .vtt is not one of them. Choose another bucket or allow .vtt in the bucket settings.':
+    'הבאקט הזה מתיר רק סיומות קבצים מסוימות, ו-.vtt אינה ביניהן. בחרו באקט אחר או התירו .vtt בהגדרות הבאקט.',
+  'Embedded tracks have no file in Storage. Saving uploads the cues as a new WebVTT file to this bucket and links the track to it.':
+    'לרצועות מוטמעות אין קובץ באחסון. השמירה מעלה את הקטעים כקובץ WebVTT חדש לבאקט הזה ומקשרת אליו את הרצועה.',
+  'Saving uploads a new WebVTT file to this bucket and re-packages the track. The previous file is kept.':
+    'השמירה מעלה קובץ WebVTT חדש לבאקט הזה ואורזת מחדש את הרצועה. הקובץ הקודם נשמר.',
+  'Discard unsaved changes?': 'לבטל את השינויים שלא נשמרו?',
+  'Your subtitle changes have not been saved. Leaving this page discards them.':
+    'השינויים בכתוביות לא נשמרו. יציאה מהדף תבטל אותם.',
+  'Play or pause': 'ניגון או השהיה',
+  'Seek 1 second (Shift: 5 seconds)': 'דילוג של שנייה (Shift: חמש שניות)',
+  'Step one frame': 'מעבר פריים אחד',
+  'Previous or next cue': 'הקטע הקודם או הבא',
+  'Update cue text': 'עדכון טקסט הקטע',
+  'Delete selected cues': 'מחיקת הקטעים שנבחרו',
+  'Read-only': 'לקריאה בלבד',
+  'Empty cues are left out of the file.': 'קטעים ריקים לא נכללים בקובץ.',
+  'Previous cue': 'הקטע הקודם',
+  'Next cue': 'הקטע הבא',
+  'Add cue': 'הוספת קטע',
+  '+{count} more': 'ועוד {count}',
+  'Split cue': 'פיצול קטע',
+  'More actions': 'פעולות נוספות',
+  'Mute or unmute': 'השתקה או ביטול השתקה',
+  Milliseconds: 'אלפיות שנייה',
+  'Drag to adjust. Hold Shift for bigger steps or Alt for smaller ones.':
+    'גררו כדי לכוונן. החזיקו Shift לצעדים גדולים יותר או Alt לצעדים קטנים יותר.',
+  'Click a cue to split it at the pointer. Hold Shift to keep splitting, press Esc to stop.':
+    'לחצו על קטע כדי לפצל אותו במיקום הסמן. החזיקו Shift כדי להמשיך לפצל, הקישו Esc לסיום.',
+
+  // Renditions empty state
+  'Encode this video for streaming': 'קידוד הסרטון להזרמה',
+  'Renditions are the quality levels a player switches between. Encode a few to stream this video smoothly on any device and connection.':
+    'גרסאות קידוד הן רמות האיכות שהנגן עובר ביניהן. קודדו כמה גרסאות כדי להזרים את הסרטון בצורה חלקה בכל מכשיר ובכל חיבור.',
+  'Pick encoding profiles': 'בחירת פרופילי קידוד',
+  'Each profile you select becomes one rendition at its own resolution and bitrate.':
+    'כל פרופיל שתבחרו הופך לגרסת קידוד אחת ברזולוציה ובקצב סיביות משלה.',
+  'Choose an output format': 'בחירת פורמט פלט',
+  'Package the renditions as HLS, DASH, or CMAF. Appwrite encodes them in the background.':
+    'ארזו את גרסאות הקידוד כ-HLS, DASH או CMAF. Appwrite מקודד אותן ברקע.',
+  'Stream the manifest': 'הזרמת המניפסט',
+  'Point any player at the manifest URL. It switches renditions as bandwidth changes.':
+    'הפנו כל נגן לכתובת המניפסט. הנגן עובר בין גרסאות הקידוד לפי רוחב הפס.',
+
+  // Subtitles empty state
+  'Add subtitles to this video': 'הוספת כתוביות לסרטון',
+  'Make this video accessible in every language your viewers speak. Players show the tracks you add here alongside the stream.':
+    'הנגישו את הסרטון בכל שפה שהצופים שלכם מדברים. הנגנים מציגים את הרצועות שתוסיפו כאן לצד ההזרמה.',
+  'Write in the editor': 'כתיבה בעורך',
+  'Type captions while the video plays, then drag cues on the timeline to fine-tune their timing.':
+    'הקלידו כתוביות בזמן שהסרטון מתנגן, ואז גררו קטעים על ציר הזמן כדי לכוונן את התזמון שלהם.',
+  'Or import a file': 'או ייבוא קובץ',
+  'Bring WebVTT or SRT files from Storage. Tracks embedded in the source are extracted automatically.':
+    'ייבאו קובצי WebVTT או SRT מהאחסון. רצועות שמוטמעות בקובץ המקור מחולצות אוטומטית.',
+  'Ship with every stream': 'זמינות בכל הזרמה',
+  'Subtitles are listed in the manifest, so viewers can pick a language in any player.':
+    'הכתוביות מופיעות במניפסט, כך שהצופים יכולים לבחור שפה בכל נגן.',
 }

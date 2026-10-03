@@ -1094,6 +1094,32 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
+/* Native WebVTT cues on the stream / embed player */
+.video-stream-player {
+  --video-subtitle-bottom-offset: 0.75rem;
+  --video-subtitle-font-size: 1em;
+}
+
+.video-stream-player::cue {
+  font-size: var(--video-subtitle-font-size);
+  line-height: 1.35;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  background-color: rgb(0 0 0 / 0.72);
+  color: #fff;
+}
+
+.video-stream-player::-webkit-media-text-track-container {
+  transform: translateY(calc(-1 * var(--video-subtitle-bottom-offset)));
+}
+
+.video-stream-player::-webkit-media-text-track-display {
+  overflow: visible !important;
+}
+
 .upgrade-button-wrapper {
   position: relative;
   padding: 1px;
