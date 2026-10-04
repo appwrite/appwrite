@@ -238,6 +238,75 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testProviderRootDirectoryNormalization(): void
+    {
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
+
+        /**
+         * Test for SUCCESS
+         * Console Select stores a leading "./"; create must persist the plain path.
+         */
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'buildSpecification' => $buildSpecification,
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Root Dir Normalize',
+            'outputDirectory' => './',
+            'providerRootDirectory' => './apps/web',
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertSame('apps/web', $site['body']['providerRootDirectory']);
+        $siteId = $site['body']['$id'];
+
+        $updated = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Root Dir Normalize',
+            'outputDirectory' => './',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['providerRootDirectory']);
+
+        /**
+         * Test for FAILURE
+         * Traversal segments are rejected without requiring a VCS connection.
+         */
+        $rejected = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Root Dir Traversal',
+            'providerRootDirectory' => 'foo/../bar',
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $rejected['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $rejected['body']['type']);
+        $this->assertStringContainsString('..', (string) $rejected['body']['message']);
+
+        $rejectedUpdate = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Root Dir Normalize',
+            'outputDirectory' => './',
+            'providerRootDirectory' => '../etc',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(400, $rejectedUpdate['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $rejectedUpdate['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testConsoleAvailabilityEndpoint(): void
     {
         $siteId = $this->setupSite([

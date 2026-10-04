@@ -281,7 +281,7 @@ class Create extends Base
                 'repositoryId' => '',
                 'repositoryInternalId' => '',
                 'providerBranch' => $providerBranch,
-                'providerRootDirectory' => $providerRootDirectory,
+                'providerRootDirectory' => Deployments::normalizeRootDirectory($providerRootDirectory),
                 'providerSilentMode' => $providerSilentMode,
                 'providerBranches' => $providerBranches,
                 'providerPaths' => $providerPaths,
@@ -407,7 +407,7 @@ class Create extends Base
                         // The coordinates a redeploy needs: remote-source builds
                         // never store a tarball.
                         'providerBranch' => $templateVersion,
-                        'providerRootDirectory' => $templateRootDirectory,
+                        'providerRootDirectory' => Deployments::normalizeRootDirectory($templateRootDirectory),
                         'type' => 'vcs',
                         'activate' => true,
                     ]),
