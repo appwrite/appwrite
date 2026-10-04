@@ -756,6 +756,13 @@ class Http
 
                 if ($paramExists) {
                     $this->validate($key, $param, $value);
+                    $validator = $this->resolveValidator($param);
+                    if ($validator instanceof Validator) {
+                        // Loose validators accept query-string forms; parse them
+                        // into the canonical PHP type before the action runs
+                        // (e.g. Boolean `"false"` must become bool false).
+                        $value = $validator->parse($value);
+                    }
                 }
             }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
@@ -22,5 +23,14 @@ final class NullableTest extends TestCase
     {
         $validator = new Nullable(new Text(0));
         $this->assertInstanceOf(\Utopia\Validator\Text::class, $validator->getValidator());
+    }
+
+    public function testCanParseWrappedBoolean(): void
+    {
+        $validator = new Nullable(new Boolean(true));
+
+        $this->assertNull($validator->parse(null));
+        $this->assertFalse($validator->parse('false'));
+        $this->assertTrue($validator->parse('true'));
     }
 }

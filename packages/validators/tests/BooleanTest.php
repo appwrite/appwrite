@@ -46,4 +46,18 @@ final class BooleanTest extends TestCase
         $this->assertFalse($boolean->isArray());
         $this->assertSame(\Utopia\Validator::TYPE_BOOLEAN, $boolean->getType());
     }
+
+    public function testCanParseLooseValues(): void
+    {
+        $boolean = new Boolean(true);
+
+        $this->assertTrue($boolean->parse(true));
+        $this->assertFalse($boolean->parse(false));
+        $this->assertTrue($boolean->parse('true'));
+        $this->assertFalse($boolean->parse('false'));
+        $this->assertTrue($boolean->parse('1'));
+        $this->assertFalse($boolean->parse('0'));
+        $this->assertTrue($boolean->parse(1));
+        $this->assertFalse($boolean->parse(0));
+    }
 }
