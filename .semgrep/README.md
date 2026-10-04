@@ -113,7 +113,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 | `var_dump`, `print_r` / `var_export` without return, `phpinfo`, native `header()` in modules, controllers, init | **ERROR** `debug-output-in-handler` |
 | SQL keyword string with concatenation / interpolation / `sprintf` passed to `query` / `exec` / `prepare` | **ERROR** `raw-sql-interpolation` |
 | `LIBXML_NOENT` / `LIBXML_DTDLOAD` / `LIBXML_DTDATTR`, `libxml_disable_entity_loader(false)` | **ERROR** `xml-external-entities` |
-| Taint: `$request->getParam/getQuery/getHeader/getCookie/getPayload/getURI` or a `string` action / route-closure param reaching `include` / `require` / `file_get_contents` / `fopen` / `unlink` / `readfile` / `rename` / `copy` / … without `basename` / `realpath` | **ERROR** `request-path-to-filesystem` |
+| Taint: `$request->getParam/getQuery/getHeader/getCookie/getPayload/getURI` or a `string` action / route-closure param reaching `include` / `require` / `file_get_contents` / `fopen` / `unlink` / `readfile` / `rename` / `copy` / … without `basename` / `ID::custom`. `realpath()` alone stays tainted; the result is clean only after `if (!str_starts_with($real, $base)) { throw / return }` (or the `substr` + `strlen` form), or inside `if (str_starts_with($real, $base)) { … }` | **ERROR** `request-path-to-filesystem` |
 | `Permission::write/update/delete/create(Role::any() / Role::guests())` (migration history and mock excluded) | **WARNING** `permissive-write-permission` |
 
 ## Rules

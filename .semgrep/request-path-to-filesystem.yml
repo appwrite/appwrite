@@ -38,12 +38,49 @@ rules:
           - pattern-inside: |
               $ROUTE->action(function (..., string $P, ...) { ... })
           - pattern: $P
+    # realpath() alone is not a sanitizer: it resolves `..` and symlinks but
+    # does not keep the result under the base directory. A path counts as
+    # clean only after a containment guard that exits, or inside a branch
+    # that requires containment.
     pattern-sanitizers:
       - pattern: basename(...)
       - pattern: \basename(...)
-      - pattern: realpath(...)
-      - pattern: \realpath(...)
       - pattern: ID::custom(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  if (!str_starts_with($REAL, $BASE)) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (!\str_starts_with($REAL, $BASE)) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (!str_starts_with($REAL, $BASE)) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (!\str_starts_with($REAL, $BASE)) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) !== $BASE) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) !== $BASE) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) !== $BASE) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) !== $BASE) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (str_starts_with($REAL, $BASE)) { ... }
+              - pattern-inside: |
+                  if (\str_starts_with($REAL, $BASE)) { ... }
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) === $BASE) { ... }
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) === $BASE) { ... }
+          - pattern: $REAL
     pattern-sinks:
       - patterns:
           - pattern-either:
