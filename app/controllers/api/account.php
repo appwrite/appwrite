@@ -1727,12 +1727,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
+        $oauth2ID = '';
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
-
+            $oauth2ID = $oauth2->getUserID($accessToken);
         } catch (OAuth2Exception $ex) {
             $providerError = $ex->getError() ?: $ex->getMessage();
 
@@ -1743,7 +1744,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             );
         }
 
-        $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
         }
