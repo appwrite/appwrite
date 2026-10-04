@@ -81,7 +81,7 @@ class Boolean extends Validator
      * coercion turns it into `true`. Call this after {@see isValid()} so
      * action callbacks receive an actual `bool`.
      */
-    public function parse(mixed $value): mixed
+    public function cast(mixed $value): mixed
     {
         if (\is_bool($value)) {
             return $value;

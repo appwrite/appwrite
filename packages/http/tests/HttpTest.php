@@ -1027,7 +1027,7 @@ final class HttpTest extends TestCase
         $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
     }
 
-    public function testLooseBooleanParamsAreParsedToBool(): void
+    public function testLooseBooleanParamsAreCastToBool(): void
     {
         Http::setAllowOverride(true);
         $_SERVER['REQUEST_METHOD'] = 'GET';

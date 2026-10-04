@@ -44,14 +44,18 @@ abstract class Validator
     abstract public function isValid($value): bool;
 
     /**
-     * Parse a value that has already passed {@see isValid()} into the
+     * Cast a value that has already passed {@see isValid()} into the
      * canonical PHP type advertised by {@see getType()}.
      *
      * Loose validators accept query-string forms (e.g. `"false"`, `"1"`)
      * that PHP would otherwise coerce incorrectly when the action parameter
      * is typed. Override in subclasses that accept such forms.
+     *
+     * Named {@see cast()} rather than {@see parse()} so subclasses that
+     * already expose a static {@see parse()} helper (e.g. Appwrite's
+     * CompoundUID) do not collide with this instance method.
      */
-    public function parse(mixed $value): mixed
+    public function cast(mixed $value): mixed
     {
         return $value;
     }

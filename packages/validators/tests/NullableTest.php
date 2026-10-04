@@ -25,12 +25,12 @@ final class NullableTest extends TestCase
         $this->assertInstanceOf(\Utopia\Validator\Text::class, $validator->getValidator());
     }
 
-    public function testCanParseWrappedBoolean(): void
+    public function testCanCastWrappedBoolean(): void
     {
         $validator = new Nullable(new Boolean(true));
 
-        $this->assertNull($validator->parse(null));
-        $this->assertFalse($validator->parse('false'));
-        $this->assertTrue($validator->parse('true'));
+        $this->assertNull($validator->cast(null));
+        $this->assertFalse($validator->cast('false'));
+        $this->assertTrue($validator->cast('true'));
     }
 }
