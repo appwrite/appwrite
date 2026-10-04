@@ -609,7 +609,7 @@ parameters:
 		-
 			message: '#^Cannot call method execute\(\) on Utopia\\Http\\Http\|null\.$#'
 			identifier: method.nonObject
-			count: 28
+			count: 29
 			path: tests/HttpTest.php
 
 		-
@@ -669,7 +669,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$params of static method Utopia\\Http\\Tests\\FPMRequest\:\:_setParams\(\) expects array\<string, mixed\>\|null, array given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: tests/HttpTest.php
 
 		-

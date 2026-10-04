@@ -756,13 +756,6 @@ class Http
 
                 if ($paramExists) {
                     $this->validate($key, $param, $value);
-                    $validator = $this->resolveValidator($param);
-                    if ($validator instanceof Validator) {
-                        // Loose validators accept query-string forms; cast them
-                        // into the canonical PHP type before the action runs
-                        // (e.g. Boolean `"false"` must become bool false).
-                        $value = $validator->cast($value);
-                    }
                 }
             }
 
@@ -889,12 +882,14 @@ class Http
      * Validate Param
      *
      * Creates an validator instance and validate given value with given rules.
+     * On success, loose forms are cast to the validator's canonical PHP type
+     * (e.g. Boolean `"false"` → bool false) via {@see Validator::cast()}.
      *
      * @param  array<string, mixed>  $param
      *
      * @throws Exception
      */
-    protected function validate(string $key, array $param, mixed $value): void
+    protected function validate(string $key, array $param, mixed &$value): void
     {
         if ($param['optional'] && \is_null($value)) {
             return;
@@ -909,6 +904,8 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+
+        $value = $validator->cast($value);
     }
 
     /**

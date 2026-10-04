@@ -1042,27 +1042,29 @@ final class HttpTest extends TestCase
                 ]);
             });
 
-        $run = function (array $params): array {
-            ob_start();
+        $run = function (array $params): string {
             $request = new FPMRequest();
             $request::_setParams($params);
+
+            ob_start();
             $this->http->execute($request, new Response());
             $result = ob_get_contents();
             ob_end_clean();
+
             $request::_setParams(null);
 
-            return json_decode($result, true);
+            return (string) $result;
         };
 
         // SDK / browser query strings send the literal text "false" / "true"
-        $this->assertSame(['total' => false, 'type' => 'boolean'], $run(['total' => 'false']));
-        $this->assertSame(['total' => true, 'type' => 'boolean'], $run(['total' => 'true']));
-        $this->assertSame(['total' => false, 'type' => 'boolean'], $run(['total' => '0']));
-        $this->assertSame(['total' => true, 'type' => 'boolean'], $run(['total' => '1']));
-        $this->assertSame(['total' => false, 'type' => 'boolean'], $run(['total' => 0]));
-        $this->assertSame(['total' => true, 'type' => 'boolean'], $run(['total' => 1]));
-        $this->assertSame(['total' => false, 'type' => 'boolean'], $run(['total' => false]));
-        $this->assertSame(['total' => true, 'type' => 'boolean'], $run(['total' => true]));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => 'false']));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => 'true']));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => '0']));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => '1']));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => 0]));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => 1]));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => false]));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => true]));
     }
 
     public function testCanInjectResourceAndParamWithSameName(): void

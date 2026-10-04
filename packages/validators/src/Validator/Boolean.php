@@ -87,11 +87,11 @@ class Boolean extends Validator
             return $value;
         }
 
-        if ($value === 'true' || $value === '1' || $value === 1) {
+        if (\in_array($value, ['true', '1', 1], true)) {
             return true;
         }
 
-        if ($value === 'false' || $value === '0' || $value === 0) {
+        if (\in_array($value, ['false', '0', 0], true)) {
             return false;
         }
 
