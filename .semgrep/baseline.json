@@ -116,98 +116,98 @@
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Create.php",
             "line": 29,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/databases/transactions')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Delete.php",
             "line": 28,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE) ->setHttpPath('/v1/databases/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Operations/Create.php",
             "line": 36,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/databases/transactions/:transactionId/operations')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php",
             "line": 52,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH) ->setHttpPath('/v1/databases/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/DocumentsDB/Transactions/Create.php",
             "line": 23,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/documentsdb/transactions')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/DocumentsDB/Transactions/Delete.php",
             "line": 23,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE) ->setHttpPath('/v1/documentsdb/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/DocumentsDB/Transactions/Operations/Create.php",
             "line": 25,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/documentsdb/transactions/:transactionId/operations')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/DocumentsDB/Transactions/Update.php",
             "line": 29,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH) ->setHttpPath('/v1/documentsdb/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Collections/Documents/Queries/Create.php",
             "line": 26,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Transactions/Create.php",
             "line": 23,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/vectorsdb/transactions')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Transactions/Delete.php",
             "line": 23,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE) ->setHttpPath('/v1/vectorsdb/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Transactions/Operations/Create.php",
             "line": 25,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/vectorsdb/transactions/:transactionId/operations')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Transactions/Update.php",
             "line": 29,
-            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)"
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH) ->setHttpPath('/v1/vectorsdb/transactions/:transactionId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Functions/Http/Jobs/Event/Create.php",
             "line": 33,
-            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)"
+            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/jobs/event')"
         },
         {
             "rule": "permissive-write-permission",
@@ -228,14 +228,14 @@
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Update.php",
             "line": 36,
-            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)"
+            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT) ->setHttpPath('/v1/storage/buckets/:bucketId/files/:fileId')"
         },
         {
             "rule": "guest-write-without-abuse-limit",
             "severity": "WARNING",
             "path": "src/Appwrite/Platform/Modules/Teams/Http/Memberships/Status/Update.php",
             "line": 40,
-            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)"
+            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH) ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId/status')"
         }
     ]
 }

@@ -30,7 +30,13 @@ function textOf(result, root) {
     for (let line = start + 1; line <= Math.min(end, start + TEXT_LINES - 1) && text.trim().length < TEXT_MIN; line++) {
         text += ' ' + (lines[line - 1] || '');
     }
-    return text.replace(/\s+/g, ' ').trim();
+    text = text.replace(/\s+/g, ' ').trim();
+    // Route chains stop at setHttpMethod(); without the path, a different route with the same method would match.
+    const route = lines.slice(start - 1, end).map((line) => line.trim()).find((line) => line.startsWith('->setHttpPath('));
+    if (route && !text.includes(route)) {
+        text += ' ' + route;
+    }
+    return text;
 }
 
 function keyOf(entry) {

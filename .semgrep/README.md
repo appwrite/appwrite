@@ -51,7 +51,7 @@ semgrep scan \
 
 [`baseline.json`](baseline.json) records the findings on the current tree so that adding or tightening a rule does not fail unrelated PRs. Semgrep OSS only offers a commit-diff baseline (`--baseline-commit`), so `baseline.js` filters the JSON output itself.
 
-Each entry is keyed on rule id, file path, and the matched source text with whitespace collapsed (extended to the next lines when the first line is short, such as a bare `$this`). The `line` field is informational. Edits elsewhere in the file that shift lines keep the entry matched, and identical lines in one file need one entry each. Editing the matched code itself makes it a new finding.
+Each entry is keyed on rule id, file path, and the matched source text with whitespace collapsed (extended to the next lines when the first line is short, such as a bare `$this`). When the match spans a module route chain, the `->setHttpPath(…)` line is appended, so the key names the route by method and path and a different route in the same file does not inherit its entry. The `line` field is informational. Edits elsewhere in the file that shift lines keep the entry matched, and identical lines in one file need one entry each. Editing the matched code itself makes it a new finding.
 
 `node .semgrep/baseline.js check semgrep.json` prints the total, how many are baselined, and the new ERROR / WARNING counts. It also lists baseline entries that no longer match, which is fine to leave until the next regeneration. Only new ERRORs fail the job.
 
