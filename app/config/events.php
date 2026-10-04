@@ -734,18 +734,23 @@ return [
             '$description' => 'This event triggers when a video is deleted.',
         ],
     ],
-    'videoProfiles' => [
-        '$model' => Response::MODEL_VIDEO_PROFILE,
+    'projects' => [
+        '$model' => Response::MODEL_PROJECT,
         '$resource' => true,
-        '$description' => 'This event triggers on any video profile event.',
-        'create' => [
-            '$description' => 'This event triggers when a video profile is created.',
-        ],
-        'update' => [
-            '$description' => 'This event triggers when a video profile is updated.',
-        ],
-        'delete' => [
-            '$description' => 'This event triggers when a video profile is deleted.',
+        '$description' => 'This event triggers on any project event.',
+        'profiles' => [
+            '$model' => Response::MODEL_VIDEO_PROFILE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any project video profile event.',
+            'create' => [
+                '$description' => 'This event triggers when a video profile is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a video profile is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a video profile is deleted.',
+            ],
         ],
     ],
 ];

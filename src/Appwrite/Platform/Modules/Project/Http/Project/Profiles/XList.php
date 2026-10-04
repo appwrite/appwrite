@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
 
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
@@ -23,24 +23,24 @@ class XList extends Base
 
     public static function getName()
     {
-        return 'listProfiles';
+        return 'listProjectProfiles';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/profiles')
+            ->setHttpPath('/v1/project/profiles')
+            ->httpAlias('/v1/projects/:projectId/profiles')
             ->desc('List video profiles')
-            ->groups(['api', 'videos'])
-            ->label('scope', 'videos.read')
-            ->label('resourceType', RESOURCE_TYPE_VIDEOS)
+            ->groups(['api', 'project'])
+            ->label('scope', 'project.profiles.read')
             ->label('sdk', new Method(
-                namespace: 'videos',
+                namespace: 'project',
                 group: 'profiles',
                 name: 'listProfiles',
-                description: '/docs/references/videos/list-profiles.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                description: '/docs/references/project/list-profiles.md',
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

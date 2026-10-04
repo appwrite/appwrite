@@ -160,18 +160,6 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Profiles are project configuration (like storage buckets), not user content.
-     * SDK methods advertise ADMIN/KEY only — enforce the same at the HTTP layer
-     * so a session with `videos.write` cannot mutate the encode ladder.
-     */
-    protected function assertPrivilegedCaller(User $user, Authorization $authorization): void
-    {
-        if (!$user->isPrivileged($authorization->getRoles()) && !$user->isKey($authorization->getRoles())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-    }
-
-    /**
      * Bounds for video profile parameters, in kilobits per second and pixels.
      *
      * One set shared by create and update: the pre-merge controller validated

@@ -184,6 +184,7 @@ $key = call($client, Client::METHOD_POST, '/projects/' . $projectId . '/keys', $
         'files.read', 'files.write',
         'buckets.read', 'buckets.write',
         'videos.read', 'videos.write',
+        'project.profiles.read', 'project.profiles.write',
         'platforms.read', 'platforms.write',
     ],
 ]);
@@ -263,7 +264,7 @@ $videoId = $video['body']['$id'];
 echo "videoId={$videoId} duration=" . ($video['body']['duration'] ?? 0) . "\n";
 
 echo "==> Creating HLS 360p rendition\n";
-$profiles = call($client, Client::METHOD_GET, '/videos/profiles', $apiHeaders);
+$profiles = call($client, Client::METHOD_GET, '/project/profiles', $apiHeaders);
 $profileId = null;
 foreach ($profiles['body']['profiles'] as $profile) {
     if (($profile['name'] ?? '') === '360p') {

@@ -71,6 +71,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.profiles.read" => [
+        "description" =>
+            "Access to read the project\'s video encode profiles",
+        "category" => "Project",
+    ],
+    "project.profiles.write" => [
+        "description" =>
+            "Access to create, update, and delete the project\'s video encode profiles",
+        "category" => "Project",
+    ],
     "project.oauth2.read" => [
         "description" =>
             "Access to read project\'s OAuth2 configuration.",

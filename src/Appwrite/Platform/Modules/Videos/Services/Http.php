@@ -16,11 +16,6 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Mani
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Manifest\Get as GetSubtitleManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Segments\Get as GetSubtitleSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Previews\Get as GetPreview;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Create as CreateProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Delete as DeleteProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Get as GetProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Update as UpdateProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\XList as ListProfiles;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
@@ -76,12 +71,7 @@ class Http extends Service
         $this->addAction(GetSubtitleManifest::getName(), new GetSubtitleManifest());
         $this->addAction(GetSubtitleSegment::getName(), new GetSubtitleSegment());
 
-        // Profiles
+        // Codecs
         $this->addAction(ListCodecs::getName(), new ListCodecs());
-        $this->addAction(CreateProfile::getName(), new CreateProfile());
-        $this->addAction(GetProfile::getName(), new GetProfile());
-        $this->addAction(ListProfiles::getName(), new ListProfiles());
-        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
-        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
     }
 }

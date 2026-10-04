@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -20,24 +20,24 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getProfile';
+        return 'getProjectProfile';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/profiles/:profileId')
+            ->setHttpPath('/v1/project/profiles/:profileId')
+            ->httpAlias('/v1/projects/:projectId/profiles/:profileId')
             ->desc('Get video profile')
-            ->groups(['api', 'videos'])
-            ->label('scope', 'videos.read')
-            ->label('resourceType', RESOURCE_TYPE_VIDEOS)
+            ->groups(['api', 'project'])
+            ->label('scope', 'project.profiles.read')
             ->label('sdk', new Method(
-                namespace: 'videos',
+                namespace: 'project',
                 group: 'profiles',
                 name: 'getProfile',
-                description: '/docs/references/videos/get-profile.md',
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                description: '/docs/references/project/get-profile.md',
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

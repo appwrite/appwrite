@@ -38,7 +38,7 @@ final class VideosCustomServerTest extends Scope
      */
     public function testListSeededProfiles(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(6, $response['body']['total']);
@@ -58,7 +58,7 @@ final class VideosCustomServerTest extends Scope
             $this->assertNotEmpty($profile['$createdAt']);
         }
 
-        $explicit = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $explicit = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'h264',
         ]);
         $this->assertEquals(200, $explicit['headers']['status-code']);
@@ -70,7 +70,7 @@ final class VideosCustomServerTest extends Scope
 
     public function testCreateProfile(): string
     {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
             'name' => 'e2e-480p',
             // Distinct from the seeded 480p rung so the unique geometry+codec index passes.
             'videoBitRate' => 2101,
@@ -92,7 +92,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testCreateProfile')]
     public function testGetProfile(string $profileId): string
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles/' . $profileId, $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($profileId, $response['body']['$id']);
@@ -105,7 +105,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testGetProfile')]
     public function testUpdateProfile(string $profileId): string
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/profiles/' . $profileId, $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $profileId, $this->headers(), [
             'name' => 'e2e-480p-updated',
             'videoBitRate' => 2200,
             'audioBitRate' => 96,
@@ -136,7 +136,7 @@ final class VideosCustomServerTest extends Scope
         ];
 
         foreach ($invalid as $params) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
+            $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
             $this->assertEquals(400, $response['headers']['status-code']);
         }
     }
@@ -144,10 +144,10 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testUpdateProfile')]
     public function testDeleteProfile(string $profileId): void
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles/' . $profileId, $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_profile_not_found', $response['body']['type']);
     }
@@ -173,8 +173,8 @@ final class VideosCustomServerTest extends Scope
 
     public function testListProfilesByCodec(): void
     {
-        $default = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
-        $h264 = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $default = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
+        $h264 = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'h264',
         ]);
         $this->assertEquals(200, $default['headers']['status-code']);
@@ -185,14 +185,14 @@ final class VideosCustomServerTest extends Scope
         );
 
         foreach (['hevc', 'vp9'] as $disabled) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+            $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
                 'codec' => $disabled,
             ]);
             $this->assertEquals(400, $response['headers']['status-code'], $disabled);
             $this->assertEquals('video_codec_disabled', $response['body']['type'], $disabled);
         }
 
-        $unknown = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $unknown = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'av1',
         ]);
         $this->assertEquals(400, $unknown['headers']['status-code']);
@@ -200,7 +200,7 @@ final class VideosCustomServerTest extends Scope
 
     public function testCreateProfileCodecs(): void
     {
-        $omit = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+        $omit = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
             'name' => 'codec-omit-' . \uniqid(),
             'videoBitRate' => 900,
             'audioBitRate' => 64,
@@ -211,7 +211,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('h264', $omit['body']['codec']);
 
         foreach (['hevc', 'vp9', 'av1'] as $codec) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+            $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
                 'name' => 'codec-' . $codec . '-' . \uniqid(),
                 'videoBitRate' => 890,
                 'audioBitRate' => 64,
@@ -223,7 +223,7 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals('general_argument_invalid', $response['body']['type'], $codec);
         }
 
-        $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $omit['body']['$id'], $this->headers());
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $omit['body']['$id'], $this->headers());
     }
 
     // ------------------------------------------------------------------ videos
@@ -531,7 +531,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testVideoIsProbedByJob')]
     public function testCreateRendition(string $videoId): array
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -626,7 +626,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testVideoIsProbedByJob')]
     public function testCreateRenditionValidation(string $videoId): void
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profileId = $profiles['body']['profiles'][0]['$id'];
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
@@ -920,7 +920,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(\substr($segment['body'], 100, 100), $ranged['body']);
 
         // DASH ladder for the same video.
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -1117,7 +1117,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('WEBVTT', (string) $vtt['body']);
         $this->assertStringContainsString('EMBEDDED CUE', (string) $vtt['body']);
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -1510,7 +1510,7 @@ final class VideosCustomServerTest extends Scope
      */
     private function seededProfile(string $name): array
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         foreach ($profiles['body']['profiles'] ?? [] as $candidate) {
             if (($candidate['name'] ?? '') === $name) {
                 return $candidate;

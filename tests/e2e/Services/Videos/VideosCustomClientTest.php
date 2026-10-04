@@ -81,7 +81,6 @@ final class VideosCustomClientTest extends Scope
         $paths = [
             '/videos',
             '/videos/codecs',
-            '/videos/profiles',
             '/videos/someVideoId',
             '/videos/someVideoId/timeline',
             '/videos/someVideoId/subtitles',
@@ -110,7 +109,7 @@ final class VideosCustomClientTest extends Scope
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $anonymous, [
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $anonymous, [
             'name' => 'guest',
             'videoBitRate' => 1000,
             'audioBitRate' => 64,
@@ -202,10 +201,8 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Profiles are project configuration (like storage buckets), not user
-     * content. Create/update/delete require a privileged caller (console) or
-     * API key — matching the SDK auth list — even though `videos.write` is
-     * granted to the users role. Sessions may still read the ladder.
+     * Profiles are project configuration, managed under the project API.
+     * A session holding `videos.write` does not receive `project.profiles.*`.
      */
     public function testSessionCannotManageProfiles(): void
     {
@@ -217,39 +214,32 @@ final class VideosCustomClientTest extends Scope
             'height' => 360,
         ];
 
-        $create = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->sessionHeaders(), $payload);
+        $create = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->sessionHeaders(), $payload);
         $this->assertEquals(401, $create['headers']['status-code']);
-        $this->assertEquals('user_unauthorized', $create['body']['type']);
+        $this->assertEquals('general_unauthorized_scope', $create['body']['type']);
 
-        $seeded = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->serverHeaders(), $payload);
+        $seeded = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->serverHeaders(), $payload);
         $this->assertEquals(201, $seeded['headers']['status-code']);
         $profileId = $seeded['body']['$id'];
 
-        $update = $this->client->call(Client::METHOD_PATCH, '/videos/profiles/' . $profileId, $this->sessionHeaders(), $payload);
+        $update = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $profileId, $this->sessionHeaders(), $payload);
         $this->assertEquals(401, $update['headers']['status-code']);
-        $this->assertEquals('user_unauthorized', $update['body']['type']);
+        $this->assertEquals('general_unauthorized_scope', $update['body']['type']);
 
-        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->sessionHeaders());
+        $delete = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->sessionHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
-        $this->assertEquals('user_unauthorized', $delete['body']['type']);
+        $this->assertEquals('general_unauthorized_scope', $delete['body']['type']);
 
-        $cleanup = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->serverHeaders());
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->serverHeaders());
         $this->assertEquals(204, $cleanup['headers']['status-code']);
     }
 
-    /**
-     * A session may read profiles, since a player needs to know the ladder.
-     */
-    public function testSessionCanReadProfiles(): void
+    public function testSessionCannotReadProfiles(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->sessionHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->sessionHeaders());
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
-
-        foreach ($response['body']['profiles'] as $profile) {
-            $this->assertEquals('h264', $profile['codec']);
-        }
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
     }
 
     public function testSessionCanReadCodecs(): void
@@ -288,7 +278,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
@@ -343,7 +333,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
