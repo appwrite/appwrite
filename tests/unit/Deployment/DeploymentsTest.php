@@ -231,7 +231,7 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('app-project1', $firstVolume->subPath);
         $this->assertSame('app-project2', $secondVolume->subPath);
         $this->assertNotSame($firstVolume->path, $secondVolume->path);
-        $this->assertStringNotContainsString('project2', $firstVolume->path);
+        $this->assertStringNotContainsString('project2', (string) $firstVolume->path);
         $this->assertStringNotContainsString('project2', $firstVolume->subPath);
         $this->assertSame(
             Deployments::outputDirectory('project2', 'deployment1'),
