@@ -13,7 +13,10 @@ module.exports = async ({ github, context, core }) => {
     // GITHUB_SHA is the commit actions/checkout scanned, so line anchors match the findings.
     const serverUrl = context.serverUrl || 'https://github.com';
     const blobBase = `${serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${context.sha}`;
-    const body = buildComment(findings, { blobBase });
+    const runUrl = context.runId ? `${serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` : null;
+    // The step runs under always(), so a failed install, fixture, proof, or scan step lands here
+    // without JSON. Replace the sticky comment so an earlier all-clear does not stand for this commit.
+    const body = findings === null ? buildIncompleteComment({ runUrl }) : buildComment(findings, { blobBase });
 
     const pullRequest = context.payload.pull_request;
     if (!pullRequest || pullRequest.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
@@ -30,7 +33,14 @@ module.exports = async ({ github, context, core }) => {
 function readFindings(path, core, root = process.cwd(), entries = baseline.load()) {
     if (!fs.existsSync(path)) {
         core?.warning(`Semgrep JSON not found at ${path}`);
-        return [];
+        return null;
+    }
+    let data;
+    try {
+        data = JSON.parse(fs.readFileSync(path, 'utf8'));
+    } catch (error) {
+        core?.warning(`Semgrep JSON at ${path} is unreadable: ${error.message}`);
+        return null;
     }
 
     const sources = new Map();
@@ -45,7 +55,6 @@ function readFindings(path, core, root = process.cwd(), entries = baseline.load(
         return sources.get(file);
     };
 
-    const data = JSON.parse(fs.readFileSync(path, 'utf8'));
     const results = data.results || [];
     const known = new Set(baseline.partition(results, entries, root).known);
     return results.map((result) => {
@@ -496,6 +505,19 @@ function buildComment(findings, options = {}) {
     return render();
 }
 
+function buildIncompleteComment(options = {}) {
+    const log = options.runUrl ? `[\`Checks / Rules\` log](${options.runUrl})` : '`Checks / Rules` log';
+    return [
+        marker,
+        '## Security rules',
+        '',
+        `**Scan did not complete.** \`semgrep.json\` is missing or unreadable for this commit, so its findings are unknown. Check the ${log}: Semgrep install, rule fixtures, the ERROR proofs, or the scan itself failed.`,
+        '',
+        footer,
+        '',
+    ].join('\n');
+}
+
 function summarizeKnown(known) {
     if (known.length === 0) {
         return [];
@@ -622,3 +644,4 @@ async function upsertComment(github, context, issueNumber, body) {
 
 module.exports.readFindings = readFindings;
 module.exports.buildComment = buildComment;
+module.exports.buildIncompleteComment = buildIncompleteComment;

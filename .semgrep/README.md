@@ -159,7 +159,7 @@ Each `*.yml` rule has a sibling `*.php` file with `// ruleid:` and `// ok:` anno
 
 On `pull_request`, `Checks / Rules` writes `semgrep.json` and upserts one comment marked `<!-- semgrep-rules-comment -->`. Re-runs edit that comment. Same-repo PRs only (forks have no write token).
 
-Only findings outside the baseline are listed in detail. Baselined findings are summarized as per-rule counts in a collapsed `<details>` block. With no new findings the comment becomes an all-clear plus that summary.
+Only findings outside the baseline are listed in detail. Baselined findings are summarized as per-rule counts in a collapsed `<details>` block. With no new findings the comment becomes an all-clear plus that summary. The comment step runs even when an earlier step fails; if `semgrep.json` is missing or unreadable (install, fixtures, proofs, or the scan failed), the comment says the scan did not complete and links the run instead of posting an all-clear.
 
 Findings are grouped by rule (full rule message once per group). `semgrep.json` carries no source lines or metavariables without a Semgrep login, so `.github/workflows/semgrep-comment.js` reads the matched file from the checkout and, per finding, prints:
 
