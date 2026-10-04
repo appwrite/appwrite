@@ -62,6 +62,7 @@ import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
+import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import {
   isPreLaunchAllowedPath,
   isPreLaunchModeEnabled,
@@ -589,6 +590,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <RootConsoleScopesPrefetch />
           <ClientThemeProvider>
               <PreLaunchRedirect />
+              <SelfHostedRouteRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>

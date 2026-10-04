@@ -1167,7 +1167,6 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Specifications docs': 'תיעוד מפרטים',
   'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
     'השתמשו באותו hostname ובאותם credentials עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-PostgreSQL שלכם. העתיקו DSN, .env וקטעי ORM מהלשונית Credentials בקונסול, או עקבו אחר מדריכי האינטגרציה בתיעוד.',
-  'Node.js drivers docs': 'תיעוד דרייברים ל-Node.js',
 }
 
 

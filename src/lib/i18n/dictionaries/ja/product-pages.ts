@@ -1265,5 +1265,4 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Specifications docs': '仕様のドキュメント',
   'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
     'Prisma、Drizzle、Sequelize、TypeORM、SQLAlchemy、psql など、PostgreSQL ツールチェーンと同じホスト名と認証情報で接続できます。Console の Credentials タブから DSN、.env、ORM スニペットをコピーするか、ドキュメントの統合ガイドに従ってください。',
-  'Node.js drivers docs': 'Node.js ドライバーのドキュメント',
 }

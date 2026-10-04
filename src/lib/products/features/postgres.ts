@@ -80,8 +80,8 @@ export const postgresProductFeatures: ProductFeatureContent[] = [
     title: 'Works with your ORM and toolstack',
     description:
       'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.',
-    docsHref: '/docs/products/databases/postgresql/integrations/drivers',
-    docsLabel: 'Node.js drivers docs',
+    docsHref: '/docs/products/databases/postgresql',
+    docsLabel: 'PostgreSQL docs',
     layout: 'stacked',
     centered: true,
     hideVisual: true,
