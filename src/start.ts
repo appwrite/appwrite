@@ -6,6 +6,7 @@ import { legacyRedirectsMiddleware } from '@/server/middleware/legacy-redirects'
 import { legacyConsolePathMiddleware } from '@/server/middleware/legacy-console-path'
 import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redirect'
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
+import { securityTxtMiddleware } from '@/server/middleware/security-txt'
 import { seoIndexingMiddleware } from '@/server/middleware/seo-indexing'
 import { serverFnGuardMiddleware } from '@/server/middleware/server-fn-guard'
 import { preLaunchMiddleware } from '@/server/middleware/pre-launch'
@@ -20,6 +21,7 @@ export const startInstance = createStart(() => ({
     serverFnGuardMiddleware,
     // Password-manager well-known URL (W3C change-password) before other gates.
     changePasswordUrlMiddleware,
+    securityTxtMiddleware,
     // Apex host before other gates so www/new never serve duplicate content.
     hostCanonicalMiddleware,
     seoIndexingMiddleware,
