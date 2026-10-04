@@ -1,82 +1,112 @@
-import { RefreshCw, Terminal } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { FileJson, RefreshCw, UserRound } from 'lucide-react'
+import {
+  ArtChip,
+  ArtIconBadge,
+  ArtWindow,
+  riseStyle,
+} from '@/components/pages/products/_components/ArtParts'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 
 const TERMINAL_LINES = [
-  { text: '$ appwrite run functions --function-id stripe-webhook', tone: 'command' as const },
-  { text: 'Building function using Docker…', tone: 'muted' as const },
-  { text: 'Starting function using Docker…', tone: 'muted' as const },
-  { text: 'Visit http://localhost:3000/ to execute your function.', tone: 'success' as const },
+  { text: 'Building function using Docker…', tone: 'muted' },
+  { text: 'Starting function using Docker…', tone: 'muted' },
+  { text: 'Visit http://localhost:3000/ to execute your function.', tone: 'success' },
+  { text: 'File changed: src/main.js', tone: 'muted' },
+  { text: 'Function restarted in 412ms', tone: 'accent' },
 ] as const
-
-function TerminalLine({ text, tone }: (typeof TERMINAL_LINES)[number]) {
-  return (
-    <p
-      className={
-        tone === 'command'
-          ? 'text-foreground'
-          : tone === 'success'
-            ? 'text-emerald-600 dark:text-emerald-400'
-            : 'text-muted-foreground'
-      }
-    >
-      {text}
-    </p>
-  )
-}
 
 export function FunctionsLocalVisual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame eyebrow={t('Local dev')} title="Appwrite CLI"> {/* pragma: allowlist secret */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="relative mx-auto w-full max-w-[540px] pb-16 pt-14 sm:px-8">
+      <ArtChip className="start-0 top-0" delayMs={600}>
+        <div className="flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
+            <ProductFeaturePublicIcon src="/icons/docker.svg" className="size-4" />
+          </span>
           <div>
-            <p className="text-[13px] font-semibold text-foreground">{t('Run on localhost')}</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              {t('Same Docker runtime as production, on your machine.')}
+            <p className="text-[11px] font-medium text-foreground">{t('Local dev')}</p>
+            <p dir="ltr" className="text-start font-mono text-[10px] text-muted-foreground">
+              localhost:3000
             </p>
           </div>
-          <Badge variant="success" className="shrink-0 text-[10px]">
-            {t('Hot reload')}
-          </Badge>
         </div>
+      </ArtChip>
 
-        <div className="overflow-hidden rounded-lg border border-border bg-muted/20 font-mono text-[10px] leading-relaxed sm:text-[11px]">
-          <div className="flex items-center gap-2 border-b border-border bg-muted/15 px-3 py-1.5">
-            <Terminal className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="text-[10px] text-muted-foreground">{t('Terminal')}</span>
-          </div>
-          <div className="space-y-1.5 p-3">
-            {TERMINAL_LINES.map((line) => (
-              <TerminalLine key={line.text} {...line} />
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
+      <ArtChip className="end-0 top-3 hidden sm:block" delayMs={800} floatDelayMs={700}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={FileJson} tone="secondary" />
+          <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('Config')}
             </p>
-            <p className="mt-1 font-mono text-[11px] text-foreground">appwrite.config.json</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Impersonate user')}
+            <p dir="ltr" className="text-start font-mono text-[11px] text-foreground">
+              appwrite.config.json
             </p>
-            <p className="mt-1 font-mono text-[11px] text-foreground">--user-id &lt;id&gt;</p>
           </div>
         </div>
+      </ArtChip>
 
-        <div className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
-          <RefreshCw className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <p className="text-[11px] leading-5 text-muted-foreground">
-            {t('Edit your code and the function restarts automatically. Deploy when you are ready.')}
+      <ArtWindow
+        className="product-hero-rise"
+        style={riseStyle(60)}
+        title={t('Terminal')}
+        trailing={
+          <span dir="ltr" className="font-mono text-[10px] text-muted-foreground">
+            appwrite-cli
+          </span>
+        }
+      >
+        <div dir="ltr" className="space-y-1.5 text-start font-mono text-[10.5px] leading-relaxed sm:text-[11.5px]">
+          <p className="text-foreground">
+            <span className="text-[var(--tone-ink)]">$</span> appwrite run functions --function-id
+            stripe-webhook
+          </p>
+          {TERMINAL_LINES.map((line, index) => (
+            <p
+              key={line.text}
+              className={cn(
+                'product-hero-rise',
+                line.tone === 'success' && 'text-emerald-600 dark:text-emerald-400',
+                line.tone === 'accent' && 'text-[var(--tone-ink)]',
+                line.tone === 'muted' && 'text-muted-foreground',
+              )}
+              style={riseStyle(400 + index * 260)}
+            >
+              {line.text}
+            </p>
+          ))}
+          <p className="text-foreground">
+            <span className="text-[var(--tone-ink)]">$</span>{' '}
+            <span
+              className="inline-block h-3.5 w-1.5 translate-y-0.5 animate-[ai-mock-cursor-blink_1s_step-end_infinite] bg-foreground/70 motion-reduce:animate-none"
+              aria-hidden
+            />
           </p>
         </div>
-      </div>
-    </ProductFeatureVisualFrame>
+      </ArtWindow>
+
+      <ArtChip className="bottom-1 start-[4%] hidden sm:block" delayMs={1300} floatDelayMs={1200}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={UserRound} tone="neutral" />
+          <div>
+            <p className="text-[11px] font-medium text-foreground">{t('Impersonate user')}</p>
+            <p dir="ltr" className="text-start font-mono text-[10px] text-muted-foreground">
+              --user-id &lt;id&gt;
+            </p>
+          </div>
+        </div>
+      </ArtChip>
+
+      <ArtChip className="bottom-3 end-0" delayMs={1500} floatDelayMs={400}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={RefreshCw} tone="success" />
+          <p className="text-[12px] font-medium text-foreground">{t('Hot reload')}</p>
+        </div>
+      </ArtChip>
+    </div>
   )
 }

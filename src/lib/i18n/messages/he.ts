@@ -397,6 +397,7 @@ export const heCatalog: EnCatalog = {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'אימייל, OAuth, SMS, אימות דו-שלבי, צוותים וסשנים.',
           databasesTagline: 'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          postgresTagline: 'PostgreSQL מנוהל עם pooling, רפליקות ו-PITR.',
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',

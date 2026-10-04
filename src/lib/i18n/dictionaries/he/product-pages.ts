@@ -10,6 +10,7 @@ export const heProductPagesDictionary: Record<string, string> = {
     'הוסיפו אימות מאובטח לאפליקציה שלכם עם אימייל, OAuth, SMS, Magic URL, MFA, צוותים, Presences וניהול סשנים.',
   'Appwrite DNS': 'Appwrite DNS',
   'Appwrite DNS docs': 'תיעוד Appwrite DNS',
+  'Appwrite Domains docs': 'תיעוד Appwrite Domains',
   'Appwrite Network': 'Appwrite Network',
   'Appwrite Sites': 'Appwrite Sites',
   'Appwrite caches your package manager store between deployments, keyed automatically per function. pnpm, bun, npm, and yarn installs are faster on the next build with no extra configuration. If a cache restore fails, the build continues normally.':
@@ -712,6 +713,461 @@ export const heProductPagesDictionary: Record<string, string> = {
     'ראו כמה תעבורה אחרונה כלל טיוטה ישפיע עליה.',
   'Incoming': 'נכנסות',
   'Your app': 'האפליקציה שלכם',
+  '3 online': '3 מחוברים',
+  'Event': 'אירוע',
+  'Your order has shipped': 'ההזמנה שלכם נשלחה',
+  'Track your delivery in the app.': 'עקבו אחרי המשלוח באפליקציה.',
+  'Welcome to Acme': 'ברוכים הבאים ל-Acme',
+  'Cloning repository': 'שכפול המאגר',
+  'Building': 'בבנייה',
+  'Deploying': 'בפריסה',
+  'Deny': 'חסימה',
+  'Bypass': 'עקיפה',
+  'Runtime': 'סביבת ריצה',
+  'Endpoint': 'Endpoint',
+  'Denied': 'נחסמו',
+  'Redirected': 'הופנו מחדש',
+  'Draft': 'טיוטה',
+  'Edge SSR': 'SSR בקצה',
+  'US East': 'מזרח ארה"ב',
+  'EU West': 'מערב אירופה',
+  'AP South': 'דרום אסיה-פסיפיק',
+  'Deploy from CI or your terminal with the Appwrite CLI and appwrite.config.json.':
+    'פרסו מ-CI או מהטרמינל עם Appwrite CLI ו-appwrite.config.json.',
+
+  // Managed PostgreSQL product page
+  'Managed PostgreSQL hosting': 'אחסון PostgreSQL מנוהל',
+  'Managed PostgreSQL hosting on Appwrite. Every database is provisioned for your project with a TLS hostname, connection pooling, extensions like pgvector, backups, PITR, replicas, and branches.':
+    'אחסון PostgreSQL מנוהל ב-Appwrite. כל מסד נתונים מוקם עבור הפרויקט שלכם עם hostname מאובטח ב-TLS, connection pooling, הרחבות כמו pgvector, גיבויים, PITR, רפליקות ו-Branches.',
+  'Raw Postgres, fully managed': 'Postgres גולמי, מנוהל לחלוטין',
+  'Appwrite runs the engine and you keep the SQL: connect with psql or any driver, bring your own ORM and migrations, and use the full PostgreSQL feature set with no Appwrite layer in between. Each database is provisioned in your project region with its own hostname, credentials, and TLS.':
+    'Appwrite מריצה את המנוע ואתם שומרים על ה-SQL: התחברו עם psql או עם כל driver, הביאו ORM ומיגרציות משלכם והשתמשו בכל יכולות PostgreSQL בלי שכבה של Appwrite באמצע. כל מסד נתונים מוקם באזור הפרויקט שלכם עם hostname, פרטי גישה ו-TLS משלו.',
+  'PostgreSQL 18 by default': 'PostgreSQL 18 כברירת מחדל',
+  '6 regions': '6 אזורים',
+  'Every Appwrite Cloud region': 'כל אזור של Appwrite Cloud',
+  'High availability maximum': 'מקסימום לזמינות גבוהה',
+  'Restore to any moment': 'שחזור לכל רגע',
+  'Smallest specification': 'המפרט הקטן ביותר',
+  'Start building on managed PostgreSQL': 'התחילו לבנות על PostgreSQL מנוהל',
+  'Create a database in your project region, copy the connection string, and run your first query in minutes.':
+    'צרו מסד נתונים באזור הפרויקט שלכם, העתיקו את מחרוזת החיבור והריצו את השאילתה הראשונה שלכם בתוך דקות.',
+
+  // Managed PostgreSQL FAQ
+  'How is managed PostgreSQL different from TablesDB, DocumentsDB, and VectorsDB?':
+    'במה PostgreSQL מנוהל שונה מ-TablesDB, מ-DocumentsDB ומ-VectorsDB?',
+  'A managed PostgreSQL database is the raw engine, provisioned for your project with its own compute, storage, networking, and credentials. You talk to it over the PostgreSQL wire protocol instead of an Appwrite SDK, so your schema, migrations, roles, and queries are standard PostgreSQL. Use TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, platform permissions, and serverless scaling for app data instead.':
+    'מסד נתונים מנוהל של PostgreSQL הוא המנוע עצמו, שמוקם עבור הפרויקט שלכם עם מחשוב, אחסון, רשת ופרטי גישה משלו. אתם מדברים איתו דרך פרוטוקול התקשורת של PostgreSQL ולא דרך SDK של Appwrite, ולכן הסכימה, המיגרציות, התפקידים והשאילתות שלכם הם PostgreSQL רגיל. השתמשו ב-TablesDB, ב-DocumentsDB או ב-VectorsDB כשאתם רוצים SDKs של Appwrite, הרשאות פלטפורמה וקנה מידה serverless לנתוני האפליקציה.',
+  'TablesDB docs': 'תיעוד TablesDB',
+  'DocumentsDB docs': 'תיעוד DocumentsDB',
+  'VectorsDB docs': 'תיעוד VectorsDB',
+  'Which PostgreSQL versions can I run, and can I upgrade later?':
+    'אילו גרסאות PostgreSQL אפשר להריץ, והאם אפשר לשדרג בהמשך?',
+  'New databases run PostgreSQL 18 by default, and you can create one on PostgreSQL 17 by passing a version at create time. The version can be upgraded later and upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once replication catches up. Reads continue throughout, but the old instance is fenced read-only at the cutover and client connections are closed, so your application has to reconnect. Check that your installed extensions support the target version first.':
+    'מסדי נתונים חדשים רצים על PostgreSQL 18 כברירת מחדל, ואפשר ליצור מסד על PostgreSQL 17 על ידי העברת גרסה בזמן היצירה. אפשר לשדרג את הגרסה בהמשך, והשדרוגים מתבצעים בזמן ריצה: instance שני מוקם בגרסה החדשה, הנתונים זורמים אליו עם logical replication, והתעבורה עוברת אליו ברגע שהרפליקציה מדביקה את הפער. הקריאות ממשיכות כל העת, אבל ה-instance הישן נחסם לקריאה בלבד ברגע המעבר וחיבורי הלקוח נסגרים, כך שהאפליקציה שלכם צריכה להתחבר מחדש. בדקו קודם שההרחבות המותקנות שלכם תומכות בגרסת היעד.',
+  'Maintenance docs': 'תיעוד תחזוקה',
+  'Which regions can I run a database in?': 'באילו אזורים אפשר להריץ מסד נתונים?',
+  'Managed PostgreSQL is available in every Appwrite Cloud region: Frankfurt, New York, San Francisco, Singapore, Sydney, and Toronto. A database takes the region of the project that owns it, so there is no per-database region selector. Create your project close to your users first, then create the database. Each database gets a hostname in the form db-<hash>.<region>.appwrite.center and the data does not leave the region.':
+    'PostgreSQL מנוהל זמין בכל אזור של Appwrite Cloud: פרנקפורט, ניו יורק, סן פרנסיסקו, סינגפור, סידני וטורונטו. מסד נתונים מקבל את האזור של הפרויקט שמחזיק אותו, ולכן אין בחירת אזור לכל מסד נתונים בנפרד. צרו קודם את הפרויקט שלכם קרוב למשתמשים, ואז צרו את מסד הנתונים. כל מסד נתונים מקבל hostname בצורה db-<hash>.<region>.appwrite.center והנתונים לא יוצאים מהאזור.',
+  'Cloud regions': 'אזורי Cloud',
+  'How do specifications and pricing work?': 'איך מפרטים ותמחור עובדים?',
+  'Each database runs against one compute specification that sets its CPU, memory, included storage, bandwidth, and connection limit. There are twelve tiers, from 1 core and 1 GB at $10 per month up to 32 cores and 256 GB, billed monthly and pro-rated by the hour the database is running. Storage and bandwidth beyond the tier allowance are billed as overage, and optional features are add-ons: each high availability replica costs the tier price again, and point-in-time recovery adds 20%. Managed databases need a paid plan with a payment method on the organization, and your plan decides which tiers you can pick.':
+    'כל מסד נתונים רץ על מפרט מחשוב אחד שקובע את ה-CPU, הזיכרון, האחסון הכלול, רוחב הפס ומגבלת החיבורים שלו. יש שתים עשרה דרגות, מליבה אחת ו-1 GB ב-$10 לחודש ועד 32 ליבות ו-256 GB, בחיוב חודשי ומחולק יחסית לפי השעות שבהן מסד הנתונים פעל. אחסון ורוחב פס מעל ההקצאה של הדרגה מחויבים כעודף, ויכולות אופציונליות הן תוספים: כל רפליקה של זמינות גבוהה עולה שוב את מחיר הדרגה, ושחזור לנקודת זמן מוסיף 20%. מסדי נתונים מנוהלים דורשים תוכנית בתשלום עם אמצעי תשלום בארגון, והתוכנית שלכם קובעת אילו דרגות אפשר לבחור.',
+  'Pricing': 'תמחור',
+  'Scaling docs': 'תיעוד שינוי קנה מידה',
+  'How many connections can I open, and when do I need the pooler?':
+    'כמה חיבורים אפשר לפתוח, ומתי צריך את ה-Pooler?',
+  'The connection limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. PostgreSQL spends a backend process per connection, so serverless functions and horizontally scaled app servers can exhaust that limit quickly. Point runtime traffic at the pooler on port 6432, same hostname and credentials, and many short-lived clients share a small pool of server connections. Keep migrations, schema changes, and long administrative sessions on the direct port 5432.':
+    'מגבלת החיבורים נקבעת לפי המפרט שלכם, מ-100 בדרגה הקטנה ביותר ועד תקרת פלטפורמה של 10,000. PostgreSQL מקצה תהליך backend לכל חיבור, ולכן פונקציות serverless ושרתי אפליקציה שמתרחבים אופקית יכולים למצות את המגבלה הזו במהירות. הפנו את תעבורת זמן הריצה ל-Pooler בפורט 6432, אותו hostname ואותם פרטי גישה, והרבה לקוחות קצרי מועד יחלקו מאגר קטן של חיבורי שרת. השאירו מיגרציות, שינויי סכימה וסשנים אדמיניסטרטיביים ארוכים על הפורט הישיר 5432.',
+  'Connection pooling docs': 'תיעוד Connection pooling',
+  'Connections docs': 'תיעוד חיבורים',
+  'Which extensions can I install?': 'אילו הרחבות אפשר להתקין?',
+  'The available list comes from what the engine reports for your PostgreSQL version, minus extensions Appwrite does not offer, so it reflects what this database can actually install. Common picks include pgvector for embeddings, PostGIS for geospatial data, pg_trgm for fuzzy search, pgcrypto, hstore, citext, and ltree. Installs and uninstalls are free, up to 50 extensions per database, and they are managed from the Console or with a Server SDK and an API key. Uninstalling always cascades, so anything that depends on the extension is dropped with it.':
+    'הרשימה הזמינה מבוססת על מה שהמנוע מדווח עבור גרסת PostgreSQL שלכם, פחות הרחבות ש-Appwrite לא מציעה, ולכן היא משקפת מה מסד הנתונים הזה יכול להתקין בפועל. בחירות נפוצות כוללות pgvector ל-embeddings, PostGIS לנתונים גיאוגרפיים, pg_trgm לחיפוש מקורב, pgcrypto, hstore, citext ו-ltree. התקנות והסרות הן בחינם, עד 50 הרחבות לכל מסד נתונים, והן מנוהלות מהקונסולה או עם Server SDK ו-API key. הסרה תמיד מתפשטת, ולכן כל מה שתלוי בהרחבה נמחק יחד איתה.',
+  'Extensions docs': 'תיעוד הרחבות',
+  'What is the difference between backups and point-in-time recovery?':
+    'מה ההבדל בין גיבויים לשחזור לנקודת זמן?',
+  'Backups are snapshots on a schedule. Every database is provisioned with a default policy, backups are stored off the instance, and you can add policies with their own cron schedule and retention or take a manual backup before a risky change. Point-in-time recovery is an add-on that continuously archives the write-ahead log, so you can restore to any moment inside a window of 1 to 35 days, for example the second before a bad migration. Both restores are in place: the database is unavailable while it restores and anything written after the target is discarded.':
+    'גיבויים הם snapshots לפי לוח זמנים. כל מסד נתונים מוקם עם מדיניות ברירת מחדל, הגיבויים נשמרים מחוץ ל-instance, ואפשר להוסיף מדיניות עם לוח זמנים cron ותקופת שמירה משלה או לבצע גיבוי ידני לפני שינוי מסוכן. שחזור לנקודת זמן הוא תוסף שמארכב באופן רציף את ה-write-ahead log, כך שתוכלו לשחזר לכל רגע בתוך חלון של 1 עד 35 ימים, למשל השנייה שלפני מיגרציה שגויה. שני סוגי השחזור מתבצעים במקום: מסד הנתונים אינו זמין בזמן השחזור וכל מה שנכתב אחרי נקודת היעד נמחק.',
+  'How does high availability and failover work?':
+    'איך זמינות גבוהה ו-failover עובדים?',
+  'High availability adds up to five streaming replicas next to the primary, each a full copy on its own compute. Pick asynchronous replication for the fastest writes, or synchronous or quorum when you cannot lose acknowledged writes. Appwrite health-checks the primary continuously, and when it stops responding the most caught-up replica is promoted, the hostname is repointed, and the old primary is rebuilt as a replica. Your application reconnects to the same host and port, and a driver pool with retries usually recovers on its own.':
+    'זמינות גבוהה מוסיפה עד חמש רפליקות streaming לצד ה-primary, כל אחת עותק מלא על מחשוב משלה. בחרו רפליקציה asynchronous לכתיבות המהירות ביותר, או synchronous או quorum כשאסור לאבד כתיבות שאושרו. Appwrite בודקת את תקינות ה-primary באופן רציף, וכשהוא מפסיק להגיב הרפליקה המעודכנת ביותר מקודמת, ה-hostname מופנה אליה, וה-primary הישן נבנה מחדש כרפליקה. האפליקציה שלכם מתחברת שוב לאותו host ואותו פורט, ו-pool של driver עם ניסיונות חוזרים בדרך כלל מתאושש לבד.',
+  'High availability docs': 'תיעוד זמינות גבוהה',
+  'What are branches good for?': 'למה Branches טובים?',
+  'A branch is a short-lived, isolated copy of your database created from a storage snapshot, with its own endpoint and the parent credentials. The parent is never frozen and takes no write pause. Use a branch to rehearse a destructive migration, reproduce a bug, run heavy analytical queries, or give every pull request its own database. Branches diverge from the parent and never merge back, and every branch has a TTL: 24 hours by default and 7 days at most.':
+    'Branch הוא עותק מבודד וקצר מועד של מסד הנתונים שלכם, שנוצר מ-snapshot של האחסון, עם endpoint משל עצמו ועם פרטי הגישה של מסד האב. מסד האב לא מוקפא ולא עוצר כתיבות. השתמשו ב-Branch כדי לתרגל מיגרציה הרסנית, לשחזר באג, להריץ שאילתות אנליטיות כבדות או לתת לכל pull request מסד נתונים משלו. Branches מתפצלים ממסד האב ואף פעם לא ממוזגים חזרה, ולכל Branch יש TTL: 24 שעות כברירת מחדל ועד 7 ימים.',
+  'Branches docs': 'תיעוד Branches',
+  'What does Appwrite manage, and what do I still own?':
+    'מה Appwrite מנהלת, ועל מה אתם עדיין אחראים?',
+  'Appwrite manages the database container, storage, networking, TLS, backups, replication, security patches, and engine upgrades, and gives you a weekly maintenance window, pause and resume, and live metrics. You own everything above the wire protocol: schema, migrations, indexes, roles and grants, queries, which extensions to install, and the IP allowlist. There is nothing Appwrite-specific in your application code.':
+    'Appwrite מנהלת את קונטיינר מסד הנתונים, האחסון, הרשת, TLS, הגיבויים, הרפליקציה, עדכוני האבטחה ושדרוגי המנוע, ונותנת לכם חלון תחזוקה שבועי, השהיה והמשך, ומטריקות חיות. אתם אחראים על כל מה שמעל פרוטוקול התקשורת: סכימה, מיגרציות, אינדקסים, תפקידים והרשאות, שאילתות, אילו הרחבות להתקין ורשימת ה-IP המותרים. אין שום דבר ייחודי ל-Appwrite בקוד האפליקציה שלכם.',
+  'Network security docs': 'תיעוד אבטחת רשת',
+  'Can I migrate an existing PostgreSQL database in?':
+    'האם אפשר לייבא מסד נתונים PostgreSQL קיים?',
+  'Yes, with the standard PostgreSQL tooling you already use. Create the database, copy its connection string, and run your dump and restore against the direct port 5432, because tools like pg_dump expect one session for the whole run and can misbehave in transaction mode. Then point your application runtime at the pooler on port 6432. Any client that speaks the PostgreSQL wire protocol works, including pgAdmin, DataGrip, and your migration tool of choice.':
+    'כן, עם כלי PostgreSQL הרגילים שאתם כבר משתמשים בהם. צרו את מסד הנתונים, העתיקו את מחרוזת החיבור שלו והריצו את ה-dump וה-restore מול הפורט הישיר 5432, כי כלים כמו pg_dump מצפים לסשן אחד לכל ההרצה ויכולים להתנהג לא כשורה במצב transaction. אחר כך הפנו את זמן הריצה של האפליקציה ל-Pooler בפורט 6432. כל לקוח שמדבר את פרוטוקול התקשורת של PostgreSQL עובד, כולל pgAdmin, DataGrip וכלי המיגרציה שבחרתם.',
+
+  // Managed PostgreSQL feature sections
+  'A PostgreSQL endpoint, nothing else in the way':
+    'Endpoint של PostgreSQL, בלי שום דבר בדרך',
+  'Every database gets its own hostname on port 5432, TLS by default, and an admin role that owns it. Connect with psql, any driver, or any ORM: Prisma, Drizzle, Kysely, Laravel, Django, Rails. The Console credentials dialog hands you a ready-made DSN, .env, Prisma, Drizzle, or psql snippet, and you can rotate the primary password whenever your policy says so.':
+    'כל מסד נתונים מקבל hostname משלו בפורט 5432, TLS כברירת מחדל ותפקיד admin שהוא הבעלים שלו. התחברו עם psql, עם כל driver או עם כל ORM: Prisma, Drizzle, Kysely, Laravel, Django, Rails. דיאלוג פרטי הגישה בקונסולה נותן לכם קטע קוד מוכן של DSN, .env, Prisma, Drizzle או psql, ואפשר להחליף את הסיסמה הראשית בכל פעם שהמדיניות שלכם דורשת זאת.',
+  'Quick start docs': 'תיעוד התחלה מהירה',
+  'Connection pooling on port 6432': 'Connection pooling בפורט 6432',
+  'PostgreSQL spends a backend process per connection, so serverless functions and horizontally scaled app servers exhaust a specification fast. The pooler runs next to your database on the same hostname with the same credentials and TLS: switch the port to 6432 and many short-lived clients share a small pool of server connections. Transaction mode is the default, session mode keeps prepared statements and LISTEN/NOTIFY, and reads route to replicas automatically once high availability is on.':
+    'PostgreSQL מקצה תהליך backend לכל חיבור, ולכן פונקציות serverless ושרתי אפליקציה שמתרחבים אופקית ממצים מפרט במהירות. ה-Pooler רץ לצד מסד הנתונים שלכם על אותו hostname עם אותם פרטי גישה ואותו TLS: החליפו את הפורט ל-6432 והרבה לקוחות קצרי מועד יחלקו מאגר קטן של חיבורי שרת. מצב transaction הוא ברירת המחדל, מצב session שומר prepared statements ו-LISTEN/NOTIFY, וקריאות מנותבות לרפליקות אוטומטית ברגע שזמינות גבוהה מופעלת.',
+  'pgvector, PostGIS, and the rest at no extra cost':
+    'pgvector, PostGIS והשאר בלי תוספת עלות',
+  'The extension catalog follows your PostgreSQL version, so you install embeddings, geospatial types, fuzzy search, and crypto helpers the same way you would on your own server. Installs and uninstalls are free, up to 50 extensions per database, managed from the Console or with a Server SDK and an API key.':
+    'קטלוג ההרחבות עוקב אחרי גרסת PostgreSQL שלכם, ולכן אתם מתקינים embeddings, סוגים גיאוגרפיים, חיפוש מקורב וכלי הצפנה בדיוק כמו שהייתם עושים בשרת שלכם. התקנות והסרות הן בחינם, עד 50 הרחבות לכל מסד נתונים, בניהול מהקונסולה או עם Server SDK ו-API key.',
+  'Snapshot branches in minutes': 'Branches מ-snapshot בתוך דקות',
+  'A branch is an isolated copy of your database taken from a storage snapshot, with its own endpoint and the parent credentials. The parent is never frozen and takes no write pause. Rehearse a destructive migration, reproduce a bug, or give every pull request its own database. Branches diverge from the parent and never merge back, so they expire: 24 hours by default, 7 days at most.':
+    'Branch הוא עותק מבודד של מסד הנתונים שלכם שנלקח מ-snapshot של האחסון, עם endpoint משל עצמו ועם פרטי הגישה של מסד האב. מסד האב לא מוקפא ולא עוצר כתיבות. תרגלו מיגרציה הרסנית, שחזרו באג או תנו לכל pull request מסד נתונים משלו. Branches מתפצלים ממסד האב ואף פעם לא ממוזגים חזרה, ולכן תוקפם פג: 24 שעות כברירת מחדל, ועד 7 ימים.',
+  'Backups off the instance, restores on demand':
+    'גיבויים מחוץ ל-instance, שחזור לפי דרישה',
+  'Every database is provisioned with a backup policy, and backups are stored off the database instance. Add policies with their own cron schedule and retention, take a manual backup before a risky change, and restore when something goes wrong. Enable point-in-time recovery as an add-on to archive the write-ahead log continuously and restore to any moment in a window of up to 35 days.':
+    'כל מסד נתונים מוקם עם מדיניות גיבוי, והגיבויים נשמרים מחוץ ל-instance של מסד הנתונים. הוסיפו מדיניות עם לוח זמנים cron ותקופת שמירה משלה, בצעו גיבוי ידני לפני שינוי מסוכן ושחזרו כשמשהו משתבש. הפעילו שחזור לנקודת זמן כתוסף כדי לארכב את ה-write-ahead log באופן רציף ולשחזר לכל רגע בחלון של עד 35 ימים.',
+  'Replicas with automatic failover': 'רפליקות עם failover אוטומטי',
+  'Add up to five streaming replicas next to the primary and pick how safe your writes should be: asynchronous for the fastest commits, synchronous or quorum when you cannot lose an acknowledged write. When the primary stops responding, Appwrite promotes the most caught-up replica and repoints the hostname, so your application reconnects to the same host. With read/write splitting on the pooler, those replicas serve your read traffic too.':
+    'הוסיפו עד חמש רפליקות streaming לצד ה-primary ובחרו כמה בטוחות הכתיבות שלכם צריכות להיות: asynchronous ל-commits המהירים ביותר, synchronous או quorum כשאסור לאבד כתיבה שאושרה. כשה-primary מפסיק להגיב, Appwrite מקדמת את הרפליקה המעודכנת ביותר ומפנה אליה את ה-hostname, כך שהאפליקציה שלכם מתחברת שוב לאותו host. עם הפרדת קריאה/כתיבה ב-Pooler, הרפליקות האלה משרתות גם את תעבורת הקריאה שלכם.',
+  'Live metrics and online resizing': 'מטריקות חיות ושינוי גודל בזמן ריצה',
+  'The Monitor tab tracks compute, connections, storage, and workload without anything to install: CPU, memory, queries per second, cache hit ratio, disk growth, and the largest tables. Inspect live sessions from the connections list, then cancel a query or terminate an idle-in-transaction session that is holding locks. When the metrics say it is time, resize compute online and let storage grow on its own.':
+    'לשונית Monitor עוקבת אחרי מחשוב, חיבורים, אחסון ועומס עבודה בלי להתקין כלום: CPU, זיכרון, שאילתות בשנייה, יחס פגיעות מטמון, גידול דיסק והטבלאות הגדולות ביותר. בדקו סשנים חיים מרשימת החיבורים, ואז בטלו שאילתה או סיימו סשן במצב idle in transaction שמחזיק מנעולים. כשהמטריקות אומרות שהגיע הזמן, שנו את גודל המחשוב בזמן ריצה ותנו לאחסון לגדול לבד.',
+  'Monitoring docs': 'תיעוד ניטור',
+
+  // Managed PostgreSQL visuals
+  'Your toolchain': 'כלי העבודה שלכם',
+  'Rotatable': 'ניתן להחלפה',
+  'TLS by default': 'TLS כברירת מחדל',
+  'Rotate password': 'החלפת סיסמה',
+  'Console or API': 'קונסולה או API',
+  'Same credentials, any client': 'אותם פרטי גישה, כל לקוח',
+  'Pool': 'מאגר',
+  'Same credentials and TLS': 'אותם פרטי גישה ואותו TLS',
+  'Writes and locked reads': 'כתיבות וקריאות עם נעילה',
+  'SELECT traffic': 'תעבורת SELECT',
+  'Transaction mode by default. Read/write splitting turns on with high availability, so SELECT traffic reaches replicas.':
+    'מצב transaction כברירת מחדל. הפרדת קריאה/כתיבה נדלקת עם זמינות גבוהה, כך שתעבורת SELECT מגיעה לרפליקות.',
+  'Search and AI': 'חיפוש ו-AI',
+  'Geospatial': 'נתונים גיאוגרפיים',
+  'Security and data types': 'אבטחה וסוגי נתונים',
+  'Vector data type and similarity search for embeddings, next to your relational data.':
+    'סוג נתונים וקטורי וחיפוש דמיון ל-embeddings, לצד הנתונים הרלציוניים שלכם.',
+  'Trigram matching for fuzzy string search, typo tolerance, and similarity ranking.':
+    'התאמת trigram לחיפוש מחרוזות מקורב, סובלנות לשגיאות כתיב ודירוג דמיון.',
+  'Spatial types, indexes, and functions for geographic objects and radius queries.':
+    'סוגים, אינדקסים ופונקציות מרחביים לאובייקטים גיאוגרפיים ולשאילתות רדיוס.',
+  'Represent and query hierarchical, tree-like data such as categories and org charts.':
+    'ייצוג ותשאול של נתונים היררכיים בצורת עץ, כמו קטגוריות ותרשימי ארגון.',
+  'Cryptographic functions for hashing and encrypting values inside the database.':
+    'פונקציות הצפנה ל-hashing ולהצפנת ערכים בתוך מסד הנתונים.',
+  'Case-insensitive text, plus hstore for key/value columns and uuid-ossp for UUIDs.':
+    'טקסט שאינו תלוי רישיות, וגם hstore לעמודות מפתח/ערך ו-uuid-ossp ל-UUIDs.',
+  'Free to install and uninstall': 'התקנה והסרה בחינם',
+  'Up to 50 extensions per database': 'עד 50 הרחבות לכל מסד נתונים',
+  'Server SDK and API key, or the Console': 'Server SDK ו-API key, או הקונסולה',
+  'Install from a Server SDK': 'התקנה מ-Server SDK',
+  'Parent database': 'מסד נתונים אב',
+  'No write pause, no freeze': 'בלי עצירת כתיבות, בלי הקפאה',
+  'Preview environment': 'סביבת תצוגה מקדימה',
+  'Rehearse an ALTER': 'תרגול ALTER',
+  'Snapshot copy': 'עותק מ-snapshot',
+  'Parent credentials reused': 'פרטי הגישה של מסד האב בשימוש חוזר',
+  'Branches diverge and never merge back':
+    'Branches מתפצלים ואף פעם לא ממוזגים חזרה',
+  'Own schedule and retention per policy':
+    'לוח זמנים ותקופת שמירה משלה לכל מדיניות',
+  'Daily policy': 'מדיניות יומית',
+  'Kept until removed': 'נשמר עד להסרה',
+  'WAL archived continuously': 'WAL מאורכב באופן רציף',
+  'Window up to 35 days': 'חלון של עד 35 ימים',
+  'Stored off the instance': 'נשמר מחוץ ל-instance',
+  'Restore in place when you need it': 'שחזור במקום כשצריך',
+  'Next to promote': 'הבאה לקידום',
+  'Streaming to 3 replicas': 'Streaming ל-3 רפליקות',
+  'Automatic failover': 'failover אוטומטי',
+  'Same hostname, same port': 'אותו hostname, אותו פורט',
+  'Replication mode': 'מצב רפליקציה',
+  'Fastest commits': 'ה-commits המהירים ביותר',
+  'One confirmation': 'אישור אחד',
+  'Majority confirms': 'רוב מאשר',
+  'Queries / sec': 'שאילתות / שנייה',
+  'Active connections': 'חיבורים פעילים',
+  'Cancel or terminate': 'ביטול או סיום',
+  'idle': 'סרק',
+  'idle in transaction': 'סרק בטרנזקציה',
+  'Resize compute': 'שינוי גודל מחשוב',
+  'Online, no dump and restore': 'בזמן ריצה, בלי dump ו-restore',
+  'Grows past 85% usage': 'גדל כשהשימוש עובר 85%',
+
+  // Managed PostgreSQL, shortened hero and CTA copy
+  'Appwrite runs the engine and you keep the SQL. Connect with psql or any driver, bring your own ORM and migrations, and get the full PostgreSQL feature set with nothing in between.':
+    'Appwrite מריצה את המנוע ואתם שומרים על ה-SQL. התחברו עם psql או עם כל driver, הביאו ORM ומיגרציות משלכם וקבלו את כל יכולות PostgreSQL בלי שום דבר באמצע.',
+  'Create a database in your project region, copy the connection string, and run your first query.':
+    'צרו מסד נתונים באזור הפרויקט שלכם, העתיקו את מחרוזת החיבור והריצו את השאילתה הראשונה שלכם.',
+
+  // Managed PostgreSQL, shortened FAQ answers
+  'A managed PostgreSQL database is the raw engine with its own compute, storage, and credentials. You talk to it over the PostgreSQL wire protocol instead of an Appwrite SDK, so schema, migrations, roles, and queries are standard PostgreSQL. Use TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs and platform permissions for app data instead.':
+    'מסד נתונים מנוהל של PostgreSQL הוא המנוע עצמו, עם מחשוב, אחסון ופרטי גישה משלו. אתם מדברים איתו דרך פרוטוקול התקשורת של PostgreSQL ולא דרך SDK של Appwrite, ולכן הסכימה, המיגרציות, התפקידים והשאילתות הם PostgreSQL רגיל. השתמשו ב-TablesDB, ב-DocumentsDB או ב-VectorsDB כשאתם רוצים SDKs של Appwrite והרשאות פלטפורמה לנתוני האפליקציה.',
+  'New databases run PostgreSQL 18 by default, and you can pick PostgreSQL 17 at create time. Upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over once it catches up. Connections are closed at the cutover, so your application has to reconnect.':
+    'מסדי נתונים חדשים רצים על PostgreSQL 18 כברירת מחדל, ואפשר לבחור PostgreSQL 17 בזמן היצירה. השדרוגים מתבצעים בזמן ריצה: instance שני מוקם בגרסה החדשה, הנתונים זורמים אליו עם logical replication, והתעבורה עוברת אליו ברגע שהוא מדביק את הפער. החיבורים נסגרים ברגע המעבר, ולכן האפליקציה שלכם צריכה להתחבר מחדש.',
+  'Every Appwrite Cloud region: Frankfurt, New York, San Francisco, Singapore, Sydney, and Toronto. A database takes the region of the project that owns it, so create your project close to your users first. Each database gets a hostname in the form db-<hash>.<region>.appwrite.center and the data does not leave the region.':
+    'כל אזור של Appwrite Cloud: פרנקפורט, ניו יורק, סן פרנסיסקו, סינגפור, סידני וטורונטו. מסד נתונים מקבל את האזור של הפרויקט שמחזיק אותו, ולכן צרו קודם את הפרויקט שלכם קרוב למשתמשים. כל מסד נתונים מקבל hostname בצורה db-<hash>.<region>.appwrite.center והנתונים לא יוצאים מהאזור.',
+  'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are +50% of base per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.':
+    'PostgreSQL משתמש באותן דרגות מחשוב ייעודי כמו בתמחור: מעבד, זיכרון וחיבורים שמורים, החל מ-$10/חודש לכל מסד נתונים. קריאות וכתיבות כלולות בדרגה. רפליקת זמינות גבוהה מחויבת ב-+50% מהבסיס לכל רפליקה, ושחזור לנקודת זמן ב-+20% מהבסיס. אחסון ורוחב פס נוספים הם חריגה לפי שימוש. מסדי נתונים מנוהלים דורשים תוכנית בתשלום.',
+  'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler on port 6432, where many short-lived clients share a small pool. Keep migrations and long administrative sessions on the direct port 5432.':
+    'המגבלה נקבעת לפי המפרט שלכם, מ-100 בדרגה הקטנה ביותר ועד תקרת פלטפורמה של 10,000. מכיוון ש-PostgreSQL מקצה תהליך backend לכל חיבור, הפנו את תעבורת זמן הריצה ל-Pooler בפורט 6432, שם הרבה לקוחות קצרי מועד חולקים מאגר קטן. השאירו מיגרציות וסשנים אדמיניסטרטיביים ארוכים על הפורט הישיר 5432.',
+  'The list comes from what the engine reports for your PostgreSQL version, so it reflects what this database can actually install: pgvector for embeddings, PostGIS for geospatial data, pg_trgm for fuzzy search, pgcrypto, hstore, citext, and ltree. Installs are free, up to 50 per database. Uninstalling always cascades, so anything depending on the extension is dropped with it.':
+    'הרשימה מבוססת על מה שהמנוע מדווח עבור גרסת PostgreSQL שלכם, ולכן היא משקפת מה מסד הנתונים הזה יכול להתקין בפועל: pgvector ל-embeddings, PostGIS לנתונים גיאוגרפיים, pg_trgm לחיפוש מקורב, pgcrypto, hstore, citext ו-ltree. ההתקנות הן בחינם, עד 50 לכל מסד נתונים. הסרה תמיד מתפשטת, ולכן כל מה שתלוי בהרחבה נמחק יחד איתה.',
+  'Backups are snapshots on a schedule, stored off the instance, with your own cron and retention on top of the default policy. Point-in-time recovery is an add-on that archives the write-ahead log continuously, so you can restore to any moment in a window of 1 to 35 days. Both restore in place, so anything written after the target is discarded.':
+    'גיבויים הם snapshots לפי לוח זמנים, שנשמרים מחוץ ל-instance, עם cron ותקופת שמירה משלכם מעל מדיניות ברירת המחדל. שחזור לנקודת זמן הוא תוסף שמארכב את ה-write-ahead log באופן רציף, כך שתוכלו לשחזר לכל רגע בחלון של 1 עד 35 ימים. שני הסוגים משחזרים במקום, ולכן כל מה שנכתב אחרי נקודת היעד נמחק.',
+  'High availability adds up to five streaming replicas, each a full copy on its own compute. Pick asynchronous replication for the fastest writes, or synchronous or quorum when you cannot lose acknowledged writes. When the primary stops responding, the most caught-up replica is promoted and the hostname repointed, so a driver pool with retries usually recovers on its own.':
+    'זמינות גבוהה מוסיפה עד חמש רפליקות streaming, כל אחת עותק מלא על מחשוב משלה. בחרו רפליקציה asynchronous לכתיבות המהירות ביותר, או synchronous או quorum כשאסור לאבד כתיבות שאושרו. כשה-primary מפסיק להגיב, הרפליקה המעודכנת ביותר מקודמת וה-hostname מופנה אליה, כך ש-pool של driver עם ניסיונות חוזרים בדרך כלל מתאושש לבד.',
+  'A branch is a short-lived copy created from a storage snapshot, with its own endpoint and the parent credentials. The parent is never frozen and takes no write pause. Rehearse a destructive migration, reproduce a bug, or give every pull request its own database. Branches never merge back and expire after 24 hours by default, 7 days at most.':
+    'Branch הוא עותק קצר מועד שנוצר מ-snapshot של האחסון, עם endpoint משל עצמו ועם פרטי הגישה של מסד האב. מסד האב לא מוקפא ולא עוצר כתיבות. תרגלו מיגרציה הרסנית, שחזרו באג או תנו לכל pull request מסד נתונים משלו. Branches אף פעם לא ממוזגים חזרה ותוקפם פג אחרי 24 שעות כברירת מחדל, ועד 7 ימים.',
+  'Appwrite manages the container, storage, networking, TLS, backups, replication, security patches, and engine upgrades. You own everything above the wire protocol: schema, migrations, indexes, roles and grants, queries, extensions, and the IP allowlist. There is nothing Appwrite-specific in your application code.':
+    'Appwrite מנהלת את הקונטיינר, האחסון, הרשת, TLS, הגיבויים, הרפליקציה, עדכוני האבטחה ושדרוגי המנוע. אתם אחראים על כל מה שמעל פרוטוקול התקשורת: סכימה, מיגרציות, אינדקסים, תפקידים והרשאות, שאילתות, הרחבות ורשימת ה-IP המותרים. אין שום דבר ייחודי ל-Appwrite בקוד האפליקציה שלכם.',
+  'Yes, with the standard PostgreSQL tooling you already use. Run your dump and restore against the direct port 5432, because tools like pg_dump expect one session for the whole run, then point your application runtime at the pooler on port 6432. Any client that speaks the wire protocol works, including pgAdmin and DataGrip.':
+    'כן, עם כלי PostgreSQL הרגילים שאתם כבר משתמשים בהם. הריצו את ה-dump וה-restore מול הפורט הישיר 5432, כי כלים כמו pg_dump מצפים לסשן אחד לכל ההרצה, ואז הפנו את זמן הריצה של האפליקציה ל-Pooler בפורט 6432. כל לקוח שמדבר את פרוטוקול התקשורת עובד, כולל pgAdmin ו-DataGrip.',
+
+  // Managed PostgreSQL, shortened feature descriptions
+  'Every database gets its own hostname on port 5432, TLS, and an admin role that owns it. Connect with psql, any driver, or any ORM, and copy a ready-made DSN, .env, or Prisma snippet from the Console.':
+    'כל מסד נתונים מקבל hostname משלו בפורט 5432, TLS ותפקיד admin שהוא הבעלים שלו. התחברו עם psql, עם כל driver או עם כל ORM, והעתיקו מהקונסולה קטע קוד מוכן של DSN, .env או Prisma.',
+  'PostgreSQL spends a backend process per connection, so serverless functions exhaust a specification fast. Switch to port 6432, same hostname and credentials, and short-lived clients share a small pool.':
+    'PostgreSQL מקצה תהליך backend לכל חיבור, ולכן פונקציות serverless ממצות מפרט במהירות. החליפו לפורט 6432, אותו hostname ואותם פרטי גישה, ולקוחות קצרי מועד יחלקו מאגר קטן.',
+  'The catalog follows your PostgreSQL version, so you install embeddings, geospatial types, and fuzzy search the same way you would on your own server. Free to install, up to 50 per database.':
+    'הקטלוג עוקב אחרי גרסת PostgreSQL שלכם, ולכן אתם מתקינים embeddings, סוגים גיאוגרפיים וחיפוש מקורב בדיוק כמו שהייתם עושים בשרת שלכם. ההתקנה בחינם, עד 50 לכל מסד נתונים.',
+  'A branch is an isolated copy taken from a storage snapshot, with its own endpoint and the parent credentials. The parent never pauses writes. Rehearse a migration or give every pull request a database.':
+    'Branch הוא עותק מבודד שנלקח מ-snapshot של האחסון, עם endpoint משל עצמו ועם פרטי הגישה של מסד האב. מסד האב אף פעם לא עוצר כתיבות. תרגלו מיגרציה או תנו לכל pull request מסד נתונים.',
+  'Every database ships with a backup policy and backups are stored off the instance. Add your own schedule and retention, or enable point-in-time recovery to restore to any moment in the last 35 days.':
+    'כל מסד נתונים מגיע עם מדיניות גיבוי, והגיבויים נשמרים מחוץ ל-instance. הוסיפו לוח זמנים ותקופת שמירה משלכם, או הפעילו שחזור לנקודת זמן כדי לשחזר לכל רגע ב-35 הימים האחרונים.',
+  'Add up to five streaming replicas and pick how safe writes should be: asynchronous, synchronous, or quorum. If the primary stops responding, the most caught-up replica is promoted and the hostname repointed.':
+    'הוסיפו עד חמש רפליקות streaming ובחרו כמה בטוחות הכתיבות צריכות להיות: asynchronous, synchronous או quorum. אם ה-primary מפסיק להגיב, הרפליקה המעודכנת ביותר מקודמת וה-hostname מופנה אליה.',
+  'The Monitor tab tracks CPU, memory, queries per second, cache hit ratio, and disk growth with nothing to install. Inspect live sessions, cancel a query, then resize compute online when it is time.':
+    'לשונית Monitor עוקבת אחרי CPU, זיכרון, שאילתות בשנייה, יחס פגיעות מטמון וגידול דיסק, בלי להתקין כלום. בדקו סשנים חיים, בטלו שאילתה, ואז שנו את גודל המחשוב בזמן ריצה כשמגיע הזמן.',
+
+  // Realtime product page
+  'Live data over one WebSocket': 'נתונים חיים על WebSocket אחד',
+  'Subscribe to Appwrite events over one WebSocket connection. Realtime brings type-safe channels, server-side query filters, live presence, and permission-aware events to every Appwrite service.':
+    'הירשמו לאירועי Appwrite דרך חיבור WebSocket אחד. Realtime מביא ערוצים בטוחי טיפוסים, מסנני שאילתות בצד השרת, Presence חי ואירועים שמודעים להרשאות לכל שירות של Appwrite.',
+  'Subscribe to events from any Appwrite service and receive changes within milliseconds instead of polling for them. A single connection carries every subscription, filters events server-side, and only delivers what the signed-in user is allowed to read.':
+    'הירשמו לאירועים מכל שירות של Appwrite וקבלו שינויים בתוך אלפיות שנייה במקום לתשאל אותם. חיבור אחד נושא את כל ההרשמות, מסנן אירועים בצד השרת ומוסר רק את מה שהמשתמש המחובר מורשה לקרוא.',
+  '1 socket': 'סוקט אחד',
+  'Shared by all subscriptions': 'משותף לכל ההרשמות',
+  'Milliseconds': 'אלפיות שנייה',
+  'From write to subscriber': 'מהכתיבה ועד הנרשם',
+  'Across every service': 'בכל השירותים',
+  'Filtered server-side': 'מסונן בצד השרת',
+  'Live online status': 'סטטוס מחוברים בזמן אמת',
+  'Start building with Realtime': 'התחילו לבנות עם Realtime',
+  'Subscribe to your first channel and watch rows, files, and presence updates arrive as they happen.':
+    'הירשמו לערוץ הראשון שלכם וראו עדכוני שורות, קבצים ו-Presence מגיעים ברגע שהם קורים.',
+
+  // Realtime FAQ
+  'What is Appwrite Realtime?': 'מה זה Appwrite Realtime?',
+  'Realtime is a third protocol for talking to Appwrite, alongside REST and GraphQL. Instead of requesting new data over HTTP, you subscribe once and the server pushes new data to every connected client over a WebSocket as soon as it changes. Subscriptions cover events from all of Appwrite services, not just databases.':
+    'Realtime הוא פרוטוקול שלישי לתקשורת עם Appwrite, לצד REST ו-GraphQL. במקום לבקש נתונים חדשים דרך HTTP, אתם נרשמים פעם אחת והשרת דוחף נתונים חדשים לכל לקוח מחובר דרך WebSocket ברגע שהם משתנים. ההרשמות מכסות אירועים מכל שירותי Appwrite, לא רק ממסדי נתונים.',
+  'Realtime overview': 'סקירת Realtime',
+  'How many WebSocket connections does my app open?':
+    'כמה חיבורי WebSocket האפליקציה שלי פותחת?',
+  'Client SDKs use a single WebSocket per Realtime client for all subscriptions. Adding one with subscribe(), replacing its channels or queries with update(), and dropping it with unsubscribe() all apply on the existing socket where supported, so there is no full reconnect. The connection closes when you call realtime.disconnect().':
+    'Client SDKs משתמשים ב-WebSocket אחד לכל לקוח Realtime עבור כל ההרשמות. הוספה עם subscribe(), החלפת הערוצים או השאילתות שלה עם update() והסרה עם unsubscribe() חלות כולן על הסוקט הקיים כשיש תמיכה, כך שאין חיבור מחדש מלא. החיבור נסגר כשאתם קוראים ל-realtime.disconnect().',
+  'Subscribe docs': 'תיעוד הרשמה',
+  'Which resources can I subscribe to?': 'לאילו משאבים אפשר להירשם?',
+  'Channels cover account events, rows, files, teams, memberships, executions, functions, and presences. The Channel helper class builds the channel string for you with a fluent API, so you can target one row or every row in a table. Leave an ID blank to subscribe with a wildcard, and append .create(), .update(), or .delete() to narrow the stream to a single event type.':
+    'ערוצים מכסים אירועי חשבון, שורות, קבצים, צוותים, חברויות, הרצות, פונקציות ו-Presences. מחלקת העזר Channel בונה בשבילכם את מחרוזת הערוץ עם API שוטף, כך שתוכלו לכוון לשורה אחת או לכל השורות בטבלה. השאירו מזהה ריק כדי להירשם עם תו כללי, והוסיפו .create(), .update() או .delete() כדי לצמצם את הזרם לסוג אירוע אחד.',
+  'Channels docs': 'תיעוד ערוצים',
+  'Events reference': 'מדריך האירועים',
+  'Can I filter events before they reach my callback?':
+    'האם אפשר לסנן אירועים לפני שהם מגיעים ל-callback שלי?',
+  'Yes. Pass queries as a third parameter when you subscribe and Appwrite filters events server-side, so your callback only runs for updates that match. Realtime supports Query.equal, Query.notEqual, the greater than and less than comparisons, Query.isNull, Query.isNotNull, Query.and, and Query.or.':
+    'כן. העבירו שאילתות כפרמטר שלישי כשאתם נרשמים ו-Appwrite מסננת את האירועים בצד השרת, כך שה-callback שלכם רץ רק עבור עדכונים שמתאימים. Realtime תומך ב-Query.equal, ב-Query.notEqual, בהשוואות גדול מ- וקטן מ-, ב-Query.isNull, ב-Query.isNotNull, ב-Query.and וב-Query.or.',
+  'Realtime queries docs': 'תיעוד שאילתות Realtime',
+  'What does a Realtime message look like?': 'איך נראית הודעת Realtime?',
+  'Every message carries four properties: events (the Appwrite events that triggered the update), channels (the channels that can receive it), timestamp (an ISO 8601 time in UTC from the server), and payload (the same data as the matching response model). Branch on the event names in events to decide how to update your UI.':
+    'כל הודעה נושאת ארבעה מאפיינים: events (אירועי Appwrite שהפעילו את העדכון), channels (הערוצים שיכולים לקבל אותה), timestamp (זמן ISO 8601 ב-UTC מהשרת) ו-payload (אותם נתונים כמו מודל התשובה המתאים). פצלו לפי שמות האירועים ב-events כדי להחליט איך לעדכן את ה-UI שלכם.',
+  'Payload docs': 'תיעוד Payload',
+  'Can a user receive updates for data they cannot read?':
+    'האם משתמש יכול לקבל עדכונים על נתונים שאינו יכול לקרוא?',
+  'No. Every subscription is secured by the same permissions system used by rows, files, and presences, so a user only receives updates for resources they have permission to access. Granting read to Role.any() is what makes a resource stream to any client, including visitors who are not signed in.':
+    'לא. כל הרשמה מאובטחת באותה מערכת הרשאות שמשמשת שורות, קבצים ו-Presences, ולכן משתמש מקבל עדכונים רק על משאבים שיש לו הרשאה לגשת אליהם. מתן הרשאת קריאה ל-Role.any() הוא מה שגורם למשאב לזרום לכל לקוח, כולל מבקרים שאינם מחוברים.',
+  'Realtime authentication docs': 'תיעוד אימות Realtime',
+  'What happens when the user signs in or out?':
+    'מה קורה כשהמשתמש מתחבר או מתנתק?',
+  'Realtime authenticates with the session that existed when the subscription was created. If you authenticate after subscribing, that subscription will not receive updates for the new user, so create the session first. When a user signs out and another signs in, call realtime.disconnect() and subscribe again for the new session.':
+    'Realtime מאמת עם הסשן שהיה קיים כשההרשמה נוצרה. אם אתם מאמתים אחרי ההרשמה, ההרשמה הזו לא תקבל עדכונים עבור המשתמש החדש, ולכן צרו קודם את הסשן. כשמשתמש מתנתק ואחר מתחבר, קראו ל-realtime.disconnect() והירשמו מחדש עבור הסשן החדש.',
+  'How does presence work?': 'איך Presence עובד?',
+  'A presence is a short-lived record tied to a user, with a userId, a free-form status string, an optional metadata object, and an expiresAt timestamp. It is durable, so you can list presences at any time to see who is here, and live, so every change fires upsert, update, and delete events on the presences channels. Keep a record alive with a heartbeat, or use realtime.upsertPresence() so it is removed when the connection closes.':
+    'Presence היא רשומה קצרת מועד שמשויכת למשתמש, עם userId, מחרוזת status חופשית, אובייקט metadata אופציונלי וחותמת זמן expiresAt. היא נשמרת, ולכן אפשר לרשום את ה-Presences בכל רגע ולראות מי נמצא כאן, והיא חיה, ולכן כל שינוי מפעיל אירועי upsert, update ו-delete בערוצי ה-presences. שמרו רשומה בחיים עם heartbeat, או השתמשו ב-realtime.upsertPresence() כדי שהיא תוסר כשהחיבור נסגר.',
+  'Auth presences': 'Presences באימות',
+  'Can I use Realtime from a Server SDK with an API key?':
+    'האם אפשר להשתמש ב-Realtime מ-Server SDK עם API key?',
+  'Not today. Realtime subscriptions are a client SDK feature and are not offered for Server SDKs with an API key. Presence records are the exception: they are also a regular HTTP resource, so server code can write them with an API key that has the presences.write scope and clients will see the change live.':
+    'לא כרגע. הרשמות Realtime הן יכולת של client SDK ואינן מוצעות ל-Server SDKs עם API key. רשומות Presence הן החריג: הן גם משאב HTTP רגיל, ולכן קוד שרת יכול לכתוב אותן עם API key שיש לו את ה-scope presences.write, והלקוחות יראו את השינוי בזמן אמת.',
+  'Can I point the SDK at a custom WebSocket endpoint?':
+    'האם אפשר להפנות את ה-SDK ל-endpoint WebSocket מותאם?',
+  'Yes. The SDK derives the Realtime endpoint from your Appwrite endpoint, which is wss://<REGION>.cloud.appwrite.io/v1/realtime by default. If you run Appwrite behind a custom proxy and moved the Realtime route, call setEndpointRealtime on the client with your own value.':
+    'כן. ה-SDK גוזר את ה-endpoint של Realtime מה-endpoint של Appwrite שלכם, שהוא wss://<REGION>.cloud.appwrite.io/v1/realtime כברירת מחדל. אם אתם מריצים את Appwrite מאחורי proxy מותאם והזזתם את הנתיב של Realtime, קראו ל-setEndpointRealtime בלקוח עם הערך שלכם.',
+  'Custom endpoint docs': 'תיעוד Endpoint מותאם',
+
+  // Realtime feature sections
+  'One connection, many subscriptions': 'חיבור אחד, הרשמות רבות',
+  'Create a Realtime client once and every subscription shares a single WebSocket. Add one with subscribe(), replace its channels or queries with update(), and drop it with unsubscribe() without reconnecting the client. Call disconnect() when you want to close everything at once, like on sign out or app teardown.':
+    'צרו לקוח Realtime פעם אחת וכל ההרשמות חולקות WebSocket אחד. הוסיפו הרשמה עם subscribe(), החליפו את הערוצים או השאילתות שלה עם update() והסירו אותה עם unsubscribe() בלי לחבר מחדש את הלקוח. קראו ל-disconnect() כשאתם רוצים לסגור הכול בבת אחת, למשל בהתנתקות או בסגירת האפליקציה.',
+  'Type-safe channels for every service': 'ערוצים בטוחי טיפוסים לכל שירות',
+  'Channels decide which resources you listen to, and the Channel helper builds them with a fluent API instead of hand-written strings. Target account events, rows, files, teams, memberships, executions, functions, and presences. Leave an ID blank to subscribe with a wildcard, or append .create(), .update(), or .delete() to narrow the stream.':
+    'ערוצים קובעים לאילו משאבים אתם מאזינים, ומחלקת העזר Channel בונה אותם עם API שוטף במקום מחרוזות שנכתבות ביד. כוונו לאירועי חשבון, שורות, קבצים, צוותים, חברויות, הרצות, פונקציות ו-Presences. השאירו מזהה ריק כדי להירשם עם תו כללי, או הוסיפו .create(), .update() או .delete() כדי לצמצם את הזרם.',
+  'Filter events before they reach you': 'סננו אירועים לפני שהם מגיעים אליכם',
+  'Pass queries when you subscribe and Appwrite filters events server-side, so your callback only runs for updates that match. The methods are the ones you already use for lists: equal, notEqual, the greater than and less than comparisons, isNull, isNotNull, and the and and or combinators.':
+    'העבירו שאילתות כשאתם נרשמים ו-Appwrite מסננת את האירועים בצד השרת, כך שה-callback שלכם רץ רק עבור עדכונים שמתאימים. המתודות הן אותן מתודות שאתם כבר משתמשים בהן לרשימות: equal, notEqual, השוואות גדול מ- וקטן מ-, isNull, isNotNull והמשלבים and ו-or.',
+  'Presence that is durable and live': 'Presence שנשמר וגם חי',
+  'A presence record carries a userId, a free-form status, an optional metadata object, and an expiresAt timestamp. List presences at any time to see who is here right now, and subscribe to the presences channels for upsert, update, and delete events in milliseconds. Use it for online dots, typing indicators, and who is viewing a document.':
+    'רשומת Presence נושאת userId, status חופשי, אובייקט metadata אופציונלי וחותמת זמן expiresAt. רשמו את ה-Presences בכל רגע כדי לראות מי נמצא כאן עכשיו, והירשמו לערוצי ה-presences כדי לקבל אירועי upsert, update ו-delete באלפיות שנייה. השתמשו בזה לנקודות חיווי של מחוברים, לחיווי הקלדה ולמי שצופה במסמך.',
+  'A predictable payload on every event': 'Payload צפוי בכל אירוע',
+  'Each message carries the events that triggered it, the channels that can receive it, an ISO 8601 timestamp from the server, and a payload that matches the response model of the resource. Branch on the event names to tell a create from an update or a delete, then apply the payload straight to your state.':
+    'כל הודעה נושאת את האירועים שהפעילו אותה, את הערוצים שיכולים לקבל אותה, חותמת זמן ISO 8601 מהשרת ו-payload שתואם למודל התשובה של המשאב. פצלו לפי שמות האירועים כדי להבדיל בין יצירה, עדכון ומחיקה, ואז החילו את ה-payload ישירות על ה-state שלכם.',
+  'Permission-aware subscriptions': 'הרשמות שמודעות להרשאות',
+  'Subscriptions are secured by the same permissions system as the rest of Appwrite, so a user only receives updates for resources they can read. Granting read to Role.any() is what opens a stream to every client. Realtime uses the session that existed when you subscribed, so disconnect and subscribe again when the session changes.':
+    'ההרשמות מאובטחות באותה מערכת הרשאות כמו שאר Appwrite, ולכן משתמש מקבל עדכונים רק על משאבים שהוא יכול לקרוא. מתן הרשאת קריאה ל-Role.any() הוא מה שפותח זרם לכל לקוח. Realtime משתמש בסשן שהיה קיים כשנרשמתם, ולכן התנתקו והירשמו שוב כשהסשן משתנה.',
+
+  // Realtime visuals
+  'Appwrite events': 'אירועי Appwrite',
+  '1 WebSocket': 'WebSocket אחד',
+  'Every subscription shares this connection.': 'כל ההרשמות חולקות את החיבור הזה.',
+  'Web app': 'אפליקציית Web',
+  'New row in orders': 'שורה חדשה ב-orders',
+  'Mobile app': 'אפליקציה למובייל',
+  'paige@example.com is editing': 'paige@example.com עורך כרגע',
+  'Live attendees': 'משתתפים מחוברים',
+  'Server-side filters': 'מסננים בצד השרת',
+  'Clients only receive what they can read.':
+    'לקוחות מקבלים רק את מה שהם יכולים לקרוא.',
+  'Realtime client': 'לקוח Realtime',
+  'Four subscriptions, one connection': 'ארבע הרשמות, חיבור אחד',
+  'Add a subscription': 'הוספת הרשמה',
+  'subscribed': 'רשום',
+  'Swap channels, no reconnect': 'החלפת ערוצים, בלי חיבור מחדש',
+  'Drops every subscription': 'מסיר כל ההרשמות',
+  'Account and teams': 'חשבון וצוותים',
+  'Every account event for the signed-in user, from a new session to a name change.':
+    'כל אירוע חשבון של המשתמש המחובר, מסשן חדש ועד שינוי שם.',
+  'Create, update, and delete events on any team.':
+    'אירועי יצירה, עדכון ומחיקה של כל צוות.',
+  'Create, update, and delete events on any membership.':
+    'אירועי יצירה, עדכון ומחיקה של כל חברות.',
+  'Any create, update, or delete event on rows in a single table.':
+    'כל אירוע יצירה, עדכון או מחיקה של שורות בטבלה אחת.',
+  'Update and delete events for one specific row.':
+    'אירועי עדכון ומחיקה של שורה אחת ספציפית.',
+  'Any row event across the project.': 'כל אירוע שורה בכל הפרויקט.',
+  'Files and functions': 'קבצים ופונקציות',
+  'Update and delete events on any file in one bucket.':
+    'אירועי עדכון ומחיקה של כל קובץ בבאקט אחד.',
+  'Any update to a function execution.': 'כל עדכון של הרצת פונקציה.',
+  'Every execution event for one function.': 'כל אירוע הרצה של פונקציה אחת.',
+  'Upsert, update, and delete events on any presence the subscriber can read.':
+    'אירועי upsert, עדכון ומחיקה של כל Presence שהנרשם יכול לקרוא.',
+  'Upsert, update, and delete events on a single presence record.':
+    'אירועי upsert, עדכון ומחיקה של רשומת Presence אחת.',
+  'Narrow a presence stream to one event type with a filter.':
+    'צמצמו זרם Presence לסוג אירוע אחד עם מסנן.',
+  'Leave an ID blank and the helper subscribes with a wildcard.':
+    'השאירו מזהה ריק ומחלקת העזר תירשם עם תו כללי.',
+  'Event filters': 'מסנני אירועים',
+  'Events on the channel': 'אירועים בערוץ',
+  'match': 'תואם',
+  'dropped': 'הושמט',
+  'Filtered on the server': 'מסונן בשרת',
+  'Your callback': 'ה-callback שלכם',
+  '2 of 3 delivered': '2 מתוך 3 נמסרו',
+  'Non-matching events never reach the client.':
+    'אירועים שאינם מתאימים לא מגיעים ללקוח.',
+  'Every message carries': 'כל הודעה נושאת',
+  'The Appwrite events that triggered this update.':
+    'אירועי Appwrite שהפעילו את העדכון הזה.',
+  'Every channel that can receive this message.':
+    'כל ערוץ שיכול לקבל את ההודעה הזו.',
+  'ISO 8601 time in UTC, from the server.': 'זמן ISO 8601 ב-UTC, מהשרת.',
+  'The same data as the resource response model.':
+    'אותם נתונים כמו מודל התשובה של המשאב.',
+  'Branch on the event name': 'פיצול לפי שם האירוע',
+  'Who is here': 'מי נמצא כאן',
+  'editing': 'בעריכה',
+  'away': 'לא זמין',
+  'List the active set at any time, or follow it live.':
+    'רשמו את הקבוצה הפעילה בכל רגע, או עקבו אחריה בזמן אמת.',
+  'Presence record': 'רשומת Presence',
+  'Slides on heartbeat': 'נדחה קדימה בכל heartbeat',
+  'typing': 'מקליד',
+  'Member of team acme': 'חבר בצוות acme',
+  'Event delivered': 'האירוע נמסר',
+  'Not a member of team acme': 'אינו חבר בצוות acme',
+  'Nothing delivered': 'לא נמסר דבר',
+  'Disconnect and subscribe again when the session changes.':
+    'התנתקו והירשמו שוב כשהסשן משתנה.',
+  'One WebSocket, filtered server-side.': 'WebSocket אחד, מסונן בצד השרת.',
+
+  // Realtime, shortened hero, FAQ, and feature copy
+  'Subscribe to events from any Appwrite service and get changes in milliseconds instead of polling. One connection carries every subscription and only delivers what the user is allowed to read.':
+    'הירשמו לאירועים מכל שירות של Appwrite וקבלו שינויים תוך אלפיות שנייה במקום לתשאל. חיבור אחד נושא את כל ההרשמות ומוסר רק את מה שהמשתמש מורשה לקרוא.',
+  'A presence is a short-lived record tied to a user, with a userId, a free-form status, optional metadata, and an expiresAt timestamp. It is durable, so you can list presences at any time, and live, so every change fires upsert, update, and delete events. Keep a record alive with a heartbeat, or use realtime.upsertPresence() so it is removed when the connection closes.':
+    'Presence היא רשומה קצרת מועד שמשויכת למשתמש, עם userId, status חופשי, metadata אופציונלי וחותמת זמן expiresAt. היא נשמרת, ולכן אפשר לרשום את ה-Presences בכל רגע, והיא חיה, ולכן כל שינוי מפעיל אירועי upsert, update ו-delete. שמרו רשומה בחיים עם heartbeat, או השתמשו ב-realtime.upsertPresence() כדי שהיא תוסר כשהחיבור נסגר.',
+  'Create a Realtime client once and every subscription shares a single WebSocket. Add one with subscribe(), swap its channels or queries with update(), and drop it with unsubscribe(), all without reconnecting.':
+    'צרו לקוח Realtime פעם אחת וכל ההרשמות חולקות WebSocket אחד. הוסיפו הרשמה עם subscribe(), החליפו את הערוצים או השאילתות שלה עם update() והסירו אותה עם unsubscribe(), הכול בלי להתחבר מחדש.',
+  'The Channel helper builds channel strings with a fluent API instead of hand-written text. Target rows, files, teams, executions, and presences. Leave an ID blank for a wildcard, or append .create() to narrow the stream.':
+    'מחלקת העזר Channel בונה מחרוזות ערוץ עם API שוטף במקום טקסט שנכתב ביד. כוונו לשורות, קבצים, צוותים, הרצות ו-Presences. השאירו מזהה ריק לתו כללי, או הוסיפו .create() כדי לצמצם את הזרם.',
+  'Pass queries when you subscribe and Appwrite filters events on the server, so your callback only runs for updates that match. The methods are the ones you already use for lists, from equal to isNull and or.':
+    'העבירו שאילתות כשאתם נרשמים ו-Appwrite מסננת את האירועים בשרת, כך שה-callback שלכם רץ רק עבור עדכונים שמתאימים. המתודות הן אותן מתודות שאתם כבר משתמשים בהן לרשימות, מ-equal ועד isNull ו-or.',
+  'A presence record carries a user, a free-form status, optional metadata, and an expiry. List presences to see who is here, and subscribe for upsert, update, and delete events in milliseconds.':
+    'רשומת Presence נושאת משתמש, status חופשי, metadata אופציונלי ומועד תפוגה. רשמו את ה-Presences כדי לראות מי נמצא כאן, והירשמו כדי לקבל אירועי upsert, update ו-delete באלפיות שנייה.',
+  'Every message carries the events that triggered it, the channels that can receive it, a server timestamp, and a payload matching the resource response model. Branch on the event names, then apply the payload.':
+    'כל הודעה נושאת את האירועים שהפעילו אותה, את הערוצים שיכולים לקבל אותה, חותמת זמן מהשרת ו-payload שתואם למודל התשובה של המשאב. פצלו לפי שמות האירועים, ואז החילו את ה-payload.',
+  'Subscriptions use the same permissions as the rest of Appwrite, so a user only receives updates for resources they can read. Realtime uses the session you had when you subscribed, so reconnect when it changes.':
+    'ההרשמות משתמשות באותן הרשאות כמו שאר Appwrite, ולכן משתמש מקבל עדכונים רק על משאבים שהוא יכול לקרוא. Realtime משתמש בסשן שהיה לכם כשנרשמתם, ולכן התחברו מחדש כשהוא משתנה.',
+  'Realtime WebSocket API': 'Realtime WebSocket API',
+  'Presence': 'Presence',
+  'Pooler': 'Pooler',
+  'REST API': 'REST API',
+  'GraphQL API': 'GraphQL API',
+  'HTTP': 'HTTP',
+  'v18': 'v18',
+  'Everything in Appwrite is realtime': 'כל דבר ב-Appwrite הוא Realtime',
+  'Rows, files, function executions, sessions, teams, and presence all emit events on the same WebSocket. Subscribe once, get changes in milliseconds instead of polling, and only ever receive what the user can read.':
+    'שורות, קבצים, הרצות פונקציות, סשנים, צוותים ו-Presence כולם מפיקים אירועים על אותו WebSocket. הירשמו פעם אחת, קבלו שינויים באלפיות שנייה במקום לתשאל, וקבלו רק את מה שהמשתמש יכול לקרוא.',
+  'Every service': 'כל שירות',
+  'Not just databases': 'לא רק מסדי נתונים',
+  'Every service publishes channels: account and sessions, teams and memberships, rows, files, function executions, and presences. The Channel helper class builds the channel string for you with a fluent API, so you can target one row or every row in a table. Leave an ID blank to subscribe with a wildcard, and append .create(), .update(), or .delete() to narrow the stream to a single event type.':
+    'כל שירות מפרסם ערוצים: חשבון וסשנים, צוותים וחברויות, שורות, קבצים, הרצות פונקציות ו-Presences. מחלקת העזר Channel בונה בשבילכם את מחרוזת הערוץ עם API שוטף, כך שתוכלו לכוון לשורה אחת או לכל השורות בטבלה. השאירו מזהה ריק כדי להירשם עם תו כללי, והוסיפו .create(), .update() או .delete() כדי לצמצם את הזרם לסוג אירוע אחד.',
+  'Subscribe to your first channel and watch rows, files, executions, and presence updates arrive as they happen.':
+    'הירשמו לערוץ הראשון שלכם וראו עדכוני שורות, קבצים, הרצות ו-Presence מגיעים ברגע שהם קורים.',
+  'Every service publishes to a channel': 'כל שירות מפרסם לערוץ',
+  'Databases, Storage, Functions, Auth, teams, and presence all stream on the same socket. The Channel helper builds the string with a fluent API, so leave an ID blank for a wildcard or append .create() to narrow the stream.':
+    'מסדי נתונים, אחסון, פונקציות, אימות, צוותים ו-Presence כולם זורמים על אותו סוקט. מחלקת העזר Channel בונה את המחרוזת עם API שוטף, כך שאפשר להשאיר מזהה ריק לתו כללי או להוסיף .create() כדי לצמצם את הזרם.',
+  'Auth, teams, and presence': 'אימות, צוותים ו-Presence',
+  'Connection pooling for short-lived clients': 'Connection pooling ללקוחות קצרי מועד',
+  'PostgreSQL spends a backend process per connection, so serverless functions exhaust a specification fast. Point runtime traffic at the pooler, same hostname and credentials, and short-lived clients share a small pool.':
+    'PostgreSQL מקצה תהליך backend לכל חיבור, ולכן פונקציות serverless ממצות מפרט במהירות. הפנו את תעבורת זמן הריצה ל-Pooler, אותו hostname ואותם פרטי גישה, ולקוחות קצרי מועד יחלקו מאגר קטן.',
+  'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many short-lived clients share a small pool. Keep migrations and long administrative sessions on a direct connection.':
+    'המגבלה נקבעת לפי המפרט שלכם, מ-100 בדרגה הקטנה ביותר ועד תקרת פלטפורמה של 10,000. מכיוון ש-PostgreSQL מקצה תהליך backend לכל חיבור, הפנו את תעבורת זמן הריצה ל-Pooler, שם הרבה לקוחות קצרי מועד חולקים מאגר קטן. השאירו מיגרציות וסשנים אדמיניסטרטיביים ארוכים על חיבור ישיר.',
+  'Yes, with the standard PostgreSQL tooling you already use. Run your dump and restore over a direct connection, because tools like pg_dump expect one session for the whole run, then point your application runtime at the pooler. Any client that speaks the wire protocol works, including pgAdmin and DataGrip.':
+    'כן, עם כלי PostgreSQL הרגילים שאתם כבר משתמשים בהם. הריצו את ה-dump וה-restore על חיבור ישיר, כי כלים כמו pg_dump מצפים לסשן אחד לכל ההרצה, ואז הפנו את זמן הריצה של האפליקציה ל-Pooler. כל לקוח שמדבר את פרוטוקול התקשורת עובד, כולל pgAdmin ו-DataGrip.',
+  'A full extension catalog, at no extra cost':
+    'קטלוג הרחבות מלא, בלי תוספת עלות',
+  'Each database lists every extension its PostgreSQL version can install, from pgvector and PostGIS to pg_trgm, pgcrypto, and many more. Free to install, up to 50 per database.':
+    'כל מסד נתונים מציג את כל ההרחבות שגרסת PostgreSQL שלו יכולה להתקין, מ-pgvector ו-PostGIS ועד pg_trgm, pgcrypto ועוד רבות. ההתקנה בחינם, עד 50 לכל מסד נתונים.',
+  'The engine reports every extension this PostgreSQL version can install, so the catalog is the full set available to this database, not a short list. That includes pgvector, PostGIS, pg_trgm, pgcrypto, and many more. Installs are free, up to 50 per database. Uninstalling always cascades, so anything depending on the extension is dropped with it.':
+    'המנוע מדווח על כל הרחבה שגרסת PostgreSQL הזו יכולה להתקין, ולכן הקטלוג הוא הסט המלא הזמין למסד הנתונים הזה, לא רשימה קצרה. זה כולל pgvector, PostGIS, pg_trgm, pgcrypto ועוד רבות. ההתקנות בחינם, עד 50 לכל מסד נתונים. הסרה תמיד עושה cascade, כך שכל מה שתלוי בהרחבה נמחק יחד איתה.',
+  'Case-insensitive text type, so comparisons ignore letter case.':
+    'טיפוס טקסט שאינו רגיש לאותיות גדולות וקטנות, כך שהשוואות מתעלמות מרישיות.',
+  'A sample of the catalog. Your database lists every extension it can install, including hstore, uuid-ossp, and many more.':
+    'מדגם מהקטלוג. מסד הנתונים שלכם מציג את כל ההרחבות שאפשר להתקין, כולל hstore, uuid-ossp ועוד רבות.',
+  'Compute credits on every Pro plan': 'קרדיטים כלולים בכל תוכנית Pro',
+  Clients: 'לקוחות',
+  'Specifications and pricing': 'מפרטים ותמחור',
+  'Specifications docs': 'תיעוד מפרטים',
+  'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
+    'השתמשו באותו hostname ובאותם credentials עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-PostgreSQL שלכם. העתיקו DSN, .env וקטעי ORM מהלשונית Credentials בקונסול, או עקבו אחר מדריכי האינטגרציה בתיעוד.',
+  'Node.js drivers docs': 'תיעוד דרייברים ל-Node.js',
 }
 
 

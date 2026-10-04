@@ -58,6 +58,7 @@ export const sitesProductFeatures: ProductFeatureContent[] = [
     wideCompanion: true,
     hideDocsLink: true,
     flushBottom: true,
+    breakRail: true,
   },
   {
     id: 'domain-rules',
@@ -74,6 +75,7 @@ export const sitesProductFeatures: ProductFeatureContent[] = [
       'Purchase domains in Appwrite and manage records with Appwrite DNS from the Console. TLS is issued automatically when you connect a hostname.',
     docsHref: '/docs/products/network/dns',
     docsLabel: 'Appwrite DNS docs',
+    extraDocsLinks: [{ href: '/docs/products/domains', label: 'Appwrite Domains docs' }],
     layout: 'stacked',
     centered: true,
     hideVisual: true,

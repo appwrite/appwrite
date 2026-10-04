@@ -184,6 +184,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-nav-github': 'Marketing GitHub Nav Clicked',
   'marketing-product-auth': 'Marketing Product Auth Clicked',
   'marketing-product-databases': 'Marketing Product Databases Clicked',
+  'marketing-product-postgres': 'Marketing Product Postgres Clicked',
   'marketing-product-storage': 'Marketing Product Storage Clicked',
   'marketing-product-functions': 'Marketing Product Functions Clicked',
   'marketing-product-messaging': 'Marketing Product Messaging Clicked',
@@ -314,6 +315,7 @@ const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
 const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   auth: 'marketing-product-auth',
   databases: 'marketing-product-databases',
+  postgres: 'marketing-product-postgres',
   storage: 'marketing-product-storage',
   functions: 'marketing-product-functions',
   messaging: 'marketing-product-messaging',

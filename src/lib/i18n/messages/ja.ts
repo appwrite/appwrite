@@ -398,6 +398,7 @@ export const jaCatalog: EnCatalog = {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'メール、OAuth、SMS、MFA、チーム、セッション。',
           databasesTagline: 'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
+          postgresTagline: 'プーリング、レプリカ、PITR に対応したマネージド PostgreSQL。',
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',
