@@ -127,6 +127,17 @@ trait UsersBase
             'name' => 'Argon2 User',
         ]);
 
+        // Argon2id user with the previous sign-up costs
+        $this->client->call(Client::METHOD_POST, '/users/argon2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => 'argon2id',
+            'email' => 'argon2id@appwrite.io',
+            'password' => '$argon2id$v=19$m=65536,t=4,p=3$azFVSGhPaXVBYnZMblNRaw$Pzm3TowCIbab0S5GL2id3OhZMexfFvutVSDoZ8D/Z8o', // appwrite (memory 65536, iterations 4, parallel 3)
+            'name' => 'Argon2id User',
+        ]);
+
         // SHA512 user
         $this->client->call(Client::METHOD_POST, '/users/sha', array_merge([
             'content-type' => 'application/json',
@@ -482,6 +493,57 @@ trait UsersBase
         self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
+    /**
+     * Plaintext create and password update must use proofForPassword Argon2 costs
+     * (memory 7168 KiB, time 5, threads 1), not library defaults (65536/4/3).
+     */
+    public function testCreateUserConfiguredArgon2Params(): void
+    {
+        $email = 'argon2-params-' . uniqid('', true) . '@localhost.test';
+        $password = 'password';
+
+        $created = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Configured Argon2 User',
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertConfiguredArgon2Hash($created['body']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/users/' . $created['body']['$id'] . '/password', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'password' => 'password-updated',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertConfiguredArgon2Hash($updated['body']);
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function assertConfiguredArgon2Hash(array $user): void
+    {
+        $this->assertSame('argon2', $user['hash']);
+        $this->assertStringStartsWith('$argon2id$v=19$m=7168,t=5,p=1$', $user['password']);
+
+        $options = $user['hashOptions'] ?? [];
+        $memoryCost = $options['memory_cost'] ?? $options['memoryCost'] ?? null;
+        $timeCost = $options['time_cost'] ?? $options['timeCost'] ?? null;
+        $threads = $options['threads'] ?? null;
+
+        $this->assertSame(7168, $memoryCost);
+        $this->assertSame(5, $timeCost);
+        $this->assertSame(1, $threads);
+    }
+
     public function testCreateScryptModified(): void
     {
         $headers = array_merge([
@@ -550,7 +612,7 @@ trait UsersBase
     public function testCreateUserSessionHashed(): void
     {
         $this->setupHashedPasswordUsers();
-        $userIds = ['md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
+        $userIds = ['md5', 'bcrypt', 'argon2', 'argon2id', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
 
         foreach ($userIds as $userId) {
             // Ensure sessions can be created with hashed passwords
@@ -568,7 +630,7 @@ trait UsersBase
         }
 
         foreach ($userIds as $userId) {
-            // Ensure all passwords were re-hashed
+            // Ensure all passwords were re-hashed to the configured Argon2 costs
             $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -578,7 +640,7 @@ trait UsersBase
             $this->assertEquals($userId, $response['body']['$id']);
             $this->assertEquals($userId . '@appwrite.io', $response['body']['email']);
             $this->assertEquals('argon2', $response['body']['hash']);
-            $this->assertStringStartsWith('$argon2', $response['body']['password']);
+            $this->assertConfiguredArgon2Hash($response['body']);
         }
 
         foreach ($userIds as $userId) {
@@ -940,8 +1002,8 @@ trait UsersBase
         $data = $this->setupUser();
         $this->setupUser1();
         $this->setupHashedPasswordUsers();
-        // setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 7
-        $minUsers = 9;
+        // setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 8
+        $minUsers = 10;
 
         /**
          * Test for SUCCESS listUsers
@@ -1717,6 +1779,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertNotEmpty($user['body']['password']);
+        $this->assertConfiguredArgon2Hash($user['body']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',

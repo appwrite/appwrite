@@ -28,6 +28,7 @@ use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/init.php';
 
@@ -187,7 +188,11 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 // Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
-$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container): void {
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry): void {
+    if (!$telemetry instanceof NoTelemetry) {
+        Timer::tick(60000, fn () => $telemetry->collect());
+    }
+
     // Flush accumulated per-project usage (connections, deliveries) to the stats-usage queue.
     Timer::tick(60000, function () use ($mqtt, $container): void {
         $usage = $mqtt->flushUsage();

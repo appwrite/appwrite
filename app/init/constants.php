@@ -473,7 +473,6 @@ const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
-const METRIC_AVATARS_STORAGE = 'avatars.storage';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 

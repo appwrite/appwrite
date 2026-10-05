@@ -1673,9 +1673,11 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.4
+    image: appwrite/browser:0.3.6
     networks:
       - browser
+    environment:
+      - ALLOWED_HOSTS=appwrite
     # Public resolvers only, so the browser cannot resolve internal service
     # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
     dns:

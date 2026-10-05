@@ -13,9 +13,8 @@ final class Certificate extends Base
         public readonly ?string $validationDomain = null,
         public readonly string $action = \Appwrite\Event\Certificate::ACTION_GENERATION,
         /**
-         * The enqueuer verified the domain's DNS itself, moments before enqueueing,
-         * so the worker does not verify it again. Unlike `skipRenewCheck` this
-         * leaves the renew check in place.
+         * DNS already passed for this rule, so the worker does not verify it
+         * again. Unlike `skipRenewCheck` this leaves the renew check in place.
          */
         public readonly bool $skipDomainValidation = false,
     ) {
