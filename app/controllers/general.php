@@ -600,7 +600,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 return;
             }
 
-            $response->chunk($chunk, $isLast);
+            if ($chunk !== '') {
+                $response->chunk($chunk);
+            }
         };
 
         try {
@@ -671,6 +673,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             if ($streamed !== null) {
                 $executionResponse['body'] = $streamBody;
+            }
+
+            // Ended only here, once the executor has confirmed the rest of the envelope arrived.
+            if ($streamed === true) {
+                $response->chunk('', true);
             }
 
             $headerOverrides = [];
