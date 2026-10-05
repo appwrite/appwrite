@@ -6,8 +6,8 @@ namespace Utopia\Abuse\Tests;
 
 use Override;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Result;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -18,9 +18,8 @@ use Utopia\Database\Exception\Duplicate;
 
 final class DatabaseSchemaTest extends TestCase
 {
-    private const int SECONDS = 3600;
-
-    private const int WINDOW = 1_767_225_600;
+    // One window spans the whole run, so no two requests of a test fall into different windows.
+    private const int SECONDS = 1_000_000_000;
 
     private Database $database;
 
@@ -46,8 +45,9 @@ final class DatabaseSchemaTest extends TestCase
 
     public function testEarlierWindowDoesNotCountTowardsTheCurrentOne(): void
     {
-        $this->assertFalse($this->check('login', 2));
-        $this->store('login', self::WINDOW - self::SECONDS, 2);
+        $result = $this->hit('login', 2);
+        $this->assertFalse($result->limited);
+        $this->store('login', $this->window($result) - self::SECONDS, 2);
 
         $this->assertFalse($this->check('login', 2), 'the exhausted earlier window is not counted');
         $this->assertTrue($this->check('login', 2), 'the current window reaches its own limit');
@@ -55,24 +55,28 @@ final class DatabaseSchemaTest extends TestCase
 
     public function testOneRowPerKeyAndWindow(): void
     {
-        $this->assertFalse($this->check('login', 5));
-        $this->assertSame([self::WINDOW], $this->windows('login'), 'the hit is stored in its window');
+        $result = $this->hit('login', 5);
+        $this->assertFalse($result->limited);
+        $window = $this->window($result);
+        $this->assertSame([$window], $this->windows('login'), 'the hit is stored in its window');
 
-        $this->store('login', self::WINDOW - self::SECONDS, 1);
-        $this->store('signup', self::WINDOW, 1);
+        $this->store('login', $window - self::SECONDS, 1);
+        $this->store('signup', $window, 1);
 
         $this->expectException(Duplicate::class);
-        $this->store('login', self::WINDOW, 1);
+        $this->store('login', $window, 1);
     }
 
     public function testCleanupRemovesOnlyEarlierWindows(): void
     {
-        $this->assertFalse($this->check('login', 5));
-        $this->store('login', self::WINDOW - self::SECONDS, 3);
+        $result = $this->hit('login', 5);
+        $this->assertFalse($result->limited);
+        $window = $this->window($result);
+        $this->store('login', $window - self::SECONDS, 3);
 
-        new Abuse($this->adapter('login', 5))->cleanup(self::WINDOW);
+        $this->assertTrue($this->adapter('login', 5)->cleanup($window));
 
-        $this->assertSame([self::WINDOW], $this->windows('login'), 'only the current window is left');
+        $this->assertSame([$window], $this->windows('login'), 'only the current window is left');
     }
 
     public function testSetupAgainKeepsExistingCounts(): void
@@ -86,18 +90,22 @@ final class DatabaseSchemaTest extends TestCase
 
     private function adapter(string $key, int $limit): TimeLimit\Database
     {
-        return new class ($key, $limit, self::SECONDS, $this->database, self::WINDOW) extends TimeLimit\Database {
-            public function __construct(string $key, int $limit, int $seconds, Database $db, int $window)
-            {
-                parent::__construct($key, $limit, $seconds, $db);
-                $this->timestamp = $window;
-            }
-        };
+        return new TimeLimit\Database($key, $limit, self::SECONDS, $this->database);
+    }
+
+    private function hit(string $key, int $limit): Result
+    {
+        return $this->adapter($key, $limit)->check();
     }
 
     private function check(string $key, int $limit): bool
     {
-        return new Abuse($this->adapter($key, $limit))->check();
+        return $this->hit($key, $limit)->limited;
+    }
+
+    private function window(Result $result): int
+    {
+        return $result->reset - self::SECONDS;
     }
 
     /**
