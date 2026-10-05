@@ -10,7 +10,7 @@ export function SitesNetworkSection() {
   const t = useT()
   return (
     <div className="flex w-full flex-col items-center">
-      <SitesNetworkProtections />
+      <SitesNetworkProtections className="px-4 sm:px-6" />
       <DocsRouteLink
         href="/docs/products/network"
         className="relative z-30 mt-10 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:mt-12"

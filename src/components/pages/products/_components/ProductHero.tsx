@@ -76,7 +76,7 @@ export function ProductHero({
       <ProductToneBackdrop variant="hero" />
       <div className="relative z-[1] mx-auto max-w-7xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:pt-24">
         {split ? (
-          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
             {intro}
             <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
               <Art />
@@ -122,7 +122,7 @@ function ProductHeroStats({ items }: { items: MarketingStatItem[] }) {
         <div
           key={item.label}
           className={cn(
-            'relative flex flex-col-reverse gap-1 bg-background/85 px-5 py-5 sm:px-6',
+            'relative flex flex-col-reverse justify-end gap-1 bg-background/85 px-5 py-5 sm:px-6',
             odd && index === items.length - 1 && 'col-span-2 lg:col-span-1',
           )}
         >

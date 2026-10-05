@@ -88,7 +88,7 @@ export function AuthMfaVisual() {
         </div>
       </ArtChip>
 
-      <ArtChip className="start-0 top-[22%]" delayMs={900} floatDelayMs={700}>
+      <ArtChip className="bottom-[4%] start-0 sm:bottom-auto sm:top-[22%]" delayMs={900} floatDelayMs={700}>
         <div className="flex items-center gap-2">
           <ArtIconBadge icon={ShieldCheck} tone="success" />
           <p className="text-[12px] font-medium text-foreground">{t('MFA enabled')}</p>
