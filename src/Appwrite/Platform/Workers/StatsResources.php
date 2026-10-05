@@ -287,7 +287,7 @@ class StatsResources extends Action
         }
 
         return [
-            ['metric' => METRIC_AVATARS_STORAGE, 'value' => $storage, 'service' => '', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+            ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
         ];
     }
 

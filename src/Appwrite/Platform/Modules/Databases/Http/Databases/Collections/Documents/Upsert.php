@@ -245,6 +245,10 @@ class Upsert extends Action
                             $relation->getId()
                         ));
 
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
+                        }
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',

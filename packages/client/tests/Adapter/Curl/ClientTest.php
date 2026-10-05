@@ -7,6 +7,9 @@ namespace Utopia\Client\Tests\Adapter\Curl;
 use Psr\Http\Message\RequestInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\Curl\Client;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\ContentType;
@@ -95,10 +98,43 @@ final class ClientTest extends AdapterContract
         ];
     }
 
+    public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void
+    {
+        // An allowed proxy in front of a disallowed target: checking the proxy's address alone would pass
+        $proxy = \stream_socket_server('tcp://127.0.0.1:0');
+        $target = \stream_socket_server('tcp://127.0.0.2:0');
+        $this->assertNotFalse($proxy);
+        $this->assertNotFalse($target);
+
+        $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
+        $request = new Request\Factory()->createRequest(Method::GET, 'http://' . \stream_socket_get_name($target, false) . '/');
+
+        \putenv('http_proxy=http://' . \stream_socket_get_name($proxy, false));
+        try {
+            $client->sendRequest($request);
+            $this->fail('The request left through the proxy.');
+        } catch (DestinationException) {
+            // refused on the direct connection to 127.0.0.2
+        } finally {
+            \putenv('http_proxy');
+        }
+
+        foreach ([$proxy, $target] as $server) {
+            $connection = @\stream_socket_accept($server, 0.2);
+            $received = '';
+            if ($connection !== false) {
+                \stream_set_blocking($connection, false);
+                $received = (string) \fread($connection, 1024);
+            }
+
+            $this->assertSame('', $received);
+        }
+    }
+
     /**
      * @param array<int, mixed> $transportOptions
      */
-    protected function createAdapter(array $transportOptions = []): Adapter
+    protected function newAdapter(array $transportOptions = []): Adapter
     {
         return new Client(new Response\Factory(), new Stream\Factory(), $transportOptions);
     }

@@ -1,18 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string\|null, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 4

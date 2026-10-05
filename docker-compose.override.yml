@@ -366,6 +366,7 @@ services:
     container_name: appwrite-webpage
     networks:
       fixtures:
+        ipv4_address: 203.0.0.1
         aliases:
           - screenshot.webapp.com
     volumes:
@@ -668,6 +669,12 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+  # Public range so appwrite-browser treats the fixture like a real site
   fixtures:
+    ipam:
+      config:
+        - subnet: 203.0.0.0/24
+          ip_range: 203.0.0.128/25
+          gateway: 203.0.0.254
 volumes:
   appwrite-gitea: null
