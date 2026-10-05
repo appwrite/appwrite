@@ -296,9 +296,8 @@ abstract class Git extends Adapter
 
     /**
      * Sparse, shallow clone of one ref into $directory, checking out only
-     * $rootDirectory. Every value reaches git as its own argument; the one
-     * shell script, the branch fallback, is constant and reads its values
-     * from positional parameters.
+     * $rootDirectory. Every value reaches git as its own argument. The shell
+     * scripts are constant and read their values from positional parameters.
      */
     protected function cloneCommand(string $cloneUrl, string $version, string $versionType, string $directory, string $rootDirectory): Command
     {
@@ -324,10 +323,7 @@ abstract class Git extends Adapter
                 $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument($version),
                 $this->git($directory)->argument('checkout')->argument($version),
             ),
-            self::CLONE_TYPE_TAG => Command::and(
-                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
-                $this->git($directory)->argument('checkout')->argument('FETCH_HEAD'),
-            ),
+            self::CLONE_TYPE_TAG => $this->tagCheckout($directory, $version),
             default => throw new Exception("Unsupported clone type: {$versionType}"),
         };
 
@@ -347,6 +343,55 @@ abstract class Git extends Adapter
             $this->git($directory)->argument('config')->argument('remote.origin.tagopt')->argument('--no-tags'),
             $checkout,
         );
+    }
+
+    /**
+     * Resolve a tag glob the way GitHub and Origin used to: the last tag
+     * `git ls-remote --tags` lists for the pattern
+     * (`tail -n 1 | awk -F/ '{print $3}'`). `--refs` omits the peeled `^{}`
+     * line of an annotated tag, so the name awk prints is the tag itself.
+     * The directory and the pattern arrive as `$1` and `$2`.
+     */
+    private const string TAG_GLOB_CHECKOUT = <<<'SCRIPT'
+refs=$(git -C "$1" ls-remote --refs --tags origin -- "$2") || exit
+tag=$(printf '%s\n' "$refs" | tail -n 1 | awk -F '/' '{print $3}')
+if [ -z "$tag" ]; then
+    printf 'fatal: no tag matching %s\n' "$2" >&2
+    exit 1
+fi
+git -C "$1" fetch --depth=1 origin "refs/tags/$tag" && git -C "$1" checkout FETCH_HEAD
+SCRIPT;
+
+    /**
+     * Check out $version. A glob is resolved to one tag. An exact name is
+     * fetched as refs/tags/<name>, so a leading dash stays part of the name.
+     */
+    private function tagCheckout(string $directory, string $version): Command
+    {
+        if (!$this->isTagGlob($version)) {
+            return Command::and(
+                $this->git($directory)->argument('fetch')->option('--depth', '1')->argument('origin')->argument('refs/tags/' . $version),
+                $this->git($directory)->argument('checkout')->argument('FETCH_HEAD'),
+            );
+        }
+
+        return new Command('sh')
+            ->flag('-c')
+            ->argument(self::TAG_GLOB_CHECKOUT)
+            ->argument('sh')
+            ->argument($directory)
+            ->argument($version);
+    }
+
+    /**
+     * True when $version is a git ref glob. `*`, `?` and `[` cannot appear in
+     * a tag name, and they are the wildcards `git ls-remote` matches on.
+     */
+    private function isTagGlob(string $version): bool
+    {
+        return str_contains($version, '*')
+            || str_contains($version, '?')
+            || str_contains($version, '[');
     }
 
     /**
