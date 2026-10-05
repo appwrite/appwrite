@@ -8,20 +8,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\BigInt;
 
-/**
- * The attribute an increment or a decrement changes, and the bound and change value it is changed with.
- *
- * On an integer attribute a fractional bound admits exactly the integers its whole part towards the allowed side
- * admits, so the maximum is rounded down and the minimum up, and a whole-number change value is passed as the
- * integer it is. A fractional change value on an integer attribute is refused. Bounds and change values of any
- * other attribute are passed as they are.
- */
 final readonly class Counter
 {
-    private const string WHITESPACE = " \t\n\r\v\f";
-
-    private const string DECIMAL = '/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/';
-
     public function __construct(private bool $integer)
     {
     }
@@ -39,10 +27,6 @@ final readonly class Counter
         return new self(false);
     }
 
-    /**
-     * From the attribute definitions of Appwrite's collection metadata document, for an operation that is staged
-     * before the library reads the collection.
-     */
     public static function from(Document $collection, string $attribute): self
     {
         /** @var array<Document> $attributes */
@@ -60,12 +44,28 @@ final readonly class Counter
 
     public function maximum(int|float|string|null $max): int|float|string|null
     {
-        return $this->bound($max, Rounding::Down);
+        if (!$this->integer) {
+            return $max;
+        }
+
+        return match (true) {
+            \is_string($max) => self::decimal($max)?->floor() ?? $max,
+            \is_float($max) && \is_finite($max) => self::integral(\floor($max)),
+            default => $max,
+        };
     }
 
     public function minimum(int|float|string|null $min): int|float|string|null
     {
-        return $this->bound($min, Rounding::Up);
+        if (!$this->integer) {
+            return $min;
+        }
+
+        return match (true) {
+            \is_string($min) => self::decimal($min)?->ceil() ?? $min,
+            \is_float($min) && \is_finite($min) => self::integral(\ceil($min)),
+            default => $min,
+        };
     }
 
     public function acceptsChange(int|float|string $value): bool
@@ -82,9 +82,6 @@ final readonly class Counter
     }
 
     /**
-     * @param string $action The operation, increment or decrement.
-     * @param string $kind What the API calls the attribute, attribute or column.
-     *
      * @throws Exception
      */
     public function assertChange(int|float|string $value, string $action, string $kind, string $attribute): void
@@ -103,55 +100,9 @@ final readonly class Counter
         return self::integral($value);
     }
 
-    private function bound(int|float|string|null $bound, Rounding $rounding): int|float|string|null
+    private static function decimal(string $bound): ?Decimal
     {
-        if (!$this->integer || $bound === null || \is_int($bound) || !\is_numeric($bound)) {
-            return $bound;
-        }
-
-        if (\is_string($bound)) {
-            return BigInt::isIntegerString($bound) ? $bound : self::decimal($bound, $rounding);
-        }
-
-        if (!\is_finite($bound)) {
-            return $bound;
-        }
-
-        return self::integral($rounding->round($bound));
-    }
-
-    private static function decimal(string $bound, Rounding $rounding): int|string
-    {
-        if (\preg_match(self::DECIMAL, \trim($bound, self::WHITESPACE), $parts) !== 1) {
-            return $bound;
-        }
-
-        [, $sign, $integer, $fraction, $exponent] = $parts + ['', '', '', '', ''];
-        $significant = \ltrim($integer . $fraction, '0');
-        if ($significant === '') {
-            return 0;
-        }
-
-        $negative = $sign === '-';
-        $reach = \strlen($integer . $fraction) + \strlen(BigInt::UNSIGNED_MAX) + 1;
-        $point = \strlen($significant) - \strlen($fraction) + self::exponent($exponent, $reach);
-        if ($point > \strlen(BigInt::UNSIGNED_MAX)) {
-            return ($negative ? '-' : '') . BigInt::UNSIGNED_MAX . '0';
-        }
-
-        $whole = $point > 0 ? \str_pad(\substr($significant, 0, $point), $point, '0') : '0';
-        $truncated = ($negative ? '-' : '') . $whole;
-        $dropsFraction = $point <= 0 || \ltrim(\substr($significant, $point), '0') !== '';
-
-        return $dropsFraction ? $rounding->roundTruncated($truncated, $negative) : BigInt::toNative($truncated);
-    }
-
-    private static function exponent(string $exponent, int $reach): int
-    {
-        $digits = \ltrim($exponent, '+-0');
-        $magnitude = \strlen($digits) > \strlen((string) $reach) ? $reach : \min((int) $digits, $reach);
-
-        return \str_starts_with($exponent, '-') ? -$magnitude : $magnitude;
+        return BigInt::isIntegerString($bound) ? null : Decimal::parse($bound);
     }
 
     private static function integral(float $whole): int|string
