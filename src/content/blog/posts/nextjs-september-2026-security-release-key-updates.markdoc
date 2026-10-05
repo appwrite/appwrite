@@ -146,17 +146,6 @@ If that overlapping request prerenders a page, the draft content can be persiste
 
 Production deployments do not serve this endpoint. The risk is to developer machines, so update local environments too, not just your deployed apps.
 
-# Self-hosted Next.js security: what changes for you
-
-The SSG and ISR cache poisoning advisory (CVE-2026-94543) explicitly states that **Vercel deployments are not affected**, and several others live in the response cache and image optimizer that a managed platform runs for you. That is not a reason to avoid self-hosting. It is a reminder that when you run the Next.js server yourself, the response cache, image optimizer, and patch cadence are your responsibility.
-
-That shared responsibility model is the same one covered in our post on [backend platform security responsibilities](/blog/post/backend-platform-security-responsibilities). The fix is process, not panic:
-
-* **Pin and lock dependencies.** Commit your lockfile and use `npm ci` in CI so builds install exactly what you reviewed. Our [Axios npm incident update](/blog/post/security-update-regarding-the-axios-npm-incident) explains why this matters beyond Next.js.
-* **Subscribe to advisories.** Watch the [Next.js security advisories](https://github.com/vercel/next.js/security/advisories) and enable [Dependabot alerts](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts) on your repositories.
-* **Keep a fast deploy path.** A patch that takes a day to ship leaves you exposed for a day. Git-based deployments shorten that window to minutes.
-* **Plan for rollback.** If a patch release breaks a page, you need to revert quickly without reintroducing the old version for long.
-
 # Patching Next.js apps on Appwrite Sites
 
 [Appwrite Sites](/docs/products/sites) runs Next.js in a container-based Node.js runtime with full [SSR support](/docs/products/sites/rendering/ssr), rather than translating it into serverless functions. That gives you full Next.js server behavior, including ISR and Image Optimization, without adapters.
