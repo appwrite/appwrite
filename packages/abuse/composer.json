@@ -32,12 +32,14 @@
         "ext-pdo": "*",
         "ext-curl": "*",
         "ext-redis": "*",
-        "utopia-php/database": "^8.0",
-        "utopia-php/query": "^0.6",
-        "utopia-php/pools": "2.*",
-        "appwrite/appwrite": "^27.1",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^2.0",
         "utopia-php/client": "^0.5",
-        "utopia-php/psr7": "^0.2.1"
+        "utopia-php/database": "^8.0",
+        "utopia-php/pools": "^2.0",
+        "utopia-php/psr7": "^0.2.1",
+        "utopia-php/query": "^0.6",
+        "appwrite/appwrite": "^27.1"
     },
     "require-dev": {
         "phpbench/phpbench": "1.*"

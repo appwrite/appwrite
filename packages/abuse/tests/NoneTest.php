@@ -2,37 +2,49 @@
 
 namespace Utopia\Abuse\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\None;
+use Utopia\Abuse\Adapter;
+use Utopia\Abuse\Adapter\SlidingWindow;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TokenBucket;
 
-class NoneTest extends TestCase
+final class NoneTest extends TestCase
 {
-    public function testNeverLimitsRequests(): void
+    /**
+     * @return array<string, array{Adapter}>
+     */
+    public static function adapters(): array
     {
-        $adapter = new None('none-key', 1, 60);
-        $abuse = new Abuse($adapter);
-
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
+        return [
+            'time limit' => [new TimeLimit\None('none-key', 1, 60)],
+            'sliding window' => [new SlidingWindow\None('none-key', 1, 60)],
+            'token bucket' => [new TokenBucket\None('none-key', 1, 1.0)],
+        ];
     }
 
-    public function testReturnsNoLogsAndCleanupSucceeds(): void
+    #[DataProvider('adapters')]
+    public function testNeverLimitsRequests(Adapter $adapter): void
     {
-        $adapter = new None('none-key', 1, 60);
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertFalse($adapter->check()->limited);
+        }
 
+        $this->assertFalse($adapter->peek()->limited);
+    }
+
+    #[DataProvider('adapters')]
+    public function testReturnsNoLogsAndCleanupSucceeds(Adapter $adapter): void
+    {
         $this->assertSame([], $adapter->getLogs());
-        $this->assertSame(true, $adapter->cleanup(time()));
+        $this->assertTrue($adapter->cleanup(\time()));
     }
 
-    public function testResetIsNoop(): void
+    #[DataProvider('adapters')]
+    public function testResetIsNoop(Adapter $adapter): void
     {
-        $adapter = new None('none-key', 1, 60);
-        $abuse = new Abuse($adapter);
+        $adapter->reset();
 
-        $abuse->reset();
-
-        $this->assertSame(false, $abuse->check());
+        $this->assertFalse($adapter->check()->limited);
     }
 }

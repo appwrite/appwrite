@@ -9,9 +9,8 @@ use Appwrite\Services\TablesDB as TablesDBService;
 use LogicException;
 use Override;
 use Throwable;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\Appwrite\TablesDB;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\Appwrite\TablesDB;
 use Utopia\Abuse\Tests\E2E\Base;
 
 class TablesDBTest extends Base
@@ -100,8 +99,8 @@ class TablesDBTest extends Base
 
         $this->assertSame('integer', $columns['count']['type']);
         $this->assertTrue($columns['count']['required']);
-        $this->assertEquals(0, $columns['count']['min']);
-        $this->assertEquals(PHP_INT_MAX, $columns['count']['max']);
+        $this->assertSame(0, $columns['count']['min']);
+        $this->assertSame(PHP_INT_MAX, $columns['count']['max']);
 
         $indexes = $this->indexesByKey($tablesDB->listIndexes(self::database(), TablesDB::TABLE_ID)->indexes);
 
@@ -146,11 +145,10 @@ class TablesDBTest extends Base
             $this->assertArrayHasKey('unique1', $indexes);
             $this->assertArrayHasKey('index2', $indexes);
 
-            $adapter->setParam('{{ip}}', '0.0.0.20');
-            $abuse = new Abuse($adapter);
-            $this->assertSame($abuse->check(), false);
-            $this->assertSame($abuse->check(), false);
-            $this->assertSame($abuse->check(), true);
+            $adapter = $adapter->withParams(['{{ip}}' => '0.0.0.20']);
+            $this->assertFalse($adapter->check()->limited);
+            $this->assertFalse($adapter->check()->limited);
+            $this->assertTrue($adapter->check()->limited);
         } catch (Throwable $error) {
             $failure = $error;
             throw $error;
@@ -178,7 +176,7 @@ class TablesDBTest extends Base
      * to hydrate the union of column types into.
      *
      * @param  array<mixed>  $columns
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array<mixed>>
      */
     private function columnsByKey(array $columns): array
     {

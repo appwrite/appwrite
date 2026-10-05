@@ -30,8 +30,7 @@ This adapter uses a MySQL / MariaDB to store usage attempts. Before using it, ca
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\Database as TimeLimit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MySQL;
@@ -55,18 +54,18 @@ $db = new Database(new MySQL($pdo), new Cache(new NoCache()));
 $db->setNamespace('namespace');
 
 // Limit login attempts to 10 time in 5 minutes time frame
-$adapter    = new TimeLimit('login-attempt-from-{{ip}}', 10, (60 * 5), $db);
+$adapter = new TimeLimit('login-attempt-from-{{ip}}', 10, 60 * 5, $db);
+$adapter->setup(); // Setup database as required
 
-$adapter->setup(); //setup database as required
-$adapter->setParam('{{ip}}', '127.0.0.1')
-;
+// withParams() returns an immutable copy with the key resolved
+$result = $adapter->withParams(['{{ip}}' => '127.0.0.1'])->check();
 
-$abuse      = new Abuse($adapter);
+header('X-RateLimit-Limit: ' . $result->limit);
+header('X-RateLimit-Remaining: ' . $result->remaining);
+header('X-RateLimit-Reset: ' . $result->reset);
 
-// Use vars to resolve adapter key
-
-if($abuse->check()) {
-    throw new Exception('Service was abused!'); // throw error and return X-Rate limit headers here
+if ($result->limited) {
+    throw new Exception('Service was abused!');
 }
 ```
 
@@ -77,50 +76,43 @@ if($abuse->check()) {
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Appwrite\TablesDB as TablesDBAdapter;
 use Appwrite\Client;
+use Utopia\Abuse\Adapter\TimeLimit\Appwrite\TablesDB;
 
-$client = (new Client())
+$client = new Client()
     ->setEndpoint('[YOUR_ENDPOINT]')
     ->setProject('[YOUR_PROJECT_ID]')
     ->setKey('[YOUR_API_KEY]');
 $databaseId = 'abuse';
 
 // Limit login attempts to 10 time in 5 minutes time frame
-$adapter = new TablesDBAdapter('login-attempt-from-{{ip}}', 10, (60 * 5), $client, $databaseId);
+$adapter = new TablesDB('login-attempt-from-{{ip}}', 10, 60 * 5, $client, $databaseId);
+$adapter->setup(); // Setup database as required
 
-$adapter->setup(); //setup database as required
-$adapter->setParam('{{ip}}', '127.0.0.1');
+$result = $adapter->withParams(['{{ip}}' => '127.0.0.1'])->check();
 
-$abuse = new Abuse($adapter);
-
-// Use vars to resolve adapter key
-
-if($abuse->check()) {
-    throw new Exception('Service was abused!'); // throw error and return X-Rate limit headers here
+if ($result->limited) {
+    throw new Exception('Service was abused!');
 }
 ```
 
 **ReCaptcha Abuse**
 
 The ReCaptcha abuse controller is using Google ReCaptcha service to detect when service is being abused by bots.
-To use this adapter you need to create an API key from the Google ReCaptcha service [admin console](https://www.google.com/recaptcha/admin).
+To use it you need to create an API key from the Google ReCaptcha service [admin console](https://www.google.com/recaptcha/admin).
 
 ```php
 <?php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\ReCaptcha;
+use Utopia\Abuse\ReCaptcha;
 
-// Limit login attempts to 10 time in 5 minutes time frame
-$adapter    = new ReCaptcha('secret-api-key', $_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR']);
-$abuse      = new Abuse($adapter);
+$recaptcha = new ReCaptcha('secret-api-key');
 
-if($abuse->check()) {
-    throw new Exception('Service was abused!'); // throw error and return X-Rate limit headers here
+// verify() returns true when the token belongs to a human scoring at least 0.5
+if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])) {
+    throw new Exception('Service was abused!');
 }
 ```
 
@@ -128,7 +120,7 @@ if($abuse->check()) {
 
 ## System Requirements
 
-Utopia Framework requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
+Utopia Abuse requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
 
 ## Copyright and license
 
