@@ -331,7 +331,8 @@ export async function runQuery(client, sql) {
   } finally {
     await client.query('ROLLBACK');
   }
-}```
+}
+```
 
 The function does not parse the SQL or look for keywords such as `DELETE`. Four properties of `runQuery` apply to every query:
 
