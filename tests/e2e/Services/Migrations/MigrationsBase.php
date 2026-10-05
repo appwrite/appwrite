@@ -37,18 +37,6 @@ trait MigrationsBase
     protected static array $destinationProject = [];
 
     /**
-     * Cached database data for independent test execution
-     * @var array
-     */
-    protected static array $cachedDatabaseData = [];
-
-    /**
-     * Cached table data for independent test execution
-     * @var array
-     */
-    protected static array $cachedTableData = [];
-
-    /**
      * @var list<string>
      */
     protected array $trackedDatabaseIds = [];
@@ -62,9 +50,6 @@ trait MigrationsBase
             if ($databaseIds === []) {
                 return;
             }
-
-            self::$cachedDatabaseData = [];
-            self::$cachedTableData = [];
 
             $failures = [];
             foreach ($databaseIds as $databaseId) {
@@ -141,15 +126,10 @@ trait MigrationsBase
     }
 
     /**
-     * Set up a database for migration tests with static caching
-     * @return array
+     * @return array{databaseId: string}
      */
     protected function setupMigrationDatabase(): array
     {
-        if (!empty(self::$cachedDatabaseData)) {
-            return self::$cachedDatabaseData;
-        }
-
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -159,30 +139,21 @@ trait MigrationsBase
             'name' => 'Test Database'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        self::$cachedDatabaseData = [
-            'databaseId' => $response['body']['$id'],
-        ];
+        $databaseId = $response['body']['$id'];
+        $this->trackDatabase($databaseId);
 
-        return self::$cachedDatabaseData;
+        return ['databaseId' => $databaseId];
     }
 
     /**
-     * Set up a table with column for migration tests with static caching
-     * @return array
+     * @return array{databaseId: string, tableId: string}
      */
     protected function setupMigrationTable(): array
     {
-        if (!empty(self::$cachedTableData)) {
-            return self::$cachedTableData;
-        }
-
-        // Ensure database exists first
-        $dbData = $this->setupMigrationDatabase();
-        $databaseId = $dbData['databaseId'];
+        $databaseId = $this->setupMigrationDatabase()['databaseId'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
             'content-type' => 'application/json',
@@ -197,7 +168,6 @@ trait MigrationsBase
 
         $tableId = $table['body']['$id'];
 
-        // Create Column
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -211,7 +181,6 @@ trait MigrationsBase
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for column to be ready
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
                 'content-type' => 'application/json',
@@ -223,12 +192,10 @@ trait MigrationsBase
             $this->assertEquals('available', $response['body']['status']);
         }, 5000, 500);
 
-        self::$cachedTableData = [
+        return [
             'databaseId' => $databaseId,
             'tableId' => $tableId,
         ];
-
-        return self::$cachedTableData;
     }
 
     public function performMigrationSync(array $body): array
@@ -882,7 +849,6 @@ trait MigrationsBase
     {
         $data = $this->setupMigrationDatabase();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
             'content-type' => 'application/json',
@@ -897,7 +863,6 @@ trait MigrationsBase
 
         $tableId = $table['body']['$id'];
 
-        // Create Column
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -911,7 +876,6 @@ trait MigrationsBase
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for column to be ready
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
                 'content-type' => 'application/json',
@@ -977,7 +941,6 @@ trait MigrationsBase
         $data = $this->setupMigrationTable();
         $tableId = $data['tableId'];
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
             'content-type' => 'application/json',
@@ -1050,7 +1013,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
@@ -1130,7 +1092,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         // Seed two rows on source so the row-level tolerance is exercised too.
@@ -1203,7 +1164,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'persist-me';
 
@@ -1288,7 +1248,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1358,7 +1317,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1440,7 +1398,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1511,7 +1468,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'persist-on-inplace';
 
@@ -1604,7 +1560,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -2056,7 +2011,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'row-after-recreate';
 
@@ -2155,7 +2109,6 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
-        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'row-spec-match';
 
