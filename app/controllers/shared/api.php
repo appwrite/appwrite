@@ -59,13 +59,13 @@ Http::init()
     ->inject('session')
     ->inject('servers')
     ->inject('mode')
-    ->inject('getTeam')
+    ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, callable $getTeam, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -191,7 +191,6 @@ Http::init()
                     );
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $team = $getTeam();
                     $dbKey = $team->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
@@ -241,7 +240,7 @@ Http::init()
                     } elseif (! empty($apiKey->getUserId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
                     } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $getTeam()->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
@@ -263,9 +262,8 @@ Http::init()
 
             // Apply permission
             if ($apiKey->getType() === API_KEY_ORGANIZATION) {
-                $teamId = $getTeam()->getId();
-                $authorization->addRole(Role::team($teamId)->toString());
-                $authorization->addRole(Role::team($teamId, 'owner')->toString());
+                $authorization->addRole(Role::team($team->getId())->toString());
+                $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
@@ -291,11 +289,11 @@ Http::init()
                 }
             }
         } // Admin User Authentication
-        elseif (($project->getId() === 'console' && ! $user->isEmpty() && ! $getTeam()->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
-            // On the console project, the team is the organization the route itself acts on (see the
+        elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+            // On the console project, $team is the organization the route itself acts on (see the
             // team resource), which is what lets its membership roles become the bare
             // owner/developer/admin roles below.
-            $teamId = $getTeam()->getId();
+            $teamId = $team->getId();
             $adminRoles = [];
             $membershipSource = !$impersonatorUser->isEmpty() ? $targetUser : $user;
             $memberships = $membershipSource->getAttribute('memberships', []);

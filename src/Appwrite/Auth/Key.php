@@ -111,14 +111,11 @@ class Key
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
      *
-     * The team may be passed as a callable so it is only loaded for organization keys.
-     *
-     * @param Document|callable(): Document $team
      * @throws Exception
      */
     public static function decode(
         Document $project,
-        Document|callable $team,
+        Document $team,
         Document $user,
         string $key
     ): Key {
@@ -260,10 +257,6 @@ class Key
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                if (\is_callable($team)) {
-                    $team = $team();
-                }
-
                 $key = $team->find(
                     key: 'secret',
                     find: $key,

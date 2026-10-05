@@ -991,63 +991,54 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    /**
-     * Lazy accessor for the team resource. Loading the team runs two uncached queries
-     * (the team and its organization keys), so callers that only need it in some
-     * branches should call this instead of injecting `team`. Resolved once per request.
-     */
-    $context->set('getTeam', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
-        $resolve = function () use ($project, $dbForPlatform, $utopia, $request, $authorization, $projectIdFromPath): Document {
-            $teamInternalId = '';
-            if ($project->getId() !== 'console') {
-                $teamInternalId = $project->getAttribute('teamInternalId', '');
-            } else {
-                $route = $utopia->match($request)?->route;
-                $path = ! empty($route) ? $route->getPath() : $request->getURI();
-                $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
-                if (str_starts_with($path, '/v1/projects/:projectId')) {
-                    $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
-                    $teamInternalId = $p->getAttribute('teamInternalId', '');
-                } elseif ($path === '/v1/projects') {
-                    $teamId = $request->getParam('teamId', '');
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+        $teamId = '';
+        $teamInternalId = '';
+        if ($project->getId() !== 'console') {
+            $teamId = $project->getAttribute('teamId', '');
+            $teamInternalId = $project->getAttribute('teamInternalId', '');
+        } else {
+            $route = $utopia->match($request)?->route;
+            $path = ! empty($route) ? $route->getPath() : $request->getURI();
+            $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
+            if (str_starts_with($path, '/v1/projects/:projectId')) {
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $teamId = $p->getAttribute('teamId', '');
+                $teamInternalId = $p->getAttribute('teamInternalId', '');
+            } elseif ($path === '/v1/projects') {
+                $teamId = $request->getParam('teamId', '');
 
-                    if (empty($teamId)) {
-                        return new Document([]);
-                    }
-
-                    $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
-
-                    return $team;
-                } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
-                    // Routes in the organization group act on the organization named in the header;
-                    // every other console route names its own team.
-                    return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
+                if (empty($teamId)) {
+                    return new Document([]);
                 }
+
+                $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+                return $team;
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
+                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
+        }
 
-            // if teamInternalId is empty, return an empty document
+        // if teamId is empty, return an empty document
 
-            if (empty($teamInternalId)) {
-                return new Document([]);
-            }
+        if (empty($teamId)) {
+            return new Document([]);
+        }
 
-            $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
-                return $dbForPlatform->findOne('teams', [
-                    Query::equal('$sequence', [$teamInternalId]),
-                ]);
-            });
+        // Read by ID so the team comes from the cache. Its organization keys are cached with it,
+        // so creating, updating or deleting one has to purge the team.
+        $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
-            return $team;
-        };
+        // A team re-created under the same ID is not the project's team.
+        if ($team->getSequence() !== $teamInternalId) {
+            return new Document([]);
+        }
 
-        $team = null;
-
-        return function () use (&$team, $resolve): Document {
-            return $team ??= $resolve();
-        };
+        return $team;
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
-
-    $context->set('team', fn (callable $getTeam): Document => $getTeam(), ['getTeam']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;
@@ -1068,14 +1059,14 @@ return function (Container $context): void {
         return '';
     }, ['request', 'apiKey']);
 
-    $context->set('apiKey', function (Request $request, Document $project, callable $getTeam, Document $user): ?Key {
+    $context->set('apiKey', function (Request $request, Document $project, Document $team, Document $user): ?Key {
         $key = $request->getHeaderLine('x-appwrite-key');
 
         if (empty($key)) {
             return null;
         }
 
-        $key = Key::decode($project, $getTeam, $user, $key);
+        $key = Key::decode($project, $team, $user, $key);
 
         $userHeader = $request->getHeaderLine('x-appwrite-user');
         $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
@@ -1100,7 +1091,7 @@ return function (Container $context): void {
         }
 
         return $key;
-    }, ['request', 'project', 'getTeam', 'user']);
+    }, ['request', 'project', 'team', 'user']);
 
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
         $tokenJWT = $request->getParam('token');
