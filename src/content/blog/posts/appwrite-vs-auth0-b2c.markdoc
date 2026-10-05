@@ -8,7 +8,6 @@ cover: /images/blog/appwrite-vs-auth0-b2c/cover.avif
 timeToRead: 5
 author: ebenezer-don
 category: products
-removed: true
 faqs:
   - question: "Is Appwrite cheaper than Auth0 for B2C apps?"
     answer: "For most B2C apps, yes. Appwrite's Pro plan is $15/month for up to 200,000 MAUs, while Auth0's Professional plan starts at $240/month for just 1,000 MAUs. The bigger your user base, the wider the gap becomes."

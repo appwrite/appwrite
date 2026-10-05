@@ -135,7 +135,7 @@ A speech-to-speech model is only half of a voice agent. The other half is everyt
 - [**Realtime**](/docs/apis/realtime) streams call state and results to a dashboard or companion app as the conversation happens.
 - [**Messaging**](/docs/products/messaging) sends the follow-up SMS, email, or push once the call ends.
 
-Wiring these together by hand is where the time saved by a fast model usually goes to die. Appwrite gives your agent one project with all of it already in place, on managed Cloud or self-hosted. If you're building with Grok Voice Think Fast 2.0, start with the [Grok Build guide](/docs/tooling/ai/agents/grok-build) to connect Grok to Appwrite for tool calling.
+Wiring these together by hand is where the time saved by a fast model usually goes to die. Appwrite gives your agent one project with all of it already in place, on managed Cloud or self-hosted. If you're building with Grok Voice Think Fast 2.0, start with the [Grok Build guide](/docs/tooling/ai/agents/grok-build) to connect Grok to Appwrite for tool calling. If you're comparing backend options, [Appwrite vs Convex for AI agents](/blog/post/appwrite-vs-convex-ai-agents) walks through the trade-offs.
 
 To try the full loop, [create a free Appwrite project](https://cloud.appwrite.io/), expose your business logic as Functions, and point your Grok Voice Think Fast 2.0 agent's tool calls at them. You end up with a voice agent that can actually complete a task, not just describe one.
 

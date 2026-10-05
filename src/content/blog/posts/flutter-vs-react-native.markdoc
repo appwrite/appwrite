@@ -7,7 +7,6 @@ cover: /images/blog/flutter-vs-react-native/cover.avif
 timeToRead: 8
 author: ebenezer-don
 category: products
-removed: true
 faqs:
   - question: "Is Flutter or React Native better for performance?"
     answer: "Flutter typically has the edge because it compiles to native ARM code and renders through its own Skia engine, avoiding the JavaScript bridge that React Native traditionally relied on. React Native's new architecture with JSI and Fabric closes much of the gap, but Flutter still wins on consistent frame rates for animation-heavy UIs. For most CRUD apps, the difference is negligible."

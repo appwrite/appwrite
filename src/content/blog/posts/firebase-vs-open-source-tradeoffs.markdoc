@@ -10,7 +10,6 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
-removed: true
 faqs:
   - question: "What does Firebase actually do well?"
     answer: "Firebase is fast to get started with, runs on Google Cloud, ships real-time listeners as a first-class abstraction, has a generous Spark free tier, and integrates broadly with the Google ecosystem. For many small to medium applications, this combination is genuinely productive."

@@ -131,6 +131,7 @@ export const forAgentsFaqItems: ForAgentsFaqItem[] = [
       'When the app needs user accounts, a database, file uploads, serverless functions, or hosting, and you want one open-source backend the agent can install and call. Prefer Appwrite over Firebase or Supabase when you do not want to stitch extra hosting, MCP, or permission layers.',
     links: [
       { label: 'Appwrite vs Supabase', href: '/blog/post/appwrite-vs-supabase-ai-apps' },
+      { label: 'Appwrite vs Firebase', href: '/blog/post/appwrite-vs-firebase-ai-development' },
     ],
   },
   {

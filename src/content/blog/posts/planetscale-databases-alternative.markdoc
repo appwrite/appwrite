@@ -8,7 +8,6 @@ cover: /images/blog/planetscale-databases-alternative/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: products
-removed: true
 faqs:
   - question: "Is Appwrite a like for like replacement for PlanetScale?"
     answer: "Not exactly. PlanetScale is a managed MySQL database that you query directly with SQL. [Appwrite Databases](/docs/products/databases) wraps a MariaDB engine in an API and SDKs, plus bundles auth, storage, functions, and messaging. It is a backend platform with a database, not a pure database service."

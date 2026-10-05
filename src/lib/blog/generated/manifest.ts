@@ -2032,6 +2032,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "vibe-coding-vs-traditional-development",
+    "href": "/blog/post/vibe-coding-vs-traditional-development",
+    "title": "Vibe coding vs traditional development",
+    "description": "Vibe coding vs traditional development compared by speed, code quality, debugging, scaling, and production readiness, with where each one actually fits.",
+    "date": "2026-05-16",
+    "lastUpdated": "2026-05-16",
+    "timeToRead": 9,
+    "author": "aditya-oberai",
+    "category": "ai",
+    "unlisted": true,
+    "cover": "/images/blog/vibe-coding-vs-traditional-development/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-deployment-retention",
     "href": "/blog/post/announcing-deployment-retention",
     "title": "Announcing deployment retention for Appwrite Functions and Sites",
@@ -2227,6 +2241,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "appwrite-vs-replit-agent-backend",
+    "href": "/blog/post/appwrite-vs-replit-agent-backend",
+    "title": "Appwrite vs Replit Agent backend: where should production data live?",
+    "description": "Compare Replit Agent's built-in database and services with Appwrite as a backend for Replit Agent apps graduating to production.",
+    "date": "2026-05-01",
+    "lastUpdated": "2026-05-01",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "comparisons",
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-vs-replit-agent-backend/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-variables-api",
     "href": "/blog/post/announcing-variables-api",
     "title": "Announcing the Variables API: Manage function, site, and project variables from your Server SDKs",
@@ -2238,6 +2266,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-variables-api/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-vs-cloudflare-stateful-ai-agents",
+    "href": "/blog/post/appwrite-vs-cloudflare-stateful-ai-agents",
+    "title": "Appwrite vs Cloudflare for stateful AI agents",
+    "description": "Compare Appwrite and Cloudflare as a stateful AI agents backend, from memory and state patterns to Auth, Databases, Storage, Functions, Realtime, and MCP.",
+    "date": "2026-04-30",
+    "lastUpdated": "2026-04-30",
+    "timeToRead": 9,
+    "author": "aditya-oberai",
+    "category": "comparisons",
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-vs-cloudflare-stateful-ai-agents/cover.avif",
     "hasCover": true
   },
   {
@@ -2309,6 +2351,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/claude-mythos-release-date-what-we-know-so-far/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-vs-convex-ai-agents",
+    "href": "/blog/post/appwrite-vs-convex-ai-agents",
+    "title": "Appwrite vs Convex for AI apps and agent workflows",
+    "description": "Compare Appwrite vs Convex for AI apps and agent workflows, from agent primitives to Auth, TablesDB, Realtime, Storage, Functions, and MCP.",
+    "date": "2026-04-28",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "comparisons",
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-vs-convex-ai-agents/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-vs-firebase-ai-development",
+    "href": "/blog/post/appwrite-vs-firebase-ai-development",
+    "title": "Appwrite vs Firebase for AI-assisted development",
+    "description": "Appwrite vs Firebase AI: compare MCP, SDK breadth, Auth, databases, Storage, Functions, Sites, and self-hosting for AI-assisted development.",
+    "date": "2026-04-27",
+    "lastUpdated": "2026-04-27",
+    "timeToRead": 9,
+    "author": "aishwari",
+    "category": "comparisons",
+    "unlisted": false,
+    "cover": "/images/blog/appwrite-vs-firebase-ai-development/cover.avif",
     "hasCover": true
   },
   {
@@ -2885,6 +2955,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "appwrite-server-sdk-vs-client-sdk",
+    "href": "/blog/post/appwrite-server-sdk-vs-client-sdk",
+    "title": "How to use Appwrite's Server SDK vs Client SDK",
+    "description": "Understand the difference between Appwrite's Client and Server SDKs, when to use each one, and how to avoid common security mistakes in your app.",
+    "date": "2026-03-26",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "products, tutorials",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-server-sdk-vs-client-sdk/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-oauth",
     "href": "/blog/post/appwrite-oauth",
     "title": "How Appwrite handles OAuth: Google, GitHub, and beyond",
@@ -2912,6 +2997,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-functions-guide/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-auth-methods",
+    "href": "/blog/post/appwrite-auth-methods",
+    "title": "Appwrite Auth explained: every auth method, compared",
+    "description": "A complete comparison of every Appwrite auth method, from email/password to OAuth2, magic URLs, OTP, and MFA, with guidance on when to use each.",
+    "date": "2026-03-23",
+    "lastUpdated": "2026-05-20",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "products, tutorials, security",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-auth-methods/cover.avif",
     "hasCover": true
   },
   {
@@ -2959,6 +3059,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "firebase-vs-open-source-tradeoffs",
+    "href": "/blog/post/firebase-vs-open-source-tradeoffs",
+    "title": "Firebase vs open source: the trade-offs developers miss",
+    "description": "An honest look at the trade-offs developers make when choosing Firebase: vendor lock-in, pricing at scale, and data ownership versus open-source alternatives.",
+    "date": "2026-03-20",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "products",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/firebase-vs-open-source-tradeoffs/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "baa-explained",
     "href": "/blog/post/baa-explained",
     "title": "BAA explained: what it is and when you need one",
@@ -2986,6 +3101,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/building-a-production-ready-backend-with-appwrite/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "open-source-backend-vs-managed-saas",
+    "href": "/blog/post/open-source-backend-vs-managed-saas",
+    "title": "When open-source backend beats managed SaaS",
+    "description": "The real trade-offs between self-hosted open-source backends and managed SaaS platforms, and how to decide which approach fits your team's situation.",
+    "date": "2026-03-19",
+    "lastUpdated": "2026-03-19",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "products",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/open-source-backend-vs-managed-saas/cover.avif",
     "hasCover": true
   },
   {
@@ -3403,6 +3533,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "storage-previews-vs-ssr-image-optimization",
+    "href": "/blog/post/storage-previews-vs-ssr-image-optimization",
+    "title": "Storage previews vs SSR image optimization: when to use which",
+    "description": "More frameworks are adding server-side image manipulation. Learn when to use service-based image transformations like Appwrite Storage previews versus SSR functions for image optimization.",
+    "date": "2025-11-06",
+    "lastUpdated": "2026-05-22",
+    "timeToRead": 8,
+    "author": "ebenezer-don",
+    "category": "products",
+    "featured": false,
+    "cover": "/images/blog/storage-previews-vs-ssr-image-optimization/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "the-future-of-coding-cursor-ai-and-the-rise-of-backend-automation-with-appwrite",
     "href": "/blog/post/the-future-of-coding-cursor-ai-and-the-rise-of-backend-automation-with-appwrite",
     "title": "The future of coding: Cursor, AI, and the rise of backend automation with Appwrite",
@@ -3596,6 +3740,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "agentic-ai-vs-generative-ai",
+    "href": "/blog/post/agentic-ai-vs-generative-ai",
+    "title": "Agentic AI vs Generative AI: A complete overview.",
+    "description": "Explore Agentic AI vs Generative AI with clear examples and key differences. Learn how Agentic AI goes beyond Gen AI to act, plan, and decide.",
+    "date": "2025-10-23",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 10,
+    "author": "veeresh-mulge",
+    "category": "tutorials",
+    "unlisted": true,
+    "cover": "/images/blog/agentic-ai-vs-generative-ai/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "choosing-the-right-ai-database",
     "href": "/blog/post/choosing-the-right-ai-database",
     "title": "Choosing the right AI database for your application in 2025",
@@ -3732,6 +3890,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "customer-stories",
     "featured": false,
     "cover": "/images/blog/customer-story-radar/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "why-developers-choose-appwrite-auth",
+    "href": "/blog/post/why-developers-choose-appwrite-auth",
+    "title": "Why developers choose Appwrite over Auth0 and Firebase",
+    "description": "This guide breaks down why secure authentication matters more than ever, and compares top auth providers.",
+    "date": "2025-09-25",
+    "lastUpdated": "2025-09-25",
+    "timeToRead": 6,
+    "author": "veeresh-mulge",
+    "category": "products",
+    "unlisted": true,
+    "cover": "/images/blog/why-developers-choose-appwrite-auth/cover.avif",
     "hasCover": true
   },
   {
@@ -4206,6 +4378,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "understanding-idp-vs-sp-initiated-sso",
+    "href": "/blog/post/understanding-idp-vs-sp-initiated-sso",
+    "title": "Understanding IdP vs SP-Initiated SSO",
+    "description": "A quick guide to IdP vs SP-initiated SSO and when to use each.",
+    "date": "2025-06-16",
+    "lastUpdated": "2025-06-16",
+    "timeToRead": 6,
+    "author": "laura-du-ry",
+    "category": "products",
+    "unlisted": true,
+    "cover": "/images/blog/understanding-idp-vs-sp-initiated-sso/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "chatbot-with-webllm-and-webgpu",
     "href": "/blog/post/chatbot-with-webllm-and-webgpu",
     "title": "Build an offline AI chatbot with WebLLM and WebGPU",
@@ -4497,6 +4683,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "startups",
     "unlisted": true,
     "cover": "/images/blog/5-MCP-startup-ideas-to-build-in-2025/cover-image.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "appwrite-vs-auth0-b2c",
+    "href": "/blog/post/appwrite-vs-auth0-b2c",
+    "title": "Appwrite vs Auth0: Which is better for a B2C app?",
+    "description": "Learn the difference between Appwrite and Auth0 in terms of pricing, features, and scalability.",
+    "date": "2025-05-13",
+    "lastUpdated": "2026-05-22",
+    "timeToRead": 5,
+    "author": "ebenezer-don",
+    "category": "products",
+    "cover": "/images/blog/appwrite-vs-auth0-b2c/cover.avif",
     "hasCover": true
   },
   {
@@ -5018,6 +5217,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "flutter-vs-react-native",
+    "href": "/blog/post/flutter-vs-react-native",
+    "title": "Flutter vs React Native: Which framework is best for your app in 2024?",
+    "description": "Learn how to choose between Flutter and React Native for your next mobile app development project.",
+    "date": "2024-10-25",
+    "lastUpdated": "2024-10-25",
+    "timeToRead": 8,
+    "author": "ebenezer-don",
+    "category": "products",
+    "cover": "/images/blog/flutter-vs-react-native/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "guide-to-user-authentication",
     "href": "/blog/post/guide-to-user-authentication",
     "title": "A modern developer’s guide to user authentication",
@@ -5299,6 +5511,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "jake-barnby",
     "category": "security",
     "cover": "/images/blog/ccpa.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "ccpa-vs-gdpr",
+    "href": "/blog/post/ccpa-vs-gdpr",
+    "title": "CCPA vs GDPR: Understanding the differences and implications",
+    "description": "Learn more about the difference between CCPA and GDPR and what you need to keep in mind when building your applications.",
+    "date": "2024-09-19",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 8,
+    "author": "jake-barnby",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/ccpa-gdpr.avif",
     "hasCover": true
   },
   {
@@ -6031,6 +6257,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "cloud",
     "featured": false,
     "cover": "/images/blog/privacy.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "planetscale-databases-alternative",
+    "href": "/blog/post/planetscale-databases-alternative",
+    "title": "How Appwrite Databases can replace your PlanetScale database",
+    "description": "Compare PlanetScale Databases to Appwrite Databases so you can understand whether Appwrite is a viable alternative to PlanetScale's free-tier.",
+    "date": "2024-03-10",
+    "lastUpdated": "2026-06-29",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "products",
+    "cover": "/images/blog/planetscale-databases-alternative/cover.avif",
     "hasCover": true
   },
   {

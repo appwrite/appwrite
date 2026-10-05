@@ -9,7 +9,6 @@ timeToRead: 8
 author: ebenezer-don
 category: products
 featured: false
-removed: true
 faqs:
   - question: "What is the difference between Storage previews and SSR image optimization?"
     answer: "Storage previews handle image transformations through a dedicated service API, separate from your app server, with built-in CDN caching. SSR image optimization processes images on your application server using libraries like Sharp or IPX. Service-based approaches reduce server load, while SSR gives you more direct control over the pipeline."
@@ -321,5 +320,4 @@ And remember, you're not locked into one approach. Start with what makes sense n
 
 - [Appwrite Storage documentation](/docs/products/storage)
 - [Image transformations guide](/docs/products/storage/images)
-- [How to use AVIF in Appwrite Storage](/blog/post/avif-in-storage)
 - [Image transformation with Appwrite Storage](/blog/post/image-transformation-with-appwrite-storage)

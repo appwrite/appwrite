@@ -7,7 +7,6 @@ cover: /images/blog/appwrite-vs-firebase-ai-development/cover.avif
 timeToRead: 9
 author: aishwari
 unlisted: false
-removed: true
 category: comparisons
 faqs:
   - question: "What is the main difference between Appwrite and Firebase for AI-assisted development?"
