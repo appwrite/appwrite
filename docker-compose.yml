@@ -408,6 +408,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX=${_APP_CONNECTIONS_MAX:-151}
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_REALTIME_TAIL_RATE
