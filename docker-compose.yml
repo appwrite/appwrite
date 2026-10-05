@@ -1752,6 +1752,7 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+      - compute
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -1969,7 +1970,8 @@ networks:
   # Fixed name on purpose: the executor creates its own network with a bare
   # `docker network create`, and compose refuses to adopt a network it did not label,
   # so pointing this at _APP_COMPUTE_RUNTIMES_NETWORK would abort `up` on every install
-  # whose runtimes network already exists.
+  # whose runtimes network already exists. The executor joins it here as well, so
+  # compose creates it before the executor can, even when the executor starts alone.
   compute:
     name: compute
 volumes:
