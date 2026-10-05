@@ -165,17 +165,21 @@ class Screenshots extends Action
             $captures = [];
             foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
                 $captureStart = \microtime(true);
+                $result = 'failure';
 
-                $captures[$key] = $screenshots->create(
-                    url: $routerHost . '/',
-                    theme: $theme,
-                    headers: $headers,
-                    sleep: $sleep,
-                );
-
-                // The first capture pays the site's cold start and the second
-                // finds it warm, so record them separately rather than as a total.
-                $this->recordDuration($duration, \microtime(true) - $captureStart, $theme);
+                try {
+                    $captures[$key] = $screenshots->create(
+                        url: $routerHost . '/',
+                        theme: $theme,
+                        headers: $headers,
+                        sleep: $sleep,
+                    );
+                    $result = 'success';
+                } finally {
+                    // The first capture pays the site's cold start and the second
+                    // finds it warm, so record them separately rather than as a total.
+                    $this->recordDuration($duration, \microtime(true) - $captureStart, $theme, $result);
+                }
             }
 
             Span::add('screenshot.count', \count($captures));
@@ -264,12 +268,13 @@ class Screenshots extends Action
         }
     }
 
-    protected function recordDuration(Histogram $duration, float $seconds, string $theme): void
+    protected function recordDuration(Histogram $duration, float $seconds, string $theme, string $result): void
     {
         try {
             $duration->record($seconds, [
                 'resourceType' => RESOURCE_TYPE_SITES,
                 'theme' => $theme,
+                'result' => $result,
             ]);
         } catch (\Throwable) {
             // Telemetry should never affect screenshot processing.
