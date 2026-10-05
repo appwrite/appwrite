@@ -8,12 +8,14 @@ use Appwrite\Auth\OAuth2\Exception;
 use Appwrite\Auth\OAuth2\Naver;
 use Appwrite\Extend\Exception as AppwriteException;
 use PHPUnit\Framework\TestCase;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 
 final class NaverTest extends TestCase
 {
     public function testLoginURL(): void
     {
-        $naver = new Naver('client-id', 'client-secret', 'https://example.com/callback', ['success' => 'https://example.com']);
+        $naver = new Naver(new Client(new CurlAdapter()), 'client-id', 'client-secret', 'https://example.com/callback', ['success' => 'https://example.com']);
 
         $url = \parse_url($naver->getLoginURL());
         \parse_str((string) ($url['query'] ?? ''), $query);
@@ -115,7 +117,7 @@ final class FakeNaver extends Naver
 {
     public function __construct(private readonly string $response)
     {
-        parent::__construct('client-id', 'client-secret', 'https://example.com/callback');
+        parent::__construct(new Client(new CurlAdapter()), 'client-id', 'client-secret', 'https://example.com/callback');
     }
 
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
