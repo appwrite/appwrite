@@ -274,6 +274,17 @@ if ($path === '/method') {
     return;
 }
 
+if ($path === '/content-length') {
+    $contentLength = $_SERVER['CONTENT_LENGTH'] ?? $_SERVER['HTTP_CONTENT_LENGTH'] ?? null;
+
+    http_response_code(200);
+    header('Content-Type: text/plain;charset=UTF-8');
+
+    echo is_string($contentLength) ? $contentLength : 'none';
+
+    return;
+}
+
 if ($path === '/body-info') {
     $body = file_get_contents('php://input');
     $body = $body === false ? '' : $body;

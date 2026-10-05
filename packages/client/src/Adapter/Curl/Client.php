@@ -346,6 +346,14 @@ class Client implements Adapter
             if (!$request->hasHeader(Header::CONTENT_TYPE)) {
                 $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
             }
+        } elseif ($size === 0 && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+            // Forced HTTP/1.1 sends no length for an empty body, and origins such
+            // as Google's OAuth token endpoint refuse that with 411.
+            $options[\CURLOPT_POSTFIELDS] = '';
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
         } elseif ($size !== 0) {
             if ($body->isSeekable()) {
                 $body->rewind();
