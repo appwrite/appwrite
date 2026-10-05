@@ -50,9 +50,9 @@ To find out which networks send a traffic spike, open the project **Usage** page
 
 # Network rules for your project API {% #api-rules %}
 
-Hosting traffic is not always hostile. Your backend and CI jobs call Appwrite from hosting networks, and so do people on VPNs. The **Block hosting provider traffic** preset denies all hosting traffic to the API, which suits apps without server-side callers or users on VPNs. Other apps can scope hosting rules to requests that bots target, such as account creation and one-time codes.
-
 ![Rule that denies POST requests to /v1/account from hosting networks unless the connection organization is iCloud Private Relay](/images/blog/firewall-network-rules-premium-geo-db/deny-hosting-signups.avif)
+
+Hosting traffic is not always hostile. Your backend and CI jobs call Appwrite from hosting networks, and so do people on VPNs. The **Block hosting provider traffic** preset denies all hosting traffic to the API, which suits apps without server-side callers or users on VPNs. Other apps can scope hosting rules to requests that bots target, such as account creation and one-time codes.
 
 The rule above denies `POST` requests to `/v1/account` from hosting networks. It has four conditions:
 
@@ -83,21 +83,15 @@ Appwrite also serves the same rows on the older `/v1/databases` path. Add the sa
 
 # Network rules for Functions and Sites {% #functions-and-sites %}
 
-Function and Site rules support the [**Challenge**](/docs/products/firewall/actions#challenge) action, which API rules do not. A challenge runs a check in the visitor's browser before the request continues.
-
 ![Site rule that challenges requests to paths that start with /signup on a site named Storefront when the connection usage type is hosting](/images/blog/firewall-network-rules-premium-geo-db/site-challenge-hosting.avif)
 
-On a Site, challenge hosting traffic on the pages that bots abuse instead of denying it. The rule above challenges hosting traffic to paths that start with `/signup` on an example site named Storefront. People on VPNs solve the challenge in the browser and continue. Scope the rule to the sign-up page and to the path that receives the form.
+Function and Site rules support the [**Challenge**](/docs/products/firewall/actions#challenge) action, which API rules do not. A challenge runs a check in the visitor's browser before the request continues. On a Site, challenge hosting traffic on the pages that bots abuse instead of denying it. The rule above challenges hosting traffic to paths that start with `/signup` on an example site named Storefront. People on VPNs solve the challenge in the browser and continue. Scope the rule to the sign-up page and to the path that receives the form.
 
 On paths that the rule matches, Appwrite denies non-browser clients from hosting networks instead of serving the challenge page. That includes search engine crawlers, link preview bots, and uptime monitors, so keep the rule off the pages that they need. The challenge raises the effort for automated clients, but a bot that drives a full browser can pass it. Some privacy-hardened browsers fail it.
 
-Only page navigations get a challenge page. A `fetch` call to a Function from a hosting network gets `403` unless the browser already holds clearance from a challenge on the function's domain. People on VPNs rarely have that clearance, so for them a challenge on such a Function works like a deny. Apply a hosting deny to Functions where that trade-off is acceptable, such as an endpoint that runs an expensive job on each call. Function rules cover requests to the function's domains. Executions created through the API follow API rules, so also limit who has execute permission on the function.
+A `fetch` call to a Function cannot show a challenge page. It gets `403` unless the browser already passed a challenge on the function's domain, so for most hosting traffic a challenge on a Function works like a deny. Deny hosting traffic only on Functions where blocking people on VPNs is acceptable, such as one that runs an expensive job. Executions created through the API follow API rules instead.
 
-Leave webhook Functions out of hosting rules, because webhook senders deliver from hosting networks. To accept requests from one sender only, create a **Deny** rule with one **IP address** **Not equal** condition per published range. Include the sender's IPv4 and IPv6 ranges, and update the rule when the sender changes its list. Do not match the sender's AS number: one of GitHub's webhook ranges, `185.199.108.0/22`, resolves to Fastly's AS number `54113`, not GitHub's `36459`. Every GitHub account delivers from the same ranges, so the function still needs to verify the webhook signature.
-
-# Requests without network data {% #missing-data %}
-
-Lookups for private and reserved addresses return no network data, and on API traffic, network attributes are also empty after the add-on ends. A **Not equal** condition matches a missing value. A rule built only on **Not equal**, such as one that denies everything except `residential`, therefore denies those requests. The deny rules above pair their **Not equal** condition with **Connection usage type** **Equals** `hosting`, which never matches a missing value. For a rule without such a condition, add **Is not empty** on the same attribute.
+Keep hosting rules off webhook Functions, because webhook senders deliver from hosting networks.
 
 # Traffic that network rules miss {% #limits %}
 
