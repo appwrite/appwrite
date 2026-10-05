@@ -583,11 +583,7 @@ jobs:
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
-        run: |
-          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
-          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
-          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
-          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
 
       - name: Failure Logs
         if: failure()
@@ -756,11 +752,7 @@ jobs:
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
-        run: |
-          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
-          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
-          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
-          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
 
       - name: Failure Logs
         if: failure()
@@ -928,11 +920,7 @@ jobs:
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
-        run: |
-          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
-          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
-          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
-          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
 
       - name: Failure Logs
         if: failure()
