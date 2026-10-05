@@ -1267,6 +1267,67 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * An eng upload created before the timeline finishes does not block
+     * extraction: both tracks stay listed and the upload keeps default.
+     */
+    public function testExtractAlongsidePriorUpload(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithSubtitles()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        // Race the timeline job: an eng upload with default before waitForTimeline
+        // so extraction often sees the upload already registered.
+        $upload = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getOverrideSubtitleFile()['$id'],
+            'name' => 'English upload',
+            'code' => 'eng',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $upload['headers']['status-code']);
+        $uploadId = $upload['body']['$id'];
+        $this->assertTrue($upload['body']['default']);
+
+        $this->waitForTimeline($videoId);
+        $readyUpload = $this->waitForSubtitleTerminalState($videoId, $uploadId);
+        $this->assertEquals('ready', $readyUpload['status']);
+
+        $embedded = $this->waitForEmbeddedSubtitle($videoId);
+        $this->assertNotNull($embedded, 'Expected an auto-extracted eng track beside the upload');
+        $this->assertEquals('eng', $embedded['code']);
+        $this->assertEquals('ready', $embedded['status']);
+        $this->assertNotEquals($uploadId, $embedded['$id']);
+
+        // Re-assert default after extraction: an in-flight extract can still
+        // race the create, so pin the authored track as the sole default here.
+        $retag = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $uploadId, $this->headers(), [
+            'default' => true,
+        ]);
+        $this->assertEquals(200, $retag['headers']['status-code']);
+        $this->assertTrue($retag['body']['default']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $byId = \array_column($list['body']['subtitles'], null, '$id');
+        $this->assertArrayHasKey($uploadId, $byId);
+        $this->assertArrayHasKey($embedded['$id'], $byId);
+        $this->assertTrue($byId[$uploadId]['default']);
+        $this->assertFalse($byId[$embedded['$id']]['default']);
+
+        $vtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $embedded['$id'] . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $vtt['headers']['status-code']);
+        $this->assertStringContainsString('EMBEDDED CUE', (string) $vtt['body']);
+    }
+
+    /**
      * An uploaded track for the same language outranks the auto-extracted row:
      * both stay listed, the upload takes the default flag, and the extracted
      * track only disappears when the user deletes it explicitly.

@@ -739,10 +739,11 @@ class Videos extends Action
     }
 
     /**
-     * Replace auto-extracted text subtitle tracks from the source container.
+     * Register soft-text subtitle tracks from the source container.
      *
-     * Uploaded tracks (non-empty fileId) always win for a given language code.
-     * Image-based streams are skipped. One failed track does not fail the timeline.
+     * Image-based streams are skipped. An upload that already claims default
+     * keeps the flag; extracted rows for the same language are still created.
+     * One failed track does not fail the timeline.
      */
     private function extractEmbeddedSubtitles(
         Database $dbForProject,
@@ -753,30 +754,6 @@ class Videos extends Action
         Encoder $encoder
     ): void {
         Console::info('Videos worker: extracting embedded subtitles for video ' . $video->getId());
-
-        $existing = $dbForProject->find('videos_subtitles', [
-            Query::equal('videoInternalId', [$video->getSequence()]),
-            Query::limit(APP_LIMIT_SUBQUERY),
-        ]);
-
-        $uploadedCodes = [];
-        $hasDefault = false;
-
-        foreach ($existing as $subtitle) {
-            if (!empty($subtitle->getAttribute('fileId', ''))) {
-                $uploadedCodes[$subtitle->getAttribute('code', '')] = true;
-            }
-            if ($subtitle->getAttribute('default', false)) {
-                $hasDefault = true;
-            }
-        }
-
-        if (!empty($uploadedCodes)) {
-            Console::info(
-                'Videos worker: upload-owned languages on video ' . $video->getId()
-                . ': ' . \implode(', ', \array_keys($uploadedCodes))
-            );
-        }
 
         try {
             $info = $encoder->probe($inPath);
@@ -825,15 +802,6 @@ class Videos extends Action
 
             $code = $this->subtitleLanguageCode($track->language);
 
-            if (isset($uploadedCodes[$code])) {
-                Console::info(
-                    'Videos worker: skipping embedded ' . $code
-                    . ' — upload already owns that language on video ' . $video->getId()
-                );
-                $skipped++;
-                continue;
-            }
-
             $vttPath = \rtrim($outDir, '/') . '/sub_' . $track->index . '.vtt';
 
             try {
@@ -866,12 +834,12 @@ class Videos extends Action
                 ?? ('Track ' . $track->index)
             );
 
+            // Re-check immediately before write: an upload can claim default while
+            // ffmpeg is extracting, and a stale snapshot would create two defaults.
             $isDefault = false;
-            if (!$hasDefault && !$assignedDefault) {
-                if ($track->default) {
-                    $isDefault = true;
-                    $assignedDefault = true;
-                }
+            if (!$assignedDefault && $track->default && !$this->hasDefaultSubtitle($dbForProject, $video)) {
+                $isDefault = true;
+                $assignedDefault = true;
             }
 
             try {
@@ -905,8 +873,8 @@ class Videos extends Action
         }
 
         // If no stream was flagged default, promote the first extracted track
-        // when no upload already claims default.
-        if (!$hasDefault && !$assignedDefault) {
+        // when no other track already claims default.
+        if (!$assignedDefault && !$this->hasDefaultSubtitle($dbForProject, $video)) {
             $embedded = $dbForProject->find('videos_subtitles', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -936,6 +904,20 @@ class Videos extends Action
             . ' skipped=' . $skipped
             . ' streams=' . \count($tracks)
         );
+    }
+
+    /**
+     * Whether any subtitle on this video is already marked default.
+     */
+    private function hasDefaultSubtitle(Database $dbForProject, Document $video): bool
+    {
+        $existing = $dbForProject->find('videos_subtitles', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('default', [true]),
+            Query::limit(1),
+        ]);
+
+        return $existing !== [];
     }
 
     /**
