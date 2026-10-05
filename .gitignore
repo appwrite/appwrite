@@ -31,3 +31,4 @@ tests/playwright/screenshots
 .playwright-mcp/
 .phpstan-cache-deadcode
 auth.json
+.pi/

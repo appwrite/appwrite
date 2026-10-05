@@ -1,0 +1,259 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\SlidingWindow\\RedisCluster\:\:getLogs\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects array\<int\|string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisCluster.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<mixed, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\SlidingWindow\\RedisPool\:\:getRedisClusterLogs\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Only iterables can be unpacked, array\|true given in argument \#2\.$#'
+			identifier: argument.unpackNonIterable
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects array\<int\|string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/SlidingWindow/RedisPool.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\TimeLimit\\RedisCluster\:\:getLogs\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects array\<int\|string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisCluster.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<mixed, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\TimeLimit\\RedisPool\:\:getRedisClusterLogs\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Only iterables can be unpacked, array\|true given in argument \#2\.$#'
+			identifier: argument.unpackNonIterable
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_combine expects array\<int\|string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TimeLimit/RedisPool.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\TokenBucket\\RedisCluster\:\:getLogs\(\) should return array\<string, mixed\> but returns array\<array\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/TokenBucket/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/TokenBucket/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$key of method RedisCluster\:\:hGetAll\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TokenBucket/RedisCluster.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TokenBucket/RedisCluster.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Adapters/TokenBucket/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Adapters\\TokenBucket\\RedisPool\:\:getRedisClusterLogs\(\) should return array\<string, mixed\> but returns array\<array\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapters/TokenBucket/RedisPool.php
+
+		-
+			message: '#^Only iterables can be unpacked, array\|true given in argument \#2\.$#'
+			identifier: argument.unpackNonIterable
+			count: 1
+			path: src/Adapters/TokenBucket/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$array of function sort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: src/Adapters/TokenBucket/RedisPool.php
+
+		-
+			message: '#^Parameter \#1 \$key of method RedisCluster\:\:hGetAll\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapters/TokenBucket/RedisPool.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Adapters/TokenBucket/RedisPool.php
+
+		-
+			message: '#^Method Utopia\\Abuse\\Tests\\E2E\\Appwrite\\TablesDBTest\:\:columnsByKey\(\) should return array\<string, array\<string, mixed\>\> but returns array\<string, array\<mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/E2E/Appwrite/TablesDBTest.php
+
+		-
+			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: tests/E2E/Base.php
+
+		-
+			message: '#^Argument of an invalid type array\|true supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: tests/E2E/RedisPoolClusterTest.php
+
+		-
+			message: '#^Instanceof between RedisCluster and RedisCluster will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: tests/E2E/RedisPoolClusterTest.php
+
+		-
+			message: '#^Parameter \#1 \$key of method RedisCluster\:\:del\(\) expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/RedisPoolClusterTest.php
+
+		-
+			message: '#^Instanceof between Redis and Redis will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: tests/E2E/RedisPoolTest.php
+
+		-
+			message: '#^Instanceof between Redis and Redis will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: tests/E2E/SlidingWindow/RedisPoolTest.php
+
+		-
+			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: tests/E2E/TokenBucket/Base.php
+
+		-
+			message: '#^Instanceof between Redis and Redis will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: tests/E2E/TokenBucket/RedisPoolTest.php

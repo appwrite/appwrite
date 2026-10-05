@@ -1,0 +1,19 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Psr\\Http\\Message\\StreamInterface@anonymous/tests/Device/LocalTest\.php\:53\:\:detach\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: tests/Device/LocalTest.php
+
+		-
+			message: '#^Method Psr\\Http\\Message\\StreamInterface@anonymous/tests/Device/LocalTest\.php\:53\:\:detach\(\) never returns resource so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: tests/Device/LocalTest.php
+
+		-
+			message: '#^Method Psr\\Http\\Message\\StreamInterface@anonymous/tests/Device/LocalTest\.php\:53\:\:detach\(\) should return resource\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: tests/Device/LocalTest.php

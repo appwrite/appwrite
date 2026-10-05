@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -55,10 +56,12 @@ class XList extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -67,10 +70,12 @@ class XList extends Action
         string $providerRepositoryId,
         string $search,
         array $queries,
+        bool $includeTotal,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -84,11 +89,15 @@ class XList extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 
-        $owner = $vcs->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
@@ -103,7 +112,7 @@ class XList extends Action
             ? $vcs->listBranches($owner, $repositoryName, search: $search)
             : $vcs->listBranches($owner, $repositoryName);
 
-        $total = \count($branches);
+        $total = $includeTotal ? \count($branches) : 0;
         [
             'limit' => $limit,
             'offset' => $offset,

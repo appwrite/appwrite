@@ -37,7 +37,7 @@ class Get extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'Origin installation ID', true)
             ->param('installation_receipt', '', new Text(8192, 0), 'Origin installation receipt JWT, signed by Cursor.', true)
-            ->param('state', '', new Text(2048, 0), 'Origin state. Contains info sent when starting the installation flow.', true)
+            ->param('state', '', new Text(4096, 0), 'Origin state. Contains info sent when starting the installation flow.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -104,13 +104,9 @@ class Get extends Action
             return;
         }
 
-        $region = $project->getAttribute('region', 'default');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
+            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
         ];
 
         $state = \array_merge($defaultState, \array_filter($state));

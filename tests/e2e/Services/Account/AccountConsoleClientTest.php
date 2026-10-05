@@ -88,7 +88,7 @@ final class AccountConsoleClientTest extends Scope
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         // Create team — user becomes sole owner and only member
-        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+        $team = $this->createTeamFixture([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -97,7 +97,7 @@ final class AccountConsoleClientTest extends Scope
             'teamId' => 'unique()',
             'name' => 'myteam'
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         // Account deletion should succeed even with active membership
         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([

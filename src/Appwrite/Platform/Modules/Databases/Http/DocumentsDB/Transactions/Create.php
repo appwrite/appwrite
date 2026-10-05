@@ -25,7 +25,7 @@ class Create extends TransactionsCreate
             ->setHttpPath('/v1/documentsdb/transactions')
             ->desc('Create transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

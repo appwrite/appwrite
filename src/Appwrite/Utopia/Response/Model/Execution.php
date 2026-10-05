@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
@@ -123,9 +124,9 @@ class Execution extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Resource(function/site) execution duration in seconds.',
+                'description' => 'Total time the resource(function/site) took to respond, in seconds.',
                 'default' => 0,
-                'example' => 0.400,
+                'example' => 1.230,
             ])
             ->addRule('scheduledAt', [
                 'type' => self::TYPE_DATETIME,
@@ -135,6 +136,38 @@ class Execution extends Model
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
+    }
+
+    /**
+     * Normalize HTTP header values to the public string contract.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['requestHeaders', 'responseHeaders'] as $attribute) {
+            $headers = $document->getAttribute($attribute, []);
+            if (!\is_array($headers)) {
+                continue;
+            }
+
+            foreach ($headers as $index => $header) {
+                if ($header instanceof Document) {
+                    $value = $header->getAttribute('value');
+                    if (\is_array($value)) {
+                        $header->setAttribute('value', \implode(', ', $value));
+                    }
+                    continue;
+                }
+
+                if (\is_array($header) && \is_array($header['value'] ?? null)) {
+                    $header['value'] = \implode(', ', $header['value']);
+                    $headers[$index] = $header;
+                }
+            }
+
+            $document->setAttribute($attribute, $headers);
+        }
+
+        return $document;
     }
 
     /**

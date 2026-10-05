@@ -86,7 +86,7 @@ class Update extends Base
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-            ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
+            ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
@@ -98,13 +98,13 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
-            )), 'Build specification for the site deployments.', true, ['plan'])
+            )), 'Build specification for the site deployments.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the SSR executions.', true, ['plan'])
+            ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->inject('request')
@@ -119,6 +119,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
@@ -161,6 +162,7 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         Deployments $deployments,
+        int $buildTimeout,
         Bus $bus,
         array $platform
     ) {
@@ -215,7 +217,7 @@ class Update extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
+        // Explicit null providerRepositoryId on a connected site — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
             $installationId = $site->getAttribute('installationId', '');
@@ -347,7 +349,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $bus, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $buildTimeout, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

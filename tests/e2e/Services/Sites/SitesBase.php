@@ -6,6 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -72,11 +73,11 @@ trait SitesBase
                 throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            $code = Console::execute("docker inspect exc1 --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            $code = Console::execute((new Command('docker'))->argument('inspect')->argument('exc1')->option('--format', '{{.State.ExitCode}}'), '', $this->stdout, $this->stderr);
             if ($code === 0 && \trim($this->stdout) !== '' && \trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
+                Console::execute((new Command('docker'))->argument('logs')->argument('exc1'), '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
@@ -245,15 +246,32 @@ trait SitesBase
     protected function packageSite(string $site): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Unique archive per process: paratest --functional packs the same
+        // fixture from many methods at once. Sharing $folderPath/code.tar.gz
+        // lets one tar truncate the file another CURLFile is still reading
+        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed

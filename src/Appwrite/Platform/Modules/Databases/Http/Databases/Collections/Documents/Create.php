@@ -77,7 +77,7 @@ class Create extends Action
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: self::getName(),
-                    desc: 'Create document',
+                    summary: 'Create document',
                     description: '/docs/references/databases/create-document.md',
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -104,7 +104,7 @@ class Create extends Action
                     namespace: $this->getSDKNamespace(),
                     group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
-                    desc: 'Create documents',
+                    summary: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
@@ -131,7 +131,7 @@ class Create extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
@@ -148,9 +148,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass|null $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
-        $data = $this->normalizeData($data);
+        $data = $this->normalizeData($data ?? []);
 
         if ($documents !== null) {
             foreach ($documents as $key => $document) {
@@ -345,6 +345,10 @@ class Create extends Action
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
 
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $current, $authorization);
+                        }
+
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
@@ -511,6 +515,7 @@ class Create extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
 

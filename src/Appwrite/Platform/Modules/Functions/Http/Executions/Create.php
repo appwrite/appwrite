@@ -14,7 +14,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Geo\Geo;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -101,7 +101,7 @@ class Create extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('publisherForFunctions')
-            ->inject('geoRecord')
+            ->inject('geo')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
@@ -117,7 +117,7 @@ class Create extends Base
         string $functionId,
         string $body,
         mixed $async,
-        string $path,
+        ?string $path,
         string $method,
         mixed $headers,
         ?string $scheduledAt,
@@ -129,7 +129,7 @@ class Create extends Base
         User $user,
         Event $queueForEvents,
         FunctionPublisher $publisherForFunctions,
-        GeoRecord $geoRecord,
+        Geo $geo,
         Store $store,
         Token $proofForToken,
         Executor $executor,
@@ -139,6 +139,7 @@ class Create extends Base
         int $executionsRetentionCount,
         Bus $bus,
     ) {
+        $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
         if (!$async && !is_null($scheduledAt)) {
@@ -165,7 +166,7 @@ class Create extends Base
         // 'headers' validator
         $validator = new Headers();
         if (!$validator->isValid($headers)) {
-            throw new Exception($validator->getDescription(), 400);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
         /* @var Document $function */
@@ -226,9 +227,13 @@ class Create extends Base
                 $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
                 $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
                 $jwt = $jwtObj->encode([
+                    'projectId' => $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
+            } else {
+                // A JWT cannot be used to create another JWT, so forward the caller's token as-is
+                $jwt = $request->getHeaderLine('x-appwrite-jwt');
             }
         }
 
@@ -251,10 +256,13 @@ class Create extends Base
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
 
-        if (!empty($ip) && !$geoRecord->isEmpty()) {
-            $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
-            $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
-            $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
+        if (!empty($ip)) {
+            $geoRecord = $geo->get($ip);
+            if (!$geoRecord->isEmpty()) {
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
+            }
         }
 
         $headersFiltered = [];
@@ -426,7 +434,7 @@ class Create extends Base
             $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),
@@ -486,12 +494,10 @@ class Create extends Base
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('logs', $logs);
             $execution->setAttribute('errors', $errors);
-            $execution->setAttribute('duration', $executionResponse['duration']);
+            $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
-
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());

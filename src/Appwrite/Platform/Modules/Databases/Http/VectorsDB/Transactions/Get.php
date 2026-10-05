@@ -25,7 +25,7 @@ class Get extends TransactionsGet
             ->setHttpPath('/v1/vectorsdb/transactions/:transactionId')
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'vectorsdb.documents.read')
             ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

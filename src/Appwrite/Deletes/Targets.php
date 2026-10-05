@@ -40,7 +40,7 @@ class Targets
                 $topic = $database->skipFilters(fn () => $database->findOne('topics', [
                     Query::select(['$id', '$sequence']),
                     Query::equal('$sequence', [$topicInternalId]),
-                ]), ['subQueryTopicTargets']);
+                ]), APP_TOPICS_SUBQUERIES);
 
                 if (!$topic->isEmpty()) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
@@ -56,7 +56,7 @@ class Targets
                             $topicId,
                             $totalAttribute,
                             min: 0
-                        ), ['subQueryTopicTargets']);
+                        ), APP_TOPICS_SUBQUERIES);
                     } catch (LimitException $e) {
                         Console::error("Delete subscribers decreaseDocumentAttribute (topicId={$topicId}): {$e->getMessage()}");
                     }

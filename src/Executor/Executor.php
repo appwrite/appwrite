@@ -6,6 +6,12 @@ use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Fetch\BodyMultipartStream;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Exception\TimeoutException;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Stream\Factory as StreamFactory;
 use Utopia\System\System;
 
 class Executor
@@ -157,27 +163,7 @@ class Executor
         $onData = null;
 
         if ($onPart !== null) {
-            $onData = function (string $data, array $responseHeaders) use (&$parts, &$buffered, &$reader, $onPart): void {
-                if ($reader === null) {
-                    $format = $responseHeaders['x-executor-response-format'] ?? '';
-
-                    // Only the echo tells the two apart: curl hands over the same runs either way.
-                    if ($format !== '' && \version_compare($format, self::RESPONSE_FORMAT_STREAM, '>=')) {
-                        $boundary = \trim(\explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '', '"');
-
-                        $reader = new BodyMultipartStream(
-                            $boundary,
-                            function (string $name, string $chunk, bool $isLast) use (&$parts, $onPart): void {
-                                if ($name !== 'body') {
-                                    $parts[$name] = ($parts[$name] ?? '') . $chunk;
-                                }
-
-                                $onPart($name, $chunk, $isLast);
-                            }
-                        );
-                    }
-                }
-
+            $onData = function (string $data) use (&$parts, &$buffered, &$reader, $onPart): void {
                 if ($reader !== null) {
                     $reader->feed($data);
 
@@ -185,6 +171,27 @@ class Executor
                 }
 
                 $buffered .= $data;
+
+                // Response headers only arrive once the transfer ends, so the first part's headers
+                // tell the formats apart: only the streaming one marks its parts chunked.
+                $head = \strstr($buffered, "\r\n\r\n", true);
+
+                if ($head === false || \stripos($head, "\r\ncontent-transfer-encoding: chunked") === false) {
+                    return;
+                }
+
+                $reader = new BodyMultipartStream(
+                    \substr(\explode("\r\n", $head, 2)[0], 2),
+                    function (string $name, string $chunk, bool $isLast) use (&$parts, $onPart): void {
+                        if ($name !== 'body') {
+                            $parts[$name] = ($parts[$name] ?? '') . $chunk;
+                        }
+
+                        $onPart($name, $chunk, $isLast);
+                    }
+                );
+                $reader->feed($buffered);
+                $buffered = '';
             };
         }
 
@@ -249,14 +256,10 @@ class Executor
      * @return array
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null): array
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?\Closure $onData = null): array
     {
         $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
-        $responseHeaders    = [];
-        $responseStatus     = -1;
-        $responseType       = '';
-        $responseBody       = '';
+        $url                = $endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : '');
 
         switch ($headers['content-type']) {
             case 'application/json':
@@ -278,67 +281,55 @@ class Executor
                 break;
         }
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
-            unset($headers[$i]);
+        $request = (new RequestFactory())->createRequest($method, $url);
+
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
         }
-
-        if (isset($callback)) {
-            $handleEvent = function ($ch, $data) use ($callback, &$responseHeaders) {
-                // Headers are complete before the first body byte, so the callback can read the echo.
-                $callback($data, $responseHeaders);
-                return \strlen($data);
-            };
-
-            curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
-        } else {
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        }
-
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-            $len = strlen($header);
-            $header = explode(':', $header, 2);
-
-            if (count($header) < 2) { // ignore invalid headers
-                return $len;
-            }
-
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-
-            return $len;
-        });
 
         if ($method != self::METHOD_GET) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+            $request = $request->withBody((new StreamFactory())->createStream($query));
         }
+
+        // No Accept-Encoding, so the executor never spends CPU compressing a response
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
+            ->withFollowRedirects()
+            ->withConnectTimeout(0)
+            ->withTimeout($timeout);
 
         // Allow self signed certificates
         if ($this->selfSigned) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $client = $client->withSslVerification(false);
         }
 
-        $responseBody   = curl_exec($ch);
+        try {
+            $response = $onData === null
+                ? $client->sendRequest($request)
+                : $client->stream($request, $onData);
+        } catch (TimeoutException) {
+            throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
+        } catch (ClientExceptionInterface $e) {
+            throw new ExecutorException($e->getMessage() . ' with status code 0', 0);
+        }
+
+        $responseHeaders = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $responseHeaders[strtolower($name)] = \end($values);
+        }
 
         $responseType   = $responseHeaders['content-type'] ?? '';
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_errno($ch);
-        $curlErrorMessage = curl_error($ch);
+        $responseStatus = $response->getStatusCode();
+        $responseBody   = (string) $response->getBody();
 
         // A callback consumed the body as it arrived, so there is nothing left to decode.
-        if ($decode && !isset($callback)) {
+        if ($decode && $onData === null) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
                     $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
-                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+                    $multipartResponse->load($responseBody);
 
                     $responseBody = $multipartResponse->getParts();
                     break;
@@ -355,18 +346,11 @@ class Executor
             }
         }
 
-        if ($curlError) {
-            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
-            }
-            throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
-        }
-
         $responseHeaders['status-code'] = $responseStatus;
 
         return [
             'headers' => $responseHeaders,
-            'body' => isset($callback) ? '' : $responseBody
+            'body' => $responseBody
         ];
     }
 

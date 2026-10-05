@@ -9,6 +9,8 @@ use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,11 +18,14 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Pools\Adapter\Stack;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
+use Utopia\Span\Storage\Memory as SpanMemory;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -44,7 +49,8 @@ final class SpyNotifications extends Notifications
         Document $project,
         Registry $register,
         Database $dbForPlatform,
-        Log $log,
+        array $platform,
+        Client $clientForWebhooks,
     ): ?string {
         $channel = $recipient['channel'];
         $this->dispatched[] = [
@@ -157,10 +163,13 @@ final class NotificationsTest extends TestCase
     private Authorization $authorization;
     private Registry $registry;
     private Document $project;
-    private Log $log;
+    private array $platform = ['consoleUrl' => 'https://console.example.test'];
+    private Span $span;
+    private Client $clientForWebhooks;
 
     protected function setUp(): void
     {
+        $this->clientForWebhooks = new Client(new CurlAdapter());
         $this->authorization = new Authorization();
         $this->authorization->addRole(Role::any()->toString());
 
@@ -210,11 +219,13 @@ final class NotificationsTest extends TestCase
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);
-        $this->log = new Log();
+        Span::setStorage(new SpanMemory());
+        $this->span = Span::init('test.notifications');
     }
 
     protected function tearDown(): void
     {
+        Span::setStorage(null);
         $this->authorization->cleanRoles();
         $this->authorization->addRole(Role::any()->toString());
     }
@@ -289,7 +300,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'event-1',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $this->assertCount(3, $worker->dispatched);
         $channels = \array_map(static fn ($d) => $d['channel'], $worker->dispatched);
@@ -311,7 +322,7 @@ final class NotificationsTest extends TestCase
             'permissions' => [Permission::read(Role::any())],
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $rows = $this->database->find('notifications');
         $this->assertCount(2, $rows);
@@ -343,11 +354,11 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'dup-key',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         $this->assertCount(1, $worker->dispatched);
 
         $worker->dispatched = [];
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         $this->assertCount(0, $worker->dispatched, 'second invocation must short-circuit on dedup hit');
     }
 
@@ -362,7 +373,8 @@ final class NotificationsTest extends TestCase
             $this->project,
             $this->registry,
             $this->database,
-            $this->log,
+            $this->platform,
+            $this->clientForWebhooks
         );
     }
 
@@ -376,7 +388,7 @@ final class NotificationsTest extends TestCase
             'body' => 'Y',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $this->assertCount(1, $worker->dispatched);
         $this->assertSame('legacy@example.test', $worker->dispatched[0]['address']);
@@ -386,7 +398,7 @@ final class NotificationsTest extends TestCase
     public function testLegacyMailPayloadOptionsAreAppliedByEmailChannel(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -408,7 +420,7 @@ final class NotificationsTest extends TestCase
                 ],
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
@@ -424,34 +436,6 @@ final class NotificationsTest extends TestCase
         $this->assertSame('Custom Sender', $message->getFromName());
         $this->assertSame('reply@example.test', $message->getReplyToEmail());
         $this->assertSame('Custom Reply', $message->getReplyToName());
-    }
-
-    public function testLegacyPayloadSmtpOverridesProjectSmtp(): void
-    {
-        $worker = new Notifications();
-        $project = new Document([
-            'smtp' => [
-                'enabled' => true,
-                'host' => 'project.smtp.test',
-                'port' => 2525,
-                'senderEmail' => 'project@example.test',
-            ],
-        ]);
-
-        $reflection = new \ReflectionMethod($worker, 'resolveSmtpConfig');
-        $reflection->setAccessible(true);
-        /** @var array<string, mixed> $smtp */
-        $smtp = $reflection->invoke($worker, $project, [
-            'smtp' => [
-                'host' => 'payload.smtp.test',
-                'port' => 587,
-                'senderEmail' => 'payload@example.test',
-            ],
-        ]);
-
-        $this->assertSame('payload.smtp.test', $smtp['host']);
-        $this->assertSame(587, $smtp['port']);
-        $this->assertSame('payload@example.test', $smtp['senderEmail']);
     }
 
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
@@ -470,7 +454,7 @@ final class NotificationsTest extends TestCase
 
             $this->expectException(\Exception::class);
             $this->expectExceptionMessage('Skipped mail processing. No SMTP configuration has been set.');
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
@@ -496,7 +480,7 @@ final class NotificationsTest extends TestCase
             'body' => 'b',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $this->assertCount(2, $worker->dispatched);
         $this->assertSame('tenant-secret', $worker->dispatched[0]['signatureKey']);
@@ -517,15 +501,14 @@ final class NotificationsTest extends TestCase
         ];
 
         try {
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             $this->fail('expected exception to propagate');
         } catch (\Throwable $error) {
             $this->assertSame('boom', $error->getMessage());
         }
 
-        $tags = $this->log->getTags();
-        $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $tags['channel'] ?? null);
-        $this->assertSame('boom', $tags['error'] ?? null);
+        $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $this->span->get('channel'));
+        $this->assertSame('boom', $this->span->get('channel.error'));
 
         $rows = $this->database->find('notifications');
         $this->assertCount(0, $rows, 'failed dispatch must not persist alert');
@@ -549,7 +532,7 @@ final class NotificationsTest extends TestCase
         ];
 
         try {
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             $this->fail('expected webhook failure to propagate');
         } catch (\RuntimeException $error) {
             $this->assertSame('webhook down', $error->getMessage());
@@ -562,7 +545,7 @@ final class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_CONSOLE, $rows[0]->getAttribute('channel'));
 
         $retry = new SpyNotifications();
-        $retry->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $retry->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $this->assertCount(1, $retry->dispatched, 'retry should dispatch only the previously undelivered webhook');
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $retry->dispatched[0]['channel']);
@@ -587,7 +570,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'console-skip',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         // The Console adapter wrote exactly one alert; the action loop
         // must NOT have called persistAlert (otherwise we'd see 2 rows or
@@ -614,7 +597,7 @@ final class NotificationsTest extends TestCase
         ];
 
         try {
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             $this->fail('expected console zero-delivery to throw');
         } catch (\Throwable $error) {
             $this->assertStringContainsString('Console alert delivery failed', $error->getMessage());
@@ -638,7 +621,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'fanout',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $rows = $this->database->find('notifications');
         $this->assertCount(2, $rows, 'two recipients must produce two distinct alert rows');
@@ -675,7 +658,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'roundtrip',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $rows = $this->database->find('notifications');
         $this->assertCount(1, $rows);
@@ -690,7 +673,7 @@ final class NotificationsTest extends TestCase
     public function testTrackingLogoInjectedIntoEmailHtml(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         // Force the cloud SMTP branch (project has no smtp config) and
         // provide the tracking secret so injectTrackingLogo actually runs.
@@ -716,7 +699,7 @@ final class NotificationsTest extends TestCase
                 'deduplicationKey' => 'logo-key',
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
             \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
@@ -766,7 +749,7 @@ final class NotificationsTest extends TestCase
     public function testTrackingLogoDoesNotUseOpenSslKeyFallback(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
@@ -788,7 +771,7 @@ final class NotificationsTest extends TestCase
                 'deduplicationKey' => 'logo-key-no-tracking-secret',
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
             \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
@@ -799,102 +782,10 @@ final class NotificationsTest extends TestCase
         $this->assertStringNotContainsString('/v1/notifications/logos/appwrite?jwt=', $spy->captured->getContent());
     }
 
-    public function testPersistAlertReturnsExistingAlertIdOnDuplicate(): void
-    {
-        $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
-
-        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
-        \putenv('_APP_SMTP_HOST=spy.smtp.test');
-
-        try {
-            $worker = new CountingPersistAlertNotifications();
-
-            $payload = [
-                'project' => ['$id' => 'project-x'],
-                'recipients' => [
-                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-7'),
-                ],
-                'subject' => 'Heads up',
-                'body' => 'b',
-                'deduplicationKey' => 'persist-dup',
-            ];
-
-            // First dispatch: writes a row through the action loop and
-            // returns the deterministic alertId.
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
-
-            $this->assertSame(1, $worker->persistAlertCalls);
-            $firstAlertId = $worker->persistedIds[0];
-
-            $messageId = \md5('persist-dup');
-            $recipient = [
-                'address' => 'user@example.test',
-                'channel' => NOTIFICATION_TYPE_EMAIL,
-                'resourceType' => RESOURCE_TYPE_USERS,
-                'resourceId' => 'user-7',
-                'resourceInternalId' => 'user-7-internal',
-                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
-                'parentResourceId' => 'project-x',
-                'parentResourceInternalId' => 'project-internal-x',
-            ];
-
-            // Second invocation with the SAME messageId/recipient. The
-            // action loop's alreadyDelivered() check short-circuits before
-            // persistAlert, so call persistAlert directly to actually hit
-            // the duplicate branch. The deterministic $id collides on the
-            // primary key -> DuplicateException -> branch returns the
-            // existing alertId without throwing.
-            $reflection = new \ReflectionMethod($worker, 'persistAlert');
-            $secondAlertId = $reflection->invoke($worker, $this->database, $messageId, $recipient, $payload, $this->project);
-
-            $this->assertSame($firstAlertId, $secondAlertId, 'duplicate persist must return the existing alertId');
-
-            // Third write: bypass the deterministic $id path and use a
-            // distinct $id with the same recipient tuple. The
-            // `_key_recipient` UNIQUE composite must reject it, proving
-            // the unique-index (not just primary-key) is what backstops the
-            // duplicate-handling branch.
-            $sameTupleDoc = new Document([
-                '$id' => 'sibling-id-' . \uniqid(),
-                '$permissions' => [Permission::read(Role::any())],
-                'messageId' => $messageId,
-                'recipientHash' => $this->recipientHash(NOTIFICATION_TYPE_EMAIL, 'user@example.test', RESOURCE_TYPE_USERS, 'user-7', 'user-7-internal'),
-                'channel' => NOTIFICATION_TYPE_EMAIL,
-                'projectId' => 'project-x',
-                'projectInternalId' => 'project-internal-x',
-                'resourceType' => RESOURCE_TYPE_USERS,
-                'resourceId' => 'user-7',
-                'resourceInternalId' => 'user-7-internal',
-                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
-                'parentResourceId' => 'project-x',
-                'parentResourceInternalId' => 'project-internal-x',
-                'title' => 'sibling',
-                'body' => 'sibling',
-                'read' => false,
-            ]);
-
-            $threw = false;
-            try {
-                $this->database->createDocument('notifications', $sameTupleDoc);
-            } catch (\Utopia\Database\Exception\Duplicate) {
-                $threw = true;
-            }
-            $this->assertTrue($threw, 'unique-index `_key_recipient` must reject a second row sharing the recipient tuple');
-
-            $rows = $this->database->find('notifications', [
-                Query::equal('messageId', [$messageId]),
-            ]);
-            $this->assertCount(1, $rows, 'unique-index must prevent a second row from being persisted');
-        } finally {
-            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
-        }
-    }
-
     public function testPersistAlertReturnsAlertIdAndStoresResource(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -912,7 +803,7 @@ final class NotificationsTest extends TestCase
                 'deduplicationKey' => 'persist-email',
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
@@ -943,7 +834,7 @@ final class NotificationsTest extends TestCase
     {
         $failing = new SpyEmailAdapter();
         $failing->throwOnSend = true;
-        $this->registry->set('smtp', static fn () => $failing);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $failing, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -965,7 +856,7 @@ final class NotificationsTest extends TestCase
 
             $threw = false;
             try {
-                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             } catch (\Throwable $error) {
                 $threw = true;
                 $this->assertStringContainsString('SMTP unavailable', $error->getMessage());
@@ -983,10 +874,10 @@ final class NotificationsTest extends TestCase
             // Retry with a working adapter using the same payload — must deliver
             // AND persist exactly one alert row.
             $working = new SpyEmailAdapter();
-            $this->registry->set('smtp', static fn () => $working);
+            $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $working, 1.0));
 
             $retryWorker = new Notifications();
-            $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
             $this->assertSame(1, $working->sendCount, 'retry must invoke the working adapter');
 
@@ -1005,7 +896,7 @@ final class NotificationsTest extends TestCase
     {
         $failing = new SpyEmailAdapter();
         $failing->throwOnSend = true;
-        $this->registry->set('smtp', static fn () => $failing);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $failing, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -1028,7 +919,7 @@ final class NotificationsTest extends TestCase
 
             $threw = false;
             try {
-                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             } catch (\Throwable $error) {
                 $threw = true;
                 $this->assertStringContainsString('SMTP unavailable', $error->getMessage());
@@ -1050,10 +941,10 @@ final class NotificationsTest extends TestCase
             $this->assertCount(0, $emailRows, 'failed email recipient must not leave an orphan dedup row');
 
             $working = new SpyEmailAdapter();
-            $this->registry->set('smtp', static fn () => $working);
+            $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $working, 1.0));
 
             $retryWorker = new Notifications();
-            $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
             $this->assertSame(1, $working->sendCount, 'retry must still deliver the email recipient');
             $rows = $this->database->find('notifications', [
@@ -1076,7 +967,7 @@ final class NotificationsTest extends TestCase
     public function testEmailChannelHappyPath(): void
     {
         $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => $spy);
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         $previousTrackingSecret = \getenv('_APP_NOTIFICATIONS_TRACKING_SECRET');
@@ -1096,7 +987,7 @@ final class NotificationsTest extends TestCase
                 'deduplicationKey' => 'happy-email',
             ];
 
-            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
             \putenv($previousTrackingSecret === false ? '_APP_NOTIFICATIONS_TRACKING_SECRET' : '_APP_NOTIFICATIONS_TRACKING_SECRET=' . $previousTrackingSecret);
@@ -1142,6 +1033,38 @@ final class NotificationsTest extends TestCase
      * NOT call `persistAlert` for console recipients. Permissions must grant
      * the recipient resource read/update/delete access.
      */
+    public function testEmailChannelSkipsUndeliverableAddressWithoutPersisting(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new CountingPersistAlertNotifications();
+
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    $this->userRecipient('john@c.c', NOTIFICATION_TYPE_EMAIL, 'user-undeliverable'),
+                ],
+                'subject' => 'Welcome aboard',
+                'body' => 'plain body',
+                'deduplicationKey' => 'undeliverable-email',
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $this->assertSame(0, $spy->sendCount, 'an address no provider can deliver to must never reach SMTP');
+        $this->assertCount(0, $this->database->find('notifications', [
+            Query::equal('messageId', [\md5('undeliverable-email')]),
+        ]), 'a skipped email must leave no alert behind');
+    }
+
     public function testConsoleChannelHappyPath(): void
     {
         $worker = new CountingPersistAlertNotifications();
@@ -1165,7 +1088,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'happy-console',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $rows = $this->database->find('notifications', [
             Query::equal('channel', ['console']),
@@ -1208,7 +1131,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'console-preview',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $rows = $this->database->find('notifications');
         $this->assertCount(1, $rows);
@@ -1236,7 +1159,7 @@ final class NotificationsTest extends TestCase
             ];
 
             try {
-                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
             } catch (\Exception $error) {
                 $this->assertStringContainsString('No SMTP configuration has been set', $error->getMessage());
                 $threw = true;
@@ -1248,7 +1171,7 @@ final class NotificationsTest extends TestCase
         $this->assertTrue($threw, 'missing SMTP must fail email delivery so the queue can retry');
         $this->assertSame(0, $worker->persistAlertCalls);
         $this->assertCount(0, $this->database->find('notifications'));
-        $this->assertSame('no_smtp', $this->log->getTags()['email_skipped'] ?? null);
+        $this->assertSame('no_smtp', $this->span->get('email.skipped'));
     }
 
     public function testConsoleChannelRejectsInvalidImplicitUserId(): void
@@ -1268,7 +1191,7 @@ final class NotificationsTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid console alert resourceId');
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
     }
 
     /**
@@ -1293,9 +1216,9 @@ final class NotificationsTest extends TestCase
                 parent::__construct();
             }
 
-            protected function dispatchWebhook(array $recipient, array $payload, Log $log): ?string
+            protected function dispatchWebhook(array $recipient, array $payload, Client $clientForWebhooks): ?string
             {
-                $adapter = new \Tests\Unit\Utopia\Messaging\Adapter\CapturingWebhook();
+                $adapter = new \Tests\Unit\Utopia\Messaging\Adapter\CapturingWebhook($clientForWebhooks);
                 $message = new \Appwrite\Utopia\Messaging\Messages\Webhook(
                     urls: [$recipient['address']],
                     payload: [
@@ -1340,7 +1263,7 @@ final class NotificationsTest extends TestCase
             'deduplicationKey' => 'happy-webhook',
         ];
 
-        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks);
 
         $this->assertCount(1, $worker->captured, 'adapter must POST exactly once');
         $request = $worker->captured[0];

@@ -66,7 +66,7 @@ class Update extends Action
                 ],
             ))
             ->param('host', null, new Nullable(new Hostname()), 'SMTP server hostname (domain)', optional: true)
-            ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true)
+            ->param('port', null, new Nullable(new Integer()), 'SMTP server port', optional: true, example: '587')
             ->param('username', null, new Nullable(new Text(256, 0)), 'SMTP server username. Pass an empty string to clear a previously set value.', optional: true)
             ->param('password', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'SMTP server password. Pass an empty string to clear a previously set value. This property is stored securely and cannot be read in future (write-only).', optional: true)
             ->param('senderEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address shown in inbox as the sender of the email. Pass an empty string to clear a previously set value.', optional: true)

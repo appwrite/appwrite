@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -120,6 +121,52 @@ trait VariablesBase
         );
 
         $this->assertSame(400, $variable['headers']['status-code']);
+    }
+
+    public function testCreateVariableInvalidKey(): void
+    {
+        // Keys become container env var names; anything that is not a
+        // C_IDENTIFIER is refused at the endpoint.
+        $keys = [
+            '9KEY',
+            'MY KEY',
+            'MY-KEY',
+            'my.key',
+            'FOO=BAR',
+            "TRAILING_TAB\t",
+            'RÉSUMÉ_KEY',
+            "A\x00C\x00M\x00E_API_KEY",
+        ];
+
+        foreach ($keys as $key) {
+            $response = $this->createVariable(ID::unique(), $key, 'value');
+
+            $this->assertSame(400, $response['headers']['status-code'], 'Key ' . \json_encode($key) . ' should be refused');
+        }
+    }
+
+    public function testUpdateVariableInvalidKeyLeavesVariableUnchanged(): void
+    {
+        $variable = $this->createVariable(
+            ID::unique(),
+            'VALID_KEY',
+            'valid-value',
+            false
+        );
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        $updated = $this->updateVariable($variableId, "BAD KEY\t", 'new-value');
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('VALID_KEY', $get['body']['key']);
+        $this->assertSame('valid-value', $get['body']['value']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
     }
 
     public function testCreateVariableMissingKey(): void
@@ -849,7 +896,14 @@ trait VariablesBase
         $folderPath = realpath(__DIR__ . '/../../../resources/' . $type) . "/$name";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

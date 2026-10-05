@@ -63,6 +63,12 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-document.md',
+                requestExamples: [
+                    'update' => [
+                        'summary' => 'Update document data',
+                        'value' => ['data' => ['username' => 'walter.obrien']],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -225,6 +231,10 @@ class Update extends Action
                             $relation->getId()
                         ));
 
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
+                        }
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -252,6 +262,7 @@ class Update extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1));
 

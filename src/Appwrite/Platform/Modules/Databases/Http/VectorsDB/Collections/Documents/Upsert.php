@@ -35,7 +35,7 @@ class Upsert extends DocumentUpsert
             ->desc('Upsert a document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.upsert')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
@@ -49,6 +49,15 @@ class Upsert extends DocumentUpsert
                     group: $this->getSdkGroup(),
                     name: 'upsertDocument',
                     description: '/docs/references/vectorsdb/upsert-document.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update a document in a four-dimensional collection',
+                            'value' => ['data' => [
+                                'embeddings' => [0.12, -0.55, 0.88, 1.02],
+                                'metadata' => ['name' => 'Example document'],
+                            ]],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(

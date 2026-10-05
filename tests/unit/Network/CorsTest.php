@@ -115,6 +115,22 @@ final class CorsTest extends TestCase
         $this->assertSame('https://example.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
     }
 
+    public function testNonHttpSchemeOriginIsMatchedByHost(): void
+    {
+        $cors = new Cors(
+            allowedHosts: ['app.example.com'],
+            allowedMethods: ['POST'],
+            allowedHeaders: ['X-Test'],
+            exposedHeaders: [],
+            allowCredentials: true
+        );
+
+        /* Webview origins such as Capacitor's carry a custom scheme, see Platform::SCHEME_CAPACITOR */
+        $result = $cors->headers('capacitor://app.example.com');
+
+        $this->assertSame('capacitor://app.example.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
+    }
+
     public function testOriginIsLowercasedForMatching(): void
     {
         $cors = new Cors(

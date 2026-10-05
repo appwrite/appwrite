@@ -70,7 +70,7 @@ Http::get('/v1/graphql')
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(0, 0), 'The query to execute.')
+    ->param('query', '', new Text(0, 0), 'The query to execute.', example: 'query { localeGet { ip } }')
     ->param('operationName', '', new Text(256), 'The name of the operation to execute.', true)
     ->param('variables', '', new Text(0), 'The JSON encoded variables to use in the query.', true)
     ->inject('request')
@@ -123,7 +123,7 @@ Http::post('/v1/graphql/mutation')
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"mutation { accountUpdateName(name: \"Walter\") { name } }"}'],
         ],
     ))
     ->label('abuse-limit', 60)
@@ -136,7 +136,15 @@ Http::post('/v1/graphql/mutation')
         $query = $request->getParams();
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+            $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
@@ -174,7 +182,7 @@ Http::post('/v1/graphql')
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"query { localeGet { ip } }"}'],
         ],
     ))
     ->label('abuse-limit', 60)
@@ -187,7 +195,15 @@ Http::post('/v1/graphql')
         $query = $request->getParams();
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+            $query = $query['query'] ?? [];
+
+            // JSON `{}` is decoded as stdClass; the executor requires an array.
+            if ($query instanceof \stdClass) {
+                $query = \get_object_vars($query);
+            }
+            if (!\is_array($query)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
+            }
         }
 
         $type = $request->getHeaderLine('content-type');
@@ -276,11 +292,17 @@ function execute(
             }
         }
 
+        // JSON `{}` is decoded as stdClass; GraphQL requires ?array.
+        $variableValues = $indexed['variables'] ?? null;
+        if ($variableValues instanceof \stdClass) {
+            $variableValues = \get_object_vars($variableValues);
+        }
+
         $promises[] = GraphQL::promiseToExecute(
             $promiseAdapter,
             $schema,
             $source,
-            variableValues: $indexed['variables'] ?? null,
+            variableValues: $variableValues,
             operationName: $indexed['operationName'] ?? null,
             validationRules: $validations
         );

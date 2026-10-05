@@ -33,7 +33,7 @@ class Update extends DocumentsUpdate
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Update documents')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -46,6 +46,15 @@ class Update extends DocumentsUpdate
                 group: $this->getSdkGroup(),
                 name: 'updateDocuments',
                 description: '/docs/references/documentsdb/update-documents.md',
+                requestExamples: [
+                    'updateSelected' => [
+                        'summary' => 'Update explicitly selected documents',
+                        'value' => [
+                            'data' => ['username' => 'walter.obrien'],
+                            'queries' => ['{"method":"equal","attribute":"$id","values":["<DOCUMENT_ID>"]}'],
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

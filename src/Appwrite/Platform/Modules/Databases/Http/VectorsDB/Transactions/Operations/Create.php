@@ -27,13 +27,28 @@ class Create extends OperationsCreate
             ->setHttpPath('/v1/vectorsdb/transactions/:transactionId/operations')
             ->desc('Create operations')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/vectorsdb/create-operations.md',
+                requestExamples: [
+                    'createDocument' => [
+                        'summary' => 'Stage a document creation in a four-dimensional collection',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'collectionId' => '<COLLECTION_ID>',
+                            'documentId' => '<DOCUMENT_ID>',
+                            'data' => [
+                                'embeddings' => [0.12, -0.55, 0.88, 1.02],
+                                'metadata' => ['name' => 'Example document'],
+                            ],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -44,7 +59,7 @@ class Create extends OperationsCreate
                 contentType: ContentType::JSON
             ))
             ->param('transactionId', '', new UID(), 'Transaction ID.')
-            ->param('operations', [], new ArrayList(new Operation(type: 'documentsdb')), 'Array of staged operations.', true)
+            ->param('operations', [], new ArrayList(new Operation(type: 'documentsdb')), 'Array of staged operations.', true, example: '[{"action":"create","databaseId":"<DATABASE_ID>","collectionId":"<COLLECTION_ID>","documentId":"<DOCUMENT_ID>","data":{"embeddings":[0.12,-0.55,0.88,1.02],"metadata":{"name":"First document"}}}]')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('transactionState')

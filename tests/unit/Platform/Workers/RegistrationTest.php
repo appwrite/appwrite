@@ -6,6 +6,7 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Modules\Databases\Services\Workers as DatabasesWorkers;
 use Appwrite\Platform\Modules\Functions\Services\Workers as FunctionsWorkers;
+use Appwrite\Platform\Modules\Usage\Services\Workers as UsageWorkers;
 use Appwrite\Platform\Services\Workers;
 use Appwrite\Platform\Workers\Executions;
 use Appwrite\Platform\Workers\Mails;
@@ -30,20 +31,10 @@ final class RegistrationTest extends TestCase
         $this->assertInstanceOf(Executions::class, $service->getAction('executions'));
     }
 
-    public function testEntrypointDoesNotAliasMailsToNotifications(): void
-    {
-        $contents = \file_get_contents(__DIR__ . '/../../../../app/worker.php');
-
-        $this->assertIsString($contents);
-        $this->assertStringNotContainsString("mails' ? 'notifications'", $contents);
-        $this->assertStringContainsString("'workers'", $contents);
-        $this->assertStringContainsString("Config::getParam('workers'", $contents);
-    }
-
     public function testRegisteredWorkerNamesMatchConfigWithoutDuplicates(): void
     {
         $names = [];
-        foreach ([new Workers(), new DatabasesWorkers(), new FunctionsWorkers()] as $service) {
+        foreach ([new Workers(), new DatabasesWorkers(), new FunctionsWorkers(), new UsageWorkers()] as $service) {
             foreach ($service->getActions() as $key => $action) {
                 $name = \strtolower((string) $key);
                 $this->assertArrayNotHasKey($name, $names, "Duplicate worker action '{$name}'");
@@ -57,6 +48,7 @@ final class RegistrationTest extends TestCase
         \sort($expected);
 
         $this->assertSame($expected, $registered);
-        $this->assertSame(1, Config::getParam('workers')['databases']['maxCoroutines']);
+        $this->assertSame(1, Config::getParam('workers')['databases']['coroutines']);
+        $this->assertSame(8, Config::getParam('workers')['stats-usage']['coroutines']);
     }
 }

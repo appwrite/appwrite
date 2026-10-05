@@ -48,6 +48,7 @@ class Exception extends \Exception
     public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
+    public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -59,6 +60,7 @@ class Exception extends \Exception
     public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
+    public const string GENERAL_USAGE_NOT_READY = 'general_usage_not_ready';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
     public const string GENERAL_INVALID_EMAIL = 'general_invalid_email';
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
@@ -82,6 +84,7 @@ class Exception extends \Exception
     public const string USER_NOT_FOUND = 'user_not_found';
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
+    public const string USER_PASSWORD_PWNED = 'password_pwned';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';
@@ -106,6 +109,8 @@ class Exception extends \Exception
     public const string USER_CHALLENGE_REQUIRED = 'user_challenge_required';
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
+    public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
+    public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
@@ -116,6 +121,7 @@ class Exception extends \Exception
     public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
     public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
     public const string USER_JWT_CREATION_DENIED = 'user_jwt_creation_denied';
+    public const string USER_IMPERSONATION_READ_ONLY = 'user_impersonation_read_only';
     public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
@@ -129,6 +135,7 @@ class Exception extends \Exception
     public const string TEAM_ALREADY_EXISTS = 'team_already_exists';
 
     public const string ORGANIZATION_ID_MISSING = 'organization_id_missing';
+    public const string ORGANIZATION_CREATION_PROHIBITED = 'organization_creation_prohibited';
 
     /** Console */
     public const string RESOURCE_ALREADY_EXISTS = 'resource_already_exists';
@@ -340,13 +347,11 @@ class Exception extends \Exception
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
     public const string KEY_CREATION_DENIED = 'key_creation_denied';
 
-    /** Dev Keys */
-    public const string DEV_KEY_GONE = 'dev_key_gone';
-
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
     public const string VARIABLE_ALREADY_EXISTS = 'variable_already_exists';
     public const string VARIABLE_CANNOT_UNSET_SECRET = 'variable_cannot_unset_secret';
+    public const string VARIABLE_INVALID_KEY = 'variable_invalid_key';
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
@@ -366,6 +371,7 @@ class Exception extends \Exception
     public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
     public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
     public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_UNAUTHORIZED = 'migration_source_unauthorized';
     public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
     public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 

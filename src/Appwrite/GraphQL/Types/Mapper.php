@@ -197,7 +197,7 @@ class Mapper
                         ARRAY_FILTER_USE_KEY
                     );
 
-                    return \json_encode($data, JSON_FORCE_OBJECT);
+                    return \json_encode((object)$data);
                 }
             ];
         }
@@ -349,6 +349,7 @@ class Mapper
                 $type = Types::assoc();
                 break;
             case \Utopia\Validator\JSON::class:
+            case \Utopia\Validator\JSON\FCM::class:
             case \Utopia\Validator\JSON\ObjectValidator::class:
                 $type = Types::json();
                 break;

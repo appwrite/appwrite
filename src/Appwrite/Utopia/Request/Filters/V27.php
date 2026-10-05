@@ -14,8 +14,26 @@ class V27 extends Filter
             'migrations.createCSVExport',
             'migrations.createJSONImport',
             'migrations.createJSONExport' => $this->parseMigrationResource($content),
+            'users.createJWT' => $this->parseKeyword($content, 'sessionId', 'recent'),
             default => $content,
         };
+    }
+
+    /**
+     * Rewrite a bare keyword to its parenthesised spelling.
+     *
+     * Keywords gained parentheses in 2.0.0 so they can never be mistaken for a
+     * stored ID. Older clients still send the bare word, which by itself is a
+     * perfectly valid ID — hence the rewrite happens here, per response
+     * format, instead of the endpoint accepting both spellings forever.
+     */
+    protected function parseKeyword(array $content, string $key, string $keyword): array
+    {
+        if (($content[$key] ?? null) === $keyword) {
+            $content[$key] = $keyword . '()';
+        }
+
+        return $content;
     }
 
     protected function parseMigrationResource(array $content): array

@@ -72,6 +72,9 @@ abstract class Database implements Source, Changes
 
         $project = $this->project((string) $schedule['projectId']);
         if ($project->isEmpty()) {
+            // Finish cleanup before reporting; a failed delete remains available for retry.
+            $this->dbForPlatform->deleteDocument('schedules', $document->getId());
+
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
@@ -104,11 +107,7 @@ abstract class Database implements Source, Changes
      */
     private function rows(?\DateTimeImmutable $since): iterable
     {
-        // Temporarly accepting both 'fra' and 'default'
-        $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!\in_array('default', $regions)) {
-            $regions[] = 'default';
-        }
+        $region = System::getEnv('_APP_REGION', 'default');
 
         $limit = 10_000;
         $sum = $limit;
@@ -117,7 +116,7 @@ abstract class Database implements Source, Changes
         while ($sum === $limit) {
             $queries = [
                 Query::limit($limit),
-                Query::equal('region', $regions),
+                Query::equal('region', [$region]),
                 Query::equal('resourceType', [$this->type()]),
             ];
 
@@ -167,10 +166,15 @@ abstract class Database implements Source, Changes
 
         $project = $this->dbForPlatform->skipFilters(
             fn () => $this->dbForPlatform->getDocument('projects', $projectId),
-            ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+            APP_PROJECTS_SUBQUERIES
         );
 
-        return $this->projects[$projectId] = $project;
+        // A project may become visible before the next reconciliation.
+        if (!$project->isEmpty()) {
+            $this->projects[$projectId] = $project;
+        }
+
+        return $project;
     }
 
     private function deleteOrphan(string $scheduleId): void
