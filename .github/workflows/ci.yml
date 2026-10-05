@@ -581,6 +581,14 @@ jobs:
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/General
 
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: |
+          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
+          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
+          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
+          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
+
       - name: Failure Logs
         if: failure()
         run: |
@@ -746,6 +754,14 @@ jobs:
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
             appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: |
+          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
+          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
+          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
+          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
+
       - name: Failure Logs
         if: failure()
         run: |
@@ -909,6 +925,14 @@ jobs:
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: |
+          mapfile -t services < <(docker compose config --format json 2>/dev/null | jq -r --arg image "${IMAGE}" '.services | to_entries[] | select(.value.image == $image) | .key')
+          if [ "${#services[@]}" -eq 0 ]; then exit 0; fi
+          matches=$(docker compose logs --no-color "${services[@]}" 2>&1 | grep -E 'zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)|exit code 139' || true)
+          if [ -n "$matches" ]; then echo "$matches"; echo '::error::Native crash in appwrite container logs'; exit 1; fi
 
       - name: Failure Logs
         if: failure()
