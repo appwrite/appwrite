@@ -146,7 +146,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
           size="md"
         />
 
-        <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-4">
           <div className="min-h-[280px] border-b border-border sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:col-start-1 lg:row-start-1 lg:border-b lg:border-e">
             <div className="flex min-h-[280px] flex-col">
               <div className="shrink-0 border-b border-border bg-muted/15 px-4 py-2.5">

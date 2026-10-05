@@ -21,7 +21,7 @@ export function PostgresPoolingVisual() {
       />
 
       <div
-        className="grid grid-cols-[auto_minmax(2.75rem,1fr)_auto] gap-x-0 gap-y-2"
+        className="grid grid-cols-[auto_minmax(2rem,1fr)_auto] gap-x-0 gap-y-2 sm:grid-cols-[auto_minmax(2.75rem,1fr)_auto]"
         style={{ gridTemplateRows: 'auto repeat(3, minmax(1.75rem, 1fr))' }}
       >
         <p className="col-span-2 mb-1 self-end text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -31,7 +31,7 @@ export function PostgresPoolingVisual() {
         {CALLERS.map((caller, index) => (
           <Fragment key={caller}>
             <div
-              className="product-hero-rise col-start-1 flex h-7 w-[7.25rem] items-center gap-1.5 self-center rounded-lg border border-border bg-background/95 px-2 dark:bg-card"
+              className="product-hero-rise col-start-1 flex h-7 w-[5.5rem] items-center gap-1.5 self-center rounded-lg border border-border bg-background/95 px-2 sm:w-[7.25rem] dark:bg-card"
               style={{ ...riseStyle(140 + index * 110), gridRow: index + 2 }}
             >
               <span
@@ -63,7 +63,7 @@ export function PostgresPoolingVisual() {
         ))}
 
         <ArtPanel
-          className="relative z-[1] col-start-3 row-start-2 row-span-3 h-full w-[11.5rem] self-stretch sm:w-[200px]"
+          className="relative z-[1] col-start-3 row-start-2 row-span-3 h-full w-[10rem] self-stretch sm:w-[200px]"
           innerClassName="flex h-full flex-col justify-center product-tone-shadow border-[rgb(var(--tone-rgb)/0.45)] px-3 py-3 dark:border-[rgb(var(--tone-rgb)/0.45)]"
           delayMs={80}
         >
