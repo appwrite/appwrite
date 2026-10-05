@@ -141,7 +141,14 @@ class XList extends Action
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
+        // The policy only hides other members, a member always sees their own details
+        $selfPrivacy = array_fill_keys(array_keys($membershipsPrivacy), true);
+        $userSequence = $user->getSequence();
+
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy, $selfPrivacy, $userSequence) {
+            $isSelf = $userSequence !== null && $membership->getAttribute('userInternalId') === $userSequence;
+            $membershipsPrivacy = $isSelf ? $selfPrivacy : $membershipsPrivacy;
+
             $memberUser = !empty(array_filter($membershipsPrivacy))
                 ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
                 : new Document();

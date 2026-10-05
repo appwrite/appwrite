@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
@@ -220,6 +222,37 @@ final class EventTest extends TestCase
 
         // An attribute of a sub-resource does not also belong to its parent.
         $this->assertNotContains('teams.jets.update.status', $membershipEvents);
+    }
+
+    public static function databaseEvents(): \Iterator
+    {
+        yield 'TablesDB' => ['tablesdb', 'tablesdb.db.tables.col.rows.row.create'];
+        yield 'DocumentsDB' => ['documentsdb', 'documentsdb.db.collections.col.documents.row.create'];
+        yield 'VectorsDB' => ['vectorsdb', 'vectorsdb.db.collections.col.documents.row.create'];
+        yield 'legacy' => ['legacy', 'databases.db.collections.col.documents.row.create'];
+        yield 'no context' => [null, 'databases.db.collections.col.documents.row.create'];
+    }
+
+    #[DataProvider('databaseEvents')]
+    public function testPublishDatabaseEvents(?string $type, string $expected): void
+    {
+        $database = $type === null ? null : new Document(['type' => $type]);
+        $pattern = 'databases.[databaseId].collections.[collectionId].documents.[documentId].create';
+        $params = ['databaseId' => 'db', 'collectionId' => 'col', 'documentId' => 'row'];
+        $this->object->setEvent($pattern);
+        if ($database !== null) {
+            $this->object->setContext('database', $database);
+        }
+        foreach ($params as $key => $value) {
+            $this->object->setParam($key, $value);
+        }
+
+        $this->object->trigger();
+        $message = Func::fromEvent(event: $pattern, params: $params, database: $database);
+
+        $events = $this->publisher->getEvents($this->queue)[0]['events'];
+        $this->assertSame($expected, $events[0]);
+        $this->assertSame($events, $message->events);
     }
 
     public function testGenerateMirrorEvents(): void

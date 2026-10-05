@@ -50,13 +50,8 @@ final class GitAction
                 default => $status
             };
 
-            $hostname = $platform['consoleHostname'] ?? '';
-            $region = $project->getAttribute('region', 'default');
             $collection = $isSite ? 'sites' : 'functions';
-            $type = $isSite ? 'site' : 'function';
-            $targetUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                ? "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$collection}/{$type}-{$resource->getId()}"
-                : "{$protocol}://{$hostname}/projects/{$project->getId()}/{$collection}/{$resource->getId()}";
+            $targetUrl = ($platform['consoleUrl'] ?? '') . "/projects/{$project->getId()}/{$collection}/{$resource->getId()}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
             $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);

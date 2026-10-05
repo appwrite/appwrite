@@ -29,14 +29,6 @@ final class Executions extends Database
     #[\Override]
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
     {
-        try {
-            $resource = $projectDB->getDocument($this->collection(), $schedule['resourceId']);
-        } catch (\Throwable) {
-            $resource = new Document();
-        }
-
-        return $resource->isEmpty()
-            ? new Document(['$id' => $schedule['resourceId']])
-            : $resource;
+        return new Document(['$id' => $schedule['resourceId']]);
     }
 }

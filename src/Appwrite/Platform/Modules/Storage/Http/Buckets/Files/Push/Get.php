@@ -127,10 +127,13 @@ class Get extends Action
             $unit = $request->getRangeUnit();
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = min(($start + APP_STORAGE_READ_BUFFER - 1), ($size - 1));
+                $end = $start + APP_STORAGE_READ_BUFFER - 1;
             }
 
-            if ($unit != 'bytes' || $start >= $end || $end >= $size) {
+            // RFC 9110: a last-byte-pos past the end of the file is clamped, not rejected.
+            $end = min($end, $size - 1);
+
+            if ($unit !== 'bytes' || $start > $end) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 

@@ -67,7 +67,7 @@ class Google extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $this->tokens = \json_decode($this->request(
+            $this->tokens = $this->parseTokens($this->request(
                 'POST',
                 'https://oauth2.googleapis.com/token?' . \http_build_query([
                     'code' => $code,
@@ -77,7 +77,7 @@ class Google extends OAuth2
                     'scope' => null,
                     'grant_type' => 'authorization_code'
                 ])
-            ), true);
+            ));
         }
 
         return $this->tokens;
@@ -90,7 +90,7 @@ class Google extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $this->tokens = \json_decode($this->request(
+        $this->tokens = $this->parseTokens($this->request(
             'POST',
             'https://oauth2.googleapis.com/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -98,13 +98,31 @@ class Google extends OAuth2
                 'client_secret' => $this->getClientSecret(),
                 'grant_type' => 'refresh_token'
             ])
-        ), true);
+        ));
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
         return $this->tokens;
+    }
+
+    /**
+     * @param string $response
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    private function parseTokens(string $response): array
+    {
+        $tokens = \json_decode($response, true);
+
+        if (!\is_array($tokens) || empty($tokens['access_token'])) {
+            throw new Exception($response, 424);
+        }
+
+        return $tokens;
     }
 
     /**
@@ -184,7 +202,7 @@ class Google extends OAuth2
     {
         if (empty($this->user)) {
             $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . \urlencode($accessToken));
-            $this->user = \json_decode($user, true);
+            $this->user = \json_decode($user, true) ?? [];
         }
 
         return $this->user;

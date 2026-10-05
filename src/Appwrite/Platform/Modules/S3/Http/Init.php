@@ -83,6 +83,22 @@ class Init extends Action
         $parts = explode('/', trim($uri, '/'));
         $service = count($parts) >= 2 ? $parts[1] : $parts[0];
 
+        $queryKeys = '';
+        $rawQuery = parse_url($uri, PHP_URL_QUERY);
+        if (is_string($rawQuery) && $rawQuery !== '') {
+            $queryKeySet = [];
+            foreach (explode('&', $rawQuery) as $pair) {
+                if ($pair === '') {
+                    continue;
+                }
+                $key = strtolower(urldecode(explode('=', $pair, 2)[0]));
+                if ($key !== '') {
+                    $queryKeySet[$key] = true;
+                }
+            }
+            $queryKeys = implode(',', array_keys($queryKeySet));
+        }
+
         $usage
                 ->setPath($uri)
                 ->setMethod($request->getMethod())
@@ -92,6 +108,10 @@ class Init extends Action
                 ->setIp($request->getIP())
                 ->setSdk(\strtolower($request->getHeaderLine('x-sdk-name', '')))
                 ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+                ->setProtocol(\strtolower($request->getProtocol()))
+                ->setAccept($request->getHeaderLine('accept', ''))
+                ->setAcceptLanguage($request->getHeaderLine('accept-language', ''))
+                ->setQueryKeys($queryKeys)
                 ->setRegion(System::getEnv('_APP_REGION', 'default'))
                 ->setService($service);
 

@@ -17,6 +17,8 @@ return [
         'description' => 'Access to read project usage metrics',
         'category' => 'Project',
     ],
+    // TODO: Remove keys.read and keys.write from project key scopes once the Console, CLI and SDKs
+    // manage project keys through the Organization API (organization.projects.keys.*)
     "keys.read" => [
         "description" =>
             "Access to read project\'s keys",
@@ -411,6 +413,10 @@ return [
     ],
     'avatars.read' => [
         'description' => 'Access to use Avatars service',
+        'category' => 'Other',
+    ],
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
         'category' => 'Other',
     ],
     'health.read' => [

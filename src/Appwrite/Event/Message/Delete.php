@@ -13,7 +13,6 @@ final class Delete extends Base
         public readonly ?string $resource = null,
         public readonly ?string $resourceType = null,
         public readonly ?string $datetime = null,
-        public readonly ?string $hourlyUsageRetentionDatetime = null,
     ) {
     }
 
@@ -26,7 +25,6 @@ final class Delete extends Base
             'resource' => $this->resource,
             'resourceType' => $this->resourceType,
             'datetime' => $this->datetime,
-            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
         ];
     }
 
@@ -39,7 +37,6 @@ final class Delete extends Base
             resource: $data['resource'] ?? null,
             resourceType: $data['resourceType'] ?? null,
             datetime: $data['datetime'] ?? null,
-            hourlyUsageRetentionDatetime: $data['hourlyUsageRetentionDatetime'] ?? null,
         );
     }
 }

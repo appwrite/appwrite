@@ -7,6 +7,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -98,13 +100,9 @@ class Get extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        $region = $project->getAttribute('region', 'default');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
+            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
         ];
 
         $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
@@ -132,7 +130,8 @@ class Get extends Action
             $accessTokenExpiry = null;
 
             if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                // github.com is the operator's configured provider, not a user's choice
+                $oauth2 = new OAuth2Github(new Client(new CurlAdapter()), System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
                 $accessToken = $oauth2->getAccessToken($code);
                 $refreshToken = $oauth2->getRefreshToken($code);

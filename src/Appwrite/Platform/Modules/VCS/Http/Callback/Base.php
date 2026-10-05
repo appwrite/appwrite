@@ -7,6 +7,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,7 +43,7 @@ abstract class Base extends Action
      * endpoint (token exchange is a server-to-server call, unlike Authorize's
      * browser-facing endpoint).
      */
-    abstract protected function createOAuth2(string $callback): OAuth2;
+    abstract protected function createOAuth2(Client $client, string $callback): OAuth2;
 
     public function __construct()
     {
@@ -101,13 +103,12 @@ abstract class Base extends Action
             return;
         }
 
-        $region = $project->getAttribute('region', 'default');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
 
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
+            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
         ];
 
         $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
@@ -119,7 +120,8 @@ abstract class Base extends Action
         }
 
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
-        $oauth2 = $this->createOAuth2($callback);
+        // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback);
 
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);

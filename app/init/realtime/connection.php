@@ -16,8 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\System\System;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register the minimal per-connection resources required by realtime.
@@ -112,52 +110,6 @@ return function (Container $container): void {
         return $rule;
     };
 
-    $findDevKey = static function (Request $request, Document $project, array $servers, Authorization $authorization) use ($getDbForPlatform): Document {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-        $key = $project->find('secret', $devKey, 'devKeys');
-
-        if (!$key) {
-            return new Document([]);
-        }
-
-        $expire = $key->getAttribute('expire');
-        if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        $dbForPlatform = $getDbForPlatform($authorization);
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt'),
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (!\in_array($sdk, $sdks, true)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt'),
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    };
-
     $container->set('authorization', function () {
         return new Authorization();
     }, []);
@@ -174,14 +126,14 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization) use ($findDevKey, $findRule) {
-        $devKey = $findDevKey($request, $project, $servers, $authorization);
-
-        if (!$devKey->isEmpty()) {
-            return new URL();
-        }
-
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
+
+        /* Add the console host, the console web app can live apart from the API host */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (!empty($consoleHostname)) {
+            $allowedHostnames[] = $consoleHostname;
+        }
 
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
         $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
@@ -211,18 +163,18 @@ return function (Container $container): void {
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'servers', 'authorization']);
+    }, ['platform', 'request', 'project', 'authorization']);
 
-    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
-        $mode = $getMode($request, $project);
-        $store = new Store();
+    $container->set('proofForToken', function (): Token {
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        $authorization->setDefaultStatus(true);
+        return $proofForToken;
+    }, []);
 
-        $dbForPlatform = $getDbForPlatform($authorization);
-        $dbForProject = $getDbForProject($project, $authorization);
+    $container->set('store', function (Request $request, Document $project, Document $console) use ($getMode): Store {
+        $mode = $getMode($request, $project);
+        $store = new Store();
 
         $store->setKey('a_session_' . $project->getId());
         if ($mode === APP_MODE_ADMIN) {
@@ -248,6 +200,17 @@ return function (Container $container): void {
             $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
             $store->decode((\is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : '');
         }
+
+        return $store;
+    }, ['request', 'project', 'console']);
+
+    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
+        $mode = $getMode($request, $project);
+
+        $authorization->setDefaultStatus(true);
+
+        $dbForPlatform = $getDbForPlatform($authorization);
+        $dbForProject = $getDbForProject($project, $authorization);
 
         $user = null;
         if ($mode === APP_MODE_ADMIN) {
@@ -289,8 +252,19 @@ return function (Container $container): void {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
+            // Every project shares the signing key, and a user ID can be chosen at
+            // signup, so a token is only good for the project that minted it. Tokens
+            // minted before the projectId claim existed are accepted only when bound
+            // to a session, whose ID the server generated and no other project holds.
+            // An unbound token authenticates nobody rather than failing the request:
+            // a function domain resolves to the console, and clients send their
+            // project's JWT there for the function to read.
+            $jwtProjectId = $payload['projectId'] ?? '';
+            $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
+            $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : !empty($payload['sessionId']);
+
             $jwtUserId = $payload['userId'] ?? '';
-            if (!empty($jwtUserId)) {
+            if ($bound && !empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -337,14 +311,83 @@ return function (Container $container): void {
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
-    }, ['request', 'project', 'console', 'authorization']);
+    }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken']);
+
+    $container->set('session', function (Request $request, User $user, Store $store, Token $proofForToken): ?Document {
+        if ($user->isEmpty()) {
+            return null;
+        }
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        if (!$sessionId && !empty($authJWT)) {
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+            try {
+                $payload = $jwt->decode($authJWT);
+            } catch (JWTException $error) {
+                // The user resource verified this token, but it can expire before this
+                // second decode. The signature is checked before expiry, so its claims
+                // still hold; the connection is closed for the expiry at its first send.
+                if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                    return null;
+                }
+                $payload = $jwt->decode($authJWT, false);
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
+
+        if (!$sessionId) {
+            return null;
+        }
+
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            /** @var Document $session */
+            if ($session->getId() === $sessionId) {
+                return $session;
+            }
+        }
+
+        return null;
+    }, ['request', 'user', 'store', 'proofForToken']);
+
+    // A connection holds no token to present again, so it ends when the JWT it was
+    // opened with expires, as an HTTP request with that JWT would then fail.
+    $container->set('jwtExpire', function (Request $request, User $user): ?int {
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        if ($user->isEmpty() || empty($authJWT)) {
+            return null;
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            // Expired since the user resource verified it: keep that expiry, which
+            // closes the connection at its first send, rather than dropping it.
+            if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
+                return null;
+            }
+            $payload = $jwt->decode($authJWT, false);
+        }
+
+        $expire = $payload['exp'] ?? null;
+
+        return \is_int($expire) ? $expire : null;
+    }, ['request', 'user']);
 
     $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
@@ -378,6 +421,16 @@ return function (Container $container): void {
             'name' => $user->getAttribute('name', ''),
             'email' => $user->getAttribute('email', ''),
             'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            // The project whose users hold this impersonator, so events about them can
+            // reach the connections they opened. The `user` resource loads them from the
+            // platform database in admin mode, on the console project, and for an account
+            // key on any project; it throws when a key and a session are both sent, so a
+            // user alongside both key headers came from the key.
+            'projectId' => (
+                $mode === APP_MODE_ADMIN
+                || $project->getId() === 'console'
+                || (!empty($request->getHeaderLine('x-appwrite-key', '')) && !empty($request->getHeaderLine('x-appwrite-user', '')))
+            ) ? 'console' : $project->getId(),
         ]);
     }, ['request', 'project', 'user', 'authorization']);
 

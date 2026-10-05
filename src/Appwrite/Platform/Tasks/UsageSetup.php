@@ -25,11 +25,6 @@ class UsageSetup extends Action
 
     public function action(Connection $usageConnection, Store $executionStore): void
     {
-        if (!$usageConnection->isEnabled() && !$executionStore->isEnabled()) {
-            Console::info('ClickHouse persistence is disabled; schema setup skipped');
-            return;
-        }
-
         // An operator may run this before ClickHouse finishes starting, so
         // retry on the same ladder the boot-time setup uses.
         $max = 15;
@@ -48,12 +43,10 @@ class UsageSetup extends Action
                     }
                 }
 
-                if ($executionStore->isEnabled()) {
-                    $executionStore->setup();
-                    $health = $executionStore->healthCheck();
-                    if (($health['schemaReady'] ?? false) !== true) {
-                        throw new \RuntimeException('Execution schema health check failed');
-                    }
+                $executionStore->setup();
+                $health = $executionStore->healthCheck();
+                if (($health['schemaReady'] ?? false) !== true) {
+                    throw new \RuntimeException('Execution schema health check failed');
                 }
 
                 Console::success('ClickHouse schemas are ready');

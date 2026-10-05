@@ -61,6 +61,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
@@ -81,12 +82,17 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Update as UpdateDenyAliasedEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyFreeEmail\Update as UpdateDenyFreeEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPwned\Update as UpdatePasswordPwnedPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
@@ -141,6 +147,7 @@ class Http extends Service
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
 
         // Keys
+        // TODO: Remove once the Console, CLI and SDKs use the Organization API instead
         $this->addAction(CreateKey::getName(), new CreateKey());
         $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
         $this->addAction(ListKeys::getName(), new ListKeys());
@@ -179,11 +186,16 @@ class Http extends Service
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
         $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
+        $this->addAction(UpdatePasswordPwnedPolicy::getName(), new UpdatePasswordPwnedPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());
         $this->addAction(UpdateSessionInvalidationPolicy::getName(), new UpdateSessionInvalidationPolicy());
         $this->addAction(UpdateSessionLimitPolicy::getName(), new UpdateSessionLimitPolicy());
         $this->addAction(UpdateUserLimitPolicy::getName(), new UpdateUserLimitPolicy());
+        $this->addAction(UpdateDenyAliasedEmailPolicy::getName(), new UpdateDenyAliasedEmailPolicy());
+        $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
+        $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
+        $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
 
         // Auth Methods
         $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());
@@ -206,6 +218,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Yandex::getName(), new UpdateOAuth2Yandex());
         $this->addAction(UpdateOAuth2X::getName(), new UpdateOAuth2X());
         $this->addAction(UpdateOAuth2WordPress::getName(), new UpdateOAuth2WordPress());
+        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
         $this->addAction(UpdateOAuth2Twitch::getName(), new UpdateOAuth2Twitch());
         $this->addAction(UpdateOAuth2Stripe::getName(), new UpdateOAuth2Stripe());
         $this->addAction(UpdateOAuth2Spotify::getName(), new UpdateOAuth2Spotify());
