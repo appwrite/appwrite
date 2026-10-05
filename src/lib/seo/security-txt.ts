@@ -1,4 +1,5 @@
 import { normalizeWellKnownPath } from './change-password-url.ts'
+import { CANONICAL_HOST } from './indexing.ts'
 
 /**
  * RFC 9116 security.txt: where researchers report vulnerabilities and abuse.
@@ -9,10 +10,14 @@ export const SECURITY_TXT_WELL_KNOWN_PATH = '/.well-known/security.txt'
 
 const EXPIRES_AFTER_DAYS = 365
 
-export function buildSecurityTxt(
-  origin: string,
-  now: Date = new Date(),
-): string {
+/**
+ * Pinned to the public origin: behind TLS termination the request origin can be
+ * internal HTTP, and RFC 9116 clients reject a file fetched from a URL missing
+ * from its Canonical entries.
+ */
+const CANONICAL_URL = `https://${CANONICAL_HOST}${SECURITY_TXT_WELL_KNOWN_PATH}`
+
+export function buildSecurityTxt(now: Date = new Date()): string {
   const expires = new Date(now.getTime() + EXPIRES_AFTER_DAYS * 86_400_000)
   expires.setUTCHours(0, 0, 0, 0)
 
@@ -21,7 +26,7 @@ export function buildSecurityTxt(
     'Contact: https://github.com/appwrite/appwrite/security/advisories/new',
     `Expires: ${expires.toISOString()}`,
     'Preferred-Languages: en',
-    `Canonical: ${origin}${SECURITY_TXT_WELL_KNOWN_PATH}`,
+    `Canonical: ${CANONICAL_URL}`,
     'Policy: https://github.com/appwrite/appwrite/security/policy',
     '',
   ].join('\n')
@@ -32,15 +37,14 @@ export function wellKnownSecurityTxtResponse(
   request: Request,
   pathname?: string,
 ): Response | null {
-  const url = new URL(request.url)
   if (
-    normalizeWellKnownPath(pathname ?? url.pathname) !==
+    normalizeWellKnownPath(pathname ?? new URL(request.url).pathname) !==
     SECURITY_TXT_WELL_KNOWN_PATH
   ) {
     return null
   }
 
-  return new Response(buildSecurityTxt(url.origin), {
+  return new Response(buildSecurityTxt(), {
     status: 200,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
