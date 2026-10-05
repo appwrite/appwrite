@@ -28,6 +28,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
@@ -40,10 +41,11 @@ use Utopia\VCS\Adapter\Git;
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
  * sources are fine. The build output and package-manager cache go wherever
- * the builds device is (see storage()). On the local device the builds
- * storage volume is attached to the build worker at its Appwrite path, so
- * build.sh writes its artifact + the cache squashfs straight onto the volume
- * Appwrite already reads. On a remote device (S3 and friends) no volume spans
+ * the builds device is (see storage()). On the local device only this
+ * project's directory on the builds volume is attached to the build worker
+ * at its Appwrite path, so build.sh writes its artifact + the cache squashfs
+ * straight onto the volume Appwrite already reads, and cannot list or write
+ * another project's tree. On a remote device (S3 and friends) no volume spans
  * Appwrite and the build workers, so the sidecar moves them over s3://
  * upload/download artifacts instead. The orchestrator supports the generic
  * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
@@ -461,8 +463,8 @@ readonly class Deployments
         }
 
         // Where output + cache land is a swappable strategy (see storage()) —
-        // the default mounts the shared builds volume; nothing else here cares
-        // which strategy is active.
+        // the default mounts this project's directory on the builds volume;
+        // nothing else here cares which strategy is active.
         $output = static::storage($project, $resource, $deployment);
 
         // Site builds write a JSON build manifest into the workspace, read
@@ -553,8 +555,8 @@ readonly class Deployments
     }
 
     /**
-     * Where the build worker leaves that source on the local device: the
-     * builds volume, the only one it mounts.
+     * Where the build worker leaves that source on the local device: this
+     * project's directory on the builds volume, the only path it mounts.
      */
     public static function stagedSourcePath(Device $deviceForBuilds, string $deploymentId): string
     {
@@ -606,9 +608,12 @@ readonly class Deployments
 
     /**
      * Where build.sh's output artifact and package-manager cache land, and
-     * what the job needs to get them there. On the local device the shared
-     * builds volume is mounted and build.sh writes straight to
-     * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
+     * what the job needs to get them there. On the local device only this
+     * project's subdirectory of the builds volume is mounted (Volume.subPath)
+     * and build.sh writes straight to buildPath()/cachePath() — sibling
+     * app-{projectId} trees stay off the worker. The project directory is
+     * created first because Docker's named-volume Subpath must exist before
+     * the container starts. On a remote device (S3 and friends) build.sh
      * writes into the job workspace and the sidecar moves output and cache
      * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
      * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
@@ -628,10 +633,18 @@ readonly class Deployments
         $cachePath = static::cachePath($projectId, $cacheKey);
         $device = static::device($projectId);
 
+        if ($device instanceof Local) {
+            $device->createDirectory($device->getRoot());
+        }
+
         return match ($device->getType()) {
             DeviceType::Local => [
                 'volumes' => [
-                    new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+                    new Volume(
+                        source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'),
+                        path: $device->getRoot(),
+                        subPath: "app-{$projectId}",
+                    ),
                 ],
                 'artifacts' => [],
                 'environment' => [

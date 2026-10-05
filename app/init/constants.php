@@ -210,6 +210,7 @@ const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
 const TOKEN_TYPE_VERIFICATION_OTP = 10;
 const TOKEN_TYPE_RECOVERY_OTP = 11;
+const TOKEN_TYPE_PASSKEY = 12;
 
 /**
  * Session Providers.
@@ -221,6 +222,7 @@ const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
+const SESSION_PROVIDER_PASSKEY = 'passkey';
 
 /**
  * Actor that performed the request (user, admin, guest, or API key).
@@ -243,6 +245,9 @@ const ONBOARDING_STATUS_SKIPPED = 'skipped';
  * MFA
  */
 const MFA_RECENT_DURATION = 1800; // 30 mins
+const PASSKEY_TOKEN_DURATION = 60;
+const APP_LIMIT_USER_PASSKEYS = 10;
+const SESSION_RECENT_DURATION = 600; // 10 mins
 
 
 // Database name
@@ -393,6 +398,7 @@ const METRIC_MESSAGES_TYPE_FAILED  = METRIC_MESSAGES . '.{type}.failed';
 const METRIC_MESSAGES_TYPE_PROVIDER = METRIC_MESSAGES . '.{type}.{provider}';
 const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider}.sent';
 const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
+const METRIC_MESSAGES_RESOURCE_TYPE = 'message';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -484,7 +490,6 @@ const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
-const METRIC_AVATARS_STORAGE = 'avatars.storage';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
@@ -506,6 +511,10 @@ const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
+// MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
+const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
+const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

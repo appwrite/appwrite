@@ -85,6 +85,10 @@ class Update extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $repository = $authorization->skip(fn () => $dbForPlatform->findOne('repositories', [
             Query::equal('$id', [$repositoryId]),
             Query::equal('projectInternalId', [$project->getSequence()])

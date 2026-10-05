@@ -37,7 +37,8 @@
         "utopia-php/client": "^0.5",
         "utopia-php/pools": "^2.0",
         "utopia-php/smtp": "^0.2",
-        "utopia-php/telemetry": "^0.4"
+        "utopia-php/telemetry": "^0.4",
+        "utopia-php/psr7": "^0.2.1"
     },
     "require-dev": {
         "swoole/ide-helper": "^6.0"

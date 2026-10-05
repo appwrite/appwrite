@@ -4,8 +4,7 @@ namespace Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -64,6 +63,7 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'not_authorized']);
             return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
@@ -73,11 +73,11 @@ class Handler implements MqttHandler
         // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis());
-            $timeLimit->setParam('{userId}', $identity['userId'] ?? '');
+            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis())->withParams(['{userId}' => (string) ($identity['userId'] ?? '')]);
 
-            if ((new Abuse($timeLimit))->check()) {
+            if ($timeLimit->check()->limited) {
                 Span::add('mqtt.result', 'abuse');
+                $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
@@ -90,6 +90,8 @@ class Handler implements MqttHandler
         }
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
+
+        $this->mqtt->recordConnection($connection->prefix);
 
         return Connack::accept(properties: $this->connackProperties($authMethod));
     }
@@ -255,10 +257,15 @@ class Handler implements MqttHandler
      * A reserved users/<id> topic reaches only that user's connections, whatever filter matched:
      * the subscribe gate is the first line, this holds even for a subscription it did not catch.
      */
-    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence): int
+    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence, float $publishedAt = 0.0): int
     {
         $segments = \explode('/', $topic);
         $owner = \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX ? $segments[1] : null;
+
+        // publish (worker) -> deliver (broker) latency; clamped as the two clocks may differ slightly.
+        if ($publishedAt > 0.0) {
+            $this->mqtt->deliveryLatency->record(\max(0.0, \microtime(true) - $publishedAt));
+        }
 
         $delivered = 0;
 
@@ -272,6 +279,8 @@ class Handler implements MqttHandler
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
         }
+
+        $this->mqtt->recordDeliveries($projectId, $delivered);
 
         return $delivered;
     }
@@ -301,9 +310,9 @@ class Handler implements MqttHandler
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
-        // The broker already removed the connection, its subscriptions and keep-alive slot, and
-        // records the active-connections gauge itself. Record the connection lifetime for
-        // accepted sessions.
+        // The broker already removed the connection, its subscriptions and keep-alive slot, and owns
+        // the connections.active gauge. Record the lifetime of accepted sessions (identity set in
+        // onConnect) only, which also have an openedAt.
         if (($connection->identity['userId'] ?? '') !== '') {
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
         }
@@ -379,6 +388,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
+            $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
             $start = max($from + 1, $tail - $maxDepth + 1);
@@ -389,11 +399,18 @@ class Handler implements MqttHandler
                 Query::limit($maxDepth),
             ]));
 
+            $replayed = 0;
             foreach ($messages as $message) {
                 $stored = $message->getAttribute('data');
                 $data = \is_string($stored) ? $stored : (string) json_encode($stored);
                 $connection->publish($filter, $data, qos: 1, dup: true, sequence: (int) $message->getAttribute('sequence'));
+                $this->mqtt->messagesDelivered->add(1, ['qos' => 1]);
+                $replayed++;
             }
+
+            // Offline-replay re-deliveries are real deliveries: account for them in per-project usage
+            // too, so a device catching up after reconnect is not undercounted.
+            $this->mqtt->recordDeliveries($connection->prefix, $replayed);
         }
 
         if ($persist !== []) {
