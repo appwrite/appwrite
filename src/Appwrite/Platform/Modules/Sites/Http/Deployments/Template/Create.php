@@ -86,6 +86,7 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
@@ -109,6 +110,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         Authorization $authorization,
         Deployments $deployments,
+        int $buildTimeout,
         Bus $bus,
         array $platform
     ) {
@@ -146,7 +148,8 @@ class Create extends Base
                 authorization: $authorization,
                 deployments: $deployments,
                 bus: $bus,
-                platform: $platform
+                platform: $platform,
+                buildTimeout: $buildTimeout
             );
 
             $queueForEvents
@@ -232,6 +235,7 @@ class Create extends Base
         $deployment = $deployments->createFromRef(
             $site,
             $deployment,
+            $buildTimeout,
             $owner,
             $repository,
             $type,

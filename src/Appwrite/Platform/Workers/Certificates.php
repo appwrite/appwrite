@@ -108,6 +108,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
+        $skipDomainValidation = $certificateMessage->skipDomainValidation;
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
 
@@ -119,7 +120,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -201,6 +202,7 @@ class Certificates extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                skipDomainValidation: true,
             ));
 
             Console::success('Certificate generation triggered successfully.');
@@ -221,6 +223,7 @@ class Certificates extends Action
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
+     * @param bool $skipDomainValidation The enqueuer verified DNS itself moments ago
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -244,7 +247,8 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $validationDomain = null,
+        bool $skipDomainValidation = false
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -310,9 +314,14 @@ class Certificates extends Action
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
 
-            // Validate domain and DNS records. Skip if job is forced
+            // Validate domain and DNS records. Skip if job is forced, or if the
+            // enqueuer verified DNS itself moments ago: a second run of the same
+            // check can only agree, or fail on a transient and contradict the
+            // status the enqueuer just wrote.
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $validationDomain);
+                if (!$skipDomainValidation) {
+                    $this->validateDomain($rule, $domain, $validationDomain);
+                }
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
@@ -359,7 +368,7 @@ class Certificates extends Action
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
 
             throw $e;
         } finally {
@@ -437,10 +446,10 @@ class Certificates extends Action
         ]));
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-        $projectId = $rule->getAttribute('projectId');
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
@@ -542,7 +551,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -574,6 +583,7 @@ class Certificates extends Action
         $preview = $locale->getText("emails.certificate.preview");
 
         $publisherForMails->enqueue(new MailMessage(
+            project: $console,
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,

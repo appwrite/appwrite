@@ -25,6 +25,11 @@ class OAuth2Discord extends OAuth2Base
         return 'YmPXnM000000000000000000002zFg5D';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'consent'];
+    }
+
     /**
      * Get Name
      *

@@ -54,7 +54,8 @@ class Microsoft extends OAuth2
             'state' => \json_encode($this->state),
             'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
-            'response_mode' => 'query'
+            'response_mode' => 'query',
+            'prompt' => $this->getPrompt() ?: null,
         ]);
     }
 
@@ -155,6 +156,19 @@ class Microsoft extends OAuth2
      * @param string $accessToken
      *
      * @return string
+     *
+     * Microsoft returns image binary. The implementation is kept empty
+     * until setPhoto() method is implemented
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        return '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
      */
     public function getUserName(string $accessToken): string
     {
@@ -216,5 +230,17 @@ class Microsoft extends OAuth2
         $secret = $this->getAppSecret();
 
         return $secret['tenantID'] ?? '';
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
     }
 }

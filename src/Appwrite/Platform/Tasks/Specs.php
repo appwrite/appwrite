@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -14,15 +16,19 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\DI\Container;
+use Utopia\DNS\Lookup\Recursive;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -138,14 +144,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
@@ -171,12 +172,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
@@ -188,27 +183,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_SERVER => [
@@ -219,14 +205,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -270,12 +251,6 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
@@ -287,27 +262,18 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -318,14 +284,9 @@ class Specs extends Action
                     'in' => 'header',
                 ],
                 'ProjectPath' => [
-                    'type' => 'apiKey',
-                    'name' => 'project',
-                    'description' => 'Your project ID',
-                    'in' => 'query',
-                    'x-appwrite' => [
-                        'location' => 'path',
-                        'param' => 'project_id',
-                    ],
+                    'location' => ParameterLocation::PATH->value,
+                    'param' => 'project_id',
+                    'config' => 'project',
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -375,38 +336,23 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'DevKey' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Dev-Key',
-                    'description' => 'Your secret dev API key',
-                    'in' => 'header',
-                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
                     'description' => 'Impersonate a user by ID',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
                     'description' => 'Impersonate a user by email',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
                     'description' => 'Impersonate a user by phone',
                     'in' => 'header',
-                    'x-appwrite' => [
-                        'optional' => true,
-                    ],
                 ],
             ],
         ];
@@ -453,6 +399,7 @@ class Specs extends Action
         $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('publicURL', fn () => new PublicURL(new PublicHostname(new Anywhere(), new Recursive(['127.0.0.1']))));
         $specsContainer->set('project', fn () => new Document([]));
         $specsContainer->set('passwordsDictionary', fn () => []);
         $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));

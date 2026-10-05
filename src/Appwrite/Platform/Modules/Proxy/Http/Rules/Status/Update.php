@@ -116,13 +116,15 @@ class Update extends Action
             throw $err;
         }
 
-        // Issue a TLS certificate when DNS verification is successful
+        // Issue a TLS certificate when DNS verification is successful. The worker
+        // does not verify DNS again: verifyRule() above just did.
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
             project: $project,
             domain: new Document([
                 'domain' => $rule->getAttribute('domain'),
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]),
+            skipDomainValidation: true,
         ));
 
         if (!empty($certificate)) {

@@ -53,6 +53,7 @@ class Create extends Action
             ->desc('Create MFA challenge')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
@@ -105,7 +106,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('publisherForMessaging')
             ->inject('publisherForMails')
-            ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
@@ -125,7 +125,6 @@ class Create extends Action
         Event $queueForEvents,
         MessagingPublisher $publisherForMessaging,
         MailPublisher $publisherForMails,
-        callable $timelimit,
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,

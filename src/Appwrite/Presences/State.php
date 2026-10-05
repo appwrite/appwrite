@@ -21,6 +21,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Span\Span;
 
 class State
 {
@@ -138,9 +139,9 @@ class State
             } else {
                 $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
                     $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                    $presenceCreated = $existingPresence->isEmpty();
 
-                    if ($existingPresence->isEmpty()) {
-                        $presenceCreated = true;
+                    if ($presenceCreated) {
                         return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                     }
 
@@ -267,9 +268,7 @@ class State
                 metrics: $usage->getMetrics(),
             ));
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
-            }
+            Span::current()?->setError($th)->set('project.id', $project->getId());
         }
     }
 
@@ -301,12 +300,9 @@ class State
                 ->from($queueForEvents)
                 ->trigger();
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimePresenceEvent', tags: [
-                    'projectId' => $project->getId(),
-                    'event' => $eventName,
-                ]);
-            }
+            Span::current()?->setError($th)
+                ->set('project.id', $project->getId())
+                ->set('presence.event', $eventName);
         }
     }
 }

@@ -8,11 +8,15 @@ use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 final class MigrationVersionsTest extends TestCase
@@ -86,6 +90,7 @@ final class MigrationVersionsTest extends TestCase
             '_key_messageId',
             '_key_recipient',
             '_key_project',
+            '_key_team',
             '_key_project_resource',
             '_key_project_parent_resource',
         ], \array_keys($indexes));
@@ -132,6 +137,113 @@ final class MigrationVersionsTest extends TestCase
 
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
+    }
+
+    /**
+     * A legacy install has notifications without the team columns. The fixture
+     * below is a frozen snapshot of that shape, written out rather than derived
+     * from the current config, so it keeps describing the old install even as
+     * the config moves on.
+     *
+     * Drives migrateCollections, as the other migration tests here do:
+     * execute() also walks every document in every console collection, which
+     * needs a full install rather than a fixture. Then does the thing the
+     * columns exist for: store a notification against a team, read it back by
+     * team, and check another team does not see it.
+     */
+    public function testV25LetsALegacyInstallStoreAndQueryTeamScopedNotifications(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25TeamNotifications')
+            ->setNamespace('migration_team_notifications_' . \uniqid());
+        $database->create();
+
+        $string = fn (string $id, int $size = Database::LENGTH_KEY): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_STRING,
+            'format' => '',
+            'size' => $size,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $database->createCollection('notifications', [
+            $string('messageId'),
+            $string('recipientHash', 64),
+            $string('type', 100),
+            $string('channel', 64),
+            $string('projectId'),
+            $string('projectInternalId'),
+            $string('resourceType', 64),
+            $string('resourceId'),
+            $string('resourceInternalId'),
+            $string('title', 256),
+            new Document([
+                '$id' => 'read',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]),
+        ]);
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('notifications', new Document([
+            '$id' => 'domain-expiry',
+            'messageId' => 'domain-expiry',
+            'recipientHash' => \md5('owner@example.com'),
+            'type' => 'warning',
+            'channel' => 'email',
+            'projectId' => 'console',
+            'projectInternalId' => 'console',
+            'teamId' => 'team-a',
+            'teamInternalId' => '1',
+            'resourceType' => 'domains',
+            'resourceId' => 'domain-a',
+            'resourceInternalId' => '1',
+            'title' => 'example.com expires in 30 days',
+            'read' => false,
+        ])));
+
+        $mine = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-a']),
+        ]));
+
+        $this->assertCount(1, $mine);
+        $this->assertSame('domain-a', $mine[0]->getAttribute('resourceId'));
+
+        $theirs = $authorization->skip(fn () => $database->find('notifications', [
+            Query::equal('teamId', ['team-b']),
+        ]));
+
+        $this->assertCount(0, $theirs);
     }
 
     public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void
@@ -228,5 +340,109 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerBranches', $attributes);
             $this->assertContains('providerPaths', $attributes);
         }
+    }
+
+    /**
+     * A legacy install has users without the email metadata columns. That one
+     * collection is a frozen snapshot of the old shape, written out rather than
+     * derived from the current config, so it keeps describing the old install
+     * even as the config moves on. Everything around it is built the way project
+     * provisioning builds it, because execute() walks the whole project.
+     *
+     * Then does the thing the columns exist for: write a user carrying them.
+     * Before the repair this fails with Unknown attribute: "emailCanonical".
+     */
+    public function testV25LetsALegacyInstallWriteAUserCarryingEmailMetadata(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25EmailMetadata')
+            ->setNamespace('migration_email_metadata_' . \uniqid());
+        $database->create();
+
+        (new Audit(new AdapterDatabase($database)))->setup();
+
+        foreach (Config::getParam('collections', [])['projects'] as $key => $collection) {
+            if ($key === 'users' || ($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+
+            $database->createCollection(
+                $key,
+                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
+                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
+            );
+        }
+
+        $string = fn (string $id, int $size): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_STRING,
+            'format' => '',
+            'size' => $size,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $boolean = fn (string $id): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_BOOLEAN,
+            'format' => '',
+            'size' => 0,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $database->createCollection('users', [
+            $string('name', 256),
+            $string('email', 320),
+            $string('phone', 16),
+            $boolean('status'),
+            $boolean('emailVerification'),
+            $boolean('phoneVerification'),
+            $boolean('reset'),
+            $boolean('mfa'),
+        ]);
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('users', new Document([
+            '$id' => 'legacy-user',
+            'name' => 'Legacy User',
+            'email' => 'legacy.user@example.com',
+            'status' => true,
+            'emailVerification' => false,
+            'emailCanonical' => 'legacyuser@example.com',
+            'emailIsFree' => true,
+            'emailIsDisposable' => false,
+            'emailIsCorporate' => false,
+            'emailIsCanonical' => false,
+        ])));
+
+        $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
+
+        $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
     }
 }

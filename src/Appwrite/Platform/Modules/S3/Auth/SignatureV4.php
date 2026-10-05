@@ -94,30 +94,42 @@ class SignatureV4
             $this->validateDate($date, $credential[1]);
         }
 
-        $canonicalRequest = $this->canonicalRequest($request, $normalizedSignedHeaders, $presigned);
         $scope = \implode('/', \array_slice($credential, 1, 4));
-        $stringToSign = "AWS4-HMAC-SHA256\n{$date}\n{$scope}\n" . \hash('sha256', $canonicalRequest);
+        $secrets = $this->keySecrets($project);
+        $methods = [\strtoupper($request->getMethod())];
+        // Fastly may rewrite HeadObject/HeadBucket to GET while forwarding the
+        // HEAD signature. Only retry HEAD when the SDK named that operation, so
+        // a presigned HEAD URL cannot be replayed as GetObject.
+        $operation = $this->operation($request);
+        if ($methods[0] === 'GET' && ($operation === 'HeadObject' || $operation === 'HeadBucket')) {
+            $methods[] = 'HEAD';
+        }
 
-        foreach ($this->keySecrets($project) as $secret) {
-            $signingKey = $this->signingKey($secret, $credential[1], $credential[2], $credential[3]);
-            $expected = \hash_hmac('sha256', $stringToSign, $signingKey);
+        foreach ($methods as $method) {
+            $canonicalRequest = $this->canonicalRequest($request, $normalizedSignedHeaders, $presigned, $method);
+            $stringToSign = "AWS4-HMAC-SHA256\n{$date}\n{$scope}\n" . \hash('sha256', $canonicalRequest);
 
-            if (!\hash_equals($expected, $signature)) {
-                continue;
+            foreach ($secrets as $secret) {
+                $signingKey = $this->signingKey($secret, $credential[1], $credential[2], $credential[3]);
+                $expected = \hash_hmac('sha256', $stringToSign, $signingKey);
+
+                if (!\hash_equals($expected, $signature)) {
+                    continue;
+                }
+
+                $this->verifyPayload($request, $presigned);
+
+                $apiKey = Key::decode($project, $team, $user, $secret);
+                if ($apiKey->getRole() !== User::ROLE_KEYS || $apiKey->isExpired()) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid or expired API key.');
+                }
+
+                if (empty(\array_intersect($requiredScopes, $apiKey->getScopes()))) {
+                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'API key is missing required S3 storage scopes.');
+                }
+
+                return $apiKey;
             }
-
-            $this->verifyPayload($request, $presigned);
-
-            $apiKey = Key::decode($project, $team, $user, $secret);
-            if ($apiKey->getRole() !== User::ROLE_KEYS || $apiKey->isExpired()) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid or expired API key.');
-            }
-
-            if (empty(\array_intersect($requiredScopes, $apiKey->getScopes()))) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'API key is missing required S3 storage scopes.');
-            }
-
-            return $apiKey;
         }
 
         throw new Exception(Exception::USER_UNAUTHORIZED, 'Signature does not match.');
@@ -271,7 +283,18 @@ class SignatureV4
         return $parameters;
     }
 
-    private function canonicalRequest(Request $request, array $signedHeaders, bool $presigned): string
+    private function operation(Request $request): string
+    {
+        foreach ($this->queryPairs($request) as [$name, $value]) {
+            if ($name === 'x-id') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    private function canonicalRequest(Request $request, array $signedHeaders, bool $presigned, string $method): string
     {
         $headers = [];
         foreach ($signedHeaders as $header) {
@@ -300,7 +323,7 @@ class SignatureV4
         $payloadHash = $payloadHash === '' ? \hash('sha256', $request->getRawPayload()) : $payloadHash;
 
         return \implode("\n", [
-            $request->getMethod(),
+            $method,
             $this->canonicalUri($request),
             $this->canonicalQuery($request, $presigned),
             $canonicalHeaders,

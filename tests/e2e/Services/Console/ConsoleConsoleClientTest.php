@@ -100,7 +100,7 @@ final class ConsoleConsoleClientTest extends Scope
             }
         }
         $this->assertNotNull($github);
-        $this->assertCount(2, $github['parameters']);
+        $this->assertCount(3, $github['parameters']);
         $clientId = $github['parameters'][0];
         $this->assertEquals('clientId', $clientId['$id']);
         $this->assertEquals('OAuth2 app Client ID, or App ID', $clientId['name']);
@@ -111,6 +111,10 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertEquals('Client Secret', $clientSecret['name']);
         $this->assertNotEmpty($clientSecret['example']);
         $this->assertEquals('', $clientSecret['hint']);
+        $prompt = $github['parameters'][2];
+        $this->assertEquals('prompt', $prompt['$id']);
+        $this->assertEquals('Prompt', $prompt['name']);
+        $this->assertEquals('["select_account"]', $prompt['example']);
 
         // Multi-parameter provider (Apple) exposes its non-clientSecret fields
         $apple = null;
@@ -196,6 +200,8 @@ final class ConsoleConsoleClientTest extends Scope
         // Well-known scopes must be present
         $this->assertContains('projects.read', $scopeIds);
         $this->assertContains('projects.write', $scopeIds);
+        $this->assertContains('organization.projects.keys.read', $scopeIds);
+        $this->assertContains('organization.projects.keys.write', $scopeIds);
 
         // Every scope has the expected shape
         foreach ($response['body']['scopes'] as $scope) {
@@ -221,5 +227,31 @@ final class ConsoleConsoleClientTest extends Scope
         }
         $this->assertNotNull($projectsRead);
         $this->assertEquals('Access to read organization projects', $projectsRead['description']);
+    }
+
+    public function testListTotal(): void
+    {
+        $lists = [
+            '/console/oauth2-providers' => 'oAuth2Providers',
+            '/console/scopes/project' => 'scopes',
+            '/console/scopes/organization' => 'scopes',
+        ];
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        foreach ($lists as $path => $key) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['total' => true]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertGreaterThan(0, $response['body']['total'], $path);
+            $this->assertCount($response['body']['total'], $response['body'][$key], $path);
+
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['total' => false]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(0, $response['body']['total'], $path);
+            $this->assertNotEmpty($response['body'][$key], $path);
+        }
     }
 }
