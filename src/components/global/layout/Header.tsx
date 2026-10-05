@@ -102,6 +102,7 @@ import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
@@ -478,7 +479,7 @@ export function ConsoleHeader({
     centerSearchPlaceholder ?? headerCopy.centerSearchPlaceholder
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
-  const preLaunch = overrides.preLaunch
+  const preLaunch = isPreLaunchModeEnabled()
   const inAppMarketingNav = Boolean(marketingNav) && !preLaunch
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
   const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(

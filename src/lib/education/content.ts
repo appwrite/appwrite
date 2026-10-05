@@ -17,7 +17,7 @@ export const educationHero = {
   eyebrow: 'Education Program',
   title: 'Build your next project with Appwrite',
   description:
-    'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.',
+    'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Verified students get six months of Appwrite Cloud with Pro resources for free.',
   githubEducationUrl: 'https://github.com/education',
 } as const
 
@@ -31,7 +31,7 @@ export const educationFeatureCards: EducationFeature[] = [
   {
     title: 'Build with any framework',
     description:
-      'Get free access to build with Appwrite’s Education plan, valid throughout your student career.',
+      'Get six months of free access to build with Appwrite’s Education plan.',
     icon: Beaker,
   },
   {
@@ -44,8 +44,8 @@ export const educationFeatureCards: EducationFeature[] = [
 export const educationKickstart = {
   title: 'Kickstart your developer journey with Appwrite',
   paragraphs: [
-    'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to receive Appwrite Cloud for the duration of your studies.',
-    'This credit is available only for users who are verified through the GitHub program as students. The plan is valid until you graduate from GitHub Education.',
+    'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to get six months of Appwrite Cloud with Pro resources.',
+    "The Education plan is available only to students verified through the GitHub Student Developer Pack. It lasts six months, then you can choose the plan that fits what you're building next.",
   ],
   image: '/images/education/kickstart.avif',
 } as const
@@ -87,7 +87,7 @@ export const educationFaqItems: EducationFaqItem[] = [
   {
     question: 'What is the Appwrite Education Program?',
     answer:
-      "If you're a student with the GitHub Student Developer Pack, you can access the Appwrite Education plan for free while in school to help you build your next project.",
+      "If you're a student with the GitHub Student Developer Pack, you can use the Appwrite Education plan free for six months to build your next project.",
   },
   {
     question: 'What does the Education plan offer?',
@@ -97,7 +97,7 @@ export const educationFaqItems: EducationFaqItem[] = [
   {
     question: 'Who is eligible to apply?',
     answer:
-      "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan until graduation.",
+      "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan for six months.",
   },
   {
     question: 'How do I apply?',
@@ -117,7 +117,12 @@ export const educationFaqItems: EducationFaqItem[] = [
   {
     question: 'How long do the Appwrite Education program benefits last?',
     answer:
-      'Your access to the Appwrite Education plan is valid until you finish your studies and graduate from the GitHub Student Developer Pack.',
+      'The Education plan lasts six months from the day you join, and each account can join once. The Console reminds you five weeks before your term ends.',
+  },
+  {
+    question: 'What happens when my Education plan ends?',
+    answer:
+      "Before your term ends, choose the plan that fits what you're building next: Free for learning and side projects, Pro for apps that need more resources, or Start for students in India and Nepal. Your projects, data, and settings stay exactly as they are. If you don't choose a plan by the end date, your organization will be disabled until you select one. Projects are only deleted later, according to our standard retention process.",
   },
   {
     question: 'Does the Education plan include any add-ons?',
@@ -133,5 +138,5 @@ export const educationFaqItems: EducationFaqItem[] = [
 export const educationCta = {
   title: 'Start building like a team of hundreds with Appwrite',
   description:
-    'Develop your developer skills with Appwrite Pro, join a vibrant community of open-source contributors, and start building with a vast array of frameworks.',
+    'Grow your skills with Pro resources on Appwrite Cloud, join a community of open-source contributors, and build with the framework of your choice.',
 } as const

@@ -30,6 +30,7 @@ import { Link } from '@tanstack/react-router'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DatabasesEmptyState } from './DatabasesEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -185,6 +186,9 @@ type AllDatabasesSectionProps = {
   limit?: number
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
+  onCreate?: () => void
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
 function databaseCardLink(
@@ -530,6 +534,9 @@ export function AllDatabasesSection({
   limit = GRID_DEFAULT_PAGE_SIZE,
   onPageChange,
   onPageSizeChange,
+  onCreate,
+  createDisabled,
+  createDisabledTooltip,
 }: AllDatabasesSectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -787,6 +794,24 @@ export function AllDatabasesSection({
     onPageSizeChange?.(nextPageSize)
   }
 
+  const emptyState = hasActiveFilters ? (
+    <EmptyState
+      icon={Database}
+      title={t('No databases match your filters')}
+      description={t('Try adjusting or clearing filters.')}
+      isEmpty={false}
+      hasFilters
+      variant="card"
+    />
+  ) : (
+    <DatabasesEmptyState
+      projectId={projectId}
+      onCreate={onCreate}
+      createDisabled={createDisabled}
+      createDisabledTooltip={createDisabledTooltip}
+    />
+  )
+
   return (
     <section>
       {showLoading ? (
@@ -986,23 +1011,7 @@ export function AllDatabasesSection({
             ) : null}
           </>
         ) : (
-          <EmptyState
-            icon={Database}
-            title={
-              hasActiveFilters
-                ? t('No databases match your filters')
-                : t('No databases yet')
-            }
-            description={
-              hasActiveFilters
-                ? t('Try adjusting or clearing filters.')
-                : t(
-                    'To create a database, use the creation wizard by clicking "Create database".',
-                  )
-            }
-            isEmpty={!hasActiveFilters}
-            variant="card"
-          />
+          emptyState
         )
       ) : (
         <>
@@ -1045,25 +1054,7 @@ export function AllDatabasesSection({
               />
             ))}
             {databases.length === 0 ? (
-              <div className="col-span-full">
-                <EmptyState
-                  icon={Database}
-                  title={
-                    hasActiveFilters
-                      ? t('No databases match your filters')
-                      : t('No databases yet')
-                  }
-                  description={
-                    hasActiveFilters
-                      ? t('Try adjusting or clearing filters.')
-                      : t(
-                          'To create a database, use the creation wizard by clicking "Create database".',
-                        )
-                  }
-                  isEmpty={!hasActiveFilters}
-                  variant="card"
-                />
-              </div>
+              <div className="col-span-full">{emptyState}</div>
             ) : null}
           </div>
           {showPagination ? (

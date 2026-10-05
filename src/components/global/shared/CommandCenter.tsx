@@ -59,6 +59,7 @@ import {
   useProjectMessages,
   useProjectTopics,
   useProjectProviders,
+  useProjectVideos,
   useProject,
   useOrganizationScopes,
   formatProjectNameForDisplay,
@@ -86,6 +87,9 @@ import {
   type ProjectResourceKind,
 } from '@/lib/command-center'
 import { canSeeProjectNavItem } from '@/lib/console-access-checks'
+import type { ConsoleAccess } from '@/lib/console-roles'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
 import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
@@ -117,6 +121,7 @@ type ResourceScope =
   | 'messages'
   | 'topics'
   | 'providers'
+  | 'videos'
   | 'projects'
 
 const RESOURCE_KIND_ICONS: Record<ProjectResourceKind, LucideIcon> = {
@@ -129,6 +134,7 @@ const RESOURCE_KIND_ICONS: Record<ProjectResourceKind, LucideIcon> = {
   message: Send,
   topic: Megaphone,
   provider: Bell,
+  video: VIDEOS_PRODUCT_ICON,
 }
 
 interface ResourceSearchSpec {
@@ -137,6 +143,7 @@ interface ResourceSearchSpec {
   description: string
   icon: LucideIcon
   availableScopes: CommandCenterContext[]
+  available?: (access: ConsoleAccess, features: ConsoleProfileFeatures) => boolean
 }
 
 const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
@@ -204,6 +211,16 @@ const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
     availableScopes: ['project'],
   },
   {
+    scope: 'videos',
+    label: 'Search videos',
+    description: 'Find a video by name or ID',
+    icon: VIDEOS_PRODUCT_ICON,
+    availableScopes: ['project'],
+    available: (access, features) =>
+      Boolean(features.videos) &&
+      canSeeProjectNavItem(access, features, 'videos'),
+  },
+  {
     scope: 'projects',
     label: 'Search projects',
     description: 'Find a project in this organization',
@@ -222,6 +239,7 @@ const RESOURCE_SEARCH_PLACEHOLDERS: Record<ResourceScope, string> = {
   messages: 'Search messages...',
   topics: 'Search topics...',
   providers: 'Search providers...',
+  videos: 'Search videos...',
   projects: 'Search projects...',
 }
 
@@ -580,8 +598,10 @@ export function CommandCenter({
 
   // Search-resource CTAs (filtered by current scope).
   const resourceSearchCtas: RuntimeCommand[] = useMemo(() => {
-    return RESOURCE_SEARCH_SPECS.filter((s) =>
-      s.availableScopes.includes(context),
+    return RESOURCE_SEARCH_SPECS.filter(
+      (s) =>
+        s.availableScopes.includes(context) &&
+        (!s.available || s.available(access, features)),
     ).map((spec) => ({
       id: `search.${spec.scope}`,
       label: spec.label,
@@ -596,7 +616,7 @@ export function CommandCenter({
       },
       isResourceSearch: true,
     }))
-  }, [context])
+  }, [context, access, features])
 
   const recentCommands: RuntimeCommand[] = useMemo(() => {
     if (!isProjectContext || !projectId) return []
@@ -772,6 +792,15 @@ export function CommandCenter({
       shouldFetch && searchScope === 'providers' ? search : undefined,
     )
 
+  const { videos: projectVideos, isLoading: videosLoading } = useProjectVideos(
+    isProjectContext && projectId && shouldFetch && searchScope === 'videos'
+      ? projectId
+      : null,
+    0,
+    100,
+    shouldFetch && searchScope === 'videos' ? search : undefined,
+  )
+
   const searchableResourceKinds = useMemo(() => {
     const kinds = new Set<ProjectResourceKind>()
     if (!isProjectContext) return kinds
@@ -786,6 +815,12 @@ export function CommandCenter({
       kinds.add('message')
       kinds.add('topic')
       kinds.add('provider')
+    }
+    if (
+      features.videos &&
+      canSeeProjectNavItem(access, features, 'videos')
+    ) {
+      kinds.add('video')
     }
     kinds.add('user')
     kinds.add('team')
@@ -865,6 +900,8 @@ export function CommandCenter({
         return topicsLoading
       case 'providers':
         return providersLoading
+      case 'videos':
+        return videosLoading
       case 'projects':
         return orgProjectsLoading
       default:
@@ -881,6 +918,7 @@ export function CommandCenter({
     messagesLoading,
     topicsLoading,
     providersLoading,
+    videosLoading,
     orgProjectsLoading,
   ])
 
@@ -1063,6 +1101,28 @@ export function CommandCenter({
         )
       })
     }
+    if (searchScope === 'videos' && projectVideos && !videosLoading) {
+      projectVideos.forEach((video) => {
+        items.push(
+          projectResourceHitToRuntimeCommand(
+            {
+              id: `video-${video.$id}`,
+              kind: 'video',
+              label: video.name || video.$id,
+              description: video.$id,
+              section: 'videos',
+              resourceId: video.$id,
+              score: 0,
+            },
+            {
+              onNavigateToResource,
+              onNavigate,
+              onOpenChange,
+            },
+          ),
+        )
+      })
+    }
     if (searchScope === 'projects' && orgProjects && !orgProjectsLoading) {
       orgProjects.forEach((project) => {
         items.push({
@@ -1101,6 +1161,8 @@ export function CommandCenter({
     topicsLoading,
     projectProviders,
     providersLoading,
+    projectVideos,
+    videosLoading,
     orgProjects,
     orgProjectsLoading,
     features.multiRegion,
@@ -1349,6 +1411,7 @@ export function CommandCenter({
         messages: 'Messages',
         topics: 'Topics',
         providers: 'Providers',
+        videos: 'Videos',
         projects: 'Projects',
       }
       return [

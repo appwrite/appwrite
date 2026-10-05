@@ -56,6 +56,7 @@ export interface FiltersPopoverProps {
   defaultSortParam?: string
   /** Called when user clicks Reset. Omit to hide the reset control. */
   onReset?: () => void
+  triggerClassName?: string
 }
 
 export function FiltersPopover({
@@ -75,6 +76,7 @@ export function FiltersPopover({
   onSortChange,
   defaultSortParam,
   onReset,
+  triggerClassName,
 }: FiltersPopoverProps) {
   const t = useT()
   return (
@@ -87,6 +89,7 @@ export function FiltersPopover({
           className={cn(
             'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
             serviceHeaderFiltersButton,
+            triggerClassName,
           )}
         >
           <Filter className="h-3.5 w-3.5 shrink-0" />

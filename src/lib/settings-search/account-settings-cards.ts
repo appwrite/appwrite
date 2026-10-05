@@ -8,6 +8,11 @@ export const ACCOUNT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'overview',
+    title: 'Profile photo',
+    keywords: ['photo', 'avatar', 'picture', 'image', 'gravatar'],
+  },
+  {
+    sectionId: 'overview',
     title: 'Update name',
     keywords: ['name', 'display name', 'profile'],
   },

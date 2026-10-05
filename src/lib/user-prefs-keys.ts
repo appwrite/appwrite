@@ -27,6 +27,7 @@ import {
   MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+  VIDEOS_SIDEBAR_BOUNDS,
 } from '@/lib/resizable-layout'
 import {
   CLI_SHELL_DEFAULT_HEIGHT_PX,
@@ -158,7 +159,9 @@ function parseProjectIdList(raw: unknown): string[] {
     return []
   }
   if (Array.isArray(raw)) {
-    return raw.filter((id): id is string => typeof id === 'string' && id.length > 0)
+    return raw.filter(
+      (id): id is string => typeof id === 'string' && id.length > 0,
+    )
   }
   return []
 }
@@ -190,6 +193,49 @@ export function mergeAgentsDismissedProjectIdsPrefs(
   return {
     ...(prefs ?? {}),
     [USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS]: JSON.stringify(next),
+  }
+}
+
+/**
+ * Project IDs where the Premium Geo DB overview promo was dismissed.
+ * Value: JSON string of project ID strings.
+ */
+export const USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS =
+  'console.premiumGeoOverview.dismissedProjectIds'
+
+const MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS = 200
+
+export function parsePremiumGeoOverviewDismissedProjectIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  return parseProjectIdList(
+    prefs?.[USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS],
+  ).slice(0, MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS)
+}
+
+export function isPremiumGeoOverviewPromoDismissed(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): boolean {
+  if (!projectId) return false
+  return parsePremiumGeoOverviewDismissedProjectIds(prefs).includes(projectId)
+}
+
+export function mergePremiumGeoOverviewDismissedProjectIdsPrefs(
+  prefs: UserPrefs | null | undefined,
+  projectId: string,
+): UserPrefs {
+  const current = parsePremiumGeoOverviewDismissedProjectIds(prefs)
+  const next = current.includes(projectId)
+    ? current
+    : [...current, projectId].slice(
+        0,
+        MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+      )
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS]:
+      JSON.stringify(next),
   }
 }
 
@@ -1293,9 +1339,7 @@ export function parseMysqlSavedQueriesSort(
   const value = prefs[key]
   if (
     typeof value === 'string' &&
-    MYSQL_SAVED_QUERIES_SORT_VALUES.includes(
-      value as MysqlSavedQueriesSort,
-    )
+    MYSQL_SAVED_QUERIES_SORT_VALUES.includes(value as MysqlSavedQueriesSort)
   ) {
     return value as MysqlSavedQueriesSort
   }
@@ -1383,9 +1427,7 @@ export function parseMysqlSidebarTablesSort(
   const value = prefs[key]
   if (
     typeof value === 'string' &&
-    MYSQL_SIDEBAR_TABLES_SORT_VALUES.includes(
-      value as MysqlSidebarTablesSort,
-    )
+    MYSQL_SIDEBAR_TABLES_SORT_VALUES.includes(value as MysqlSidebarTablesSort)
   ) {
     return value as MysqlSidebarTablesSort
   }
@@ -1462,9 +1504,7 @@ export function parseMysqlSidebarPanel(
   const value = prefs[key]
   if (
     typeof value === 'string' &&
-    MYSQL_SIDEBAR_PANEL_VALUES.includes(
-      value as MysqlSidebarPanelPreference,
-    )
+    MYSQL_SIDEBAR_PANEL_VALUES.includes(value as MysqlSidebarPanelPreference)
   ) {
     return value as MysqlSidebarPanelPreference
   }
@@ -1670,6 +1710,112 @@ export function buildStorageSidebarWidthPrefs(widthPx: number): UserPrefs {
     USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH,
     widthPx,
   )
+}
+
+/**
+ * Full key: `console.videos.sidebarWidth` - videos list sidebar width in px.
+ */
+export const USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH = 'console.videos.sidebarWidth'
+
+export function parseVideosSidebarWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  const raw = Number(prefs?.[USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH] ?? NaN)
+  if (!Number.isFinite(raw) || raw <= 0) return null
+  return clampTableViewSidebarWidthPx(raw, VIDEOS_SIDEBAR_BOUNDS)
+}
+
+/**
+ * Full key: `console.videos.player` - stream player settings shared by every
+ * video. Value: JSON string of `VideoPlayerPrefs`.
+ */
+export const USER_PREFS_KEY_VIDEOS_PLAYER = 'console.videos.player'
+
+export type VideoPlayerOutputPref = 'hls' | 'dash' | 'cmaf' | 'source'
+
+export type VideoPlayerPrefs = {
+  /** 0 to 1. */
+  volume: number
+  muted: boolean
+  /** Preferred playback format; used when the video has it ready. */
+  output: VideoPlayerOutputPref | null
+  /** Preferred rendition height in px; `null` means automatic quality. */
+  quality: number | null
+  /** Subtitle language (or track name when untagged); `'off'` disables; `null` keeps the player default. */
+  subtitles: string | null
+}
+
+export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
+  volume: 1,
+  muted: false,
+  output: null,
+  quality: null,
+  subtitles: null,
+}
+
+const VIDEO_PLAYER_OUTPUTS: readonly VideoPlayerOutputPref[] = [
+  'hls',
+  'dash',
+  'cmaf',
+  'source',
+]
+
+export function parseVideoPlayerPrefs(
+  prefs: UserPrefs | null | undefined,
+): VideoPlayerPrefs {
+  const raw = prefs?.[USER_PREFS_KEY_VIDEOS_PLAYER]
+  if (typeof raw !== 'string' || !raw) return VIDEO_PLAYER_PREFS_DEFAULT
+  let parsed: Record<string, unknown>
+  try {
+    const value: unknown = JSON.parse(raw)
+    if (!value || typeof value !== 'object') return VIDEO_PLAYER_PREFS_DEFAULT
+    parsed = value as Record<string, unknown>
+  } catch {
+    return VIDEO_PLAYER_PREFS_DEFAULT
+  }
+  const volume = Number(parsed.volume)
+  const quality = Number(parsed.quality)
+  return {
+    volume: Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : 1,
+    muted: parsed.muted === true,
+    output: VIDEO_PLAYER_OUTPUTS.includes(
+      parsed.output as VideoPlayerOutputPref,
+    )
+      ? (parsed.output as VideoPlayerOutputPref)
+      : null,
+    quality:
+      parsed.quality != null && Number.isFinite(quality) && quality > 0
+        ? Math.round(quality)
+        : null,
+    subtitles:
+      typeof parsed.subtitles === 'string' && parsed.subtitles
+        ? parsed.subtitles.slice(0, 64)
+        : null,
+  }
+}
+
+export function mergeVideoPlayerPrefsIntoPrefs(
+  prefs: UserPrefs,
+  value: VideoPlayerPrefs,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_VIDEOS_PLAYER]: JSON.stringify({
+      volume: Math.round(value.volume * 100) / 100,
+      muted: value.muted,
+      output: value.output,
+      quality: value.quality,
+      subtitles: value.subtitles,
+    }),
+  }
+}
+
+export function buildVideosSidebarWidthPrefs(widthPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH]: String(
+      clampTableViewSidebarWidthPx(widthPx, VIDEOS_SIDEBAR_BOUNDS),
+    ),
+  }
 }
 
 function parseSidebarWidthPxForKey(
@@ -2504,9 +2650,14 @@ const LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED = 'sidebarCollapsed'
 export function parseSidebarCollapsed(
   prefs: UserPrefs | null | undefined,
 ): boolean {
-  const current = parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_SIDEBAR_COLLAPSED])
+  const current = parseBooleanAccountPref(
+    prefs?.[USER_PREFS_KEY_SIDEBAR_COLLAPSED],
+  )
   if (current !== null) return current
-  return parseBooleanAccountPref(prefs?.[LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED]) ?? false
+  return (
+    parseBooleanAccountPref(prefs?.[LEGACY_USER_PREFS_KEY_SIDEBAR_COLLAPSED]) ??
+    false
+  )
 }
 
 export function mergeSidebarCollapsedIntoPrefs(
@@ -2728,7 +2879,8 @@ export function mergeAIChatActiveConversationIdIntoPrefs(
 ): UserPrefs {
   return {
     ...prefs,
-    [USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]: conversationId?.trim() || '',
+    [USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]:
+      conversationId?.trim() || '',
   }
 }
 
@@ -3494,9 +3646,7 @@ export const EMPTY_COMMUNITY_SUPPORT_PREFS: CommunitySupportPrefs = {
 }
 
 function parseNonNegativeInt(value: unknown): number {
-  return typeof value === 'number' &&
-    Number.isFinite(value) &&
-    value >= 0
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
     ? Math.floor(value)
     : 0
 }
@@ -3601,7 +3751,8 @@ export const USER_PREFS_KEY_USAGE_CHART_INTERVAL = 'console.usageChart.interval'
 
 const USAGE_CHART_INTERVAL_PREF_VALUES = ['1m', '15m', '1h', '1d'] as const
 
-export type UsageChartIntervalPref = (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
+export type UsageChartIntervalPref =
+  (typeof USAGE_CHART_INTERVAL_PREF_VALUES)[number]
 
 export function isUsageChartIntervalPref(
   value: string,
@@ -3671,13 +3822,15 @@ export function mergeUsageChartFiltersIntoPrefs(
 ): UserPrefs {
   return {
     ...prefs,
-    [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]: JSON.stringify(serializedDateRange),
+    [USER_PREFS_KEY_USAGE_CHART_DATE_RANGE]:
+      JSON.stringify(serializedDateRange),
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
   }
 }
 
 /** Full key: `console.firewall.trafficLive` - live traffic chart polling when true. */
-export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE = 'console.firewall.trafficLive'
+export const USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE =
+  'console.firewall.trafficLive'
 
 export function parseFirewallTrafficLiveUpdatesEnabled(
   prefs: UserPrefs | null | undefined,
@@ -3711,6 +3864,7 @@ export type ServiceListViewModeScope =
   | 'sites'
   | 'projects'
   | 'stores'
+  | 'videos'
 
 /** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE =
@@ -3722,6 +3876,10 @@ export const USER_PREFS_KEY_SITES_LIST_VIEW_MODE = 'console.sites.listViewMode'
 /** Full key: `console.organizations.projects.listViewMode` - org projects tab. */
 export const USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE =
   'console.organizations.projects.listViewMode'
+
+/** Full key: `console.videos.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE =
+  'console.videos.listViewMode'
 
 /** Full key: `console.stores.listViewMode` - `"list"` or `"grid"`. */
 export const USER_PREFS_KEY_STORES_LIST_VIEW_MODE =
@@ -3737,6 +3895,8 @@ function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
       return USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE
     case 'stores':
       return USER_PREFS_KEY_STORES_LIST_VIEW_MODE
+    case 'videos':
+      return USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE
   }
 }
 
@@ -3813,9 +3973,7 @@ function isOversizedOrBinaryLabel(value: string): boolean {
   return false
 }
 
-function sanitizeRecentImpersonationLabel(
-  value: unknown,
-): string | undefined {
+function sanitizeRecentImpersonationLabel(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
   const trimmed = value.trim()
   if (!trimmed || isOversizedOrBinaryLabel(trimmed)) return undefined
@@ -4061,7 +4219,9 @@ export function readRecentImpersonationSavedList(
 ): RecentImpersonationUser[] {
   const id = operatorId?.trim()
   if (!id) return []
-  const map = readRecentByOperatorMap(SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
+  const map = readRecentByOperatorMap(
+    SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY,
+  )
   return enrichRecentImpersonationUsers(
     id,
     sanitizeRecentImpersonationList(map[id]),
@@ -4074,7 +4234,9 @@ export function writeRecentImpersonationSavedList(
 ) {
   const id = operatorId?.trim()
   if (!id) return
-  const map = readRecentByOperatorMap(SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
+  const map = readRecentByOperatorMap(
+    SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY,
+  )
   map[id] = sanitizeRecentImpersonationList(list)
   writeRecentByOperatorMap(map, SESSION_STORAGE_RECENT_SAVED_BY_OPERATOR_KEY)
 }

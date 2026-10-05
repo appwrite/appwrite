@@ -32,6 +32,36 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "nextjs-september-2026-security-release-key-updates",
+    "href": "/blog/post/nextjs-september-2026-security-release-key-updates",
+    "title": "Next.js September 2026 security release: Key updates",
+    "description": "Next.js September 2026 security release patches seven vulnerabilities. See what is affected, the risks, and which versions developers should update to.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/nextjs-september-2026-security-release-key-updates/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "september-product-update-native-sign-in-databases-and-more",
+    "href": "/blog/post/september-product-update-native-sign-in-databases-and-more",
+    "title": "September product update: Native sign-in, databases and more",
+    "description": "See what's new in Appwrite with native sign-in, databases across all regions, Resend setup, user photos, CLI config files, and more.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/september-product-update-native-sign-in-databases-and-more/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "tanstack-start-server-function-xss",
     "href": "/blog/post/tanstack-start-server-function-xss",
     "title": "TanStack Start XSS (CVE-2026-102989): what to do on Appwrite",

@@ -60,7 +60,7 @@ export function ProductHeroLogoStrip({ config, className }: ProductHeroLogoStrip
           })}
         </ul>
       ) : (
-        <ul className="mx-auto mt-7 flex max-w-6xl flex-nowrap items-center justify-center gap-x-1 px-1 sm:mt-9 sm:gap-x-2 md:gap-x-3.5 lg:max-w-7xl lg:gap-x-5">
+        <ul className="mx-auto mt-7 flex max-w-[21rem] flex-wrap items-center justify-center gap-x-1 gap-y-2 px-1 sm:mt-9 sm:max-w-[25rem] sm:gap-x-2 md:max-w-[30rem] md:gap-x-3.5 lg:max-w-7xl lg:flex-nowrap lg:gap-x-5">
           {config.items.map((item) => (
             <li key={item.key} className="shrink-0">
               <span

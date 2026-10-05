@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import {
   ArrowRight,
+  ArrowUpRight,
   BadgeCheck,
   ChevronRight,
   Database,
@@ -29,9 +30,10 @@ import { NetworkSection } from '@/components/pages/home/NetworkSection'
 import { PricingSection } from '@/components/pages/home/PricingSection'
 import { ScaleSection } from '@/components/pages/home/ScaleSection'
 import {
+  handleProductBentoPointerMove,
   HomeSoftLights,
-  ProductBentoHoverLight,
   ProductBentoSoftLights,
+  ProductBentoSpotlight,
 } from '@/components/pages/home/HomeSoftLights'
 import { HomeHashScroll } from '@/components/pages/home/HomeHashScroll'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
@@ -47,6 +49,7 @@ import type { ProductNavItemId } from '@/lib/products/types'
 import {
   getMarketingHomeOgImage,
   getMarketingPageMetaTags,
+  MARKETING_HOMEPAGE_TITLE,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
@@ -245,6 +248,7 @@ export function getHomePageHead() {
     meta: [
       ...getMarketingPageMetaTags({
         pageName: 'Home',
+        title: MARKETING_HOMEPAGE_TITLE,
         description: HOME_COPY.seoDescription,
         ogImage: getMarketingHomeOgImage(),
       }),
@@ -286,21 +290,21 @@ export function View() {
         <section className="relative isolate overflow-hidden border-b border-border bg-background">
           <HomeSoftLights />
           <div
-            className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
+            className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_0%,black_40%,transparent_100%)]"
             aria-hidden
           />
           <div className="relative z-[1] mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
             <Button
               variant="outline"
               size="sm"
-              className="h-7 rounded-full px-3 text-[12px]"
+              className="group h-7 rounded-full bg-background/70 px-3 text-[12px] backdrop-blur-sm"
               asChild
             >
               <MarketingSiteLink href="/init">
                 <Megaphone className="size-3.5" />
                 <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
                 {homeCopy.announcementText}
-                <ArrowRight className="size-3.5" />
+                <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" />
               </MarketingSiteLink>
             </Button>
 
@@ -339,7 +343,7 @@ export function View() {
           </div>
 
           <div className="relative z-[1] mt-8 flex justify-center sm:mt-10">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground backdrop-blur-sm">
               <McpIcon className="size-3.5" />
               <span>{homeCopy.mcpIncluded}</span>
             </div>
@@ -442,7 +446,10 @@ export function View() {
               scale={{ href: '#scale' }}
             />
 
-            <div className="product-bento-grid mt-10 grid overflow-hidden rounded-xl border border-border lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
+            <div
+              className="product-bento-grid mt-10 grid overflow-hidden rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(0,0,0,0.03),0_24px_48px_-24px_rgba(0,0,0,0.12)] lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px] dark:shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]"
+              onPointerMove={handleProductBentoPointerMove}
+            >
               {productBentoItems.map((item) => {
                 const Icon = item.icon
                 const href = item.href
@@ -450,24 +457,25 @@ export function View() {
                 return (
                   <article
                     key={item.id}
-                    className={`${item.className} ${item.dividerClassName} group relative flex cursor-pointer flex-col overflow-hidden border-border p-5 hover:bg-accent/10 sm:p-6 lg:p-7 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
+                    data-bento-tile
+                    className={`${item.className} ${item.dividerClassName} group relative flex cursor-pointer flex-col overflow-hidden border-border p-5 sm:p-6 lg:p-7 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
                   >
+                    <ProductBentoSpotlight />
                     {href ? (
                       <ProductBentoCardLink href={href} title={item.title} />
                     ) : null}
-                    <ProductBentoHoverLight tall={item.tall} />
                     <div
                       className={`pointer-events-none relative z-[2] flex min-h-0 flex-1 flex-col lg:h-full ${item.tall ? 'lg:min-h-full' : ''}`}
                     >
-                      <div className="relative z-10 shrink-0 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
+                      <div className="relative z-10 shrink-0 pb-4">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--foreground)_6%,transparent)] transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))]">
                             <Icon
-                              className="size-3.5 text-foreground"
+                              className="size-3.5 text-foreground transition-colors duration-300 group-hover:text-[var(--brand-cta)]"
                               aria-hidden
                             />
                           </span>
-                          <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground">
+                          <h3 className="font-aeonik-pro text-[17px] font-normal tracking-[-0.01em] text-foreground">
                             {item.title}
                           </h3>
                           {item.label ? (
@@ -475,16 +483,20 @@ export function View() {
                               {item.label}
                             </span>
                           ) : null}
+                          <ArrowUpRight
+                            className="ms-auto size-4 shrink-0 translate-y-1 text-muted-foreground opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-y-0 group-hover:opacity-100 rtl:-scale-x-100 motion-reduce:transition-none"
+                            aria-hidden
+                          />
                         </div>
                         <p
-                          className={`mt-2 min-h-10 text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
+                          className={`mt-2.5 min-h-10 max-w-xl text-pretty text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
                         >
                           {item.description}
                         </p>
                       </div>
 
                       <div
-                        className={`relative isolate min-h-0 flex-1 overflow-hidden contain-paint ${
+                        className={`relative isolate min-h-0 flex-1 overflow-hidden contain-paint [mask-image:linear-gradient(to_bottom,black_calc(100%_-_2.5rem),transparent)] ${
                           item.mobileVisualTall
                             ? 'min-h-[280px] max-lg:min-h-[460px] lg:min-h-[15rem]'
                             : item.compact
@@ -538,10 +550,10 @@ export function View() {
                 return (
                   <article
                     key={item.id}
-                    className="group border-b border-border p-5 transition-colors hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0"
+                    className="group border-b border-border p-5 transition-colors duration-300 hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0"
                   >
                     <div className="flex flex-col gap-3">
-                      <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
+                      <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40 transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[var(--brand-cta)]/10">
                         <Icon
                           className="size-3.5 text-[var(--brand-cta)]"
                           aria-hidden
@@ -551,7 +563,7 @@ export function View() {
                         <h3 className="text-[14px] font-semibold text-foreground">
                           {item.title}
                         </h3>
-                        <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
+                        <p className="mt-2 text-pretty text-[13px] leading-5 text-muted-foreground">
                           {item.description}
                         </p>
                       </div>

@@ -72,6 +72,8 @@ interface ActivityLogDrawerProps {
   onOpenChange: (open: boolean) => void
   event: Models.ActivityEvent | null
   display: ActivityDrawerDisplay | null
+  /** Resolves the actor photo for regular project users. */
+  projectId?: string
 }
 
 const actionLabels: Record<ActionType, string> = {
@@ -235,6 +237,7 @@ export function ActivityLogDrawer({
   onOpenChange,
   event,
   display,
+  projectId,
 }: ActivityLogDrawerProps) {
   const t = useT()
   const { lookups: countryLookups } = useCountryLookups()
@@ -400,6 +403,8 @@ export function ActivityLogDrawer({
                           event.actorEmail?.trim() ||
                           t('Unknown')
                         }
+                        actorId={event.actorId}
+                        projectId={projectId}
                       />
                       <div className="flex min-w-0 items-center gap-1.5">
                         <p className="min-w-0 truncate text-[13px] font-medium text-foreground">

@@ -4,7 +4,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
-import { useDebugOverrides } from '@/lib/debug-overrides'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { useInitLiveClock } from '@/lib/init/use-init-live-clock'
@@ -56,7 +56,7 @@ function InitPageContent({
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
-  const { preLaunch } = useDebugOverrides()
+  const preLaunch = isPreLaunchModeEnabled()
   const presence = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
   const communityGlobe = useInitCommunityGlobeData(baseEvent, {
@@ -293,7 +293,7 @@ export function View() {
 
 function InitEmptyState() {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
-  const { preLaunch } = useDebugOverrides()
+  const preLaunch = isPreLaunchModeEnabled()
 
   return (
     <>

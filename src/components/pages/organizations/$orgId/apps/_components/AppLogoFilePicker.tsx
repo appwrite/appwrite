@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ID } from '@appwrite.io/console'
-import { ImageIcon, Loader2, Upload, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { ImageFilePicker } from '@/components/global/shared/ImageFilePicker'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   APPS_LOGO_BUCKET_ID,
@@ -33,7 +32,6 @@ export function AppLogoFilePicker({
   region,
 }: AppLogoFilePickerProps) {
   const t = useT()
-  const uploadInputRef = useRef<HTMLInputElement>(null)
   const { projects } = useProjectsForTeam(teamId, 0, 1)
   const consoleRegion = resolveAppsLogoConsoleRegion(
     region ?? projects[0]?.region,
@@ -58,12 +56,7 @@ export function AppLogoFilePicker({
     return value
   }, [selectedFromValue, value, consoleRegion])
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    // Clear immediately so the same file can be re-selected after an error.
-    event.target.value = ''
-    if (!file) return
-
+  const handleUpload = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.png')) {
       toast.error(t('Only PNG logos are supported'))
       return
@@ -90,72 +83,31 @@ export function AppLogoFilePicker({
       toast.error(getErrorMessage(error, t('Failed to upload logo')))
     } finally {
       setUploading(false)
-      // Native file dialogs can leave focus/layout odd inside sheets; blur after.
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur()
-      }
     }
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        {previewUrl ? (
+    <ImageFilePicker
+      preview={
+        previewUrl ? (
           <MarketplaceAppLogo
             src={previewUrl}
             size="xl"
             alt={t('App logo preview')}
             monochrome={false}
           />
-        ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted">
-            <ImageIcon className="h-8 w-8 text-muted-foreground" />
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1 space-y-2">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Upload a PNG logo for the consent screen and marketplace.')}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <input
-              ref={uploadInputRef}
-              type="file"
-              accept="image/png,.png"
-              className="sr-only"
-              tabIndex={-1}
-              disabled={disabled || uploading}
-              onChange={handleUpload}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={disabled || uploading}
-              onClick={() => uploadInputRef.current?.click()}
-            >
-              {uploading ? (
-                <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Upload className="me-1.5 h-3.5 w-3.5" />
-              )}
-              {t('Upload PNG')}
-            </Button>
-            {value ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={disabled || uploading}
-                onClick={() => onChange('')}
-              >
-                <X className="me-1.5 h-3.5 w-3.5" />
-                {t('Remove')}
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </div>
+        ) : undefined
+      }
+      accept="image/png,.png"
+      description={t(
+        'Upload a PNG logo for the consent screen and marketplace.',
+      )}
+      uploadLabel={t('Upload PNG')}
+      removeLabel={value ? t('Remove') : undefined}
+      onRemove={value ? () => onChange('') : undefined}
+      onFile={handleUpload}
+      uploading={uploading}
+      disabled={disabled}
+    />
   )
 }

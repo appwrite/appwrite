@@ -249,6 +249,18 @@ export function EventEditor({
                   placeholder="All providers"
                 />
               )}
+              {builder.selection.service === 'videos' && projectId && (
+                <IdSelectorRow
+                  label="Video (optional)"
+                  projectId={projectId}
+                  type="video"
+                  value={builder.selection.videoId ?? '*'}
+                  onSelect={(v) =>
+                    builder.setVideoId(v === '*' ? undefined : v)
+                  }
+                  placeholder="All videos"
+                />
+              )}
               {showResourceRow && (
                 <>
                   <PillRow

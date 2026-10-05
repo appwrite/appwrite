@@ -46,7 +46,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import {
   useProjectUsers,
@@ -321,25 +321,16 @@ function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
   const user = users.find((u) => u.$id === userId)
 
   const displayName = user?.name || user?.email || user?.phone || userId
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : user?.email
-      ? user.email[0].toUpperCase()
-      : '?'
 
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <Avatar className="size-6 shrink-0">
-        {user?.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
-        <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+      <PhotoAvatar
+        projectId={projectId}
+        userId={userId}
+        name={user?.name || user?.email}
+        size="sm"
+        className="shrink-0"
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-[13px] font-medium text-foreground truncate">
@@ -587,16 +578,6 @@ function UserSelectionModal({
                   const isAlreadyAdded = isUserAlreadyAdded(user.$id)
                   const displayName =
                     user.name || user.email || user.phone || user.$id
-                  const initials = user.name
-                    ? user.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .toUpperCase()
-                        .slice(0, 2)
-                    : user.email
-                      ? user.email[0].toUpperCase()
-                      : '?'
 
                   return (
                     <div
@@ -622,14 +603,13 @@ function UserSelectionModal({
                         onClick={(e) => e.stopPropagation()}
                         className="cursor-pointer"
                       />
-                      <Avatar className="size-8">
-                        {user.avatar && (
-                          <AvatarImage src={user.avatar} alt={displayName} />
-                        )}
-                        <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
+                      <PhotoAvatar
+                        projectId={projectId}
+                        userId={user.$id}
+                        name={user.name || user.email}
+                        size="md"
+                        className="shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
                           {displayName}
@@ -843,7 +823,6 @@ interface MemberSelectionUser {
   name?: string
   email?: string
   phone?: string
-  avatar?: string
 }
 
 function MemberSelectionModal({
@@ -922,17 +901,6 @@ function MemberSelectionModal({
     selectedUser?.phone ||
     selectedUser?.$id ||
     ''
-  const selectedUserInitials = selectedUser?.name
-    ? selectedUser.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : selectedUser?.email
-      ? selectedUser.email[0].toUpperCase()
-      : '?'
-
   return (
     <Dialog
       open={open}
@@ -971,17 +939,13 @@ function MemberSelectionModal({
                   >
                     <ArrowLeft className="size-4 rtl:-scale-x-100" />
                   </Button>
-                  <Avatar className="size-8">
-                    {selectedUser.avatar && (
-                      <AvatarImage
-                        src={selectedUser.avatar}
-                        alt={selectedUserName}
-                      />
-                    )}
-                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                      {selectedUserInitials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <PhotoAvatar
+                    projectId={projectId}
+                    userId={selectedUser.$id}
+                    name={selectedUser.name || selectedUser.email}
+                    size="md"
+                    className="shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {selectedUserName}
@@ -1084,16 +1048,6 @@ function MemberSelectionModal({
                     users.map((user) => {
                       const displayName =
                         user.name || user.email || user.phone || user.$id
-                      const initials = user.name
-                        ? user.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase()
-                            .slice(0, 2)
-                        : user.email
-                          ? user.email[0].toUpperCase()
-                          : '?'
 
                       return (
                         <button
@@ -1102,17 +1056,13 @@ function MemberSelectionModal({
                           onClick={() => setSelectedUser(user)}
                           className="w-full text-start flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 cursor-pointer"
                         >
-                          <Avatar className="size-8">
-                            {user.avatar && (
-                              <AvatarImage
-                                src={user.avatar}
-                                alt={displayName}
-                              />
-                            )}
-                            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PhotoAvatar
+                            projectId={projectId}
+                            userId={user.$id}
+                            name={user.name || user.email}
+                            size="md"
+                            className="shrink-0"
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">
                               {displayName}

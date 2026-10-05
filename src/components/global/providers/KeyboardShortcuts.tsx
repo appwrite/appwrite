@@ -21,6 +21,7 @@ import {
   canCreateSite,
   canCreateTeam,
   canCreateUser,
+  canCreateVideo,
   canSeeActivityNav,
   canSeeProjectNavItem,
   canSeeUsageNav,
@@ -28,6 +29,7 @@ import {
   canShowProjectSettings,
 } from '@/lib/console-access-checks'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
+import type { CreateResourceType } from '@/components/global/shared/CommandCenter.types'
 import { useCliShellOptional } from '@/components/global/cli-shell/cli-shell-context'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
@@ -184,13 +186,18 @@ export function KeyboardShortcutsProvider({
           to: '/projects/$projectId/messaging/providers/$providerId',
           params: { projectId, providerId: resourceId },
         })
+      } else if (section === 'videos') {
+        navigate({
+          to: '/projects/$projectId/videos/$videoId',
+          params: { projectId, videoId: resourceId },
+        })
       }
     },
     [navigate, projectId],
   )
 
   const onCreateResource = useCallback(
-    (type: 'database' | 'bucket' | 'user' | 'team' | 'function' | 'site') => {
+    (type: CreateResourceType) => {
       if (type === 'database') {
         navigate({
           to: '/projects/$projectId/databases',
@@ -224,6 +231,12 @@ export function KeyboardShortcutsProvider({
         navigate({
           to: '/projects/$projectId/sites/create',
           params: { projectId },
+        })
+      } else if (type === 'video') {
+        navigate({
+          to: '/projects/$projectId/videos/',
+          params: { projectId },
+          search: { create: 'video' },
         })
       }
     },
@@ -304,6 +317,9 @@ export function KeyboardShortcutsProvider({
     if (canSeeProjectNavItem(access, features, 'sites')) {
       shortcuts['g w'] = () => navigateToSection('sites')
     }
+    if (features.videos && canSeeProjectNavItem(access, features, 'videos')) {
+      shortcuts['g v'] = () => navigateToSection('videos')
+    }
     if (features.activity && canSeeActivityNav(access, features)) {
       shortcuts['g l'] = () => navigateToSection('activity')
     }
@@ -333,6 +349,9 @@ export function KeyboardShortcutsProvider({
     }
     if (canCreateTeam(access, features)) {
       shortcuts['c t'] = () => onCreateResource('team')
+    }
+    if (features.videos && canCreateVideo(access, features)) {
+      shortcuts['c v'] = () => onCreateResource('video')
     }
 
     return shortcuts

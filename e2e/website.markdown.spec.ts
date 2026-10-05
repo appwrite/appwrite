@@ -162,6 +162,17 @@ test.describe('markdown exports (read-only)', () => {
     expect(reliability.status()).toBe(404)
   })
 
+  test('well-known security.txt lists the security contact', async ({
+    request,
+  }) => {
+    const response = await request.get('/.well-known/security.txt')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/text\/plain/)
+    const body = await response.text()
+    expect(body).toContain('Contact: mailto:security@appwrite.io')
+    expect(body).toMatch(/^Expires: /m)
+  })
+
   test('robots.txt serves plain text with a tracked route', async ({ request }) => {
     const response = await request.get('/robots.txt')
 

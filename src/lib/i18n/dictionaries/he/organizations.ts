@@ -314,6 +314,31 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
   'Create project': 'יצירת פרויקט',
+  'Advanced security': 'אבטחה מתקדמת',
+  'Security add-on': 'תוסף אבטחה',
+  '+ more': '+ עוד',
+  'Geolocation for Firewall rules': 'מיקום עבור כללי Firewall',
+  'Geolocation for Firewall rules.': 'מיקום עבור כללי Firewall.',
+  '{price}/mo, prorated.': '{price}/חודש, חיוב יחסי.',
+  'Billed monthly, prorated.': 'חיוב חודשי, יחסי.',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'מיקום עבור כללי Firewall · {price}/חודש, חיוב יחסי.',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'מיקום עבור כללי Firewall · חיוב חודשי, יחסי.',
+  'Optional security add-on': 'תוסף אבטחה אופציונלי',
+  'Advanced geolocation for access control': 'מיקום מתקדם לבקרת גישה',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    'הוסיפו הקשר של עיר, ISP, ASN וסוג חיבור לכל בקשה, לכללי Firewall מדויקים וגישה אזורית בטוחה יותר.',
+  'Prorated when you enable this add-on.': 'חיוב יחסי בעת הפעלת התוסף.',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    'העשירו כל בקשה בהקשר של עיר, ISP, ASN וסוג חיבור, כדי שכללי Firewall יוכלו לחסום שימוש לרעה, לאכוף גישה אזורית ולהגיב לתעבורה חשודה בדיוק.',
+  '{price}/month for this project. Prorated when enabled.':
+    '{price}/חודש לפרויקט זה. חיוב יחסי בעת ההפעלה.',
+  'Billed monthly for this project, prorated when enabled.':
+    'חיוב חודשי לפרויקט זה, בחיוב יחסי בעת ההפעלה.',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'הפרויקט נוצר, אך לא ניתן היה להפעיל את תוסף האבטחה. ניתן להפעיל Premium Geo DB בהגדרות הפרויקט.',
+  'Enabling Premium Geo DB...': 'מפעילים את Premium Geo DB...',
   'Create secret': 'יצירת סוד',
   'Create your first domain to get started':
     'צרו את הדומיין הראשון שלכם כדי להתחיל',
@@ -1520,6 +1545,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Installation settings updated': 'הגדרות ההתקנה עודכנו',
+  'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
   'Plans could not be loaded. Refresh and try again.':
     'לא ניתן לטעון את התוכניות. רעננו ונסו שוב.',
@@ -1544,4 +1572,39 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'בחרו תוכנית חדשה כדי לשמור על הפרויקטים והנתונים שלכם.',
   'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
     'כשתוכנית Education תסתיים, הארגון שלכם יושבת והפרויקטים שבו יימחקו בהמשך. בחרו תוכנית עכשיו והכול יישאר בדיוק איפה שהשארתם.',
+  'Create a project': 'יצירת פרויקט',
+  'Name it and pick the region closest to your users. Each project keeps its data, keys, and settings apart.':
+    'תנו לו שם ובחרו את האזור הקרוב ביותר למשתמשים שלכם. כל פרויקט שומר על הנתונים, המפתחות וההגדרות שלו בנפרד.',
+  'Add a web, mobile, or server platform and install an SDK. Your first request takes a few lines of code.':
+    'הוסיפו פלטפורמת ווב, מובייל או שרת והתקינו SDK. הבקשה הראשונה דורשת רק כמה שורות קוד.',
+  'Build with every product': 'בנייה עם כל המוצרים',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites are ready in every project, no setup required.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים זמינים בכל פרויקט, בלי הגדרות נוספות.',
+  'Create your first project': 'יצירת הפרויקט הראשון שלכם',
+  'A project is the backend for one app: its users, data, files, and code, hosted in the region you choose.':
+    'פרויקט הוא ה-backend של אפליקציה אחת: המשתמשים, הנתונים, הקבצים והקוד שלה, מתארחים באזור שתבחרו.',
+  'Bring or buy a domain': 'הוספה או רכישה של דומיין',
+  'Add a domain you already own, transfer it in, or buy a new one without leaving the console.':
+    'הוסיפו דומיין שכבר בבעלותכם, העבירו אותו ל-Appwrite או רכשו דומיין חדש בלי לצאת מהקונסול.',
+  'Manage DNS in one place': 'ניהול DNS במקום אחד',
+  'Point your nameservers to Appwrite, then add records or apply presets for email and verification.':
+    'הפנו את שרתי השמות ל-Appwrite, ואז הוסיפו רשומות או החילו תבניות מוכנות לאימייל ולאימות.',
+  'Connect it everywhere': 'חיבור לכל מקום',
+  'Use the domain and its subdomains for sites, functions, and project APIs across the organization.':
+    'השתמשו בדומיין ובתתי-הדומיינים שלו עבור אתרים, פונקציות ו-APIs של פרויקטים בכל הארגון.',
+  'Your domains, managed by Appwrite': 'הדומיינים שלכם, בניהול Appwrite',
+  'Register, transfer, and manage domains for your whole organization. Configure DNS once and connect it to your sites, functions, and APIs.':
+    'רשמו, העבירו ונהלו דומיינים לכל הארגון. הגדירו DNS פעם אחת וחברו אותו לאתרים, לפונקציות ול-APIs שלכם.',
+  'Create your app': 'יצירת האפליקציה',
+  'Add a name, logo, and redirect URIs so users recognize your app on the consent screen.':
+    'הוסיפו שם, לוגו וכתובות הפניה כדי שהמשתמשים יזהו את האפליקציה שלכם במסך ההסכמה.',
+  'Request scoped access': 'בקשת גישה מוגבלת בהרשאות',
+  'Users pick the projects and organizations your app can reach, and can revoke access at any time.':
+    'המשתמשים בוחרים לאילו פרויקטים וארגונים האפליקציה שלכם תוכל לגשת, ויכולים לבטל את הגישה בכל עת.',
+  'Publish to the marketplace': 'פרסום במרקטפלייס',
+  'List the app so teams across Appwrite can discover it and connect it to their projects.':
+    'פרסמו את האפליקציה כדי שצוותים ב-Appwrite יוכלו לגלות אותה ולחבר אותה לפרויקטים שלהם.',
+  'Build on top of Appwrite': 'בנו על גבי Appwrite',
+  'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
+    'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
 }

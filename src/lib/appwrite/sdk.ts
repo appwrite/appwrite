@@ -45,6 +45,7 @@ import {
   Organizations,
   Presences,
   Usage,
+  Videos,
   Webhooks,
   Notifications,
   Waf,
@@ -571,6 +572,7 @@ const sdkForProjectRaw = {
   waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),
+  videos: new Videos(clientProject),
   webhooks: new Webhooks(clientProject),
 }
 

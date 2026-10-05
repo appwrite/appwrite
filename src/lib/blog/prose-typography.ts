@@ -21,6 +21,9 @@ export const BLOG_FAQ_ANSWER_CLASS =
 
 export const BLOG_PAGE_TITLE_CLASS = DOCS_PAGE_TITLE_CLASS
 
+export const BLOG_POST_TITLE_CLASS =
+  'font-aeonik-pro text-pretty text-[36px] font-normal leading-[1.15] tracking-tight text-foreground @[640px]:text-[50px] @[640px]:leading-[1.1]'
+
 export const BLOG_CATEGORY_TITLE_CLASS = DOCS_PAGE_TITLE_CLASS
 
 export const BLOG_STICKY_TITLE_CLASS = DOCS_STICKY_TITLE_CLASS

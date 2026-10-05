@@ -110,6 +110,7 @@ import {
   canSwitchOrganizations} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
+import { ProjectsEmptyState } from './_components/ProjectsEmptyState'
 import {
   ProjectListCardFooter,
   ProjectListCardMain} from './_components/ProjectListCardContent'
@@ -1894,6 +1895,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     requestedPage !== displayedPage
       ? projectsByTeam
       : filteredProjectsByTeam
+  const showsFirstRunProjectsEmptyState =
+    !projectsSearchActive &&
+    !showProjectsLoading &&
+    pinnedProjects.length === 0 &&
+    displayedProjectsByTeam.length === 0
 
   const showProjectUsageCharts =
     features.usageStats ||
@@ -2783,6 +2789,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     {!activeProjectsError && (
                       <>
                         {/* Toolbar: Search + Filters + Create */}
+                        {!showsFirstRunProjectsEmptyState && (
                         <div className="mb-4 flex items-center gap-3">
                           <div className="relative min-w-0 flex-1 @[640px]:max-w-xs">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -2898,6 +2905,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           })()}
                           </div>
                         </div>
+                        )}
 
                         {/* Loading placeholder - same layout as grid to prevent shift */}
                         {showProjectsLoading ? (
@@ -3346,20 +3354,26 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             </div>
 
                             {/* Empty State: no pinned and no other projects (not shown while search is fetching) */}
-                            {(projectsSearchActive ||
-                              pinnedProjects.length === 0) &&
+                            {showsFirstRunProjectsEmptyState ? (
+                              <ProjectsEmptyState
+                                onCreate={() =>
+                                  setCreateProjectDialogOpen(true)
+                                }
+                                createDisabled={!canManageProjects}
+                                createDisabledTooltip={t(
+                                  "You don't have permission to create projects.",
+                                )}
+                              />
+                            ) : (
+                              projectsSearchActive &&
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
                                   icon={Folder}
-                                  title={t('No projects yet')}
-                                  description={t(
-                                    'Create your first project to get started',
-                                  )}
-                                  isEmpty={!searchQuery}
-                                  hasFilters={!!searchQuery}
+                                  hasFilters
                                   variant="card"
                                 />
-                              )}
+                              )
+                            )}
 
                             {/* Pagination for Active Projects */}
                             {activeProjectsTotal > urlProjectsLimit && (

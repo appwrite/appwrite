@@ -6,9 +6,12 @@ import { ArrowUpRight } from 'lucide-react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { FirewallTrafficChart } from '@/components/pages/projects/$projectId/firewall/_components/FirewallTrafficChart'
 import { OVERVIEW_CHART_HEIGHT } from '@/components/pages/projects/$projectId/overview/chart-panel'
+import { ArtLiveDot, ArtPanel, riseStyle } from '@/components/pages/products/_components/ArtParts'
 import {
+  FIREWALL_TRAFFIC_SERIES,
   getFirewallTrafficSeriesTotals,
   sortFirewallTrafficSeriesByValueAsc,
+  type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { useT } from '@/lib/i18n/translate'
@@ -69,20 +72,32 @@ function MetricTile({
   label,
   value,
   change,
+  color,
+  delayMs,
 }: {
   label: string
   value: string | number
   change?: number
+  color?: string
+  delayMs: number
 }) {
   return (
-    <div className="min-w-0">
-      <p className="text-[12px] text-muted-foreground">{label}</p>
-      <div className="mt-0.5 flex items-baseline gap-x-2">
-        <span className="text-[20px] font-semibold tabular-nums text-foreground">
+    <ArtPanel className="min-w-0" innerClassName="px-3.5 py-3" delayMs={delayMs}>
+      <p className="flex items-center gap-1.5 truncate text-[12px] text-muted-foreground">
+        <span
+          className={cn('size-2 shrink-0 rounded-full', !color && 'bg-[var(--tone-ink)]')}
+          style={color ? { backgroundColor: color } : undefined}
+          aria-hidden
+        />
+        {label}
+      </p>
+      <div className="mt-1 flex items-baseline gap-x-2">
+        <span dir="ltr" className="font-aeonik-pro text-[22px] leading-none tracking-tight tabular-nums text-foreground">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
         {change !== undefined ? (
           <span
+            dir="ltr"
             className={cn(
               'text-[12px] font-medium tabular-nums',
               change > 0 && 'text-emerald-600 dark:text-emerald-400',
@@ -95,7 +110,7 @@ function MetricTile({
           </span>
         ) : null}
       </div>
-    </div>
+    </ArtPanel>
   )
 }
 
@@ -109,6 +124,14 @@ export function FirewallMonitorSection() {
   const seriesByValueAsc = useMemo(
     () => sortFirewallTrafficSeriesByValueAsc(totals),
     [totals],
+  )
+  const seriesColor = useMemo(
+    () =>
+      Object.fromEntries(FIREWALL_TRAFFIC_SERIES.map((series) => [series.key, series.color])) as Record<
+        FirewallTrafficSeriesKey,
+        string
+      >,
+    [],
   )
 
   const totalRequests =
@@ -124,100 +147,82 @@ export function FirewallMonitorSection() {
       : '0.0'
 
   const metrics = [
-    { label: t('Passed'), value: totals.requests, change: 8 },
-    { label: t('Denied'), value: totals.denied, change: 18 },
-    { label: t('Challenged'), value: totals.challenged, change: 6 },
-    { label: t('Rate limited'), value: totals.rateLimited, change: -3 },
-    { label: t('Redirected'), value: totals.redirected, change: 2 },
+    { label: t('Passed'), value: totals.requests, change: 8, color: seriesColor.requests },
+    { label: t('Denied'), value: totals.denied, change: 18, color: seriesColor.denied },
+    { label: t('Challenged'), value: totals.challenged, change: 6, color: seriesColor.challenged },
+    { label: t('Rate limited'), value: totals.rateLimited, change: -3, color: seriesColor.rateLimited },
+    { label: t('Redirected'), value: totals.redirected, change: 2, color: seriesColor.redirected },
     { label: t('Block rate'), value: `${blockRate}%`, change: 4 },
   ]
 
   return (
-    <div className="w-full border-t border-border bg-background">
-      <div className="flex flex-col-reverse gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <div className="min-w-0 flex-1">
+    <div className="relative w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div
+          className="product-hero-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+          style={riseStyle(0)}
+        >
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-[24px] font-semibold tabular-nums text-foreground">
+            <span dir="ltr" className="font-aeonik-pro text-[32px] leading-none tracking-tight tabular-nums text-foreground">
               {totalRequests.toLocaleString()}
             </span>
-            <span className="text-[13px] text-muted-foreground">
-              {t('requests')}
-            </span>
+            <span className="text-[13px] text-muted-foreground">{t('requests')}</span>
             <span className="text-[12px] font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
-              +{mock.requestsChange}% {t('vs previous period')}
+              <span dir="ltr">+{mock.requestsChange}%</span> {t('vs previous period')}
             </span>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-[12px] text-muted-foreground shadow-sm dark:bg-card">
+              <ArtLiveDot className="size-1.5" />
+              {t('Last 24 hours')}
+            </span>
+            <DocsRouteLink
+              href="/docs/products/firewall/monitor"
+              className="group/docs inline-flex h-8 items-center gap-1.5 px-2 text-[12px] font-medium text-foreground/80 transition-colors hover:text-[var(--tone-ink)]"
+            >
+              {t('Monitor docs')}
+              <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden />
+            </DocsRouteLink>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex h-9 items-center rounded-md border border-border bg-muted/20 px-3 text-[12px] text-muted-foreground">
-            {t('Last 24 hours')}
-          </span>
-          <DocsRouteLink
-            href="/docs/products/firewall/monitor"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t('Monitor docs')}
-            <ArrowUpRight className="size-3.5" aria-hidden />
-          </DocsRouteLink>
-        </div>
-      </div>
 
-      <div className="px-2 pb-2 pt-4 sm:px-4 sm:pt-4 lg:px-6">
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-2 sm:px-2">
-          {seriesByValueAsc.map((series) => (
-            <div key={series.key} className="flex items-center gap-1.5">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: series.color }}
-              />
-              <span className="text-[12px] text-muted-foreground">
-                {t(series.label)}
-              </span>
-            </div>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          {metrics.map((metric, index) => (
+            <MetricTile
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              change={metric.change}
+              color={metric.color}
+              delayMs={150 + index * 80}
+            />
           ))}
         </div>
 
-        <FirewallTrafficChart
-          data={mock.points}
-          dateRange={mock.dateRange}
-          chartInterval={DEFAULT_USAGE_CHART_INTERVAL}
-          height={PRODUCT_TRAFFIC_CHART_HEIGHT}
-          gradientSuffix="product"
-          className="w-full"
-        />
-      </div>
+        <div className="product-hero-rise mt-8" style={riseStyle(500)}>
+          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-1">
+            {seriesByValueAsc.map((series) => (
+              <div key={series.key} className="flex items-center gap-1.5">
+                <span
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: series.color }}
+                />
+                <span className="text-[12px] text-muted-foreground">
+                  {t(series.label)}
+                </span>
+              </div>
+            ))}
+          </div>
 
-      <div className="grid grid-cols-2 border-t border-border sm:grid-cols-3 xl:grid-cols-6">
-        {metrics.map((metric, index) => {
-          const count = metrics.length
-          const isLast = index === count - 1
-          const lastRowStartMobile = count - (count % 2 || 2)
-          const lastRowStartSm = count - (count % 3 || 3)
-          const showBottomBorderMobile = index < lastRowStartMobile
-          const showBottomBorderSm = index < lastRowStartSm
-          const showEndBorderMobile = index % 2 === 0 && !isLast
-          const showEndBorderSm = index % 3 !== 2 && !isLast
-          return (
-            <div
-              key={metric.label}
-              className={cn(
-                'px-4 py-3 sm:px-6',
-                showBottomBorderMobile && 'border-b border-border',
-                !showBottomBorderSm && 'sm:border-b-0',
-                'xl:border-b-0',
-                showEndBorderMobile && 'border-e border-border sm:border-e-0',
-                showEndBorderSm && 'sm:border-e sm:border-border xl:border-e-0',
-                !isLast && 'xl:border-e xl:border-border',
-              )}
-            >
-              <MetricTile
-                label={metric.label}
-                value={metric.value}
-                change={typeof metric.change === 'number' ? metric.change : undefined}
-              />
-            </div>
-          )
-        })}
+          <FirewallTrafficChart
+            data={mock.points}
+            dateRange={mock.dateRange}
+            chartInterval={DEFAULT_USAGE_CHART_INTERVAL}
+            height={PRODUCT_TRAFFIC_CHART_HEIGHT}
+            gradientSuffix="product"
+            className="w-full"
+          />
+        </div>
       </div>
     </div>
   )

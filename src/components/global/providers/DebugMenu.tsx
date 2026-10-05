@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Megaphone,
   Trash2,
-  Plus,
   RotateCcw,
   Image,
   Palette,
@@ -18,7 +17,6 @@ import {
   AlertTriangle,
   Check,
   Minus,
-  Columns2,
   Braces,
   CalendarDays,
   Ticket,
@@ -63,7 +61,6 @@ import {
   type FeatureFlagsMenuDebugKey,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
-import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
   detectUserOs,
   getUserOsLabel,
@@ -80,7 +77,6 @@ import {
 } from '@/lib/favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  setDebugProfileOverride,
   setDebugProfileFeatureOverride,
   resetDebugProfileFeatureOverrides,
   resetDebugProfileFeatureOverride,
@@ -90,12 +86,7 @@ import {
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
-import {
-  setDebugEndpointOverride,
-  removeCustomDebugEndpoint,
-  ENDPOINT_PRESETS,
-  type EndpointPresetId,
-} from '@/lib/debug-endpoint'
+import { ENDPOINT_PRESETS } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import {
   getEnvMcpEndpointUrl,
@@ -127,6 +118,7 @@ import { DebugMenuIpPanel } from '@/components/global/providers/DebugMenuIpPanel
 import { DebugMenuLocalePanel } from '@/components/global/providers/DebugMenuLocalePanel'
 import { DebugMenuDemosPanel } from '@/components/global/providers/DebugMenuDemosPanel'
 import { DebugMenuAgentSetupPanel } from '@/components/global/providers/DebugMenuAgentSetupPanel'
+import { DebugMenuTargetPanel } from '@/components/global/providers/DebugMenuTargetPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -146,16 +138,6 @@ import {
   writeDebugMenuUiState,
 } from '@/lib/debug-menu-ui-state'
 import { getEnglishCatalog } from '@/lib/i18n'
-import {
-  COMMUNITY_SUPPORT_REMINDER_MS,
-  COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
-} from '@/lib/community/support-prompt'
-
-const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
-  COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
-)
-/** Debug-only cadence note for the community support wizard. */
-const COMMUNITY_SUPPORT_WIZARD_CADENCE = `Shows the "A note from the team" wizard after ${COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD} unique console days, then again every ~${COMMUNITY_SUPPORT_REMINDER_DAYS} days until the user picks an action.`
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
@@ -243,6 +225,7 @@ interface MenuItem {
     | 'localeStatus'
     | 'demos'
     | 'agentSetup'
+    | 'targetPicker'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -708,7 +691,8 @@ function isDebugPanelSubmenuVariant(
     variant === 'clientIp' ||
     variant === 'localeStatus' ||
     variant === 'demos' ||
-    variant === 'agentSetup'
+    variant === 'agentSetup' ||
+    variant === 'targetPicker'
   )
 }
 
@@ -739,6 +723,40 @@ function createProfileFeatureFlagItem(
   }
 }
 
+function createCombinedProfileFeatureFlagItem(
+  label: string,
+  description: string,
+  keys: (keyof ConsoleProfileFeatures)[],
+  profileId: ConsoleProfileId,
+  currentValues: boolean[],
+  options?: { disabled?: boolean; category?: string },
+): MenuItem {
+  const canonical = getCanonicalProfileFeatures(profileId)
+  const defaultValue = keys.every((key) => canonical[key])
+
+  return {
+    label,
+    description,
+    category: options?.category,
+    variant: 'switch',
+    switchValue: currentValues.every(Boolean),
+    defaultValue,
+    disabled: options?.disabled,
+    switchOnChange: (checked: boolean) => {
+      setTimeout(() => {
+        for (const key of keys) {
+          setDebugProfileFeatureOverride(key, checked)
+        }
+      }, 0)
+    },
+    onResetToDefault: () => {
+      for (const key of keys) {
+        resetDebugProfileFeatureOverride(key)
+      }
+    },
+  }
+}
+
 function createDebugFeatureFlagItem(
   label: string,
   description: string,
@@ -748,10 +766,7 @@ function createDebugFeatureFlagItem(
   onReset?: () => void,
   category?: string,
 ): MenuItem {
-  const defaultValue =
-    key === 'preLaunch'
-      ? getPreLaunchDefault()
-      : FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
+  const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
 
   return {
     label,
@@ -796,7 +811,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'clientIp' ||
     item.submenuVariant === 'localeStatus' ||
     item.submenuVariant === 'demos' ||
-    item.submenuVariant === 'agentSetup'
+    item.submenuVariant === 'agentSetup' ||
+    item.submenuVariant === 'targetPicker'
   )
 }
 
@@ -1380,47 +1396,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           ]?.label ?? mcpEndpointPreset
 
     const activeProfileLabel = CONSOLE_PROFILES[profileId].label
-    const activeProfileDescription = profileFromOverride
-      ? `${activeProfileLabel} (debug override)`
-      : `${activeProfileLabel} (VITE_CONSOLE_PROFILE → ${CONSOLE_PROFILES[envProfileId].label})`
-
-    const profileOptions: MenuItem[] = [
-      {
-        label: 'Cloud',
-        description: CONSOLE_PROFILES.cloud.description,
-        active: profileFromOverride && profileId === 'cloud',
-        icon: <Cloud className="h-3 w-3" />,
-        onClick: () => {
-          applyOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
-        },
-      },
-      {
-        label: 'Self-hosted',
-        description: CONSOLE_PROFILES['self-hosted'].description,
-        active: profileFromOverride && profileId === 'self-hosted',
-        icon: <Server className="h-3 w-3" />,
-        onClick: () => {
-          applyOverrideAndGoHome(() =>
-            setDebugProfileOverride('self-hosted'),
-          )
-        },
-      },
-      {
-        label: 'Use env var',
-        description: `Current env: ${CONSOLE_PROFILES[envProfileId].label}`,
-        active: !profileFromOverride,
-        onClick: () => {
-          applyOverrideAndGoHome(() => setDebugProfileOverride(null))
-        },
-        icon: <RotateCcw className="h-3 w-3" />,
-      },
-      {
-        label: 'Compare profiles',
-        description: 'Canonical Cloud vs self-hosted feature flags',
-        icon: <Columns2 className="h-3 w-3" />,
-        submenuVariant: 'profileComparison',
-      },
-    ]
+    const activeTargetDescription = `${activeProfileLabel}${
+      profileFromOverride ? '' : ' (env)'
+    } · ${activeEndpointBadge}: ${activeEndpointUrl}`
 
     const lowPowerAnimationOptions: MenuItem[] = (
       [
@@ -1735,12 +1713,36 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               createProfileFeatureFlagItem(
+                'Videos',
+                'Show the Videos product (transcoding, renditions, subtitles, stream player) in projects.',
+                'videos',
+                profileId,
+                features.videos,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
                 profileId,
                 features.nativeDbsMongo,
-                { category: 'Databases' },
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
+                'Agent',
+                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
+                'agent',
+                profileId,
+                features.agent,
+                { category: 'Products' },
+              ),
+              createCombinedProfileFeatureFlagItem(
+                'Partners platform',
+                'Org settings Partners tab (/settings/partners), partner API keys, and the /docs/partners documentation hub.',
+                ['orgApiKeys', 'partnersDocs'],
+                profileId,
+                [features.orgApiKeys, features.partnersDocs],
+                { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
                 'Database PITR restore',
@@ -1791,14 +1793,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Partners keys',
-                'Org settings Partners tab and /settings/partners route.',
-                'orgApiKeys',
-                profileId,
-                features.orgApiKeys,
-                { category: 'Organization' },
-              ),
-              createProfileFeatureFlagItem(
                 'Blog drafts',
                 'List draft blog posts above "Explore by topic" and open draft post pages (noindex).',
                 'blogDrafts',
@@ -1807,43 +1801,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Docs' },
               ),
               createProfileFeatureFlagItem(
-                'Partners docs',
-                'Partner documentation hub, audience switcher, and /docs/partners routes.',
-                'partnersDocs',
-                profileId,
-                features.partnersDocs,
-                { category: 'Docs' },
-              ),
-              createProfileFeatureFlagItem(
-                'Agent',
-                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
-                'agent',
-                profileId,
-                features.agent,
-                { category: 'UI & tools' },
-              ),
-              createProfileFeatureFlagItem(
                 'Notifications',
                 'Console notifications center (header bell and inbox popover).',
                 'notifications',
                 profileId,
                 features.notifications,
                 { category: 'UI & tools' },
-              ),
-              createDebugFeatureFlagItem(
-                'Pre-launch',
-                'Lock the site to /init. Root redirects there; other pages are blocked. Sign-in stays open and returns to /init. On by default.',
-                'preLaunch',
-                overrides.preLaunch,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    preLaunch: checked,
-                  }))
-                  setDebugOverride('preLaunch', checked)
-                },
-                undefined,
-                'Site',
               ),
               createDebugFeatureFlagItem(
                 'Activity chart',
@@ -1901,21 +1864,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     showSuccessTeamCard: checked,
                   }))
                   setDebugOverride('showSuccessTeamCard', checked)
-                },
-                undefined,
-                'UI & tools',
-              ),
-              createDebugFeatureFlagItem(
-                'Functions local editor',
-                'Functions list “Local editor” button and /functions/editor (Monaco, gzip for deploy).',
-                'showFunctionsLocalEditor',
-                overrides.showFunctionsLocalEditor,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showFunctionsLocalEditor: checked,
-                  }))
-                  setDebugOverride('showFunctionsLocalEditor', checked)
                 },
                 undefined,
                 'UI & tools',
@@ -1984,21 +1932,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
-              createDebugFeatureFlagItem(
-                'Preview community support wizard',
-                `Force-show the skippable "A note from the team" wizard. ${COMMUNITY_SUPPORT_WIZARD_CADENCE}`,
-                'previewCommunitySupportWizard',
-                overrides.previewCommunitySupportWizard,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    previewCommunitySupportWizard: checked,
-                  }))
-                  setDebugOverride('previewCommunitySupportWizard', checked)
-                },
-                undefined,
-                'UI & tools',
-              ),
               {
                 label: 'Reset all feature flags',
                 description:
@@ -2021,8 +1954,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <Globe className="h-3.5 w-3.5" />,
         items: [
           {
-            label: 'Console profile',
-            description: activeProfileDescription,
+            label: 'Profile & endpoint',
+            description: activeTargetDescription,
             badge: activeProfileLabel,
             icon:
               profileId === 'cloud' ? (
@@ -2030,109 +1963,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : (
                 <Server className="h-3 w-3" />
               ),
-            submenu: profileOptions,
+            submenuVariant: 'targetPicker',
           },
-          (() => {
-            const customEndpointItems: MenuItem[] = endpointCustomEndpoints.map(
-              (url) => {
-                let hostLabel = url
-                try {
-                  hostLabel = new URL(url).host
-                } catch {
-                  // keep full URL as label
-                }
-                return {
-                  label: hostLabel,
-                  description: url,
-                  onClick: () => {
-                    applyOverrideAndGoHome(() =>
-                      setDebugEndpointOverride('custom', url),
-                    )
-                  },
-                  active:
-                    endpointPreset === 'custom' && endpointCustomUrl === url,
-                  icon: <Globe className="h-3 w-3" />,
-                  removeLabel: 'Remove custom endpoint',
-                  onRemove: () => {
-                    const wasActive = removeCustomDebugEndpoint(url)
-                    if (wasActive) {
-                      // Override already cleared; reload so clients pick up env endpoint.
-                      applyOverrideAndGoHome(() => undefined)
-                    }
-                  },
-                }
-              },
-            )
-
-            const endpointOptions: MenuItem[] = [
-              ...(
-                Object.entries(ENDPOINT_PRESETS) as [
-                  Exclude<EndpointPresetId, 'custom'>,
-                  (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
-                ][]
-              ).map(([id, { label, url, description }]) => ({
-                label,
-                description: `${url} · ${description}`,
-                onClick: () => {
-                  applyOverrideAndGoHome(() => setDebugEndpointOverride(id))
-                },
-                active: endpointPreset === id,
-                icon: <Globe className="h-3 w-3" />,
-              })),
-              ...customEndpointItems,
-              {
-                label: 'Add custom...',
-                description: 'Save a custom API URL to this list',
-                onClick: () => {
-                  void prompt({
-                    title: 'Custom API endpoint',
-                    fields: [
-                      {
-                        name: 'url',
-                        label: 'API endpoint URL',
-                        placeholder: 'https://my-appwrite.example/v1',
-                        defaultValue:
-                          endpointPreset === 'custom' && endpointCustomUrl
-                            ? endpointCustomUrl
-                            : activeEndpointUrl !== '—'
-                              ? activeEndpointUrl
-                              : 'http://localhost:9601/v1',
-                      },
-                    ],
-                    confirmLabel: 'Use endpoint',
-                  }).then((values) => {
-                    const url = values?.url.trim()
-                    if (url) {
-                      applyOverrideAndGoHome(() =>
-                        setDebugEndpointOverride('custom', url),
-                      )
-                    }
-                  })
-                },
-                icon: <Plus className="h-3 w-3" />,
-                rowClassName:
-                  'mt-2 border-t border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] pt-2',
-              },
-              {
-                label: 'Use env var',
-                description: endpointEnvUrl
-                  ? `VITE_APPWRITE_ENDPOINT → ${endpointEnvUrl}`
-                  : 'Reset to VITE_APPWRITE_ENDPOINT',
-                onClick: () => {
-                  applyOverrideAndGoHome(() => setDebugEndpointOverride(null))
-                },
-                active: !endpointPreset,
-                icon: <RotateCcw className="h-3 w-3" />,
-              },
-            ]
-            return {
-              label: 'Server endpoint',
-              description: activeEndpointUrl,
-              badge: activeEndpointBadge,
-              icon: <Globe className="h-3 w-3" />,
-              submenu: endpointOptions,
-            }
-          })(),
           (() => {
             const envMcpUrl = getEnvMcpEndpointUrl()
             const mcpEndpointOptions: MenuItem[] = [
@@ -2236,6 +2068,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     faviconStatus,
     profileId,
+    features.videos,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.userVerification,
@@ -2640,7 +2473,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'demos' ||
               currentSubmenu?.submenuVariant === 'agentSetup'
                 ? 'w-[min(92vw,720px)]'
-                : 'w-80',
+                : currentSubmenu?.submenuVariant === 'targetPicker'
+                  ? 'w-[min(92vw,520px)]'
+                  : 'w-80',
           )}
           onWheelCapture={(event) => {
             event.stopPropagation()
@@ -2784,6 +2619,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuDemosPanel onLaunchDemo={() => setIsOpen(false)} />
               ) : currentSubmenu.submenuVariant === 'agentSetup' ? (
                 <DebugMenuAgentSetupPanel />
+              ) : currentSubmenu.submenuVariant === 'targetPicker' ? (
+                <DebugMenuTargetPanel
+                  onApply={applyOverrideAndGoHome}
+                  comparisonTable={
+                    <ConsoleProfileComparisonTable
+                      activeProfileId={profileId}
+                    />
+                  }
+                />
               ) : (
                 <div className="space-y-0.5">
                   {currentSubmenu.note ? (

@@ -119,6 +119,8 @@ export function BucketsSidebar({
     [data?.buckets],
   )
   const total = data?.total ?? 0
+  const isFirstRunEmpty =
+    data?.total === 0 && !search.trim() && !debouncedSearch
   const totalPages = Math.max(1, Math.ceil(total / SIDEBAR_PAGE_SIZE))
 
   const { data: totalBucketsCount = 0 } = useQuery({
@@ -182,121 +184,125 @@ export function BucketsSidebar({
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={t('Search buckets...')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-8 ps-8 pe-2 text-[13px]"
-              />
+        {isFirstRunEmpty ? null : (
+          <>
+            <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder={t('Search buckets...')}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-8 ps-8 pe-2 text-[13px]"
+                  />
+                </div>
+                <DropdownMenu>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            aria-label={t('Sort buckets')}
+                          >
+                            <ArrowUpDown className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {t('Sort by attribute and direction')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {t('Sort buckets')}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup
+                      value={`${sortBy}-${sortOrder}`}
+                      onValueChange={(value) => {
+                        const [by, dir] = value.split('-')
+                        if (
+                          by &&
+                          (dir === 'asc' || dir === 'desc') &&
+                          (by === 'name' ||
+                            by === '$createdAt' ||
+                            by === '$updatedAt')
+                        ) {
+                          setSortBy(by as SortBy)
+                          setSortOrder(dir)
+                          setPage(1)
+                        }
+                      }}
+                    >
+                      <DropdownMenuRadioItem value="name-asc">
+                        {t('Name (A → Z)')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="name-desc">
+                        {t('Name (Z → A)')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="$createdAt-asc">
+                        {t('Created (oldest first)')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="$createdAt-desc">
+                        {t('Created (newest first)')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="$updatedAt-asc">
+                        {t('Updated (oldest first)')}
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="$updatedAt-desc">
+                        {t('Updated (newest first)')}
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-            <DropdownMenu>
-              <TooltipProvider delayDuration={0}>
+
+            <div className="shrink-0 px-2 py-2">
+              {isCreateDisabled && noCreatePermission ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
+                    <span className="block w-full">
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        aria-label={t('Sort buckets')}
+                        variant="outline"
+                        size="sm"
+                        className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
+                        type="button"
+                        disabled
+                        {...analyticsAttrs('create-bucket')}
                       >
-                        <ArrowUpDown className="h-3.5 w-3.5" />
+                        <Plus className="h-4 w-4" />
+                        {t('Create bucket')}
                       </Button>
-                    </DropdownMenuTrigger>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {t('Sort by attribute and direction')}
+                  <TooltipContent side="right">
+                    {createPermissionTooltip}
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {t('Sort buckets')}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={`${sortBy}-${sortOrder}`}
-                  onValueChange={(value) => {
-                    const [by, dir] = value.split('-')
-                    if (
-                      by &&
-                      (dir === 'asc' || dir === 'desc') &&
-                      (by === 'name' ||
-                        by === '$createdAt' ||
-                        by === '$updatedAt')
-                    ) {
-                      setSortBy(by as SortBy)
-                      setSortOrder(dir)
-                      setPage(1)
-                    }
-                  }}
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
+                  type="button"
+                  disabled={isCreateDisabled}
+                  onClick={() => setCreateOpen(true)}
+                  {...analyticsAttrs('create-bucket')}
                 >
-                  <DropdownMenuRadioItem value="name-asc">
-                    {t('Name (A → Z)')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="name-desc">
-                    {t('Name (Z → A)')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="$createdAt-asc">
-                    {t('Created (oldest first)')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="$createdAt-desc">
-                    {t('Created (newest first)')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="$updatedAt-asc">
-                    {t('Updated (oldest first)')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="$updatedAt-desc">
-                    {t('Updated (newest first)')}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        <div className="shrink-0 px-2 py-2">
-          {isCreateDisabled && noCreatePermission ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="block w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
-                    type="button"
-                    disabled
-                    {...analyticsAttrs('create-bucket')}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('Create bucket')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {createPermissionTooltip}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
-              type="button"
-              disabled={isCreateDisabled}
-              onClick={() => setCreateOpen(true)}
-              {...analyticsAttrs('create-bucket')}
-            >
-              <Plus className="h-4 w-4" />
-              {t('Create bucket')}
-            </Button>
-          )}
-        </div>
+                  <Plus className="h-4 w-4" />
+                  {t('Create bucket')}
+                </Button>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isFetching && buckets.length === 0 ? (

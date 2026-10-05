@@ -171,6 +171,31 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'Advanced security': '高度なセキュリティ',
+  'Security add-on': 'セキュリティアドオン',
+  '+ more': '+ その他',
+  'Geolocation for Firewall rules': 'Firewall ルール用の位置情報',
+  'Geolocation for Firewall rules.': 'Firewall ルール用の位置情報。',
+  '{price}/mo, prorated.': '{price}/月、日割り請求。',
+  'Billed monthly, prorated.': '月額、日割り請求。',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'Firewall ルール用の位置情報 · {price}/月、日割り請求。',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'Firewall ルール用の位置情報 · 月額、日割り請求。',
+  'Optional security add-on': 'オプションのセキュリティアドオン',
+  'Advanced geolocation for access control': 'アクセス制御用の高度な位置情報',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    '都市、ISP、ASN、接続情報を各リクエストに付与し、Firewall ルールと地域別アクセス制御を強化します。',
+  'Prorated when you enable this add-on.': '有効化時は日割り請求されます。',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    '都市、ISP、ASN、接続コンテキストで各リクエストを拡張し、Firewall ルールで不正利用のブロック、地域別アクセス制限、不審なトラフィックへの的確な対応ができます。',
+  '{price}/month for this project. Prorated when enabled.':
+    'このプロジェクトは {price}/月。有効化時は日割り請求されます。',
+  'Billed monthly for this project, prorated when enabled.':
+    'このプロジェクトに対して月額請求。有効化時は日割りです。',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'プロジェクトは作成されましたが、セキュリティアドオンを有効にできませんでした。プロジェクト設定から Premium Geo DB を有効にしてください。',
+  'Enabling Premium Geo DB...': 'Premium Geo DB を有効にしています...',
   'Create secret': 'シークレットを作成',
   'Credit History': 'クレジット履歴',
   'Credit expiration': 'クレジットの有効期限',
@@ -1533,6 +1558,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Installation settings updated': 'インストール設定を更新しました',
+  'No installation scopes are available.': '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1558,4 +1586,39 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プロジェクトとデータを残すには、新しいプランを選択してください。',
   'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
     'Educationプランが終了すると、組織は無効になり、プロジェクトは後日削除されます。今プランを選べば、すべてそのまま使い続けられます。',
+  'Create a project': 'プロジェクトを作成',
+  'Name it and pick the region closest to your users. Each project keeps its data, keys, and settings apart.':
+    '名前を付け、ユーザーに最も近いリージョンを選択します。データ、キー、設定はプロジェクトごとに分離されます。',
+  'Add a web, mobile, or server platform and install an SDK. Your first request takes a few lines of code.':
+    'Web、モバイル、サーバーのプラットフォームを追加し、SDK をインストールします。最初のリクエストは数行のコードで送信できます。',
+  'Build with every product': 'すべてのプロダクトで開発',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites are ready in every project, no setup required.':
+    '認証、データベース、ストレージ、Functions、メッセージング、サイトは、すべてのプロジェクトで設定不要ですぐに使えます。',
+  'Create your first project': '最初のプロジェクトを作成',
+  'A project is the backend for one app: its users, data, files, and code, hosted in the region you choose.':
+    'プロジェクトは 1 つのアプリのバックエンドです。ユーザー、データ、ファイル、コードを、選択したリージョンでホストします。',
+  'Bring or buy a domain': 'ドメインを追加または購入する',
+  'Add a domain you already own, transfer it in, or buy a new one without leaving the console.':
+    '所有しているドメインを追加、移管するか、コンソールから離れずに新しいドメインを購入できます。',
+  'Manage DNS in one place': 'DNS を 1 か所で管理する',
+  'Point your nameservers to Appwrite, then add records or apply presets for email and verification.':
+    'ネームサーバーを Appwrite に向け、レコードを追加するか、メールや検証用のプリセットを適用します。',
+  'Connect it everywhere': 'あらゆる場所に接続する',
+  'Use the domain and its subdomains for sites, functions, and project APIs across the organization.':
+    'ドメインとそのサブドメインを、組織全体のサイト、Functions、プロジェクト API で使用できます。',
+  'Your domains, managed by Appwrite': 'Appwrite で管理するドメイン',
+  'Register, transfer, and manage domains for your whole organization. Configure DNS once and connect it to your sites, functions, and APIs.':
+    '組織全体のドメインを登録、移管、管理できます。DNS を一度設定すれば、サイト、Functions、API に接続できます。',
+  'Create your app': 'アプリを作成する',
+  'Add a name, logo, and redirect URIs so users recognize your app on the consent screen.':
+    '名前、ロゴ、リダイレクト URI を追加して、ユーザーが同意画面でアプリを識別できるようにします。',
+  'Request scoped access': 'スコープ付きのアクセスを要求する',
+  'Users pick the projects and organizations your app can reach, and can revoke access at any time.':
+    'ユーザーはアプリがアクセスできるプロジェクトと組織を選択し、いつでもアクセスを取り消せます。',
+  'Publish to the marketplace': 'マーケットプレイスに公開する',
+  'List the app so teams across Appwrite can discover it and connect it to their projects.':
+    'アプリを掲載すると、Appwrite 上のチームがアプリを見つけてプロジェクトに接続できます。',
+  'Build on top of Appwrite': 'Appwrite の上に構築する',
+  'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
+    'API キーを貼り付ける代わりに、同意に基づくスコープ付きのアクセスで Appwrite ユーザーがプロジェクトを接続できる OAuth2 アプリを作成できます。マーケットプレイスに公開して、あらゆる組織に見つけてもらいましょう。',
 }

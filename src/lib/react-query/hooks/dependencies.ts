@@ -24,6 +24,8 @@ export const Dependencies = {
   VARIABLES: ['variables'],
   SITES: ['sites'],
   SITE: ['site'],
+  VIDEOS: ['videos'],
+  VIDEO: ['video'],
   FUNCTION_DOMAINS: ['proxy-rules', 'domains', 'function'],
   SITES_DOMAINS: ['proxy-rules', 'domains', 'site'],
 } as const

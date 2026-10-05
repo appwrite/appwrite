@@ -80,6 +80,7 @@ import {
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
+import { BackupsEmptyState } from '../_components/BackupsEmptyState'
 import { RestorePitrButton } from '../_components/RestorePitr'
 import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
@@ -217,6 +218,11 @@ export function View({ projectId, databaseId }: ViewProps) {
     policiesLoading && policies.length === 0 && !policiesData
   const isBackupsActuallyLoading =
     backupsLoading && backups.length === 0 && !backupsData
+  const showsFirstRunEmptyState =
+    !isPoliciesActuallyLoading &&
+    !isBackupsActuallyLoading &&
+    policies.length === 0 &&
+    backupsTotal === 0
 
   const invalidatePolicies = () => {
     queryClient.invalidateQueries({
@@ -430,6 +436,15 @@ export function View({ projectId, databaseId }: ViewProps) {
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
+      {showsFirstRunEmptyState ? (
+        <BackupsEmptyState
+          docsPath="/docs/products/databases/mysql/backups"
+          onCreatePolicy={() => setCreatePolicyDialogOpen(true)}
+          onManualBackup={() => setCreateManualBackupDialogOpen(true)}
+          createPolicyDisabled={isAtBackupPoliciesLimit}
+          createPolicyDisabledTooltip={createPolicyDisabledTooltip}
+        />
+      ) : (
       <div className={backupsViewGridClass}>
         <div className={backupsViewPoliciesColumnClass}>
           <div className="mb-4 flex items-center justify-between">
@@ -820,6 +835,7 @@ export function View({ projectId, databaseId }: ViewProps) {
           </div>
         </div>
       </div>
+      )}
 
       {selectedBackups.size > 0 && (
         <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">

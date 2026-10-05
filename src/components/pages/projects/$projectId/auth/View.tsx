@@ -66,9 +66,11 @@ import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { TeamsEmptyState } from './_components/TeamsEmptyState'
+import { UsersEmptyState } from './_components/UsersEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -1261,6 +1263,52 @@ export function View({
         ? t("You don't have permission to create teams.")
         : undefined
 
+  const hasUsersQuery = Boolean(urlSearch || usersFilterMap.size > 0)
+  const hasTeamsQuery = Boolean(teamsUrlSearch || teamsFilterMap.size > 0)
+  const showsFirstRunEmptyState =
+    (activeTab === 'users' &&
+      !showUsersLoading &&
+      !hasUsersQuery &&
+      usersDisplayedPage === 1 &&
+      paginatedUsers.length === 0) ||
+    (activeTab === 'teams' &&
+      !showTeamsLoading &&
+      !hasTeamsQuery &&
+      teamsDisplayedPage === 1 &&
+      paginatedTeams.length === 0)
+  const usersEmptyState = hasUsersQuery ? (
+    <EmptyState
+      icon={Users}
+      description={
+        urlSearch
+          ? `${t('No results for')} "${urlSearch}". ${t('Try a different search.')}`
+          : t('No users match your filters.')
+      }
+      isEmpty={false}
+      hasFilters
+      variant="card"
+    />
+  ) : (
+    <UsersEmptyState
+      projectId={projectId!}
+      onCreate={() => setCreateUserDialogOpen(true)}
+      createDisabled={!canCreateUser(access, features)}
+      createDisabledTooltip={t("You don't have permission to create users.")}
+      showSecuritySettings={showAuthSecuritySettings}
+    />
+  )
+
+  const teamsEmptyState =
+    hasTeamsQuery ? (
+      <EmptyState icon={Users} isEmpty={false} hasFilters variant="card" />
+    ) : (
+      <TeamsEmptyState
+        onCreate={() => setCreateTeamDialogOpen(true)}
+        createDisabled={!canCreateTeam(access, features)}
+        createDisabledTooltip={t("You don't have permission to create teams.")}
+      />
+    )
+
   // SMTP alert for templates tab
   const smtpAlert =
     activeTab === 'templates' && !isSmtpEnabled ? (
@@ -1317,6 +1365,7 @@ export function View({
         title={t('Auth')}
         tabs={tabs}
         activeTab={activeTab}
+        hideToolbar={showsFirstRunEmptyState}
         searchPlaceholder={
           activeTab === 'policies' ||
           activeTab === 'social-providers' ||
@@ -1559,7 +1608,9 @@ export function View({
                                     className="block group"
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
-                                      <InitialsAvatar
+                                      <PhotoAvatar
+                                        projectId={projectId}
+                                        userId={user.$id}
                                         name={user.name || user.email || ''}
                                         size="sm"
                                         className="shrink-0"
@@ -1836,26 +1887,7 @@ export function View({
                   />
                 </>
               ) : (
-                <EmptyState
-                  icon={Users}
-                  title={
-                    urlSearch || usersFilterMap.size > 0
-                      ? undefined
-                      : t('No users yet')
-                  }
-                  description={
-                    urlSearch
-                      ? `${t('No results for')} "${urlSearch}". ${t('Try a different search.')}`
-                      : usersFilterMap.size > 0
-                        ? t('No users match your filters.')
-                        : t(
-                            'Create your first user to get started with authentication',
-                          )
-                  }
-                  isEmpty={!(urlSearch || usersFilterMap.size > 0)}
-                  hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
-                  variant="card"
-                />
+                usersEmptyState
               )
             ) : (
               <div className="flex flex-col gap-2">
@@ -1912,28 +1944,7 @@ export function View({
                   })}
 
                   {paginatedUsers.length === 0 && (
-                    <div className="col-span-full">
-                      <EmptyState
-                        icon={Users}
-                        title={
-                          urlSearch || usersFilterMap.size > 0
-                            ? undefined
-                            : t('No users yet')
-                        }
-                        description={
-                          urlSearch
-                            ? `${t('No results for')} "${urlSearch}". ${t('Try a different search.')}`
-                            : usersFilterMap.size > 0
-                              ? t('No users match your filters.')
-                              : t(
-                                  'Create your first user to get started with authentication',
-                                )
-                        }
-                        isEmpty={!(urlSearch || usersFilterMap.size > 0)}
-                        hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
-                        variant="card"
-                      />
-                    </div>
+                    <div className="col-span-full">{usersEmptyState}</div>
                   )}
                 </div>
                 {paginatedUsers.length > 0 && (
@@ -2150,22 +2161,7 @@ export function View({
                   />
                 </>
               ) : (
-                <EmptyState
-                  icon={Users}
-                  title={
-                    teamsUrlSearch || teamsFilterMap.size > 0
-                      ? undefined
-                      : t('No teams yet')
-                  }
-                  description={
-                    teamsUrlSearch || teamsFilterMap.size > 0
-                      ? undefined
-                      : t('Create your first team to organize users into groups')
-                  }
-                  isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
-                  hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
-                  variant="card"
-                />
+                teamsEmptyState
               )
             ) : (
               <div className="flex flex-col gap-2">
@@ -2201,26 +2197,7 @@ export function View({
                   ))}
 
                   {paginatedTeams.length === 0 && (
-                    <div className="col-span-full">
-                      <EmptyState
-                        icon={Users}
-                        title={
-                          teamsUrlSearch || teamsFilterMap.size > 0
-                            ? undefined
-                            : t('No teams yet')
-                        }
-                        description={
-                          teamsUrlSearch || teamsFilterMap.size > 0
-                            ? undefined
-                            : t(
-                                'Create your first team to organize users into groups',
-                              )
-                        }
-                        isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
-                        hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
-                        variant="card"
-                      />
-                    </div>
+                    <div className="col-span-full">{teamsEmptyState}</div>
                   )}
                 </div>
                 {paginatedTeams.length > 0 && (

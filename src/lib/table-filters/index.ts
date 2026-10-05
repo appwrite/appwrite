@@ -54,6 +54,9 @@ export { usersFilterColumns } from './filter-configs/users'
 export { teamsFilterColumns } from './filter-configs/teams'
 export { bucketsFilterColumns } from './filter-configs/buckets'
 export { filesFilterColumns } from './filter-configs/files'
+export { videosFilterColumns } from './filter-configs/videos'
+export { videoRenditionsFilterColumns } from './filter-configs/video-renditions'
+export { videoProfilesFilterColumns } from './filter-configs/video-profiles'
 export {
   databasesFilterColumns,
   getDatabasesFilterColumns,

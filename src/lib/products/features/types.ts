@@ -8,6 +8,8 @@ export type ProductFeatureContent = {
   description: string
   docsHref: string
   docsLabel: string
+  /** Additional docs links rendered next to the primary one. */
+  extraDocsLinks?: { href: string; label: string }[]
   layout?: ProductFeatureLayout
   /** Centered stacked layout: title, companion, and a compact visual below. */
   centered?: boolean
@@ -25,4 +27,6 @@ export type ProductFeatureContent = {
   hideDocsLink?: boolean
   /** Remove bottom section padding so companion content can meet the section border. */
   flushBottom?: boolean
+  /** On rail-style pages, pause the timeline and center this section on the page. */
+  breakRail?: boolean
 }

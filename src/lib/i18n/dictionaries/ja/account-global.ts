@@ -1383,4 +1383,23 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'サインインのたびに追加の認証ステップを求めます。',
   'Secure account': 'アカウントを保護',
   'Remind me later': '後で通知',
+
+  // Profile photo
+  'Profile photo': 'プロフィール写真',
+  'Shown next to your name across the Console and to the members of your organizations.':
+    'コンソール全体であなたの名前の横に表示され、所属する組織のメンバーにも表示されます。',
+  'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.':
+    'PNG、JPEG、または WebP（最大 5MB）。写真がない場合は、連携したサインインプロバイダーの画像、Gravatar、またはイニシャルが使用されます。',
+  'Upload photo': '写真をアップロード',
+  'Remove photo': '写真を削除',
+  'Photo must be a PNG, JPEG, or WebP image':
+    '写真は PNG、JPEG、または WebP 形式である必要があります',
+  'Photo must be at most 5MB': '写真のサイズは 5MB 以下である必要があります',
+  'Profile photo updated': 'プロフィール写真を更新しました',
+  'Failed to update profile photo': 'プロフィール写真の更新に失敗しました',
+  'Profile photo removed': 'プロフィール写真を削除しました',
+  'Failed to remove profile photo': 'プロフィール写真の削除に失敗しました',
+  'Remove profile photo': 'プロフィール写真を削除',
+  'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
+    'アバターは連携したサインインプロバイダーの画像、Gravatar、またはイニシャルに戻ります。新しい写真はいつでもアップロードできます。',
 }

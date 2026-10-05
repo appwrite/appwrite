@@ -8,9 +8,11 @@ export type ProductIcon = LucideIcon | ComponentType<SVGProps<SVGSVGElement>>
 export type ProductId =
   | 'auth'
   | 'databases'
+  | 'postgres'
   | 'storage'
   | 'functions'
   | 'messaging'
+  | 'realtime'
   | 'sites'
   | 'firewall'
 
@@ -18,13 +20,7 @@ export type ProductGroup = 'build' | 'deploy' | 'protect'
 
 export type ProductNavGroup = ProductGroup
 
-export type ProductNavItemId =
-  | ProductId
-  | 'realtime'
-  | 'domains'
-  | 'firewall'
-  | 'advisor'
-  | 'agent'
+export type ProductNavItemId = ProductId | 'domains' | 'advisor' | 'agent'
 
 export type ProductNavItem = {
   id: ProductNavItemId

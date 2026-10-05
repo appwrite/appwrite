@@ -36,6 +36,7 @@ export function useEventBuilder(initialValue?: string) {
       userId: undefined,
       topicId: undefined,
       providerId: undefined,
+      videoId: undefined,
       fileId: undefined,
       rowId: undefined,
       columnId: undefined,
@@ -79,6 +80,7 @@ export function useEventBuilder(initialValue?: string) {
       userId: undefined,
       topicId: undefined,
       providerId: undefined,
+      videoId: undefined,
       fileId: undefined,
       rowId: undefined,
       columnId: undefined,
@@ -153,6 +155,10 @@ export function useEventBuilder(initialValue?: string) {
     setSelection((s) => ({ ...s, providerId: v ?? undefined }))
   }, [])
 
+  const setVideoId = useCallback((v: string | '*' | undefined) => {
+    setSelection((s) => ({ ...s, videoId: v ?? undefined }))
+  }, [])
+
   const setFileId = useCallback((v: string | '*' | undefined) => {
     setSelection((s) => ({ ...s, fileId: v ?? undefined }))
   }, [])
@@ -201,6 +207,7 @@ export function useEventBuilder(initialValue?: string) {
     setUserId,
     setTopicId,
     setProviderId,
+    setVideoId,
     setFileId,
     setRowId,
     setColumnId,

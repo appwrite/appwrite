@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { DocsHomeSectionHeading } from './_components/DocsHomeSectionHeading'
 import { DocsPartnersHubBento } from './_components/DocsPartnersHubBento'
@@ -14,8 +13,6 @@ import {
   DOCS_PARTNERS_HOME_AUDIENCES,
   DOCS_PARTNERS_HOME_INTEGRATIONS,
 } from '@/lib/docs/partners-home-content'
-import { isCloudProfile } from '@/lib/console-profiles'
-import { isDomainsDocsHref } from '@/lib/docs/domains-docs-feature'
 import { cn } from '@/lib/utils'
 import { DocsPartnersHeroSection } from './DocsPartnersHeroSection'
 import { DocsPartnersPreviewHeroSection } from './DocsPartnersPreviewHeroSection'
@@ -61,13 +58,7 @@ type DocsPartnersHomeProps = {
 }
 
 export function DocsPartnersHome({ variant = 'page' }: DocsPartnersHomeProps) {
-  const partnerApis = useMemo(
-    () =>
-      DOCS_PARTNERS_HOME_APIS.filter(
-        (item) => isCloudProfile() || !isDomainsDocsHref(item.href),
-      ),
-    [],
-  )
+  const partnerApis = DOCS_PARTNERS_HOME_APIS
 
   return (
     <>

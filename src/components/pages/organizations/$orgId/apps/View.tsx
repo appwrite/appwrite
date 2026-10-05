@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { Loader2, Package, Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   useCreateOrganizationApp,
   useOrganizationApps,
   useOrganizations,
 } from '@/lib/react-query/hooks'
+import { AppsEmptyState } from './_components/AppsEmptyState'
 import { MarketplaceAppCard } from '../marketplace/_components/MarketplaceAppCard'
 import { CreateMarketplaceApp } from '../marketplace/_components/CreateMarketplaceApp'
 import type { CreateMarketplaceAppInput } from '../marketplace/_components/CreateMarketplaceApp'
@@ -31,11 +31,10 @@ export function View() {
     [organizations],
   )
 
-  const {
-    apps,
-    isLoading,
-    isFetching,
-  } = useOrganizationApps(orgId, teamNamesById)
+  const { apps, isLoading, isFetching } = useOrganizationApps(
+    orgId,
+    teamNamesById,
+  )
 
   const createAppMutation = useCreateOrganizationApp(orgId)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -72,13 +71,31 @@ export function View() {
     )
   }
 
+  if (apps.length === 0) {
+    return (
+      <>
+        <AppsEmptyState onCreate={() => setCreateDialogOpen(true)} />
+        <CreateMarketplaceApp
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onCreate={handleCreateApp}
+          isSubmitting={createAppMutation.isPending}
+        />
+      </>
+    )
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-[15px] font-semibold text-foreground">{t('Apps')}</h2>
+          <h2 className="text-[15px] font-semibold text-foreground">
+            {t('Apps')}
+          </h2>
           <p className="text-[13px] text-muted-foreground mt-1">
-            {t('OAuth2 apps published by your organization to the marketplace.')}
+            {t(
+              'OAuth2 apps published by your organization to the marketplace.',
+            )}
           </p>
         </div>
         <Button
@@ -91,40 +108,22 @@ export function View() {
         </Button>
       </div>
 
-      {apps.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title={t('No apps yet')}
-          description={t('Create an app to share it with other organizations on the marketplace.')}
-          action={
-            <Button
-              size="sm"
-              onClick={() => setCreateDialogOpen(true)}
-              {...analyticsAttrs('create-marketplace-app')}
-            >
-              {t('Create app')}
-            </Button>
-          }
-          variant="card"
-        />
-      ) : (
-        <div className="relative">
-          {isFetching && (
-            <div className="absolute end-0 top-0 z-10">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {apps.map((app) => (
-              <MarketplaceAppCard
-                key={app.$id}
-                app={app}
-                onClick={() => openApp(app)}
-              />
-            ))}
+      <div className="relative">
+        {isFetching && (
+          <div className="absolute end-0 top-0 z-10">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {apps.map((app) => (
+            <MarketplaceAppCard
+              key={app.$id}
+              app={app}
+              onClick={() => openApp(app)}
+            />
+          ))}
         </div>
-      )}
+      </div>
 
       <CreateMarketplaceApp
         open={createDialogOpen}
