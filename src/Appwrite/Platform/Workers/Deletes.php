@@ -1632,7 +1632,8 @@ class Deletes extends Action
         /**
          * Delete deployment files
          */
-        match ($document->getAttribute('resourceType')) {
+        // Untyped deployments predate Sites and belong to Functions.
+        match ($document->getAttribute('resourceType') ?: 'functions') {
             'functions' => $this->deleteDeploymentFiles($deviceForFunctions, $document),
             'sites' => $this->deleteDeploymentFiles($deviceForSites, $document),
             default => throw new Exception('Invalid resource type')
