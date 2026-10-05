@@ -44,12 +44,12 @@ class FastlyTls implements Provider
             $subscription = $this->retrySubscription($subscription['resource']['id']);
         }
 
-        $state = $this->subscriptionState($subscription);
-        if ($state === Status::ISSUED || $state === Status::RENEWING) {
+        $renewDate = $this->extractRenewDate($subscription);
+        if ($renewDate !== null) {
             $this->ensureActivated($subscription, $domain);
         }
 
-        return $this->extractRenewDate($subscription);
+        return $renewDate;
     }
 
     public function isInstantGeneration(string $domain, ?string $domainType): bool
@@ -447,7 +447,13 @@ class FastlyTls implements Provider
             return false;
         }
 
-        foreach ($this->hostnames($subscription, $domain) as $hostname) {
+        // Every hostname on the subscription, so the apex also activates www when one certificate covers both
+        $hostnames = [];
+        foreach ([...$this->references($subscription['resource'], 'tls_domains'), $domain] as $name) {
+            $hostnames[strtolower($name)] ??= $name;
+        }
+
+        foreach ($hostnames as $hostname) {
             if ($this->activationExists($certificateId, $hostname)) {
                 continue;
             }
@@ -492,23 +498,6 @@ class FastlyTls implements Provider
     }
 
     /**
-     * Every hostname on the subscription, so checking the apex also activates
-     * www when one certificate covers both.
-     *
-     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
-     * @return list<string>
-     */
-    private function hostnames(array $subscription, string $domain): array
-    {
-        $names = [];
-        foreach ([...$this->references($subscription['resource'], 'tls_domains'), $domain] as $name) {
-            $names[strtolower($name)] ??= $name;
-        }
-
-        return array_values($names);
-    }
-
-    /**
      * @param array<string, mixed> $resource
      * @return list<string>
      */
@@ -529,17 +518,6 @@ class FastlyTls implements Provider
         }
 
         return $ids;
-    }
-
-    /**
-     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
-     */
-    private function subscriptionState(array $subscription): string
-    {
-        $attributes = $subscription['resource']['attributes'] ?? null;
-        $state = \is_array($attributes) ? ($attributes['state'] ?? null) : null;
-
-        return $this->mapStatus(\is_string($state) ? $state : '');
     }
 
     private function activationExists(string $certificateId, string $hostname): bool
