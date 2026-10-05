@@ -347,8 +347,9 @@ final class TeamsConsoleClientTest extends Scope
         ];
 
         /**
-         * Test for FAILURE: a confirmed developer cannot self-promote or change
-         * another membership, even with X-Appwrite-Organization.
+         * Test for FAILURE: a confirmed developer cannot self-promote, change
+         * another membership, or invite with owner roles, even with
+         * X-Appwrite-Organization.
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $developerMembershipUid, $developerHeaders, [
             'roles' => ['owner'],
@@ -364,9 +365,19 @@ final class TeamsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
 
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', $developerHeaders, [
+            'email' => uniqid() . 'invitee@localhost.test',
+            'name' => 'Invited User',
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to send invitations for this team', $response['body']['message']);
+
         /**
          * Test for SUCCESS: the organization owner can still change roles
-         * with the same organization header.
+         * and invite members with the same organization header.
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $developerMembershipUid, array_merge([
             'origin' => 'http://localhost',
@@ -387,6 +398,22 @@ final class TeamsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(['developer'], $response['body']['roles']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-organization' => $teamUid,
+        ], $this->getHeaders()), [
+            'email' => uniqid() . 'invitee@localhost.test',
+            'name' => 'Invited User',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(['developer'], $response['body']['roles']);
+        $this->assertFalse($response['body']['confirm']);
     }
 
     public function testDeleteTeamMembership(): void
