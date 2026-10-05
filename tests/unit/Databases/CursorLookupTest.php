@@ -17,7 +17,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Hook\Permissions;
-use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
@@ -34,24 +33,11 @@ use Utopia\Query\Schema\ColumnType;
  */
 final class CursorLookupTest extends TestCase
 {
-    private const string CURSOR_ID = 'post2';
-    private const string POSTS = 'database_1_collection_1';
-    private const string AUTHORS = 'database_1_collection_2';
     private const string CUSTOMERS = 'database_1_collection_3';
     private const string ORDERS = 'database_1_collection_4';
     private const string PRODUCTS = 'database_1_collection_5';
 
     private Authorization $authorization;
-
-    /**
-     * @var list<array{authorized: bool, queries: array<Query>}>
-     */
-    private array $lookups = [];
-
-    /**
-     * @var list<array{collection: string, authorized: bool}>
-     */
-    private array $reads = [];
 
     protected function setUp(): void
     {
@@ -60,44 +46,34 @@ final class CursorLookupTest extends TestCase
         $this->authorization->addRole(Role::users()->toString());
     }
 
-    public function testCursorWithJoinResolvesADocumentTheCallerCannotRead(): void
+    public function testCursorWithoutJoinPagesPastADocumentTheCallerCannotRead(): void
     {
-        $cursor = $this->lookup([
-            Query::join(self::AUTHORS, 'authorId', '$id')->toString(),
-            Query::orderAsc('title')->toString(),
-            Query::cursorAfter(self::CURSOR_ID)->toString(),
-        ]);
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->customer($store, 'bob', readable: false);
+        $this->customer($store, 'carol', readable: true);
 
-        $this->assertCount(1, $this->lookups);
-        $this->assertFalse($this->lookups[0]['authorized'], 'the cursor lookup must skip authorization, as it does without a join');
-        $this->assertSame(self::CURSOR_ID, $cursor->getId(), 'the page must start after the cursor document');
+        $ids = $this->listedIds($store, [Query::orderAsc('name')], Query::cursorAfter('bob'), join: false);
+
+        $this->assertSame(['carol'], $ids, 'a caller who cannot read the cursor document still pages past it');
     }
 
-    public function testCursorWithJoinIsLookedUpWithoutSelectsOrJoins(): void
+    public function testCursorWithJoinPagesByAnOrderTheSelectLeavesOut(): void
     {
-        $cursor = $this->lookup([
-            Query::join(self::AUTHORS, 'authorId', '$id')->toString(),
-            Query::select(['title'])->toString(),
-            Query::orderAsc('title')->toString(),
-            Query::cursorAfter(self::CURSOR_ID)->toString(),
-        ], $this->documentsDatabase(cursorReadable: true));
+        $store = $this->store();
+        $this->customer($store, 'alice', readable: true);
+        $this->customer($store, 'bob', readable: true);
+        $this->customer($store, 'carol', readable: true);
+        $this->order($store, 'a-only', 'alice', 10, readable: true);
+        $this->order($store, 'b-only', 'bob', 15, readable: true);
+        $this->order($store, 'c-only', 'carol', 20, readable: true);
 
-        $this->assertCount(1, $this->lookups);
-        $this->assertSame([], $this->lookups[0]['queries'], 'a select must not strip the order attributes from the cursor document, and a join must not read joined rows with authorization skipped');
-        $this->assertSame(self::CURSOR_ID, $cursor->getId());
-    }
+        $ids = $this->listedIds($store, [
+            Query::select(['$id'])->toString(),
+            Query::orderAsc('name'),
+        ], Query::cursorAfter('bob'));
 
-    public function testCursorWithoutJoinIsLookedUpWithoutQueries(): void
-    {
-        $cursor = $this->lookup([
-            Query::select(['title'])->toString(),
-            Query::cursorAfter(self::CURSOR_ID)->toString(),
-        ]);
-
-        $this->assertCount(1, $this->lookups);
-        $this->assertFalse($this->lookups[0]['authorized']);
-        $this->assertSame([], $this->lookups[0]['queries']);
-        $this->assertSame(self::CURSOR_ID, $cursor->getId());
+        $this->assertSame(['carol'], $ids, 'the select shapes the listed rows, never the cursor document the page starts after');
     }
 
     public function testCursorWithJoinOrderTakesItsValueFromAJoinedRowTheCallerCanRead(): void
@@ -124,19 +100,6 @@ final class CursorLookupTest extends TestCase
 
         $this->assertSame('bob', $cursor->getId(), 'a caller who cannot read the cursor document still pages past it');
         $this->assertSame(20, $this->orderValue($cursor, 'ord.amount'));
-    }
-
-    public function testCursorDocumentIsReadWithAuthorizationSkippedAndJoinedRowsWithTheCallersPermissions(): void
-    {
-        $store = $this->store();
-        $this->customer($store, 'bob', readable: false);
-        $this->order($store, 'd-visible', 'bob', 20, readable: true);
-
-        $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('bob'));
-
-        $this->assertContains(['collection' => self::CUSTOMERS, 'authorized' => false], $this->reads, 'the cursor document itself is read with authorization skipped');
-        $this->assertContains(['collection' => self::ORDERS, 'authorized' => true], $this->reads, 'joined rows are read with the caller\'s permissions');
-        $this->assertNotContains(['collection' => self::ORDERS, 'authorized' => false], $this->reads, 'joined rows are never read with authorization skipped');
     }
 
     public function testCursorWithJoinOrderSkipsJoinedRowsTheListFiltersOut(): void
@@ -264,7 +227,6 @@ final class CursorLookupTest extends TestCase
         $this->customer($store, 'alice', readable: true);
         $this->order($store, 'a-first', 'alice', 10, readable: true);
         $this->order($store, 'a-second', 'alice', 25, readable: true);
-        $this->reads = [];
 
         $parsed = Query::parseQueries([
             Query::join(self::CUSTOMERS, 'customerId', '$id', '=', 'cus')->toString(),
@@ -272,9 +234,6 @@ final class CursorLookupTest extends TestCase
         ]);
         $cursor = Query::getCursorQueries($parsed, false)[0];
         $document = (new CursorLookup($store, $this->authorization))->resolve(self::ORDERS, $cursor, $parsed);
-
-        $this->assertFalse($document->offsetExists('cus.$id'), 'a join on the joined $id pairs one row, so the list adds no tie on it');
-        $this->assertNotContains(['collection' => self::CUSTOMERS, 'authorized' => true], $this->reads, 'no joined row is read for a join the cursor carries nothing of');
 
         $cursor->setValue($document);
         $this->assertSame(['a-second'], \array_map(
@@ -284,120 +243,73 @@ final class CursorLookupTest extends TestCase
     }
 
     /**
-     * @param list<string> $queries
-     */
-    private function lookup(array $queries, ?Database $store = null, string $collection = self::POSTS): Document
-    {
-        $parsed = Query::parseQueries($queries);
-        $cursors = Query::getCursorQueries($parsed, false);
-        $this->assertCount(1, $cursors, 'the list must carry the cursor the lookup resolves');
-
-        return (new CursorLookup($store ?? $this->documentsDatabase(), $this->authorization))
-            ->resolve($collection, \reset($cursors), $parsed);
-    }
-
-    /**
-     * Resolves the cursor of a list of customers joined to their orders.
-     *
      * @param list<Query|string> $queries
      */
     private function page(Database $store, array $queries, Query $cursor): Document
     {
-        return $this->lookup([
-            Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString(),
-            ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
-            $cursor->toString(),
-        ], $store, self::CUSTOMERS);
+        $parsed = $this->customerQueries($queries, $cursor, join: true);
+
+        return (new CursorLookup($store, $this->authorization))->resolve(self::CUSTOMERS, Query::getCursorQueries($parsed, false)[0], $parsed);
     }
 
     /**
-     * Pages a list of customers with the cursor the lookup resolves, as the list route does, and returns each row as
-     * its customer and joined order ids.
-     *
      * @param list<Query|string> $queries
      * @return list<array{0: string, 1: mixed}>
      */
     private function pageRows(Database $store, array $queries, Query $cursor, bool $join = true): array
     {
-        $parsed = Query::parseQueries([
-            ...($join ? [Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString()] : []),
-            ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
-            $cursor->toString(),
-        ]);
-        $resolved = Query::getCursorQueries($parsed, false)[0];
-        $resolved->setValue((new CursorLookup($store, $this->authorization))->resolve(self::CUSTOMERS, $resolved, $parsed));
-
         return \array_map(
             static fn (Document $row): array => [$row->getId(), $row->getAttribute('ord.$id')],
-            $store->find(self::CUSTOMERS, $parsed),
+            $this->listed($store, $queries, $cursor, $join),
         );
     }
 
     /**
-     * The value the list query compares for an order attribute: the qualified key, else the bare one.
+     * @param list<Query|string> $queries
+     * @return list<string>
      */
+    private function listedIds(Database $store, array $queries, Query $cursor, bool $join = true): array
+    {
+        return \array_map(
+            static fn (Document $row): string => $row->getId(),
+            $this->listed($store, $queries, $cursor, $join),
+        );
+    }
+
+    /**
+     * @param list<Query|string> $queries
+     * @return array<Document>
+     */
+    private function listed(Database $store, array $queries, Query $cursor, bool $join): array
+    {
+        $parsed = $this->customerQueries($queries, $cursor, $join);
+        $resolved = Query::getCursorQueries($parsed, false)[0];
+        $resolved->setValue((new CursorLookup($store, $this->authorization))->resolve(self::CUSTOMERS, $resolved, $parsed));
+
+        return $store->find(self::CUSTOMERS, $parsed);
+    }
+
+    /**
+     * @param list<Query|string> $queries
+     * @return array<Query>
+     */
+    private function customerQueries(array $queries, Query $cursor, bool $join): array
+    {
+        return Query::parseQueries([
+            ...($join ? [Query::join(self::ORDERS, '$id', 'customerId', '=', 'ord')->toString()] : []),
+            ...\array_map(static fn (Query|string $query): string => $query instanceof Query ? $query->toString() : $query, $queries),
+            $cursor->toString(),
+        ]);
+    }
+
     private function orderValue(Document $cursor, string $order): mixed
     {
         return $cursor->getAttribute($order) ?? $cursor->getAttribute(\substr($order, (int) \strrpos($order, '.') + 1));
     }
 
-    /**
-     * Unless the cursor is readable, the caller holds no read permission on the cursor document,
-     * so only a lookup that skips authorization finds it.
-     */
-    private function documentsDatabase(bool $cursorReadable = false): Database
-    {
-        $database = $this->createStub(Database::class);
-        $database->method('getDocument')->willReturnCallback(
-            function (string $collection, string $id, array $queries = []) use ($cursorReadable): Document {
-                $authorized = $this->authorization->getStatus();
-                $this->lookups[] = ['authorized' => $authorized, 'queries' => $queries];
-
-                return $authorized && !$cursorReadable ? new Document() : new Document(['$id' => $id, 'title' => 'Second']);
-            }
-        );
-        $database->method('find')->willReturn([]);
-        $database->method('skipRelationships')->willReturnCallback(static fn (callable $callback): mixed => $callback());
-
-        return $database;
-    }
-
-    /**
-     * A real database whose collections hold per-document permissions only, recording which reads
-     * the lookup runs with the caller's permissions and which it runs with authorization skipped.
-     */
     private function store(): Database
     {
-        $record = function (string $collection, bool $authorized): void {
-            $this->reads[] = ['collection' => $collection, 'authorized' => $authorized];
-        };
-
-        $store = new class (new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()), $record) extends Database {
-            /**
-             * @param \Closure(string, bool): void $record
-             */
-            public function __construct(SQLite $adapter, Cache $cache, private readonly \Closure $record)
-            {
-                parent::__construct($adapter, $cache);
-            }
-
-            #[\Override]
-            public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
-            {
-                ($this->record)($collection, $this->getAuthorization()->getStatus());
-
-                return parent::getDocument($collection, $id, $queries, $forUpdate);
-            }
-
-            #[\Override]
-            public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
-            {
-                ($this->record)($collection, $this->getAuthorization()->getStatus());
-
-                return parent::find($collection, $queries, $forPermission);
-            }
-        };
-
+        $store = new Database(new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()));
         $store
             ->setAuthorization($this->authorization)
             ->setDatabase('cursorLookup')

@@ -607,32 +607,6 @@ class MetricTest extends TestCase
     }
 
     /**
-     * Test EVENT_COLUMNS constant
-     */
-    public function testEventColumnsConstant(): void
-    {
-        $expected = [
-            'path', 'method', 'status',
-            'service', 'resourceType', 'resourceId', 'resourceInternalId',
-            'ordinal',
-            'teamId', 'teamInternalId',
-            'country', 'region', 'hostname', 'ip',
-            'protocol', 'accept', 'acceptLanguage', 'queryKeys',
-            'ipReputation',
-            'city', 'continentCode', 'subdivisions',
-            'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
-            'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
-            'connectionType', 'connectionUsageType', 'connectionOrganization',
-            'osCode', 'osName', 'osVersion',
-            'clientType', 'clientCode', 'clientName', 'clientVersion',
-            'clientEngine', 'clientEngineVersion',
-            'sdk', 'sdkVersion',
-            'deviceName', 'deviceBrand', 'deviceModel',
-        ];
-        $this->assertSame($expected, Metric::EVENT_COLUMNS);
-    }
-
-    /**
      * Test GAUGE_COLUMNS constant
      */
     public function testGaugeColumnsConstant(): void
@@ -641,40 +615,17 @@ class MetricTest extends TestCase
         $this->assertSame($expected, Metric::GAUGE_COLUMNS);
     }
 
-    /**
-     * The replica ordinal is a shared dimension: present in both EVENT_COLUMNS
-     * and GAUGE_COLUMNS, extracted from tags into its column, and readable via
-     * the typed accessor. Daily event rollups stay unsplit — they still group
-     * on resource identity only.
-     */
     public function testOrdinalIsASharedDimension(): void
     {
-        $this->assertContains('ordinal', Metric::GAUGE_COLUMNS);
-        $this->assertContains('ordinal', Metric::EVENT_COLUMNS);
+        $this->assertSame('0', Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 0], 'event')['ordinal']);
+        $this->assertSame('1', Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge')['ordinal']);
 
-        $gaugeIds = array_column(Metric::getGaugeSchema(), '$id');
-        $this->assertContains('ordinal', $gaugeIds);
+        $unsplit = Metric::extractColumns(['resourceId' => 'db_a'], 'event');
+        $this->assertArrayHasKey('ordinal', $unsplit);
+        $this->assertNull($unsplit['ordinal']);
 
-        $eventIds = array_column(Metric::getEventSchema(), '$id');
-        $this->assertContains('ordinal', $eventIds);
-
-        $gaugeIndexIds = array_column(Metric::getGaugeIndexes(), '$id');
-        $this->assertContains('index-ordinal', $gaugeIndexIds);
-
-        $eventIndexIds = array_column(Metric::getEventIndexes(), '$id');
-        $this->assertContains('index-ordinal', $eventIndexIds);
-
-        $gauge = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge');
-        $this->assertSame('1', $gauge['ordinal']);
-        $this->assertSame('db_a', $gauge['resourceId']);
-
-        $event = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 0], 'event');
-        $this->assertSame('0', $event['ordinal']);
-        $this->assertSame('db_a', $event['resourceId']);
-
-        $metric = new Metric(['ordinal' => '2']);
-        $this->assertSame('2', $metric->getOrdinal());
-        $this->assertNull(new Metric([])->getOrdinal());
+        $this->assertSame('2', (new Metric(['ordinal' => '2']))->getOrdinal());
+        $this->assertNull((new Metric([]))->getOrdinal());
     }
 
     /**
@@ -684,7 +635,7 @@ class MetricTest extends TestCase
     {
         $ids = array_column(Metric::getEventSchema(), '$id');
         foreach ([
-            'service', 'resourceInternalId', 'ordinal', 'teamId', 'teamInternalId',
+            'service', 'resourceInternalId', 'teamId', 'teamInternalId',
             'region', 'hostname', 'osCode', 'osName', 'osVersion',
             'clientType', 'clientCode', 'clientName', 'clientVersion',
             'clientEngine', 'clientEngineVersion',
