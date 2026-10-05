@@ -63,7 +63,7 @@ The rule above denies `POST` requests to `/v1/account` from hosting networks. It
 
 The last condition keeps Safari users with iCloud Private Relay out of the rule. Private Relay exits through hosting networks, but Premium Geo DB reports the connection organization `iCloud Private Relay` for its addresses.
 
-Every enabled auth method can create accounts, including anonymous sessions and email, phone, and Magic URL tokens. Disable the methods that your app does not use in the **Auth methods** card under **Auth** > **Settings**. If your app uses anonymous sessions, add the same deny rule for `/v1/account/sessions/anonymous`.
+Every enabled auth method can create accounts, including anonymous sessions and email, phone, and Magic URL tokens. Disable the methods that your app does not use in the **Auth methods** card under **Auth** > **Settings**. OAuth2 and native Apple and Google sign-in also create accounts on the first sign-in, through paths that these rules do not cover. Disable the providers that your app does not use under **Auth** > **Social providers**. If your app uses anonymous sessions, add the same deny rule for `/v1/account/sessions/anonymous`.
 
 The rule only sees the visitor's address when the browser or mobile app calls Appwrite directly. If server-side code creates accounts with an API key, Appwrite sees the server's address instead. Requests with an API key ignore the auth method settings. A server-rendered app can therefore disable **Email/Password** to stop scripts from creating accounts directly, and challenge its sign-up page on the Site.
 
