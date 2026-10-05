@@ -7,6 +7,7 @@ date: 2025-10-04
 timeToRead: 10
 author: veeresh-mulge
 unlisted: true
+removed: true
 category: products
 faqs:
   - question: "What are push notifications?"

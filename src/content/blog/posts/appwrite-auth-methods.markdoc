@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials, security
 featured: false
 unlisted: true
+removed: true
 lastUpdated: 2026-05-20
 faqs:
   - question: "How many authentication methods does Appwrite support?"

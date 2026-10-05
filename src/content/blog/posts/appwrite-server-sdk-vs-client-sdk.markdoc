@@ -10,6 +10,7 @@ author: aditya-oberai
 category: products, tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the difference between Appwrite's Client SDK and Server SDK?"
     answer: "The Client SDK authenticates as a logged-in user using a session and is bound by the permissions you set on tables, buckets, and functions. The Server SDK authenticates with an API key, which can bypass row-level permissions within the scopes the key was created with. Client SDKs ship for browsers and mobile, while Server SDKs ship for backend languages and Appwrite Functions."

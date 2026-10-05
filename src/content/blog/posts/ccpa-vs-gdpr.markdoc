@@ -9,6 +9,7 @@ timeToRead: 8
 author: jake-barnby
 category: security
 featured: false
+removed: true
 faqs:
   - question: "What is the main difference between GDPR and CCPA?"
     answer: "GDPR is an EU-wide regulation that protects personal data of EU residents and applies to any organization that processes it. CCPA is a state-level US law that protects California residents and applies only to for-profit businesses meeting specific revenue or volume thresholds. GDPR has broader scope, stricter consent requirements, and higher penalties relative to the size of the business."

@@ -9,6 +9,7 @@ author: aditya-oberai
 category: architectures
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: Is cloud storage safe?
     answer: Its safety depends on configuring permissions correctly and choosing a reputable provider, since most breaches come from misconfiguration rather than the provider itself.

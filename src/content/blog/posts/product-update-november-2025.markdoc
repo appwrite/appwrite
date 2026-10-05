@@ -95,8 +95,6 @@ A new way to optimize your Appwrite Databases. You can now skip total counting o
 
 You can now deploy Next.js apps built in [standalone mode](https://nextjs.org/docs/app/api-reference/config/next-config-js/output) on Appwrite Sites, with full support for Next.js 16. In standalone mode, the build process creates a smaller package that includes only the files your app needs to run in production, leaving out development tools and unused parts of the framework.
 
-[Read the announcement](/blog/post/nextjs-standalone-support-in-appwrite-sites)
-
 # Disable image transformations for buckets
 
 Image transformations allow actions like resizing, cropping, and format conversion through the Appwrite Storage API. With this new update, you have full control to turn off these operations when they're not needed, reducing the chance of unintentional processing or costs.
@@ -120,7 +118,6 @@ Read
 - [Announcing Database AI suggestions: from table name to schema in one click](/blog/post/announcing-database-ai-suggestions)
 - [What's new in Node.js v25.2: Web Storage, V8 14.1, permissions and more](/blog/post/nodejs-v25-whats-new)
 - [Remix 3: what's changing and why it matters](/blog/post/remix-3-whats-changing-and-why-it-matters)
-- [Next.js standalone builds now supported on Appwrite Sites](/blog/post/nextjs-standalone-support-in-appwrite-sites)
 - [Announcing DB operators: Update multiple fields without fetching the entire row](/blog/post/announcing-db-operators)
 
 # Conclusion

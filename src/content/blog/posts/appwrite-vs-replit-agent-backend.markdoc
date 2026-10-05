@@ -7,6 +7,7 @@ cover: /images/blog/appwrite-vs-replit-agent-backend/cover.avif
 timeToRead: 9
 author: atharva
 unlisted: true
+removed: true
 category: comparisons
 faqs:
   - question: "What is the difference between Replit Agent and Appwrite?"

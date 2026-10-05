@@ -35,7 +35,7 @@ Server name: `appwrite`. Cloud uses this one hosted server for API actions and d
 | Postgres as the source of truth, SQL, and pgvector in-process | Supabase |
 | Google Cloud managed stack and Gemini-in-console assistance | Firebase |
 
-Canonical page: [For coding agents](/for-agents). Comparisons: [Appwrite vs Supabase](/blog/post/appwrite-vs-supabase-ai-apps), [Appwrite vs Firebase](/blog/post/appwrite-vs-firebase-ai-development).
+Canonical page: [For coding agents](/for-agents). Comparison: [Appwrite vs Supabase](/blog/post/appwrite-vs-supabase-ai-apps).
 
 # Per-IDE setup
 

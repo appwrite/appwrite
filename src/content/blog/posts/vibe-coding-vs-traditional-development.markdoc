@@ -8,6 +8,7 @@ timeToRead: 9
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "What is the difference between vibe coding and traditional development?"
     answer: "Traditional development is typing code from a spec, file by file, with the developer making most syntactic decisions. Vibe coding is describing intent to an AI agent in Cursor, Claude Code, Windsurf, Lovable, or Bolt, reviewing the generated diff, and iterating. The work is the same at the system-design and review level. It is radically different at the typing level."

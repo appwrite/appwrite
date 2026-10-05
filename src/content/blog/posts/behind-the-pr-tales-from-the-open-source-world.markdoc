@@ -8,6 +8,7 @@ date: 2023-10-30
 author: haimantika-mitra
 category: hackathons, contributors, open-source
 featured: false
+removed: true
 faqs:
   - question: "What is Hacktoberfest?"
     answer: "Hacktoberfest is an annual open-source event in October where contributors submit pull requests to participating repositories. It's run by DigitalOcean and partners, and exists to encourage new and experienced developers to contribute to open-source projects."

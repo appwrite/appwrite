@@ -8,6 +8,7 @@ timeToRead: 5
 author: aishwari
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "Why is screenshot automation harder than it looks?"
     answer: "Modern pages render differently based on device size, locale, auth state, async data, and feature flags. The same URL can produce wildly different output depending on when and where it is rendered, and headless browsers are timing-sensitive. The hard part is not capturing an image, it is getting a reproducible image."

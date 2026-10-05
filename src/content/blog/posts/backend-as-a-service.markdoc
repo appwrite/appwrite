@@ -84,4 +84,4 @@ For a narrower functions comparison across vendors, see [Appwrite vs Supabase vs
 
 Create a project in [Appwrite Cloud](https://cloud.appwrite.io/console) or follow [self-hosting](/docs/advanced/self-hosting), then use the [Quick starts](/docs/quick-starts) for your framework. Core API references live under [REST](/docs/apis/rest) and [Realtime](/docs/apis/realtime).
 
-**Related on this site:** [Best backend as a service platforms](/blog/post/best-backend-as-a-service-platforms) · [BaaS vs custom backend](/blog/post/baas-vs-custom-backend) · [Leveraging BaaS tools to scale faster](/blog/post/leveraging-baas-tools-to-scale-faster)
+**Related on this site:** [Best backend as a service platforms](/blog/post/best-backend-as-a-service-platforms) · [BaaS vs custom backend](/blog/post/baas-vs-custom-backend)

@@ -28,7 +28,7 @@ To refresh your mind, here is an overview of all products and features released 
 
 # Messaging
 
-With just a few lines of backend code, you can now set up a full-functioning messaging service for your application that covers three significant communication channels under one unified API using Cloud. You can send SMS, email, and push notifications through popular third-party providers like [Twilio](/blog/post/simplify-messaging-twilio), APNS, Firebase Cloud Messaging, Vonage, Sendgrid, and Mailgun.
+With just a few lines of backend code, you can now set up a full-functioning messaging service for your application that covers three significant communication channels under one unified API using Cloud. You can send SMS, email, and push notifications through popular third-party providers like Twilio, APNS, Firebase Cloud Messaging, Vonage, Sendgrid, and Mailgun.
 
 ## Highlights
 

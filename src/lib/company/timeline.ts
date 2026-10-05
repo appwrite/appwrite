@@ -252,18 +252,6 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
         href: '/blog/post/meet-the-new-appwrite',
         kind: 'blog',
       },
-      {
-        id: 'logo',
-        label: 'The new logo',
-        href: '/blog/post/the-journey-and-meaning-behind-our-new-logo',
-        kind: 'blog',
-      },
-      {
-        id: 'website',
-        label: 'Designing the new website',
-        href: '/blog/post/designing-the-new-appwrite-website',
-        kind: 'blog',
-      },
     ],
   },
   {

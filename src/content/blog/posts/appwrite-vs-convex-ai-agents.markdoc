@@ -8,6 +8,7 @@ cover: /images/blog/appwrite-vs-convex-ai-agents/cover.avif
 timeToRead: 9
 author: atharva
 unlisted: true
+removed: true
 category: comparisons
 faqs:
   - question: "What is the main difference between Appwrite and Convex for AI agents?"

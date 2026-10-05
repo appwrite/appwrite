@@ -7,6 +7,7 @@ cover: /images/blog/appwrite-vs-cloudflare-stateful-ai-agents/cover.avif
 timeToRead: 9
 author: aditya-oberai
 unlisted: true
+removed: true
 category: comparisons
 faqs:
   - question: "How do Appwrite and Cloudflare differ for stateful AI agents?"

@@ -8,6 +8,7 @@ timeToRead: 06
 author: laura-du-ry
 callToAction: true
 unlisted: true
+removed: true
 category: products
 faqs:
   - question: "What is the difference between IdP-initiated and SP-initiated SSO?"

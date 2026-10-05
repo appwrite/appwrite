@@ -174,8 +174,6 @@ Every prompt above does the same three things: it sets context, specifies the ta
 
 The developers who get the most out of AI tools treat prompting as a skill, not a shortcut. It takes an extra 30 seconds to write a structured prompt. It saves you five minutes of follow-ups and one round of copy-pasting garbage output into a new conversation.
 
-For a look at what to avoid, [7 prompting mistakes you need to stop making right now](/blog/post/7-prompting-mistakes-you-need-to-stop-making-right-now) covers the other side of this.
-
 # Taking this further with Appwrite
 
 If you're building with AI assistants and using Appwrite as your backend, the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) lets AI tools interact directly with your project. You can query tables, manage functions, and run operations through natural language inside tools like Claude Code, Cursor, or Windsurf.
@@ -184,4 +182,3 @@ This means the prompts you've refined for code generation can also drive your ba
 
 - [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
 - [Claude Code integration guide](/docs/tooling/ai/agents/claude-code)
-- [7 prompting mistakes you need to stop making right now](/blog/post/7-prompting-mistakes-you-need-to-stop-making-right-now)

@@ -151,5 +151,4 @@ Appwrite provides frontend hosting (and much more) with full SSR and RSC support
 
 Read more about Appwrite Sites:
 
-- [How to setup the Next.js starter template on Appwrite Sites](/blog/post/nextjs-starter-sites)
 - [Announcing Appwrite Sites: The open source Vercel alternative](/blog/post/announcing-appwrite-sites)

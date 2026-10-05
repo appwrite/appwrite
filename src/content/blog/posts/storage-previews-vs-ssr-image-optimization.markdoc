@@ -9,6 +9,7 @@ timeToRead: 8
 author: ebenezer-don
 category: products
 featured: false
+removed: true
 faqs:
   - question: "What is the difference between Storage previews and SSR image optimization?"
     answer: "Storage previews handle image transformations through a dedicated service API, separate from your app server, with built-in CDN caching. SSR image optimization processes images on your application server using libraries like Sharp or IPX. Service-based approaches reduce server load, while SSR gives you more direct control over the pipeline."
