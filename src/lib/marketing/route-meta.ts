@@ -1,6 +1,7 @@
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl } from '@/lib/seo/og-image'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
+import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const MARKETING_HOMEPAGE_TITLE =
@@ -61,4 +62,16 @@ export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag
       siteOrigin,
     }) as unknown as MetaTag[],
   )
+}
+
+/** Marketing route `head()` with canonical link in `links` (required for crawlers). */
+export function getMarketingRouteHead(
+  input: MarketingPageMetaInput & { canonicalPath: string },
+) {
+  const siteOrigin = getSeoSiteOrigin(input.siteOrigin)
+  const canonical = input.canonical ?? `${siteOrigin}${input.canonicalPath}`
+
+  return asRouteHead(getMarketingPageMetaTags({ ...input, canonical }), {
+    canonicalHref: canonical,
+  })
 }

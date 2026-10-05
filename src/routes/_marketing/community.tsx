@@ -5,19 +5,21 @@ import {
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/community/View'
 import { fetchCommunityGitHubIssues } from '@/lib/community/github-issues'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/_marketing/community')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/community',
       pageName: 'Community',
       description:
         'Join our vibrant community of developers. Ask questions, contribute solutions, and inspire others to improve the backend development experience.',
-    }),
-  }),
+    });
+    return seo;
+  },
   loader: async ({ context }) => {
 
     const issues = await fetchCommunityGitHubIssues()

@@ -5,7 +5,7 @@ import {
   getBlogAuthor,
   getPostsForAuthor,
 } from '@/lib/blog/content'
-import { getBlogAuthorRouteMetaTags } from '@/lib/blog/route-meta'
+import { getBlogAuthorRouteHead } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -31,11 +31,9 @@ export const Route = createFileRoute('/_marketing/blog/author/$author')({
   },
   head: ({ loaderData }) => {
     if (!loaderData?.author) return {}
-    return {
-      meta: getBlogAuthorRouteMetaTags(loaderData.author, {
-        siteOrigin: getRequestSiteOrigin(),
-      }),
-    }
+    return getBlogAuthorRouteHead(loaderData.author, {
+      siteOrigin: getRequestSiteOrigin(),
+    })
   },
   component: BlogAuthorPage,
 })

@@ -268,6 +268,51 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/advanced/platform/environment-variables': '/docs/partners/project/environment-variables',
   '/docs/advanced/security/environment-variables': '/docs/partners/project/environment-variables',
   '/docs/advanced/integration': '/docs/apis/rest',
+  '/contact-us': '/enterprise',
+}
+
+/** First path segment under `/docs/products/databases/` that is a real docs tree. */
+const DATABASES_ENGINE_SEGMENTS = new Set([
+  'tablesdb',
+  'documentsdb',
+  'vectorsdb',
+  'mysql',
+  'postgresql',
+])
+
+/** Old flat database doc slugs that were renamed in TablesDB. */
+const DATABASES_FLAT_SLUG_ALIASES: Record<string, string> = {
+  documents: 'rows',
+  collections: 'tables',
+}
+
+const DATABASES_DOCS_PREFIX = '/docs/products/databases/'
+
+/**
+ * Pre-TablesDB docs lived at `/docs/products/databases/{topic}`; they now live
+ * under `/docs/products/databases/tablesdb/{topic}` (or renamed slugs).
+ */
+function getLegacyDatabasesDocsRedirect(pathname: string): string | null {
+  if (!pathname.startsWith(DATABASES_DOCS_PREFIX)) {
+    return null
+  }
+
+  const rest = pathname.slice(DATABASES_DOCS_PREFIX.length)
+  if (!rest) {
+    return null
+  }
+
+  const firstSegment = rest.split('/')[0]
+  if (DATABASES_ENGINE_SEGMENTS.has(firstSegment)) {
+    return null
+  }
+
+  const aliased = DATABASES_FLAT_SLUG_ALIASES[rest]
+  if (aliased) {
+    return `${DATABASES_DOCS_PREFIX}tablesdb/${aliased}`
+  }
+
+  return `${DATABASES_DOCS_PREFIX}tablesdb/${rest}`
 }
 
 /**
@@ -279,6 +324,11 @@ export function getLegacyRedirectTarget(pathname: string): string | null {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   const exact = LEGACY_REDIRECTS[normalized]
   if (exact) return exact
+
+  const databasesDocsTarget = getLegacyDatabasesDocsRedirect(normalized)
+  if (databasesDocsTarget) {
+    return databasesDocsTarget
+  }
 
   const legacyCategoryMatch = normalized.match(/^\/blog\/category\/(.+)$/)
   if (legacyCategoryMatch) {

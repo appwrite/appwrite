@@ -12,11 +12,17 @@ export const HOSTS_REDIRECT_TO_CANONICAL = [
 ] as const
 
 /** Set to false to allow indexing on all hosts (no noindex headers or blocking robots.txt). */
-export const BLOCK_NON_PRODUCTION_SEO = false
+export const BLOCK_NON_PRODUCTION_SEO = true
 
 export const NOINDEX_ROBOTS_META = {
   name: 'robots',
   content: 'noindex, nofollow',
+} as const
+
+/** Duplicate or alternate URLs that should stay crawlable but not rank. */
+export const NOINDEX_FOLLOW_ROBOTS_META = {
+  name: 'robots',
+  content: 'noindex, follow',
 } as const
 
 /**
