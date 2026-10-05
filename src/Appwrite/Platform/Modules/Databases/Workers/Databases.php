@@ -231,8 +231,6 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
-
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
                 $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
@@ -240,6 +238,8 @@ class Databases extends Action
 
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -344,8 +344,6 @@ class Databases extends Action
                 }
 
                 throw $e;
-            } finally {
-                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -410,6 +408,8 @@ class Databases extends Action
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
                 $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -465,9 +465,9 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 
@@ -521,9 +521,9 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 

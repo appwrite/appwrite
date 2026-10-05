@@ -48,6 +48,7 @@ use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -900,7 +901,8 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('session')
-    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current) {
+    ->inject('clientForOAuth2')
+    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current, Client $clientForOAuth2) {
 
         $sessionId = ($sessionId === 'current')
             ? $current?->getId()
@@ -940,7 +942,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
-            $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
 
             $session
@@ -1411,7 +1413,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1470,7 +1473,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
         $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => false,
@@ -1590,7 +1593,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('cookieDomain')
     ->inject('authorization')
     ->inject('platform')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1616,7 +1620,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
-        $oauth2 = new $className($appId, $appSecret, $callback);
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);
 
         if (!empty($state)) {
             try {
@@ -1723,12 +1727,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
+        $oauth2ID = '';
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
-
+            $oauth2ID = $oauth2->getUserID($accessToken);
         } catch (OAuth2Exception $ex) {
             $providerError = $ex->getError() ?: $ex->getMessage();
 
@@ -1739,7 +1744,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             );
         }
 
-        $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
         }
@@ -2344,7 +2348,8 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2400,7 +2405,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
         $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,
@@ -3632,16 +3637,9 @@ Http::patch('/v1/account/password')
             ->setAttribute('hash', $proofForPassword->getHash()->getName())
             ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
 
-        $sessions = $user->getAttribute('sessions', []);
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate && $current !== null) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                if ($session->getId() !== $current->getId()) {
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                }
-            }
+            User::invalidateAuthentication($dbForProject, $user, $current->getId());
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -4365,34 +4363,40 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
-
-        $user->setAttributes($profile->getArrayCopy());
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                return;
             }
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
+        $user->setAttributes($profile->getArrayCopy());
 
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
+        if ($invalidate) {
+            User::invalidateAuthentication($dbForProject, $profile);
+        }
+
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
@@ -4741,34 +4745,40 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
-            [
-                'password' => $newPassword,
-                'passwordHistory' => $history,
-                'passwordPwned' => $passwordPwned,
-                'passwordUpdate' => DateTime::now(),
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                'emailVerification' => true]
-        ));
-
-        $user->setAttributes($profile->getArrayCopy());
-
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
-        if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+            $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                return;
             }
+
+            $dbForProject->updateDocument('users', $profile->getId(), new Document(
+                [
+                    'password' => $newPassword,
+                    'passwordHistory' => $history,
+                    'passwordPwned' => $passwordPwned,
+                    'passwordUpdate' => DateTime::now(),
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                    'emailVerification' => true]
+            ));
+
+            return $document;
+        });
+
+        // Thrown outside the transaction, which would otherwise retry the reuse as a transient failure.
+        if ($recoveryDocument === null) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+        $profile = $dbForProject->getDocument('users', $profile->getId());
+        $profile->setAttribute('sessions', $sessions);
+        $user->setAttributes($profile->getArrayCopy());
 
-        /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
+        if ($invalidate) {
+            User::invalidateAuthentication($dbForProject, $profile);
+        }
+
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

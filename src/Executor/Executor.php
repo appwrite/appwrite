@@ -5,6 +5,12 @@ namespace Executor;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Exception\TimeoutException;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Stream\Factory as StreamFactory;
 use Utopia\System\System;
 
 class Executor
@@ -180,14 +186,10 @@ class Executor
      * @return array
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null): array
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15): array
     {
         $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
-        $responseHeaders    = [];
-        $responseStatus     = -1;
-        $responseType       = '';
-        $responseBody       = '';
+        $url                = $endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : '');
 
         switch ($headers['content-type']) {
             case 'application/json':
@@ -209,62 +211,43 @@ class Executor
                 break;
         }
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
-            unset($headers[$i]);
+        $request = (new RequestFactory())->createRequest($method, $url);
+
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
         }
-
-        if (isset($callback)) {
-            $headers[] = 'accept: text/event-stream';
-
-            $handleEvent = function ($ch, $data) use ($callback) {
-                $callback($data);
-                return \strlen($data);
-            };
-
-            curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
-        } else {
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        }
-
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-            $len = strlen($header);
-            $header = explode(':', $header, 2);
-
-            if (count($header) < 2) { // ignore invalid headers
-                return $len;
-            }
-
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-
-            return $len;
-        });
 
         if ($method != self::METHOD_GET) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+            $request = $request->withBody((new StreamFactory())->createStream($query));
         }
+
+        // No Accept-Encoding, so the executor never spends CPU compressing a response
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
+            ->withFollowRedirects()
+            ->withConnectTimeout(0)
+            ->withTimeout($timeout);
 
         // Allow self signed certificates
         if ($this->selfSigned) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $client = $client->withSslVerification(false);
         }
 
-        $responseBody   = curl_exec($ch);
+        try {
+            $response = $client->sendRequest($request);
+        } catch (TimeoutException) {
+            throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
+        } catch (ClientExceptionInterface $e) {
+            throw new ExecutorException($e->getMessage() . ' with status code 0', 0);
+        }
 
-        if (isset($callback)) {
-            return [];
+        $responseHeaders = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $responseHeaders[strtolower($name)] = \end($values);
         }
 
         $responseType   = $responseHeaders['content-type'] ?? '';
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_errno($ch);
-        $curlErrorMessage = curl_error($ch);
+        $responseStatus = $response->getStatusCode();
+        $responseBody   = (string) $response->getBody();
 
         if ($decode) {
             $strpos = strpos($responseType, ';');
@@ -273,7 +256,7 @@ class Executor
                 case 'multipart/form-data':
                     $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
-                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+                    $multipartResponse->load($responseBody);
 
                     $responseBody = $multipartResponse->getParts();
                     break;
@@ -288,13 +271,6 @@ class Executor
                     $json = null;
                     break;
             }
-        }
-
-        if ($curlError) {
-            if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
-            }
-            throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         $responseHeaders['status-code'] = $responseStatus;
