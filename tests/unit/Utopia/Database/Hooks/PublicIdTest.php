@@ -20,11 +20,16 @@ use Utopia\Database\Validator\Authorization;
 
 final class PublicIdTest extends TestCase
 {
-    public function testResolvePublicIdParsesInternalName(): void
+    public function testResolvePublicIdFindsTheCollectionOfTheNamedDatabaseAndSequence(): void
     {
-        $database = $this->database(new Document(['$id' => 'libraries']));
+        $database = $this->catalog([
+            'database_2' => ['17' => 'libraries', '18' => 'shelves'],
+            'database_3' => ['17' => 'decoy'],
+        ]);
 
         $this->assertSame('libraries', Metadata::resolvePublicId($database, 'database_2_collection_17'));
+        $this->assertSame('shelves', Metadata::resolvePublicId($database, 'database_2_collection_18'));
+        $this->assertSame('decoy', Metadata::resolvePublicId($database, 'database_3_collection_17'));
     }
 
     public function testResolvePublicIdReturnsInternalIdForUnknownShape(): void
@@ -38,7 +43,7 @@ final class PublicIdTest extends TestCase
 
     public function testResolvePublicIdReturnsInternalIdWhenCatalogMissing(): void
     {
-        $database = $this->database(new Document());
+        $database = $this->catalog(['database_2' => ['18' => 'shelves']]);
 
         $this->assertSame(
             'database_2_collection_17',
@@ -58,17 +63,7 @@ final class PublicIdTest extends TestCase
 
     public function testResolvePublicIdReadsACatalogTheCallerCannotReadWithoutFiringHooks(): void
     {
-        $authorization = new Authorization();
-        $authorization->addRole(Role::any()->toString());
-        $database = (new Database(new Memory(), new Cache(new None())))
-            ->setDatabase('public_ids')
-            ->setNamespace('catalog')
-            ->setAuthorization($authorization);
-        $authorization->skip(function () use ($database): void {
-            $database->create();
-            $database->createCollection(new Collection(id: 'database_2'));
-            $database->createDocument('database_2', new Document(['$id' => 'libraries', '$sequence' => '17']));
-        });
+        $database = $this->catalog(['database_2' => ['17' => 'libraries']]);
 
         $hooks = new class () implements Lifecycle {
             /** @var list<Event> */
@@ -171,6 +166,30 @@ final class PublicIdTest extends TestCase
 
         $this->assertSame('movies', $result->getAttribute('$tableId'));
         $this->assertSame('db1', $result->getAttribute('$databaseId'));
+    }
+
+    /**
+     * @param  array<string, array<string, string>>  $collections
+     */
+    private function catalog(array $collections): Database
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+        $database = (new Database(new Memory(), new Cache(new None())))
+            ->setDatabase('public_ids')
+            ->setNamespace('catalog')
+            ->setAuthorization($authorization);
+        $authorization->skip(function () use ($database, $collections): void {
+            $database->create();
+            foreach ($collections as $catalogId => $publicIds) {
+                $database->createCollection(new Collection(id: $catalogId));
+                foreach ($publicIds as $sequence => $publicId) {
+                    $database->createDocument($catalogId, new Document(['$id' => $publicId, '$sequence' => (string) $sequence]));
+                }
+            }
+        });
+
+        return $database;
     }
 
     private function database(?Document $catalog = null, bool $inTransaction = false, string $hostname = ''): Database

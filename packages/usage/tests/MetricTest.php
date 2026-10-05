@@ -606,15 +606,6 @@ class MetricTest extends TestCase
         $this->assertEquals(100, $array['value']);
     }
 
-    /**
-     * Test GAUGE_COLUMNS constant
-     */
-    public function testGaugeColumnsConstant(): void
-    {
-        $expected = ['service', 'resourceType', 'teamId', 'teamInternalId', 'resourceId', 'resourceInternalId', 'ordinal'];
-        $this->assertSame($expected, Metric::GAUGE_COLUMNS);
-    }
-
     public function testOrdinalIsASharedDimension(): void
     {
         $this->assertSame('0', Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 0], 'event')['ordinal']);

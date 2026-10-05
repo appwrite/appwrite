@@ -21,16 +21,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
-/**
- * A cursor only marks where the next page starts, so its document is looked up with authorization skipped,
- * whether or not the query joins another collection: a caller who may list a collection must be able to page
- * past a document it cannot read. The lookup never carries the request's selects or joins. An order on a joined
- * attribute takes its value from the joined rows the caller can read, read as listing that collection directly
- * reads them, so a page boundary never depends on a row the list itself hides.
- *
- * The queries reach the lookup as the list route hands them over: parsed, with each join resolved to the table
- * of the collection it names.
- */
 final class CursorLookupTest extends TestCase
 {
     private const string CUSTOMERS = 'database_1_collection_3';
@@ -93,7 +83,7 @@ final class CursorLookupTest extends TestCase
     {
         $store = $this->store();
         $this->customer($store, 'bob', readable: false);
-        $this->order($store, 'c-hidden', 'bob', 5, readable: false);
+        $this->order($store, 'c-hidden', 'bob', 30, readable: false);
         $this->order($store, 'd-visible', 'bob', 20, readable: true);
 
         $cursor = $this->page($store, [Query::orderAsc('ord.amount')], Query::cursorAfter('bob'));
