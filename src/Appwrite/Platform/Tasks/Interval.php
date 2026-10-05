@@ -143,26 +143,12 @@ class Interval extends Action
         Span::add("interval.domain_verification.failed", $failed);
     }
 
-    /**
-     * Ask again about certificates that are still generating.
-     *
-     * Issuance is asynchronous. The first job often runs while the certificate
-     * is still pending, and nothing else would come back to attach it to the
-     * TLS configuration once it is issued. DNS already passed when the rule
-     * entered this status, so the follow-up does not run that check again.
-     *
-     * $updatedAt is only written when a job finishes, so the age threshold has
-     * to be comfortably longer than a job takes or a tick would enqueue the
-     * same hostname while the previous attempt is still running. Five minutes
-     * is well past that for every provider, and still well inside what a
-     * customer waiting on issuance would notice.
-     */
     private function generateCertificate(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
-        $before = DatabaseDateTime::format(new DateTime('-5 minutes'));
+        $before = DatabaseDateTime::format(new DateTime('-5 minutes')); // Outlast a running job, which only updates the rule when it ends
 
         $rules = $dbForPlatform->find('rules', [
-            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATING]),
+            Query::equal('status', [RULE_STATUS_CERTIFICATE_GENERATING]), // Delayed providers finish issuing after the first job
             Query::lessThan('$updatedAt', $before),
             Query::orderAsc('$updatedAt'),
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
@@ -170,11 +156,11 @@ class Interval extends Action
         ]);
 
         $scanned = \count($rules);
-        Span::add('scanned', $scanned);
+        Span::add('interval.certificate_generation.scanned', $scanned);
 
         if ($scanned === 0) {
-            Span::add('processed', 0);
-            Span::add('failed', 0);
+            Span::add('interval.certificate_generation.processed', 0);
+            Span::add('interval.certificate_generation.failed', 0);
             return;
         }
 
@@ -193,7 +179,7 @@ class Interval extends Action
                         'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                     ]),
                     action: \Appwrite\Event\Certificate::ACTION_GENERATION,
-                    skipDomainValidation: true,
+                    skipDomainValidation: true, // DNS passed before the rule reached generating
                 ));
                 $processed++;
             } catch (\Throwable) {
@@ -201,7 +187,7 @@ class Interval extends Action
             }
         }
 
-        Span::add('processed', $processed);
-        Span::add('failed', $failed);
+        Span::add('interval.certificate_generation.processed', $processed);
+        Span::add('interval.certificate_generation.failed', $failed);
     }
 }
