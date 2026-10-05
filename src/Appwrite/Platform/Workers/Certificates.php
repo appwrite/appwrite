@@ -381,17 +381,19 @@ class Certificates extends Action
             ]);
 
             if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
-                // Nothing retries 'unverified', so keep the rule generating while attempts remain
+                // Nothing retries 'unverified', so keep the rule generating while attempts remain.
+                // The interval retries it, so this is a wait, not a worker error.
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
             } else {
                 // Mark rule as 'unverified'
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
                 // Send email to security email
                 $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
-            }
 
-            throw $e;
+                throw $e;
+            }
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);
