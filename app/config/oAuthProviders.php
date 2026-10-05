@@ -489,6 +489,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
     ],
+    'webflow' => [
+        'name' => 'Webflow',
+        'developers' => 'https://developers.webflow.com/data/reference/oauth-app',
+        'icon' => 'icon-webflow',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Webflow',
+    ],
     'wordpress' => [
         'name' => 'WordPress',
         'developers' => 'https://developer.wordpress.com/docs/oauth2/',

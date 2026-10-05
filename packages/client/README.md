@@ -42,6 +42,23 @@ echo $response->json()['name'];
 
 The concrete `Utopia\Psr7` messages and factories are provided by the `utopia-php/psr7` dependency.
 
+## Choose where it may connect
+
+A `Client` connects anywhere by default. Pass `Destinations` to restrict it, for example when fetching a URL a user chose. The client hands them to its adapter, and every adapter checks the address each connection is actually made to, for every redirect hop, so a hostname that resolves differently at connect time cannot get past the check. A refused connection throws `Utopia\Client\Exception\DestinationException`.
+
+```php
+<?php
+
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
+
+new Client($adapter);                       // Anywhere: your own services and fixed third-party APIs
+new Client($adapter, new PublicInternet()); // a URL a user chose: private and reserved ranges are refused
+new Client($adapter, new PublicInternet(new IPRange('10.0.0.0/8'))); // ...except the ranges you name
+```
+
+`PublicInternet` also ignores proxy settings, since a proxy would hide the destination from the check.
+
 ## Configure the client
 
 Defaults are immutable — each `with*()` returns a configured clone, and a default never overrides a header already set on the request.

@@ -23,6 +23,7 @@ use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -108,6 +109,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('cache')
             ->inject('bus')
+            ->inject('clientForOAuth2')
             ->callback($this->action(...));
     }
 
@@ -135,6 +137,7 @@ class Create extends Action
         Authorization $authorization,
         Cache $cache,
         Bus $bus,
+        Client $clientForOAuth2,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -158,7 +161,7 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'Configure a client ID or native client IDs for this provider to accept ID tokens.');
         }
 
-        $claims = (new IdTokenVerifier(new Jwks($cache)))
+        $claims = (new IdTokenVerifier(new Jwks($cache, $clientForOAuth2)))
             ->verify($profile, $idToken, $allowedAudiences, $nonce !== '' ? $nonce : null);
 
         $sub = $claims['sub'];

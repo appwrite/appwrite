@@ -19,8 +19,8 @@ class Phrase extends Proof
      */
     public function generate(): string
     {
-        $adjective = $this->adjectives[array_rand($this->adjectives)];
-        $noun = $this->nouns[array_rand($this->nouns)];
+        $adjective = $this->adjectives[random_int(0, \count($this->adjectives) - 1)];
+        $noun = $this->nouns[random_int(0, \count($this->nouns) - 1)];
 
         return "{$adjective} {$noun}";
     }
