@@ -454,11 +454,23 @@ class FastlyTls implements Provider
         }
 
         foreach ($hostnames as $hostname) {
-            if ($this->activationExists($certificateId, $hostname)) {
+            $activation = $this->findActivation($hostname);
+
+            if ($activation === null) {
+                $this->createActivation($certificateId, $hostname);
                 continue;
             }
 
-            $this->createActivation($certificateId, $hostname);
+            if ($activation['certificate'] === $certificateId) {
+                continue;
+            }
+
+            // A renewal leaves the hostname on the subscription's previous certificate
+            if (!\in_array($activation['certificate'], $this->references($subscription['resource'], 'tls_certificates'), true)) {
+                throw new \RuntimeException('Another certificate already terminates TLS for ' . $hostname . '.');
+            }
+
+            $this->updateActivation($activation['id'], $certificateId, $hostname);
         }
 
         return true;
@@ -520,10 +532,10 @@ class FastlyTls implements Provider
         return $ids;
     }
 
-    private function activationExists(string $certificateId, string $hostname): bool
+    /** @return array{id:string,certificate:string}|null */
+    private function findActivation(string $hostname): ?array
     {
         $query = http_build_query([
-            'filter[tls_certificate.id]' => $certificateId,
             'filter[tls_configuration.id]' => $this->tlsConfigurationId,
             'filter[tls_domain.id]' => $hostname,
             'page[size]' => 1,
@@ -544,7 +556,16 @@ class FastlyTls implements Provider
             throw new \RuntimeException('Fastly TLS activations response was missing its data list.');
         }
 
-        return $data !== [];
+        $activation = $data[0] ?? null;
+        if (!\is_array($activation) || !\is_string($activation['id'] ?? null)) {
+            return null;
+        }
+
+        $relationships = $activation['relationships'] ?? null;
+        $certificate = \is_array($relationships) ? ($relationships['tls_certificate'] ?? null) : null;
+        $reference = \is_array($certificate) ? ($certificate['data'] ?? null) : null;
+
+        return ['id' => $activation['id'], 'certificate' => \is_array($reference) && \is_string($reference['id'] ?? null) ? $reference['id'] : ''];
     }
 
     private function createActivation(string $certificateId, string $hostname): void
@@ -578,7 +599,7 @@ class FastlyTls implements Provider
         if ($result['statusCode'] === 409) {
             // A conflict is either our own activation, made concurrently, or
             // another certificate already holding the hostname.
-            if ($this->activationExists($certificateId, $hostname)) {
+            if (($this->findActivation($hostname)['certificate'] ?? null) === $certificateId) {
                 return;
             }
 
@@ -587,6 +608,28 @@ class FastlyTls implements Provider
 
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
             throw new \RuntimeException($this->formatError('Failed to activate Fastly TLS certificate for ' . $hostname, $result));
+        }
+    }
+
+    private function updateActivation(string $activationId, string $certificateId, string $hostname): void
+    {
+        $result = $this->request('PATCH', '/tls/activations/' . $activationId, [
+            'data' => [
+                'id' => $activationId,
+                'type' => 'tls_activation',
+                'relationships' => [
+                    'tls_certificate' => [
+                        'data' => [
+                            'type' => 'tls_certificate',
+                            'id' => $certificateId,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to move the Fastly TLS activation for ' . $hostname, $result));
         }
     }
 

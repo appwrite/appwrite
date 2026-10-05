@@ -54,7 +54,7 @@ final class FastlyTlsTest extends TestCase
         $issued = '{"data":[{"id":"sub_123","attributes":{"state":"issued"},"relationships":{"tls_certificates":{"data":[{"type":"tls_certificate","id":"cert_1"}]}}}]}';
         $client = new TestClient([
             new Response(200, body: new Stream($issued)),
-            new Response(200, body: new Stream('{"data":[{"id":"act_1","type":"tls_activation"}]}')),
+            new Response(200, body: new Stream('{"data":[{"id":"act_1","type":"tls_activation","relationships":{"tls_certificate":{"data":{"type":"tls_certificate","id":"cert_1"}}}}]}')),
             new Response(200, body: new Stream($issued)),
         ]);
 
@@ -239,7 +239,7 @@ final class FastlyTlsTest extends TestCase
     {
         $client = new TestClient([
             $this->json($this->subscription(state: 'issued', certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']])),
-            $this->json(['data' => [['id' => 'act_1', 'type' => 'tls_activation']]]),
+            $this->json($this->activation('cert_1')),
         ]);
 
         $this->assertSame(Status::ISSUED, new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null));
@@ -328,11 +328,57 @@ final class FastlyTlsTest extends TestCase
     {
         $client = new TestClient([
             $this->json($this->subscription(state: 'issued', certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']])),
-            $this->json(['data' => [['id' => 'act_1', 'type' => 'tls_activation']]]),
+            $this->json($this->activation('cert_1')),
         ]);
 
         $this->assertSame(Status::ISSUED, new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null));
         $this->assertCount(2, $client->calls);
+    }
+
+    public function testRenewalMovesTheActivationToTheNewCertificate(): void
+    {
+        $client = new TestClient([
+            $this->json([
+                'data' => [[
+                    'id' => 'sub_123',
+                    'attributes' => ['state' => 'renewing'],
+                    'relationships' => [
+                        'tls_certificates' => ['data' => [['type' => 'tls_certificate', 'id' => 'cert_new'], ['type' => 'tls_certificate', 'id' => 'cert_old']]],
+                        'tls_domains' => ['data' => [['type' => 'tls_domain', 'id' => 'example.com']]],
+                    ],
+                ]],
+                'included' => [
+                    ['type' => 'tls_certificate', 'id' => 'cert_new', 'attributes' => ['not_after' => '2027-06-01T00:00:00Z']],
+                    ['type' => 'tls_certificate', 'id' => 'cert_old', 'attributes' => ['not_after' => '2026-01-01T00:00:00Z']],
+                ],
+            ]),
+            $this->json($this->activation('cert_old')),
+            $this->json(['data' => ['id' => 'act_1', 'type' => 'tls_activation']]),
+        ]);
+
+        $this->assertSame(Status::RENEWING, new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null));
+        $this->assertSame('PATCH', $client->calls[2]['method']);
+        $this->assertStringEndsWith('/tls/activations/act_1', $client->calls[2]['url']);
+        $this->assertSame(['data' => [
+            'id' => 'act_1',
+            'type' => 'tls_activation',
+            'relationships' => ['tls_certificate' => ['data' => ['type' => 'tls_certificate', 'id' => 'cert_new']]],
+        ]], $client->calls[2]['body']);
+    }
+
+    public function testActivationOnAnotherCertificateFails(): void
+    {
+        $client = new TestClient([
+            $this->json($this->subscription(state: 'issued', certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']])),
+            $this->json($this->activation('cert_other')),
+        ]);
+
+        try {
+            new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null);
+            $this->fail('A certificate outside the subscription must not be replaced.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('Another certificate already terminates TLS for example.com', $error->getMessage());
+        }
     }
 
     public function testActivationConflictIsAcceptedOnceOurCertificateIsConfirmed(): void
@@ -341,7 +387,7 @@ final class FastlyTlsTest extends TestCase
             $this->json($this->subscription(state: 'issued', certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']])),
             $this->json(['data' => []]),
             $this->json('{"errors":[{"title":"Conflict","detail":"Activation already exists"}]}', 409),
-            $this->json(['data' => [['id' => 'act_1', 'type' => 'tls_activation']]]),
+            $this->json($this->activation('cert_1')),
         ]);
 
         $this->assertSame(Status::ISSUED, new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null));
@@ -473,6 +519,16 @@ final class FastlyTlsTest extends TestCase
                 'relationships' => ['tls_domain' => ['data' => ['id' => 'example.com', 'type' => 'tls_domain']]],
             ]],
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function activation(string $certificateId): array
+    {
+        return ['data' => [[
+            'id' => 'act_1',
+            'type' => 'tls_activation',
+            'relationships' => ['tls_certificate' => ['data' => ['type' => 'tls_certificate', 'id' => $certificateId]]],
+        ]]];
     }
 
     /** @return list<array{domain:string,certificate:string}> */
