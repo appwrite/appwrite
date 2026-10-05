@@ -18,6 +18,10 @@ use Utopia\Database\Validator\BigInt;
  */
 final readonly class Counter
 {
+    private const string WHITESPACE = " \t\n\r\v\f";
+
+    private const string DECIMAL = '/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/';
+
     public function __construct(private bool $integer)
     {
     }
@@ -56,12 +60,12 @@ final readonly class Counter
 
     public function maximum(int|float|string|null $max): int|float|string|null
     {
-        return $this->bound($max, \floor(...));
+        return $this->bound($max, Rounding::Down);
     }
 
     public function minimum(int|float|string|null $min): int|float|string|null
     {
-        return $this->bound($min, \ceil(...));
+        return $this->bound($min, Rounding::Up);
     }
 
     public function acceptsChange(int|float|string $value): bool
@@ -99,25 +103,55 @@ final readonly class Counter
         return self::integral($value);
     }
 
-    /**
-     * @param callable(float): float $round
-     */
-    private function bound(int|float|string|null $bound, callable $round): int|float|string|null
+    private function bound(int|float|string|null $bound, Rounding $rounding): int|float|string|null
     {
         if (!$this->integer || $bound === null || \is_int($bound) || !\is_numeric($bound)) {
             return $bound;
         }
 
-        if (\is_string($bound) && BigInt::isIntegerString($bound)) {
+        if (\is_string($bound)) {
+            return BigInt::isIntegerString($bound) ? $bound : self::decimal($bound, $rounding);
+        }
+
+        if (!\is_finite($bound)) {
             return $bound;
         }
 
-        $value = (float) $bound;
-        if (!\is_finite($value)) {
+        return self::integral($rounding->round($bound));
+    }
+
+    private static function decimal(string $bound, Rounding $rounding): int|string
+    {
+        if (\preg_match(self::DECIMAL, \trim($bound, self::WHITESPACE), $parts) !== 1) {
             return $bound;
         }
 
-        return self::integral($round($value));
+        [, $sign, $integer, $fraction, $exponent] = $parts + ['', '', '', '', ''];
+        $significant = \ltrim($integer . $fraction, '0');
+        if ($significant === '') {
+            return 0;
+        }
+
+        $negative = $sign === '-';
+        $reach = \strlen($integer . $fraction) + \strlen(BigInt::UNSIGNED_MAX) + 1;
+        $point = \strlen($significant) - \strlen($fraction) + self::exponent($exponent, $reach);
+        if ($point > \strlen(BigInt::UNSIGNED_MAX)) {
+            return ($negative ? '-' : '') . BigInt::UNSIGNED_MAX . '0';
+        }
+
+        $whole = $point > 0 ? \str_pad(\substr($significant, 0, $point), $point, '0') : '0';
+        $truncated = ($negative ? '-' : '') . $whole;
+        $dropsFraction = $point <= 0 || \ltrim(\substr($significant, $point), '0') !== '';
+
+        return $dropsFraction ? $rounding->roundTruncated($truncated, $negative) : BigInt::toNative($truncated);
+    }
+
+    private static function exponent(string $exponent, int $reach): int
+    {
+        $digits = \ltrim($exponent, '+-0');
+        $magnitude = \strlen($digits) > \strlen((string) $reach) ? $reach : \min((int) $digits, $reach);
+
+        return \str_starts_with($exponent, '-') ? -$magnitude : $magnitude;
     }
 
     private static function integral(float $whole): int|string

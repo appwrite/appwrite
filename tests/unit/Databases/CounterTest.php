@@ -68,6 +68,34 @@ final class CounterTest extends TestCase
         yield 'fractional text' => ['10.5', 10, 11];
         yield 'integer text' => ['10', '10', '10'];
         yield 'beyond the native integer range' => [1.0e19, '10000000000000000000', '10000000000000000000'];
+        yield 'fractional text beyond float precision' => ['9007199254740993.5', 9007199254740993, 9007199254740994];
+        yield 'negative fractional text beyond float precision' => ['-9007199254740993.5', -9007199254740994, -9007199254740993];
+        yield 'negative fractional text' => ['-5.5', -6, -5];
+        yield 'negative fraction of one text' => ['-0.5', -1, 0];
+        yield 'fraction of one text' => ['0.5', 0, 1];
+        yield 'whole decimal text' => ['10.000', 10, 10];
+        yield 'leading zeros text' => ['0000000000000000000005.5', 5, 6];
+        yield 'fractional text above the native integer range' => ['9223372036854775807.5', 9223372036854775807, '9223372036854775808'];
+        yield 'fractional text below the native integer range' => ['-9223372036854775808.5', '-9223372036854775809', \PHP_INT_MIN];
+        yield 'fractional text at the unsigned limit' => ['18446744073709551615.9', '18446744073709551615', '18446744073709551616'];
+        yield 'exponent text' => ['1e3', 1000, 1000];
+        yield 'capital exponent text' => ['1E3', 1000, 1000];
+        yield 'fractional exponent text' => ['1.25e1', 12, 13];
+        yield 'negative fractional exponent text' => ['-1.25e1', -13, -12];
+        yield 'negative exponent text' => ['1e-3', 0, 1];
+        yield 'negative value with a negative exponent text' => ['-1e-3', -1, 0];
+        yield 'vanishing exponent text' => ['1e-999999999', 0, 1];
+        yield 'negative value with a vanishing exponent text' => ['-1e-999999999', -1, 0];
+        yield 'exponent beyond the native integer range text' => ['5e-9223372036854775808', 0, 1];
+        yield 'zero exponent text beyond float precision' => ['9007199254740993.5e0', 9007199254740993, 9007199254740994];
+        yield 'padded fractional text' => [' 10.5 ', 10, 11];
+        yield 'signed fractional text' => ['+10.5', 10, 11];
+        yield 'fraction without a whole part text' => ['.5', 0, 1];
+        yield 'whole part without a fraction text' => ['5.', 5, 5];
+        yield 'negative zero text' => ['-0.0', 0, 0];
+        yield 'zero with a huge exponent text' => ['0e999999999', 0, 0];
+        yield 'zero decimal with an exponent text' => ['0.000e50', 0, 0];
+        yield 'negative zero with an exponent text' => ['-0e5', 0, 0];
         yield 'no bound' => [null, null, null];
     }
 
@@ -115,6 +143,28 @@ final class CounterTest extends TestCase
 
         $this->assertSame(\INF, $counter->maximum(\INF));
         $this->assertSame('ten', $counter->minimum('ten'));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function nonNumericBounds(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'exponent without digits' => ['1e'];
+        yield 'hexadecimal' => ['0x1A'];
+        yield 'digit separators' => ['1_000'];
+        yield 'two decimal points' => ['1.2.3'];
+        yield 'two signs' => ['--5'];
+    }
+
+    #[DataProvider('nonNumericBounds')]
+    public function testNonNumericTextBoundsArePassedOnUnchanged(string $bound): void
+    {
+        $counter = Counter::of($this->database, self::COLLECTION, 'count');
+
+        $this->assertSame($bound, $counter->maximum($bound));
+        $this->assertSame($bound, $counter->minimum($bound));
     }
 
     /**
@@ -234,5 +284,73 @@ final class CounterTest extends TestCase
 
         $this->expectException(TypeException::class);
         $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count', 1, 10.5);
+    }
+
+    public function testAFractionalTextMaximumBeyondFloatPrecisionBoundsTheIncrementAtItsWholePart(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'precise', 'big' => 9007199254740992]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        $increased = $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->maximum('9007199254740993.5'));
+        $this->assertSame(9007199254740993, $increased->getAttribute('big'));
+
+        try {
+            $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->maximum('9007199254740993.5'));
+            $this->fail('an increment past the whole part of the maximum must be refused');
+        } catch (LimitException) {
+        }
+
+        $this->assertSame(9007199254740993, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('big'));
+    }
+
+    public function testAFractionalTextMinimumBeyondFloatPrecisionBoundsTheDecrementAtItsWholePart(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'precise', 'big' => -9007199254740992]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        $decreased = $this->database->decreaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->minimum('-9007199254740993.5'));
+        $this->assertSame(-9007199254740993, $decreased->getAttribute('big'));
+
+        try {
+            $this->database->decreaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->minimum('-9007199254740993.5'));
+            $this->fail('a decrement past the whole part of the minimum must be refused');
+        } catch (LimitException) {
+        }
+
+        $this->assertSame(-9007199254740993, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('big'));
+    }
+
+    public function testAMaximumTextBeyondTheIntegerRangeAllowsTheIncrement(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'unbounded', 'big' => 5]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        $increased = $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->maximum('1e400'));
+
+        $this->assertSame(6, $increased->getAttribute('big'));
+    }
+
+    public function testAMaximumTextBelowTheIntegerRangeRefusesTheIncrement(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'unreachable', 'big' => 5]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        try {
+            $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 1, $counter->maximum('-1e400'));
+            $this->fail('an increment above a maximum below the integer range must be refused');
+        } catch (LimitException) {
+        }
+
+        $this->assertSame(5, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('big'));
+    }
+
+    public function testAMinimumTextWithAHugeExponentAllowsTheDecrement(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'deep', 'big' => 5]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        $decreased = $this->database->decreaseDocumentAttribute(self::COLLECTION, $document->getId(), 'big', 10, $counter->minimum('-1e999999999'));
+
+        $this->assertSame(-5, $decreased->getAttribute('big'));
     }
 }
