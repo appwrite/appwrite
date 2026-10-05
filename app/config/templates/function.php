@@ -8,11 +8,6 @@ $templateRuntimes = Config::getParam('template-runtimes');
 $templateRuntimes['NODE'] = \array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']);
 $templateRuntimes['PYTHON'] = \array_diff($templateRuntimes['PYTHON'], ['python-3.8']);
 $allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
-$mcpServerRuntimes = \array_values(\array_filter(
-    $templateRuntimes['PYTHON'],
-    fn (string $runtime) => \version_compare(\substr($runtime, \strlen('python-')), '3.10', '>=')
-));
-\usort($mcpServerRuntimes, fn (string $a, string $b) => \version_compare($b, $a));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
 {
@@ -429,7 +424,7 @@ return [
         'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
-                $mcpServerRuntimes,
+                ['python-3.14', 'python-3.13', 'python-3.12', 'python-3.11', 'python-3.10'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/mcp-server',
