@@ -20,6 +20,7 @@ use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Exception\Certificate as CertificateException;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -391,7 +392,13 @@ class Certificates extends Action
                 $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
             }
 
-            throw $e;
+            // Fastly stays blocked until the domain owner publishes the DNS record
+            // that proves ownership. That wait is already in the logs, the attempt
+            // count, and the email on the last attempt. A failed issuance or an
+            // API error still leaves the worker so it is reported.
+            if (!($e instanceof CertificateException && $e->isBlocked())) {
+                throw $e;
+            }
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);

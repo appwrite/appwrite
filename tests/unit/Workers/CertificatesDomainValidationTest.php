@@ -19,6 +19,8 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
+use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Exception\Certificate as CertificateException;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,6 +43,8 @@ require_once __DIR__ . '/../../../app/init.php';
 final class CertificatesDomainValidationTest extends TestCase
 {
     private const DOMAIN = 'www.example.invalid';
+
+    private const BLOCKED_MESSAGE = 'Fastly cannot issue a certificate for www.example.invalid until its ownership is verified.';
 
     public function testAJobFromAVerifiedEndpointReachesIssuanceWithoutASecondDnsCheck(): void
     {
@@ -76,13 +80,109 @@ final class CertificatesDomainValidationTest extends TestCase
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
     }
 
+    public function testWaitingOnDomainOwnershipDoesNotRethrow(): void
+    {
+        $certificates = $this->providerWaitingOnOwnership();
+
+        $thrown = null;
+        $mails = 0;
+        $writes = $this->generate($certificates, skipDomainValidation: true, thrown: $thrown, mails: $mails);
+
+        $this->assertNull($thrown);
+        $this->assertSame(0, $mails);
+        $this->assertSame(1, $writes['certificates']['attempts']);
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $writes['rules']['status']);
+        $this->assertStringContainsString(self::BLOCKED_MESSAGE, (string) $writes['rules']['logs']);
+        $this->assertStringContainsString(self::BLOCKED_MESSAGE, (string) $writes['certificates']['logs']);
+    }
+
+    public function testWaitingOnDomainOwnershipFailsAfterFiveAttempts(): void
+    {
+        $certificates = $this->providerWaitingOnOwnership();
+
+        // The failure mail needs a recipient; production sets this, the test process does not.
+        putenv('_APP_EMAIL_CERTIFICATES=certs@example.test');
+
+        try {
+            $thrown = null;
+            $mails = 0;
+            $writes = $this->generate($certificates, skipDomainValidation: true, attempts: 4, thrown: $thrown, mails: $mails);
+        } finally {
+            putenv('_APP_EMAIL_CERTIFICATES');
+        }
+
+        $this->assertNull($thrown);
+        $this->assertSame(1, $mails);
+        $this->assertSame(5, $writes['certificates']['attempts']);
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+        $this->assertStringContainsString(self::BLOCKED_MESSAGE, (string) $writes['rules']['logs']);
+    }
+
+    public function testAFailedCertificateStillRethrows(): void
+    {
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(false);
+        $certificates->method('isInstantGeneration')->willReturn(false);
+        $certificates->expects($this->never())->method('issueCertificate');
+        $certificates->method('getCertificateStatus')->willThrowException(new CertificateException(
+            'Fastly stopped trying to issue a certificate for ' . self::DOMAIN . '.',
+            Status::FAILED,
+        ));
+
+        $thrown = null;
+        $writes = $this->generate($certificates, skipDomainValidation: true, thrown: $thrown);
+
+        $this->assertInstanceOf(CertificateException::class, $thrown);
+        $this->assertFalse($thrown->isBlocked());
+        $this->assertSame(1, $writes['certificates']['attempts']);
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $writes['rules']['status']);
+        $this->assertStringContainsString('stopped trying', (string) $writes['rules']['logs']);
+    }
+
+    public function testAProviderApiErrorStillRethrows(): void
+    {
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(false);
+        $certificates->method('isInstantGeneration')->willReturn(false);
+        $certificates->expects($this->never())->method('issueCertificate');
+        $certificates->method('getCertificateStatus')->willThrowException(
+            new \RuntimeException('Failed to fetch Fastly TLS subscriptions with status 500: unavailable'),
+        );
+
+        $thrown = null;
+        $writes = $this->generate($certificates, skipDomainValidation: true, thrown: $thrown);
+
+        $this->assertInstanceOf(\RuntimeException::class, $thrown);
+        $this->assertSame(1, $writes['certificates']['attempts']);
+        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $writes['rules']['status']);
+    }
+
+    private function providerWaitingOnOwnership(): Provider&Stub
+    {
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(false);
+        $certificates->method('isInstantGeneration')->willReturn(false);
+        $certificates->expects($this->never())->method('issueCertificate');
+        $certificates->method('getCertificateStatus')->willThrowException(new CertificateException(
+            self::BLOCKED_MESSAGE,
+            Status::BLOCKED,
+        ));
+
+        return $certificates;
+    }
+
     /**
      * Runs one generation job for a rule in `verifying`.
      *
      * @return array<string, array<string, mixed>> the attributes written per collection
      */
-    private function generate(Provider&Stub $certificates, bool $skipDomainValidation): array
-    {
+    private function generate(
+        Provider&Stub $certificates,
+        bool $skipDomainValidation,
+        int $attempts = 0,
+        ?\Throwable &$thrown = null,
+        int &$mails = 0,
+    ): array {
         $rule = new Document([
             '$id' => md5(self::DOMAIN),
             '$collection' => 'rules',
@@ -101,11 +201,13 @@ final class CertificatesDomainValidationTest extends TestCase
             '$collection' => 'certificates',
             '$updatedAt' => DateTime::now(),
             'domain' => self::DOMAIN,
-            'attempts' => 0,
+            'attempts' => $attempts,
             'logs' => '',
         ]);
 
         $writes = [];
+        $mailPublisher = new MockPublisher();
+        $thrown = null;
 
         $dbForPlatform = $this->createStub(Database::class);
         $dbForPlatform->method('getDocument')
@@ -134,7 +236,7 @@ final class CertificatesDomainValidationTest extends TestCase
             (new Certificates())->action(
                 $message,
                 $dbForPlatform,
-                new MailPublisher(new MockPublisher(), new Queue('v1-mails')),
+                new MailPublisher($mailPublisher, new Queue('v1-mails')),
                 $this->createStub(Event::class),
                 $this->createStub(Webhook::class),
                 new FunctionPublisher(new MockPublisher(), new Queue('v1-functions')),
@@ -145,10 +247,13 @@ final class CertificatesDomainValidationTest extends TestCase
                 $this->createStub(Authorization::class),
                 (new Bus())->setResolver(static fn (): null => null),
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $error) {
             // The worker rethrows an issuance failure after recording it; the
             // records are what these tests read.
+            $thrown = $error;
         }
+
+        $mails = \count($mailPublisher->getEvents('v1-mails') ?? []);
 
         return $writes;
     }
