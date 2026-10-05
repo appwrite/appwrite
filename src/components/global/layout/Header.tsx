@@ -752,7 +752,9 @@ export function ConsoleHeader({
             const logoDestination = preLaunch
               ? ({ to: '/init' } as const)
               : showMarketingNav
-                ? ({ to: '/home' } as const)
+                ? headerAuthenticated
+                  ? ({ to: '/home' } as const)
+                  : ({ to: '/' } as const)
                 : showGuestHeader && features.init
                   ? ({ to: '/init' } as const)
                   : linkOrgId
