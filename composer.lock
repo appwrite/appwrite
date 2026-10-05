@@ -3031,12 +3031,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "43a6c7021ff20665632b1269a5bfc9fea3ec9c06"
+                "reference": "f6b82b7f8392983b67618694493d6dc78bf9d640"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/43a6c7021ff20665632b1269a5bfc9fea3ec9c06",
-                "reference": "43a6c7021ff20665632b1269a5bfc9fea3ec9c06",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f6b82b7f8392983b67618694493d6dc78bf9d640",
+                "reference": "f6b82b7f8392983b67618694493d6dc78bf9d640",
                 "shasum": ""
             },
             "require": {
