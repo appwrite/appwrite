@@ -206,6 +206,38 @@ Synchronous publishers use `publish($queue, $payload)` for one message and `publ
 
 Queue 5 renames `enqueueMany()` to `publishMany()` on `Publisher\Synchronous` and all implementations. Update callers and custom publishers. No forwarding alias is retained.
 
+### Coalescing
+
+`Publisher\Coalescing` keeps at most one pending message per key in a queue. `coalesce(Queue $queue, array $payload, string $key): Outcome` publishes the payload and returns `Outcome::Published`, or returns `Outcome::Coalesced` without publishing when a message with that key is already pending. An empty key throws `InvalidArgumentException` with `Cannot coalesce with an empty key.`
+
+```php
+use Utopia\Queue\Publisher\Outcome;
+use Utopia\Queue\Queue;
+
+$queue = new Queue('stats', keyTtl: 3600);
+
+$outcome = $publisher->coalesce($queue, ['projectId' => $projectId], $projectId);
+$skipped = $outcome === Outcome::Coalesced;
+```
+
+A key is held until its message can no longer be delivered without operator action: it is committed, dead-lettered, set aside as poison, or its hold expires. Release, reaping and recovery keep the key while the hold lasts. `retry()` re-drives a message without its key. The consumer sees the key through `Message::getKey()`.
+
+A refusal is an outcome, never an exception. Anything that leaves the broker's state unknown, such as a lost connection, throws, so a caller never mistakes a failed publish for a coalesced one.
+
+Keys are strings of any bytes, but the JSON codec only encodes valid UTF-8, so keys published through it must be valid UTF-8.
+
+**Pool** and **Background** always implement `Coalescing` and delegate `coalesce()` synchronously to the publisher they wrap, bypassing the background buffer. When that publisher cannot coalesce they throw `LogicException` at call time, so `instanceof Coalescing` does not guarantee support. Know which broker a publisher wraps before relying on coalescing.
+
+#### Redis
+
+A keyed publish stores a per-key marker next to the message. `Queue::$keyTtl` (default one day) bounds that marker, so a hold whose message is never settled frees itself. A key whose message was set aside as poison is freed only when `keyTtl` expires, because the key cannot be decoded from bytes no codec can read. Moving a hold to a reaped message uses `KEEPTTL`, which needs Redis 6 or later.
+
+Redis frees a key on every `reject()`, terminal or not, because its failed list is a dead letter that only an operator re-drives.
+
+Reaping keeps the key only while the hold lasts. A message reaped after its marker expired is requeued without a hold, so another publish for that key is accepted. `reapAfter` defaults to 25 hours, longer than the default `keyTtl`, so keep `keyTtl` well above the expected run time of a keyed job, and above `reapAfter` if a reaped message must keep its key.
+
+Workers still running the settle script from before coalescing never free markers, so keyed holds taken during a rolling deploy last until `keyTtl`. Deploy consumers before keyed publishers.
+
 ### Batched receive
 
 `job('v1-stats-usage', coroutines: 1, prefetch: 100)` allows up to 100 unacknowledged messages while running one handler at a time. Prefetch counts waiting messages, running handlers, and messages awaiting confirmation. It defaults to the coroutine count; an explicit lower value is rejected. A batch is the number of messages in one broker operation, which can be smaller than prefetch. The Swoole adapter enforces the prefetch limit and renews all outstanding messages from one loop.
