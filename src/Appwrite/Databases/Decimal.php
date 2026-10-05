@@ -8,7 +8,7 @@ final readonly class Decimal
 {
     private const string WHITESPACE = " \t\n\r\v\f";
 
-    private const string DECIMAL_PATTERN = '/^([+-]?)(?=\.?\d)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/';
+    private const string EXPONENT_MARKERS = 'eE';
 
     private const string SATURATED = BigInt::UNSIGNED_MAX . '0';
 
@@ -21,17 +21,25 @@ final readonly class Decimal
 
     public static function parse(string $value): ?self
     {
-        if (\preg_match(self::DECIMAL_PATTERN, \trim($value, self::WHITESPACE), $parts) !== 1) {
+        $value = \trim($value, self::WHITESPACE);
+        $unsigned = self::unsigned($value);
+        $marker = \strcspn($unsigned, self::EXPONENT_MARKERS);
+        $exponent = \substr($unsigned, $marker + 1);
+        if ($marker < \strlen($unsigned) && !\ctype_digit(self::unsigned($exponent))) {
             return null;
         }
 
-        [, $sign, $integer, $fraction, $exponent] = $parts + ['', '', '', '', ''];
+        [$integer, $fraction] = \explode('.', \substr($unsigned, 0, $marker), 2) + ['', ''];
+        if ($integer . $fraction === '' || !self::isDigits($integer) || !self::isDigits($fraction)) {
+            return null;
+        }
+
         $digits = \ltrim($integer . $fraction, '0');
         if ($digits === '') {
             return new self(false, '0', false);
         }
 
-        $negative = $sign === '-';
+        $negative = \str_starts_with($value, '-');
         $exponentLimit = \strlen($integer . $fraction) + \strlen(BigInt::UNSIGNED_MAX) + 1;
         $point = \strlen($digits) - \strlen($fraction) + self::exponent($exponent, $exponentLimit);
         if ($point > \strlen(BigInt::UNSIGNED_MAX)) {
@@ -61,6 +69,16 @@ final readonly class Decimal
     private function truncated(): string
     {
         return ($this->negative ? '-' : '') . $this->whole;
+    }
+
+    private static function unsigned(string $value): string
+    {
+        return \str_starts_with($value, '+') || \str_starts_with($value, '-') ? \substr($value, 1) : $value;
+    }
+
+    private static function isDigits(string $value): bool
+    {
+        return $value === '' || \ctype_digit($value);
     }
 
     private static function exponent(string $exponent, int $limit): int
