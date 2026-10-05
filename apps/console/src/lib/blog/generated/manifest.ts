@@ -59,6 +59,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "marketplace-moderation-agent-appwrite-permissions",
+    "href": "/blog/post/marketplace-moderation-agent-appwrite-permissions",
+    "title": "Build a marketplace moderation agent that publishes with Appwrite permissions",
+    "description": "Build Switchback, a swap site for used outdoor gear where an AI agent reviews every new listing. The agent publishes a listing by giving everyone read access, so Appwrite permissions decide what buyers can see.",
+    "date": "2026-10-05",
+    "lastUpdated": "2026-10-05",
+    "timeToRead": 14,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/marketplace-moderation-agent-appwrite-permissions/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-jaspr-support",
     "href": "/blog/post/announcing-jaspr-support",
     "title": "Announcing Jaspr support in Appwrite Sites: SSR in Dart",
