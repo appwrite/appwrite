@@ -55,7 +55,7 @@ final class DecimalTest extends TestCase
     {
         $decimal = Decimal::parse($value);
 
-        $this->assertNotNull($decimal);
+        $this->assertInstanceOf(Decimal::class, $decimal);
         $this->assertSame($floor, $decimal->floor());
         $this->assertSame($ceiling, $decimal->ceil());
     }

@@ -615,8 +615,8 @@ class MetricTest extends TestCase
         $this->assertArrayHasKey('ordinal', $unsplit);
         $this->assertNull($unsplit['ordinal']);
 
-        $this->assertSame('2', (new Metric(['ordinal' => '2']))->getOrdinal());
-        $this->assertNull((new Metric([]))->getOrdinal());
+        $this->assertSame('2', new Metric(['ordinal' => '2'])->getOrdinal());
+        $this->assertNull(new Metric([])->getOrdinal());
     }
 
     /**
