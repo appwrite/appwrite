@@ -1173,8 +1173,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'הזרימו וידאו ואודיו עם Appwrite Videos. הפכו קבצים באחסון לסטרימים אדפטיביים ב-HLS, DASH ו-CMAF עם פרופילי קידוד, כתוביות ותמונות תצוגה מקדימה בציר הזמן.',
   'Adaptive video streaming from your Storage files':
     'סטרימינג וידאו אדפטיבי מהקבצים שבאחסון',
-  'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. One API, in the same project as your Auth, Databases, and Storage.':
-    'הפכו קבצי וידאו ואודיו לסטרימים ב-HLS, DASH ו-CMAF עם סולם קידוד, כתוביות ותמונות תצוגה מקדימה בציר הזמן. API אחד, באותו פרויקט עם האימות, מסדי הנתונים והאחסון שלכם.',
+  'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. First frame under 100 ms, by design. One API, in the same project as your Auth, Databases, and Storage.':
+    'הפכו קבצי וידאו ואודיו לסטרימים ב-HLS, DASH ו-CMAF עם סולם קידוד, כתוביות ותמונות תצוגה מקדימה בציר הזמן. פריים ראשון מתחת ל-100 ms, לפי העיצוב. API אחד, באותו פרויקט עם האימות, מסדי הנתונים והאחסון שלכם.',
   'Start streaming with Videos': 'התחילו להזרים וידאו',
   'Upload a file to Storage, create a video, and get an adaptive stream URL for any HLS or DASH player.':
     'העלו קובץ לאחסון, צרו סרטון וקבלו כתובת סטרים אדפטיבית לכל נגן HLS או DASH.',
@@ -1194,6 +1194,9 @@ export const heProductPagesDictionary: Record<string, string> = {
   'What happens when I delete a video?': 'מה קורה כשמוחקים סרטון?',
   'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
     'מחיקת סרטון מסירה את גרסאות הקידוד, הכתוביות, התצוגות המקדימות והסגמנטים המקודדים שלו. מחיקת פרופיל משאירה את גרסאות הקידוד שכבר קודדו איתו.',
+  'How do you reach a first frame under 100 ms?': 'איך מגיעים לפריים ראשון מתחת ל-100 ms?',
+  'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
+    'הצינור תוכנן לתקציב הפתיחה הזה. נגנים טוענים מניפסט ראשי קטן, בוחרים גרסת קידוד מהסולם שהחיבור יכול להביא מיד, ומבקשים סגמנט ראשון קצר במקום את קובץ המקור. השתמשו בבודק כדי לעקוב אחרי הזמן עד לפריים הראשון בסשן אמיתי.',
   'Who can manage videos in my organization?': 'מי יכול לנהל סרטונים בארגון שלי?',
   'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
     'שירות הסרטונים פועל לפי התפקידים בארגון שלכם. ההרשאות videos.read ו-videos.write קובעות מי יכול לצפות ולנהל סרטונים, פרופילים, גרסאות קידוד וכתוביות.',
@@ -1231,6 +1234,70 @@ export const heProductPagesDictionary: Record<string, string> = {
   Encode: 'קידוד',
   Stream: 'סטרים',
   'Probed metadata': 'מטא-דאטה שזוהתה',
+  'Welcome to the launch': 'ברוכים הבאים להשקה',
+  '3 outputs': '3 פלטים',
+  'HLS, DASH, and CMAF': 'HLS, DASH ו-CMAF',
+  Adaptive: 'אדפטיבי',
+  'Default bitrate ladder': 'סולם קצבי סיביות ברירת מחדל',
+  'Uploaded or extracted': 'מועלות או מחולצות',
+  Timeline: 'ציר זמן',
+  'Scrubbing thumbnails': 'תמונות תצוגה מקדימה בגלילה',
+  'Any player': 'כל נגן',
+  'Web, iOS, and Android': 'Web, iOS ו-Android',
+  'From the first encode': 'מהקידוד הראשון',
+  'Source stays in Storage': 'המקור נשאר באחסון',
+  'The original file is never replaced': 'קובץ המקור אף פעם לא מוחלף',
+  'Default project ladder': 'סולם ברירת המחדל של הפרויקט',
+  'Add a profile for any other bitrate': 'הוסיפו פרופיל לכל קצב סיביות אחר',
+  'Upload or extract': 'העלאה או חילוץ',
+  'Retag an embedded track without replacing the file':
+    'תייגו מחדש רצועה מוטמעת בלי להחליף את הקובץ',
+  'Poster frame included': 'כולל תמונת פוסטר',
+  'Same sprites, same index': 'אותם ספרייטים, אותו אינדקס',
+  'Master manifest URL': 'כתובת המניפסט הראשי',
+  Excerpt: 'קטע',
+  'Demo video by McPix22': 'סרטון הדגמה של McPix22',
+  'Inspect quality as viewers play': 'בדקו את איכות הניגון',
+  'Pop the inspector out beside any video in the Console. Watch a live experience score for that session, then drill into buffer, bitrate, dropped frames, and diagnostics when a stream misses the sub 100 ms first frame.':
+    'פתחו את הבודק לצד כל סרטון בקונסולה. עקבו אחרי ציון חוויה חי לסשן הזה, ואז בדקו באפר, קצב סיביות, פריימים שנפלו ואבחון כשסטרים מפספס את הפריים הראשון מתחת ל-100 ms.',
+  'Live experience score': 'ציון חוויה בזמן אמת',
+  'Follows the playing video': 'עוקב אחרי הסרטון שמתנגן',
+  'Pop out beside the player': 'נפתח לצד הנגן',
+  '100 ms': '100 ms',
+  'To first frame': 'עד לפריים הראשון',
+  'First frame': 'פריים ראשון',
+  'First frame in 100 ms': 'פריים ראשון ב-100 ms',
+  'Web, mobile, and native': 'Web, מובייל ו-Native',
+  'Embed a built-in player': 'הטמיעו נגן מובנה',
+  'Copy an iframe from the Console and drop the Appwrite player on any page. Set a start time, choose captions, lock a rendition, or leave quality on Auto. The stream is designed for a first frame in under 100 ms.':
+    'העתיקו iframe מהקונסולה והטמיעו את נגן Appwrite בכל עמוד. הגדירו זמן התחלה, בחרו כתוביות, נעלו גרסת קידוד או השאירו איכות על Auto. הסטרים תוכנן לפריים ראשון מתחת ל-100 ms.',
+  'Use any player on any platform': 'השתמשו בכל נגן בכל פלטפורמה',
+  'Prefer your own player? The same master manifest works with hls.js, Shaka Player, and Video.js on the web, AVPlayer on Apple platforms, ExoPlayer on Android, and the usual Flutter and React Native players.':
+    'מעדיפים נגן משלכם? אותו מניפסט ראשי עובד עם hls.js, Shaka Player ו-Video.js ב-Web, AVPlayer בפלטפורמות Apple, ExoPlayer ב-Android, ונגני Flutter ו-React Native הרגילים.',
+  Autoplay: 'ניגון אוטומטי',
+  Captions: 'כתוביות',
+  Quality: 'איכות',
+  'Embed on any page': 'הטמעה בכל עמוד',
+  'Flutter · React Native': 'Flutter · React Native',
+  'First frame under 100 ms': 'פריים ראשון מתחת ל-100 ms',
+  'Press play, see picture in under 100 ms': 'לוחצים Play, רואים תמונה תוך פחות מ-100 ms',
+  'No waiting on the whole file. Streams open from a few kilobytes and one short segment, so picture lands before anyone notices.':
+    'בלי לחכות לכל הקובץ. סטרימים נפתחים מכמה קילובייטים וסגמנט קצר אחד, כך שהתמונה מופיעה לפני שמישהו שם לב.',
+  'Master manifest': 'מניפסט ראשי',
+  'First segment': 'סגמנט ראשון',
+  'Under 100 ms': 'מתחת ל-100 ms',
+  'Appwrite stream': 'סטרים של Appwrite',
+  'Init segment': 'סגמנט init',
+  'Progressive download': 'הורדה פרוגרסיבית',
+  'Whole file first': 'קודם כל הקובץ',
+  'Still downloading, no picture yet': 'עדיין מוריד, עוד אין תמונה',
+  budget: 'תקציב',
+  'to spare': 'מרווח',
+  'Manifest to map the stream': 'מניפסט שממפה את הסטרים',
+  'Starting rung, 1080p next': 'שלב פתיחה, ואחריו 1080p',
+  'Segment to paint a frame': 'סגמנט עד לפריים',
+  'Picture on screen': 'תמונה על המסך',
+  'Climbs the ladder': 'מטפס בסולם',
 }
 
 

@@ -7,7 +7,14 @@ export const videosProductContent: ProductPageContent = {
   hero: {
     title: 'Adaptive video streaming from your Storage files',
     description:
-      'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. One API, in the same project as your Auth, Databases, and Storage.',
+      'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. First frame under 100 ms, by design. One API, in the same project as your Auth, Databases, and Storage.',
+    stats: [
+      { value: '< 100 ms', label: 'To first frame' },
+      { value: '3 outputs', label: 'HLS, DASH, and CMAF' },
+      { value: 'Adaptive', label: 'Default bitrate ladder' },
+      { value: 'Any player', label: 'Web, mobile, and native' },
+      { value: 'Inspector', label: 'Live experience score' },
+    ],
   },
   faq: [
     {
@@ -34,6 +41,11 @@ export const videosProductContent: ProductPageContent = {
       question: 'What happens when I delete a video?',
       answer:
         'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.',
+    },
+    {
+      question: 'How do you reach a first frame under 100 ms?',
+      answer:
+        'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.',
     },
     {
       question: 'Who can manage videos in my organization?',

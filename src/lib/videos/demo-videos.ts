@@ -141,6 +141,26 @@ export const DEMO_VIDEOS: DemoVideo[] = [
   }),
 ]
 
+/**
+ * Local high-quality 1080p encode of Pixabay "Water, Falls, Waterfall" for the
+ * Videos marketing hero. Pixabay Content License (McPix22). Downscaled from
+ * the 4K source at CRF 16, capped at 20 Mbps, so the hero player is above
+ * the bitrate the frame needs.
+ */
+export const VIDEOS_HERO_DEMO = {
+  id: 'waterfall',
+  src: '/videos/demo/waterfall-1080p.mp4?v=hq',
+  poster: '/videos/demo/waterfall-poster.jpg',
+  fileName: 'falls.mp4',
+  sizeLabel: '85 MB',
+  startAt: 0,
+  title: 'Waterfall',
+  license: 'Pixabay Content License',
+  licenseHref: 'https://pixabay.com/service/license-summary/',
+  sourceHref: 'https://pixabay.com/videos/water-falls-waterfall-358693/',
+  attribution: 'McPix22',
+} as const
+
 /** Sizes are approximate, so leave headroom against the bucket limit. */
 const SIZE_HEADROOM = 1.05
 

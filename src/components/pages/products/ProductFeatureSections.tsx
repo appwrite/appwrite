@@ -12,6 +12,7 @@ import { SitesDomainManagement } from '@/components/pages/products/features/site
 import { SitesGitProviders } from '@/components/pages/products/features/sites/SitesGitProviders'
 import { SitesNetworkSection } from '@/components/pages/products/features/sites/SitesNetworkSection'
 import { VideosOutputsCatalog } from '@/components/pages/products/features/videos/VideosOutputsCatalog'
+import { VideosPerformanceCatalog } from '@/components/pages/products/features/videos/VideosPerformanceCatalog'
 import { getProductFeatures } from '@/lib/products/features'
 import { getProductFeatureVisual } from '@/lib/products/features/visuals'
 import { getProductTheme } from '@/lib/products/theme'
@@ -58,6 +59,8 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
             <SitesNetworkSection />
           ) : productId === 'videos' && feature.id === 'outputs' ? (
             <VideosOutputsCatalog />
+          ) : productId === 'videos' && feature.id === 'performance' ? (
+            <VideosPerformanceCatalog />
           ) : undefined
 
         if (!Visual && !companion && !feature.hideVisual) return null

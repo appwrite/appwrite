@@ -1,6 +1,12 @@
 import { Captions } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import {
+  ArtChip,
+  ArtIconBadge,
+  ArtPanel,
+  ArtWindow,
+  riseStyle,
+} from '@/components/pages/products/_components/ArtParts'
 import { useT } from '@/lib/i18n/translate'
 
 const TRACKS = [
@@ -11,25 +17,45 @@ const TRACKS = [
 
 export function VideosSubtitlesVisual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame title={t('Subtitles')}>
-      <div className="space-y-2">
-        {TRACKS.map((track) => (
-          <div
+    <div className="relative mx-auto w-full max-w-[500px] pb-16 pt-2">
+      <ArtWindow
+        className="product-hero-rise"
+        style={riseStyle(60)}
+        title={t('Subtitles')}
+        trailing={
+          <Badge variant="info" className="text-[10px]">
+            {t('Default')}
+          </Badge>
+        }
+        bodyClassName="p-3"
+      >
+        <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[linear-gradient(165deg,rgb(var(--tone-rgb)/0.45),#17171b_70%)]">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8">
+            <p className="text-center text-[12px] font-medium text-white">
+              {t('Welcome to the launch')}
+            </p>
+          </div>
+        </div>
+      </ArtWindow>
+
+      <div className="mt-3 space-y-2">
+        {TRACKS.map((track, index) => (
+          <ArtPanel
             key={track.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/80 px-3 py-2.5"
+            delayMs={280 + index * 120}
+            innerClassName="flex items-center justify-between gap-3 px-3 py-2"
           >
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
-                <Captions className="size-3.5 text-muted-foreground" aria-hidden />
-              </span>
+              <ArtIconBadge icon={Captions} tone={track.isDefault ? 'primary' : 'neutral'} />
               <div className="min-w-0">
                 <p className="truncate text-[12px] font-medium text-foreground">
-                  {t(track.name)}
+                  {track.id === 'und' ? track.name : t(track.name)}
                 </p>
-                <p className="truncate font-mono text-[10px] text-muted-foreground">
+                <p dir="ltr" className="truncate font-mono text-[10px] text-muted-foreground">
                   {track.code}
-                  {track.source ? ` / ${track.source}` : ''}
+                  {track.source ? ` · ${track.source}` : ''}
                 </p>
               </div>
             </div>
@@ -48,14 +74,16 @@ export function VideosSubtitlesVisual() {
                 {t('Ready')}
               </Badge>
             </div>
-          </div>
+          </ArtPanel>
         ))}
-        <div className="rounded-lg border border-dashed border-border bg-muted/10 px-3 py-2.5">
-          <p className="text-[11px] leading-5 text-muted-foreground">
-            {t('Uploads are converted to WebVTT and segmented for streaming. Retag an embedded track from und to its real language without replacing the file.')}
-          </p>
-        </div>
       </div>
-    </ProductFeatureVisualFrame>
+
+      <ArtChip className="bottom-0 end-[4%] max-w-[240px]" delayMs={900} floatDelayMs={700}>
+        <p className="text-[11px] font-medium text-foreground">{t('Upload or extract')}</p>
+        <p className="text-[10px] leading-4 text-muted-foreground">
+          {t('Retag an embedded track without replacing the file')}
+        </p>
+      </ArtChip>
+    </div>
   )
 }
