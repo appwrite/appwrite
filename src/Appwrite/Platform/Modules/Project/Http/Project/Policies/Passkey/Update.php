@@ -36,7 +36,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/policies/passkey')
             ->desc('Update passkey policy')
-            ->groups(['api', 'project'])
+            ->groups(['api', 'project', 'passkeys'])
             ->label('scope', ['policies.write', 'project.policies.write'])
             ->label('event', 'projects.[projectId].policies.[policy].update')
             ->label('audits.event', 'projects.[projectId].policies.[policy].update')
