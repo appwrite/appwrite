@@ -165,7 +165,9 @@ const PROJECT_TABS: CommandEntry[] = [
     description: 'Relying party ID and allowed origins for passkey sign-in',
     icon: Fingerprint,
     keywords: ['passkey', 'passkeys', 'webauthn', 'relying party', 'origins'],
-    available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
+    available: (ctx) =>
+      ctx.projectPasskeys &&
+      canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passkeys`,
   },
   {

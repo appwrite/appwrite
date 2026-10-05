@@ -17,6 +17,19 @@ export const TEAM_PREFS_KEY_PINNED_PROJECT_IDS = 'console.pinnedProjectIds'
 export type TeamPrefs = Record<string, unknown>
 
 /**
+ * Cloud's passkeys rollout flag, on organization (team) prefs for project
+ * passkeys and on account prefs for console passkeys. Written by Cloud's
+ * `task-manage-flags`; the console only reads it. Value: `true` when allowed.
+ */
+export const PREFS_KEY_PASSKEYS_FLAG = 'flags-passkeys'
+
+export function parsePasskeysFlag(
+  prefs: Record<string, unknown> | null | undefined,
+): boolean {
+  return Boolean(prefs?.[PREFS_KEY_PASSKEYS_FLAG])
+}
+
+/**
  * Parse pinned project IDs from team prefs.
  * Returns up to MAX_PINNED_PROJECTS IDs in order.
  */

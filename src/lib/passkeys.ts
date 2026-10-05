@@ -1,6 +1,29 @@
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import type { Translator } from '@/lib/i18n/translate'
+import { parsePasskeysFlag } from '@/lib/team-prefs-keys'
+
+type Prefs = Record<string, unknown> | null | undefined
+
+/** Project passkeys: Cloud allows them only for organizations carrying the rollout flag. */
+export function canUseProjectPasskeys(
+  features: ConsoleProfileFeatures,
+  organizationPrefs: Prefs,
+): boolean {
+  return !features.passkeysFlag || parsePasskeysFlag(organizationPrefs)
+}
+
+/** Console passkeys: Cloud allows them only for users carrying the rollout flag. */
+export function canUseAccountPasskeys(
+  features: ConsoleProfileFeatures,
+  accountPrefs: Prefs,
+): boolean {
+  return (
+    features.accountPasskeys &&
+    (!features.passkeysFlag || parsePasskeysFlag(accountPrefs))
+  )
+}
 
 /** WebAuthn in this browser. The JSON helpers are optional: see the fallbacks below. */
 export function isPasskeySupported(): boolean {
@@ -144,31 +167,27 @@ function asPublicKeyCredential(
 }
 
 /**
- * Signs in with a passkey and returns a token to exchange for a session. With
- * `autofill`, the browser offers the passkeys in the email field's suggestions
- * instead of opening a prompt, and the request waits until one is picked or
- * `signal` aborts it. `onSelected` runs once the user has picked a passkey.
+ * Signs in with a passkey offered in the email field's autofill and returns a
+ * token to exchange for a session. The request waits until a passkey is picked
+ * or `signal` aborts it; `onSelected` runs once the user has picked one.
  */
-export async function signInWithPasskey(
-  options: {
-    autofill?: boolean
-    signal?: AbortSignal
-    onSelected?: () => void
-  } = {},
-): Promise<Models.Token> {
+export async function signInWithPasskey(options: {
+  signal: AbortSignal
+  onSelected: () => void
+}): Promise<Models.Token> {
   const account = sdk.forConsole.account
   const challenge = await account.createPasskeyToken()
-  options.signal?.throwIfAborted()
+  options.signal.throwIfAborted()
   const credential = asPublicKeyCredential(
     await navigator.credentials.get({
       publicKey: parseRequestOptions(
         challenge.publicKey as PublicKeyCredentialRequestOptionsJSON,
       ),
-      mediation: options.autofill ? 'conditional' : undefined,
+      mediation: 'conditional',
       signal: options.signal,
     }),
   )
-  options.onSelected?.()
+  options.onSelected()
   return account.updatePasskeyToken({
     challengeId: challenge.$id,
     credential: credentialToJSON(credential),

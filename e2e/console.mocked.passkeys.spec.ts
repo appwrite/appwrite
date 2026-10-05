@@ -11,9 +11,15 @@ import { expect, test } from './fixtures'
  * The Appwrite API is mocked at the network layer and the real console pages are
  * asserted: what the policy card reads back, what its Update button sends, and that
  * the Passkey auth method only becomes switchable once the policy is configured.
+ *
+ * On Cloud, passkeys are rolled out per organization: only an organization whose
+ * prefs carry `flags-passkeys` sees them. Self-hosted servers do not gate them.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
+
+/** Cloud's rollout flag, written by its `task-manage-flags`. */
+const PASSKEYS_FLAG = 'flags-passkeys'
 
 /** Mirrors `ProjectPolicyId.Passkey` and `ProjectAuthMethodId.Passkey`. */
 const PASSKEY_ID = 'passkey'
@@ -118,6 +124,7 @@ const ORGANIZATION = {
   billingPlan: 'tier-0',
   billingEmail: ACCOUNT.email,
   status: 'active',
+  prefs: { [PASSKEYS_FLAG]: true },
 } satisfies Partial<Models.Organization<Models.Preferences>>
 
 const PROJECT_ID = 'proj0000000000000000001'
@@ -154,6 +161,8 @@ function project() {
 
 type MockOptions = {
   policy?: PasskeyPolicy
+  /** The organization's prefs; carries the passkeys flag by default. */
+  organizationPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
 }
@@ -184,6 +193,10 @@ async function mockAppwriteApi(
 ): Promise<Calls> {
   let policy = options.policy ?? CONFIGURED
   const projectDocument = project()
+  const organization = {
+    ...ORGANIZATION,
+    prefs: options.organizationPrefs ?? ORGANIZATION.prefs,
+  }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = { policyPatches: [], methodPatches: [] }
 
@@ -241,12 +254,12 @@ async function mockAppwriteApi(
     )
       return json(200, { roles: OWNER_ROLES, scopes: OWNER_SCOPES })
     if (apiPath === '/organizations' || apiPath === '/teams')
-      return json(200, { total: 1, teams: [ORGANIZATION] })
+      return json(200, { total: 1, teams: [organization] })
     if (
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
-      return json(200, ORGANIZATION)
+      return json(200, organization)
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
@@ -276,6 +289,23 @@ async function mockAppwriteApi(
   })
 
   return calls
+}
+
+/**
+ * Pins the console profile for the page. A dev server started without
+ * VITE_CONSOLE_PROFILE picks one from the endpoint, so the specs never rely on it.
+ */
+async function useProfile(page: Page, id: 'cloud' | 'self-hosted') {
+  await page.addInitScript((profileId) => {
+    window.localStorage.setItem(
+      'debug:consoleProfile',
+      JSON.stringify({ id: profileId, features: {} }),
+    )
+  }, id)
+}
+
+function policiesNavigation(page: Page) {
+  return page.getByRole('navigation', { name: 'Policies navigation' })
 }
 
 function card(page: Page) {
@@ -319,6 +349,12 @@ test.describe('passkeys (mocked API)', () => {
     await mockAppwriteApi(page, { policy: CONFIGURED })
     await openPasskeyPolicies(page)
 
+    await expect(
+      policiesNavigation(page).getByRole('link', {
+        name: 'Passkeys',
+        exact: true,
+      }),
+    ).toBeVisible()
     await expect(rpIdInput(page)).toHaveValue('example.com')
     await expect(originInput(page, 1)).toHaveValue('https://example.com')
     await expect(originInput(page, 2)).toHaveValue('https://app.example.com')
@@ -494,5 +530,54 @@ test.describe('passkeys (mocked API)', () => {
     await expect(toggle).toBeChecked()
     await expect.poll(() => calls.methodPatches.length).toBe(1)
     expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
+  })
+
+  test('organizations without the passkeys flag see no passkey settings', async ({
+    page,
+  }) => {
+    await useProfile(page, 'cloud')
+    await mockAppwriteApi(page, { organizationPrefs: {} })
+
+    await openAuthSettings(page)
+    await expect(page.locator('#jwt')).toBeVisible()
+    await expect(page.locator(`#${PASSKEY_ID}`)).toHaveCount(0)
+    await expect(
+      page.getByRole('link', { name: 'Passkey policies', exact: true }),
+    ).toHaveCount(0)
+
+    await page.goto(`/projects/${PROJECT_ID}/auth/policies/passkeys`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/auth/policies/sessions$`),
+      { timeout: 30_000 },
+    )
+    const navigation = policiesNavigation(page)
+    await expect(
+      navigation.getByRole('link', { name: 'Passwords', exact: true }),
+    ).toBeVisible()
+    await expect(
+      navigation.getByRole('link', { name: 'Passkeys', exact: true }),
+    ).toHaveCount(0)
+    await expect(card(page)).toHaveCount(0)
+  })
+
+  test('self-hosted consoles show passkey settings without a flag', async ({
+    page,
+  }) => {
+    await useProfile(page, 'self-hosted')
+    await mockAppwriteApi(page, { policy: CONFIGURED, organizationPrefs: {} })
+
+    await openPasskeyPolicies(page)
+    await expect(rpIdInput(page)).toHaveValue('example.com')
+    await expect(
+      policiesNavigation(page).getByRole('link', {
+        name: 'Passkeys',
+        exact: true,
+      }),
+    ).toBeVisible()
+
+    await openAuthSettings(page)
+    await expect(page.locator(`#${PASSKEY_ID}`)).toBeVisible()
   })
 })

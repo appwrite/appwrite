@@ -9,6 +9,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
 import { isPasskeyPolicyConfigured } from '@/lib/passkey-policy'
+import { useProjectPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -121,6 +122,15 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
   const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
+  const passkeysAllowed = useProjectPasskeysAllowed(projectId)
+  const visibleAuthMethods = useMemo(
+    () =>
+      AUTH_METHODS.filter(
+        (method) =>
+          passkeysAllowed || method.key !== ProjectAuthMethodId.Passkey,
+      ),
+    [passkeysAllowed],
+  )
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -162,7 +172,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   const updateAuthMethodMutation = useUpdateAuthMethod(projectId)
 
-  const handleAuthMethodToggle = (method: ProjectAuthMethodId, checked: boolean) => {
+  const handleAuthMethodToggle = (
+    method: ProjectAuthMethodId,
+    checked: boolean,
+  ) => {
     setOptimisticAuthMethods((prev) => ({ ...prev, [method]: checked }))
     setUpdatingAuthMethods((prev) => new Set(prev).add(method))
     lastSubmittedAuthMethods.current[method] = checked
@@ -212,7 +225,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-            {AUTH_METHODS.map((method) => {
+            {visibleAuthMethods.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false

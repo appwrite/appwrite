@@ -1322,7 +1322,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הסיסמה הזו נמצאה בדליפת מידע ידועה. שנו אותה בהקדם האפשרי.',
 
   // Console passkeys: sign-in and account management
-  'Sign in with a passkey': 'התחברות עם מפתח גישה',
   'Failed to sign in with a passkey': 'ההתחברות עם מפתח גישה נכשלה',
   'Passkeys are not set up for this domain.':
     'מפתחות גישה לא הוגדרו עבור הדומיין הזה.',

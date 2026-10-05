@@ -9,6 +9,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
+import { useProjectPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { useT } from '@/lib/i18n/translate'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
 import {
@@ -116,14 +117,26 @@ function PoliciesLayoutContent({
   const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
     usePoliciesSettingsSearch()
 
+  const passkeysAllowed = useProjectPasskeysAllowed(projectId)
+
   const navItems = useMemo(
     () =>
-      NAV_ITEMS.map((item) => ({
-        ...item,
-        label: t(item.label),
-        params: { projectId },
-      })),
-    [projectId, t],
+      NAV_ITEMS.filter((item) => passkeysAllowed || item.id !== 'passkeys').map(
+        (item) => ({
+          ...item,
+          label: t(item.label),
+          params: { projectId },
+        }),
+      ),
+    [passkeysAllowed, projectId, t],
+  )
+
+  const cardIndex = useMemo(
+    () =>
+      POLICIES_SETTINGS_CARD_INDEX.filter(
+        (entry) => passkeysAllowed || entry.sectionId !== 'passkeys',
+      ),
+    [passkeysAllowed],
   )
 
   const activeLabel = t(
@@ -134,7 +147,7 @@ function PoliciesLayoutContent({
     <SettingsLayoutShell
       navItems={navItems}
       activeSectionId={activeSubTab}
-      cardIndex={POLICIES_SETTINGS_CARD_INDEX}
+      cardIndex={cardIndex}
       searchQuery={policiesSearchQuery}
       onSearchQueryChange={setPoliciesSearchQuery}
       searchPlaceholder={t('Search policies...')}

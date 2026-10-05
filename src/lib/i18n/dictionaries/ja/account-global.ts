@@ -1319,7 +1319,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
 
   // Console passkeys: sign-in and account management
-  'Sign in with a passkey': 'パスキーでサインイン',
   'Failed to sign in with a passkey': 'パスキーでのサインインに失敗しました',
   'Passkeys are not set up for this domain.':
     'このドメインではパスキーが設定されていません。',

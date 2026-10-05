@@ -16,7 +16,10 @@ import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-refer
 import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
-import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
+import {
+  PREFS_KEY_PASSKEYS_FLAG,
+  TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
+} from '@/lib/team-prefs-keys'
 import {
   USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
   USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
@@ -663,6 +666,15 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
     description: 'Pinned project IDs for the organization (JSON string[]).',
     category: 'Organization',
+  },
+  // Cloud flags (written by Cloud's task-manage-flags, read-only here)
+  {
+    id: 'passkeysFlag',
+    scope: 'both',
+    key: PREFS_KEY_PASSKEYS_FLAG,
+    description:
+      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: org prefs allow project passkeys, account prefs allow console passkeys.",
+    category: 'Cloud flags',
   },
 ] as const
 

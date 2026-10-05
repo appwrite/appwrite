@@ -37,6 +37,12 @@ export type ConsoleProfileFeatures = {
   accountIdentities: boolean
   /** Console passkeys (sign in with a passkey, manage the account's passkeys) */
   accountPasskeys: boolean
+  /**
+   * Passkeys follow Cloud's rollout flag (`flags-passkeys` in the organization's
+   * prefs for project passkeys, in the user's prefs for console passkeys).
+   * Self-hosted servers do not gate passkeys.
+   */
+  passkeysFlag: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
@@ -107,6 +113,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
   accountPasskeys: 'Account passkeys',
+  passkeysFlag: 'Passkeys flag',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
@@ -156,6 +163,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountMfa: true,
       accountIdentities: true,
       accountPasskeys: true,
+      passkeysFlag: true,
       accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
@@ -193,6 +201,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountMfa: false,
       accountIdentities: false,
       accountPasskeys: false,
+      passkeysFlag: false,
       accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,

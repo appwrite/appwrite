@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { canUseAccountPasskeys } from '@/lib/passkeys'
 import {
   accountIdentitiesQueryOptions,
   accountPasskeysQueryOptions,
+  ensureConsoleAccountQueryData,
   mfaFactorsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { AccountSecurity } from '@/components/pages/account/Security'
@@ -15,6 +17,9 @@ export const Route = createFileRoute('/_public/account/security')({
 
     const { queryClient } = context
     const features = getActiveProfileFeatures()
+    const account = features.accountPasskeys
+      ? await ensureConsoleAccountQueryData(queryClient)
+      : undefined
 
     const [identities, mfaFactors, passkeys] = await Promise.all([
       features.accountIdentities
@@ -23,7 +28,7 @@ export const Route = createFileRoute('/_public/account/security')({
       features.accountMfa
         ? queryClient.ensureQueryData(mfaFactorsQueryOptions())
         : Promise.resolve(undefined),
-      features.accountPasskeys
+      canUseAccountPasskeys(features, account?.prefs)
         ? queryClient
             .ensureQueryData(accountPasskeysQueryOptions())
             .catch(() => undefined)

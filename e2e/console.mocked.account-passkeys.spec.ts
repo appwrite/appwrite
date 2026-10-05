@@ -11,9 +11,17 @@ import { expect, test } from './fixtures'
  * answers `navigator.credentials`, so the real browser ceremony runs end to end. The
  * mocked backend accepts any credential; what is asserted is what the console sends
  * and shows.
+ *
+ * On Cloud, console passkeys are rolled out per user: only an account whose prefs
+ * carry `flags-passkeys` can manage them. The sign-in page cannot know the user, so
+ * it only offers passkeys through the email field's autofill, which shows nothing
+ * unless the browser already holds a passkey for the console.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
+
+/** Cloud's rollout flag, written by its `task-manage-flags`. */
+const PASSKEYS_FLAG = 'flags-passkeys'
 
 const ACCOUNT = {
   $id: 'user000000000000000001',
@@ -29,7 +37,7 @@ const ACCOUNT = {
   emailVerification: true,
   phoneVerification: false,
   mfa: false,
-  prefs: {},
+  prefs: { [PASSKEYS_FLAG]: true },
   targets: [],
   accessedAt: NOW,
 } satisfies Partial<Models.User<Models.Preferences>>
@@ -58,6 +66,8 @@ type ApiError = { message: string; code: number; type: string }
 
 type MockOptions = {
   signedIn?: boolean
+  /** The account's prefs; carries the passkeys flag by default. */
+  accountPrefs?: Models.Preferences
   passkeys?: Models.Passkey[]
   /** When set, adding a passkey is refused with this error. */
   createError?: ApiError
@@ -92,6 +102,7 @@ async function mockAppwriteApi(
 ): Promise<Calls> {
   let signedIn = options.signedIn ?? false
   let passkeys = [...(options.passkeys ?? [])]
+  const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = { requests: [] }
 
@@ -223,8 +234,8 @@ async function mockAppwriteApi(
       return route.fulfill({ status: 204, headers })
     }
 
-    if (apiPath === '/account') return json(200, ACCOUNT)
-    if (apiPath === '/account/prefs') return json(200, {})
+    if (apiPath === '/account') return json(200, account)
+    if (apiPath === '/account/prefs') return json(200, account.prefs)
     if (apiPath === '/account/identities')
       return json(200, { total: 0, identities: [] })
     if (apiPath === '/account/mfa/factors')
@@ -278,26 +289,23 @@ async function addVirtualAuthenticator(
       },
     },
   )
-  const addCredential = async () => {
-    const { privateKey } = generateKeyPairSync('ec', {
-      namedCurve: 'prime256v1',
-    })
-    await session.send('WebAuthn.addCredential', {
-      authenticatorId,
-      credential: {
-        credentialId: randomBytes(16).toString('base64'),
-        isResidentCredential: true,
-        rpId: new URL(String(test.info().project.use.baseURL)).hostname,
-        privateKey: privateKey
-          .export({ format: 'der', type: 'pkcs8' })
-          .toString('base64'),
-        userHandle: Buffer.from(ACCOUNT.$id).toString('base64'),
-        signCount: 0,
-      },
-    })
-  }
-  if (withCredential) await addCredential()
-  return { addCredential }
+  if (!withCredential) return
+  const { privateKey } = generateKeyPairSync('ec', {
+    namedCurve: 'prime256v1',
+  })
+  await session.send('WebAuthn.addCredential', {
+    authenticatorId,
+    credential: {
+      credentialId: randomBytes(16).toString('base64'),
+      isResidentCredential: true,
+      rpId: new URL(String(test.info().project.use.baseURL)).hostname,
+      privateKey: privateKey
+        .export({ format: 'der', type: 'pkcs8' })
+        .toString('base64'),
+      userHandle: Buffer.from(ACCOUNT.$id).toString('base64'),
+      signCount: 0,
+    },
+  })
 }
 
 /** Makes the browser prompt behave as if the user closed it. */
@@ -356,17 +364,15 @@ async function openSecurity(page: Page) {
 }
 
 test.describe('console passkeys (mocked API)', () => {
-  test('signing in with a passkey exchanges the token for a session', async ({
+  test('picking a passkey from autofill exchanges the token for a session', async ({
     page,
   }) => {
     await useProfile(page, 'cloud')
     const calls = await mockAppwriteApi(page)
-    // Without a credential yet, the authenticator cannot answer the autofill request.
-    const { addCredential } = await addVirtualAuthenticator(page)
-    await openSignIn(page)
-    await addCredential()
-
-    await passkeyButton(page).click()
+    await addVirtualAuthenticator(page, { withCredential: true })
+    await page.goto('/sign-in?redirect=%2Faccount%2Fsecurity', {
+      waitUntil: 'domcontentloaded',
+    })
 
     await expect(page).toHaveURL(/\/account\/security$/, { timeout: 30_000 })
     await expect(passkeysCard(page)).toBeVisible()
@@ -378,6 +384,8 @@ test.describe('console passkeys (mocked API)', () => {
     expect(challenge).toBeGreaterThanOrEqual(0)
     expect(verify).toBeGreaterThan(challenge)
     expect(session).toBeGreaterThan(verify)
+    expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(1)
+    expect(countCalls(calls, 'POST', '/account/sessions/token')).toBe(1)
 
     const verification = calls.requests[verify].request
     expect(verification.headers()['x-appwrite-project']).toBe('console')
@@ -393,20 +401,7 @@ test.describe('console passkeys (mocked API)', () => {
     })
   })
 
-  test('picking a passkey from autofill signs in', async ({ page }) => {
-    await useProfile(page, 'cloud')
-    const calls = await mockAppwriteApi(page)
-    await addVirtualAuthenticator(page, { withCredential: true })
-    await page.goto('/sign-in?redirect=%2Faccount%2Fsecurity', {
-      waitUntil: 'domcontentloaded',
-    })
-
-    await expect(page).toHaveURL(/\/account\/security$/, { timeout: 30_000 })
-    expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(1)
-    expect(countCalls(calls, 'POST', '/account/sessions/token')).toBe(1)
-  })
-
-  test('closing the passkey prompt leaves the sign-in page usable', async ({
+  test('a dismissed autofill request leaves the sign-in page usable', async ({
     page,
   }) => {
     await useProfile(page, 'cloud')
@@ -417,15 +412,7 @@ test.describe('console passkeys (mocked API)', () => {
     // Autofill asks for a challenge on load and fails quietly when cancelled.
     await expect
       .poll(() => countCalls(calls, 'POST', '/account/tokens/passkey'))
-      .toBeGreaterThanOrEqual(1)
-    const beforeClick = countCalls(calls, 'POST', '/account/tokens/passkey')
-
-    await passkeyButton(page).click()
-
-    await expect
-      .poll(() => countCalls(calls, 'POST', '/account/tokens/passkey'))
-      .toBeGreaterThan(beforeClick)
-    await expect(passkeyButton(page)).toBeEnabled()
+      .toBe(1)
     await expect(
       page.getByRole('button', { name: 'Login', exact: true }),
     ).toBeEnabled()
@@ -470,7 +457,9 @@ test.describe('console passkeys (mocked API)', () => {
     await expect(
       page.getByRole('button', { name: 'Login', exact: true }),
     ).toBeEnabled()
-    await expect(passkeyButton(page)).toBeEnabled()
+    // The user is unknown here, so there is no explicit passkey button to show
+    // to users the rollout has not reached.
+    await expect(passkeyButton(page)).toHaveCount(0)
     await expect(page.locator('[data-sonner-toast]')).toHaveCount(0)
     expect(countCalls(calls, 'PUT', '/account/tokens/passkey')).toBe(0)
   })
@@ -603,16 +592,36 @@ test.describe('console passkeys (mocked API)', () => {
     page,
   }) => {
     await useProfile(page, 'self-hosted')
-    await mockAppwriteApi(page)
+    const calls = await mockAppwriteApi(page)
     await openSignIn(page)
     await expect(
       page.getByRole('button', { name: 'Login', exact: true }),
     ).toBeVisible()
-    await expect(passkeyButton(page)).toHaveCount(0)
+    await expect(page.getByPlaceholder('Your email')).not.toHaveAttribute(
+      'autocomplete',
+      'username webauthn',
+    )
+    expect(countCalls(calls, 'POST', '/account/tokens/passkey')).toBe(0)
 
     await page.unrouteAll({ behavior: 'ignoreErrors' })
     await mockAppwriteApi(page, { signedIn: true, passkeys: [SYNCED] })
     await openSecurity(page)
     await expect(passkeysCard(page)).toHaveCount(0)
+  })
+
+  test('users without the passkeys flag have no passkeys card', async ({
+    page,
+  }) => {
+    await useProfile(page, 'cloud')
+    const calls = await mockAppwriteApi(page, {
+      signedIn: true,
+      accountPrefs: {},
+      passkeys: [SYNCED],
+    })
+    await openSecurity(page)
+
+    await expect(page.locator('[data-card-id="password"]')).toBeVisible()
+    await expect(passkeysCard(page)).toHaveCount(0)
+    expect(countCalls(calls, 'GET', '/account/passkeys')).toBe(0)
   })
 })
