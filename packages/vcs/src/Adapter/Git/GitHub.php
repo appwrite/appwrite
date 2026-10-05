@@ -714,11 +714,17 @@ class GitHub extends Git
         $url = '/app/installations/' . $installationId;
         $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->jwtToken"]);
 
+        // Only a missing installation is permanent; rate limits and server errors stay retryable failures
+        $responseHeaders = $response['headers'] ?? [];
+        if (\is_array($responseHeaders) && ($responseHeaders['status-code'] ?? 0) === 404) {
+            throw new OwnerNotFound("Installation '{$installationId}' was not found.");
+        }
+
         $responseBody = $response['body'] ?? [];
         $responseBodyAccount = $responseBody['account'] ?? [];
 
         if (!\array_key_exists('login', $responseBodyAccount)) {
-            throw new OwnerNotFound('Owner name retrieval response is missing account login.');
+            throw new Exception('Owner name retrieval response is missing account login.');
         }
 
         return $responseBodyAccount['login'] ?? '';

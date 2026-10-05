@@ -596,7 +596,7 @@ trait Deployment
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
             } catch (OwnerNotFound $e) {
-                // The installation no longer resolves to an account, so nothing can be built or reported back for it.
+                // The installation is gone, so nothing can be built or reported back for it.
                 Span::add("{$logBase}.build.skipped.reason", 'owner not found');
                 Span::add("{$logBase}.build.skipped", 'true');
                 Console::warning("Skipping repository '{$repository->getId()}': {$e->getMessage()}");
