@@ -40,7 +40,7 @@ export function StorageCdnVisual() {
         <div className="absolute inset-[20%] rounded-full bg-[radial-gradient(circle,rgb(var(--tone-rgb)/0.22),transparent_70%)]" />
       </div>
 
-      <div className="absolute left-1/2 top-1/2 size-[260px] -translate-x-1/2 -translate-y-1/2 sm:size-[330px]">
+      <div className="absolute left-1/2 top-1/2 z-[2] size-[260px] -translate-x-1/2 -translate-y-1/2 sm:size-[330px]">
         {EDGES.map((edge, index) => (
           <span
             key={edge.code}
@@ -49,7 +49,7 @@ export function StorageCdnVisual() {
           >
             <span
               dir="ltr"
-              className="product-hero-float inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1 font-mono text-[10px] text-foreground shadow-sm dark:bg-card"
+              className="product-hero-float inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-background px-2 py-1 font-mono text-[10px] text-foreground shadow-sm dark:bg-card"
               style={floatStyle(index * 420)}
             >
               <ArtLiveDot className="size-1.5" />
