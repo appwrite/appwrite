@@ -66,9 +66,6 @@ import {
   docsNavLinkClassName,
 } from '@/lib/docs/nav-styles'
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
-import { isDatabaseTypeDocsPathnameHidden } from '@/lib/docs/database-docs-feature'
-import { isDomainsDocsPathname } from '@/lib/docs/domains-docs-feature'
-import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
@@ -98,7 +95,6 @@ import {
 import {
   OFFCANVAS_START_CLOSED,
 } from '@/lib/layout/offcanvas-classes'
-import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useLocalMarketingEnabled } from '@/lib/marketing/local-marketing'
 import {
@@ -503,19 +499,7 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!isCloudProfile() && isDomainsDocsPathname(pathname)) {
-      navigate({ to: '/docs', replace: true })
-      return
-    }
-    if (!isCloudProfile() && isFirewallDocsPathname(pathname)) {
-      navigate({ to: '/docs', replace: true })
-      return
-    }
     if (!features.agent && isAgentDocsPathname(pathname)) {
-      navigate({ to: '/docs', replace: true })
-      return
-    }
-    if (isDatabaseTypeDocsPathnameHidden(pathname)) {
       navigate({ to: '/docs', replace: true })
     }
   }, [features.agent, features.partnersDocs, hasMounted, navigate, pathname])

@@ -1,7 +1,14 @@
-import { Copy, Server } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import { Copy } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  ArtPanel,
+  ArtToken as T,
+  ArtWindow,
+  floatStyle,
+  riseStyle,
+} from '@/components/pages/products/_components/ArtParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { useT } from '@/lib/i18n/translate'
 
 const COMPATIBLE_TOOLS = [
@@ -11,95 +18,93 @@ const COMPATIBLE_TOOLS = [
   { id: 'cyberduck', name: 'Cyberduck', iconSrc: '/icons/cyberduck.svg' },
 ] as const
 
-function MockCredentialRow({
-  label,
-  value,
-  masked = false,
-}: {
-  label: string
-  value: string
-  masked?: boolean
-}) {
-  const t = useT()
-  return (
-    <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {t(label)}
-      </p>
-      <div className="mt-1.5 flex items-center gap-2">
-        <p className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
-          {masked ? value.replace(/./g, '•') : value}
-        </p>
-        <Copy className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-      </div>
-    </div>
-  )
-}
+const CREDENTIALS = [
+  { label: 'Endpoint', value: 'https://fra.cloud.appwrite.io/v1/s3', masked: false },
+  { label: 'Access key', value: '6512a8f0e4c1', masked: false },
+  { label: 'Secret key', value: '••••••••••••••••', masked: true },
+] as const
 
 export function StorageS3Visual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame
-      tabs={[
-        { id: 'app', label: t('App') },
-        { id: 'server', label: t('Server') },
-        { id: 's3', label: 'S3', active: true },
-      ]}
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-start gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
-              <Server className="size-4 text-muted-foreground" aria-hidden />
+    <div className="relative mx-auto w-full max-w-[540px] pb-36 sm:pe-14">
+      <ArtWindow
+        className="product-hero-rise"
+        style={riseStyle(60)}
+        title={<span dir="ltr">~/site · zsh</span>}
+        bodyClassName="px-4 py-3.5"
+      >
+        <pre dir="ltr" className="overflow-hidden font-mono text-[11px] leading-[1.85]">
+          <code>
+            <T tone="comment">$</T> <T tone="function">rclone</T> <T tone="identifier">copy</T>{' '}
+            <T tone="string">./assets</T> <T tone="string">appwrite:marketing-assets</T>
+            {'\n'}
+            <T tone="comment">Transferred:</T> <T tone="number">128</T> <T tone="comment">/</T>{' '}
+            <T tone="number">128</T>
+            <T tone="comment">, </T>
+            <T tone="number">100%</T>
+            {'\n'}
+            <T tone="comment">Elapsed time:</T> <T tone="number">4.2s</T>
+            {'\n\n'}
+            <T tone="comment">$</T> <T tone="function">aws</T> <T tone="identifier">s3 ls</T>{' '}
+            <T tone="string">s3://marketing-assets</T>
+            {'\n'}
+            <T tone="comment">2026-10-03</T> <T tone="number">842 KB</T> <T tone="identifier">hero-banner.webp</T>
+            {'\n'}
+            <T tone="comment">2026-10-03</T> <T tone="number">1.2 MB</T> <T tone="identifier">pricing.pdf</T>
+            <span className="ms-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-[ai-mock-cursor-blink_1s_step-end_infinite] bg-foreground/60 motion-reduce:animate-none" />
+          </code>
+        </pre>
+      </ArtWindow>
+
+      <div className="absolute end-0 top-10 z-[2] hidden flex-col gap-2 sm:flex">
+        {COMPATIBLE_TOOLS.map((tool, index) => (
+          <span
+            key={tool.id}
+            className="product-hero-rise"
+            style={riseStyle(500 + index * 110)}
+            title={tool.name}
+          >
+            <span
+              className="product-hero-float flex size-11 items-center justify-center rounded-xl border border-border bg-background shadow-sm dark:bg-card"
+              style={floatStyle(index * 380) as CSSProperties}
+            >
+              <ProductFeaturePublicIcon src={tool.iconSrc} className="size-[18px]" />
             </span>
-            <div>
-              <p className="text-[13px] font-semibold text-foreground">{t('S3-compatible access')}</p>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
-                {t('Project-scoped endpoint with SigV4 signing.')}
-              </p>
-            </div>
-          </div>
+          </span>
+        ))}
+      </div>
+
+      <ArtPanel
+        className="absolute bottom-0 start-0 z-[2] w-[min(320px,100%)] sm:start-[6%]"
+        innerClassName="product-tone-shadow p-3.5"
+        delayMs={700}
+        float
+        floatDelayMs={400}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12px] font-semibold text-foreground">{t('S3-compatible access')}</p>
           <Badge variant="info" className="shrink-0 text-[10px]">
             SigV4
           </Badge>
         </div>
-
-        <div className="space-y-2">
-          <MockCredentialRow
-            label={t('Endpoint')}
-            value="https://cloud.appwrite.io/v1/s3"
-          />
-          <MockCredentialRow label={t('Access key')} value="AKIA4EXAMPLEKEY" masked />
-          <MockCredentialRow label={t('Secret key')} value="wJalrXUtnFEMIEXAMPLE" masked />
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{t('Project-scoped endpoint with SigV4 signing.')}</p>
+        <div className="mt-2.5 space-y-1.5">
+          {CREDENTIALS.map((credential) => (
+            <div
+              key={credential.label}
+              className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-1.5"
+            >
+              <span className="w-[72px] shrink-0 text-[10px] text-muted-foreground">{t(credential.label)}</span>
+              <span dir="ltr" className="min-w-0 flex-1 truncate text-start font-mono text-[10px] text-foreground">
+                {credential.value}
+              </span>
+              <Copy className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
+          ))}
         </div>
-
-        <div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Works with')}
-          </p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {COMPATIBLE_TOOLS.map((tool) => (
-              <div
-                key={tool.id}
-                className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1.5 transition-colors group-hover/visual:border-foreground/10 group-hover/visual:bg-muted/40"
-              >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30">
-                  <ProductFeaturePublicIcon src={tool.iconSrc} className="size-3.5" />
-                </span>
-                <span className="min-w-0 truncate text-[10px] font-medium text-foreground">
-                  {tool.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
-          <p className="text-[11px] leading-5 text-muted-foreground">
-            {t('Attach Storage to existing object-storage pipelines without rebuilding upload flows.')}
-          </p>
-        </div>
-      </div>
-    </ProductFeatureVisualFrame>
+      </ArtPanel>
+    </div>
   )
 }

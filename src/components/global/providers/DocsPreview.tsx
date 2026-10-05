@@ -36,9 +36,14 @@ import {
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
-import { isDatabaseTypeDocsSlugHidden } from '@/lib/docs/database-docs-feature'
-import { isDomainsDocsSlug } from '@/lib/docs/domains-docs-feature'
-import { isFirewallDocsSlug } from '@/lib/docs/firewall-docs-feature'
+import {
+  isDomainsDocsEnabled,
+  isDomainsDocsSlug,
+} from '@/lib/docs/domains-docs-feature'
+import {
+  isFirewallDocsEnabled,
+  isFirewallDocsSlug,
+} from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
@@ -47,7 +52,6 @@ import {
   openInNewTab,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
-import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { useDocsPreview } from './DocsPreviewContext'
@@ -63,8 +67,8 @@ export function DocsPreviewContent() {
   const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
-  const domainsDocsEnabled = isCloudProfile()
-  const firewallDocsEnabled = isCloudProfile()
+  const domainsDocsEnabled = isDomainsDocsEnabled()
+  const firewallDocsEnabled = isFirewallDocsEnabled()
   const agentDocsEnabled = features.agent
 
   const showMenu =
@@ -75,8 +79,7 @@ export function DocsPreviewContent() {
     (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
     (!isDomainsDocsSlug(slug) || domainsDocsEnabled) &&
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
-    (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
-    !isDatabaseTypeDocsSlugHidden(slug)
+    (!isAgentDocsSlug(slug) || agentDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -90,7 +93,6 @@ export function DocsPreviewContent() {
       (!isDomainsDocsSlug(slug!) || domainsDocsEnabled) &&
       (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
-      !isDatabaseTypeDocsSlugHidden(slug!) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -115,10 +117,6 @@ export function DocsPreviewContent() {
         return
       }
       if (isAgentDocsSlug(nextSlug) && !agentDocsEnabled) {
-        openDocsPreview('', { view: 'article' })
-        return
-      }
-      if (isDatabaseTypeDocsSlugHidden(nextSlug)) {
         openDocsPreview('', { view: 'article' })
         return
       }
@@ -152,10 +150,6 @@ export function DocsPreviewContent() {
       return
     }
     if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
-      openDocsPreview('', { view: 'article' })
-      return
-    }
-    if (isDatabaseTypeDocsSlugHidden(slug)) {
       openDocsPreview('', { view: 'article' })
     }
   }, [
@@ -231,10 +225,6 @@ export function DocsPreviewContent() {
   }
 
   if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
-    return null
-  }
-
-  if (isDatabaseTypeDocsSlugHidden(slug)) {
     return null
   }
 

@@ -179,7 +179,7 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
       },
       {
         title: 'Managed PostgreSQL',
-        url: `${origin}/docs/products/databases/postgresql`,
+        url: `${origin}/products/postgres`,
         description:
           'Hosted PostgreSQL with pgvector, Prisma, backups, replicas, and PITR.',
       },
@@ -197,6 +197,12 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
         title: 'Messaging',
         url: `${origin}/products/messaging`,
         description: 'Set up push notifications, emails, and SMS.',
+      },
+      {
+        title: 'Realtime',
+        url: `${origin}/products/realtime`,
+        description:
+          'Subscribe to live events over WebSocket with channels, query filters, and presence.',
       },
       {
         title: 'Sites',

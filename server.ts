@@ -112,6 +112,10 @@ import {
   HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
   wellKnownChangePasswordResponse,
 } from './src/lib/seo/change-password-url.ts'
+import {
+  SECURITY_TXT_WELL_KNOWN_PATH,
+  wellKnownSecurityTxtResponse,
+} from './src/lib/seo/security-txt.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
 import {
   injectSsrVisitorCountryIntoHtml,
@@ -901,6 +905,9 @@ async function initializeServer() {
         new Response('Not Found', { status: 404 }),
       [HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH]: (req: Request) =>
         wellKnownChangePasswordResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [SECURITY_TXT_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownSecurityTxtResponse(req) ??
         new Response('Not Found', { status: 404 }),
 
       // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,

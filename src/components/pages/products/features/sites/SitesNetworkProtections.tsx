@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -17,17 +18,18 @@ export function SitesNetworkProtections({ className }: SitesNetworkProtectionsPr
   const t = useT()
   return (
     <div className={cn('flex flex-wrap justify-center gap-2', className)}>
-      {NETWORK_PROTECTIONS.map((label) => (
-        <div
+      {NETWORK_PROTECTIONS.map((label, index) => (
+        <span
           key={label}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/20 px-3 py-2 text-[13px] font-medium text-foreground"
+          className="product-hero-rise inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[13px] font-medium text-foreground shadow-sm dark:bg-card"
+          style={riseStyle(100 + index * 90)}
         >
           <CheckCircle2
             className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
             aria-hidden
           />
           {t(label)}
-        </div>
+        </span>
       ))}
     </div>
   )

@@ -15,14 +15,14 @@ import {
 import { SheetClose } from '@/components/ui/sheet'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  MARKETING_PRODUCT_NAV_CATEGORIES,
+  getMarketingProductMenuCategories,
   PRODUCT_NAV_REGISTRY,
   isProductId,
   type ProductNavCategory,
 } from '@/lib/products/registry'
 import { isProductReleased } from '@/lib/products/availability'
 import { isProductNavItemNew } from '@/lib/products/new-badge'
-import type { ProductNavItemId } from '@/lib/products/types'
+import type { ProductId, ProductNavItemId } from '@/lib/products/types'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -42,18 +42,13 @@ type MarketingProductsNavPanelProps = {
 }
 
 type ProductNamesCopy = {
-  auth: string
-  databases: string
-  storage: string
-  functions: string
-  messaging: string
-  videos: string
-  sites: string
+  [key in ProductId]: string
 }
 
 type ProductNavigationItemsCopy = {
   authTagline: string
   databasesTagline: string
+  postgresTagline: string
   storageTagline: string
   functionsTagline: string
   messagingTagline: string
@@ -87,20 +82,17 @@ type ProductNavigationCopy = {
 }
 
 function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
-  const { isCloud, features } = useConsoleProfile()
+  const { features } = useConsoleProfile()
 
   return useMemo(
     () =>
-      MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
-        ...category,
-        productIds: category.productIds.filter((id) => {
-          if (id === 'firewall') return isCloud
-          if (id === 'domains') return isCloud
-          if (id === 'agent') return features.agent
-          return isProductReleased(id, features)
-        }),
-      })).filter((category) => category.productIds.length > 0),
-    [features, isCloud],
+      getMarketingProductMenuCategories({ agent: features.agent })
+        .map((category) => ({
+          ...category,
+          productIds: category.productIds.filter((id) => isProductReleased(id, features)),
+        }))
+        .filter((category) => category.productIds.length > 0),
+    [features],
   )
 }
 
@@ -121,12 +113,13 @@ function getLocalizedProductNavItemName(
 ): string {
   if (navItemId === 'auth') return productNamesCopy.auth
   if (navItemId === 'databases') return productNamesCopy.databases
+  if (navItemId === 'postgres') return productNamesCopy.postgres
   if (navItemId === 'storage') return productNamesCopy.storage
   if (navItemId === 'functions') return productNamesCopy.functions
   if (navItemId === 'messaging') return productNamesCopy.messaging
   if (navItemId === 'videos') return productNamesCopy.videos
   if (navItemId === 'sites') return productNamesCopy.sites
-  if (navItemId === 'realtime') return navigationItemsCopy.realtimeName
+  if (navItemId === 'realtime') return productNamesCopy.realtime
   if (navItemId === 'agent') return navigationItemsCopy.agentName
   if (navItemId === 'domains') return navigationItemsCopy.domainsName
   if (navItemId === 'firewall') return navigationItemsCopy.firewallName
@@ -141,6 +134,7 @@ function getLocalizedProductNavItemTagline(
 ): string {
   if (navItemId === 'auth') return navigationItemsCopy.authTagline
   if (navItemId === 'databases') return navigationItemsCopy.databasesTagline
+  if (navItemId === 'postgres') return navigationItemsCopy.postgresTagline
   if (navItemId === 'storage') return navigationItemsCopy.storageTagline
   if (navItemId === 'functions') return navigationItemsCopy.functionsTagline
   if (navItemId === 'messaging') return navigationItemsCopy.messagingTagline

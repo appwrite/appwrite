@@ -11,6 +11,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { PostgresElephantIcon } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
 import type {
   ProductId,
   ProductNavItem,
@@ -22,10 +23,12 @@ import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 export const PRODUCT_IDS = [
   'auth',
   'databases',
+  'postgres',
   'storage',
   'functions',
   'messaging',
   'videos',
+  'realtime',
   'sites',
   'firewall',
 ] as const satisfies readonly ProductId[]
@@ -48,6 +51,15 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     icon: Database,
     tagline: 'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
     docsPath: '/docs/products/databases',
+  },
+  postgres: {
+    id: 'postgres',
+    name: 'PostgreSQL',
+    group: 'build',
+    path: '/products/postgres',
+    icon: PostgresElephantIcon,
+    tagline: 'Managed PostgreSQL with pooling, replicas, and PITR.',
+    docsPath: '/docs/products/databases/postgresql',
   },
   storage: {
     id: 'storage',
@@ -84,6 +96,15 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     icon: VIDEOS_PRODUCT_ICON,
     tagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
   },
+  realtime: {
+    id: 'realtime',
+    name: 'Realtime',
+    group: 'build',
+    path: '/products/realtime',
+    icon: Radio,
+    tagline: 'Live events, channels, and presence.',
+    docsPath: '/docs/apis/realtime',
+  },
   sites: {
     id: 'sites',
     name: 'Sites',
@@ -115,6 +136,7 @@ export const DEPLOY_PRODUCT_IDS = PRODUCT_IDS.filter(
 export const PRODUCT_NAV_ITEM_IDS = [
   'auth',
   'databases',
+  'postgres',
   'storage',
   'functions',
   'messaging',
@@ -143,6 +165,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: PRODUCT_REGISTRY.databases.path,
     icon: PRODUCT_REGISTRY.databases.icon,
     tagline: PRODUCT_REGISTRY.databases.tagline,
+  },
+  postgres: {
+    id: 'postgres',
+    name: PRODUCT_REGISTRY.postgres.name,
+    group: 'build',
+    href: PRODUCT_REGISTRY.postgres.path,
+    icon: PRODUCT_REGISTRY.postgres.icon,
+    tagline: PRODUCT_REGISTRY.postgres.tagline,
   },
   storage: {
     id: 'storage',
@@ -178,11 +208,11 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
   },
   realtime: {
     id: 'realtime',
-    name: 'Realtime',
+    name: PRODUCT_REGISTRY.realtime.name,
     group: 'build',
-    href: '/docs/apis/realtime',
-    icon: Radio,
-    tagline: 'Live events, channels, and presence.',
+    href: PRODUCT_REGISTRY.realtime.path,
+    icon: PRODUCT_REGISTRY.realtime.icon,
+    tagline: PRODUCT_REGISTRY.realtime.tagline,
   },
   agent: {
     id: 'agent',
@@ -273,6 +303,41 @@ export const MARKETING_PRODUCT_NAV_CATEGORIES = PRODUCT_NAV_CATEGORIES.map(
     productIds: category.productIds.filter((id) => !isProductNavItemComingSoon(id)),
   }),
 )
+
+export function isMarketingProductMenuNavItem(
+  id: ProductNavItemId,
+  options: { agent: boolean },
+): boolean {
+  if (isProductNavItemComingSoon(id)) return false
+  if (id === 'agent') return options.agent
+  return true
+}
+
+export function getMarketingProductMenuCategories(options: {
+  agent: boolean
+}): ProductNavCategory[] {
+  return MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
+    ...category,
+    productIds: category.productIds.filter((id) =>
+      isMarketingProductMenuNavItem(id, options),
+    ),
+  })).filter((category) => category.productIds.length > 0)
+}
+
+/** Product pages plus Domains for the “Explore Appwrite” grid on /products/*. */
+export const PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS = [
+  'auth',
+  'databases',
+  'postgres',
+  'storage',
+  'functions',
+  'messaging',
+  'videos',
+  'realtime',
+  'sites',
+  'domains',
+  'firewall',
+] as const satisfies readonly ProductNavItemId[]
 
 export function isProductNavItemId(value: string): value is ProductNavItemId {
   return (PRODUCT_NAV_ITEM_IDS as readonly string[]).includes(value)

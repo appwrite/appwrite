@@ -4,6 +4,8 @@ import { DATABASES_FEATURE_VISUALS } from '@/components/pages/products/features/
 import { FIREWALL_FEATURE_VISUALS } from '@/components/pages/products/features/firewall'
 import { FUNCTIONS_FEATURE_VISUALS } from '@/components/pages/products/features/functions'
 import { MESSAGING_FEATURE_VISUALS } from '@/components/pages/products/features/messaging'
+import { POSTGRES_FEATURE_VISUALS } from '@/components/pages/products/features/postgres'
+import { REALTIME_FEATURE_VISUALS } from '@/components/pages/products/features/realtime'
 import { SITES_FEATURE_VISUALS } from '@/components/pages/products/features/sites'
 import { STORAGE_FEATURE_VISUALS } from '@/components/pages/products/features/storage'
 import { VIDEOS_FEATURE_VISUALS } from '@/components/pages/products/features/videos'
@@ -17,6 +19,8 @@ const PRODUCT_FEATURE_VISUALS: Partial<
   firewall: FIREWALL_FEATURE_VISUALS,
   functions: FUNCTIONS_FEATURE_VISUALS,
   messaging: MESSAGING_FEATURE_VISUALS,
+  postgres: POSTGRES_FEATURE_VISUALS,
+  realtime: REALTIME_FEATURE_VISUALS,
   sites: SITES_FEATURE_VISUALS,
   storage: STORAGE_FEATURE_VISUALS,
   videos: VIDEOS_FEATURE_VISUALS,

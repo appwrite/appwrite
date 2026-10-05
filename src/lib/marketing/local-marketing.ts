@@ -1,5 +1,4 @@
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
 import { useMarketingSiteLayoutProvided } from '@/lib/marketing/marketing-site-layout-context'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
@@ -19,7 +18,6 @@ export function isLocalMarketingEnabled(
 
 export function useLocalMarketingEnabled(): boolean {
   const { features } = useConsoleProfile()
-  const { preLaunch } = useDebugOverrides()
   const inMarketingLayout = useMarketingSiteLayoutProvided()
   const pathname = useRouterState({
     select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
@@ -28,6 +26,6 @@ export function useLocalMarketingEnabled(): boolean {
     (features.marketing ||
       inMarketingLayout ||
       matchesMarketingPagePath(pathname)) &&
-    !preLaunch
+    !isPreLaunchModeEnabled()
   )
 }

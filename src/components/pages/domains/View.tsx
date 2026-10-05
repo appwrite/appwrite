@@ -2,8 +2,11 @@ import { useCallback } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { DomainsSearchBackground } from '@/components/pages/domains/DomainsSearchSoftLights'
+import { DomainsDefaultState } from '@/components/pages/domains/_components/DomainsDefaultState'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { DomainSearchResults } from '@/components/pages/organizations/$orgId/domains/_components/DomainSearchResults'
+import { ProductHeroIcon } from '@/components/pages/products/_components/ProductHeroIcon'
+import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import {
   buildBuyDomainWizardSearch,
   buildSignInForDomainPath,
@@ -102,12 +105,21 @@ export function View({
     [continueToBuyWizard],
   )
 
+  const searching = initialSearch.trim().length > 0
+
   return (
-    <div className="relative isolate min-h-[calc(100dvh-3.5rem)] min-w-0 bg-background">
-      <DomainsSearchBackground />
+    <div className="relative isolate min-h-[calc(100dvh-3.5rem)] min-w-0 overflow-x-clip bg-background">
+      <DomainsSearchBackground spotlight={!searching} />
       <div className="relative z-[2]">
         <DomainSearchResults
           variant="focus"
+          eyebrow={
+            <ProductHeroIcon
+              icon={PRODUCT_NAV_REGISTRY.domains.icon}
+              name={PRODUCT_NAV_REGISTRY.domains.name}
+            />
+          }
+          emptyState={<DomainsDefaultState onExampleSearch={onSearchValueChange} />}
           initialSearch={initialSearch}
           onSearchValueChange={onSearchValueChange}
           onSelectDomain={handleSelectDomain}

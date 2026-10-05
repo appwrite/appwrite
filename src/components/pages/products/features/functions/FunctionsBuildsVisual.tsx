@@ -1,191 +1,186 @@
-'use client'
-
-import { useState } from 'react'
-import { CheckCircle2, Copy, Download, Search } from 'lucide-react'
-import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
+import type { CSSProperties } from 'react'
+import { CheckCircle2, Circle, Cpu, Loader2, Zap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { ArtIconBadge, ArtPanel, riseStyle } from '@/components/pages/products/_components/ArtParts'
+import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
-import { DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS } from '@/lib/utils/deployment-status'
 import { cn } from '@/lib/utils'
 
-const SCROLL_FADE_MASK_CLASS =
-  '[mask-image:linear-gradient(to_bottom,black_calc(100%-5rem),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_calc(100%-5rem),transparent)]'
-
-const MOCK_BUILD_LOGS = `[10:24:01] Starting build for process-order
-[10:24:02] Restoring dependency cache
-[10:24:03] \x1b[32mDependency cache restored in 1.2s\x1b[0m
-[10:24:03] Running build command: pnpm install --frozen-lockfile
-[10:24:05] Lockfile is up to date, resolution step skipped
-[10:24:07] Packages: +42
-[10:24:11] \x1b[32mDone in 8.1s (cache hit)\x1b[0m
-[10:24:11] Running build command: npm run build
-[10:24:14] Compiling TypeScript…
-[10:24:18] Bundling function entrypoint
-[10:24:21] Optimizing output for node-22
-[10:24:23] \x1b[32mBuild finished successfully\x1b[0m
-[10:24:23] Packaging deployment artifact`
-
-const DEPLOYMENTS = [
-  {
-    id: '67abc12f9e2d',
-    status: 'active' as const,
-    duration: '24s',
-    created: '2m ago',
-  },
-  {
-    id: '89def45a1c8b',
-    status: 'ready' as const,
-    duration: '1m 12s',
-    created: 'Yesterday',
-  },
+const BUILD_STEPS = [
+  { label: 'Restoring dependency cache', duration: '1.2s', state: 'done' },
+  { label: 'pnpm install --frozen-lockfile', duration: '8.1s', state: 'done' },
+  { label: 'npm run build', duration: '12s', state: 'running' },
+  { label: 'Packaging deployment artifact', duration: '', state: 'pending' },
 ] as const
 
-function MockDeploymentId({ id }: { id: string }) {
-  return (
-    <span className="inline-flex max-w-[7rem] items-center gap-1.5 truncate font-mono text-[11px] text-foreground">
-      {id}
-      <Copy className="size-3 shrink-0 text-muted-foreground/70" aria-hidden />
-    </span>
-  )
+const PACKAGE_MANAGERS = [
+  { id: 'npm', icon: '/icons/npm.svg' },
+  { id: 'pnpm', icon: '/icons/pnpm.svg' },
+  { id: 'yarn', icon: '/icons/yarn.svg' },
+  { id: 'bun', icon: '/icons/bun.svg' },
+] as const
+
+const SPECIFICATIONS = [
+  { label: 'Build', value: '2 vCPU · 2 GB', share: 1 },
+  { label: 'Runtime', value: '0.5 vCPU · 512 MB', share: 0.3 },
+] as const
+
+function StepIcon({ state }: { state: (typeof BUILD_STEPS)[number]['state'] }) {
+  if (state === 'done') {
+    return <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+  }
+  if (state === 'running') {
+    return (
+      <Loader2
+        className="size-4 animate-spin text-[var(--tone-ink)] motion-reduce:animate-none"
+        aria-hidden
+      />
+    )
+  }
+  return <Circle className="size-4 text-muted-foreground/50" aria-hidden />
 }
 
 export function FunctionsBuildsVisual() {
   const t = useT()
-  const [logsSearch, setLogsSearch] = useState('')
 
   return (
-    <ProductFeatureVisualFrame
-      tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'deployments', label: 'Deployments', active: true },
-        { id: 'settings', label: 'Settings' },
-      ]}
-      contentClassName="p-0"
-    >
-      <div className="grid min-h-[18rem] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-e">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-            <h3 className="text-[13px] font-semibold text-foreground">{t('Build logs')}</h3>
-            <span className="shrink-0 text-[11px] text-muted-foreground">
-              {t('Duration:')} <span className="font-medium text-foreground">24s</span>
-            </span>
-          </div>
-
-          <div className="border-b border-border px-3 py-2.5">
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={t('Search logs...')}
-                  value={logsSearch}
-                  onChange={(event) => setLogsSearch(event.target.value)}
-                  className="h-8 ps-8 text-[12px]"
-                />
-              </div>
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
-                <Download className="size-3.5" aria-hidden />
-              </span>
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
-                <Copy className="size-3.5" aria-hidden />
-              </span>
-            </div>
-          </div>
-
-          <div className={cn('relative max-h-[14rem] overflow-hidden', SCROLL_FADE_MASK_CLASS)}>
-            <BuildLogsView
-              buildLogs={MOCK_BUILD_LOGS}
-              searchTerm={logsSearch}
-              highlightLineOnHover
-              fontSizeClass="text-[10px] sm:text-[11px]"
-              lineHorizontalPaddingClass="ps-3 pe-3"
-              trailingPadding={false}
-            />
-          </div>
+    <div className="relative mx-auto grid w-full max-w-[560px] items-start gap-6 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] sm:gap-5">
+      <div className="min-w-0">
+        <div
+          className="product-hero-rise mb-3 flex flex-wrap items-center gap-2"
+          style={riseStyle(0)}
+        >
+          <Badge variant="deploymentBuilding" className="gap-1.5 text-[10px]">
+            <Loader2 className="size-3 animate-spin motion-reduce:animate-none" aria-hidden />
+            {t('Building')}
+          </Badge>
+          <span dir="ltr" className="font-mono text-[11px] text-foreground">
+            67abc12f9e2d
+          </span>
+          <span className="ms-auto text-[11px] text-muted-foreground">
+            {t('Duration:')} <span className="font-medium text-foreground">24s</span>
+          </span>
         </div>
 
-        <div className="min-w-0 p-3 sm:p-4">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Deployments')}
-          </p>
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t('Deployment ID')}
-                  </TableHead>
-                  <TableHead
-                    className={cn(
-                      'px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
-                      DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+        <div className="relative">
+          <span
+            className="absolute bottom-5 start-[27px] top-5 border-s border-dashed border-foreground/25"
+            aria-hidden
+          />
+          <ol className="space-y-2">
+            {BUILD_STEPS.map((step, index) => {
+              const running = step.state === 'running'
+              return (
+                <li key={step.label}>
+                  <ArtPanel
+                    delayMs={150 + index * 140}
+                    innerClassName={cn(
+                      'relative flex items-center gap-2.5 px-3 py-2.5',
+                      running &&
+                        'product-tone-shadow border-[rgb(var(--tone-rgb)/0.45)] dark:border-[rgb(var(--tone-rgb)/0.45)]',
+                      step.state === 'pending' && 'opacity-60',
                     )}
                   >
-                    {t('Status')}
-                  </TableHead>
-                  <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[72px]">
-                    {t('Duration')}
-                  </TableHead>
-                  <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[88px]">
-                    {t('Created')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {DEPLOYMENTS.map((deployment) => {
-                  const isActive = deployment.status === 'active'
-                  return (
-                    <TableRow
-                      key={deployment.id}
-                      className={cn(
-                        'border-b border-border hover:bg-muted/50',
-                        isActive && 'bg-muted/40 dark:bg-muted/35',
-                      )}
-                    >
-                      <TableCell className="px-3 py-2.5">
-                        <MockDeploymentId id={deployment.id} />
-                      </TableCell>
-                      <TableCell
-                        className={cn('px-3 py-2.5', DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS)}
+                    <span className="relative z-[1] flex size-7 shrink-0 items-center justify-center rounded-full bg-background dark:bg-card">
+                      <StepIcon state={step.state} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        dir="ltr"
+                        className="truncate text-start font-mono text-[11px] text-foreground"
                       >
-                        {isActive ? (
-                          <Badge variant="active" className="gap-1.5 text-[10px] font-medium">
-                            <CheckCircle2 className="size-3" aria-hidden />
-                            {t('Active')}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="deploymentReady"
-                            className="gap-1.5 text-[10px] font-medium"
-                          >
-                            <CheckCircle2 className="size-3" aria-hidden />
-                            {t('Ready')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-3 py-2.5 text-[11px] text-foreground">
-                        {deployment.duration}
-                      </TableCell>
-                      <TableCell className="px-3 py-2.5 text-[11px] text-muted-foreground">
-                        {t(deployment.created)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                        {step.label}
+                      </p>
+                      {running ? (
+                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="product-hero-fill h-full w-[72%] rounded-full bg-[var(--tone-ink)]"
+                            style={
+                              {
+                                '--fill-delay': '900ms',
+                                '--fill-duration': '3.2s',
+                              } as CSSProperties
+                            }
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                    {step.duration ? (
+                      <span dir="ltr" className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                        {step.duration}
+                      </span>
+                    ) : null}
+                  </ArtPanel>
+                </li>
+              )
+            })}
+          </ol>
         </div>
       </div>
-    </ProductFeatureVisualFrame>
+
+      <div className="min-w-0 space-y-3 sm:pt-10">
+        <ArtPanel innerClassName="px-3.5 py-3" delayMs={600} float floatDelayMs={200}>
+          <div className="flex items-center gap-2">
+            <ArtIconBadge icon={Zap} />
+            <p className="text-[12px] font-semibold text-foreground">{t('Cache hit')}</p>
+            <span dir="ltr" className="ms-auto font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
+              -8.1s
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-1.5">
+            {PACKAGE_MANAGERS.map((manager, index) => (
+              <span
+                key={manager.id}
+                className="product-hero-rise relative flex aspect-square items-center justify-center rounded-lg border border-border bg-muted/30"
+                style={riseStyle(800 + index * 110)}
+                title={manager.id}
+              >
+                <ProductFeaturePublicIcon src={manager.icon} className="size-4" />
+                <CheckCircle2
+                  className="absolute -end-1 -top-1 size-3 rounded-full bg-background text-emerald-600 dark:bg-card dark:text-emerald-400"
+                  aria-hidden
+                />
+              </span>
+            ))}
+          </div>
+        </ArtPanel>
+
+        <ArtPanel
+          className="sm:-ms-6"
+          innerClassName="px-3.5 py-3"
+          delayMs={850}
+          float
+          floatDelayMs={900}
+        >
+          <div className="flex items-center gap-2">
+            <ArtIconBadge icon={Cpu} tone="secondary" />
+            <p className="text-[12px] font-semibold text-foreground">{t('Specifications')}</p>
+          </div>
+          <div className="mt-2.5 space-y-2">
+            {SPECIFICATIONS.map((spec) => (
+              <div key={spec.label}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground">{t(spec.label)}</span>
+                  <span dir="ltr" className="font-mono text-[10px] text-foreground">
+                    {spec.value}
+                  </span>
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="product-hero-fill h-full rounded-full bg-[rgb(var(--tone2-rgb)/0.7)]"
+                    style={
+                      {
+                        width: `${spec.share * 100}%`,
+                        '--fill-delay': '1100ms',
+                      } as CSSProperties
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </ArtPanel>
+      </div>
+    </div>
   )
 }

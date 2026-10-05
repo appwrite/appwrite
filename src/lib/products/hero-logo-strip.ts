@@ -36,7 +36,7 @@ const SITES_FRAMEWORK_ITEMS: ProductHeroLogoStripItem[] = [
  * Functions runtimes from docs (one entry per runtime family).
  * @see src/content/docs/products/functions/runtimes/index.markdoc
  */
-const FUNCTIONS_RUNTIME_ITEMS: ProductHeroLogoStripItem[] = [
+export const FUNCTIONS_RUNTIME_ITEMS: ProductHeroLogoStripItem[] = [
   { name: 'Node.js', key: 'node-22' },
   { name: 'Bun', key: 'bun-1.3' },
   { name: 'Deno', key: 'deno-2.0' },

@@ -1,92 +1,88 @@
-import { Badge } from '@/components/ui/badge'
-import { MockProviderTile } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { Check } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import { Switch } from '@/components/ui/switch'
+import { ArtChip, ArtPanel, floatStyle, riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 
-const POPULAR_PROVIDERS = [
-  { id: 'google', name: 'Google', icon: '/icons/google.svg', enabled: true },
-  { id: 'github', name: 'GitHub', icon: '/icons/github.svg', enabled: true },
-  { id: 'apple', name: 'Apple', icon: '/icons/apple.svg', enabled: true },
-  { id: 'discord', name: 'Discord', icon: '/icons/discord-simple.svg', enabled: false },
-  { id: 'microsoft', name: 'Microsoft', icon: '/icons/microsoft.svg', enabled: false },
-  { id: 'spotify', name: 'Spotify', icon: '/icons/spotify.svg', enabled: false },
+const ENABLED_PROVIDERS = [
+  { id: 'google', name: 'Google', icon: '/icons/google.svg' },
+  { id: 'github', name: 'GitHub', icon: '/icons/github.svg' },
+  { id: 'apple', name: 'Apple', icon: '/icons/apple.svg' },
 ] as const
 
-const MORE_PROVIDERS = [
-  { id: 'gitlab', name: 'GitLab', icon: '/icons/gitlab.svg' },
-  { id: 'linkedin', name: 'LinkedIn', icon: '/icons/linkedin.svg' },
-  { id: 'slack', name: 'Slack', icon: '/icons/slack.svg' },
-  { id: 'twitch', name: 'Twitch', icon: '/icons/twitch.svg' },
-  { id: 'facebook', name: 'Facebook', icon: '/icons/facebook.svg' },
-  { id: 'okta', name: 'Okta', icon: '/icons/okta.svg' },
-] as const
+/** Scattered around the panel; `fade` dims tiles further from the center. */
+const SCATTERED_PROVIDERS: { id: string; icon: string; className: string; fade?: boolean }[] = [
+  { id: 'discord', icon: '/icons/discord-simple.svg', className: 'start-[4%] top-[6%]' },
+  { id: 'microsoft', icon: '/icons/microsoft.svg', className: 'start-[22%] top-[0%]', fade: true },
+  { id: 'gitlab', icon: '/icons/gitlab.svg', className: 'end-[20%] top-[2%]' },
+  { id: 'slack', icon: '/icons/slack.svg', className: 'end-[2%] top-[18%]', fade: true },
+  { id: 'linkedin', icon: '/icons/linkedin.svg', className: 'start-[0%] top-[46%]', fade: true },
+  { id: 'spotify', icon: '/icons/spotify.svg', className: 'end-[0%] top-[56%]' },
+  { id: 'twitch', icon: '/icons/twitch.svg', className: 'start-[8%] bottom-[6%]' },
+  { id: 'okta', icon: '/icons/okta.svg', className: 'end-[12%] bottom-[2%]', fade: true },
+  { id: 'facebook', icon: '/icons/facebook.svg', className: 'start-[28%] bottom-[0%]', fade: true },
+]
 
 export function AuthOAuthVisual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame
-      tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'social', label: 'Social providers', active: true },
-        { id: 'settings', label: 'Settings' },
-      ]}
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-[13px] font-semibold text-foreground">
-              {t('Social providers')}
-            </p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              {t('Enable OAuth 2 sign-in for external accounts.')}
-            </p>
-          </div>
-          <Badge variant="info" className="text-[10px] shrink-0">
-            {t('30+ providers')}
-          </Badge>
-        </div>
+    <div className="relative mx-auto h-[380px] w-full max-w-[520px]">
+      {SCATTERED_PROVIDERS.map((provider, index) => (
+        <span
+          key={provider.id}
+          className={cn('product-hero-rise absolute', provider.className)}
+          style={riseStyle(200 + index * 70)}
+          aria-hidden
+        >
+          <span
+            className={cn(
+              'product-hero-float flex size-11 items-center justify-center rounded-xl border border-border bg-background shadow-sm dark:bg-card',
+              provider.fade && 'opacity-55',
+            )}
+            style={floatStyle(index * 380) as CSSProperties}
+          >
+            <ProductFeaturePublicIcon src={provider.icon} className="size-[18px]" />
+          </span>
+        </span>
+      ))}
 
-        <div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Popular')}
-          </p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {POPULAR_PROVIDERS.map((provider, index) => (
-              <MockProviderTile
-                key={provider.id}
-                name={provider.name}
-                iconSrc={provider.icon}
-                enabled={provider.enabled}
-                style={{ transitionDelay: `${index * 60}ms` }}
-              />
-            ))}
-          </div>
+      <ArtPanel
+        className="absolute left-1/2 top-1/2 z-[1] w-[min(260px,70%)] -translate-x-1/2 -translate-y-1/2"
+        innerClassName="product-tone-shadow p-3.5"
+        delayMs={60}
+      >
+        <p className="text-[12px] font-semibold text-foreground">{t('Social providers')}</p>
+        <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+          {t('Enable OAuth 2 sign-in for external accounts.')}
+        </p>
+        <div className="mt-3 space-y-1.5">
+          {ENABLED_PROVIDERS.map((provider, index) => (
+            <div
+              key={provider.id}
+              className="product-hero-rise flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-2"
+              style={riseStyle(350 + index * 120)}
+            >
+              <span className="flex items-center gap-2">
+                <ProductFeaturePublicIcon src={provider.icon} className="size-3.5" />
+                <span className="text-[12px] font-medium text-foreground">{provider.name}</span>
+              </span>
+              <Switch checked disabled className="scale-90 data-[state=checked]:bg-foreground/80" aria-hidden />
+            </div>
+          ))}
         </div>
+      </ArtPanel>
 
-        <div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('More providers')}
-          </p>
-          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
-            {MORE_PROVIDERS.map((provider) => (
-              <div
-                key={provider.id}
-                className="flex flex-col items-center gap-1 rounded-lg border border-border bg-background/80 px-1.5 py-2"
-              >
-                <ProductFeaturePublicIcon src={provider.icon} inactive />
-                <span className="truncate text-[9px] text-muted-foreground">{provider.name}</span>
-              </div>
-            ))}
-          </div>
+      <ArtChip className="bottom-[16%] end-[24%] sm:end-[26%]" delayMs={900} floatDelayMs={600}>
+        <div className="flex items-center gap-1.5">
+          <span className="flex size-4 items-center justify-center rounded-full bg-[rgb(var(--tone-rgb)/0.16)] text-[var(--tone-ink)]">
+            <Check className="size-2.5" strokeWidth={3} aria-hidden />
+          </span>
+          <span className="text-[11px] font-medium text-foreground">{t('30+ providers')}</span>
         </div>
-
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2.5 text-center">
-          <p className="text-[11px] text-muted-foreground">
-            {t('One-click signup via GitHub, Google, Apple, and more.')}
-          </p>
-        </div>
-      </div>
-    </ProductFeatureVisualFrame>
+      </ArtChip>
+    </div>
   )
 }

@@ -21,6 +21,11 @@ import type { BuyDomainWizardSearch } from '@/routes/_public/organizations.$orgI
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 import { DomainSearchResults } from './DomainSearchResults'
+import { DomainsSearchBackground } from '@/components/pages/domains/DomainsSearchSoftLights'
+import { DomainsDefaultState } from '@/components/pages/domains/_components/DomainsDefaultState'
+import { ProductHeroIcon } from '@/components/pages/products/_components/ProductHeroIcon'
+import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
+import { domainsHero } from '@/lib/domains/marketing-content'
 import type { DomainSelectionQuote } from '@/lib/domains/search'
 import { useT } from '@/lib/i18n/translate'
 
@@ -42,7 +47,8 @@ export function BuyDomainWizard({
     useOrganizationDomainsPlanLimit(orgId)
 
   const fallbackPath = `/organizations/${orgId}/domains/`
-  const initialSearch = routeSearch.domain ?? ''
+  const [searchValue, setSearchValue] = useState(routeSearch.domain ?? '')
+  const searching = searchValue.trim().length > 0
 
   useEffect(() => {
     if (
@@ -193,6 +199,11 @@ export function BuyDomainWizard({
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar={false}
+      constrainWidth={false}
+      contentPadding={false}
+      fullscreenContentXClassName="px-0"
+      fullscreenInnerClassName="relative isolate flex min-h-full flex-col overflow-x-clip"
+      contentClassName="relative z-[2] flex flex-1 flex-col"
       footer={
         <div className="flex gap-2 justify-end w-full">
           <Button variant="outline" onClick={() => navigate({ to: '..' })}>
@@ -201,13 +212,29 @@ export function BuyDomainWizard({
         </div>
       }
     >
+      <DomainsSearchBackground className="-z-10" spotlight={!searching} />
       <DomainSearchResults
-        initialSearch={initialSearch}
+        variant="focus"
+        heroSize="compact"
+        className="min-h-0 flex-1"
+        eyebrow={
+          <ProductHeroIcon
+            icon={PRODUCT_NAV_REGISTRY.domains.icon}
+            name={PRODUCT_NAV_REGISTRY.domains.name}
+          />
+        }
+        title={t(domainsHero.title)}
+        description={t(domainsHero.description)}
+        emptyState={
+          <DomainsDefaultState compact onExampleSearch={setSearchValue} />
+        }
+        initialSearch={searchValue}
+        onSearchValueChange={setSearchValue}
         onSelectDomain={handleSelectDomain}
         limitReached={isDomainLimitReached}
         limitMessage={
           isDomainLimitReached ? (
-            <p className="text-[12px] text-amber-600 dark:text-amber-400">
+            <p className="pt-1 text-center text-[12px] text-amber-600 dark:text-amber-400">
               {t('Your current plan includes up to')} {domainsLimit}{' '}
               {t('domains')}. <UpgradePlanLink orgId={orgId} />{' '}
               {t('to buy another domain.')}

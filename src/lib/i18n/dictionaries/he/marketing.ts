@@ -154,7 +154,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'Appwrite זכתה בפרס Golden Kitty של Product Hunt לכלי המפתחים הטוב ביותר, הוקרה להשפעת הפלטפורמה בקרב יוצרים וקהילת המפתחים הרחבה.', // pragma: allowlist secret
   'Appwrite-powered authentication screens generator for any application.': 'מחולל מסכי אימות מבוסס Appwrite לכל אפליקציה.', // pragma: allowlist secret
   'Appwrite-powered platform where you can sell your digital products online.': 'פלטפורמה מבוססת Appwrite למכירת מוצרים דיגיטליים אונליין.', // pragma: allowlist secret
-  'Apr 30, 2026': '30 באפריל 2026',
+  'Jan 31, 2027': '31 בינואר 2027',
   'Architecture and deployment guidance for your stack.': 'הכוונה בארכיטקטורה ובפריסה עבור הסטאק שלכם.',
   'Are OTP SMS costs covered by Appwrite?': 'האם עלויות SMS של OTP מכוסות על ידי Appwrite?', // pragma: allowlist secret
   'Arena announcement': 'הכרזת Arena',
@@ -945,8 +945,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'Screenshots': 'צילומי מסך',
   'Seamlessly deploy your code': 'פרסו את הקוד בצורה חלקה',
   'Search': 'חיפוש',
-  'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': // pragma: allowlist secret
-    'חפשו ביותר מ-160 סיומות דומיין עם תמחור חי ו-WHOIS פרטי. נהלו DNS, חברו אתרים, פונקציות או דומייני API מותאמים והנפיקו TLS בלי לצאת מ-Appwrite.', // pragma: allowlist secret
+  'Search 160+ TLDs with live pricing. Manage DNS and connect Sites, Functions, or APIs next to the rest of your backend.': // pragma: allowlist secret
+    'חפשו ביותר מ-160 סיומות דומיין עם תמחור חי. נהלו DNS וחברו אתרים, פונקציות או API לצד שאר ה-backend שלכם.', // pragma: allowlist secret
   'Search integrations...': 'חיפוש אינטגרציות',
   'Search logs...': 'חיפוש בלוגים...',
   'Search templates...': 'חיפוש תבניות…',
@@ -1707,4 +1707,13 @@ export const heMarketingDictionary: Record<string, string> = {
   'https://appwrite.io/llms.txt is the curated hub. Every docs, blog, changelog, and integrations page also has a Markdown twin: append .md to the URL.':
     'https://appwrite.io/llms.txt הוא הצומת המאוצר. לכל עמוד תיעוד, בלוג, changelog ואינטגרציות יש גם גרסת Markdown: הוסיפו .md לכתובת.',
   'llms.txt': 'llms.txt',
+  'Popular searches': 'חיפושים פופולריים',
+  '160+ TLDs': 'יותר מ-160 סיומות',
+  'Live pricing and availability as you type.': 'מחירים וזמינות בזמן אמת תוך כדי הקלדה.',
+  'Managed with your backend': 'מנוהל עם ה-backend שלכם',
+  'Buy and manage the domain in the same Console as Auth, Databases, Sites, and Functions.':
+    'רכשו ונהלו את הדומיין באותה קונסולה עם אימות, מסדי נתונים, אתרים ופונקציות.',
+  'Manage records in the Console, next to your projects.': 'ניהול רשומות ב-Console, לצד הפרויקטים שלכם.',
+  'Connect Sites, Functions, or API domains with certificates issued for you.':
+    'חיבור אתרים, פונקציות או דומיינים של API עם תעודות שמונפקות עבורכם.',
 }

@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils'
 
 type DomainsSearchBackgroundProps = {
   className?: string
+  /** Brand glow behind the hero copy, used before a search starts. */
+  spotlight?: boolean
 }
 
 /**
@@ -9,6 +11,7 @@ type DomainsSearchBackgroundProps = {
  */
 export function DomainsSearchBackground({
   className,
+  spotlight = false,
 }: DomainsSearchBackgroundProps) {
   return (
     <div
@@ -24,6 +27,15 @@ export function DomainsSearchBackground({
       />
 
       <div className="absolute inset-0 z-[1] overflow-hidden">
+        {spotlight ? (
+          <div
+            className={cn(
+              'absolute left-1/2 top-[-18%] h-[620px] w-[min(1100px,150%)] -translate-x-1/2',
+              'bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.16)_0%,rgba(253,54,110,0.05)_40%,transparent_70%)]',
+              'dark:bg-[radial-gradient(ellipse_at_center,rgba(253,54,110,0.12)_0%,rgba(253,54,110,0.035)_40%,transparent_70%)]',
+            )}
+          />
+        ) : null}
         <div
           className={cn(
             'absolute -start-[42%] bottom-[-32%] h-[480px] w-[820px] opacity-[0.52]',

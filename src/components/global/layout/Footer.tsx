@@ -9,7 +9,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { useOptionalCookieConsent } from '@/components/global/providers/CookieConsent'
-import { useDebugOverrides } from '@/lib/debug-overrides'
+import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { LegacyAppwriteIcon } from '@/components/global/shared/LegacyAppwriteBrand'
 import { getFooterPolicyLinks } from '@/lib/legal/policies'
 import {
@@ -154,22 +154,21 @@ function getExpandedFooterGroups(
     links: [
       productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
       productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
-      {
-        ...docsFooterLink(
-          footerCopy.expanded.products.postgresql,
-          '/docs/products/databases/postgresql',
-          marketing,
-        ),
-        analyticsAction: getMarketingProductAnalyticsAction('databases'),
-        isNew: isProductNavItemNew('databases'),
-      },
+      productFooterLink(
+        footerCopy.expanded.products.postgresql,
+        '/products/postgres',
+        marketing,
+        'postgres',
+      ),
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
-      {
-        ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
-        analyticsAction: getMarketingProductAnalyticsAction('realtime'),
-      },
+      productFooterLink(
+        footerCopy.expanded.products.realtime,
+        '/products/realtime',
+        marketing,
+        'realtime',
+      ),
       ...(agent
         ? [
             {
@@ -184,7 +183,7 @@ function getExpandedFooterGroups(
           ]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
-      ...(isCloud
+      ...(marketing || isCloud
         ? [
             marketingProductFooterLink(
               footerCopy.expanded.products.domains,
@@ -195,7 +194,7 @@ function getExpandedFooterGroups(
           ]
         : []),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
-      ...(isCloud
+      ...(marketing || isCloud
         ? [
             productFooterLink(
               footerCopy.expanded.products.firewall,
@@ -295,9 +294,9 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
-      docsFooterLink(
+      productFooterLink(
         footerCopy.expanded.compare.postgresqlHosting,
-        '/docs/products/databases/postgresql',
+        '/products/postgres',
         marketing,
       ),
       blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
@@ -362,7 +361,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const t = useT()
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
-  const { preLaunch } = useDebugOverrides()
+  const preLaunch = isPreLaunchModeEnabled()
   const localMarketing = features.marketing && !preLaunch
   const { catalog } = useI18n()
   const footerCopy = catalog.app.footer

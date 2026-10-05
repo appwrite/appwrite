@@ -3,7 +3,7 @@ layout: changelog
 title: Automatic image cropping with gravity=auto
 date: 2026-09-10
 cover: /images/blog/introducing-autogravity/cover.avif
-tags: storage, ai
+tags: storage
 ---
 
 The file preview endpoint now accepts `gravity=auto`. Instead of cropping toward a fixed position such as `center` or `top-left`, Appwrite finds the main subject of the image and keeps it in view.

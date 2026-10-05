@@ -61,7 +61,6 @@ import {
   type FeatureFlagsMenuDebugKey,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
-import { getPreLaunchDefault } from '@/lib/pre-launch'
 import {
   detectUserOs,
   getUserOsLabel,
@@ -139,16 +138,6 @@ import {
   writeDebugMenuUiState,
 } from '@/lib/debug-menu-ui-state'
 import { getEnglishCatalog } from '@/lib/i18n'
-import {
-  COMMUNITY_SUPPORT_REMINDER_MS,
-  COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
-} from '@/lib/community/support-prompt'
-
-const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
-  COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
-)
-/** Debug-only cadence note for the community support wizard. */
-const COMMUNITY_SUPPORT_WIZARD_CADENCE = `Shows the "A note from the team" wizard after ${COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD} unique console days, then again every ~${COMMUNITY_SUPPORT_REMINDER_DAYS} days until the user picks an action.`
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
@@ -734,6 +723,40 @@ function createProfileFeatureFlagItem(
   }
 }
 
+function createCombinedProfileFeatureFlagItem(
+  label: string,
+  description: string,
+  keys: (keyof ConsoleProfileFeatures)[],
+  profileId: ConsoleProfileId,
+  currentValues: boolean[],
+  options?: { disabled?: boolean; category?: string },
+): MenuItem {
+  const canonical = getCanonicalProfileFeatures(profileId)
+  const defaultValue = keys.every((key) => canonical[key])
+
+  return {
+    label,
+    description,
+    category: options?.category,
+    variant: 'switch',
+    switchValue: currentValues.every(Boolean),
+    defaultValue,
+    disabled: options?.disabled,
+    switchOnChange: (checked: boolean) => {
+      setTimeout(() => {
+        for (const key of keys) {
+          setDebugProfileFeatureOverride(key, checked)
+        }
+      }, 0)
+    },
+    onResetToDefault: () => {
+      for (const key of keys) {
+        resetDebugProfileFeatureOverride(key)
+      }
+    },
+  }
+}
+
 function createDebugFeatureFlagItem(
   label: string,
   description: string,
@@ -743,10 +766,7 @@ function createDebugFeatureFlagItem(
   onReset?: () => void,
   category?: string,
 ): MenuItem {
-  const defaultValue =
-    key === 'preLaunch'
-      ? getPreLaunchDefault()
-      : FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
+  const defaultValue = FEATURE_FLAGS_MENU_DEBUG_DEFAULTS[key]
 
   return {
     label,
@@ -1706,7 +1726,23 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'nativeDbsMongo',
                 profileId,
                 features.nativeDbsMongo,
-                { category: 'Databases' },
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
+                'Agent',
+                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
+                'agent',
+                profileId,
+                features.agent,
+                { category: 'Products' },
+              ),
+              createCombinedProfileFeatureFlagItem(
+                'Partners platform',
+                'Org settings Partners tab (/settings/partners), partner API keys, and the /docs/partners documentation hub.',
+                ['orgApiKeys', 'partnersDocs'],
+                profileId,
+                [features.orgApiKeys, features.partnersDocs],
+                { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
                 'Database PITR restore',
@@ -1757,14 +1793,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Partners keys',
-                'Org settings Partners tab and /settings/partners route.',
-                'orgApiKeys',
-                profileId,
-                features.orgApiKeys,
-                { category: 'Organization' },
-              ),
-              createProfileFeatureFlagItem(
                 'Blog drafts',
                 'List draft blog posts above "Explore by topic" and open draft post pages (noindex).',
                 'blogDrafts',
@@ -1773,43 +1801,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Docs' },
               ),
               createProfileFeatureFlagItem(
-                'Partners docs',
-                'Partner documentation hub, audience switcher, and /docs/partners routes.',
-                'partnersDocs',
-                profileId,
-                features.partnersDocs,
-                { category: 'Docs' },
-              ),
-              createProfileFeatureFlagItem(
-                'Agent',
-                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
-                'agent',
-                profileId,
-                features.agent,
-                { category: 'UI & tools' },
-              ),
-              createProfileFeatureFlagItem(
                 'Notifications',
                 'Console notifications center (header bell and inbox popover).',
                 'notifications',
                 profileId,
                 features.notifications,
                 { category: 'UI & tools' },
-              ),
-              createDebugFeatureFlagItem(
-                'Pre-launch',
-                'Lock the site to /init. Root redirects there; other pages are blocked. Sign-in stays open and returns to /init. On by default.',
-                'preLaunch',
-                overrides.preLaunch,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    preLaunch: checked,
-                  }))
-                  setDebugOverride('preLaunch', checked)
-                },
-                undefined,
-                'Site',
               ),
               createDebugFeatureFlagItem(
                 'Activity chart',
@@ -1867,21 +1864,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     showSuccessTeamCard: checked,
                   }))
                   setDebugOverride('showSuccessTeamCard', checked)
-                },
-                undefined,
-                'UI & tools',
-              ),
-              createDebugFeatureFlagItem(
-                'Functions local editor',
-                'Functions list “Local editor” button and /functions/editor (Monaco, gzip for deploy).',
-                'showFunctionsLocalEditor',
-                overrides.showFunctionsLocalEditor,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showFunctionsLocalEditor: checked,
-                  }))
-                  setDebugOverride('showFunctionsLocalEditor', checked)
                 },
                 undefined,
                 'UI & tools',
@@ -1946,21 +1928,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     previewOnboardingComplete: checked,
                   }))
                   setDebugOverride('previewOnboardingComplete', checked)
-                },
-                undefined,
-                'UI & tools',
-              ),
-              createDebugFeatureFlagItem(
-                'Preview community support wizard',
-                `Force-show the skippable "A note from the team" wizard. ${COMMUNITY_SUPPORT_WIZARD_CADENCE}`,
-                'previewCommunitySupportWizard',
-                overrides.previewCommunitySupportWizard,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    previewCommunitySupportWizard: checked,
-                  }))
-                  setDebugOverride('previewCommunitySupportWizard', checked)
                 },
                 undefined,
                 'UI & tools',

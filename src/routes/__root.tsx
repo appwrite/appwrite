@@ -63,6 +63,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
 import { MarketingDisabledRedirect } from '@/components/global/auth/MarketingDisabledRedirect'
+import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import { MARKETING_DISABLED_BOOT_SCRIPT } from '@/lib/marketing/marketing-route-guard'
 import {
   isPreLaunchAllowedPath,
@@ -593,6 +594,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <ClientThemeProvider>
               <PreLaunchRedirect />
               <MarketingDisabledRedirect />
+              <SelfHostedRouteRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>

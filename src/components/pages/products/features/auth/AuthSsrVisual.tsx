@@ -1,7 +1,12 @@
-import { Badge } from '@/components/ui/badge'
+import { Check, Cookie } from 'lucide-react'
+import {
+  ArtChip,
+  ArtIconBadge,
+  ArtToken as T,
+  ArtWindow,
+  riseStyle,
+} from '@/components/pages/products/_components/ArtParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
-import { Syn } from '@/components/pages/home/product-bento/MockSyntax'
 import { useT } from '@/lib/i18n/translate'
 
 const FRAMEWORKS = [
@@ -12,62 +17,65 @@ const FRAMEWORKS = [
 
 export function AuthSsrVisual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame title={t('Server-side session')} eyebrow="SSR">
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {FRAMEWORKS.map((framework) => (
-            <div
-              key={framework.id}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 px-2.5 py-1.5"
-            >
-              <ProductFeaturePublicIcon src={framework.icon} className="size-3.5" />
-              <span className="text-[11px] font-medium text-foreground">{framework.label}</span>
-            </div>
-          ))}
-        </div>
+    <div className="relative mx-auto w-full max-w-[540px] px-2 pb-24 pt-12 sm:px-6 sm:pb-14">
+      <div className="absolute start-0 top-0 z-[2] flex gap-1.5">
+        {FRAMEWORKS.map((framework, index) => (
+          <span
+            key={framework.id}
+            className="product-hero-rise inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 shadow-sm dark:bg-card"
+            style={riseStyle(400 + index * 120)}
+          >
+            <ProductFeaturePublicIcon src={framework.icon} className="size-3.5" />
+            <span className="text-[11px] font-medium text-foreground">{framework.label}</span>
+          </span>
+        ))}
+      </div>
 
-        <div className="overflow-hidden rounded-lg border border-border bg-muted/20 font-mono text-[10px] leading-relaxed sm:text-[11px]">
-          <div className="border-b border-border bg-muted/15 px-3 py-1.5 text-[10px] text-muted-foreground">
-            middleware.ts
-          </div>
-          <div className="space-y-0.5 p-3">
-            <div>
-              <Syn tone="keyword">import</Syn> <Syn tone="punctuation">{'{'}</Syn>{' '}
-              <Syn tone="identifier">createSessionClient</Syn>{' '}
-              <Syn tone="punctuation">{'}'}</Syn> <Syn tone="keyword">from</Syn>{' '}
-              <Syn tone="string">&apos;@appwrite.io/ssr&apos;</Syn>
-            </div>
-            <div className="h-1" />
-            <div>
-              <Syn tone="keyword">const</Syn> <Syn tone="identifier">client</Syn>{' '}
-              <Syn tone="operator">=</Syn> <Syn tone="function">createSessionClient</Syn>
-              <Syn tone="punctuation">(</Syn>
-              <Syn tone="identifier">request</Syn>
-              <Syn tone="punctuation">)</Syn>
-            </div>
-            <div>
-              <Syn tone="keyword">const</Syn> <Syn tone="identifier">account</Syn>{' '}
-              <Syn tone="operator">=</Syn> <Syn tone="keyword">await</Syn>{' '}
-              <Syn tone="identifier">client</Syn>
-              <Syn tone="punctuation">.</Syn>
-              <Syn tone="identifier">account</Syn>
-              <Syn tone="punctuation">.</Syn>
-              <Syn tone="function">get</Syn>
-              <Syn tone="punctuation">()</Syn>
-            </div>
-          </div>
-        </div>
+      <ArtWindow
+        className="product-hero-rise"
+        style={riseStyle(60)}
+        title={<span dir="ltr">middleware.ts</span>}
+        trailing={<span className="text-[10px] font-medium text-muted-foreground">SSR</span>}
+      >
+        <pre dir="ltr" className="overflow-hidden font-mono text-[11.5px] leading-[1.8]">
+          <code>
+            <T tone="keyword">import</T> <T tone="punctuation">{'{'}</T> <T tone="identifier">createSessionClient</T>{' '}
+            <T tone="punctuation">{'}'}</T> <T tone="keyword">from</T> <T tone="string">&apos;@appwrite.io/ssr&apos;</T>
+            {'\n\n'}
+            <T tone="keyword">const</T> <T tone="identifier">client</T> <T tone="operator">=</T>{' '}
+            <T tone="function">createSessionClient</T>
+            <T tone="punctuation">(</T>
+            <T tone="identifier">request</T>
+            <T tone="punctuation">)</T>
+            {'\n'}
+            <T tone="keyword">const</T> <T tone="identifier">user</T> <T tone="operator">=</T> <T tone="keyword">await</T>{' '}
+            <T tone="identifier">client</T>
+            <T tone="punctuation">.</T>
+            <T tone="identifier">account</T>
+            <T tone="punctuation">.</T>
+            <T tone="function">get</T>
+            <T tone="punctuation">()</T>
+          </code>
+        </pre>
+      </ArtWindow>
 
-        <div className="flex flex-wrap items-center gap-2 opacity-80 transition-opacity duration-500 group-hover/visual:opacity-100 motion-reduce:opacity-100">
-          <Badge variant="success" className="text-[10px]">
-            {t('Session verified')}
-          </Badge>
-          <span className="rounded-md border border-border bg-background/80 px-2 py-1 font-mono text-[10px] text-muted-foreground">
-            Set-Cookie: a_session_...
+      <ArtChip className="bottom-12 end-0 sm:bottom-2" delayMs={900}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={Check} tone="success" />
+          <p className="text-[12px] font-medium text-foreground">{t('Session verified')}</p>
+        </div>
+      </ArtChip>
+
+      <ArtChip className="bottom-0 start-[6%]" delayMs={1150} floatDelayMs={900}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={Cookie} />
+          <span dir="ltr" className="font-mono text-[11px] text-muted-foreground">
+            Set-Cookie: a_session_…
           </span>
         </div>
-      </div>
-    </ProductFeatureVisualFrame>
+      </ArtChip>
+    </div>
   )
 }

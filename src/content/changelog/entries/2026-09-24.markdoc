@@ -3,7 +3,7 @@ layout: changelog
 title: "Introducing native sign-in with Apple and Google"
 date: 2026-09-24
 cover: /images/blog/announcing-native-sign-in/cover.avif
-tags: auth, mobile
+tags: auth
 ---
 
 Mobile apps can now sign users in with the account picker built into the device and create an Appwrite session from the ID token it returns.

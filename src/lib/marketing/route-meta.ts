@@ -3,6 +3,9 @@ import { buildOgImageUrl } from '@/lib/seo/og-image'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 
+export const MARKETING_HOMEPAGE_TITLE =
+  'Appwrite · The open-source cloud for developers and agents'
+
 export const MARKETING_HOMEPAGE_OG_DESCRIPTION =
   'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. The open-source cloud for agents and developers.'
 
@@ -10,6 +13,8 @@ type MetaTag = Record<string, string>
 
 type MarketingPageMetaInput = {
   pageName: string
+  /** Full document title. Falls back to `pageName · Appwrite`. */
+  title?: string
   description: string
   ogImage?: string
   ogImageTitle?: string
@@ -40,7 +45,7 @@ export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag
 
   return asRouteMetaTags(
     getPageMetaTags({
-      title: pageTitle(input.pageName),
+      title: input.title ?? pageTitle(input.pageName),
       description: input.description,
       canonical: input.canonical,
       ogType: input.ogType,

@@ -1,197 +1,136 @@
-'use client'
-
-import { useState } from 'react'
-import { CheckCircle2, Copy, Download, Search } from 'lucide-react'
-import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
+import { Archive, Check, Cpu, Filter, Zap } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { ArtChip, ArtIconBadge, ArtPanel } from '@/components/pages/products/_components/ArtParts'
 import { useT } from '@/lib/i18n/translate'
-import { DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS } from '@/lib/utils/deployment-status'
 import { cn } from '@/lib/utils'
 
-const SCROLL_FADE_MASK_CLASS =
-  '[mask-image:linear-gradient(to_bottom,black_calc(100%-5rem),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_calc(100%-5rem),transparent)]'
-
-const MOCK_BUILD_LOGS = `[10:24:01] Starting build for marketing-site
-[10:24:02] Restoring dependency cache
-[10:24:03] \x1b[32mDependency cache restored in 1.2s\x1b[0m
-[10:24:03] Running install command: pnpm install --frozen-lockfile
-[10:24:05] Lockfile is up to date, resolution step skipped
-[10:24:07] Packages: +42
-[10:24:11] \x1b[32mDone in 8.1s (cache hit)\x1b[0m
-[10:24:11] Running build command: npm run build
-[10:24:14] Compiling application…
-[10:24:18] Generating static pages
-[10:24:21] Optimizing assets for production
-[10:24:23] \x1b[32mBuild finished successfully\x1b[0m
-[10:24:23] Packaging deployment artifact`
-
-const DEPLOYMENTS = [
-  {
-    id: '67abc12f9e2d',
-    status: 'active' as const,
-    duration: '24s',
-    created: '2m ago',
-  },
-  {
-    id: '89def45a1c8b',
-    status: 'ready' as const,
-    duration: '28s',
-    created: 'Yesterday',
-  },
+const BUILDS = [
+  { id: '67abc12f', duration: '24s', width: '34%', cached: true, active: true },
+  { id: '89def45a', duration: '28s', width: '39%', cached: true, active: false },
+  { id: '12ab34cd', duration: '1m 12s', width: '100%', cached: false, active: false },
 ] as const
 
-function MockDeploymentId({ id }: { id: string }) {
-  return (
-    <span className="inline-flex max-w-[7rem] items-center gap-1.5 truncate font-mono text-[11px] text-foreground">
-      {id}
-      <Copy className="size-3 shrink-0 text-muted-foreground/70" aria-hidden />
-    </span>
-  )
-}
+const PATH_FILTERS = [
+  { path: 'apps/web/**', matched: true },
+  { path: 'apps/docs/**', matched: false },
+] as const
 
 export function SitesBuildPerformanceVisual() {
   const t = useT()
-  const [logsSearch, setLogsSearch] = useState('')
 
   return (
-    <ProductFeatureVisualFrame
-      tabs={[
-        { id: 'overview', label: t('Overview') },
-        { id: 'deployments', label: t('Deployments'), active: true },
-        { id: 'settings', label: t('Settings') },
-      ]}
-      contentClassName="p-0"
-    >
-      <div className="grid min-h-[18rem] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-e">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-            <h3 className="text-[13px] font-semibold text-foreground">{t('Build logs')}</h3>
-            <span className="shrink-0 text-[11px] text-muted-foreground">
-              {t('Duration:')} <span className="font-medium text-foreground">24s</span>
-            </span>
-          </div>
-
-          <div className="border-b border-border px-3 py-2.5">
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={t('Search logs...')}
-                  value={logsSearch}
-                  onChange={(event) => setLogsSearch(event.target.value)}
-                  className="h-8 ps-8 text-[12px]"
-                />
+    <div className="relative mx-auto h-[440px] w-full max-w-[560px]">
+      <ArtPanel
+        className="absolute left-1/2 top-1/2 z-[1] w-[min(340px,88%)] -translate-x-1/2 -translate-y-1/2"
+        innerClassName="product-tone-shadow p-3.5"
+        delayMs={60}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12px] font-semibold text-foreground">{t('Deployments')}</p>
+          <span className="text-[10px] text-muted-foreground">{t('Duration')}</span>
+        </div>
+        <div className="mt-3 space-y-3">
+          {BUILDS.map((build, index) => (
+            <div key={build.id}>
+              <div className="flex items-center gap-2">
+                <span dir="ltr" className="font-mono text-[11px] text-foreground">{build.id}</span>
+                {build.active ? (
+                  <Badge variant="active" className="text-[10px]">{t('Active')}</Badge>
+                ) : null}
+                <span dir="ltr" className="ms-auto font-mono text-[11px] text-foreground">{build.duration}</span>
               </div>
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
-                <Download className="size-3.5" aria-hidden />
-              </span>
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
-                <Copy className="size-3.5" aria-hidden />
-              </span>
-            </div>
-          </div>
-
-          <div className={cn('relative max-h-[14rem] overflow-hidden', SCROLL_FADE_MASK_CLASS)}>
-            <BuildLogsView
-              buildLogs={MOCK_BUILD_LOGS}
-              searchTerm={logsSearch}
-              highlightLineOnHover
-              fontSizeClass="text-[10px] sm:text-[11px]"
-              lineHorizontalPaddingClass="ps-3 pe-3"
-              trailingPadding={false}
-            />
-          </div>
-        </div>
-
-        <div className="min-w-0 p-3 sm:p-4">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Deployments')}
-          </p>
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t('Deployment ID')}
-                  </TableHead>
-                  <TableHead
-                    className={cn(
-                      'px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
-                      DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
-                    )}
-                  >
-                    {t('Status')}
-                  </TableHead>
-                  <TableHead className="w-[72px] px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t('Duration')}
-                  </TableHead>
-                  <TableHead className="w-[88px] px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t('Created')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {DEPLOYMENTS.map((deployment) => {
-                  const isActive = deployment.status === 'active'
-                  return (
-                    <TableRow
-                      key={deployment.id}
+              <div className="mt-1.5 flex items-center gap-2">
+                <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full" style={{ width: build.width }}>
+                    <div
                       className={cn(
-                        'border-b border-border hover:bg-muted/50',
-                        isActive && 'bg-muted/40 dark:bg-muted/35',
+                        'product-hero-fill h-full rounded-full',
+                        build.cached ? 'bg-[var(--tone-ink)]' : 'bg-muted-foreground/40',
                       )}
-                    >
-                      <TableCell className="px-3 py-2.5">
-                        <MockDeploymentId id={deployment.id} />
-                      </TableCell>
-                      <TableCell
-                        className={cn('px-3 py-2.5', DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS)}
-                      >
-                        {isActive ? (
-                          <Badge variant="active" className="gap-1.5 text-[10px] font-medium">
-                            <CheckCircle2 className="size-3" aria-hidden />
-                            {t('Active')}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="deploymentReady"
-                            className="gap-1.5 text-[10px] font-medium"
-                          >
-                            <CheckCircle2 className="size-3" aria-hidden />
-                            {t('Ready')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-3 py-2.5 text-[11px] text-foreground">
-                        {deployment.duration}
-                      </TableCell>
-                      <TableCell className="px-3 py-2.5 text-[11px] text-muted-foreground">
-                        {t(deployment.created)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                      style={{ '--fill-delay': `${400 + index * 220}ms`, '--fill-duration': '1.1s' } as CSSProperties}
+                    />
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    'flex min-w-[72px] shrink-0 items-center justify-end gap-1 text-[10px]',
+                    build.cached ? 'text-[var(--tone-ink)]' : 'text-muted-foreground',
+                  )}
+                >
+                  {build.cached ? (
+                    <>
+                      <Zap className="size-3" aria-hidden />
+                      {t('Cache hit')}
+                    </>
+                  ) : (
+                    t('Build')
+                  )}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ArtPanel>
 
-          <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/10 px-3 py-2.5">
-            <p className="text-[11px] leading-5 text-muted-foreground">
-              {t('Package manager stores are cached between builds. Deployment retention removes old inactive deployments to save storage. Path filters help Turborepo monorepos skip unnecessary deploys.')}
-            </p>
+      <ArtChip className="start-0 top-[2%]" delayMs={600}>
+        <div className="flex items-center gap-1.5">
+          <Filter className="size-3 text-[var(--tone-ink)]" aria-hidden />
+          <p className="text-[11px] font-semibold text-foreground">{t('Path filters')}</p>
+        </div>
+        <div className="mt-2 space-y-1.5">
+          {PATH_FILTERS.map((filter) => (
+            <div key={filter.path} className="flex items-center gap-2">
+              <span
+                dir="ltr"
+                className={cn(
+                  'font-mono text-[10px]',
+                  filter.matched ? 'text-foreground' : 'text-muted-foreground line-through',
+                )}
+              >
+                {filter.path}
+              </span>
+              {filter.matched ? (
+                <Check className="ms-auto size-3 text-emerald-600 dark:text-emerald-400" strokeWidth={3} aria-hidden />
+              ) : (
+                <Badge variant="inactive" className="ms-auto text-[9px]">{t('Skipped')}</Badge>
+              )}
+            </div>
+          ))}
+        </div>
+      </ArtChip>
+
+      <ArtChip className="end-0 top-[8%] hidden sm:block" delayMs={800} floatDelayMs={700}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={Zap} tone="success" />
+          <p dir="ltr" className="font-mono text-[10px] text-muted-foreground">
+            pnpm store restored <span className="text-foreground">1.2s</span>
+          </p>
+        </div>
+      </ArtChip>
+
+      <ArtChip className="bottom-[3%] start-[2%]" delayMs={1000} floatDelayMs={1200}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={Archive} tone="secondary" />
+          <div>
+            <p className="text-[11px] font-medium text-foreground">{t('Deployment retention')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('30 days')}</p>
           </div>
         </div>
-      </div>
-    </ProductFeatureVisualFrame>
+      </ArtChip>
+
+      <ArtChip className="bottom-[9%] end-0 hidden sm:block" delayMs={1200} floatDelayMs={400}>
+        <div className="flex items-center gap-1.5">
+          <Cpu className="size-3 text-[var(--tone-ink)]" aria-hidden />
+          <p className="text-[11px] font-semibold text-foreground">{t('Specification')}</p>
+        </div>
+        <div className="mt-1.5 grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-[10px]">
+          <span className="text-muted-foreground">{t('CPU')}</span>
+          <span dir="ltr" className="text-end font-mono text-foreground">2 vCPU</span>
+          <span className="text-muted-foreground">{t('Memory')}</span>
+          <span dir="ltr" className="text-end font-mono text-foreground">4 GB</span>
+        </div>
+      </ArtChip>
+    </div>
   )
 }

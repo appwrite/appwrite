@@ -98,7 +98,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Appwrite won Best Developer Tool at the 2022 Golden Kitty Awards': 'Appwriteが2022年Golden Kitty Awardsで最優秀開発者ツールを受賞',
   'Appwrite-powered authentication screens generator for any application.': 'あらゆるアプリ向けのAppwrite認証画面ジェネレーター。',
   'Appwrite-powered platform where you can sell your digital products online.': 'デジタル製品をオンラインで販売できるAppwriteプラットフォーム。',
-  'Apr 30, 2026': '2026年4月30日',
+  'Jan 31, 2027': '2027年1月31日',
   'Architecture and deployment guidance for your stack.': 'スタックに合わせたアーキテクチャとデプロイのガイダンス。',
   'Are OTP SMS costs covered by Appwrite?': 'OTP SMSの費用はAppwriteが負担しますか?',
   'Arena announcement': 'Arena発表',
@@ -1188,7 +1188,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Resources for presenting the Appwrite brand to maintain consistency while using our logos, colors, and other brand elements across various platforms and materials.': 'ロゴ、カラー、その他のブランド要素をさまざまなプラットフォームや資料で使用する際に一貫性を保つための、Appwriteブランドの提示に関するリソース。',
   'Rollbacks switch which deployment is served. No code is deleted, modified, or rebuilt, so recovery is near-instant with zero downtime.': 'ロールバックは、どのデプロイを配信するかを切り替えます。コードの削除、変更、再ビルドは発生しないため、ダウンタイムなくほぼ瞬時に復旧できます。',
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': 'Enterpriseは、フルマネージドのAppwrite Cloud上で実行するか、環境内のプレミアムセルフホスト版として実行できます。',
-  'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': 'リアルタイム料金とプライベートWHOISで160以上のTLDを検索。Appwriteを離れることなく、DNSの管理、Sites、Functions、カスタムAPIドメインの接続、TLSのプロビジョニングができます。',
+  'Search 160+ TLDs with live pricing. Manage DNS and connect Sites, Functions, or APIs next to the rest of your backend.': 'リアルタイム料金で160以上のTLDを検索。DNSの管理とSites、Functions、APIの接続を、残りのバックエンドと同じ場所で行えます。',
   'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.': 'Twilio、Vonage、MSG91、Telesign、Textmagicなどの各種SMSベンダーを通じて、OTPコード、配送状況の更新、アラートをアプリの外に送信。',
   'Send receipts, digests, and transactional mail through SendGrid, Mailgun, Amazon SES, SMTP, and other email providers.': 'SendGrid、Mailgun、Amazon SES、SMTPなどの各種メールプロバイダーを通じて、領収書、ダイジェスト、トランザクションメールを送信。',
   'Ship production features without stitching together multiple vendors or maintaining custom backend infrastructure.': '複数のベンダーをつなぎ合わせたり、カスタムのバックエンドインフラを維持したりすることなく、本番機能をリリース。',
@@ -1551,4 +1551,13 @@ export const jaMarketingDictionary: Record<string, string> = {
   'https://appwrite.io/llms.txt is the curated hub. Every docs, blog, changelog, and integrations page also has a Markdown twin: append .md to the URL.':
     'https://appwrite.io/llms.txt が厳選ハブです。ドキュメント、ブログ、changelog、インテグレーションの各ページには Markdown 版もあります。URL に .md を付けてください。',
   'llms.txt': 'llms.txt',
+  'Popular searches': '人気の検索',
+  '160+ TLDs': '160 以上の TLD',
+  'Live pricing and availability as you type.': '入力に合わせて価格と空き状況をリアルタイムに表示します。',
+  'Managed with your backend': 'バックエンドと一緒に管理',
+  'Buy and manage the domain in the same Console as Auth, Databases, Sites, and Functions.':
+    '認証、データベース、サイト、Functions と同じコンソールでドメインを購入・管理できます。',
+  'Manage records in the Console, next to your projects.': 'プロジェクトと同じ Console でレコードを管理できます。',
+  'Connect Sites, Functions, or API domains with certificates issued for you.':
+    'サイト、Functions、API ドメインを接続すると、証明書が自動で発行されます。',
 }

@@ -1,127 +1,126 @@
-import { Bell, Mail, Phone } from 'lucide-react'
+import { BellRing, Check, Layers, Mail, MessageSquareText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import {
+  ArtChip,
+  ArtConnector,
+  ArtIconBadge,
+  ArtPanel,
+  ArtToken as T,
+  ArtWindow,
+  riseStyle,
+} from '@/components/pages/products/_components/ArtParts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-const CHANNELS = [
-  {
-    id: 'email',
-    label: 'Email',
-    icon: Mail,
-    method: 'createEmail()',
-    example: 'subject, html body, topics',
-  },
-  {
-    id: 'sms',
-    label: 'SMS',
-    icon: Phone,
-    method: 'createSms()',
-    example: 'message body, topics',
-  },
-  {
-    id: 'push',
-    label: 'Push',
-    icon: Bell,
-    method: 'createPush()',
-    example: 'title, body, topics',
-  },
-] as const
-
-function ChannelMethodRow({
-  label,
-  icon: Icon,
-  method,
-  example,
-  active = false,
-  delayMs = 0,
-}: {
+const CHANNELS: {
+  id: string
   label: string
   icon: LucideIcon
   method: string
-  example: string
+  args: string
   active?: boolean
-  delayMs?: number
-}) {
-  const t = useT()
+}[] = [
+  { id: 'email', label: 'Email', icon: Mail, method: 'createEmail', args: 'topics, subject', active: true },
+  { id: 'sms', label: 'SMS', icon: MessageSquareText, method: 'createSms', args: 'targets, content' },
+  { id: 'push', label: 'Push', icon: BellRing, method: 'createPush', args: 'topics, title' },
+]
+
+function CodeLine({ method, args, active }: { method: string; args: string; active?: boolean }) {
   return (
-    <div
+    <span
       className={cn(
-        'rounded-lg border border-border bg-background/80 px-3 py-2.5 transition-[border-color,background-color,transform] duration-300',
-        active && 'border-foreground/10 bg-muted/35',
-        'group-hover/visual:border-foreground/10 group-hover/visual:bg-muted/25',
+        '-mx-4 block border-s-2 px-4',
+        active ? 'border-[var(--tone-ink)] bg-[rgb(var(--tone-rgb)/0.08)]' : 'border-transparent',
       )}
-      style={{ transitionDelay: `${delayMs}ms` }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
-            <Icon className="size-3.5 text-muted-foreground" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[12px] font-medium text-foreground">{t(label)}</p>
-            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{example}</p>
-          </div>
-        </div>
-        <Badge variant={active ? 'info' : 'outline'} className="shrink-0 font-mono text-[10px]">
-          {method}
-        </Badge>
-      </div>
-    </div>
+      <T tone="identifier">messaging</T>
+      <T tone="punctuation">.</T>
+      <T tone="function">{method}</T>
+      <T tone="punctuation">({'{ '}</T>
+      <T tone="property">{args}</T>
+      <T tone="punctuation">{' })'}</T>
+    </span>
   )
 }
 
 export function MessagingUnifiedApiVisual() {
   const t = useT()
+
   return (
-    <ProductFeatureVisualFrame
-      tabs={[
-        { id: 'overview', label: t('Overview') },
-        { id: 'messages', label: t('Messages'), active: true }, // pragma: allowlist secret
-        { id: 'providers', label: t('Providers') },
-      ]}
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="relative mx-auto w-full max-w-[600px] pb-14 pt-12">
+      <ArtChip className="start-0 top-0" delayMs={900}>
+        <div className="flex items-center gap-2">
+          <ArtIconBadge icon={Layers} />
           <div>
-            <p className="text-[13px] font-semibold text-foreground">{t('One Messaging service')}</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              {t('Email, SMS, and push from a single SDK client.')}
-            </p>
-          </div>
-          <Badge variant="info" className="shrink-0 text-[10px]">
-            {t('3 channels')}
-          </Badge>
-        </div>
-
-        <div className="overflow-hidden rounded-lg border border-border bg-muted/20">
-          <div className="border-b border-border bg-muted/15 px-3 py-2">
-            <p className="font-mono text-[10px] text-muted-foreground">
-              import {'{ Messaging }'} from &apos;appwrite&apos;
-            </p>
-          </div>
-          <div className="space-y-2 p-3">
-            {CHANNELS.map((channel, index) => (
-              <ChannelMethodRow
-                key={channel.id}
-                label={channel.label}
-                icon={channel.icon}
-                method={channel.method}
-                example={channel.example}
-                active={channel.id === 'email'}
-                delayMs={index * 70}
-              />
-            ))}
+            <p className="text-[12px] font-medium text-foreground">{t('One Messaging service')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('3 channels')}</p>
           </div>
         </div>
+      </ArtChip>
 
-        <div className="rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5 text-center">
-          <p className="text-[11px] leading-5 text-muted-foreground">
-            {t('Replace separate email, SMS, and push SDKs with one API and delivery log.')}
-          </p>
+      <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-0">
+        <ArtWindow
+          className="product-hero-rise"
+          style={riseStyle(60)}
+          title={<span dir="ltr">notify.ts</span>}
+          bodyClassName="px-4 py-3.5"
+        >
+          <pre dir="ltr" className="font-mono text-[11px] leading-[1.9]">
+            <code>
+              <T tone="keyword">const</T> <T tone="identifier">messaging</T> <T tone="operator">=</T>{' '}
+              <T tone="keyword">new</T> <T tone="class">Messaging</T>
+              <T tone="punctuation">(</T>
+              <T tone="identifier">client</T>
+              <T tone="punctuation">)</T>
+              {'\n\n'}
+              {CHANNELS.map((channel) => (
+                <CodeLine key={channel.id} method={channel.method} args={channel.args} active={channel.active} />
+              ))}
+            </code>
+          </pre>
+        </ArtWindow>
+
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-col sm:gap-3">
+          {CHANNELS.map((channel, index) => (
+            <div key={channel.id} className="flex min-w-0 items-center">
+              <ArtConnector travel travelDelayMs={index * 700} className="hidden w-10 shrink-0 sm:block" />
+              <ArtPanel
+                className="min-w-0 flex-1"
+                delayMs={350 + index * 150}
+                float
+                floatDelayMs={index * 450}
+                innerClassName={cn(
+                  'flex flex-col items-start gap-2 px-2.5 py-2.5 sm:flex-row sm:items-center sm:gap-2.5 sm:px-3',
+                  channel.active && 'border-[rgb(var(--tone-rgb)/0.45)] dark:border-[rgb(var(--tone-rgb)/0.45)]',
+                )}
+              >
+                <ArtIconBadge icon={channel.icon} tone={channel.active ? 'primary' : 'neutral'} />
+                <div className="min-w-0">
+                  <p className="text-[12px] font-medium text-foreground">{t(channel.label)}</p>
+                  <p dir="ltr" className="truncate font-mono text-[10px] text-muted-foreground">
+                    {channel.method}()
+                  </p>
+                </div>
+                <span
+                  className="ms-auto hidden size-1.5 shrink-0 rounded-full bg-emerald-500 sm:block"
+                  aria-hidden
+                />
+              </ArtPanel>
+            </div>
+          ))}
         </div>
       </div>
-    </ProductFeatureVisualFrame>
+
+      <ArtChip className="bottom-0 end-0 hidden sm:block" delayMs={1200} floatDelayMs={700}>
+        <div className="flex items-center gap-2">
+          <span className="flex size-4 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+            <Check className="size-2.5" strokeWidth={3} aria-hidden />
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {t('Email, SMS, and push from a single SDK client.')}
+          </span>
+        </div>
+      </ArtChip>
+    </div>
   )
 }

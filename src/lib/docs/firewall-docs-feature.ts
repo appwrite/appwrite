@@ -1,5 +1,3 @@
-import { isCloudProfile } from '@/lib/console-profiles'
-
 export function isFirewallDocsSlug(slug: string): boolean {
   return slug === 'products/firewall' || slug.startsWith('products/firewall/')
 }
@@ -20,6 +18,7 @@ export function isFirewallDocsHref(href: string): boolean {
   )
 }
 
+/** Public /docs routes are always published; console profile gates the product UI. */
 export function isFirewallDocsEnabled(): boolean {
-  return isCloudProfile()
+  return true
 }

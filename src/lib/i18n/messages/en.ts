@@ -365,10 +365,12 @@ export const enCatalog = {
       productNames: {
         auth: 'Auth',
         databases: 'Databases',
+        postgres: 'PostgreSQL',
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
         videos: 'Videos',
+        realtime: 'Realtime',
         sites: 'Sites',
         firewall: 'Firewall',
       },
@@ -390,6 +392,7 @@ export const enCatalog = {
         items: {
           authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
           databasesTagline: 'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          postgresTagline: 'Managed PostgreSQL with pooling, replicas, and PITR.',
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',
