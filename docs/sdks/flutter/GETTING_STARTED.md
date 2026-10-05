@@ -7,6 +7,8 @@ From the options, choose to add a new **Flutter** platform and add your app cred
 
 If you are building your Flutter application for multiple devices, you have to follow this process for each different device.
 
+> On Android, iOS and macOS, call `createOAuth2Session` without the `success` and `failure` URLs. The SDK only returns to your app through the `appwrite-callback-[PROJECT_ID]` scheme, and only the default redirect carries the new session with it. A custom URL, such as an https App Link, makes the call fail (for example with `PlatformException(CANCELED)`) even when the login itself succeeded. Await the returned `Future` and navigate from your Dart code instead.
+
 ### Android
 For **Android** first add your app <u>name</u> and <u>package name</u>, Your package name is generally the **applicationId** in your app-level <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/android/app/build.gradle#L41" target="_blank" rel="noopener">build.gradle</a> file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
 

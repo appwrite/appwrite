@@ -18,6 +18,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
+| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring |
+| `bin/monorepo check <name> [--fix]` | Pint, PHPStan (package `phpstan.neon`) and Rector for one package |
+| `bin/monorepo test <name> [--linked]` | Package unit tier (`composer test`), plus `test:e2e` against its compose file when defined |
+| `bin/monorepo absorb <name> [url]` | Import a library with history, strip hoisted QA, write mirror plumbing |
+| `bin/monorepo split <name> --dry-run` | Synthesize the mirror history and print its head without pushing |
+| `bin/monorepo release <name> <version>` | Tag `<name>/<version>` and push it; CI mirrors the tag and publishes the release |
 
 `composer check` / `composer analyze` over the whole project is very slow. Prefer specific files during development.
 
@@ -47,7 +53,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
-- **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
+- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -55,14 +61,14 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **app/http.php**, **app/worker.php**, **app/realtime.php**, **app/cli.php** -- process entry harnesses
 - **app/controllers/** -- leftover HTTP controllers; new endpoints go in modules
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
-- **docs/** -- references, tutorials, SDK getting-started notes
+- **docs/** -- references, tutorials, SDK getting-started notes, [release process](docs/releases.md)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
 
 ## Libraries
 
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
-Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
 
 ## Modules
 
@@ -222,6 +228,7 @@ Actions should read like a story. The `action()` method is the plot: [`Teams/Htt
 ## Conventions
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
+- Do not add regular expressions (`preg_*`, regex patterns passed to validators). Use string functions (`str_starts_with`, `str_ends_with`, `str_contains`, `strlen`, `substr`, `explode`, `ctype_*`) or an existing validator instead; regex is hard to review and easy to get subtly wrong. If nothing else works, explain why in the PR.
 - When updating documents, pass only changed attributes as a sparse Document:
 
 ```php
@@ -298,27 +305,4 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 
 ## Releases
 
-### Patch version
-
-When bumping a patch (e.g. `1.9.0` → `1.9.1`):
-
-- [`docker-compose.yml`](docker-compose.yml) — `appwrite-console` image tag (`appwrite/new:X.Y.Z`)
-- [`app/init/constants.php`](app/init/constants.php) — set `APP_VERSION_STABLE`
-- [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
-- [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
-
-Ask the user to review, publish notes on the [Appwrite changelog](https://appwrite.io/changelog), generate specs if the API changed, and add request/response filters if needed.
-
-`APP_CACHE_BUSTER` is not a version number and does not track releases. It salts the response cache key in [`Request::cacheIdentifier()`](src/Appwrite/Utopia/Request.php) for the routes labelled `cache` (file preview, avatars). Bump it only when cached output would now be wrong — a changed image pipeline or new bundled avatar assets — since every bump orphans every entry and regenerates them.
-
-### Self-hosted RC / final
-
-A release is not ready until a **fresh install** and an **upgrade from the previous stable** both work with realistic data. Previous baseline = highest stable semver tag lower than the target (ignore RC/beta/alpha; prefer `git ls-remote --tags origin`).
-
-**Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
-
-**Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes.
-
-**Metadata:** `APP_VERSION_STABLE`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; [changelog](https://appwrite.io/changelog). For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
-
-Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break on the changelog).
+Self-hosted release process (branches, version bump, notes, publish, specs, install/upgrade gates) lives in [docs/releases.md](docs/releases.md). Read it before preparing or publishing a release.

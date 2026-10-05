@@ -10,6 +10,7 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Throwable;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -18,6 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -52,10 +54,12 @@ class Notifications extends Action
             ->inject('project')
             ->inject('register')
             ->inject('dbForPlatform')
+            ->inject('platform')
+            ->inject('clientForWebhooks')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
     {
         $payload = $message->getPayload();
 
@@ -90,7 +94,7 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $clientForWebhooks);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
@@ -173,13 +177,15 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
+        Client $clientForWebhooks,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
-            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload),
+            NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $clientForWebhooks),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
     }
@@ -194,6 +200,7 @@ class Notifications extends Action
         Document $project,
         Registry $register,
         Database $dbForPlatform,
+        array $platform,
     ): ?string {
         $address = $recipient['address'];
         $smtp = $this->resolveSmtpConfig($project, $payload);
@@ -206,13 +213,10 @@ class Notifications extends Action
         $type = empty($smtp) ? 'cloud' : 'smtp';
         Span::add('type', $type);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
-
         $subject = $payload['subject'] ?? '';
         $variables = $payload['variables'] ?? [];
         $variables = \array_merge($variables, $payload['templateParams'] ?? []);
-        $variables['host'] = $protocol . '://' . $consoleHostname;
+        $variables['host'] = $platform['consoleUrl'] ?? '';
         $name = $payload['name'] ?? '';
         $body = $payload['body'] ?? '';
         $preview = $payload['preview'] ?? '';
@@ -270,21 +274,20 @@ class Notifications extends Action
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
+        // A pooled adapter belongs to this send alone; a project's own SMTP is
+        // dialled for it and closed after.
+        $adapter = empty($smtp) ? null : new SMTP(
+            host: $smtp['host'],
+            port: (int) $smtp['port'],
+            username: $smtp['username'] ?? '',
+            password: $smtp['password'] ?? '',
+            smtpSecure: $smtp['secure'] ?? '',
+            smtpAutoTLS: false,
+            xMailer: 'Appwrite Mailer',
+            timeout: 10,
+            keepAlive: false,
+            timelimit: 30,
+        );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
@@ -327,20 +330,32 @@ class Notifications extends Action
             ];
         }
 
-        $emailMessage = new EmailMessage(
-            to: [['email' => $address, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-
         try {
-            $adapter->send($emailMessage);
+            $emailMessage = new EmailMessage(
+                to: [['email' => $address, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
+            );
+
+            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+
+            if ($adapter instanceof EmailAdapter) {
+                $send($adapter);
+            } else {
+                $register->get('smtp')->use($send);
+            }
+        } catch (InvalidArgumentException $error) {
+            // The address or name can never be delivered, so a retry cannot help.
+            Span::add('email.skipped', $error->getType());
+            Span::add('email.error', $error->getMessage());
+
+            return null;
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
@@ -407,7 +422,7 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
-    protected function dispatchWebhook(array $recipient, array $payload): ?string
+    protected function dispatchWebhook(array $recipient, array $payload, Client $clientForWebhooks): ?string
     {
         $address = $recipient['address'];
         $signatureKey = $recipient['signatureKey'] ?? null;
@@ -432,7 +447,7 @@ class Notifications extends Action
             signingSecret: $signatureKey,
         );
 
-        $adapter = new WebhookAdapter();
+        $adapter = new WebhookAdapter($clientForWebhooks);
         $result = $adapter->send($message);
 
         if (($result['deliveredTo'] ?? 0) === 0) {

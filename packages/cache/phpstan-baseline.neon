@@ -1,0 +1,139 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Binary operation "\." between mixed and ''\:'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Cannot access offset ''host'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Cannot access offset ''port'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Cannot access offset ''total_items'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Method Utopia\\Cache\\Adapter\\Hazelcast\:\:getSize\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Hazelcast.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\:'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Cannot access offset ''curr_items'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Cannot access offset ''host'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Cannot access offset ''port'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Method Utopia\\Cache\\Adapter\\Memcached\:\:getSize\(\) should return int but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/Memcached.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\Cache\\Envelope\:\:encode\(\) expects array\<int\|string, mixed\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Adapter/Redis/Multiplexing.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\Cache\\Envelope\:\:encode\(\) expects array\<int\|string, mixed\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Redis/Multiplexing.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\Cache\\Envelope\:\:encode\(\) expects array\<int\|string, mixed\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:dbSize\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Parameter \#1 \$key_or_address of method RedisCluster\:\:ping\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/RedisCluster.php
+
+		-
+			message: '#^Method Utopia\\Cache\\Envelope\:\:unwrap\(\) should return array\<string, mixed\>\|false but returns non\-empty\-array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Envelope.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: tests/E2E/MultiplexingDeadlineTest.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: tests/E2E/MultiplexingLeasableTest.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: tests/E2E/MultiplexingReaderTest.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: tests/E2E/RedisLeasableTest.php

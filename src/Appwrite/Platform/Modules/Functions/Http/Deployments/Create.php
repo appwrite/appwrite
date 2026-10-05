@@ -87,6 +87,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('plan')
             ->inject('authorization')
             ->inject('locks')
@@ -107,6 +108,7 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Deployments $deployments,
+        int $buildTimeout,
         array $plan,
         Authorization $authorization,
         callable $locks
@@ -174,6 +176,11 @@ class Create extends Action
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+            }
+
+            $idValidator = new UID();
+            if (!$idValidator->isValid($deploymentId)) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
             }
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
@@ -274,7 +281,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileSize, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileSize, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -335,7 +342,7 @@ class Create extends Action
                         'activate' => $activate,
                         'sourceMetadata' => $metadata,
                         'type' => $type,
-                    ]));
+                    ]), $buildTimeout);
                 } else {
                     $deployment = $deployments->upload($function, $deployment->setAttributes([
                         'sourceChunksUploaded' => $chunksUploaded,

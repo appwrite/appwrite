@@ -104,6 +104,10 @@ class StatsUsage extends Action
                     'ip' => $metric['ip'] ?? '',
                     'sdk' => $metric['sdk'] ?? '',
                     'sdkVersion' => $metric['sdkVersion'] ?? '',
+                    'protocol' => $metric['protocol'] ?? '',
+                    'accept' => $metric['accept'] ?? '',
+                    'acceptLanguage' => $metric['acceptLanguage'] ?? '',
+                    'queryKeys' => $metric['queryKeys'] ?? '',
                 ];
                 $tags = array_merge($this->resolveUserAgentTags((string) ($metric['userAgent'] ?? '')), $tags);
                 $tags = array_filter($tags, static fn (mixed $value): bool => $value !== '' && $value !== null);
@@ -158,6 +162,7 @@ class StatsUsage extends Action
             METRIC_COLLECTIONS,
             METRIC_DOCUMENTS,
             METRIC_DATABASES_STORAGE,
+            METRIC_AVATARS_STORAGE,
         ], true);
     }
 

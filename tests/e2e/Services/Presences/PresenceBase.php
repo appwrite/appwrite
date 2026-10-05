@@ -1048,6 +1048,58 @@ trait PresenceBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testUpdateWhilePresenceIsDeleted(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $userId = $this->getUser()['$id'];
+
+        if ($this->getSide() === 'server') {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getPresenceServerHeaders());
+            $payload = ['userId' => $userId];
+        } else {
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders());
+            $payload = [];
+        }
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, $payload + [
+                'status' => 'online',
+            ]);
+            $this->assertEquals(200, $presence['headers']['status-code']);
+            $presenceId = $presence['body']['$id'];
+
+            [$update, $delete] = $this->client->callConcurrently([
+                [Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, $payload + ['status' => 'away', 'purge' => true]],
+                [Client::METHOD_DELETE, '/presences/' . $presenceId, $headers, []],
+            ]);
+
+            /**
+             * Test for SUCCESS
+             */
+            $this->assertContains($update['headers']['status-code'], [200, 404], 'Update raced with delete: ' . \json_encode($update['body']));
+            $this->assertContains($delete['headers']['status-code'], [204, 404], 'Delete raced with update: ' . \json_encode($delete['body']));
+
+            $list = $this->client->call(Client::METHOD_GET, '/presences', $headers, [
+                'queries' => [Query::equal('userId', [$userId])->toString()],
+            ]);
+            $this->assertEquals(200, $list['headers']['status-code']);
+            $this->assertNotContains($presenceId, \array_column($list['body']['presences'], '$id'));
+
+            /**
+             * Test for FAILURE
+             */
+            if ($update['headers']['status-code'] === 404) {
+                $this->assertEquals('presence_not_found', $update['body']['type']);
+            }
+        }
+    }
+
     public function testClientCannotPassUserId(): void
     {
         if ($this->getSide() === 'server') {

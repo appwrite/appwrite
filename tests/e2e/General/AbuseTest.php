@@ -39,7 +39,7 @@ final class AbuseTest extends Scope
 
         $projectId = $increasedLimitProjects[0];
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+        $team = $this->createTeamFixture([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -49,7 +49,7 @@ final class AbuseTest extends Scope
             'name' => 'Increased Limit Team',
         ]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',

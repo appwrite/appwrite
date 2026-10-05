@@ -81,6 +81,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('authorization')
             ->inject('bus')
             ->inject('platform')
@@ -104,6 +105,7 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Deployments $deployments,
+        int $buildTimeout,
         Authorization $authorization,
         Bus $bus,
         array $platform
@@ -144,7 +146,8 @@ class Create extends Base
                 deployments: $deployments,
                 platform: $platform,
                 referenceType: $type,
-                reference: $reference
+                reference: $reference,
+                buildTimeout: $buildTimeout
             );
 
             $queueForEvents
@@ -185,6 +188,7 @@ class Create extends Base
                 'type' => 'vcs',
                 'activate' => $activate,
             ]),
+            $buildTimeout,
             $owner,
             $repository,
             $type,

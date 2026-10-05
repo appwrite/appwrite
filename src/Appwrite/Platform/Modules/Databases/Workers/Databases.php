@@ -231,8 +231,6 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
-
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
                 $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
@@ -240,6 +238,8 @@ class Databases extends Action
 
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -258,7 +258,7 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForDatabases, Database $dbForProject, Realtime $queueForRealtime): void
+    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection/table');
@@ -294,11 +294,11 @@ class Databases extends Action
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
+                    if (!$dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
                         $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
-                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
+                } elseif (!$dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
                     throw new DatabaseException('Failed to delete attribute/column');
                 }
 
@@ -344,8 +344,6 @@ class Databases extends Action
                 }
 
                 throw $e;
-            } finally {
-                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -362,9 +360,6 @@ class Databases extends Action
                 $found = \array_search($key, $attributes);
 
                 if ($found !== false) {
-                    // If found, remove entry from attributes, lengths, and orders
-                    // array_values wraps array_diff to reindex array keys
-                    // when found attribute is removed from array
                     $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
                     $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
                     $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
@@ -377,11 +372,10 @@ class Databases extends Action
                             ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
                             ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
 
-                        // Check if an index exists with the same attributes and orders
                         $exists = false;
                         foreach ($indexes as $existing) {
                             if (
-                                $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                                $existing->getAttribute('key') !== $index->getAttribute('key')
                                 && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
                                 && $existing->getAttribute('orders') === $index->getAttribute('orders')
                             ) {
@@ -390,7 +384,7 @@ class Databases extends Action
                             }
                         }
 
-                        if ($exists) { // Delete the duplicate if created, else update in db
+                        if ($exists) {
                             $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime);
                         } else {
                             $dbForProject->updateDocument('indexes', $index->getId(), new Document([
@@ -410,6 +404,8 @@ class Databases extends Action
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
                 $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -465,9 +461,9 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 
@@ -521,9 +517,9 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
             $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 

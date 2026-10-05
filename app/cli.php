@@ -21,7 +21,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 
@@ -138,41 +137,6 @@ $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Data
         );
     };
 }, ['databaseFactory', 'dbForPlatform']);
-
-$container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
-    $database = null;
-
-    return function (?Document $project = null) use ($pools, $cache, &$database, $authorization) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = $collections['logs'] ?? [];
-        $logsCollections = array_keys($logsCollections);
-
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setSharedTables(true)
-            ->setNamespace('logsV1')
-            ->setGlobalCollections($logsCollections)
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-        // set tenant
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        return $database;
-    };
-}, ['pools', 'cache', 'authorization']);
 
 $container->set('usage', function () {
     return new UsageContext();
