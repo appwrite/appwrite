@@ -149,9 +149,9 @@ class State
                     $existingPresence = $dbForProject->getAuthorization()->skip(
                         fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                     );
+                    $presenceCreated = $existingPresence->isEmpty();
 
-                    if ($existingPresence->isEmpty()) {
-                        $presenceCreated = true;
+                    if ($presenceCreated) {
                         return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                     }
 
