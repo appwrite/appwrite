@@ -36,6 +36,11 @@ class Naver extends OAuth2
     protected array $scopes = [];
 
     /**
+     * @var string
+     */
+    private string $returnedState = '';
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -57,6 +62,21 @@ class Naver extends OAuth2
     }
 
     /**
+     * Naver checks the state again on the code exchange, and the callback
+     * builds a fresh provider, so keep the value it returned.
+     *
+     * @param string $state
+     *
+     * @return array|null
+     */
+    public function parseState(string $state): ?array
+    {
+        $this->returnedState = $state;
+
+        return \json_decode($state, true);
+    }
+
+    /**
      * @param string $code
      *
      * @return array
@@ -73,6 +93,7 @@ class Naver extends OAuth2
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
+                    'state' => $this->returnedState,
                 ])
             ));
         }
