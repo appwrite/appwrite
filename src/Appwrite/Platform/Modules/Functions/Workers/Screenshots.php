@@ -230,7 +230,7 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $failure = $captured ? 'Screenshot could not be saved.' : 'Screenshot capturing failed.';
+            $failure = $captured ? 'Screenshot was captured but could not be applied.' : 'Screenshot capturing failed.';
 
             try {
                 $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$failure} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
