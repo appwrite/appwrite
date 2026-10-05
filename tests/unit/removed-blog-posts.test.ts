@@ -45,6 +45,14 @@ describe('findRemovedBlogPostLinks', () => {
     ])
   })
 
+  test('flags bare quoted slugs only in code', () => {
+    const text = "blogFooterLink(label, 'old-post', marketing)"
+    expect(findRemovedBlogPostLinks(text, removedSlugs)).toEqual([])
+    expect(findRemovedBlogPostLinks(text, removedSlugs, { code: true })).toEqual([
+      { line: 1, slug: 'old-post' },
+    ])
+  })
+
   test('does not match slugs that only share a prefix', () => {
     expect(findRemovedBlogPostLinks('/blog/post/old-post-2', removedSlugs)).toEqual([])
   })

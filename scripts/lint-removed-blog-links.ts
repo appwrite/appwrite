@@ -1,6 +1,7 @@
 /**
  * Flag links to blog posts marked `removed: true` anywhere under src/ (other
- * posts, docs, changelog, integrations, and code). Removed posts redirect to
+ * posts, docs, changelog, integrations, and code, including bare slug strings
+ * in .ts/.tsx files that build blog URLs). Removed posts redirect to
  * the home page, so links to them must be dropped or pointed elsewhere.
  *
  * Usage:
@@ -12,6 +13,7 @@ import { readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import {
   findRemovedBlogPostLinks,
+  isCodeSourceFile,
   listLiveSourceFiles,
   readRemovedBlogPostSlugs,
 } from '../src/lib/blog/removed-posts.ts'
@@ -23,7 +25,9 @@ function main() {
   let count = 0
 
   for (const file of listLiveSourceFiles(removedSlugs)) {
-    const links = findRemovedBlogPostLinks(readFileSync(file, 'utf8'), removedSlugs)
+    const links = findRemovedBlogPostLinks(readFileSync(file, 'utf8'), removedSlugs, {
+      code: isCodeSourceFile(file),
+    })
     for (const link of links) {
       console.error(
         `${relative(ROOT, file).replace(/\\/g, '/')}:${link.line}  links to removed post "${link.slug}"`,

@@ -8,7 +8,6 @@ timeToRead: 6
 author: eldad-fux
 category: tutorials
 unlisted: true
-removed: true
 faqs:
   - question: "Can I host a Vue.js app for free on Appwrite Sites?"
     answer: "Yes. [Appwrite Sites](/docs/products/sites) has a free tier that supports Vue.js deployments with a global CDN, automatic SSL, and DDoS protection. The free plan covers most personal projects, portfolios, and early stage products."

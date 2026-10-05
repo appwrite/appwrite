@@ -22,6 +22,9 @@ const IGNORED_SOURCE_DIRECTORIES = [path.join(srcDirectory, 'lib/blog/generated'
 const LIVE_SOURCE_EXTENSIONS = new Set(['.markdoc', '.md', '.ts', '.tsx'])
 
 const BLOG_POST_LINK_PATTERN = /\/blog\/post\/([A-Za-z0-9_.-]+)/g
+/** Bare quoted slugs, e.g. `blogFooterLink(label, 'some-post')`. */
+const QUOTED_SLUG_PATTERN = /(['"`])([A-Za-z0-9_.-]+)\1/g
+const CODE_EXTENSIONS = new Set(['.ts', '.tsx'])
 
 export type RemovedBlogPostLink = {
   line: number
@@ -87,10 +90,15 @@ function resolveRemovedSlug(
   return null
 }
 
-/** Links (relative or absolute) to removed posts in `text`, with 1-based lines. */
+/**
+ * Links (relative or absolute) to removed posts in `text`, with 1-based lines.
+ * With `code: true`, also flags removed slugs passed as bare strings, since
+ * code often builds the `/blog/post/` URL from a slug.
+ */
 export function findRemovedBlogPostLinks(
   text: string,
   removedSlugs: ReadonlySet<string>,
+  options: { code?: boolean } = {},
 ): RemovedBlogPostLink[] {
   const links: RemovedBlogPostLink[] = []
   const lines = text.split('\n')
@@ -100,7 +108,16 @@ export function findRemovedBlogPostLinks(
       const slug = resolveRemovedSlug(match[1]!, removedSlugs)
       if (slug) links.push({ line: index + 1, slug })
     }
+    if (!options.code) continue
+    for (const match of line.matchAll(QUOTED_SLUG_PATTERN)) {
+      if (removedSlugs.has(match[2]!)) links.push({ line: index + 1, slug: match[2]! })
+    }
   }
 
   return links
+}
+
+/** Whether a source file is code, where bare slug strings also count as links. */
+export function isCodeSourceFile(file: string): boolean {
+  return CODE_EXTENSIONS.has(path.extname(file))
 }
