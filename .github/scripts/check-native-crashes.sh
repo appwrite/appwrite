@@ -23,7 +23,11 @@ while IFS= read -r name; do
 done <<< "$names"
 echo "Scanning: ${services[*]}"
 
-logs=$(docker compose logs --no-color "${services[@]}" 2>&1)
+if ! logs=$(docker compose logs --no-color "${services[@]}" 2>&1); then
+    echo "$logs"
+    echo '::error::docker compose logs failed for the appwrite services'
+    exit 1
+fi
 
 status=0
 matches=$(grep -E -- "$pattern" <<< "$logs") || status=$?
