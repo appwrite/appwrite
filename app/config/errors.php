@@ -1626,24 +1626,24 @@ return [
         'description' => 'Video rendition segment with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VIDEO_SUBTITLE_NOT_FOUND => [
-        'name' => Exception::VIDEO_SUBTITLE_NOT_FOUND,
-        'description' => 'Video subtitle with the requested ID could not be found.',
+    Exception::VIDEO_CAPTION_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_NOT_FOUND,
+        'description' => 'Video caption with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VIDEO_SUBTITLE_NOT_VALID => [
-        'name' => Exception::VIDEO_SUBTITLE_NOT_VALID,
-        'description' => 'The requested file is not a valid subtitle file.',
+    Exception::VIDEO_CAPTION_NOT_VALID => [
+        'name' => Exception::VIDEO_CAPTION_NOT_VALID,
+        'description' => 'The requested file is not a valid caption file.',
         'code' => 400,
     ],
-    Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND => [
-        'name' => Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND,
-        'description' => 'Video subtitle segment with the requested ID could not be found.',
+    Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND,
+        'description' => 'Video caption segment with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
         'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
-        'description' => 'The subtitle language code is not a valid ISO 639-2 code.',
+        'description' => 'The caption language code is not a valid ISO 639-2 code.',
         'code' => 400,
     ],
     Exception::VIDEO_PREVIEW_NOT_FOUND => [

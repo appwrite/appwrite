@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Manifest;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Manifest;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Manifest\Base;
@@ -28,15 +28,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getSubtitleManifest';
+        return 'getCaptionManifest';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/manifest')
-            ->desc('Get subtitle manifest')
+            ->setHttpPath('/v1/videos/:videoId/outputs/:output/captions/:captionId/manifest')
+            ->desc('Get caption manifest')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -44,8 +44,8 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'playback',
-                name: 'getSubtitleManifest',
-                description: '/docs/references/videos/get-subtitle-manifest.md',
+                name: 'getCaptionManifest',
+                description: '/docs/references/videos/get-caption-manifest.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -59,7 +59,7 @@ class Get extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
-            ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+            ->param('captionId', '', new UID(), 'Caption unique ID.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -72,7 +72,7 @@ class Get extends Base
     public function action(
         string $videoId,
         string $output,
-        string $subtitleId,
+        string $captionId,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -82,14 +82,14 @@ class Get extends Base
     ): void {
         $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->getDocument('videos_subtitles', $subtitleId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 
         if (
-            $subtitle->isEmpty()
-            || $subtitle->getAttribute('videoInternalId') !== $video->getSequence()
-            || $subtitle->getAttribute('status') !== self::STATUS_READY
+            $caption->isEmpty()
+            || $caption->getAttribute('videoInternalId') !== $video->getSequence()
+            || $caption->getAttribute('status') !== self::STATUS_READY
         ) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
         // DASH addresses the WebVTT file directly from the MPD's <BaseURL>, so this
@@ -97,10 +97,10 @@ class Get extends Base
         // sent it and then fell through into the HLS branch, throwing after the
         // response was already committed.
         if ($output === self::OUTPUT_DASH) {
-            $path = $subtitle->getAttribute('path', '');
+            $path = $caption->getAttribute('path', '');
 
             if (empty($path) || !$deviceForVideos->exists($path)) {
-                throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
+                throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
             }
 
             $response
@@ -111,15 +111,15 @@ class Get extends Base
             return;
         }
 
-        $segments = $this->getSegments($dbForProject, $authorization, 'videos_subtitles_segments', [
-            Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
+        $segments = $this->getSegments($dbForProject, $authorization, 'videos_captions_segments', [
+            Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 
         if (empty($segments)) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
-        $baseUri = $this->baseUri($video, $output) . '/subtitles/' . $subtitle->getId() . '/segments/';
+        $baseUri = $this->baseUri($video, $output) . '/captions/' . $caption->getId() . '/segments/';
 
         $entries = [];
 
@@ -130,8 +130,8 @@ class Get extends Base
             ];
         }
 
-        $manifest = $this->renderView('hls-subtitles', [
-            'targetDuration' => \max(1, (int) \ceil((float) $subtitle->getAttribute('targetDuration', 1))),
+        $manifest = $this->renderView('hls-captions', [
+            'targetDuration' => \max(1, (int) \ceil((float) $caption->getAttribute('targetDuration', 1))),
             'segments' => $entries,
         ]);
 

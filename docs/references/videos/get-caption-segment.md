@@ -1,1 +1,1 @@
-Get a single WebVTT segment of a subtitle track. Players reach this from a subtitle playlist; it is not usually requested directly.
+Get a single WebVTT segment of a caption track. Players reach this from a captions playlist; it is not usually requested directly.

@@ -1,1 +1,1 @@
-Get the playable subtitle resource for a video output: an HLS subtitle playlist, or the WebVTT file itself for DASH.
+Get the playable caption resource for a video output: an HLS captions playlist, or the WebVTT file itself for DASH.

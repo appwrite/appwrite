@@ -83,7 +83,7 @@ final class VideosCustomClientTest extends Scope
             '/videos/codecs',
             '/videos/someVideoId',
             '/videos/someVideoId/timeline',
-            '/videos/someVideoId/subtitles',
+            '/videos/someVideoId/captions',
             '/videos/someVideoId/renditions',
             '/videos/someVideoId/outputs/hls/master.m3u8',
         ];
@@ -191,7 +191,7 @@ final class VideosCustomClientTest extends Scope
         // The session is not granted anything by that bucket.
         foreach ([
             '/videos/' . $videoId,
-            '/videos/' . $videoId . '/subtitles',
+            '/videos/' . $videoId . '/captions',
             '/videos/' . $videoId . '/renditions',
             '/videos/' . $videoId . '/timeline',
         ] as $path) {

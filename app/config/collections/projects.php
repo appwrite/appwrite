@@ -2783,7 +2783,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('subtitlesExtracted'),
+                '$id' => ID::custom('captionsExtracted'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -3520,10 +3520,10 @@ return [
         ],
     ],
 
-    'videos_subtitles' => [
+    'videos_captions' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('videos_subtitles'),
-        'name' => 'Videos Subtitles',
+        '$id' => ID::custom('videos_captions'),
+        'name' => 'Videos Captions',
         'attributes' => [
             [
                 '$id' => ID::custom('videoId'),
@@ -3676,13 +3676,13 @@ return [
         ],
     ],
 
-    'videos_subtitles_segments' => [
+    'videos_captions_segments' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('videos_subtitles_segments'),
-        'name' => 'Videos Subtitles Segments',
+        '$id' => ID::custom('videos_captions_segments'),
+        'name' => 'Videos Captions Segments',
         'attributes' => [
             [
-                '$id' => ID::custom('subtitleId'),
+                '$id' => ID::custom('captionId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3693,7 +3693,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('subtitleInternalId'),
+                '$id' => ID::custom('captionInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3739,16 +3739,16 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_subtitleId'),
+                '$id' => ID::custom('_key_captionId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['subtitleId'],
+                'attributes' => ['captionId'],
                 'lengths' => [],
                 'orders' => [],
             ],
             [
-                '$id' => ID::custom('_key_subtitleInternalId'),
+                '$id' => ID::custom('_key_captionInternalId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['subtitleInternalId'],
+                'attributes' => ['captionInternalId'],
                 'lengths' => [],
                 'orders' => [],
             ],

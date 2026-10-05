@@ -112,7 +112,7 @@ class Create extends Base
             'fileInternalId' => $file->getSequence(),
             'name' => $name,
             'size' => $file->getAttribute('sizeOriginal', 0),
-            'subtitlesExtracted' => false,
+            'captionsExtracted' => false,
             'search' => \implode(' ', [$file->getId(), $name]),
         ])));
 

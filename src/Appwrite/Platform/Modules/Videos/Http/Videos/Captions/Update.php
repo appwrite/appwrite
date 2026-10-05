@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Captions;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Video as VideoMessage;
@@ -32,44 +32,44 @@ class Update extends Base
 
     public static function getName()
     {
-        return 'updateSubtitle';
+        return 'updateCaption';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/videos/:videoId/subtitles/:subtitleId')
-            ->desc('Update subtitle')
+            ->setHttpPath('/v1/videos/:videoId/captions/:captionId')
+            ->desc('Update caption')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.write')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
-            ->label('event', 'videos.[videoId].subtitles.[subtitleId].update')
-            ->label('audits.event', 'subtitle.update')
-            ->label('audits.resource', 'video/{request.videoId}/subtitle/{request.subtitleId}')
+            ->label('event', 'videos.[videoId].captions.[captionId].update')
+            ->label('audits.event', 'caption.update')
+            ->label('audits.resource', 'video/{request.videoId}/caption/{request.captionId}')
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
-                group: 'subtitles',
-                name: 'updateSubtitle',
-                description: '/docs/references/videos/update-subtitle.md',
+                group: 'captions',
+                name: 'updateCaption',
+                description: '/docs/references/videos/update-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_VIDEO_SUBTITLE,
+                        model: Response::MODEL_VIDEO_CAPTION,
                     )
                 ]
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
-            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the subtitle file. Omit together with fileId to only update name, code, or default.', true)
-            ->param('fileId', '', new UID(), 'Subtitle file unique ID. Omit together with bucketId to only update name, code, or default.', true)
+            ->param('captionId', '', new UID(), 'Caption unique ID.')
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file. Omit together with fileId to only update name, code, or default.', true)
+            ->param('fileId', '', new UID(), 'Caption file unique ID. Omit together with bucketId to only update name, code, or default.', true)
             // The name is rendered into HLS/DASH manifests, which are quote- and
             // line-delimited; the allowlist keeps structural characters out at the door.
-            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Subtitle display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'', true)
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Subtitle ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
-            ->param('default', null, new Nullable(new Boolean()), 'Make this the default subtitle track for the video. Omit to leave unchanged.', true)
+            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Caption display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'', true)
+            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
+            ->param('default', null, new Nullable(new Boolean()), 'Make this the default caption track for the video. Omit to leave unchanged.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -82,7 +82,7 @@ class Update extends Base
 
     public function action(
         string $videoId,
-        string $subtitleId,
+        string $captionId,
         string $bucketId,
         string $fileId,
         string $name,
@@ -98,16 +98,16 @@ class Update extends Base
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->getDocument('videos_subtitles', $subtitleId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 
-        if ($subtitle->isEmpty() || $subtitle->getAttribute('videoInternalId') !== $video->getSequence()) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        if ($caption->isEmpty() || $caption->getAttribute('videoInternalId') !== $video->getSequence()) {
+            throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
         $replaceSource = $bucketId !== '' || $fileId !== '';
 
         if ($replaceSource && ($bucketId === '' || $fileId === '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'bucketId and fileId must be provided together to replace a subtitle file.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'bucketId and fileId must be provided together to replace a caption file.');
         }
 
         $sourceChanged = false;
@@ -115,21 +115,21 @@ class Update extends Base
         if ($replaceSource) {
             $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
-            if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
-                throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+            if (!\in_array($file->getAttribute('mimeType', ''), self::CAPTION_MIME_TYPES, true)) {
+                throw new Exception(Exception::VIDEO_CAPTION_NOT_VALID);
             }
 
-            $sourceChanged = $subtitle->getAttribute('fileId') !== $file->getId();
+            $sourceChanged = $caption->getAttribute('fileId') !== $file->getId();
         }
 
-        $nextCode = $code !== '' ? $code : (string) $subtitle->getAttribute('code', '');
+        $nextCode = $code !== '' ? $code : (string) $caption->getAttribute('code', '');
 
         if ($default === true) {
-            $this->clearDefault($dbForProject, $authorization, $video, $subtitle->getId());
+            $this->clearDefault($dbForProject, $authorization, $video, $caption->getId());
         }
 
         $updates = [
-            'name' => $name !== '' ? $name : $subtitle->getAttribute('name'),
+            'name' => $name !== '' ? $name : $caption->getAttribute('name'),
             'code' => $nextCode,
         ];
 
@@ -152,22 +152,22 @@ class Update extends Base
             $updates['path'] = null;
         }
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), new Document($updates)));
+        $caption = $authorization->skip(fn () => $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document($updates)));
 
         if ($sourceChanged) {
             $publisherForVideos->enqueue(new VideoMessage(
                 project: $project,
-                action: VideoAction::Subtitle,
+                action: VideoAction::Caption,
                 video: $video,
-                subtitle: $subtitle,
+                caption: $caption,
             ));
         }
 
         $queueForEvents
             ->setParam('videoId', $video->getId())
-            ->setParam('subtitleId', $subtitle->getId());
+            ->setParam('captionId', $caption->getId());
 
-        $response->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
+        $response->dynamic($caption, Response::MODEL_VIDEO_CAPTION);
     }
 
     /**
@@ -175,20 +175,20 @@ class Update extends Base
      */
     private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video, string $exceptId): void
     {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
 
-        foreach ($existing as $subtitle) {
-            if ($subtitle->getId() === $exceptId) {
+        foreach ($existing as $caption) {
+            if ($caption->getId() === $exceptId) {
                 continue;
             }
 
             $authorization->skip(fn () => $dbForProject->updateDocument(
-                'videos_subtitles',
-                $subtitle->getId(),
+                'videos_captions',
+                $caption->getId(),
                 new Document(['default' => false])
             ));
         }

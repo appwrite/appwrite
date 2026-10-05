@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Segments;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Segments;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -26,15 +26,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getSubtitleSegment';
+        return 'getCaptionSegment';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:segmentId')
-            ->desc('Get subtitle segment')
+            ->setHttpPath('/v1/videos/:videoId/outputs/:output/captions/:captionId/segments/:segmentId')
+            ->desc('Get caption segment')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -42,8 +42,8 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'playback',
-                name: 'getSubtitleSegment',
-                description: '/docs/references/videos/get-subtitle-segment.md',
+                name: 'getCaptionSegment',
+                description: '/docs/references/videos/get-caption-segment.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -57,7 +57,7 @@ class Get extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
-            ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+            ->param('captionId', '', new UID(), 'Caption unique ID.')
             ->param('segmentId', '', new UID(), 'Segment unique ID.')
             ->inject('response')
             ->inject('dbForProject')
@@ -70,7 +70,7 @@ class Get extends Base
     public function action(
         string $videoId,
         string $output,
-        string $subtitleId,
+        string $captionId,
         string $segmentId,
         Response $response,
         Database $dbForProject,
@@ -80,22 +80,22 @@ class Get extends Base
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->getDocument('videos_subtitles', $subtitleId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 
-        if ($subtitle->isEmpty() || $subtitle->getAttribute('videoInternalId') !== $video->getSequence()) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        if ($caption->isEmpty() || $caption->getAttribute('videoInternalId') !== $video->getSequence()) {
+            throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
-        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videos_subtitles_segments', $segmentId));
+        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions_segments', $segmentId));
 
-        if ($segment->isEmpty() || $segment->getAttribute('subtitleInternalId') !== $subtitle->getSequence()) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+        if ($segment->isEmpty() || $segment->getAttribute('captionInternalId') !== $caption->getSequence()) {
+            throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
         $path = $segment->getAttribute('path', '') . $segment->getAttribute('fileName', '');
 
         if (!$deviceForVideos->exists($path)) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
         $response

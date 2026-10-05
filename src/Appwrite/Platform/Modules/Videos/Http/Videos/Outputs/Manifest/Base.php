@@ -65,16 +65,16 @@ abstract class Base extends VideosAction
     }
 
     /**
-     * Ready subtitle tracks for this video.
+     * Ready caption tracks for this video.
      *
      * @return array<Document>
      */
-    protected function getReadySubtitles(
+    protected function getReadyCaptions(
         Database $dbForProject,
         Authorization $authorization,
         Document $video
     ): array {
-        return $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+        return $authorization->skip(fn () => $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [self::STATUS_READY]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -181,7 +181,7 @@ abstract class Base extends VideosAction
         $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
 
         $renditions = $this->getReadyRenditions($dbForProject, $authorization, $video, $output);
-        $subtitles = $this->getReadySubtitles($dbForProject, $authorization, $video);
+        $captions = $this->getReadyCaptions($dbForProject, $authorization, $video);
 
         $baseUri = $this->baseUri($video, $output);
 
@@ -247,7 +247,7 @@ abstract class Base extends VideosAction
                     'resolution' => $stream['resolution'] ?? '',
                     'name' => $rendition->getAttribute('name', ''),
                     'codecs' => $codecs,
-                    'subs' => empty($subtitles) ? null : 'subs',
+                    'subs' => empty($captions) ? null : 'subs',
                     'audio' => $hasAudioGroup ? 'group_audio' : null,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
@@ -257,20 +257,20 @@ abstract class Base extends VideosAction
             }
         }
 
-        $subtitleEntries = [];
+        $captionEntries = [];
 
-        foreach ($subtitles as $subtitle) {
-            $subtitleEntries[] = [
-                'name' => $subtitle->getAttribute('name', ''),
-                'code' => $subtitle->getAttribute('code', ''),
-                'default' => $subtitle->getAttribute('default', false) ? 'YES' : 'NO',
-                'uri' => $this->withProject($baseUri . '/subtitles/' . $subtitle->getId() . '/manifest', $project),
+        foreach ($captions as $caption) {
+            $captionEntries[] = [
+                'name' => $caption->getAttribute('name', ''),
+                'code' => $caption->getAttribute('code', ''),
+                'default' => $caption->getAttribute('default', false) ? 'YES' : 'NO',
+                'uri' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project),
             ];
         }
 
         $manifest = $this->renderView('hls-master', [
             'audios' => $audios,
-            'subtitles' => $subtitleEntries,
+            'captions' => $captionEntries,
             'renditions' => $streams,
         ]);
 
@@ -292,7 +292,7 @@ abstract class Base extends VideosAction
         $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
 
         $renditions = $this->getReadyRenditions($dbForProject, $authorization, $video, $output);
-        $subtitles = $this->getReadySubtitles($dbForProject, $authorization, $video);
+        $captions = $this->getReadyCaptions($dbForProject, $authorization, $video);
 
         $baseUri = $this->baseUri($video, $output);
 
@@ -390,20 +390,20 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $subtitleEntries = [];
+        $captionEntries = [];
 
-        foreach ($subtitles as $subtitle) {
-            $subtitleEntries[] = [
-                'id' => $subtitle->getId(),
-                'name' => $subtitle->getAttribute('code', ''),
-                'baseUrl' => $this->withProject($baseUri . '/subtitles/' . $subtitle->getId() . '/manifest', $project),
+        foreach ($captions as $caption) {
+            $captionEntries[] = [
+                'id' => $caption->getId(),
+                'name' => $caption->getAttribute('code', ''),
+                'baseUrl' => $this->withProject($baseUri . '/captions/' . $caption->getId() . '/manifest', $project),
             ];
         }
 
         $manifest = $this->renderView('dash', [
             'mpd' => $mpd,
             'renditions' => $adaptations,
-            'subtitles' => $subtitleEntries,
+            'captions' => $captionEntries,
         ]);
 
         $this->sendManifest($response, $manifest, 'application/dash+xml');

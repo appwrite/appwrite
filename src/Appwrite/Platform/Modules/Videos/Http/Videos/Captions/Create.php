@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Captions;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Video as VideoMessage;
@@ -32,43 +32,43 @@ class Create extends Base
 
     public static function getName()
     {
-        return 'createSubtitle';
+        return 'createCaption';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/videos/:videoId/subtitles')
-            ->desc('Create subtitle')
+            ->setHttpPath('/v1/videos/:videoId/captions')
+            ->desc('Create caption')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.write')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
-            ->label('event', 'videos.[videoId].subtitles.[subtitleId].create')
-            ->label('audits.event', 'subtitle.create')
-            ->label('audits.resource', 'video/{request.videoId}/subtitle/{response.$id}')
+            ->label('event', 'videos.[videoId].captions.[captionId].create')
+            ->label('audits.event', 'caption.create')
+            ->label('audits.resource', 'video/{request.videoId}/caption/{response.$id}')
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
-                group: 'subtitles',
-                name: 'createSubtitle',
-                description: '/docs/references/videos/create-subtitle.md',
+                group: 'captions',
+                name: 'createCaption',
+                description: '/docs/references/videos/create-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_VIDEO_SUBTITLE,
+                        model: Response::MODEL_VIDEO_CAPTION,
                     )
                 ]
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the subtitle file.')
-            ->param('fileId', '', new UID(), 'Subtitle file unique ID.')
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file.')
+            ->param('fileId', '', new UID(), 'Caption file unique ID.')
             // The name is rendered into HLS/DASH manifests, which are quote- and
             // line-delimited; the allowlist keeps structural characters out at the door.
-            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Subtitle display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'')
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Subtitle ISO 639-2 three-letter language code.')
-            ->param('default', false, new Boolean(true), 'Make this the default subtitle track for the video.', true)
+            ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Caption display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'')
+            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code.')
+            ->param('default', false, new Boolean(true), 'Make this the default caption track for the video.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -97,15 +97,15 @@ class Create extends Base
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
-        if (!\in_array($file->getAttribute('mimeType', ''), self::SUBTITLE_MIME_TYPES, true)) {
-            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+        if (!\in_array($file->getAttribute('mimeType', ''), self::CAPTION_MIME_TYPES, true)) {
+            throw new Exception(Exception::VIDEO_CAPTION_NOT_VALID);
         }
 
         if ($default) {
             $this->clearDefault($dbForProject, $authorization, $video);
         }
 
-        $subtitle = $authorization->skip(fn () => $dbForProject->createDocument('videos_subtitles', new Document([
+        $caption = $authorization->skip(fn () => $dbForProject->createDocument('videos_captions', new Document([
             '$id' => ID::unique(),
             'videoId' => $video->getId(),
             'videoInternalId' => $video->getSequence(),
@@ -126,23 +126,23 @@ class Create extends Base
             // failed create cannot cost the video its default track. Nothing is
             // deleted — extraction runs once per video, so removing an extracted
             // track is irreversible and stays an explicit user action.
-            $subtitle = $this->takeDefaultFromEmbedded($dbForProject, $authorization, $video, $subtitle);
+            $caption = $this->takeDefaultFromEmbedded($dbForProject, $authorization, $video, $caption);
         }
 
         $publisherForVideos->enqueue(new VideoMessage(
             project: $project,
-            action: VideoAction::Subtitle,
+            action: VideoAction::Caption,
             video: $video,
-            subtitle: $subtitle,
+            caption: $caption,
         ));
 
         $queueForEvents
             ->setParam('videoId', $video->getId())
-            ->setParam('subtitleId', $subtitle->getId());
+            ->setParam('captionId', $caption->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
+            ->dynamic($caption, Response::MODEL_VIDEO_CAPTION);
     }
 
     /**
@@ -158,9 +158,9 @@ class Create extends Base
         Database $dbForProject,
         Authorization $authorization,
         Document $video,
-        Document $subtitle
+        Document $caption
     ): Document {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(1),
@@ -171,20 +171,20 @@ class Create extends Base
         if (
             $current === null
             || !empty($current->getAttribute('fileId', ''))
-            || $current->getAttribute('code', '') !== $subtitle->getAttribute('code', '')
+            || $current->getAttribute('code', '') !== $caption->getAttribute('code', '')
         ) {
-            return $subtitle;
+            return $caption;
         }
 
         $authorization->skip(fn () => $dbForProject->updateDocument(
-            'videos_subtitles',
+            'videos_captions',
             $current->getId(),
             new Document(['default' => false])
         ));
 
         return $authorization->skip(fn () => $dbForProject->updateDocument(
-            'videos_subtitles',
-            $subtitle->getId(),
+            'videos_captions',
+            $caption->getId(),
             new Document(['default' => true])
         ));
     }
@@ -194,17 +194,17 @@ class Create extends Base
      */
     private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video): void
     {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
 
-        foreach ($existing as $subtitle) {
+        foreach ($existing as $caption) {
             $authorization->skip(fn () => $dbForProject->updateDocument(
-                'videos_subtitles',
-                $subtitle->getId(),
-                $subtitle->setAttribute('default', false)
+                'videos_captions',
+                $caption->getId(),
+                $caption->setAttribute('default', false)
             ));
         }
     }

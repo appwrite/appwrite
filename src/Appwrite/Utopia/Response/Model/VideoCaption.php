@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
 
-class VideoSubtitle extends Model
+class VideoCaption extends Model
 {
     /**
      * `embedded` is derived, not stored: extracted tracks are the rows with no
@@ -22,19 +22,19 @@ class VideoSubtitle extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Subtitle ID.',
+                'description' => 'Caption ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Subtitle creation time in ISO 8601 format.',
+                'description' => 'Caption creation time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Subtitle update date in ISO 8601 format.',
+                'description' => 'Caption update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -46,32 +46,32 @@ class VideoSubtitle extends Model
             ])
             ->addRule('bucketId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Storage bucket ID holding the subtitle file.',
+                'description' => 'Storage bucket ID holding the caption file.',
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
             ->addRule('fileId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Subtitle file ID.',
+                'description' => 'Caption file ID.',
                 'default' => '',
                 'example' => 'c5fg5emg1c168grr',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Subtitle display name.',
+                'description' => 'Caption display name.',
                 'default' => '',
                 'example' => 'English',
             ])
             // ISO 639-2 three-letter code, validated against the locale-languages config.
             ->addRule('code', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Subtitle ISO 639-2 language code.',
+                'description' => 'Caption ISO 639-2 language code.',
                 'default' => '',
                 'example' => 'eng',
             ])
             ->addRule('default', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is this the default subtitle track?',
+                'description' => 'Is this the default caption track?',
                 'default' => false,
                 'example' => false,
             ])
@@ -103,7 +103,7 @@ class VideoSubtitle extends Model
      */
     public function getName(): string
     {
-        return 'Video subtitle';
+        return 'Video caption';
     }
 
     /**
@@ -113,6 +113,6 @@ class VideoSubtitle extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_VIDEO_SUBTITLE;
+        return Response::MODEL_VIDEO_CAPTION;
     }
 }

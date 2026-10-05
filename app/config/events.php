@@ -710,18 +710,18 @@ return [
                 '$description' => 'This event triggers when a rendition is deleted.',
             ],
         ],
-        'subtitles' => [
-            '$model' => Response::MODEL_VIDEO_SUBTITLE,
+        'captions' => [
+            '$model' => Response::MODEL_VIDEO_CAPTION,
             '$resource' => true,
-            '$description' => 'This event triggers on any subtitles event.',
+            '$description' => 'This event triggers on any captions event.',
             'create' => [
-                '$description' => 'This event triggers when a subtitle is created.',
+                '$description' => 'This event triggers when a caption is created.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a subtitle is updated.',
+                '$description' => 'This event triggers when a caption is updated.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a subtitle is deleted.',
+                '$description' => 'This event triggers when a caption is deleted.',
             ],
         ],
         'create' => [

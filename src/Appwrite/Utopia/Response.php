@@ -158,8 +158,8 @@ class Response extends SwooleResponse
     public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
     public const MODEL_VIDEO_RENDITION = 'videoRendition';
     public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
-    public const MODEL_VIDEO_SUBTITLE = 'videoSubtitle';
-    public const MODEL_VIDEO_SUBTITLE_LIST = 'videoSubtitleList';
+    public const MODEL_VIDEO_CAPTION = 'videoCaption';
+    public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';

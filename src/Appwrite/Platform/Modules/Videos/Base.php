@@ -129,7 +129,7 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Lifecycle of a rendition or subtitle, shared with the videos worker.
+     * Lifecycle of a rendition or caption, shared with the videos worker.
      *
      * Endpoints create rows as `pending`; the worker advances them and settles on
      * `ready` or `error`.
@@ -179,8 +179,8 @@ abstract class Base extends UtopiaAction
     public const SOURCE_MIME_PREFIXES = ['video/', 'audio/'];
     public const SOURCE_MIME_TYPES = ['application/ogg'];
 
-    /** Mime types accepted as a subtitle source. */
-    public const SUBTITLE_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
+    /** Mime types accepted as a caption source. */
+    public const CAPTION_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
 
     /**
      * Renders one of the `app/views/videos/*.phtml` manifest templates.
@@ -321,25 +321,25 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Deletes a subtitle row and enqueues lazy cleanup of its segments and files.
+     * Deletes a caption row and enqueues lazy cleanup of its segments and files.
      */
-    protected function deleteSubtitle(
+    protected function deleteCaption(
         Database $dbForProject,
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         Document $project,
-        Document $subtitle
+        Document $caption
     ): void {
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_captions', $caption->getId()));
 
         if (!$deleted) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video subtitle from DB');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video caption from DB');
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
-            document: $subtitle,
+            document: $caption,
         ));
     }
 

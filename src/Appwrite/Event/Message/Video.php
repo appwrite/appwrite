@@ -11,7 +11,7 @@ final class Video extends Base
         public readonly VideoAction $action,
         public readonly Document $video,
         public readonly ?Document $profile = null,
-        public readonly ?Document $subtitle = null,
+        public readonly ?Document $caption = null,
         public readonly ?Document $rendition = null,
         public readonly string $output = '',
     ) {
@@ -30,7 +30,7 @@ final class Video extends Base
             'action' => $this->action->value,
             'video' => $this->video->getArrayCopy(),
             'profile' => $this->profile?->getArrayCopy(),
-            'subtitle' => $this->subtitle?->getArrayCopy(),
+            'caption' => $this->caption?->getArrayCopy(),
             'rendition' => $this->rendition?->getArrayCopy(),
             'output' => $this->output,
         ];
@@ -47,7 +47,7 @@ final class Video extends Base
             action: VideoAction::from($data['action']),
             video: new Document($data['video'] ?? []),
             profile: !empty($data['profile']) ? new Document($data['profile']) : null,
-            subtitle: !empty($data['subtitle']) ? new Document($data['subtitle']) : null,
+            caption: !empty($data['caption']) ? new Document($data['caption']) : null,
             rendition: !empty($data['rendition']) ? new Document($data['rendition']) : null,
             output: $data['output'] ?? '',
         );

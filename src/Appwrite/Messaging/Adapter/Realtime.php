@@ -1087,16 +1087,16 @@ class Realtime extends MessagingAdapter
                 if (isset($parts[1])) {
                     $channels[] = 'videos.' . $parts[1];
                 }
-                // Nested rendition/subtitle events:
+                // Nested rendition/caption events:
                 // `videos.{videoId}.renditions.{renditionId}.{action}`
-                // `videos.{videoId}.subtitles.{subtitleId}.{action}`
-                if (isset($parts[2]) && \in_array($parts[2], ['renditions', 'subtitles'], true)) {
+                // `videos.{videoId}.captions.{captionId}.{action}`
+                if (isset($parts[2]) && \in_array($parts[2], ['renditions', 'captions'], true)) {
                     $channels[] = 'videos.' . $parts[1] . '.' . $parts[2];
                     if (isset($parts[3])) {
                         $channels[] = 'videos.' . $parts[1] . '.' . $parts[2] . '.' . $parts[3];
                     }
                 }
-                // Renditions and subtitles inherit the source file's permissions, which the
+                // Renditions and captions inherit the source file's permissions, which the
                 // publisher stamps onto the payload before it reaches Realtime.
                 $roles = $payload->getRead();
                 break;

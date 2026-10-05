@@ -49,7 +49,7 @@ use Utopia\Video\Track;
 use Utopia\Video\Variant;
 
 /**
- * Consumes the `videos` queue: sprite timelines, subtitle packaging and
+ * Consumes the `videos` queue: sprite timelines, caption packaging and
  * rendition transcoding.
  *
  * The class name matches the module because this worker owns the module's
@@ -58,12 +58,12 @@ use Utopia\Video\Variant;
 class Videos extends Action
 {
     /**
-     * Soft text subtitle codecs that ffmpeg can convert to WebVTT.
+     * Soft text caption codecs that ffmpeg can convert to WebVTT.
      * Image-based streams (PGS, VobSub, …) are skipped.
      *
      * @var list<string>
      */
-    private const TEXT_SUBTITLE_CODECS = [
+    private const TEXT_CAPTION_CODECS = [
         'subrip',
         'srt',
         'webvtt',
@@ -130,7 +130,7 @@ class Videos extends Action
                 $project,
                 $videoMessage
             ),
-            VideoAction::Subtitle => $this->subtitle(
+            VideoAction::Caption => $this->caption(
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
@@ -252,23 +252,23 @@ class Videos extends Action
     }
 
     /**
-     * Normalise a subtitle to WebVTT, write a segment row and upload the file.
+     * Normalise a caption to WebVTT, write a segment row and upload the file.
      */
-    private function subtitle(
+    private function caption(
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
         VideoMessage $videoMessage
     ): void {
-        $subtitle = $videoMessage->subtitle;
+        $caption = $videoMessage->caption;
 
-        if ($subtitle === null || $subtitle->isEmpty()) {
-            throw new \Exception('Missing subtitle in payload');
+        if ($caption === null || $caption->isEmpty()) {
+            throw new \Exception('Missing caption in payload');
         }
 
-        // Re-fetch rather than trust the queue snapshot: a subtitle created before
+        // Re-fetch rather than trust the queue snapshot: a caption created before
         // the source was probed carries duration 0, which would bake
-        // targetDuration "0.0" into the subtitle playlist.
+        // targetDuration "0.0" into the caption playlist.
         $video = $dbForProject->getDocument('videos', $videoMessage->video->getId());
         if ($video->isEmpty()) {
             $video = $videoMessage->video;
@@ -276,9 +276,9 @@ class Videos extends Action
         $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
 
         try {
-            $subtitle = $dbForProject->updateDocument(
-                'videos_subtitles',
-                $subtitle->getId(),
+            $caption = $dbForProject->updateDocument(
+                'videos_captions',
+                $caption->getId(),
                 new Document([
                     'status' => Base::STATUS_STARTED,
                 ])
@@ -286,36 +286,36 @@ class Videos extends Action
 
             $file = $this->resolveFile(
                 $dbForProject,
-                $subtitle->getAttribute('bucketId', ''),
-                $subtitle->getAttribute('fileId', '')
+                $caption->getAttribute('bucketId', ''),
+                $caption->getAttribute('fileId', '')
             );
             $downloaded = $this->download($deviceForFiles, $file, $workspace['inDir']);
             $ext = \strtolower(\pathinfo($downloaded, PATHINFO_EXTENSION));
-            $subtitlePath = $workspace['inDir'] . $subtitle->getId() . '.vtt';
+            $captionPath = $workspace['inDir'] . $caption->getId() . '.vtt';
 
             if ($ext === 'srt') {
-                $this->subripToWebvtt($downloaded, $subtitlePath);
+                $this->subripToWebvtt($downloaded, $captionPath);
             } elseif (\in_array($ext, ['vtt', 'webvtt'], true)) {
-                if (!\copy($downloaded, $subtitlePath)) {
-                    throw new \Exception('Failed to stage WebVTT subtitle');
+                if (!\copy($downloaded, $captionPath)) {
+                    throw new \Exception('Failed to stage WebVTT caption');
                 }
             } else {
                 // text/plain and application/x-subrip without a .srt extension: try
                 // Subrip parsing, then fall back to a straight copy.
                 try {
-                    $this->subripToWebvtt($downloaded, $subtitlePath);
+                    $this->subripToWebvtt($downloaded, $captionPath);
                 } catch (\Throwable) {
-                    if (!\copy($downloaded, $subtitlePath)) {
-                        throw new \Exception('Failed to stage subtitle as WebVTT');
+                    if (!\copy($downloaded, $captionPath)) {
+                        throw new \Exception('Failed to stage caption as WebVTT');
                     }
                 }
             }
 
-            $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $subtitlePath);
+            $this->persistCaptionVtt($dbForProject, $deviceForVideos, $video, $caption, $captionPath);
         } catch (\Throwable $th) {
             $dbForProject->updateDocument(
-                'videos_subtitles',
-                $subtitle->getId(),
+                'videos_captions',
+                $caption->getId(),
                 new Document([
                     'status' => Base::STATUS_ERROR,
                 ])
@@ -693,28 +693,28 @@ class Videos extends Action
     }
 
     /**
-     * Write a staged WebVTT file as the subtitle's single segment and mark ready.
+     * Write a staged WebVTT file as the caption's single segment and mark ready.
      */
-    private function persistSubtitleVtt(
+    private function persistCaptionVtt(
         Database $dbForProject,
         Device $deviceForVideos,
         Document $video,
-        Document $subtitle,
+        Document $caption,
         string $vttPath
     ): Document {
-        $dbForProject->deleteDocuments('videos_subtitles_segments', [
-            Query::equal('subtitleInternalId', [$subtitle->getSequence()]),
+        $dbForProject->deleteDocuments('videos_captions_segments', [
+            Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 
-        $dir = $deviceForVideos->getPath($video->getId()) . '/subtitles/';
-        $fileName = $subtitle->getId() . '.vtt';
+        $dir = $deviceForVideos->getPath($video->getId()) . '/captions/';
+        $fileName = $caption->getId() . '.vtt';
         $fullPath = $dir . $fileName;
         // HLS EXT-X-TARGETDURATION must be a decimal-integer (seconds, rounded up).
         $duration = (string) \max(1, (int) \ceil(((int) $video->getAttribute('duration', 0)) / 1000));
 
-        $dbForProject->createDocument('videos_subtitles_segments', new Document([
-            'subtitleId' => $subtitle->getId(),
-            'subtitleInternalId' => $subtitle->getSequence(),
+        $dbForProject->createDocument('videos_captions_segments', new Document([
+            'captionId' => $caption->getId(),
+            'captionInternalId' => $caption->getSequence(),
             'fileName' => $fileName,
             'path' => $dir,
             'duration' => $duration,
@@ -728,8 +728,8 @@ class Videos extends Action
         );
 
         return $dbForProject->updateDocument(
-            'videos_subtitles',
-            $subtitle->getId(),
+            'videos_captions',
+            $caption->getId(),
             new Document([
                 'targetDuration' => $duration,
                 'status' => Base::STATUS_READY,
@@ -739,13 +739,13 @@ class Videos extends Action
     }
 
     /**
-     * Register soft-text subtitle tracks from the source container.
+     * Register soft-text caption tracks from the source container.
      *
      * Image-based streams are skipped. An upload that already claims default
      * keeps the flag; extracted rows for the same language are still created.
      * One failed track does not fail the timeline.
      */
-    private function extractEmbeddedSubtitles(
+    private function extractEmbeddedCaptions(
         Database $dbForProject,
         Device $deviceForVideos,
         Document $video,
@@ -753,12 +753,12 @@ class Videos extends Action
         string $outDir,
         Encoder $encoder
     ): void {
-        Console::info('Videos worker: extracting embedded subtitles for video ' . $video->getId());
+        Console::info('Videos worker: extracting embedded captions for video ' . $video->getId());
 
         try {
             $info = $encoder->probe($inPath);
         } catch (\Throwable $th) {
-            Console::warning('Videos worker: subtitle probe failed for ' . $video->getId() . ': ' . $th->getMessage());
+            Console::warning('Videos worker: caption probe failed for ' . $video->getId() . ': ' . $th->getMessage());
             return;
         }
 
@@ -769,7 +769,7 @@ class Videos extends Action
         );
         Console::info(
             'Videos worker: found ' . \count($tracks)
-            . ' subtitle stream(s) in source for video ' . $video->getId()
+            . ' caption stream(s) in source for video ' . $video->getId()
             . ' streams=[' . \implode(', ', $streams) . ']'
         );
 
@@ -782,7 +782,7 @@ class Videos extends Action
             $language = $track->language ?? 'und';
 
             Console::info(
-                'Videos worker: subtitle stream index=' . $track->index
+                'Videos worker: caption stream index=' . $track->index
                 . ' codec=' . ($track->codec ?? 'unknown')
                 . ' language=' . $language
                 . ' default=' . ($track->default ? 'yes' : 'no')
@@ -790,9 +790,9 @@ class Videos extends Action
                 . ' video=' . $video->getId()
             );
 
-            if ($codec === '' || !\in_array($codec, self::TEXT_SUBTITLE_CODECS, true)) {
+            if ($codec === '' || !\in_array($codec, self::TEXT_CAPTION_CODECS, true)) {
                 Console::warning(
-                    'Videos worker: skipping non-text subtitle stream '
+                    'Videos worker: skipping non-text caption stream '
                     . $track->index . ' (' . ($track->codec ?? 'unknown') . ') on video '
                     . $video->getId()
                 );
@@ -800,7 +800,7 @@ class Videos extends Action
                 continue;
             }
 
-            $code = $this->subtitleLanguageCode($track->language);
+            $code = $this->captionLanguageCode($track->language);
 
             $vttPath = \rtrim($outDir, '/') . '/sub_' . $track->index . '.vtt';
 
@@ -809,10 +809,10 @@ class Videos extends Action
                     'Videos worker: ffmpeg extract map 0:' . $track->index
                     . ' -> webvtt for video ' . $video->getId()
                 );
-                $this->ffmpegExtractSubtitle($inPath, $track->index, $vttPath);
+                $this->ffmpegExtractCaption($inPath, $track->index, $vttPath);
             } catch (\Throwable $th) {
                 Console::warning(
-                    'Videos worker: failed extracting subtitle stream '
+                    'Videos worker: failed extracting caption stream '
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
                 $skipped++;
@@ -821,7 +821,7 @@ class Videos extends Action
 
             if (!\is_file($vttPath) || \filesize($vttPath) === 0) {
                 Console::warning(
-                    'Videos worker: empty VTT for subtitle stream '
+                    'Videos worker: empty VTT for caption stream '
                     . $track->index . ' on video ' . $video->getId()
                 );
                 $skipped++;
@@ -837,13 +837,13 @@ class Videos extends Action
             // Re-check immediately before write: an upload can claim default while
             // ffmpeg is extracting, and a stale snapshot would create two defaults.
             $isDefault = false;
-            if (!$assignedDefault && $track->default && !$this->hasDefaultSubtitle($dbForProject, $video)) {
+            if (!$assignedDefault && $track->default && !$this->hasDefaultCaption($dbForProject, $video)) {
                 $isDefault = true;
                 $assignedDefault = true;
             }
 
             try {
-                $subtitle = $dbForProject->createDocument('videos_subtitles', new Document([
+                $caption = $dbForProject->createDocument('videos_captions', new Document([
                     '$id' => ID::unique(),
                     'videoId' => $video->getId(),
                     'videoInternalId' => $video->getSequence(),
@@ -853,10 +853,10 @@ class Videos extends Action
                     'status' => Base::STATUS_STARTED,
                 ]));
 
-                $this->persistSubtitleVtt($dbForProject, $deviceForVideos, $video, $subtitle, $vttPath);
+                $this->persistCaptionVtt($dbForProject, $deviceForVideos, $video, $caption, $vttPath);
                 $registered++;
                 Console::info(
-                    'Videos worker: registered embedded subtitle ' . $subtitle->getId()
+                    'Videos worker: registered embedded caption ' . $caption->getId()
                     . ' code=' . $code
                     . ' name=' . $name
                     . ' default=' . ($isDefault ? 'yes' : 'no')
@@ -865,7 +865,7 @@ class Videos extends Action
                 );
             } catch (\Throwable $th) {
                 Console::warning(
-                    'Videos worker: failed registering embedded subtitle stream '
+                    'Videos worker: failed registering embedded caption stream '
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
                 $skipped++;
@@ -874,24 +874,24 @@ class Videos extends Action
 
         // If no stream was flagged default, promote the first extracted track
         // when no other track already claims default.
-        if (!$assignedDefault && !$this->hasDefaultSubtitle($dbForProject, $video)) {
-            $embedded = $dbForProject->find('videos_subtitles', [
+        if (!$assignedDefault && !$this->hasDefaultCaption($dbForProject, $video)) {
+            $embedded = $dbForProject->find('videos_captions', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
 
-            foreach ($embedded as $subtitle) {
-                if (!empty($subtitle->getAttribute('fileId', ''))) {
+            foreach ($embedded as $caption) {
+                if (!empty($caption->getAttribute('fileId', ''))) {
                     continue;
                 }
 
                 $dbForProject->updateDocument(
-                    'videos_subtitles',
-                    $subtitle->getId(),
+                    'videos_captions',
+                    $caption->getId(),
                     new Document(['default' => true])
                 );
                 Console::info(
-                    'Videos worker: set default embedded subtitle ' . $subtitle->getId()
+                    'Videos worker: set default embedded caption ' . $caption->getId()
                     . ' on video ' . $video->getId()
                 );
                 break;
@@ -899,7 +899,7 @@ class Videos extends Action
         }
 
         Console::info(
-            'Videos worker: embedded subtitle extract done for video ' . $video->getId()
+            'Videos worker: embedded caption extract done for video ' . $video->getId()
             . ' registered=' . $registered
             . ' skipped=' . $skipped
             . ' streams=' . \count($tracks)
@@ -907,11 +907,11 @@ class Videos extends Action
     }
 
     /**
-     * Whether any subtitle on this video is already marked default.
+     * Whether any caption on this video is already marked default.
      */
-    private function hasDefaultSubtitle(Database $dbForProject, Document $video): bool
+    private function hasDefaultCaption(Database $dbForProject, Document $video): bool
     {
-        $existing = $dbForProject->find('videos_subtitles', [
+        $existing = $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(1),
@@ -923,7 +923,7 @@ class Videos extends Action
     /**
      * Map a container language tag to an ISO 639-2 code2 used by the API.
      */
-    private function subtitleLanguageCode(?string $language): string
+    private function captionLanguageCode(?string $language): string
     {
         if ($language === null || $language === '') {
             return 'und';
@@ -946,9 +946,9 @@ class Videos extends Action
     }
 
     /**
-     * Extract one subtitle stream to WebVTT with the container ffmpeg binary.
+     * Extract one caption stream to WebVTT with the container ffmpeg binary.
      */
-    private function ffmpegExtractSubtitle(string $inPath, int $streamIndex, string $outPath): void
+    private function ffmpegExtractCaption(string $inPath, int $streamIndex, string $outPath): void
     {
         $stdout = '';
         $stderr = '';
@@ -1003,7 +1003,7 @@ class Videos extends Action
 
     /**
      * Download the storage file into the job directory, probe metadata once,
-     * and extract embedded subtitles once.
+     * and extract embedded captions once.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
      * @return array{0: Document, 1: string}
@@ -1030,19 +1030,19 @@ class Videos extends Action
             $video = $this->probe($dbForProject, $video, $file, $inPath);
         }
 
-        if (!$video->getAttribute('subtitlesExtracted', false)) {
+        if (!$video->getAttribute('captionsExtracted', false)) {
             $claimed = $dbForProject->updateDocuments(
                 'videos',
-                new Document(['subtitlesExtracted' => true]),
+                new Document(['captionsExtracted' => true]),
                 [
                     Query::equal('$id', [$video->getId()]),
-                    Query::equal('subtitlesExtracted', [false]),
+                    Query::equal('captionsExtracted', [false]),
                 ]
             );
 
             if ($claimed > 0) {
                 try {
-                    $this->extractEmbeddedSubtitles(
+                    $this->extractEmbeddedCaptions(
                         $dbForProject,
                         $deviceForVideos,
                         $video,
@@ -1052,7 +1052,7 @@ class Videos extends Action
                     );
                 } catch (\Throwable $th) {
                     Console::warning(
-                        'Videos worker: embedded subtitle extract failed for '
+                        'Videos worker: embedded caption extract failed for '
                         . $video->getId() . ': ' . $th->getMessage()
                     );
                 }

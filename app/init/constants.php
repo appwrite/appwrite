@@ -128,7 +128,7 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
-const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, subtitles, sprite timelines
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, sprite timelines
 const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
@@ -290,7 +290,7 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 // deletes worker dispatches on $document->getCollection().
 const DELETE_TYPE_VIDEOS = 'videos';
 const DELETE_TYPE_VIDEOS_RENDITIONS = 'videos_renditions';
-const DELETE_TYPE_VIDEOS_SUBTITLES = 'videos_subtitles';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videos_captions';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';

@@ -11,8 +11,8 @@ enum VideoAction: string
     /** Extract sprite sheets and build the WebVTT scrubbing timeline. */
     case Timeline = 'timeline';
 
-    /** Normalise an uploaded subtitle file to WebVTT and segment it. */
-    case Subtitle = 'subtitle';
+    /** Normalise an uploaded caption file to WebVTT and segment it. */
+    case Caption = 'caption';
 
     /** Transcode into an HLS or DASH rendition against a profile. */
     case Encode = 'encode';

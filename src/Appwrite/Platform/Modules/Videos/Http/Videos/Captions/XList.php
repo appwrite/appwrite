@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Captions;
 
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
@@ -22,29 +22,29 @@ class XList extends Base
 
     public static function getName()
     {
-        return 'listSubtitles';
+        return 'listCaptions';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/subtitles')
-            ->desc('List subtitles')
+            ->setHttpPath('/v1/videos/:videoId/captions')
+            ->desc('List captions')
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
-                group: 'subtitles',
-                name: 'listSubtitles',
-                description: '/docs/references/videos/list-subtitles.md',
+                group: 'captions',
+                name: 'listCaptions',
+                description: '/docs/references/videos/list-captions.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_VIDEO_SUBTITLE_LIST,
+                        model: Response::MODEL_VIDEO_CAPTION_LIST,
                     )
                 ]
             ))
@@ -65,14 +65,14 @@ class XList extends Base
     ): void {
         $video = $this->getReadableVideo($dbForProject, $authorization, $user, $videoId);
 
-        $subtitles = $authorization->skip(fn () => $dbForProject->find('videos_subtitles', [
+        $captions = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
 
         $response->dynamic(new Document([
-            'subtitles' => $subtitles,
-            'total' => \count($subtitles),
-        ]), Response::MODEL_VIDEO_SUBTITLE_LIST);
+            'captions' => $captions,
+            'total' => \count($captions),
+        ]), Response::MODEL_VIDEO_CAPTION_LIST);
     }
 }

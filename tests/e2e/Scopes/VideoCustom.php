@@ -8,7 +8,7 @@ use Utopia\Database\Helpers\Role;
 
 /**
  * Fixtures shared by the Videos e2e suites: a bucket, a source video file and a
- * subtitle file.
+ * caption file.
  *
  * Each is uploaded once per test class and cached statically — the video is the
  * 23 MB `large-file.mp4` fixture and has to be chunk-uploaded, so re-uploading
@@ -20,11 +20,11 @@ trait VideoCustom
 
     protected static array $videoBucket = [];
     protected static array $videoFile = [];
-    protected static array $subtitleFile = [];
-    protected static array $videoFileWithSubtitles = [];
-    protected static array $videoFileWithUndeterminedSubtitles = [];
-    protected static array $videoFileWithTwoSubtitles = [];
-    protected static array $overrideSubtitleFile = [];
+    protected static array $captionFile = [];
+    protected static array $videoFileWithCaptions = [];
+    protected static array $videoFileWithUndeterminedCaptions = [];
+    protected static array $videoFileWithTwoCaptions = [];
+    protected static array $overrideCaptionFile = [];
     protected static array $audioOnlyFile = [];
     protected static array $invalidVideoFile = [];
 
@@ -145,10 +145,10 @@ trait VideoCustom
      * Uploads the SubRip fixture. Sent as `text/plain`, which is what the mime
      * detector reports for `.srt`.
      */
-    public function getSubtitleFile(): array
+    public function getCaptionFile(): array
     {
-        if (!empty(self::$subtitleFile)) {
-            return self::$subtitleFile;
+        if (!empty(self::$captionFile)) {
+            return self::$captionFile;
         }
 
         $source = \realpath(__DIR__ . '/../../resources/disk-a/video-srt.srt');
@@ -166,9 +166,9 @@ trait VideoCustom
 
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$subtitleFile = ['$id' => $file['body']['$id']];
+        self::$captionFile = ['$id' => $file['body']['$id']];
 
-        return self::$subtitleFile;
+        return self::$captionFile;
     }
 
     /**
@@ -243,10 +243,10 @@ trait VideoCustom
      * Uploads the short MP4 that carries a soft `mov_text` English track with the
      * cue text `EMBEDDED CUE` (see `video-with-subs.mp4`).
      */
-    public function getVideoFileWithSubtitles(): array
+    public function getVideoFileWithCaptions(): array
     {
-        if (!empty(self::$videoFileWithSubtitles)) {
-            return self::$videoFileWithSubtitles;
+        if (!empty(self::$videoFileWithCaptions)) {
+            return self::$videoFileWithCaptions;
         }
 
         $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-subs.mp4');
@@ -265,22 +265,22 @@ trait VideoCustom
 
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$videoFileWithSubtitles = [
+        self::$videoFileWithCaptions = [
             '$id' => $file['body']['$id'],
             'sizeOriginal' => $file['body']['sizeOriginal'],
         ];
 
-        return self::$videoFileWithSubtitles;
+        return self::$videoFileWithCaptions;
     }
 
     /**
      * Uploads the short MP4 whose `mov_text` track is tagged `und` (no real
      * language in the container), so extract stores `code=und`.
      */
-    public function getVideoFileWithUndeterminedSubtitles(): array
+    public function getVideoFileWithUndeterminedCaptions(): array
     {
-        if (!empty(self::$videoFileWithUndeterminedSubtitles)) {
-            return self::$videoFileWithUndeterminedSubtitles;
+        if (!empty(self::$videoFileWithUndeterminedCaptions)) {
+            return self::$videoFileWithUndeterminedCaptions;
         }
 
         $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-und-subs.mp4');
@@ -299,22 +299,22 @@ trait VideoCustom
 
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$videoFileWithUndeterminedSubtitles = [
+        self::$videoFileWithUndeterminedCaptions = [
             '$id' => $file['body']['$id'],
             'sizeOriginal' => $file['body']['sizeOriginal'],
         ];
 
-        return self::$videoFileWithUndeterminedSubtitles;
+        return self::$videoFileWithUndeterminedCaptions;
     }
 
     /**
      * Uploads the short MP4 with two soft `mov_text` tracks: English
      * (`EMBEDDED CUE EN`) and French (`EMBEDDED CUE FR`).
      */
-    public function getVideoFileWithTwoSubtitles(): array
+    public function getVideoFileWithTwoCaptions(): array
     {
-        if (!empty(self::$videoFileWithTwoSubtitles)) {
-            return self::$videoFileWithTwoSubtitles;
+        if (!empty(self::$videoFileWithTwoCaptions)) {
+            return self::$videoFileWithTwoCaptions;
         }
 
         $source = \realpath(__DIR__ . '/../../resources/disk-a/video-with-2-subs.mp4');
@@ -333,21 +333,21 @@ trait VideoCustom
 
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$videoFileWithTwoSubtitles = [
+        self::$videoFileWithTwoCaptions = [
             '$id' => $file['body']['$id'],
             'sizeOriginal' => $file['body']['sizeOriginal'],
         ];
 
-        return self::$videoFileWithTwoSubtitles;
+        return self::$videoFileWithTwoCaptions;
     }
 
     /**
      * Uploads the SubRip fixture whose single cue is `OVERRIDE CUE`.
      */
-    public function getOverrideSubtitleFile(): array
+    public function getOverrideCaptionFile(): array
     {
-        if (!empty(self::$overrideSubtitleFile)) {
-            return self::$overrideSubtitleFile;
+        if (!empty(self::$overrideCaptionFile)) {
+            return self::$overrideCaptionFile;
         }
 
         $source = \realpath(__DIR__ . '/../../resources/disk-a/video-override.srt');
@@ -366,31 +366,31 @@ trait VideoCustom
 
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$overrideSubtitleFile = ['$id' => $file['body']['$id']];
+        self::$overrideCaptionFile = ['$id' => $file['body']['$id']];
 
-        return self::$overrideSubtitleFile;
+        return self::$overrideCaptionFile;
     }
 
     /**
-     * Polls until at least one ready subtitle with an empty fileId appears
+     * Polls until at least one ready caption with an empty fileId appears
      * (auto-extracted from the source), or the timeout elapses.
      *
      * @return array<string, mixed>|null
      */
-    public function waitForEmbeddedSubtitle(string $videoId, int $timeout = 300): ?array
+    public function waitForEmbeddedCaption(string $videoId, int $timeout = 300): ?array
     {
         $deadline = \time() + $timeout;
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
-                $fileId = $subtitle['fileId'] ?? '';
-                if (($subtitle['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
-                    return $subtitle;
+            foreach ($response['body']['captions'] ?? [] as $caption) {
+                $fileId = $caption['fileId'] ?? '';
+                if (($caption['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                    return $caption;
                 }
             }
 
@@ -401,26 +401,26 @@ trait VideoCustom
     }
 
     /**
-     * Polls until at least $count ready embedded subtitles (empty fileId) exist.
+     * Polls until at least $count ready embedded captions (empty fileId) exist.
      *
      * @return list<array<string, mixed>>
      */
-    public function waitForEmbeddedSubtitles(string $videoId, int $count = 1, int $timeout = 300): array
+    public function waitForEmbeddedCaptions(string $videoId, int $count = 1, int $timeout = 300): array
     {
         $deadline = \time() + $timeout;
         $embedded = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $embedded = [];
-            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
-                $fileId = $subtitle['fileId'] ?? '';
-                if (($subtitle['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
-                    $embedded[] = $subtitle;
+            foreach ($response['body']['captions'] ?? [] as $caption) {
+                $fileId = $caption['fileId'] ?? '';
+                if (($caption['status'] ?? '') === 'ready' && ($fileId === null || $fileId === '')) {
+                    $embedded[] = $caption;
                 }
             }
 
@@ -530,9 +530,9 @@ trait VideoCustom
         return $this->videoStoragePath($videoId, $name . '-' . $renditionId);
     }
 
-    public function subtitleStoragePath(string $videoId, string $subtitleId): string
+    public function captionStoragePath(string $videoId, string $captionId): string
     {
-        return $this->videoStoragePath($videoId, 'subtitles/' . $subtitleId . '.vtt');
+        return $this->videoStoragePath($videoId, 'captions/' . $captionId . '.vtt');
     }
 
     public function waitUntilPathExists(string $path, int $timeout = 30): void
@@ -662,25 +662,25 @@ trait VideoCustom
     }
 
     /**
-     * Polls a subtitle until it leaves `pending`/`started` and settles.
+     * Polls a caption until it leaves `pending`/`started` and settles.
      */
-    public function waitForSubtitleTerminalState(string $videoId, string $subtitleId, int $timeout = 120): array
+    public function waitForCaptionTerminalState(string $videoId, string $captionId, int $timeout = 120): array
     {
         $pending = ['pending', 'started'];
         $deadline = \time() + $timeout;
         $body = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
-                if (($subtitle['$id'] ?? '') === $subtitleId) {
-                    $body = $subtitle;
-                    if (!\in_array($subtitle['status'] ?? '', $pending, true)) {
-                        return $subtitle;
+            foreach ($response['body']['captions'] ?? [] as $caption) {
+                if (($caption['$id'] ?? '') === $captionId) {
+                    $body = $caption;
+                    if (!\in_array($caption['status'] ?? '', $pending, true)) {
+                        return $caption;
                     }
                     break;
                 }
