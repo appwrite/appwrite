@@ -15,7 +15,9 @@ use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Storage;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
@@ -36,8 +38,6 @@ final class BootDatabaseTest extends TestCase
     /** @var array<string, string|false> */
     private array $variables = [];
 
-    private PDO $connection;
-
     private Factory $factory;
 
     protected function setUp(): void
@@ -49,11 +49,11 @@ final class BootDatabaseTest extends TestCase
         \putenv('_APP_DATABASE_SHARED_NAMESPACE=' . self::NAMESPACE);
         \putenv('_APP_DATABASE_SHARED_TABLES=' . self::HOSTNAME);
 
-        $this->connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
         // Reports the host it dialled, as a pooled MariaDB, MySQL, PostgreSQL or
         // MongoDB connection does; plain SQLite keys its cache by no host at all.
-        $adapter = new class ($this->connection) extends SQLite {
+        $adapter = new class ($connection) extends SQLite {
             public function supports(Capability $feature): bool
             {
                 return $feature === Capability::Hostname || parent::supports($feature);
@@ -95,19 +95,24 @@ final class BootDatabaseTest extends TestCase
         );
     }
 
-    public function testAProjectCollectionCreatedAtBootKeepsItsPermissionRows(): void
+    public function testAProjectCollectionCreatedAtBootIsListedToTheRolesItGrantsRead(): void
     {
         $setup = $this->factory->setup(self::HOSTNAME);
         $setup->create();
-        $setup->createCollection($this->collection('booted'));
+        $setup->createCollection($this->collection('booted', [Permission::read(Role::any())]));
 
-        $this->factory->project($this->project())->createCollection($this->collection('created'));
+        $project = $this->factory->project($this->project());
+        $project->createCollection($this->collection('created', [Permission::read(Role::any())]));
 
-        $this->assertSame([['create', 'any']], $this->permissionRows('created'));
+        $listed = $project->find(Database::METADATA, [Query::equal('$id', ['booted', 'created'])]);
+
+        $ids = \array_map(static fn (Document $collection): string => $collection->getId(), $listed);
+        \sort($ids);
+
         $this->assertSame(
-            $this->permissionRows('created'),
-            $this->permissionRows('booted'),
-            'A project collection the boot creates must store the same permission rows as one a project database creates'
+            ['booted', 'created'],
+            $ids,
+            'A project collection the boot creates must be listed to the roles it grants read, as one a project database creates is'
         );
     }
 
@@ -120,26 +125,15 @@ final class BootDatabaseTest extends TestCase
         ]);
     }
 
-    private function collection(string $id): Collection
+    /**
+     * @param list<string>|null $permissions
+     */
+    private function collection(string $id, ?array $permissions = null): Collection
     {
         return new Collection(
             id: $id,
             attributes: [new Attribute('name', ColumnType::String, size: 255)],
+            permissions: $permissions,
         );
-    }
-
-    /**
-     * @return list<array{0: string, 1: string}>
-     */
-    private function permissionRows(string $collection): array
-    {
-        $table = self::NAMESPACE . '_' . Storage::permissionsTable(Database::METADATA);
-        $statement = $this->connection->prepare("SELECT _type, _permission FROM `{$table}` WHERE _document = :document ORDER BY _id");
-        $statement->execute(['document' => $collection]);
-
-        /** @var list<array{0: string, 1: string}> $rows */
-        $rows = $statement->fetchAll(PDO::FETCH_NUM);
-
-        return $rows;
     }
 }

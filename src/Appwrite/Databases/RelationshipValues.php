@@ -75,7 +75,8 @@ final readonly class RelationshipValues
      */
     private function validatePermissions(array $relation, Document $relatedCollection): void
     {
-        if ($this->dbForDatabases === null) {
+        $permissions = $relation['$permissions'] ?? null;
+        if ($this->dbForDatabases === null || $permissions === null) {
             return;
         }
 
@@ -84,7 +85,7 @@ final readonly class RelationshipValues
             $relation['$id']
         ));
 
-        (new RelatedPermissions($this->authorization))->validate($relation['$permissions'] ?? null, $current);
+        (new RelatedPermissions($this->authorization))->validate($permissions, $current);
     }
 
     private function validate(mixed $relation): void

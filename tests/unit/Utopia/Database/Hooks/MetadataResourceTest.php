@@ -8,8 +8,6 @@ use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
 use PHPUnit\Framework\TestCase;
-use ReflectionFunction;
-use ReflectionNamedType;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -88,12 +86,7 @@ final class MetadataResourceTest extends TestCase
 
     public function testRequestResourceRecordsReadsOnTheRequestCounter(): void
     {
-        $catalog = $this->createStub(Database::class);
-        $catalog->method('getAuthorization')->willReturn($this->authorization);
-        $catalog->method('silent')->willReturnCallback(static fn (callable $callback): mixed => $callback());
-        $catalog->method('findOne')->willReturn(new Document(['$id' => 'actors']));
-
-        $container = $this->requestContainer($catalog);
+        $container = $this->requestContainer($this->catalog());
         $getDatabasesDB = $container->get('getDatabasesDB');
         $cinema = new Document(['$id' => 'cinema', '$sequence' => '4']);
         $movies = new Document(['$id' => 'movies', '$sequence' => '9']);
@@ -108,18 +101,20 @@ final class MetadataResourceTest extends TestCase
 
     public function testRequestResourceKeepsItsClosureContract(): void
     {
-        $getDatabasesDB = $this->requestContainer($this->createStub(Database::class))->get('getDatabasesDB');
-        $contract = new ReflectionFunction($getDatabasesDB);
-        $parameters = $contract->getParameters();
+        $getDatabasesDB = $this->requestContainer($this->catalog())->get('getDatabasesDB');
+        $cinema = new Document(['$id' => 'cinema', '$sequence' => '4']);
 
-        $this->assertCount(2, $parameters);
-        $this->assertSame(['database', 'collection'], [$parameters[0]->getName(), $parameters[1]->getName()]);
-        $this->assertInstanceOf(ReflectionNamedType::class, $parameters[1]->getType());
-        $this->assertSame(Document::class, $parameters[1]->getType()->getName());
-        $this->assertTrue($parameters[1]->allowsNull());
-        $this->assertTrue($parameters[1]->isDefaultValueAvailable());
-        $this->assertInstanceOf(ReflectionNamedType::class, $contract->getReturnType());
-        $this->assertSame(Database::class, $contract->getReturnType()->getName());
+        $databases = [
+            'without a collection' => $getDatabasesDB($cinema),
+            'with a collection' => $getDatabasesDB(database: $cinema, collection: new Document(['$id' => 'movies', '$sequence' => '9'])),
+        ];
+
+        foreach ($databases as $call => $database) {
+            $film = $database->skipRelationships(fn (): Document => $database->getDocument(self::MOVIES, 'film'));
+
+            $this->assertSame('film', $film->getId(), 'the database handed out ' . $call . ' reads the tenant');
+            $this->assertSame('movies', $film->getAttribute('$collectionId'), 'the database handed out ' . $call . ' knows the public ID');
+        }
     }
 
     public function testWorkerResourceTakesTheProjectByName(): void
@@ -155,6 +150,22 @@ final class MetadataResourceTest extends TestCase
             ->setAuthorization($this->authorization);
 
         return $tenant->addHook(new Relationships($tenant));
+    }
+
+    private function catalog(): Database
+    {
+        $catalog = (new Database(new Memory(), new Cache(new NoCache())))
+            ->setDatabase('resource')
+            ->setNamespace('catalog')
+            ->setAuthorization($this->authorization);
+        $this->authorization->skip(function () use ($catalog): void {
+            $catalog->create();
+            $catalog->createCollection(new Collection(id: 'database_4'));
+            $catalog->createDocument('database_4', new Document(['$id' => 'movies', '$sequence' => '9']));
+            $catalog->createDocument('database_4', new Document(['$id' => 'actors', '$sequence' => '10']));
+        });
+
+        return $catalog;
     }
 
     private function requestContainer(Database $catalog): Container

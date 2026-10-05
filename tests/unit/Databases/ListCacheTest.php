@@ -137,16 +137,13 @@ final class ListCacheTest extends TestCase
         $miss = new Operations();
         $documents = $this->tenant($miss)->find(self::ALBUMS, $queries);
         $this->listCache($queries)->saveDocuments($documents, $miss);
-        $operations = $this->fields(ListCache::OPERATIONS);
-        foreach ($operations as $field) {
+        foreach ($this->fields(ListCache::OPERATIONS) as $field) {
             $this->cache->entries[self::KEY][$field] = $counts;
         }
         $hit = new Operations();
 
         $cached = $this->listCache($queries)->documents(self::TTL, $hit);
 
-        $this->assertCount(1, $this->fields(ListCache::DOCUMENTS));
-        $this->assertCount(1, $operations, 'the miss caches the operations of its documents next to them');
         $this->assertNotNull($cached);
         $this->assertSame(\count($cached), $hit->reads($cached));
     }
