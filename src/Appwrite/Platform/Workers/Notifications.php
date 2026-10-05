@@ -31,7 +31,9 @@ use Utopia\System\System;
 class Notifications extends Action
 {
     protected int $previewMaxLen = 150;
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
     /**
      * @var array<string, string>
