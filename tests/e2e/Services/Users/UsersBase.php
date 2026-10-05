@@ -127,6 +127,17 @@ trait UsersBase
             'name' => 'Argon2 User',
         ]);
 
+        // Argon2id user with the previous sign-up costs
+        $this->client->call(Client::METHOD_POST, '/users/argon2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => 'argon2id',
+            'email' => 'argon2id@appwrite.io',
+            'password' => '$argon2id$v=19$m=65536,t=4,p=3$azFVSGhPaXVBYnZMblNRaw$Pzm3TowCIbab0S5GL2id3OhZMexfFvutVSDoZ8D/Z8o', // appwrite (memory 65536, iterations 4, parallel 3)
+            'name' => 'Argon2id User',
+        ]);
+
         // SHA512 user
         $this->client->call(Client::METHOD_POST, '/users/sha', array_merge([
             'content-type' => 'application/json',
@@ -601,7 +612,7 @@ trait UsersBase
     public function testCreateUserSessionHashed(): void
     {
         $this->setupHashedPasswordUsers();
-        $userIds = ['md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
+        $userIds = ['md5', 'bcrypt', 'argon2', 'argon2id', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
 
         foreach ($userIds as $userId) {
             // Ensure sessions can be created with hashed passwords
@@ -619,7 +630,7 @@ trait UsersBase
         }
 
         foreach ($userIds as $userId) {
-            // Ensure all passwords were re-hashed to the configured Argon2 costs, including the imported argon2i hash
+            // Ensure all passwords were re-hashed to the configured Argon2 costs
             $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -991,8 +1002,8 @@ trait UsersBase
         $data = $this->setupUser();
         $this->setupUser1();
         $this->setupHashedPasswordUsers();
-        // setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 7
-        $minUsers = 9;
+        // setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 8
+        $minUsers = 10;
 
         /**
          * Test for SUCCESS listUsers
