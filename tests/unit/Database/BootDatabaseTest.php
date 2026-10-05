@@ -51,8 +51,6 @@ final class BootDatabaseTest extends TestCase
 
         $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-        // Reports the host it dialled, as a pooled MariaDB, MySQL, PostgreSQL or
-        // MongoDB connection does; plain SQLite keys its cache by no host at all.
         $adapter = new class ($connection) extends SQLite {
             public function supports(Capability $feature): bool
             {

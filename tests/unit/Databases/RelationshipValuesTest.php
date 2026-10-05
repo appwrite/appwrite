@@ -210,22 +210,19 @@ final class RelationshipValuesTest extends TestCase
 
     public function testNestedDocumentsWithoutPermissionsNeverReadTheRelatedDocuments(): void
     {
-        $prepared = $this->prepareWith([
+        $document = [
             'artist' => [
                 '$id' => 'artist1',
                 'name' => 'Artist',
-                'label' => ['name' => 'Label'],
+                'label' => ['$id' => 'label1', 'name' => 'Label'],
             ],
             'tracks' => [
                 'track1',
-                ['name' => 'Track 2'],
+                ['$id' => 'track2', 'name' => 'Track 2'],
             ],
-        ], $this->unreadable());
+        ];
 
-        $this->assertSame('artist1', $prepared['artist']['$id']);
-        $this->assertGeneratedId($prepared['artist']['label'], 'a nested document at depth 2');
-        $this->assertSame('track1', $prepared['tracks'][0], 'a related document ID stays a link');
-        $this->assertGeneratedId($prepared['tracks'][1], 'a new nested document in a to-many relationship');
+        $this->assertSame($document, $this->prepareWith($document, $this->unreadable()));
     }
 
     public function testNestedDocumentWithNullPermissionsNeverReadsTheRelatedDocument(): void
