@@ -724,7 +724,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'x-github-event' => 'installation',
         ], $payload);
 
-        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals(401, $event['headers']['status-code']);
         $this->assertEquals('general_access_forbidden', $event['body']['type']);
 
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
@@ -733,7 +733,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), 'wrong-secret'),
         ], $payload);
 
-        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals(401, $event['headers']['status-code']);
         $this->assertEquals('general_access_forbidden', $event['body']['type']);
     }
 
