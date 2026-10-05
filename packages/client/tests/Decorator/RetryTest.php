@@ -11,8 +11,10 @@ use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Decorator\Retry\Backoff;
+use Utopia\Client\Destinations;
 use Utopia\Client\Exception\InvalidUriException;
 use Utopia\Client\Exception\NetworkException;
+use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -196,6 +198,11 @@ final class QueueAdapter implements Adapter
     {
     }
 
+    public function withDestinations(Destinations $destinations): static
+    {
+        return $this;
+    }
+
     public function withTimeout(float $seconds): static
     {
         return $this;
@@ -231,7 +238,7 @@ final class QueueAdapter implements Adapter
         return $this;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         return $this;
     }

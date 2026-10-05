@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -2594,6 +2595,34 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testListFrameworksAndSpecificationsTotal(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => true]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertCount($frameworks['body']['total'], $frameworks['body']['frameworks']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => false]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertEquals(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+
+        $specifications = $this->listSpecifications(['total' => true]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertCount($specifications['body']['total'], $specifications['body']['specifications']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+
+        $specifications = $this->listSpecifications(['total' => false]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertEquals(0, $specifications['body']['total']);
+        $this->assertNotEmpty($specifications['body']['specifications']);
+    }
+
     public function testGetFrameworksHidesStartCommand(): void
     {
         $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
@@ -3303,6 +3332,7 @@ final class SitesCustomServerTest extends Scope
             'path' => '/contact'
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/contact', $response['headers']['location']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', (string) $response['headers']['set-cookie']);
         // due to swoole update; no more httponly
@@ -3320,6 +3350,45 @@ final class SitesCustomServerTest extends Scope
             $this->assertStringContainsString("Contact page", (string) $response['body']);
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
+
+        // Success: Path defaults to the site root
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => ''
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        // Failure: Path must be relative to the site root
+        $paths = [
+            ['contact'],
+            'contact',
+            'example.com',
+            '@example.com',
+            '.example.com',
+            '-example.com',
+            ':8080/contact',
+            'https://example.com/contact',
+            '//example.com/contact',
+            '/\\example.com/contact',
+            "/contact\r\nx-test: 1",
+        ];
+        foreach ($paths as $path) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $jwt['body']['jwt'],
+                'path' => $path
+            ], followRedirects: false);
+            $message = \var_export($path, true);
+            $this->assertEquals(400, $response['headers']['status-code'], $message);
+            $this->assertArrayNotHasKey('location', $response['headers'], $message);
+            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
+        }
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
@@ -3842,6 +3911,49 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(404, $deployment['headers']['status-code']);
         $this->assertEquals('installation_not_found', $deployment['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $code = $this->packageSite('static');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'true',
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupSite($siteId);
     }

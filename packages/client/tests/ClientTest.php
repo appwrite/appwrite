@@ -10,8 +10,18 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
+use Utopia\Client\Adapter\Curl\Client as CurlClient;
 use Utopia\Client\Client;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\Client\Exception\DestinationException;
+use Utopia\Client\Exception\ProtocolException;
+use Utopia\Client\Exception\TimeoutException;
+use Utopia\Client\Redirect;
+use Utopia\Client\Tests\Server\Http;
 use Utopia\Client\Tls;
+use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Span\Span;
@@ -20,6 +30,52 @@ use ValueError;
 
 final class ClientTest extends TestCase
 {
+    public function testItPassesItsDestinationToTheAdapter(): void
+    {
+        $listener = \stream_socket_server('tcp://127.0.0.1:0');
+        $this->assertNotFalse($listener);
+        $request = new Request\Factory()->createRequest('GET', 'http://' . \stream_socket_get_name($listener, false) . '/');
+
+        try {
+            new Client(new CurlClient(), new PublicInternet())->sendRequest($request);
+            $this->fail('A loopback address reached a public-internet client.');
+        } catch (DestinationException $destinationException) {
+            $this->assertStringContainsString('127.0.0.1', $destinationException->getMessage());
+        }
+
+        // curl connects before it checks the address, so the refused attempt left a connection: it carried no request
+        $this->assertSame('', $this->received($listener));
+
+        // Changing it on a configured client reaches the adapter too
+        $client = new Client(new CurlClient(), new PublicInternet())
+            ->withDestinations(new Anywhere())
+            ->withTimeout(0.25);
+        try {
+            $client->sendRequest($request);
+        } catch (TimeoutException) {
+            // The listener never answers
+        }
+
+        $this->assertStringStartsWith('GET / HTTP/1.1', $this->received($listener));
+    }
+
+    /**
+     * What the next connection to the listener sent, or nothing when none arrives.
+     *
+     * @param resource $listener
+     */
+    private function received($listener): string
+    {
+        $connection = @\stream_socket_accept($listener, 1);
+        if ($connection === false) {
+            return '';
+        }
+
+        \stream_set_timeout($connection, 1);
+
+        return (string) \fread($connection, 8192);
+    }
+
     public function testItDecoratesConfigurableAdapters(): void
     {
         $request = new Request\Factory()->createRequest('GET', 'https://example.com');
@@ -75,6 +131,23 @@ final class ClientTest extends TestCase
         $this->assertSame('', $client->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
         $this->assertSame('on', $configured->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
         $this->assertSame('off', $client->withFollowRedirects(false)->sendRequest($request)->getHeaderLine('X-Follow-Redirects'));
+    }
+
+    public function testItStopsFollowingRedirectsAtTheConfiguredHopLimit(): void
+    {
+        Http::serve(function (int $port): void {
+            $requestFactory = new Request\Factory();
+            $client = new Client(new CurlClient())->withFollowRedirects(maxHops: 5);
+
+            $response = $client->sendRequest($requestFactory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/5'));
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('hopped', (string) $response->getBody());
+
+            $this->expectException(ProtocolException::class);
+
+            $client->sendRequest($requestFactory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/hops/6'));
+        });
     }
 
     public function testItRejectsInvalidTimeouts(): void
@@ -254,6 +327,11 @@ final class RecordingAdapter implements Adapter
     ) {
     }
 
+    public function withDestinations(Destinations $destinations): static
+    {
+        return $this;
+    }
+
     public function withTimeout(float $seconds): static
     {
         if ($seconds < 0.0 || !is_finite($seconds)) {
@@ -318,7 +396,7 @@ final class RecordingAdapter implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
         $clone = clone $this;
         $clone->followRedirects = $enabled;
