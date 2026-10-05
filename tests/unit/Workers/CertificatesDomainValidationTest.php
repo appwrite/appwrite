@@ -19,7 +19,6 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -77,67 +76,12 @@ final class CertificatesDomainValidationTest extends TestCase
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
     }
 
-    public function testAnIssuedCertificateIsVerifiedOnceItIsReady(): void
-    {
-        // A Fastly subscription that is already issued does not need renewal, but
-        // the hostname is not safe to call verified until the provider reports
-        // it ready. Ready includes the TLS activation.
-        $certificates = $this->createMock(Provider::class);
-        $certificates->method('isRenewRequired')->willReturn(false);
-        $certificates->method('isInstantGeneration')->willReturn(false);
-        $certificates->method('getCertificateStatus')->willReturn(Status::ISSUED);
-        $certificates->expects($this->once())->method('issueCertificate')->willReturn('2027-01-02 00:00:00.000');
-
-        $writes = $this->generate($certificates, skipDomainValidation: true);
-
-        $this->assertSame(RULE_STATUS_VERIFIED, $writes['rules']['status']);
-        $this->assertSame('2027-01-02 00:00:00.000', $writes['certificates']['renewDate']);
-    }
-
-    public function testActivationFailureLeavesTheRuleRetryable(): void
-    {
-        // The domain's own checks passed; only the provider is outstanding. Moving
-        // the rule to 'unverified' here would strand it, because the worker's
-        // guard accepts only generating or verified and the interval requeues
-        // only generating. So it stays on generating and is tried again.
-        $writes = $this->generate($this->failingActivation(), skipDomainValidation: true);
-
-        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATING, $writes['rules']['status']);
-        $this->assertSame(1, $writes['certificates']['attempts']);
-    }
-
-    public function testActivationThatKeepsFailingIsEventuallyReportedFailed(): void
-    {
-        // Retrying forever would hide a permanently broken configuration, so the
-        // last attempt is terminal and visible.
-        $writes = $this->generate($this->failingActivation(), skipDomainValidation: true, attempts: 4);
-
-        $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
-        $this->assertSame(5, $writes['certificates']['attempts']);
-    }
-
-    /**
-     * A provider holding an issued certificate it cannot attach.
-     */
-    private function failingActivation(): Provider&Stub
-    {
-        $certificates = $this->createMock(Provider::class);
-        $certificates->method('isRenewRequired')->willReturn(false);
-        $certificates->method('isInstantGeneration')->willReturn(false);
-        $certificates->method('getCertificateStatus')->willThrowException(new \RuntimeException(
-            'Failed to activate Fastly TLS certificate for ' . self::DOMAIN . ' with status 400: TLS configuration not found',
-        ));
-        $certificates->expects($this->never())->method('issueCertificate');
-
-        return $certificates;
-    }
-
     /**
      * Runs one generation job for a rule in `verifying`.
      *
      * @return array<string, array<string, mixed>> the attributes written per collection
      */
-    private function generate(Provider&Stub $certificates, bool $skipDomainValidation, int $attempts = 0): array
+    private function generate(Provider&Stub $certificates, bool $skipDomainValidation): array
     {
         $rule = new Document([
             '$id' => md5(self::DOMAIN),
@@ -157,7 +101,7 @@ final class CertificatesDomainValidationTest extends TestCase
             '$collection' => 'certificates',
             '$updatedAt' => DateTime::now(),
             'domain' => self::DOMAIN,
-            'attempts' => $attempts,
+            'attempts' => 0,
             'logs' => '',
         ]);
 

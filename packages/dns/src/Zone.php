@@ -12,18 +12,13 @@ final readonly class Zone
     public string $name;
 
     /**
-     * @var list<Record>
-     */
-    public array $records;
-
-    /**
      * @param string $name The zone domain name (usually apex)
      * @param list<Record> $records DNS records in this zone (excluding SOA)
      * @param Record $soa The SOA record for this zone
      */
     public function __construct(
         string $name,
-        array $records,
+        public array $records,
         public Record $soa,
     ) {
         if ($soa->type !== Record::TYPE_SOA) {
@@ -48,50 +43,6 @@ final readonly class Zone
                 );
             }
         }
-
-        // An RRset is a set. The same record twice is not two records, it is one
-        // published twice, which RFC 2181 section 5 makes invalid rather than
-        // merely redundant. Appwrite arrives here with the apex stored both as
-        // "@" and as the apex FQDN: two documents that absolutize to the same
-        // owner carrying the same rdata. Publish the first copy only.
-        //
-        // TTL is deliberately not part of the identity. RFC 2181 section 5.2
-        // requires one TTL across an RRset, so where two copies disagree the
-        // first one's TTL is the answer.
-        $this->records = self::withoutDuplicates($records);
-    }
-
-    /**
-     * @param list<Record> $records
-     * @return list<Record>
-     */
-    private static function withoutDuplicates(array $records): array
-    {
-        $published = [];
-        $seen = [];
-
-        foreach ($records as $record) {
-            // Everything that distinguishes one resource record from another:
-            // MX and SRV carry part of their meaning outside rdata.
-            $key = \implode("\0", [
-                $record->name,
-                $record->class,
-                $record->type,
-                $record->rdata,
-                $record->priority ?? '',
-                $record->weight ?? '',
-                $record->port ?? '',
-            ]);
-
-            if (isset($seen[$key])) {
-                continue;
-            }
-
-            $seen[$key] = true;
-            $published[] = $record;
-        }
-
-        return $published;
     }
 
     /**
