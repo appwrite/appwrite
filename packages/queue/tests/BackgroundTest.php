@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Utopia\Queue\Broker\Background;
 use Utopia\Queue\Publisher\BufferFullException;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
@@ -24,6 +26,74 @@ final class BackgroundTest extends TestCase
 
         $this->assertTrue($result);
         $this->assertSame([['id' => 1]], $published);
+    }
+
+    /**
+     * @return array<string, array{Outcome}>
+     */
+    public static function outcomes(): array
+    {
+        return [
+            'published' => [Outcome::Published],
+            'coalesced' => [Outcome::Coalesced],
+        ];
+    }
+
+    #[DataProvider('outcomes')]
+    public function testCoalesceReturnsTheWrappedPublishersOutcome(Outcome $outcome): void
+    {
+        $publisher = new CoalescingPublisher($outcome);
+        $background = new Background($publisher);
+
+        $result = $background->coalesce(new Queue('stats'), ['projectId' => 'p1'], 'p1');
+
+        $this->assertSame($outcome, $result);
+        $this->assertSame([['queue' => 'stats', 'payload' => ['projectId' => 'p1'], 'key' => 'p1']], $publisher->coalesced);
+    }
+
+    public function testCoalesceBypassesTheBufferWhileStarted(): void
+    {
+        $publisher = new CoalescingPublisher(Outcome::Coalesced);
+        $background = new Background($publisher, capacity: 1);
+        $result = null;
+
+        Coroutine\run(function () use ($background, &$result): void {
+            $background->start();
+            $result = $background->coalesce(new Queue('stats'), ['projectId' => 'p1'], 'p1');
+            $background->shutdown();
+        });
+
+        $this->assertSame(Outcome::Coalesced, $result);
+        $this->assertCount(1, $publisher->coalesced);
+    }
+
+    public function testCoalesceThrowsWhenTheWrappedPublisherCannotCoalesce(): void
+    {
+        $publisher = new SynchronousPublisher();
+        $background = new Background($publisher);
+
+        try {
+            $background->coalesce(new Queue('stats'), ['projectId' => 'p1'], 'p1');
+            $this->fail('A publisher without keyed publishes must be refused.');
+        } catch (\LogicException) {
+        }
+
+        $this->assertSame(0, $publisher->calls);
+    }
+
+    public function testCoalesceRejectsAnEmptyKeyBeforeDelegating(): void
+    {
+        $publisher = new CoalescingPublisher(Outcome::Published);
+        $background = new Background($publisher);
+
+        try {
+            $background->coalesce(new Queue('stats'), ['projectId' => 'p1'], '');
+            $this->fail('An empty key must be rejected.');
+        } catch (\InvalidArgumentException $exception) {
+            $this->assertSame('Cannot coalesce with an empty key.', $exception->getMessage());
+        }
+
+        $this->assertSame([], $publisher->coalesced);
     }
 
     public function testEnqueueFallsBackToSyncWhenNotStarted(): void

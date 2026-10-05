@@ -6,10 +6,12 @@ use Utopia\Pools\Pool as UtopiaPool;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Consumer\Bounded;
 use Utopia\Queue\Message;
+use Utopia\Queue\Publisher\Coalescing;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
-readonly class Pool implements Synchronous, Consumer, Bounded
+readonly class Pool implements Synchronous, Coalescing, Consumer, Bounded
 {
     public function __construct(
         private ?UtopiaPool $publisher = null,
@@ -25,6 +27,25 @@ readonly class Pool implements Synchronous, Consumer, Bounded
     public function publishMany(Queue $queue, array $payloads): bool
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
+    }
+
+    public function coalesce(Queue $queue, array $payload, string $key): Outcome
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cannot coalesce with an empty key.');
+        }
+
+        if ($this->publisher === null) {
+            throw new \LogicException('Pool has no publisher pool to coalesce through.');
+        }
+
+        return $this->publisher->use(static function (mixed $adapter) use ($queue, $payload, $key): Outcome {
+            if (!$adapter instanceof Coalescing) {
+                throw new \LogicException('Pooled publisher ' . get_debug_type($adapter) . ' cannot coalesce.');
+            }
+
+            return $adapter->coalesce($queue, $payload, $key);
+        });
     }
 
     public function retry(Queue $queue, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): void

@@ -9,6 +9,8 @@ use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Queue\Publisher\Asynchronous;
 use Utopia\Queue\Publisher\BufferFullException;
+use Utopia\Queue\Publisher\Coalescing;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -42,9 +44,9 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
  * Dispatch counts and failures aren't metered here — the wrapped synchronous
  * publisher already sees every publish and can report those itself.
  *
- * publish() bypasses the channel and delegates synchronously.
+ * publish() and coalesce() bypass the channel and delegate synchronously.
  */
-class Background implements Synchronous, Asynchronous
+class Background implements Synchronous, Asynchronous, Coalescing
 {
     private readonly Channel $channel;
 
@@ -175,6 +177,22 @@ class Background implements Synchronous, Asynchronous
     public function publishMany(Queue $queue, array $payloads): bool
     {
         return $this->publisher->publishMany($queue, $payloads);
+    }
+
+    /**
+     * Delegates synchronously so the caller receives the outcome.
+     */
+    public function coalesce(Queue $queue, array $payload, string $key): Outcome
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cannot coalesce with an empty key.');
+        }
+
+        if (!$this->publisher instanceof Coalescing) {
+            throw new \LogicException('Wrapped publisher ' . $this->publisher::class . ' cannot coalesce.');
+        }
+
+        return $this->publisher->coalesce($queue, $payload, $key);
     }
 
     /**
