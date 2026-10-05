@@ -12,6 +12,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use WebSocket\ConnectionException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -187,6 +188,52 @@ final class RealtimeConsoleClientTest extends Scope
         }, 120000, 500);
 
         return $data;
+    }
+
+    public function testConnectionPlatform(): void
+    {
+        $session = $this->getRoot()['session'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['console'], [
+            'origin' => 'http://appwrite.unknown',
+            'cookie' => 'a_session_console=' . $session,
+        ], 'console');
+        $payload = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertStringStartsWith('Invalid Origin', $payload['data']['message']);
+
+        // The server closes the socket right after the error frame; the next read
+        // returns as soon as that happens instead of waiting out the read timeout.
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+            // Socket closed by the server
+        }
+        $this->assertFalse($client->isConnected());
     }
 
     public function testManualAuthentication(): void
@@ -717,7 +764,11 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -736,7 +787,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -792,7 +846,11 @@ final class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -811,7 +869,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /** Delete index generates two events. One from the API and one from the database worker */
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -866,7 +927,11 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -884,7 +949,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.attributes.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -939,7 +1007,11 @@ final class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.columns.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'deleting'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -957,7 +1029,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.tables.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.columns.*.delete", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);

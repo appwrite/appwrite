@@ -57,7 +57,7 @@ class ScheduleFunctions extends Action
             },
         );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
 
         Span::init('schedule.functions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -72,9 +72,19 @@ class ScheduleFunctions extends Action
     }
 
     /**
+     * Skip runs the worker would reject; rejected jobs pile up on the failed list.
+     *
+     * @param array<string, mixed> $schedule
+     */
+    protected function shouldEnqueue(array $schedule, Database $dbForPlatform): bool
+    {
+        return true;
+    }
+
+    /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
     {
         $batch = \count($occurrences);
 
@@ -93,6 +103,20 @@ class ScheduleFunctions extends Action
                 Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
+
+                // A failed check enqueues anyway: the window is committed after
+                // dispatch, so a skipped run is lost, while the worker still enforces.
+                try {
+                    $eligible = $this->shouldEnqueue($schedule, $dbForPlatform);
+                } catch (\Throwable $th) {
+                    $error = $th;
+                    $eligible = true;
+                }
+
+                if (!$eligible) {
+                    Span::add('occurrence.skipped', true);
+                    continue;
+                }
 
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
