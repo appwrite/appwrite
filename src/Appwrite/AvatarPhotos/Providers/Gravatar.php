@@ -3,6 +3,7 @@
 namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
+use Utopia\Client\Client;
 use Utopia\Database\Document;
 
 /**
@@ -11,6 +12,11 @@ use Utopia\Database\Document;
 class Gravatar extends Photo
 {
     private const BASE_URL = 'https://www.gravatar.com/avatar/';
+
+    public function __construct(
+        private readonly Client $client,
+    ) {
+    }
 
     public function getName(): string
     {
@@ -30,6 +36,6 @@ class Gravatar extends Photo
             'r' => $rating,
         ]);
 
-        return $this->fetch($url);
+        return $this->fetch($this->client, $url);
     }
 }

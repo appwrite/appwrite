@@ -1,0 +1,577 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getGroups\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getHttpPath\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getInjections\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getLabels\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:getParams\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:groups\(\) has parameter \$groups with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:param\(\) has parameter \$aliases with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Action\:\:param\(\) has parameter \$injections with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$callback has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$groups type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$injections type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$labels type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$options type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Action\:\:\$params type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Action.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Module.php
+
+		-
+			message: '#^Cannot call method getType\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Module\:\:getService\(\) should return Utopia\\Platform\\Service\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Module\:\:getServices\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Module\:\:getServices\(\) should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Module\:\:getServicesByType\(\) should return array\<Utopia\\Platform\\Service\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Possibly invalid array key type string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Module\:\:\$services type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Module.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 6
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''default'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''deprecated'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''description'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''enum'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''example'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''injections'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''optional'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''skipValidation'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot access offset ''validator'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getActions\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getCallback\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getDesc\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getGroups\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getLabels\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getOptions\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot call method getType\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 5
+			path: src/Platform.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Platform\:\:getServices\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Platform\:\:init\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Platform\:\:initHttp\(\) has parameter \$services with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Platform\:\:initTasks\(\) has parameter \$services with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$action of method Utopia\\Servers\\Hook\:\:action\(\) expects callable\(\)\: mixed, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$adapter of class Utopia\\CLI\\CLI constructor expects Utopia\\CLI\\Adapter\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$consumer of class Utopia\\Queue\\Adapter\\Swoole constructor expects \(callable\(\)\: mixed\)\|Utopia\\Queue\\Consumer, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$desc of method Utopia\\Servers\\Hook\:\:desc\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$groups of method Utopia\\Servers\\Hook\:\:groups\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$injection of method Utopia\\Servers\\Hook\:\:inject\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Utopia\\Servers\\Hook\:\:label\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$methods of static method Utopia\\Http\\Http\:\:routes\(\) expects array\<int, string\>\|string, array\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Utopia\\CLI\\CLI\:\:task\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#1 \$queue of method Utopia\\Queue\\Server\:\:job\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#2 \$workerName of method Utopia\\Platform\\Platform\:\:initWorker\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#2 \$workerNum of class Utopia\\Queue\\Adapter\\Swoole constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#3 \$namespace of class Utopia\\Queue\\Adapter\\Swoole constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#3 \$params of method Utopia\\Platform\\Platform\:\:initWorker\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#3 \$validator of method Utopia\\Servers\\Hook\:\:param\(\) expects \(callable\(\)\: mixed\)\|Utopia\\Validator, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#4 \$description of method Utopia\\Servers\\Hook\:\:param\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#5 \$optional of method Utopia\\Servers\\Hook\:\:param\(\) expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#6 \$injections of method Utopia\\Servers\\Hook\:\:param\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#7 \$skipValidation of method Utopia\\Servers\\Hook\:\:param\(\) expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#8 \$deprecated of method Utopia\\Servers\\Hook\:\:param\(\) expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \#9 \$example of method Utopia\\Servers\\Hook\:\:param\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \$aliases of method Utopia\\Servers\\Hook\:\:param\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Parameter \$enum of method Utopia\\Servers\\Hook\:\:param\(\) expects object\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Platform.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Service\:\:getAction\(\) should return Utopia\\Platform\\Action\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Service.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Service\:\:getActions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Service.php
+
+		-
+			message: '#^Property Utopia\\Platform\\Service\:\:\$actions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Service.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Cannot access offset ''deprecated'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Cannot access offset ''enum'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Cannot access offset ''example'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Cannot call method run\(\) on Utopia\\Http\\Http\|null\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/HttpServicesTest.php
+
+		-
+			message: '#^Cannot call method send\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TestActionAliased.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Tests\\TestActionAliased\:\:action\(\) has parameter \$response with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/TestActionAliased.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Tests\\TestActionCLI\:\:action\(\) has parameter \$list with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/TestActionCLI.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/TestActionCLI.php
+
+		-
+			message: '#^Cannot call method chunk\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TestActionChunked.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Tests\\TestActionChunked\:\:action\(\) has parameter \$response with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/TestActionChunked.php
+
+		-
+			message: '#^Cannot call method redirect\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TestActionRedirect.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Tests\\TestActionRedirect\:\:action\(\) has parameter \$response with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/TestActionRedirect.php
+
+		-
+			message: '#^Cannot call method send\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TestActionRoot.php
+
+		-
+			message: '#^Method Utopia\\Platform\\Tests\\TestActionRoot\:\:action\(\) has parameter \$response with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/TestActionRoot.php
+
+		-
+			message: '#^Cannot call method send\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/TestActionWithParams.php
+
+		-
+			message: '#^Cannot call method getAction\(\) on Utopia\\Platform\\Service\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/WorkerServicesTest.php
+
+		-
+			message: '#^Cannot call method getAction\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/WorkerServicesTest.php
+
+		-
+			message: '#^Trying to invoke mixed but it''s not a callable\.$#'
+			identifier: callable.nonCallable
+			count: 2
+			path: tests/WorkerServicesTest.php

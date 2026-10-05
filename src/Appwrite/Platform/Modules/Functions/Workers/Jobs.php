@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
@@ -30,7 +31,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -65,6 +69,34 @@ class Jobs extends Action
     private const LOCK_TTL = 30;
     private const LOCK_TIMEOUT = 10.0;
 
+    private const string INTERNAL_ERROR_MESSAGE = 'Internal server error. Please try again.';
+
+    private const array USER_ARTIFACT_ERRORS = [
+        ErrorCode::ArchiveEmpty->value => 'The source archive is empty.',
+        ErrorCode::ArchiveUnknownFormat->value => 'The source archive format is not recognized.',
+        ErrorCode::ArchiveCorrupt->value => 'The source archive is corrupt or incomplete. Re-create it and try again.',
+        ErrorCode::ArchivePathInvalid->value => 'The source archive contains a path or link that points outside the archive.',
+        ErrorCode::ArchiveLayoutMismatch->value => 'No files found in the source archive at the configured root directory.',
+        ErrorCode::CloneFailed->value => 'Failed to clone the repository. Check that the repository and branch exist and are accessible.',
+    ];
+
+    // Repository sources only: an uploaded source is downloaded from Appwrite.
+    private const array USER_SOURCE_ERRORS = [
+        'Download failed with status 401' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 403' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
+        'Download failed with status 404' => 'The repository, branch or commit could not be found. Check that it still exists.',
+    ];
+
+    private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
+    {
+        $code = $artifact->error?->code;
+        if ($code === ErrorCode::DownloadHttpError && $deployment->getAttribute('type') === 'vcs') {
+            return self::USER_SOURCE_ERRORS[$artifact->error->message] ?? null;
+        }
+
+        return self::USER_ARTIFACT_ERRORS[$code->value ?? ''] ?? null;
+    }
+
     public static function getName(): string
     {
         return 'jobs';
@@ -87,6 +119,8 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
+            ->inject('deviceForFunctions')
+            ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('cache')
             ->inject('locks')
@@ -109,6 +143,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         callable $locks,
@@ -123,7 +159,9 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus): void {
+        $failure = null;
+
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -140,11 +178,14 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
             $durationBefore = $deployment->getAttribute('buildDuration');
 
-            $deployment = match (CallbackEvent::tryFrom($event->event)) {
+            $callback = CallbackEvent::tryFrom($event->event);
+            $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
+
+            $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
-                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, JobArtifact::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
-                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
+                CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
 
@@ -177,7 +218,23 @@ class Jobs extends Action
             if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
+
+            // Artifacts after a failed build fail for want of output.
+            if ($artifact?->status === 'failed'
+                && $statusBefore !== 'failed'
+                && !\in_array($artifact->artifactId, ['cache', 'manifest'], true)
+                && self::userMessage($deployment, $artifact) === null) {
+                Span::add('deployment.id', $deploymentId);
+                Span::add('artifact.id', $artifact->artifactId);
+                Span::add('artifact.type', $artifact->artifactType);
+                Span::add('artifact.error.code', $artifact->error?->code->value);
+                $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
+            }
         }, self::LOCK_TIMEOUT);
+
+        if ($failure !== null) {
+            throw $failure;
+        }
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
@@ -274,7 +331,8 @@ class Jobs extends Action
 
     /**
      * Record a reported artifact: 'sourceSize' (remote-source builds) becomes
-     * the deployment's sourceSize; 'manifest' (site builds) is the output file
+     * the deployment's sourceSize, and a delivered 'sourceUpload' its
+     * sourcePath; 'manifest' (site builds) is the output file
      * listing for adapter detection; and 'output' confirms remote delivery.
      * Manifest and output callbacks save markers that join readiness.
      */
@@ -288,6 +346,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
@@ -295,6 +355,7 @@ class Jobs extends Action
         Bus $bus,
     ): Document {
         $failed = $artifact->status === 'failed';
+        $message = self::userMessage($deployment, $artifact) ?? self::INTERNAL_ERROR_MESSAGE;
         if ($artifact->artifactId === 'manifest') {
             // A failed manifest degrades to an empty listing (detection
             // skipped), never a failed build.
@@ -315,7 +376,7 @@ class Jobs extends Action
             if ($failed) {
                 // Fail immediately even if exit delivery is lost. Leave duration
                 // unknown until exit arrives, rather than billing callback wait.
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output upload failed: ' . ($artifact->error->message ?? 'unknown error'), $publisherForScreenshots, $vcsFactory, $platform, $bus);
+                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
             }
 
             if ($artifact->status !== 'success') {
@@ -329,12 +390,17 @@ class Jobs extends Action
 
         // Any other artifact failing dooms the build — the orchestrator aborts
         // the job on a pre-job failure, and a lost output has nothing to serve
-        // — so fail it now with the artifact's own message (which file, which
-        // status) rather than waiting for the bare exit code. The build cache
+        // — so fail it now rather than waiting for the bare exit code. The build cache
         // upload is the one best-effort artifact: losing it costs the next
         // build time, not this one.
         if ($failed && $artifact->artifactId !== 'cache') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $artifact->error->message ?? 'Build failed.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
+        }
+
+        if ($artifact->artifactId === 'sourceUpload' && $artifact->status === 'success') {
+            return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'sourcePath' => Deployments::sourcePath($project->getId(), $deployment->getAttribute('resourceType', 'functions'), $deployment->getId()),
+            ]));
         }
 
         if ($artifact->artifactId !== 'sourceSize' || $artifact->status !== 'success') {
@@ -347,10 +413,16 @@ class Jobs extends Action
             return $deployment;
         }
 
-        return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'sourceSize' => $size,
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
+
+        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
+        }
+
+        return $deployment;
     }
 
     /**
@@ -387,7 +459,7 @@ class Jobs extends Action
         $dbForProject->updateDocuments('deployments', new Document([
             'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
                 ? (int) \ceil($duration)
-                : $this->duration($deployment),
+                : $this->duration($deployment, $this->buildTimeout($dbForPlatform, $project)),
             'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
@@ -429,6 +501,8 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         ScreenshotPublisher $publisherForScreenshots,
         Device $deviceForBuilds,
+        Device $deviceForFunctions,
+        Device $deviceForSites,
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
@@ -437,7 +511,65 @@ class Jobs extends Action
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
+        $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
+
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
+    }
+
+    /**
+     * On the local device a remote-source build leaves its source on the
+     * builds volume (see Deployments::payload()). It moves beside manual
+     * uploads' once the build has completed and the sidecar's sourceSize is
+     * recorded, whichever callback lands second. The build's own code can
+     * write that volume too, so only the file the sidecar measured is kept.
+     * Losing it costs the download, never the build.
+     */
+    private function keepStagedSource(Database $dbForProject, Document $project, Document $deployment, Device $deviceForBuilds, Device $deviceForFunctions, Device $deviceForSites): Document
+    {
+        $staged = Deployments::stagedSourcePath($deviceForBuilds, $deployment->getId());
+        $size = (int) $deployment->getAttribute('sourceSize', 0);
+        if ($deviceForBuilds->getType() !== DeviceType::Local || $size <= 0 || !(\is_link($staged) || $deviceForBuilds->exists($staged))) {
+            return $deployment;
+        }
+
+        $file = false;
+        try {
+            $stat = \lstat($staged);
+            $opened = false;
+            if ($deployment->getAttribute('sourcePath', '') === ''
+                && $stat !== false
+                && ($stat['mode'] & 0o170000) === 0o100000
+                && $stat['size'] === $size
+                && \realpath($staged) === $staged
+                && ($file = \fopen($staged, 'rb')) !== false
+            ) {
+                $opened = \fstat($file);
+            }
+
+            if ($file !== false && $opened !== false && $opened['ino'] === $stat['ino'] && $opened['dev'] === $stat['dev']) {
+                $resourceType = $deployment->getAttribute('resourceType', 'functions');
+                $sourcePath = Deployments::sourcePath($project->getId(), $resourceType, $deployment->getId());
+                ($resourceType === 'sites' ? $deviceForSites : $deviceForFunctions)->write($sourcePath, Stream::fromResource($file), 'application/gzip');
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'sourcePath' => $sourcePath,
+                ]));
+            } else {
+                Span::add('source.error', 'Staged source refused');
+            }
+        } catch (\Throwable $error) {
+            Span::add('source.error', $error->getMessage());
+        } finally {
+            if ($file !== false) {
+                \fclose($file);
+            }
+            // Unlinking follows symlinked parent directories, which the build
+            // could plant, so clean up only inside the builds tree.
+            if (\realpath(\dirname($staged)) === \dirname($staged)) {
+                $deviceForBuilds->delete($staged);
+            }
+        }
+
+        return $deployment;
     }
 
     /**
@@ -636,6 +768,13 @@ class Jobs extends Action
             ));
         }
 
+        // A build that is not activated never reaches activate() above, and a
+        // push to a non-production branch never produces an activated one.
+        // Sites get this from activateBranchPreviewRule; functions have none.
+        if ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
+            $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
+        }
+
         // (Re)activate its schedule so the scheduler enqueues cron executions
         // (sites have no scheduleId, so schedule() no-ops for them).
         if (! $resource->isEmpty()) {
@@ -657,8 +796,13 @@ class Jobs extends Action
      * buildStartedAt (stamped by the first log callback) can be missing when a
      * terminal callback finalizes first — fall back to the deployment's
      * creation time rather than reporting 0.
+     *
+     * Elapsed time is wall clock, not build time: an exit reported weeks late
+     * would be billed in full, so it is bounded by the build timeout plus the 300s
+     * headroom Deployments grants the build's credentials. A measured duration
+     * is never bounded; termination grace can legitimately run past the timeout.
      */
-    private function duration(Document $deployment): int
+    private function duration(Document $deployment, int $timeout): int
     {
         if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
             return (int) $deployment->getAttribute('buildDuration', 0);
@@ -678,9 +822,19 @@ class Jobs extends Action
             return 0;
         }
 
-        // A timeout is a budget, not a measurement: termination grace can
-        // legitimately leave the worker running past it.
-        return (int) \ceil(\max(0.0, $ended - $started));
+        $elapsed = (int) \ceil(\max(0.0, $ended - $started));
+
+        return $timeout > 0 ? \min($elapsed, $timeout + 300) : $elapsed;
+    }
+
+    /**
+     * The timeout this project's builds are submitted with. Override when it
+     * varies per project, so a late exit is bounded by the timeout that build
+     * really had.
+     */
+    protected function buildTimeout(Database $dbForPlatform, Document $project): int
+    {
+        return (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
     }
 
     /**
@@ -723,8 +877,11 @@ class Jobs extends Action
      */
     protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
     {
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
         $branch = $deployment->getAttribute('providerBranch', '');
-        $branches = $branch === '' ? [''] : ['', $branch];
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
@@ -747,6 +904,34 @@ class Jobs extends Action
             'deploymentInternalId' => $deployment->getSequence(),
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ]));
+    }
+
+    /**
+     * Repoint the function's branch-pinned rules at this deployment.
+     */
+    protected function activateBranchRule(Database $dbForPlatform, Document $project, Document $resource, Document $deployment, Bus $bus): void
+    {
+        // Template deployments reuse providerBranch for their resolved ref
+        // (tags included), which must not repoint a branch rule.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        if ($branch === '' || empty($deployment->getAttribute('installationId'))) {
+            return;
+        }
+
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }, [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', ['function']),
+            Query::equal('trigger', ['manual']),
+            Query::equal('deploymentVcsProviderBranch', [$branch]),
+        ]);
     }
 
     /**

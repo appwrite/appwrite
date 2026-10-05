@@ -64,6 +64,36 @@ trait RealtimeBase
         return $matched;
     }
 
+    /**
+     * Receive websocket frames until the server closes the socket.
+     *
+     * Returns the frames that arrived before the close, in order, so a caller can
+     * check both what the connection was told and that it was then closed.
+     *
+     * @return array<int, array>
+     */
+    private function receiveUntilClosed(WebSocketClient $client, int $maxFrames = 10): array
+    {
+        $frames = [];
+
+        while ($client->isConnected() && \count($frames) < $maxFrames) {
+            try {
+                $frame = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
+            } catch (ConnectionException) {
+                // Socket closed by the server
+                break;
+            }
+
+            $frames[] = \is_array($frame) ? $frame : ['raw' => $frame];
+        }
+
+        $this->assertFalse($client->isConnected(), 'Server did not close the socket. Frames: ' . \json_encode($frames));
+
+        return $frames;
+    }
+
     private function getWebsocket(
         array $channels = [],
         array $headers = [],

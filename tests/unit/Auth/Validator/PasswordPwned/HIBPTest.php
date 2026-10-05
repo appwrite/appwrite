@@ -7,12 +7,13 @@ namespace Tests\Unit\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP;
 use Appwrite\Extend\Exception;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
-use Utopia\Fetch\Adapter;
-use Utopia\Fetch\Client;
-use Utopia\Fetch\Options\Request as RequestOptions;
-use Utopia\Fetch\Response;
+use Utopia\Psr7\Response;
+use Utopia\Psr7\Stream;
 
 final class HIBPTest extends TestCase
 {
@@ -79,8 +80,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        $this->assertFalse((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
-        $this->assertFalse((new HIBP($cache, new Client($fetch), self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertFalse((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertFalse((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
 
         $this->assertCount(1, $fetch->urls);
     }
@@ -90,8 +91,8 @@ final class HIBPTest extends TestCase
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
         $cache = new Cache(new Memory());
 
-        (new HIBP($cache, new Client($fetch), 'https://one.test/range'))->isValid(self::LEAKED);
-        (new HIBP($cache, new Client($fetch), 'https://two.test/range'))->isValid(self::LEAKED);
+        (new HIBP($cache, $fetch, 'https://one.test/range'))->isValid(self::LEAKED);
+        (new HIBP($cache, $fetch, 'https://two.test/range'))->isValid(self::LEAKED);
 
         $this->assertCount(2, $fetch->urls);
     }
@@ -100,8 +101,8 @@ final class HIBPTest extends TestCase
     {
         $fetch = new RangeFetch(body: '');
 
-        (new HIBP(null, new Client($fetch), 'https://server.test/range'))->isValid(self::LEAKED);
-        (new HIBP(null, new Client($fetch), 'https://other.test/range/'))->isValid(self::LEAKED);
+        (new HIBP(null, $fetch, 'https://server.test/range'))->isValid(self::LEAKED);
+        (new HIBP(null, $fetch, 'https://other.test/range/'))->isValid(self::LEAKED);
 
         $this->assertStringStartsWith('https://server.test/range/', $fetch->urls[0]);
         $this->assertStringStartsWith('https://other.test/range/', $fetch->urls[1]);
@@ -131,7 +132,7 @@ final class HIBPTest extends TestCase
     public function testFailedLookupIsNotCached(): void
     {
         $fetch = new RangeFetch(failure: new \RuntimeException('connection refused'));
-        $validator = new HIBP(new Cache(new Memory()), new Client($fetch), self::ENDPOINT);
+        $validator = new HIBP(new Cache(new Memory()), $fetch, self::ENDPOINT);
 
         foreach ([1, 2] as $attempt) {
             try {
@@ -146,7 +147,7 @@ final class HIBPTest extends TestCase
 
     private function validator(RangeFetch $fetch): HIBP
     {
-        return new HIBP(null, new Client($fetch), self::ENDPOINT);
+        return new HIBP(null, $fetch, self::ENDPOINT);
     }
 
     /**
@@ -167,7 +168,7 @@ final class HIBPTest extends TestCase
     }
 }
 
-final class RangeFetch implements Adapter
+final class RangeFetch implements ClientInterface
 {
     /** @var array<int, string> URLs the validator asked the breach service for */
     public array $urls = [];
@@ -179,20 +180,14 @@ final class RangeFetch implements Adapter
     ) {
     }
 
-    public function send(
-        string $url,
-        string $method,
-        mixed $body,
-        array $headers,
-        RequestOptions $options,
-        ?callable $chunkCallback = null
-    ): Response {
-        $this->urls[] = $url;
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->urls[] = (string) $request->getUri();
 
         if ($this->failure !== null) {
             throw $this->failure;
         }
 
-        return new Response($this->statusCode, $this->body, []);
+        return new Response($this->statusCode, body: new Stream($this->body));
     }
 }

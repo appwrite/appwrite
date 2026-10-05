@@ -190,7 +190,7 @@ Long-running processes that already own a pooled client can hand it to the adapt
 
 ```php
 use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Client as HttpClient;
+use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;

@@ -25,18 +25,19 @@ class OAuth2Google extends OAuth2Base
         return 'GOCSPX-2k8gsR0000000000000000VNahJj';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'consent', 'select_account'];
+    }
+
+    public function getPromptDefault(): array
+    {
+        return ['consent'];
+    }
+
     public function __construct()
     {
         parent::__construct();
-
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Google OAuth2 prompt values.',
-            'default' => ['consent'],
-            'example' => ['consent'],
-            'array' => true,
-            'enum' => ['none', 'consent', 'select_account'],
-        ]);
 
         $this->addRule('nativeEnabled', [
             'type' => self::TYPE_BOOLEAN,
