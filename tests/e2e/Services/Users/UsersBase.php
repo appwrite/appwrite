@@ -634,6 +634,7 @@ trait UsersBase
             $this->assertSame(7168, $options['memory_cost'] ?? $options['memoryCost'] ?? null);
             $this->assertSame(5, $options['time_cost'] ?? $options['timeCost'] ?? null);
             $this->assertSame(1, $options['threads'] ?? null);
+        }
 
         foreach ($userIds as $userId) {
             // Ensure sessions can be created after re-hashing of passwords
