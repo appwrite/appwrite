@@ -197,6 +197,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'vs_code.svg',
   'vscode.svg',
   'vue.svg',
+  'webflow.svg',
   'whatsapp.svg',
   'windsurf.svg',
   'wordpress.svg',

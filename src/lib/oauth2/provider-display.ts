@@ -65,6 +65,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Kakao]: '2026-09-08',
     [OAuthProvider.Resend]: '2026-09-08',
     [OAuthProvider.Tiktok]: '2026-09-08',
+    [OAuthProvider.Webflow]: '2026-09-29',
   }
 
 function parseUtcDate(isoDate: string): Date {
