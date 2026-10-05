@@ -47,6 +47,44 @@ trait MigrationsBase
     protected static array $cachedTableData = [];
 
     /**
+     * @var array<string>
+     */
+    protected array $trackedDatabaseIds = [];
+
+    protected function tearDown(): void
+    {
+        if (!empty($this->trackedDatabaseIds)) {
+            $this->deleteTrackedDatabases();
+        }
+
+        parent::tearDown();
+    }
+
+    protected function trackDatabase(string $databaseId): void
+    {
+        $this->trackedDatabaseIds[] = $databaseId;
+    }
+
+    private function deleteTrackedDatabases(): void
+    {
+        foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
+            foreach ($this->trackedDatabaseIds as $databaseId) {
+                $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $project['$id'],
+                    'x-appwrite-key' => $project['apiKey'],
+                ]);
+
+                $this->assertContains($response['headers']['status-code'], [204, 404], 'Failed to delete migration database ' . $databaseId . ' in project ' . $project['$id']);
+            }
+        }
+
+        $this->trackedDatabaseIds = [];
+        self::$cachedDatabaseData = [];
+        self::$cachedTableData = [];
+    }
+
+    /**
      * @param bool $fresh
      * @return array
      */
@@ -958,6 +996,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
@@ -1019,12 +1058,6 @@ trait MigrationsBase
         $rowAfterOverwrite = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfterOverwrite['headers']['status-code']);
         $this->assertEquals('Original', $rowAfterOverwrite['body']['name'], 'onDuplicate=overwrite must restore source value');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Unchanged source under Skip/Overwrite is a no-op — every resource Tolerated. */
@@ -1043,6 +1076,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         // Seed two rows on source so the row-level tolerance is exercised too.
@@ -1097,12 +1131,6 @@ trait MigrationsBase
             $this->assertEquals(200, $check['headers']['status-code']);
             $this->assertEquals('Seeded ' . $rowId, $check['body']['name']);
         }
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Overwrite reconciles container drift via UpdateInPlace; children (rows) preserved. */
@@ -1121,6 +1149,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'persist-me';
 
@@ -1187,12 +1216,6 @@ trait MigrationsBase
         $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $row['headers']['status-code']);
         $this->assertEquals('SeedRow', $row['body']['name'], 'Overwrite must not touch child rows when updating container metadata');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves dest container drift even when source has diverged. */
@@ -1211,6 +1234,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1262,12 +1286,6 @@ trait MigrationsBase
         $this->assertEquals(200, $destTable['headers']['status-code']);
         $this->assertEquals('Dest-Managed Table', $destTable['body']['name'], 'Skip must not propagate source name over dest drift');
         $this->assertTrue($destTable['body']['enabled'], 'Skip must preserve dest enabled flag');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Overwrite drops dest columns source no longer declares; cleanup runs before rows land. */
@@ -1286,6 +1304,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1349,12 +1368,6 @@ trait MigrationsBase
         // Source's column preserved.
         $nameCheck = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $destHeaders);
         $this->assertEquals(200, $nameCheck['headers']['status-code'], 'Overwrite must preserve columns source declared');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves orphan columns; cleanup is Overwrite-only. */
@@ -1373,6 +1386,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1425,12 +1439,6 @@ trait MigrationsBase
 
         $orphanCheck = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/dest_only_col', $destHeaders);
         $this->assertEquals(200, $orphanCheck['headers']['status-code'], 'Skip must preserve destination columns, including orphans');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** SDK-reachable attribute change propagates via updateAttributeInPlace; row data preserved. */
@@ -1449,6 +1457,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'persist-on-inplace';
 
@@ -1523,12 +1532,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals('SeedRow', $rowAfter['body']['name'], 'updateAttributeInPlace must not touch row data');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves dest attribute drift; leaf-level analog of the container drift test. */
@@ -1547,6 +1550,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
 
         $resources = [
@@ -1609,12 +1613,6 @@ trait MigrationsBase
         $this->assertEquals(200, $destAttr['headers']['status-code']);
         $this->assertFalse($destAttr['body']['required'], 'Skip must not propagate source required over dest drift');
         $this->assertEquals('dest-default', $destAttr['body']['default'], 'Skip must preserve dest default');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Two-way onDelete change updates in place on both sides; partner meta refreshed by hand. */
@@ -1632,6 +1630,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'Rel In-Place DB',
@@ -1731,12 +1730,6 @@ trait MigrationsBase
             $this->assertEquals('available', $child['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
         }, 10000, 500);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Two-way recreate with same spec: spec-match guard tolerates parent; pair-key dedup tolerates partner. Both sides + child rows preserved. */
@@ -1754,6 +1747,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'Two-Way Recreate DB',
@@ -1892,12 +1886,6 @@ trait MigrationsBase
         $destChild = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/rows/child-1', $destHeaders);
         $this->assertEquals(200, $destChild['headers']['status-code'], 'partner-table row must survive two-way recreate re-migration');
         $this->assertEquals('parent-1', $destChild['body']['parent']['$id'] ?? $destChild['body']['parent'], 'partner-table row relationship must point to the migrated parent');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** One-way + onDelete change falls through to DropAndRecreate (in-place gated off for one-way). */
@@ -1915,6 +1903,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'One-Way DropAndRecreate DB',
@@ -1995,12 +1984,6 @@ trait MigrationsBase
             $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
         }, 10000, 500);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Recreate with non-SDK spec change (array toggle): updateAttributeInPlace bails → drop+recreate; row pass refills. */
@@ -2019,6 +2002,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'row-after-recreate';
 
@@ -2099,12 +2083,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals(['after-recreate'], $rowAfter['body']['name'], 'row pass must repopulate the recreated column with source value');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Source drops+recreates with SAME spec: spec-match guard forces Tolerate; dest meta untouched. */
@@ -2123,6 +2101,7 @@ trait MigrationsBase
 
         $data = $this->setupMigrationTable();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
         $tableId = $data['tableId'];
         $rowId = 'row-spec-match';
 
@@ -2203,12 +2182,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals('after-recreate', $rowAfter['body']['name']);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /**
