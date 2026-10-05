@@ -314,18 +314,18 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$from} not found");
+            throw new Exception('Collection ' . $from . ' not found');
         }
 
         $attributesToCreate = [];
         $attributes = $collection['attributes'];
-        $attributeKeys = \array_map(fn (Attribute $attribute) => $attribute->getKey(), $collection['attributes']);
+        $attributeKeys = \array_map(fn (Attribute $attribute): string => $attribute->getKey(), $collection['attributes']);
 
         $database->purgeCachedCollection($collectionId);
 
         $existingIds = \array_map(
-            fn ($attribute) => $attribute->getId(),
-            $database->getCollection($collectionId)->getAttribute('attributes', [])
+            fn (Attribute $attribute): string => $attribute->getId(),
+            $database->getCollection($collectionId)->getDeclaredAttributes()
         );
 
         foreach ($attributeIds as $attributeId) {
@@ -337,7 +337,7 @@ abstract class Migration
             $attributeKey = \array_search($attributeId, $attributeKeys);
 
             if ($attributeKey === false) {
-                throw new Exception("Attribute {$attributeId} not found");
+                throw new Exception('Attribute ' . $attributeId . ' not found');
             }
 
             $attribute = clone $attributes[$attributeKey];
@@ -407,15 +407,15 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$from} not found");
+            throw new Exception('Collection ' . $from . ' not found');
         }
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute) => $attribute->getKey(), $attributes));
+        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute): string => $attribute->getKey(), $attributes));
 
         if ($attributeKey === false) {
-            throw new Exception("Attribute {$attributeId} not found");
+            throw new Exception('Attribute ' . $attributeId . ' not found');
         }
 
         $attribute = clone $attributes[$attributeKey];
@@ -458,15 +458,15 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$collectionId} not found");
+            throw new Exception('Collection ' . $collectionId . ' not found');
         }
 
         $indexes = $collection['indexes'];
 
-        $indexKey = \array_search($indexId, \array_map(fn (Index $index) => $index->getKey(), $indexes));
+        $indexKey = \array_search($indexId, \array_map(fn (Index $index): string => $index->getKey(), $indexes));
 
         if ($indexKey === false) {
-            throw new Exception("Index {$indexId} not found");
+            throw new Exception('Index ' . $indexId . ' not found');
         }
 
         $database->createIndex(

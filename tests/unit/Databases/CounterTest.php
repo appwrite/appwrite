@@ -133,10 +133,10 @@ final class CounterTest extends TestCase
     {
         $counter = Counter::of($this->database, self::COLLECTION, $attribute);
 
-        $this->assertEqualsWithDelta(10.5, $counter->maximum(10.5), PHP_FLOAT_EPSILON);
-        $this->assertEqualsWithDelta(10.5, $counter->minimum(10.5), PHP_FLOAT_EPSILON);
+        $this->assertSame(10.5, $counter->maximum(10.5));
+        $this->assertSame(10.5, $counter->minimum(10.5));
         $this->assertTrue($counter->acceptsChange(1.5));
-        $this->assertEqualsWithDelta(1.5, $counter->change(1.5), PHP_FLOAT_EPSILON);
+        $this->assertSame(1.5, $counter->change(1.5));
     }
 
     public function testBoundsTheLibraryRefusesAnywayArePassedOnUnchanged(): void
@@ -275,10 +275,12 @@ final class CounterTest extends TestCase
 
         $integer = Counter::of($database, self::COLLECTION, 'count');
         $array = Counter::of($database, self::COLLECTION, 'scores');
+        $double = Counter::of($database, self::COLLECTION, 'ratio');
 
         $this->assertSame([], $reads->getArrayCopy());
         $this->assertSame(10, $integer->maximum(10.5));
-        $this->assertEqualsWithDelta(10.5, $array->maximum(10.5), PHP_FLOAT_EPSILON);
+        $this->assertSame(10.5, $array->maximum(10.5));
+        $this->assertSame(10.5, $double->maximum(10.5));
     }
 
     public function testAFractionalChangeValueOnAnIntegerIsRefusedAsAnInvalidArgument(): void
