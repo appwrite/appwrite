@@ -47,17 +47,32 @@ trait MigrationsBase
     protected static array $cachedTableData = [];
 
     /**
-     * @var array<string>
+     * @var list<string>
      */
     protected array $trackedDatabaseIds = [];
 
     protected function tearDown(): void
     {
-        if (!empty($this->trackedDatabaseIds)) {
-            $this->deleteTrackedDatabases();
-        }
+        $databaseIds = $this->trackedDatabaseIds;
+        $this->trackedDatabaseIds = [];
 
-        parent::tearDown();
+        try {
+            if ($databaseIds === []) {
+                return;
+            }
+
+            self::$cachedDatabaseData = [];
+            self::$cachedTableData = [];
+
+            $failures = [];
+            foreach ($databaseIds as $databaseId) {
+                array_push($failures, ...$this->deleteMigrationDatabases($databaseId));
+            }
+
+            $this->assertSame([], $failures, 'Failed to delete tracked migration databases');
+        } finally {
+            parent::tearDown();
+        }
     }
 
     protected function trackDatabase(string $databaseId): void
@@ -65,23 +80,32 @@ trait MigrationsBase
         $this->trackedDatabaseIds[] = $databaseId;
     }
 
-    private function deleteTrackedDatabases(): void
+    /**
+     * @return list<string>
+     */
+    private function deleteMigrationDatabases(string $databaseId): array
     {
+        $failures = [];
+
         foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
-            foreach ($this->trackedDatabaseIds as $databaseId) {
+            try {
                 $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $project['$id'],
                     'x-appwrite-key' => $project['apiKey'],
                 ]);
+            } catch (\Throwable $error) {
+                $failures[] = 'Database ' . $databaseId . ' in project ' . $project['$id'] . ': ' . $error->getMessage();
+                continue;
+            }
 
-                $this->assertContains($response['headers']['status-code'], [204, 404], 'Failed to delete migration database ' . $databaseId . ' in project ' . $project['$id']);
+            $status = $response['headers']['status-code'];
+            if ($status !== 204 && $status !== 404) {
+                $failures[] = 'Database ' . $databaseId . ' in project ' . $project['$id'] . ': status ' . $status;
             }
         }
 
-        $this->trackedDatabaseIds = [];
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
+        return $failures;
     }
 
     /**
@@ -660,6 +684,7 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']['$id']);
 
         $databaseId = $response['body']['$id'];
+        $this->trackDatabase($databaseId);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -691,64 +716,44 @@ trait MigrationsBase
 
         $this->assertEquals($databaseId, $response['body']['$id']);
         $this->assertEquals('Test Database', $response['body']['name']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
     }
 
     public function testAppwriteMigrationRejectsForeignSourceApiKey(): void
     {
         $databaseId = $this->createSourceDatabase();
+        $this->trackDatabase($databaseId);
 
-        try {
-            $result = $this->performMigrationExpectingFailure([
-                'resources' => [Resource::TYPE_DATABASE],
-                'endpoint' => $this->webEndpoint,
-                'projectId' => $this->getProject()['$id'],
-                'apiKey' => $this->getDestinationProject()['apiKey'],
-            ]);
+        $result = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_DATABASE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getDestinationProject()['apiKey'],
+        ]);
 
-            $this->assertStringContainsString(
-                'The source API key cannot read the requested resources of the source project.',
-                implode("\n", $result['errors']),
-            );
-            $this->assertDestinationDatabaseMissing($databaseId);
-        } finally {
-            $this->deleteMigrationDatabases($databaseId);
-        }
+        $this->assertStringContainsString(
+            'The source API key cannot read the requested resources of the source project.',
+            implode("\n", $result['errors']),
+        );
+        $this->assertDestinationDatabaseMissing($databaseId);
     }
 
     public function testAppwriteMigrationRejectsSourceApiKeyWithoutTableScope(): void
     {
         $databaseId = $this->createSourceDatabase();
+        $this->trackDatabase($databaseId);
 
-        try {
-            $result = $this->performMigrationExpectingFailure([
-                'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
-                'endpoint' => $this->webEndpoint,
-                'projectId' => $this->getProject()['$id'],
-                'apiKey' => $this->getNewKey(['databases.read']),
-            ]);
+        $result = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getNewKey(['databases.read']),
+        ]);
 
-            $this->assertStringContainsString(
-                'The source API key cannot read the requested resources of the source project.',
-                implode("\n", $result['errors']),
-            );
-            $this->assertDestinationDatabaseMissing($databaseId);
-        } finally {
-            $this->deleteMigrationDatabases($databaseId);
-        }
+        $this->assertStringContainsString(
+            'The source API key cannot read the requested resources of the source project.',
+            implode("\n", $result['errors']),
+        );
+        $this->assertDestinationDatabaseMissing($databaseId);
     }
 
     private function createSourceDatabase(): string
@@ -778,22 +783,11 @@ trait MigrationsBase
         $this->assertSame(404, $response['headers']['status-code'], 'The source database was copied without a source API key that can read it.');
     }
 
-    private function deleteMigrationDatabases(string $databaseId): void
-    {
-        foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
-            $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $project['$id'],
-                'x-appwrite-key' => $project['apiKey'],
-            ]);
-        }
-    }
-
     public function testAppwriteMigrationDatabasesTable(): void
     {
-        // Set up database using helper method (with static caching)
         $data = $this->setupMigrationDatabase();
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
             'content-type' => 'application/json',
@@ -881,31 +875,14 @@ trait MigrationsBase
         $this->assertEquals('name', $response['body']['key']);
         $this->assertEquals(100, $response['body']['size']);
         $this->assertEquals(true, $response['body']['required']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        // Clear the cache since we cleaned up
-        self::$cachedDatabaseData = [];
     }
 
     public function testAppwriteMigrationDatabasesRow(): void
     {
-        // Set up table using helper method (with static caching)
         $data = $this->setupMigrationTable();
         $tableId = $data['tableId'];
         $databaseId = $data['databaseId'];
+        $this->trackDatabase($databaseId);
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
             'content-type' => 'application/json',
@@ -960,24 +937,6 @@ trait MigrationsBase
 
         $this->assertEquals($rowId, $response['body']['$id']);
         $this->assertEquals('Test Row', $response['body']['name']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        // Clear the caches since we cleaned up
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Rows under all three modes; schema tolerance lets every run hit 'completed'. */
