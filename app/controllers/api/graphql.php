@@ -70,7 +70,7 @@ Http::get('/v1/graphql')
     ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(0, 0), 'The query to execute.')
+    ->param('query', '', new Text(0, 0), 'The query to execute.', example: 'query { localeGet { ip } }')
     ->param('operationName', '', new Text(256), 'The name of the operation to execute.', true)
     ->param('variables', '', new Text(0), 'The JSON encoded variables to use in the query.', true)
     ->inject('request')
@@ -123,7 +123,7 @@ Http::post('/v1/graphql/mutation')
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"mutation { accountUpdateName(name: \"Walter\") { name } }"}'],
         ],
     ))
     ->label('abuse-limit', 60)
@@ -182,7 +182,7 @@ Http::post('/v1/graphql')
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"query { localeGet { ip } }"}'],
         ],
     ))
     ->label('abuse-limit', 60)

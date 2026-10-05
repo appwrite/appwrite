@@ -22,6 +22,9 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
@@ -34,17 +37,21 @@ use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
+use Utopia\Client\Client;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool as Connections;
@@ -81,6 +88,45 @@ $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'
 
 $container->set('executor', fn () => new Executor(), []);
 
+// Clients for destinations a user chose. Each connection, redirects included, is checked on the
+// address it actually reaches: public addresses only, plus the private or reserved ranges this
+// container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
+// own network). A malformed range throws rather than being skipped. Shared per process: without
+// connection reuse every request opens its own handle, and each with*() returns a copy.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+
+// Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
+// falling back to _APP_DNS, never the container's own resolver.
+$container->set('publicHostname', function () {
+    $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
+
+    $publicInternet = new PublicInternet(...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    ));
+
+    return new PublicHostname($publicInternet, new Recursive($servers));
+}, []);
+
+$container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
@@ -116,6 +162,19 @@ $container->set('autogravity', function (Cache $cache) {
 }, ['cache']);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
+
+/**
+ * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
+ * messaging job, so one bad platform variable must not stop a project's push and email.
+ */
+$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+    try {
+        return (new MessagingProvider($telemetry))->internalSMS();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
@@ -398,12 +457,13 @@ $container->set('servers', function () {
 
     $languages = array_map(fn ($language) => strtolower($language['name']), $server['sdks']);
 
-    return $languages;
+    return [...$languages, ...APP_SDK_INTEGRATIONS];
 });
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+// The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter())), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 

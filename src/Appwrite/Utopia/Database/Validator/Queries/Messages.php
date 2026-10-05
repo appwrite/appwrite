@@ -11,6 +11,8 @@ class Messages extends Base
         'status',
         'description',
         'providerType',
+        'users',
+        'targets',
     ];
 
     /**

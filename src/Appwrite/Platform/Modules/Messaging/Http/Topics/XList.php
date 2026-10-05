@@ -88,7 +88,7 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
             }
 
-            $cursor->setValue($cursorDocument[0]);
+            $cursor->setValue($cursorDocument);
         }
         try {
             // Safe to skip subquery, Does not return in Response

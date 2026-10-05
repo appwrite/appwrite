@@ -9,6 +9,7 @@ return [
         'mfaChallenge',
         'sessionAlert',
         'otpSession',
-        'otpVerification'
+        'otpVerification',
+        'otpRecovery'
     ]
 ];

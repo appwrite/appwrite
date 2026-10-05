@@ -28,7 +28,7 @@ Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php
 Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
 Config::load('computeScopes', __DIR__ . '/../config/scopes/compute.php', $configAdapter);
 Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
-Config::load('workers', __DIR__ . '/../config/workers.php', $configAdapter);  // Queue workers (name → queue / maxCoroutines)
+Config::load('workers', __DIR__ . '/../config/workers.php', $configAdapter);  // Queue workers (name → queue / coroutines)
 Config::load('onboarding', __DIR__ . '/../config/onboarding.php', $configAdapter);  // Project onboarding stages → routes
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
 Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions
@@ -47,6 +47,7 @@ Config::load('storage-logos', __DIR__ . '/../config/storage/logos.php', $configA
 Config::load('storage-mimes', __DIR__ . '/../config/storage/mimes.php', $configAdapter);
 Config::load('storage-inputs', __DIR__ . '/../config/storage/inputs.php', $configAdapter);
 Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php', $configAdapter);
+Config::load('storage-formats', __DIR__ . '/../config/storage/formats.php', $configAdapter);
 Config::load('specifications', __DIR__ . '/../config/specifications.php', $configAdapter);
 Config::load('templates-function', __DIR__ . '/../config/templates/function.php', $configAdapter);
 Config::load('templates-site', __DIR__ . '/../config/templates/site.php', $configAdapter);

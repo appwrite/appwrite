@@ -23,6 +23,7 @@ use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -53,7 +54,8 @@ class Create extends Action
     public function __construct()
     {
         $providers = Config::getParam('oAuthProviders', []);
-        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => !empty($node['idToken']) && empty($node['mock'])));
+        $idTokenProviders = \array_keys(\array_filter($providers, fn ($node) => !empty($node['idToken'])));
+        $documentedProviders = \array_filter($idTokenProviders, fn (string $provider) => empty($providers[$provider]['mock']));
 
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
@@ -84,7 +86,7 @@ class Create extends Action
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},ip:{ip}')
             ->label('abuse-reset', [201])
-            ->param('provider', '', new WhiteList(\array_keys($providers), true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $idTokenProviders) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
+            ->param('provider', '', new WhiteList($idTokenProviders, true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $documentedProviders) . '.', enum: new Enum(name: 'IdTokenProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)
             ->param('accessToken', '', new Text(4096, 0), 'Provider access token to store alongside the session for calling provider APIs. Never used for authentication.', true)
@@ -107,6 +109,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('cache')
             ->inject('bus')
+            ->inject('clientForOAuth2')
             ->callback($this->action(...));
     }
 
@@ -134,6 +137,7 @@ class Create extends Action
         Authorization $authorization,
         Cache $cache,
         Bus $bus,
+        Client $clientForOAuth2,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -157,7 +161,7 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'Configure a client ID or native client IDs for this provider to accept ID tokens.');
         }
 
-        $claims = (new IdTokenVerifier(new Jwks($cache)))
+        $claims = (new IdTokenVerifier(new Jwks($cache, $clientForOAuth2)))
             ->verify($profile, $idToken, $allowedAudiences, $nonce !== '' ? $nonce : null);
 
         $sub = $claims['sub'];

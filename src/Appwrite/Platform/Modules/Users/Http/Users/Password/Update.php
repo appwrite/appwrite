@@ -15,6 +15,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -86,10 +87,11 @@ class Update extends Action
             }
         }
 
-        $passwordPwned = \strlen($password) === 0 || !($project->getAttribute('auths', [])['passwordPwned']['enabled'] ?? true)
+        $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
+        $passwordPwned = \strlen($password) === 0 || !($pwnedPolicy['enabled'] ?? true)
             ? null
             : !$pwnedPasswords->isValid($password);
-        if ($passwordPwned) {
+        if ($passwordPwned && ($pwnedPolicy['users'] ?? false)) {
             throw new Exception(Exception::USER_PASSWORD_PWNED);
         }
 
@@ -145,13 +147,9 @@ class Update extends Action
             'hashOptions' => $user->getAttribute('hashOptions'),
         ]));
 
-        $sessions = $user->getAttribute('sessions', []);
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
+            User::invalidateAuthentication($dbForProject, $user);
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

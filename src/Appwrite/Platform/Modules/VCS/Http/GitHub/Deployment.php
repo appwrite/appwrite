@@ -98,6 +98,18 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+                if ($resource->isEmpty()) {
+                    Span::add("{$logBase}.build.skipped.reason", 'resource not found');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                // Stale repository rows can outlive a disconnect, so only build for the repository the resource still links to.
+                if ($resource->getAttribute('repositoryId', '') !== $repositoryId) {
+                    Span::add("{$logBase}.build.skipped.reason", 'repository not connected');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
@@ -439,13 +451,23 @@ trait Deployment
                     $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                     // VCS branch preview
+                    $branchDomain = null;
                     if (!empty($providerBranch)) {
-                        $domain = (new BranchDomainFilter())->apply([
-                            'branch' => $providerBranch,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $sitesDomain,
-                        ]);
+                        try {
+                            $branchDomain = (new BranchDomainFilter())->apply([
+                                'branch' => $providerBranch,
+                                'resourceId' => $resource->getId(),
+                                'projectId' => $project->getId(),
+                                'sitesDomain' => $sitesDomain,
+                            ]);
+                        } catch (\InvalidArgumentException $error) {
+                            // Deploy without a branch preview rather than store an unreachable rule
+                            Console::warning('Skipping branch preview rule: ' . $error->getMessage());
+                        }
+                    }
+
+                    if ($branchDomain !== null) {
+                        $domain = $branchDomain;
                         $ruleId = md5($domain);
                         try {
                             $rule = $authorization->skip(

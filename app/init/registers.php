@@ -256,12 +256,7 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis(
-                                    $dsn->getHost(),
-                                    $dsn->getPort(),
-                                    $dsn->getUser() === '' ? null : $dsn->getUser(),
-                                    $dsn->getPassword() === '' ? null : $dsn->getPassword(),
-                                );
+                                $connection = Queue\Connection\Redis::fromDSN($dsn);
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
@@ -334,7 +329,7 @@ $register->set('smtp', function () {
     $size = max(
         1,
         (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1),
-        ((int) ($workers['mails']['maxCoroutines'] ?? 1)) + ((int) ($workers['notifications']['maxCoroutines'] ?? 1)),
+        ((int) ($workers['mails']['coroutines'] ?? 1)) + ((int) ($workers['notifications']['coroutines'] ?? 1)),
     );
 
     return new Pool(

@@ -39,15 +39,20 @@ trait WebhooksBase
     }
 
     /**
-     * Create a probe callback that filters webhooks by event pattern.
+     * Create a probe callback that filters webhooks by event pattern and optional payload key.
      */
-    private function webhookEventProbe(string $eventPattern): callable
+    private function webhookEventProbe(string $eventPattern, ?string $key = null): callable
     {
-        return function (array $request) use ($eventPattern) {
+        return function (array $request) use ($eventPattern, $key) {
             $this->assertStringContainsString(
                 $eventPattern,
                 $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
             );
+
+            // Delivery order is not guaranteed; select the resource inside the probe.
+            if ($key !== null) {
+                $this->assertSame($key, $request['data']['key'] ?? null);
+            }
         };
     }
 
@@ -521,7 +526,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create"));
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create", 'extra'));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -548,7 +553,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update"));
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", 'extra'));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -888,7 +893,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.create"));
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.create", 'extra'));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -915,7 +920,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.update"));
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.update", 'extra'));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');

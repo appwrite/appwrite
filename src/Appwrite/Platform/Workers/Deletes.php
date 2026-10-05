@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
 
@@ -348,6 +350,7 @@ class Deletes extends Action
                 $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -1103,6 +1106,10 @@ class Deletes extends Action
 
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+
+        // Delete photos, including files a racing upload or delete left behind.
+        // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
+        getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())->deletePath(APP_STORAGE_PHOTOS . '/' . $userId . '/');
     }
 
     /**
@@ -1237,6 +1244,7 @@ class Deletes extends Action
             TOKEN_TYPE_GENERIC,
             TOKEN_TYPE_EMAIL,
             TOKEN_TYPE_VERIFICATION_OTP,
+            TOKEN_TYPE_RECOVERY_OTP,
         ];
 
         // Current index is on {`type`, `expire`}
@@ -1578,6 +1586,15 @@ class Deletes extends Action
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
 
+        // A build canceled or deleted before it completed never had its staged
+        // source moved (see Deployments::payload()). Unlinking follows
+        // symlinked parent directories the build could plant, so clean up only
+        // inside the builds tree.
+        $staged = Deployments::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
+
         if (empty($buildPath)) {
             Console::info("No build files for deployment " . $deploymentId);
             return;
@@ -1782,10 +1799,14 @@ class Deletes extends Action
      */
     protected function deleteRule(Database $dbForPlatform, Document $document, Provider $certificates, Bus $bus): void
     {
-        $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
-
         $domain = $document->getAttribute('domain');
-        $certificates->deleteCertificate($domain);
+
+        // A queued deletion can outlive its rule. Leave TLS and routing alone
+        // when the domain has since been recreated.
+        if ($dbForPlatform->findOne('rules', [Query::equal('domain', [$domain])])->isEmpty()) {
+            $bus->dispatch(new RuleDeleted($document->getArrayCopy()));
+            $certificates->deleteCertificate($domain, $document->getAttribute('deploymentResourceType', $document->getAttribute('type')));
+        }
 
         // Delete certificate document, so Appwrite is aware of change
         if (isset($document['certificateId'])) {
@@ -1939,10 +1960,36 @@ class Deletes extends Action
             return;
         }
 
-        $dbForProject->deleteDocuments('transactionLogs', [
-            Query::equal('transactionInternalId', $transactionInternalIds),
+        foreach (\array_chunk($transactionInternalIds, \max(1, $dbForProject->getMaxQueryValues())) as $batch) {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', $batch),
+            ], onError: function (Throwable $th) {
+                // Swallow errors to avoid breaking the cleanup process
+            });
+        }
+    }
+
+    /**
+     * The push ledger (pushLedger) is the append-only record of QoS 1 push
+     * messages the MQTT broker keeps so it can replay any a client missed while offline.
+     * Replay only ever reaches back one week, so entries older than that are dead weight
+     * and are pruned here, mirroring how expired presences are cleaned up.
+     */
+    private function deleteExpiredPushLedger(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired push ledger messages');
+
+        $dbForProject = $getProjectDB($project);
+        if ($dbForProject->getCollection('pushLedger')->isEmpty()) {
+            return;
+        }
+
+        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+
+        $dbForProject->deleteDocuments('pushLedger', [
+            Query::lessThan('$createdAt', $expired),
         ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
+            // Swallow errors (e.g. projects without the push ledger collection).
         });
     }
 
