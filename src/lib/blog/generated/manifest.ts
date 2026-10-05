@@ -4574,6 +4574,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "free-vuejs-hosting",
+    "href": "/blog/post/free-vuejs-hosting",
+    "title": "Free Vue.js hosting with Appwrite Sites - Deploy and scale effortlessly",
+    "description": "Learn how to deploy your Vue.js app for free with Appwrite Sites.",
+    "date": "2025-05-20",
+    "lastUpdated": "2025-05-20",
+    "timeToRead": 6,
+    "author": "eldad-fux",
+    "category": "tutorials",
+    "unlisted": true,
+    "cover": "/images/blog/free-vuejs-hosting/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "hosting-flutter-web",
     "href": "/blog/post/hosting-flutter-web",
     "title": "Announcing hosting for Flutter web: deploy your Flutter web apps with Appwrite",

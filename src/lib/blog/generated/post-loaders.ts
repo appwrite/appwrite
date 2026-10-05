@@ -73,7 +73,6 @@ export const BLOG_POST_LOADERS = import.meta.glob(
     "!/src/content/blog/posts/everyone-can-do-devrel-but-should-they.markdoc",
     "!/src/content/blog/posts/flutter-starter-sites.markdoc",
     "!/src/content/blog/posts/free-remix-hosting.markdoc",
-    "!/src/content/blog/posts/free-vuejs-hosting.markdoc",
     "!/src/content/blog/posts/function-template-prompt-chatgpt.markdoc",
     "!/src/content/blog/posts/function-template-whatsapp-vonage.markdoc",
     "!/src/content/blog/posts/hf-2023-journey.markdoc",

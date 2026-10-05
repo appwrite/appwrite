@@ -71,7 +71,6 @@ export const REMOVED_BLOG_POST_SLUGS: ReadonlySet<string> = new Set([
   "everyone-can-do-devrel-but-should-they",
   "flutter-starter-sites",
   "free-remix-hosting",
-  "free-vuejs-hosting",
   "function-template-prompt-chatgpt",
   "function-template-whatsapp-vonage",
   "hf-2023-journey",
