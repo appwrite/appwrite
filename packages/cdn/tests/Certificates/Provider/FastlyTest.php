@@ -60,7 +60,7 @@ final class FastlyTest extends TestCase
         ], $client->calls[2]['body']);
     }
 
-    public function testIssuedCertificateIsNotActivatedWithoutTlsConfiguration(): void
+    public function testIssuedCertificateWithoutATlsConfigurationIsNotActivated(): void
     {
         $client = new TestClient([
             $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"},"relationships":{"tls_certificates":{"data":[{"id":"cert_1","type":"tls_certificate"}]}}}]}'),

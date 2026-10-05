@@ -32,9 +32,9 @@ class Fastly implements Provider
         string $certificateAuthority = 'certainly',
         ?ClientInterface $client = null,
         private readonly string $apiBase = 'https://api.fastly.com',
-        string $tlsConfigurationId = '',
         private readonly int $deploymentPollAttempts = 10,
         private readonly int $deploymentPollIntervalMilliseconds = 5000,
+        string $tlsConfigurationId = '',
     ) {
         if ($this->deploymentPollAttempts < 1) {
             throw new \InvalidArgumentException('Deployment poll attempts must be at least one.');
@@ -45,9 +45,6 @@ class Fastly implements Provider
         }
 
         $this->client = $client ?? new Client(new CurlAdapter());
-        // An empty TLS configuration id leaves domain management owning the
-        // hostname: the subscription stays unpinned and no activation is created.
-        // Set it to terminate TLS from a configuration instead.
         $this->tls = new FastlyTls(
             apiToken: $this->apiToken,
             tlsConfigurationId: $tlsConfigurationId,

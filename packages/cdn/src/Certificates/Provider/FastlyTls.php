@@ -44,9 +44,6 @@ class FastlyTls implements Provider
             $subscription = $this->retrySubscription($subscription['resource']['id']);
         }
 
-        // A subscription can be issued without a TLS activation. The edge then
-        // keeps serving the shared default certificate and browsers report a
-        // SAN mismatch. Activation is what attaches this certificate.
         $state = $this->subscriptionState($subscription);
         if ($state === Status::ISSUED || $state === Status::RENEWING) {
             $this->ensureActivated($subscription, $domain);
@@ -73,14 +70,13 @@ class FastlyTls implements Provider
 
         $status = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
-        // An issued certificate needs nothing from the domain owner, whatever
-        // an authorization left over from an earlier order still says. It does
-        // need a TLS activation, or the hostname keeps the default certificate.
-        if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
-            if ($status === Status::ISSUED && !$this->ensureActivated($subscription, $domain)) {
-                return Status::PROCESSING;
-            }
+        if ($status === Status::ISSUED && !$this->ensureActivated($subscription, $domain)) {
+            return Status::PROCESSING;
+        }
 
+        // An issued certificate needs nothing from the domain owner, whatever
+        // an authorization left over from an earlier order still says.
+        if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
             return $status;
         }
 
@@ -89,10 +85,6 @@ class FastlyTls implements Provider
         // subscription state alone cannot tell waiting from progress.
         $authorizations = $this->findAuthorizations($subscription, $domain);
         if ($status !== Status::FAILED && !$this->isBlocked($authorizations)) {
-            // Renewing is treated as ready by the caller, so it needs the same
-            // activation guard as issued. A subscription with no certificate
-            // reference at all has no old certificate serving either, so there is
-            // nothing attached and nothing to attach.
             if ($status === Status::RENEWING && !$this->ensureActivated($subscription, $domain)) {
                 return Status::PROCESSING;
             }
@@ -438,26 +430,11 @@ class FastlyTls implements Provider
     }
 
     /**
-     * Make sure every hostname on the subscription terminates TLS with its
-     * certificate on the configured TLS configuration.
-     *
-     * Fastly does not always create this activation when the certificate is
-     * issued, including for a multi-SAN certificate covering the apex and www.
-     * A missing activation leaves the hostname on the shared default
-     * certificate: the certificate is valid and nothing serves it, which reads
-     * to a browser as a SAN mismatch rather than a missing certificate. A
-     * failure here throws, so the caller keeps the domain retryable instead of
-     * reporting it ready.
-     *
-     * No TLS configuration means Fastly domain management owns the hostname, and
-     * there is no activation to create.
+     * Without an activation, the hostname keeps serving the shared default
+     * certificate instead of this one.
      *
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
-     * Fastly can report a subscription issued or renewing slightly before the
-     * certificate appears on it. Callers treat both states as ready, so both have
-     * to honour a false return and report PROCESSING instead.
-     *
-     * @return bool False when the subscription carries no certificate to attach yet.
+     * @return bool False when Fastly reports the subscription issued or renewing before its certificate appears.
      */
     private function ensureActivated(array $subscription, string $domain): bool
     {
@@ -482,18 +459,13 @@ class FastlyTls implements Provider
     }
 
     /**
-     * The certificate that should terminate TLS: the one on the subscription
-     * that expires last, so a renewal attaches the new certificate and not the
-     * one it replaces.
+     * The latest-expiring certificate, so a renewal activates the new one.
      *
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
      */
     private function issuedCertificateId(array $subscription): ?string
     {
         $ids = $this->references($subscription['resource'], 'tls_certificates');
-        if ($ids === []) {
-            return null;
-        }
 
         $bestId = null;
         $bestExpiry = null;
@@ -504,7 +476,7 @@ class FastlyTls implements Provider
 
             $attributes = $included['attributes'] ?? null;
             $notAfter = \is_array($attributes) ? ($attributes['not_after'] ?? null) : null;
-            $expiry = \is_string($notAfter) ? \strtotime($notAfter) : false;
+            $expiry = \is_string($notAfter) ? strtotime($notAfter) : false;
             if ($expiry === false) {
                 continue;
             }
@@ -515,15 +487,13 @@ class FastlyTls implements Provider
             }
         }
 
-        // Without a readable expiry on any of them, the last reference is the
-        // most recently added.
-        return \is_string($bestId) ? $bestId : \array_last($ids);
+        // Without an expiry to compare, the last reference is the newest.
+        return \is_string($bestId) ? $bestId : array_last($ids);
     }
 
     /**
-     * Hostnames the certificate covers. The subscription's own domains come
-     * first, and the hostname being checked is always included, so looking up
-     * the apex still activates www when one certificate covers both.
+     * Every hostname on the subscription, so checking the apex also activates
+     * www when one certificate covers both.
      *
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
      * @return list<string>
@@ -531,53 +501,30 @@ class FastlyTls implements Provider
     private function hostnames(array $subscription, string $domain): array
     {
         $names = [];
-        $seen = [];
-
         foreach ([...$this->references($subscription['resource'], 'tls_domains'), $domain] as $name) {
-            $key = \strtolower($name);
-            if ($key === '' || isset($seen[$key])) {
-                continue;
-            }
-
-            $seen[$key] = true;
-            $names[] = $name;
+            $names[strtolower($name)] ??= $name;
         }
 
-        return $names;
+        return array_values($names);
     }
 
     /**
-     * Ids held by one of the subscription's relationship lists.
-     *
      * @param array<string, mixed> $resource
      * @return list<string>
      */
     private function references(array $resource, string $relationship): array
     {
         $relationships = $resource['relationships'] ?? null;
-        if (!\is_array($relationships)) {
-            return [];
-        }
-
-        $entry = $relationships[$relationship] ?? null;
-        if (!\is_array($entry)) {
-            return [];
-        }
-
-        $data = $entry['data'] ?? null;
+        $entry = \is_array($relationships) ? ($relationships[$relationship] ?? null) : null;
+        $data = \is_array($entry) ? ($entry['data'] ?? null) : null;
         if (!\is_array($data)) {
             return [];
         }
 
         $ids = [];
         foreach ($data as $reference) {
-            if (!\is_array($reference)) {
-                continue;
-            }
-
-            $id = $reference['id'] ?? null;
-            if (\is_string($id) && $id !== '') {
-                $ids[] = $id;
+            if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
+                $ids[] = $reference['id'];
             }
         }
 
@@ -651,18 +598,13 @@ class FastlyTls implements Provider
         ]);
 
         if ($result['statusCode'] === 409) {
-            // A conflict is either a concurrent check that created the same
-            // activation, or a different certificate already holding the
-            // hostname. Only the first is success, so confirm ours is attached
-            // rather than trust the status code.
+            // A conflict is either our own activation, made concurrently, or
+            // another certificate already holding the hostname.
             if ($this->activationExists($certificateId, $hostname)) {
                 return;
             }
 
-            throw new \RuntimeException($this->formatError(
-                'Another certificate already terminates TLS for ' . $hostname,
-                $result,
-            ));
+            throw new \RuntimeException($this->formatError('Another certificate already terminates TLS for ' . $hostname, $result));
         }
 
         if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
