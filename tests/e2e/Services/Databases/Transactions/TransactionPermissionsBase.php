@@ -305,7 +305,7 @@ trait TransactionPermissionsBase
                 $this->assertEquals(400, $response['headers']['status-code']);
                 $this->assertEquals('attribute_type_invalid', $response['body']['type']);
 
-                $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $admin, [
                     'operations' => [[
                         'action' => $operation,
                         'databaseId' => $databaseId,
