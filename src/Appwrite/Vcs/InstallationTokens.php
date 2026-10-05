@@ -17,6 +17,13 @@ class InstallationTokens
      */
     public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
     {
+        // Only personal installations carry OAuth tokens to refresh. An app
+        // installation (a GitHub App, an Origin app) authenticates per request
+        // with an app-signed JWT and may have no OAuth2 client to resolve at all.
+        if (!$installation->getAttribute('personal', false)) {
+            return $installation;
+        }
+
         $provider = $installation->getAttribute('provider', 'github');
 
         return $this->refresh($installation, $dbForPlatform, $vcsFactory->oauth2FromProvider($provider));

@@ -20,14 +20,6 @@ class Client
      */
     public const SCALE = 1.5;
 
-    /**
-     * Navigation budget handed to the browser, in milliseconds. Left unset the
-     * browser applies its own 30s default, which matches the HTTP timeout of
-     * the client calling it, so the browser can never report why it gave up.
-     * Its accepted maximum is 120000.
-     */
-    public const TIMEOUT = 60000;
-
     private Factory $factory;
 
     /**
@@ -52,7 +44,7 @@ class Client
             'theme' => $theme,
             'headers' => $headers,
             'sleep' => $sleep,
-            'timeout' => self::TIMEOUT,
+            'timeout' => 60000,
             'viewport' => [
                 'width' => self::VIEWPORT_WIDTH,
                 'height' => self::VIEWPORT_HEIGHT,

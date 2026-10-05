@@ -81,6 +81,7 @@ class Delete extends Action
 
         $queueForEvents
             ->setParam('databaseId', $database->getId())
+            ->setContext('database', $database)
             ->setPayload($response->output($database, UtopiaResponse::MODEL_DATABASE));
 
         $publisherForDatabase->enqueue(new DatabaseMessage(

@@ -8,7 +8,7 @@ final class StatsResources extends Base
 {
     /**
      * @param Document $project
-     * @param array<int, array{metric: string, value: int}> $gauges
+     * @param array<int, array{metric: string, value: int, service?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, ordinal?: int}> $gauges
      */
     public function __construct(
         public readonly Document $project,

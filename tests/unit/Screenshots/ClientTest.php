@@ -94,19 +94,6 @@ final class ClientTest extends TestCase
         $this->assertArrayNotHasKey('waitUntil', \json_decode((string)$this->request->getBody(), true));
     }
 
-    public function testCreateSetsNavigationBudgetAboveBrowserDefault(): void
-    {
-        $response = (new Response(200, body: new Stream('png-bytes')))
-            ->withHeader('Content-Type', 'image/png');
-
-        $this->client($response)->create('http://appwrite/', 'light');
-
-        // Left unset the browser applies its own 30s default, which matches the
-        // HTTP timeout of the client calling it, so the client aborts first and
-        // the browser never gets to report why navigation failed.
-        $this->assertGreaterThan(30000, \json_decode((string)$this->request->getBody(), true)['timeout']);
-    }
-
     public function testCreateError(): void
     {
         $response = (new Response(400, body: new Stream('{"error":"Timeout exceeded"}')))

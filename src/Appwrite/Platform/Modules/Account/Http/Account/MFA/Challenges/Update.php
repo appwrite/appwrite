@@ -37,6 +37,7 @@ class Update extends Action
             ->desc('Update MFA challenge (confirmation)')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].sessions.[sessionId].create')
             ->label('audits.event', 'challenges.update')
             ->label('audits.resource', 'user/{response.userId}')

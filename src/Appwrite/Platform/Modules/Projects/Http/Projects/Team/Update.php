@@ -7,14 +7,12 @@ use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 
 class Update extends Action
 {
@@ -23,11 +21,6 @@ class Update extends Action
     public static function getName()
     {
         return 'updateProjectTeam';
-    }
-
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
     }
 
     public function __construct()

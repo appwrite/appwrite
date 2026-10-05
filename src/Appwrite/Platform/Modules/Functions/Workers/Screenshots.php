@@ -150,7 +150,8 @@ class Screenshots extends Action
                 'bannerDisabled' => true,
                 'projectCheckDisabled' => true,
                 'previewAuthDisabled' => true,
-                'deploymentStatusIgnored' => true
+                'deploymentStatusIgnored' => true,
+                'runtimeEphemeral' => true,
             ]);
 
             $headers = [
@@ -166,7 +167,7 @@ class Screenshots extends Action
                 $captureStart = \microtime(true);
 
                 $captures[$key] = $screenshots->create(
-                    url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                    url: $routerHost . '/',
                     theme: $theme,
                     headers: $headers,
                     sleep: $sleep,

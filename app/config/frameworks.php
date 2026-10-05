@@ -143,7 +143,7 @@ return [
                 'key' => 'static',
                 'buildCommand' => 'npm run generate',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './output/public',
+                'outputDirectory' => './.output/public',
                 'startCommand' => 'bash helpers/server.sh',
             ]
         ]
@@ -320,6 +320,22 @@ return [
                 'outputDirectory' => './build/web',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
+            ],
+        ],
+    ],
+    'jaspr' => [
+        'key' => 'jaspr',
+        'name' => 'Jaspr',
+        'screenshotSleep' => 3000,
+        'buildRuntime' => 'flutter-3.44',
+        'runtimes' => $templateRuntimes['FLUTTER'],
+        'adapters' => [
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'jaspr build',
+                'installCommand' => 'dart pub get',
+                'outputDirectory' => './build/jaspr',
+                'startCommand' => 'bash helpers/jaspr/server.sh',
             ],
         ],
     ],

@@ -82,7 +82,7 @@ class Create extends Action
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
-            ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, float, boolean, datetime, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
+            ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -258,6 +258,9 @@ class Create extends Action
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
         $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
+        // Reload the collection so its subquery filters include the schema created above.
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument($databaseKey, $collection->getId()));
+
         $queueForEvents
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
@@ -294,16 +297,24 @@ class Create extends Action
             $formatOptions = ['elements' => $attribute['elements']];
         }
 
-        if (isset($attribute['min']) || isset($attribute['max'])) {
+        // The dedicated endpoints store a range on every numeric attribute, falling
+        // back to the full width of the type, so omitting min/max here has to produce
+        // the same document rather than one with no range at all.
+        if (\in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
+            $isFloat = $type === Database::VAR_FLOAT;
+
             $format = match($type) {
                 Database::VAR_INTEGER => APP_DATABASE_ATTRIBUTE_INT_RANGE,
                 Database::VAR_BIGINT => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
+            $min = $attribute['min'] ?? ($isFloat ? -\PHP_FLOAT_MAX : \PHP_INT_MIN);
+            $max = $attribute['max'] ?? ($isFloat ? \PHP_FLOAT_MAX : \PHP_INT_MAX);
+
             $formatOptions = [
-                'min' => $attribute['min'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
-                'max' => $attribute['max'] ?? ($type === Database::VAR_INTEGER || $type === Database::VAR_BIGINT ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
+                'min' => $isFloat ? \floatval($min) : $min,
+                'max' => $isFloat ? \floatval($max) : $max,
             ];
         }
 

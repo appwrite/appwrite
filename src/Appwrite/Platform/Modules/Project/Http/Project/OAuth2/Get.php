@@ -58,6 +58,7 @@ class Get extends Action
                             Response::MODEL_OAUTH2_YANDEX,
                             Response::MODEL_OAUTH2_X,
                             Response::MODEL_OAUTH2_WORDPRESS,
+                            Response::MODEL_OAUTH2_WEBFLOW,
                             Response::MODEL_OAUTH2_TWITCH,
                             Response::MODEL_OAUTH2_STRIPE,
                             Response::MODEL_OAUTH2_SPOTIFY,
@@ -66,6 +67,9 @@ class Get extends Action
                             Response::MODEL_OAUTH2_NOTION,
                             Response::MODEL_OAUTH2_SALESFORCE,
                             Response::MODEL_OAUTH2_YAHOO,
+                            Response::MODEL_OAUTH2_HUGGINGFACE,
+                            Response::MODEL_OAUTH2_RESEND,
+                            Response::MODEL_OAUTH2_CLOUDFLARE,
                             Response::MODEL_OAUTH2_LINKEDIN,
                             Response::MODEL_OAUTH2_DISQUS,
                             Response::MODEL_OAUTH2_AMAZON,
@@ -83,11 +87,13 @@ class Get extends Action
                             Response::MODEL_OAUTH2_OKTA,
                             Response::MODEL_OAUTH2_KICK,
                             Response::MODEL_OAUTH2_MICROSOFT,
+                            Response::MODEL_OAUTH2_TIKTOK,
+                            Response::MODEL_OAUTH2_KAKAO,
                         ],
                     )
                 ]
             ))
-            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified']))
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));

@@ -9,7 +9,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use GraphQL\GraphQL;
 use GraphQL\Type\Definition\NamedType;
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Type\Schema;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\DI\Container;
@@ -37,6 +41,70 @@ final class BuilderTest extends TestCase
         $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertInstanceOf(NamedType::class, $type);
         $this->assertSame('Table', $type->name());
+    }
+
+    #[DataProvider('additionalDataProvider')]
+    public function testSerializeAdditionalData(array $data, string $expected): void
+    {
+        $schema = new Schema([
+            'query' => new ObjectType([
+                'name' => 'Query',
+                'fields' => [
+                    'record' => ['type' => Mapper::model('Any')],
+                ],
+            ]),
+        ]);
+
+        $result = GraphQL::executeQuery($schema, '{ record { data } }', ['record' => $data])->toArray();
+
+        $this->assertArrayNotHasKey('errors', $result);
+        $actual = json_decode($result['data']['record']['data'], false, flags: JSON_THROW_ON_ERROR);
+        $this->assertInstanceOf(\stdClass::class, $actual);
+        $this->assertEquals(json_decode($expected, false, flags: JSON_THROW_ON_ERROR), $actual);
+    }
+
+    public static function additionalDataProvider(): \Iterator
+    {
+        yield 'string array' => [
+            ['tags' => ['first', 'second']],
+            '{"tags":["first","second"]}',
+        ];
+        yield 'empty array' => [
+            ['tags' => []],
+            '{"tags":[]}',
+        ];
+        yield 'numeric and boolean arrays' => [
+            ['numbers' => [0, 1, 2.5], 'flags' => [true, false]],
+            '{"numbers":[0,1,2.5],"flags":[true,false]}',
+        ];
+        yield 'nested arrays and objects' => [
+            [
+                'records' => [['tags' => ['first']], ['tags' => []]],
+                'settings' => (object)['flags' => [true]],
+                'empty' => (object)[],
+            ],
+            '{"records":[{"tags":["first"]},{"tags":[]}],"settings":{"flags":[true]},"empty":{}}',
+        ];
+        yield 'empty data is an object' => [
+            [],
+            '{}',
+        ];
+        yield 'system fields are excluded' => [
+            ['_id' => 'record', '_permissions' => ['read("any")'], 'tags' => ['first']],
+            '{"tags":["first"]}',
+        ];
+        yield 'only system fields' => [
+            ['_id' => 'record'],
+            '{}',
+        ];
+        yield 'numeric attribute names keep outer object' => [
+            [0 => ['first'], 1 => []],
+            '{"0":["first"],"1":[]}',
+        ];
+        yield 'scalar attributes' => [
+            ['name' => 'record', 'count' => 0, 'enabled' => false, 'optional' => null],
+            '{"name":"record","count":0,"enabled":false,"optional":null}',
+        ];
     }
 
     public function testRouteOmitsHiddenParameters(): void

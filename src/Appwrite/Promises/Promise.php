@@ -46,43 +46,6 @@ abstract class Promise
     }
 
     /**
-     * Resolve promise with given value.
-     *
-     * @param mixed $value
-     * @return self
-     */
-    public static function resolve(mixed $value): self
-    {
-        return new static(function (callable $resolve) use ($value) {
-            $resolve($value);
-        });
-    }
-
-    /**
-     * Rejects the promise with the given reason.
-     *
-     * @param mixed $value
-     * @return self
-     */
-    public static function reject(mixed $value): self
-    {
-        return new static(function (callable $resolve, callable $reject) use ($value) {
-            $reject($value);
-        });
-    }
-
-    /**
-     * Catch any exception thrown by the executor.
-     *
-     * @param callable $onRejected
-     * @return self
-     */
-    public function catch(callable $onRejected): self
-    {
-        return $this->then(null, $onRejected);
-    }
-
-    /**
      * Execute the promise.
      *
      * @param callable|null $onFulfilled

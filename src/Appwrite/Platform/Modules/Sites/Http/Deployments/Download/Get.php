@@ -110,7 +110,10 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -120,7 +123,8 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        if (!$device->exists($path)) {
+        // Not every storage device reports an empty path as missing.
+        if ($path === '' || !$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -144,10 +148,13 @@ class Get extends Action
             $unit = $request->getRangeUnit();
 
             if ($end === null) {
-                $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
+                $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            // RFC 9110: a last-byte-pos past the end of the file is clamped, not rejected.
+            $end = min($end, $size - 1);
+
+            if ($unit !== 'bytes' || $start > $end) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 

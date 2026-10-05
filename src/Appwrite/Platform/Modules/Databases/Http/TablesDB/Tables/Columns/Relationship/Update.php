@@ -32,7 +32,8 @@ class Update extends RelationshipUpdate
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key/relationship')
+            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/relationship/:key')
+            ->httpAlias('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key/relationship')
             ->desc('Update relationship column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
@@ -62,7 +63,7 @@ class Update extends RelationshipUpdate
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true)), 'Constraints option', true, enum: new Enum(name: 'RelationMutate'))
+            ], true)), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')

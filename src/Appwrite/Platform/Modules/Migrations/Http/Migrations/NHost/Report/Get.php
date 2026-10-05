@@ -48,14 +48,14 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.', enum: new Enum(name: 'NHostMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.', example: '["user"]', enum: new Enum(name: 'NHostMigrationResource'))
             ->param('subdomain', '', new Text(512), 'Source\'s Subdomain.')
             ->param('region', '', new Text(512), 'Source\'s Region.')
             ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret.')
             ->param('database', '', new Text(512), 'Source\'s Database Name.')
             ->param('username', '', new Text(512), 'Source\'s Database Username.')
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
-            ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
+            ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
             ->callback($this->action(...));
     }

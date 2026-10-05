@@ -87,6 +87,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('plan')
             ->inject('authorization')
             ->inject('locks')
@@ -107,6 +108,7 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Deployments $deployments,
+        int $buildTimeout,
         array $plan,
         Authorization $authorization,
         callable $locks
@@ -176,12 +178,17 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
+            $idValidator = new UID();
+            if (!$idValidator->isValid($deploymentId)) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
+            }
+
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception(Exception::DEPLOYMENT_INVALID_FILE_SIZE);
         }
 
         if (!$upload->isValid($fileTmpName)) {
@@ -273,21 +280,8 @@ class Create extends Action
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->upload(
-            $deviceForLocal->read($fileTmpName),
-            $path,
-            $metadata['content_type'] ?? '',
-            $chunk,
-            $chunks,
-            $metadata
-        );
-
-        if (empty($chunksUploaded)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
-        }
-
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileSize, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -313,6 +307,21 @@ class Create extends Action
                     }
                 }
 
+                // Keep chunk writes and assembly under the same lock so another
+                // request cannot count or assemble a partially written chunk.
+                $chunksUploaded = $deviceForFunctions->upload(
+                    $deviceForLocal->read($fileTmpName),
+                    $path,
+                    $metadata['content_type'] ?? '',
+                    $chunk,
+                    $chunks,
+                    $metadata
+                );
+
+                if (empty($chunksUploaded)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
+                }
+
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
@@ -333,7 +342,7 @@ class Create extends Action
                         'activate' => $activate,
                         'sourceMetadata' => $metadata,
                         'type' => $type,
-                    ]));
+                    ]), $buildTimeout);
                 } else {
                     $deployment = $deployments->upload($function, $deployment->setAttributes([
                         'sourceChunksUploaded' => $chunksUploaded,

@@ -34,7 +34,7 @@ class Update extends DocumentUpdate
             ->desc('Update document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
@@ -47,6 +47,12 @@ class Update extends DocumentUpdate
                 group: $this->getSdkGroup(),
                 name: 'updateDocument',
                 description: '/docs/references/vectorsdb/update-document.md',
+                requestExamples: [
+                    'update' => [
+                        'summary' => 'Update document metadata',
+                        'value' => ['data' => ['metadata' => ['name' => 'Updated document']]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

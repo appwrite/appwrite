@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -80,7 +81,9 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('authorization')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -102,7 +105,9 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Deployments $deployments,
+        int $buildTimeout,
         Authorization $authorization,
+        Bus $bus,
         array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -141,7 +146,8 @@ class Create extends Base
                 deployments: $deployments,
                 platform: $platform,
                 referenceType: $type,
-                reference: $reference
+                reference: $reference,
+                buildTimeout: $buildTimeout
             );
 
             $queueForEvents
@@ -182,6 +188,7 @@ class Create extends Base
                 'type' => 'vcs',
                 'activate' => $activate,
             ]),
+            $buildTimeout,
             $owner,
             $repository,
             $type,
@@ -189,7 +196,7 @@ class Create extends Base
             $rootDirectory,
         );
 
-        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
+        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization, $bus);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
