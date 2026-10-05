@@ -49,6 +49,7 @@ import type { ProductNavItemId } from '@/lib/products/types'
 import {
   getMarketingHomeOgImage,
   getMarketingPageMetaTags,
+  MARKETING_HOMEPAGE_TITLE,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
@@ -247,6 +248,7 @@ export function getHomePageHead() {
     meta: [
       ...getMarketingPageMetaTags({
         pageName: 'Home',
+        title: MARKETING_HOMEPAGE_TITLE,
         description: HOME_COPY.seoDescription,
         ogImage: getMarketingHomeOgImage(),
       }),
