@@ -10,6 +10,7 @@ use Appwrite\Usage\Connection;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Span\Span;
@@ -111,8 +112,11 @@ class StatsResources extends Action
                 }
 
                 Span::add('project.id', $occurrence->id);
-                if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $occurrence->payload)) === false) {
-                    $error = new \RuntimeException('Failed to enqueue');
+                $outcome = $publisherForStatsResources->coalesce(new StatsResourcesMessage(project: $occurrence->payload));
+                if ($outcome === null) {
+                    $error = new \RuntimeException('Usage stats are disabled');
+                } elseif ($outcome === Outcome::Coalesced) {
+                    Span::add('occurrence.skipped', 'waiting');
                 }
             } catch (\Throwable $th) {
                 $error = $th;
