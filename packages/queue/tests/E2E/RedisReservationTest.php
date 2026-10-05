@@ -185,7 +185,7 @@ final class RedisReservationTest extends TestCase
             public array $sizes = [];
             public function execute(string $script, array $keys, array $args): mixed
             {
-                $this->sizes[] = \count($keys) / 7;
+                $this->sizes[] = \count($keys) / 8;
                 // Let other completions arrive while the first request is in flight.
                 \Swoole\Coroutine::sleep(0.01);
                 return parent::execute($script, $keys, $args);

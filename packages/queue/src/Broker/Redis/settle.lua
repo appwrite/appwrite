@@ -1,10 +1,10 @@
 local function settle(KEYS, ARGV)
-    -- KEYS: claim, job, processing, processing counter, outcome counter, failed/dead, owner.
-    -- ARGV: token, pid, operation (commit, reject, release), retained payload ttl.
+    -- KEYS: claim, job, processing, processing counter, outcome counter, failed/dead, owner, marker.
+    -- ARGV: token, pid, operation (commit, reject, release), retained payload ttl, keyed flag.
     if ARGV[3] ~= 'commit' and ARGV[3] ~= 'reject' and ARGV[3] ~= 'release' then
         return redis.error_reply('Invalid queue operation')
     end
-    local types = {'string', 'string', 'list', 'string', 'string', 'list', 'string'}
+    local types = {'string', 'string', 'list', 'string', 'string', 'list', 'string', 'string'}
     for i, kind in ipairs(types) do
         local actual = redis.call('TYPE', KEYS[i]).ok
         if actual ~= 'none' and actual ~= kind then return redis.error_reply('WRONGTYPE queue settlement') end
@@ -18,6 +18,10 @@ local function settle(KEYS, ARGV)
     if ARGV[3] ~= 'commit' and not raw then return redis.error_reply('Queue delivery payload is missing') end
     local removed = redis.call('LREM', KEYS[3], 1, ARGV[2])
     if removed == 0 then return 0 end
+    -- Only the holder frees its key; a newer message may hold it after expiry.
+    if ARGV[5] == '1' and ARGV[3] ~= 'release' and redis.call('GET', KEYS[8]) == ARGV[2] then
+        redis.call('DEL', KEYS[8])
+    end
     redis.call('DEL', KEYS[1], KEYS[7])
     if ARGV[3] == 'release' then
         redis.call('RPUSH', KEYS[6], raw)
@@ -33,11 +37,11 @@ local function settle(KEYS, ARGV)
     return 1
 end
 local results = {}
-for i = 1, #KEYS, 7 do
+for i = 1, #KEYS, 8 do
     local keys, args = {}, {}
-    for j = 0, 6 do keys[j + 1] = KEYS[i + j] end
-    local offset = ((i - 1) / 7) * 4
-    for j = 1, 4 do args[j] = ARGV[offset + j] end
+    for j = 0, 7 do keys[j + 1] = KEYS[i + j] end
+    local offset = ((i - 1) / 8) * 5
+    for j = 1, 5 do args[j] = ARGV[offset + j] end
     local ok, result = pcall(settle, keys, args)
     results[#results + 1] = ok and result or redis.error_reply(result)
 end

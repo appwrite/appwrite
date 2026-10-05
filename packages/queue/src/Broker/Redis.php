@@ -7,10 +7,12 @@ use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Connection;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
+use Utopia\Queue\Publisher\Coalescing;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
-class Redis implements Synchronous, Consumer
+class Redis implements Synchronous, Consumer, Coalescing
 {
     private const int POP_TIMEOUT = 2;
     private const int RECONNECT_BACKOFF_MS = 100;
@@ -210,6 +212,8 @@ class Redis implements Synchronous, Consumer
                 $resolved($index, $result === false ? new \RedisException('Queue settlement failed') : $result);
             }
         });
+        $owner = "{$queue->namespace}.owners.{$queue->name}.{$pid}";
+        $key = $message->getKey();
         $result = $this->settlements[$queue->namespace]->request([[
             "{$queue->namespace}.claims.{$queue->name}.{$pid}",
             "{$queue->namespace}.jobs.{$queue->name}.{$pid}",
@@ -217,8 +221,9 @@ class Redis implements Synchronous, Consumer
             "{$queue->namespace}.stats.{$queue->name}.processing",
             "{$queue->namespace}.stats.{$queue->name}.{$outcome}",
             "{$queue->namespace}.{$list}.{$queue->name}",
-            "{$queue->namespace}.owners.{$queue->name}.{$pid}",
-        ], [$message->getReceipt() ?? '', $pid, $operation, $queue->jobTtl]]);
+            $owner,
+            $key === null ? $owner : $this->marker($queue, $key),
+        ], [$message->getReceipt() ?? '', $pid, $operation, $queue->jobTtl, $key === null ? '' : '1']]);
         if ($result !== 1) {
             throw new \RuntimeException('Queue delivery is no longer owned by this consumer');
         }
@@ -341,6 +346,32 @@ class Redis implements Synchronous, Consumer
         $key = "{$queue->namespace}.queue.{$queue->name}";
 
         return $this->commands->leftPushMany($key, $encoded);
+    }
+
+    public function coalesce(Queue $queue, array $payload, string $key): Outcome
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cannot coalesce with an empty key.');
+        }
+
+        $envelope = $this->envelope($queue, $payload);
+        $envelope['key'] = $key;
+        $result = $this->script($this->commands, 'coalesce', [
+            $this->marker($queue, $key),
+            "{$queue->namespace}.queue.{$queue->name}",
+        ], [$this->codec->encode($envelope), $queue->keyTtl, $envelope['pid']]);
+
+        return match ($result) {
+            1 => Outcome::Published,
+            0 => Outcome::Coalesced,
+            default => throw new \RuntimeException('Queue coalesce failed'),
+        };
+    }
+
+    /** Holds the pending pid; hex stops dotted keys colliding across queues. */
+    private function marker(Queue $queue, string $key): string
+    {
+        return "{$queue->namespace}.pending.{$queue->name}." . bin2hex($key);
     }
 
     /**
@@ -478,12 +509,19 @@ class Redis implements Synchronous, Consumer
 
             $dead = ($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
                 || ($newerThan !== null && $job->getTimestamp() < $now - $newerThan);
+            $coalescing = $job->getKey();
+            $successor = uniqid(more_entropy: true);
             $moved = $this->script($this->commands, 'reclaim', [
                 $ownerKey, "{$queue->namespace}.claims.{$queue->name}.{$pid}",
                 "{$queue->namespace}.jobs.{$queue->name}.{$pid}", $processing,
                 "{$queue->namespace}.stats.{$queue->name}.processing",
                 "{$queue->namespace}." . ($dead ? 'dead' : 'queue') . ".{$queue->name}",
-            ], [\is_string($owner) ? $owner : '', $pid, $dead ? '' : $this->retryPayload($queue, $job), $queue->jobTtl]);
+                $coalescing === null ? $ownerKey : $this->marker($queue, $coalescing),
+            ], [
+                \is_string($owner) ? $owner : '', $pid,
+                $dead ? '' : $this->retryPayload($queue, $job, $successor, $coalescing),
+                $queue->jobTtl, $coalescing === null ? '' : '1', $successor,
+            ]);
             if ($moved && !$dead) {
                 $requeued++;
             } elseif (!$moved) {
@@ -504,18 +542,22 @@ class Redis implements Synchronous, Consumer
      */
     private function requeue(Queue $queue, Message $job): void
     {
-        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->retryPayload($queue, $job));
+        // Rejection freed the key, so the retried copy is published without it.
+        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->retryPayload($queue, $job, uniqid(more_entropy: true)));
     }
 
-    private function retryPayload(Queue $queue, Message $job): string
+    private function retryPayload(Queue $queue, Message $job, string $pid, ?string $key = null): string
     {
         $payload = [
-            'pid' => uniqid(more_entropy: true),
+            'pid' => $pid,
             'queue' => $queue->name,
             'timestamp' => time(),
             'payload' => $job->getPayload(),
             'attempts' => $job->getAttempts() + 1,
         ];
+        if ($key !== null) {
+            $payload['key'] = $key;
+        }
         return $this->codec->encode($payload);
     }
 
