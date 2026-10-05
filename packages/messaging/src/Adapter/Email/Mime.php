@@ -105,7 +105,8 @@ final class Mime
 
     /**
      * The reading a client without markup gets. Stripping tags leaves the
-     * contents of a style block behind, so those go first.
+     * contents of a style block behind, so those go first, and entities
+     * would show up literally, so they are decoded last.
      */
     private static function text(EmailMessage $email): string
     {
@@ -113,8 +114,8 @@ final class Mime
             return $email->getContent();
         }
 
-        return trim(strip_tags(
+        return trim(html_entity_decode(strip_tags(
             preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $email->getContent()) ?? '',
-        ));
+        ), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 }
