@@ -10,6 +10,7 @@ class Message
     protected array $payload;
     protected int $attempts = 0;
     protected ?int $sequence = null;
+    protected ?string $key = null;
     protected bool $terminal = false;
 
     public function __construct(array $array = [])
@@ -24,6 +25,7 @@ class Message
         $this->payload = $array['payload'] ?? [];
         $this->attempts = $array['attempts'] ?? 0;
         $this->sequence = $array['sequence'] ?? null;
+        $this->key = \is_string($array['key'] ?? null) ? $array['key'] : null;
     }
 
     private ?string $receipt = null;
@@ -124,6 +126,12 @@ class Message
         return $this;
     }
 
+    /** The coalescing key this message holds, or null when published without one. */
+    public function getKey(): ?string
+    {
+        return $this->key;
+    }
+
     /**
      * Declare that this message must not be delivered again.
      *
@@ -165,7 +173,7 @@ class Message
 
     public function asArray(): array
     {
-        return [
+        $array = [
             'pid' => $this->pid,
             'queue' => $this->queue,
             'timestamp' => $this->timestamp,
@@ -173,5 +181,11 @@ class Message
             'attempts' => $this->attempts,
             'sequence' => $this->sequence,
         ];
+
+        if ($this->key !== null) {
+            $array['key'] = $this->key;
+        }
+
+        return $array;
     }
 }
