@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Exception\ApiException as OrchestratorApiException;
 use OpenRuntimes\Orchestrator\Exception\ClientException as OrchestratorClientException;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -144,7 +145,7 @@ final class DeploymentsTest extends TestCase
         $this->assertSame(['users.read'], Deployments::scopes($site));
     }
 
-    private function buildPayload(array $vars): array
+    private function buildPayload(array $vars, string $projectId = 'project1'): array
     {
         // Presigned-URL and ephemeral-key signing both run before the
         // variables are assembled, and refuse an empty key.
@@ -153,7 +154,7 @@ final class DeploymentsTest extends TestCase
         $runtimeKey = \array_key_first(Config::getParam('runtimes-v2'));
 
         return ExposedDeployments::submitPayload(
-            new Document(['$id' => 'project1', 'region' => 'default']),
+            new Document(['$id' => $projectId, 'region' => 'default']),
             new Document([
                 '$id' => 'function1',
                 '$collection' => 'functions',
@@ -319,6 +320,98 @@ final class DeploymentsTest extends TestCase
         });
 
         return $database;
+    }
+
+    public function testLocalBuildMountsOnlyTheProjectDirectory(): void
+    {
+        $payload = $this->withLocalBuilds(fn () => $this->buildPayload([]));
+
+        $this->assertCount(1, $payload['volumes']);
+        $this->assertInstanceOf(Volume::class, $payload['volumes'][0]);
+
+        $volume = $payload['volumes'][0];
+        $projectRoot = APP_STORAGE_BUILDS . '/app-project1';
+
+        $this->assertSame('appwrite-builds', $volume->source);
+        $this->assertSame($projectRoot, $volume->path);
+        $this->assertSame('app-project1', $volume->subPath);
+        $this->assertNotSame(APP_STORAGE_BUILDS, $volume->path);
+
+        $serialized = $volume->toArray();
+        $this->assertSame('app-project1', $serialized['subPath']);
+        $this->assertSame($projectRoot, $serialized['path']);
+
+        $this->assertSame(
+            Deployments::outputDirectory('project1', 'deployment1'),
+            $payload['environment']['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']
+        );
+        $this->assertSame(
+            Deployments::outputDirectory('project1', 'deployment1') . '/' . Deployments::artifact(),
+            Deployments::buildPath('project1', 'deployment1')
+        );
+
+        $runtimeKey = \array_key_first(Config::getParam('runtimes-v2'));
+        $image = Config::getParam('runtimes-v2')[$runtimeKey]['image'] ?? '';
+        $this->assertSame(
+            Deployments::cachePath('project1', Deployments::cacheKey('project1', 'function1', $image)),
+            $payload['environment']['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']
+        );
+        $this->assertStringStartsWith($projectRoot . '/', $payload['environment']['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']);
+    }
+
+    public function testLocalBuildMountCannotReachSiblingProject(): void
+    {
+        [$first, $second] = $this->withLocalBuilds(fn () => [
+            $this->buildPayload([], 'project1'),
+            $this->buildPayload([], 'project2'),
+        ]);
+
+        $firstVolume = $first['volumes'][0];
+        $secondVolume = $second['volumes'][0];
+        $sibling = APP_STORAGE_BUILDS . '/app-project2';
+
+        // The previous Local strategy mounted APP_STORAGE_BUILDS, so every
+        // sibling app-{projectId} path was inside the worker. Isolation is
+        // the mount itself: a sibling must not sit under the attached path.
+        $this->assertFalse(\str_starts_with($sibling, \rtrim($firstVolume->path, '/') . '/'));
+        $this->assertSame('app-project1', $firstVolume->subPath);
+        $this->assertSame('app-project2', $secondVolume->subPath);
+        $this->assertNotSame($firstVolume->path, $secondVolume->path);
+        $this->assertStringNotContainsString('project2', (string) $firstVolume->path);
+        $this->assertStringNotContainsString('project2', $firstVolume->subPath);
+        $this->assertSame(
+            Deployments::outputDirectory('project2', 'deployment1'),
+            $second['environment']['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']
+        );
+        $this->assertStringStartsWith($secondVolume->path . '/', $second['environment']['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']);
+        $this->assertSame(
+            Deployments::buildPath('project2', 'deployment1'),
+            Deployments::outputDirectory('project2', 'deployment1') . '/' . Deployments::artifact()
+        );
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $test
+     * @return T
+     */
+    private function withLocalBuilds(callable $test): mixed
+    {
+        $device = \getenv('_APP_STORAGE_DEVICE');
+        $connection = \getenv('_APP_CONNECTIONS_STORAGE');
+        $volume = \getenv('_APP_BUILDS_VOLUME');
+
+        \putenv('_APP_STORAGE_DEVICE=Local');
+        \putenv('_APP_CONNECTIONS_STORAGE=');
+        \putenv('_APP_BUILDS_VOLUME=appwrite-builds');
+
+        try {
+            return $test();
+        } finally {
+            $device === false ? \putenv('_APP_STORAGE_DEVICE') : \putenv('_APP_STORAGE_DEVICE=' . $device);
+            $connection === false ? \putenv('_APP_CONNECTIONS_STORAGE') : \putenv('_APP_CONNECTIONS_STORAGE=' . $connection);
+            $volume === false ? \putenv('_APP_BUILDS_VOLUME') : \putenv('_APP_BUILDS_VOLUME=' . $volume);
+        }
     }
 }
 

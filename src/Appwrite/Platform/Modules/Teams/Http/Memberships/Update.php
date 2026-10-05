@@ -112,7 +112,10 @@ class Update extends Action
             }
         }
 
-        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        // Console organization developer/admin become bare privileged roles when
+        // X-Appwrite-Organization is applied. Those roles must not authorize
+        // membership role changes; only the team owner or an API key may.
+        if (!$isOwner && !$isAppUser && ($project->getId() === 'console' || !$isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
         }
 
