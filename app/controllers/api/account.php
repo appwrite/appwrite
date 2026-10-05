@@ -1109,8 +1109,11 @@ Http::post('/v1/account/sessions/email')
             }
         }
 
-        // Re-hash if not using recommended algo
-        if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
+        // Re-hash if not using recommended algo or its configured costs (read from the hash, not hashOptions)
+        if (
+            $user->getAttribute('hash') !== $proofForPassword->getHash()->getName()
+            || \password_needs_rehash($user->getAttribute('password'), PASSWORD_ARGON2ID, $proofForPassword->getHash()->getOptions())
+        ) {
             $user
                 ->setAttribute('password', $proofForPassword->hash($password))
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())

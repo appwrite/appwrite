@@ -619,8 +619,7 @@ trait UsersBase
         }
 
         foreach ($userIds as $userId) {
-            // Ensure non-argon2 imports were re-hashed to the configured Argon2 costs.
-            // The imported argon2 user already has hash=argon2, so login leaves it unchanged.
+            // Ensure all passwords were re-hashed to the configured Argon2 costs, including the imported argon2i hash
             $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -630,12 +629,6 @@ trait UsersBase
             $this->assertEquals($userId, $response['body']['$id']);
             $this->assertEquals($userId . '@appwrite.io', $response['body']['email']);
             $this->assertEquals('argon2', $response['body']['hash']);
-
-            if ($userId === 'argon2') {
-                $this->assertStringStartsWith('$argon2i$v=19$m=20,t=3,p=2$', $response['body']['password']);
-                continue;
-            }
-
             $this->assertConfiguredArgon2Hash($response['body']);
         }
 
