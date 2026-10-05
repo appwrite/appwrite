@@ -18,9 +18,9 @@ final readonly class Counter
     {
         $definition = $database->silent(fn () => $database->getCollection($collection));
 
-        foreach ($definition->attributes as $declared) {
-            if ($declared->key === $attribute) {
-                return new self(!$declared->array && Attribute::isIntegerType($declared->type));
+        foreach ($definition->getDeclaredAttributes() as $declared) {
+            if ($declared->getKey() === $attribute) {
+                return new self(!$declared->isArray() && Attribute::isIntegerType($declared->getType()));
             }
         }
 

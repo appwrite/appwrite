@@ -128,9 +128,9 @@ class Create extends CollectionAction
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
         $attributes = \array_map(function (Attribute $attribute) use ($dimension) {
-            if ($attribute->key === 'embeddings') {
+            if ($attribute->getKey() === 'embeddings') {
                 $attribute = clone $attribute;
-                $attribute->size = $dimension;
+                $attribute->setAttribute('size', $dimension);
             }
             return $attribute;
         }, $collections['defaultAttributes']);
@@ -164,49 +164,47 @@ class Create extends CollectionAction
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
             ));
-            // Create attribute and indexes metadata documents in the attributes and indexes collections
-            // needed for the get and list calls
-            $attributeDocs = array_map(function (Attribute $attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {
+            $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId, $dimension) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attributeConfig->key),
-                    'key' => $attributeConfig->key,
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->getKey()),
+                    'key' => $attribute->getKey(),
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $attributeConfig->type->value,
+                    'type' => $attribute->getType()->value,
                     'status' => 'available',
                     'size' => $dimension,
-                    'required' => $attributeConfig->required,
-                    'signed' => $attributeConfig->signed,
-                    'default' => $attributeConfig->default,
-                    'array' => $attributeConfig->array,
-                    'format' => $attributeConfig->format ?? '',
-                    'formatOptions' => $attributeConfig->formatOptions,
-                    'filters' => $attributeConfig->filters,
-                    'options' => $attributeConfig->options ?? [],
+                    'required' => $attribute->isRequired(),
+                    'signed' => $attribute->isSigned(),
+                    'default' => $attribute->getDefault(),
+                    'array' => $attribute->isArray(),
+                    'format' => $attribute->getFormat() ?? '',
+                    'formatOptions' => $attribute->getFormatOptions(),
+                    'filters' => $attribute->getFilters(),
+                    'options' => $attribute->getOptions() ?? [],
                 ]);
             }, $collections['defaultAttributes']);
-            $dbForProject->createDocuments('attributes', $attributeDocs);
+            $dbForProject->createDocuments('attributes', $attributeDocuments);
 
-            $indexDocs = array_map(function (Index $indexConfig) use ($database, $collection, $databaseId, $collectionId) {
+            $indexDocuments = \array_map(function (Index $index) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $indexConfig->key),
-                    'key' => $indexConfig->key,
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $index->getKey()),
+                    'key' => $index->getKey(),
                     'status' => 'available',
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $indexConfig->type->value,
-                    'attributes' => $indexConfig->attributes,
-                    'lengths' => $indexConfig->lengths,
-                    'orders' => $indexConfig->orders,
+                    'type' => $index->getType()->value,
+                    'attributes' => $index->getIndexedAttributes(),
+                    'lengths' => $index->getLengths(),
+                    'orders' => $index->getOrders(),
                 ]);
             }, $collections['defaultIndexes']);
 
-            if (!empty($indexDocs)) {
-                $dbForProject->createDocuments('indexes', $indexDocs);
+            if (!empty($indexDocuments)) {
+                $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());

@@ -14,6 +14,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Index;
 use Utopia\Database\PDO;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -318,7 +319,7 @@ abstract class Migration
 
         $attributesToCreate = [];
         $attributes = $collection['attributes'];
-        $attributeKeys = \array_map(fn ($a) => $a->key, $collection['attributes']);
+        $attributeKeys = \array_map(fn (Attribute $attribute) => $attribute->getKey(), $collection['attributes']);
 
         $database->purgeCachedCollection($collectionId);
 
@@ -329,7 +330,7 @@ abstract class Migration
 
         foreach ($attributeIds as $attributeId) {
             if (\in_array($attributeId, $existingIds, true)) {
-                Console::warning("Skipping attribute \"{$attributeId}\" in collection {$collectionId}: Attribute already exists");
+                Console::warning('Skipping attribute "' . $attributeId . '" in collection ' . $collectionId . ': Attribute already exists');
                 continue;
             }
 
@@ -341,8 +342,8 @@ abstract class Migration
 
             $attribute = clone $attributes[$attributeKey];
 
-            if (\in_array('json', $attribute->filters) && $attribute->default !== null) {
-                $attribute->default = \json_encode($attribute->default);
+            if (\in_array('json', $attribute->getFilters()) && $attribute->getDefault() !== null) {
+                $attribute->setAttribute('default', \json_encode($attribute->getDefault()));
             }
 
             $attributesToCreate[] = $attribute;
@@ -365,7 +366,7 @@ abstract class Migration
                         attribute: $attribute,
                     );
                 } catch (Duplicate) {
-                    Console::warning("Skipping attribute \"{$attribute->key}\" in collection {$collectionId}: Attribute already exists");
+                    Console::warning('Skipping attribute "' . $attribute->getKey() . '" in collection ' . $collectionId . ': Attribute already exists');
                 }
             }
         }
@@ -411,7 +412,7 @@ abstract class Migration
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = \array_search($attributeId, \array_map(fn ($a) => $a->key, $attributes));
+        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute) => $attribute->getKey(), $attributes));
 
         if ($attributeKey === false) {
             throw new Exception("Attribute {$attributeId} not found");
@@ -419,8 +420,8 @@ abstract class Migration
 
         $attribute = clone $attributes[$attributeKey];
 
-        if (\in_array('json', $attribute->filters) && $attribute->default !== null) {
-            $attribute->default = \json_encode($attribute->default);
+        if (\in_array('json', $attribute->getFilters()) && $attribute->getDefault() !== null) {
+            $attribute->setAttribute('default', \json_encode($attribute->getDefault()));
         }
 
         $database->createAttribute(
@@ -462,7 +463,7 @@ abstract class Migration
 
         $indexes = $collection['indexes'];
 
-        $indexKey = \array_search($indexId, \array_map(fn ($i) => $i->key, $indexes));
+        $indexKey = \array_search($indexId, \array_map(fn (Index $index) => $index->getKey(), $indexes));
 
         if ($indexKey === false) {
             throw new Exception("Index {$indexId} not found");

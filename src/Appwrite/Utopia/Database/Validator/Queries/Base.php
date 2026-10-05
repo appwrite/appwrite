@@ -47,7 +47,7 @@ class Base extends Queries
 
             $allAttributes[] = $document;
 
-            if (isset($allowedAttributesLookup[$attribute->key])) {
+            if (isset($allowedAttributesLookup[$attribute->getKey()])) {
                 $attributes[] = $document;
             }
         }

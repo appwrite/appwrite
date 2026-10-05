@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
@@ -222,6 +223,62 @@ final class CounterTest extends TestCase
         ]);
 
         $this->assertSame($maximum, Counter::from($collection, $attribute)->maximum(10.5));
+    }
+
+    public function testCountingADefinitionReadsNoMagicProperties(): void
+    {
+        $reads = new \ArrayObject();
+        $attribute = static fn (string $key, ColumnType $type, bool $array = false): Attribute => new class ($reads, $key, $type, $array) extends Attribute {
+            /**
+             * @param \ArrayObject<int, string> $reads
+             */
+            public function __construct(private readonly \ArrayObject $reads, string $key, ColumnType $type, bool $array)
+            {
+                parent::__construct($key, $type, array: $array);
+            }
+
+            public function __get(string $name): mixed
+            {
+                $this->reads->append('attribute.' . $name);
+
+                return parent::__get($name);
+            }
+        };
+        $definition = new class ($reads, self::COLLECTION, [$attribute('ratio', ColumnType::Double), $attribute('scores', ColumnType::Integer, true), $attribute('count', ColumnType::Integer)]) extends Collection {
+            /**
+             * @param \ArrayObject<int, string> $reads
+             * @param array<Attribute> $attributes
+             */
+            public function __construct(private readonly \ArrayObject $reads, string $id, array $attributes)
+            {
+                parent::__construct(id: $id, attributes: $attributes);
+            }
+
+            public function __get(string $name): mixed
+            {
+                $this->reads->append('collection.' . $name);
+
+                return parent::__get($name);
+            }
+        };
+        $database = new class (new Memory(), new Cache(new None()), $definition) extends Database {
+            public function __construct(Adapter $adapter, Cache $cache, private readonly Collection $definition)
+            {
+                parent::__construct($adapter, $cache);
+            }
+
+            public function getCollection(string $id): Collection
+            {
+                return $this->definition;
+            }
+        };
+
+        $integer = Counter::of($database, self::COLLECTION, 'count');
+        $array = Counter::of($database, self::COLLECTION, 'scores');
+
+        $this->assertSame([], $reads->getArrayCopy());
+        $this->assertSame(10, $integer->maximum(10.5));
+        $this->assertEqualsWithDelta(10.5, $array->maximum(10.5), PHP_FLOAT_EPSILON);
     }
 
     public function testAFractionalChangeValueOnAnIntegerIsRefusedAsAnInvalidArgument(): void
