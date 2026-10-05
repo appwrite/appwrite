@@ -12,9 +12,12 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Utopia\Client\Adapter;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Exception\AdapterInitializationException;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\InvalidResponseException;
 use Utopia\Client\Exception\InvalidUriException;
@@ -38,13 +41,19 @@ class Client implements Adapter
 
     private const float DEFAULT_TIMEOUT = 30.0;
 
+    private const int TEMP_MEMORY = 2 * 1024 * 1024;
+
     private readonly ResponseBuilder $responseBuilder;
 
     private bool $reuseConnections = false;
 
     private bool $followRedirects = false;
 
+    private int $maxHops = Redirect::MAX_HOPS;
+
     private ?CurlHandle $handle = null;
+
+    private Destinations $destinations;
 
     /**
      * Native cURL options. Values override adapter defaults when keys overlap.
@@ -62,12 +71,21 @@ class Client implements Adapter
         ];
 
         $this->responseBuilder = new ResponseBuilder($responseFactory, $streamFactory);
+        $this->destinations = new Anywhere();
     }
 
     public function __clone(): void
     {
         // Clones get their own handle and connection cache.
         $this->handle = null;
+    }
+
+    public function withDestinations(Destinations $destinations): static
+    {
+        $clone = clone $this;
+        $clone->destinations = $destinations;
+
+        return $clone;
     }
 
     public function withTimeout(float $seconds): static
@@ -137,10 +155,15 @@ class Client implements Adapter
         return $clone;
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
+        if ($maxHops < 0) {
+            throw new ValueError('Redirect hop limit must be greater than or equal to zero.');
+        }
+
         $clone = clone $this;
         $clone->followRedirects = $enabled;
+        $clone->maxHops = $maxHops;
 
         return $clone;
     }
@@ -211,8 +234,9 @@ class Client implements Adapter
         $decompress = !$request->hasHeader(Header::ACCEPT_ENCODING);
 
         $headers = '';
+        $refused = null;
         $handle = $this->handle($request);
-        $options = $this->options($request, $headers, $sink, $decompress);
+        $options = $this->options($request, $headers, $refused, $sink, $decompress);
 
         try {
             if (curl_setopt_array($handle, $options) === false) {
@@ -227,6 +251,10 @@ class Client implements Adapter
         if ($result === false) {
             $message = curl_error($handle);
             $code = curl_errno($handle);
+
+            if ($refused !== null) {
+                throw new DestinationException($request, "Connection to {$refused} refused: not an allowed destination.", $code);
+            }
 
             throw $this->networkException($request, $message === '' ? 'Curl request failed.' : $message, $code);
         }
@@ -281,7 +309,7 @@ class Client implements Adapter
      *
      * @return array<int, mixed>
      */
-    private function options(RequestInterface $request, string &$headers, callable $sink, bool $decompress): array
+    private function options(RequestInterface $request, string &$headers, ?string &$refused, callable $sink, bool $decompress): array
     {
         $options = [
             \CURLOPT_URL => (string) $request->getUri(),
@@ -311,7 +339,22 @@ class Client implements Adapter
         // Stream the body through a read callback so it is never fully held in
         // memory. cURL pulls it in chunks; we hand it the size when known so the
         // request carries Content-Length, and fall back to chunked otherwise.
-        if ($size !== 0) {
+        if ($size !== null && $size !== 0 && $size <= self::TEMP_MEMORY && \in_array($body->getMetadata('uri'), ['php://temp', 'php://memory'], true)) {
+            // cURL keeps a copy of POSTFIELDS, so 307/308 redirects can resend it
+            $options[\CURLOPT_POSTFIELDS] = (string) $body;
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
+        } elseif ($size === 0 && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+            // Forced HTTP/1.1 sends no length for an empty body, and origins such
+            // as Google's OAuth token endpoint refuse that with 411.
+            $options[\CURLOPT_POSTFIELDS] = '';
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
+        } elseif ($size !== 0) {
             if ($body->isSeekable()) {
                 $body->rewind();
             }
@@ -341,8 +384,28 @@ class Client implements Adapter
         $merged[\CURLOPT_FORBID_REUSE] = !$this->reuseConnections;
         $merged[\CURLOPT_FOLLOWLOCATION] = $this->followRedirects;
 
+        // Checked once connected, before anything is sent, against the address curl
+        // actually connected to: every connection and every redirect hop. Authoritative
+        // like the options above, so a constructor option cannot replace it.
+        $destinations = $this->destinations;
+        $merged[\CURLOPT_PREREQFUNCTION] = static function (CurlHandle $handle, string $address) use ($destinations, &$refused): int {
+            if ($destinations->allows($address)) {
+                return \CURL_PREREQFUNC_OK;
+            }
+
+            $refused = $address;
+
+            return \CURL_PREREQFUNC_ABORT;
+        };
+
+        // Through a proxy the connected address is the proxy's, so ignore any the
+        // environment configures unless the destination permits them.
+        if (!$this->destinations->permitsProxy()) {
+            $merged[\CURLOPT_PROXY] = '';
+        }
+
         if ($this->followRedirects) {
-            $merged[\CURLOPT_MAXREDIRS] = Redirect::MAX_HOPS;
+            $merged[\CURLOPT_MAXREDIRS] = $this->maxHops;
         }
 
         return $merged;

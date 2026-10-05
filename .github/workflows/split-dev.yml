@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   split-dev:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Refuse main
         if: github.ref_name == 'main'

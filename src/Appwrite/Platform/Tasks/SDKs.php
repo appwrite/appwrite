@@ -325,10 +325,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
-                            $config->setBowerPackage('@appwrite.io/console');
                         } else {
                             $config->setNPMPackage('appwrite');
-                            $config->setBowerPackage('appwrite');
                         }
                         break;
                     case 'cli':
@@ -360,7 +358,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'nodejs':
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
-                        $config->setBowerPackage('appwrite');
                         $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
                             If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
@@ -468,17 +465,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])
-                    ->setPlatform($key)
+                    ->setPlatform($language['family'])
                     ->setGitURL($language['url'])
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
                     ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
-                    ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
-                    ->setShareURL('http://appwrite.io')
-                    ->setShareTags('JS,javascript,reactjs,angular,ios,android,serverless')
-                    ->setShareVia('appwrite')
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setGettingStarted($gettingStarted)
@@ -623,7 +616,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
 
             if ($hasBranch) {
-                $repo->execute('checkout', '-f', $gitBranch);
+                // Squash merges leave the target branch diverged, so start from the base and keep the target as a parent for a fast-forward push
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('checkout', '-f', '-B', $gitBranch, 'FETCH_HEAD');
+                $repo->execute('merge', '--quiet', '-s', 'ours', '--allow-unrelated-histories', '--no-edit', 'origin/' . $gitBranch);
             } else {
                 // Fetch base branch to create the target branch from it
                 try {
@@ -664,12 +660,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // Stage, commit, push
             $repo->addAllChanges();
 
-            try {
+            if ($repo->hasChanges()) {
                 $repo->commit($commitMessage);
-            } catch (\Throwable $e) {
-                // Exit code 1 (256 in PHP) = nothing to commit
+            } else {
                 Console::log('  No changes to commit, SDK is up to date');
-                return true;
+                if (!$hasBranch) {
+                    return true;
+                }
             }
 
             $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');

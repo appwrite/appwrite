@@ -1,0 +1,163 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Binary operation "\." between string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Cannot access offset ''sec\-websocket\-key'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Cannot access offset ''sec\-websocket\-protocol'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Parameter \#1 \$connection of method Utopia\\Mqtt\\Adapter\\Swoole\:\:close\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Property Utopia\\Mqtt\\Adapter\\Swoole\:\:\$stream \(array\<int, string\>\) does not accept array\<string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Adapter/Swoole.php
+
+		-
+			message: '#^Method Utopia\\Mqtt\\Client\:\:receive\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Part \$this\-\>client\-\>errCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Part \$this\-\>client\-\>errMsg \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Packet.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Packet.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 7
+			path: src/Packet/Specs/V3.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 9
+			path: src/Packet/Specs/V5.php
+
+		-
+			message: '#^Method Utopia\\Mqtt\\Properties\:\:user\(\) should return array\<string, string\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Properties.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 8
+			path: src/Property.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Property.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Property.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\)\: mixed\)\|null, ''chr'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, 128\|int\<min, 2\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Server.php
+
+		-
+			message: '#^Offset ''cursor'' might not exist on array\{topic\: string, sequence\: int, cursor\: int\}\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 7
+			path: tests/ConnectionTest.php
+
+		-
+			message: '#^Offset ''topic'' might not exist on array\{topic\: string, sequence\: int, cursor\: int\}\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/ConnectionTest.php
+
+		-
+			message: '#^Method Utopia\\Mqtt\\Tests\\DisconnectTest\:\:onWire\(\) should return array\{code\: int, reason\: string\|null\} but returns array\{code\: int\<0, 255\>, reason\: mixed\}\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/DisconnectTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\Mqtt\\Packet\:\:parse\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 19
+			path: tests/E2E/AdapterTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/E2E/WebSocketAdapterTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/Fixtures/Swoole/server.php
+
+		-
+			message: '#^Method Utopia\\Mqtt\\Tests\\PacketTest\:\:lengthProvider\(\) should return array\<string, array\{int\}\> but returns array\{0\: array\{0\}, 127\: array\{127\}, 128\: array\{128\}, 16383\: array\{16383\}, 16384\: array\{16384\}, 2097151\: array\{2097151\}, 2097152\: array\{2097152\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/PacketTest.php
+
+		-
+			message: '#^Offset ''prefix'' might not exist on array\{prefix\: string, userId\: string, subs\: array\<string, int\>\}\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: tests/Subscription/StoreTest.php

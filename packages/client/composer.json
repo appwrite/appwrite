@@ -15,10 +15,7 @@
     "autoload": {
         "psr-4": {
             "Utopia\\Client\\": "src/"
-        },
-        "files": [
-            "src/compat.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {

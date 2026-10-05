@@ -34,6 +34,11 @@ class Handler implements MqttHandler
 {
     private const REPLAY_TTL = 3600;
 
+    // The reserved per-user topic namespace. `users/<userId>` is an implicit topic owned by that
+    // user alone: it needs no topics document (the publisher auto-provisions one) and a client may
+    // subscribe only to its own. Wildcards under it are refused so they can't span other users.
+    private const USER_TOPIC_PREFIX = 'users';
+
     public function __construct(
         private readonly Container $container,
         private readonly Mqtt $mqtt,
@@ -59,7 +64,8 @@ class Handler implements MqttHandler
 
         if ($identity === []) {
             Span::add('mqtt.result', 'rejected');
-            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED);
+            $this->mqtt->connectRefused->add(1, ['reason' => 'not_authorized']);
+            return $this->refuseConnect(Connack::NOT_AUTHORIZED, Exception::USER_UNAUTHORIZED, $authMethod);
         }
 
         $connection->identity = $identity;
@@ -73,7 +79,8 @@ class Handler implements MqttHandler
 
             if ((new Abuse($timeLimit))->check()) {
                 Span::add('mqtt.result', 'abuse');
-                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+                $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
+                return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
         }
 
@@ -86,20 +93,39 @@ class Handler implements MqttHandler
         $connection->setClientId($clientId);
         Span::add('mqtt.client_id', $connection->getClientId());
 
-        return Connack::accept();
+        $this->mqtt->recordConnection($connection->prefix);
+
+        return Connack::accept(properties: $this->connackProperties($authMethod));
     }
 
     /**
-     * Refuse a CONNECT with an MQTT reason code and, on MQTT 5.0, the matching Appwrite error
-     * message as the Reason String (property 0x1F) so clients learn why — the same messages the
-     * realtime endpoint returns. 3.1.1 clients only get the reason code; the string is dropped.
+     * Refuse a CONNECT with an MQTT reason code, echoing the enhanced-auth method (see
+     * connackProperties) and carrying the matching Appwrite error message as the Reason String.
      */
-    private function refuseConnect(int $reasonCode, string $error): Connack
+    private function refuseConnect(int $reasonCode, string $error, string $authMethod): Connack
+    {
+        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error));
+    }
+
+    /**
+     * CONNACK properties for a connection. MQTT 5.0 (§3.2.2.3.10) requires the server to echo the
+     * CONNECT's Authentication Method on the CONNACK for enhanced auth, or strict clients (e.g.
+     * HiveMQ) reject it with "Auth method in CONNACK must be present". A refusal also carries the
+     * Appwrite error message as the Reason String (0x1F). Returns null when there is nothing to add.
+     */
+    private function connackProperties(string $authMethod, ?string $error = null): ?Properties
     {
         $properties = new Properties();
-        $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
 
-        return Connack::refuse($reasonCode, $properties);
+        if ($authMethod !== '') {
+            $properties->add(new Property(Property::AUTHENTICATION_METHOD, $authMethod));
+        }
+
+        if ($error !== null) {
+            $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+        }
+
+        return $properties->all() === [] ? null : $properties;
     }
 
     public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
@@ -145,15 +171,18 @@ class Handler implements MqttHandler
         }
 
         $projectDB = $this->getProjectDB($connection->prefix);
+        $userId = $connection->identity['userId'] ?? '';
 
-        // Subscription is open: a permitted connection may subscribe to any topic or wildcard. The
-        // topic document is consulted only to cap the QoS and to enable offline replay for an exact
-        // topic name — never to allow or deny the subscription.
+        // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
+        // a filter that could reach the reserved users/ namespace, which is ownership-gated (see
+        // deniesUserTopic); a wildcard first level is refused for that reason. The topic
+        // document is consulted only to cap the QoS and to enable offline replay for an exact name.
         $names = [];
         foreach ($subscribe->filters() as $filter) {
-            if (!$this->isWildcard($filter->topic)) {
-                $names[$filter->topic] = true;
+            if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
+                continue;
             }
+            $names[$filter->topic] = true;
         }
 
         $authorization = new Authorization();
@@ -174,6 +203,13 @@ class Handler implements MqttHandler
 
         foreach ($subscribe->filters() as $filter) {
             Span::add('mqtt.topic', $filter->topic);
+
+            // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
+            // users/<id> falls through and is served like any exact topic name below.
+            if ($this->deniesUserTopic($filter->topic, $userId)) {
+                $suback->deny();
+                continue;
+            }
 
             $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
@@ -219,17 +255,34 @@ class Handler implements MqttHandler
     /**
      * Fan a message out to a topic's local subscribers, each at the QoS granted to that
      * subscription (clamped by the message QoS). Returns the number delivered.
+     *
+     * A reserved users/<id> topic reaches only that user's connections, whatever filter matched:
+     * the subscribe gate is the first line, this holds even for a subscription it did not catch.
      */
-    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence): int
+    public function deliver(Server $server, string $projectId, string $topic, string $message, int $qos, int $sequence, float $publishedAt = 0.0): int
     {
+        $segments = \explode('/', $topic);
+        $owner = \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX ? $segments[1] : null;
+
+        // publish (worker) -> deliver (broker) latency; clamped as the two clocks may differ slightly.
+        if ($publishedAt > 0.0) {
+            $this->mqtt->deliveryLatency->record(\max(0.0, \microtime(true) - $publishedAt));
+        }
+
         $delivered = 0;
 
         foreach ($server->subscribers($projectId, $topic) as [$connection, $grantedQos]) {
+            if ($owner !== null && ($connection->identity['userId'] ?? '') !== $owner) {
+                continue;
+            }
+
             $deliveryQos = min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
             $delivered++;
         }
+
+        $this->mqtt->recordDeliveries($projectId, $delivered);
 
         return $delivered;
     }
@@ -259,9 +312,9 @@ class Handler implements MqttHandler
 
     public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
     {
-        // The broker already removed the connection, its subscriptions and keep-alive slot, and
-        // records the active-connections gauge itself. Record the connection lifetime for
-        // accepted sessions.
+        // The broker already removed the connection, its subscriptions and keep-alive slot, and owns
+        // the connections.active gauge. Record the lifetime of accepted sessions (identity set in
+        // onConnect) only, which also have an openedAt.
         if (($connection->identity['userId'] ?? '') !== '') {
             $this->mqtt->connectionDuration->record(microtime(true) - $connection->openedAt);
         }
@@ -271,6 +324,33 @@ class Handler implements MqttHandler
     private function isWildcard(string $topic): bool
     {
         return \str_contains($topic, '+') || \str_contains($topic, '#');
+    }
+
+    /**
+     * Whether a filter that could reach the reserved users/ namespace must be refused: a wildcard
+     * first level (# or +, which the broker matches against users/<id> like any other first level),
+     * any wildcard under users/ (so it can't span other users), or an exact users/<id> that is not
+     * the caller's own. An owned users/<id> is allowed (served like any exact topic), and a deeper
+     * users/<id>/… path is an ordinary topic, not a reserved one.
+     */
+    private function deniesUserTopic(string $topic, string $userId): bool
+    {
+        $first = \explode('/', $topic, 2)[0];
+        if ($first === '#' || $first === '+') {
+            return true;
+        }
+
+        if (!\str_starts_with($topic, self::USER_TOPIC_PREFIX . '/')) {
+            return false;
+        }
+
+        if ($this->isWildcard($topic)) {
+            return true;
+        }
+
+        $segments = \explode('/', $topic);
+
+        return \count($segments) === 2 && $segments[1] !== $userId;
     }
 
     /**
@@ -310,6 +390,7 @@ class Handler implements MqttHandler
                 continue;
             }
 
+            $this->mqtt->replayBacklog->record($tail - $from);
             $connection->resume($filter, $from);
 
             $start = max($from + 1, $tail - $maxDepth + 1);
@@ -320,11 +401,18 @@ class Handler implements MqttHandler
                 Query::limit($maxDepth),
             ]));
 
+            $replayed = 0;
             foreach ($messages as $message) {
                 $stored = $message->getAttribute('data');
                 $data = \is_string($stored) ? $stored : (string) json_encode($stored);
                 $connection->publish($filter, $data, qos: 1, dup: true, sequence: (int) $message->getAttribute('sequence'));
+                $this->mqtt->messagesDelivered->add(1, ['qos' => 1]);
+                $replayed++;
             }
+
+            // Offline-replay re-deliveries are real deliveries: account for them in per-project usage
+            // too, so a device catching up after reconnect is not undercounted.
+            $this->mqtt->recordDeliveries($connection->prefix, $replayed);
         }
 
         if ($persist !== []) {

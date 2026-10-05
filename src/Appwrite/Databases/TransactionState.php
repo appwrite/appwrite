@@ -2,6 +2,7 @@
 
 namespace Appwrite\Databases;
 
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
@@ -25,12 +26,14 @@ class TransactionState
      * @var callable(Document $database): Database
      */
     private mixed $getDatabasesDB;
+    private User $user;
 
-    public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB)
+    public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB, User $user)
     {
         $this->dbForProject = $dbForProject;
         $this->authorization = $authorization;
         $this->getDatabasesDB = $getDatabasesDB;
+        $this->user = $user;
     }
 
 
@@ -338,7 +341,12 @@ class TransactionState
      */
     private function getTransactionState(string $transactionId): array
     {
-        $transaction = $this->authorization->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
+        $roles = $this->authorization->getRoles();
+
+        // Staged operations are only visible to the transaction owner, API keys and privileged users.
+        $transaction = ($this->user->isKey($roles) || $this->user->isPrivileged($roles))
+            ? $this->authorization->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId))
+            : $this->dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty() || $transaction->getAttribute('status') !== 'pending') {
             return [];
         }

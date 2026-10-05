@@ -228,6 +228,7 @@ final class AppwriteTest extends TestCase
         $this->assertSame('India vs Australia', $payload['notification']['body']);
         $this->assertSame(['matchId' => '42'], $payload['data']);
         $this->assertSame('high', $payload['priority']);
+        $this->assertSame('msg-1', $payload['messageId']);
     }
 
     public function testSequenceAdvancesPerPublish(): void
@@ -285,6 +286,40 @@ final class AppwriteTest extends TestCase
         }
         $this->assertSame(6, $sequenceByTopic['topic-1']);
         $this->assertSame(1, $sequenceByTopic['topic-2']);
+    }
+
+    public function testUserAddressedPushIsDelivered(): void
+    {
+        // A user target (users/<id>) needs no pre-created topic and is delivered on that channel
+        // with the notification payload intact.
+        $broker = new FakeBroker();
+
+        $response = $this->adapter($broker)->send(new Push(
+            to: ['users/user-1'],
+            title: 'Hi',
+            body: 'Hello',
+        ));
+
+        $this->assertSame(1, $response['deliveredTo']);
+        $this->assertSame('success', $response['results'][0]['status']);
+        $this->assertSame('users/user-1', $broker->published[0]['channels'][0]);
+        $payload = \json_decode($broker->published[0]['options']['payload'], true);
+        $this->assertSame('Hello', $payload['notification']['body']);
+    }
+
+    public function testRepeatedUserPushesRemainDeliverable(): void
+    {
+        // Sending to the same user again still delivers on its channel (the implicit topic persists
+        // across campaigns without being re-created by the caller).
+        $broker = new FakeBroker();
+
+        $first = $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['users/user-1'], title: 'first'));
+        $second = $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['users/user-1'], title: 'second'));
+
+        $this->assertSame(1, $first['deliveredTo']);
+        $this->assertSame(1, $second['deliveredTo']);
+        $this->assertSame('users/user-1', $broker->published[0]['channels'][0]);
+        $this->assertSame('users/user-1', $broker->published[1]['channels'][0]);
     }
 
     public function testUnknownTopicFailsWithoutSinkingOthers(): void
