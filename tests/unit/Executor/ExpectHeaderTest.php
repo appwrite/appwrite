@@ -9,12 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Large POST bodies make libcurl add Expect: 100-continue and wait up to 1s when
- * the peer never answers 100. Executor::call() must send an empty Expect header
- * so that handshake is skipped.
+ * the peer never answers 100. Executor::call() must suppress that handshake.
  */
 final class ExpectHeaderTest extends TestCase
 {
-    public function testCreateExecutionSendsEmptyExpectOnLargeBodies(): void
+    public function testCreateExecutionSkips100ContinueOnLargeBodies(): void
     {
         if (!\function_exists('pcntl_fork')) {
             $this->markTestSkipped('pcntl_fork required');
@@ -48,10 +47,12 @@ final class ExpectHeaderTest extends TestCase
                 $request .= $chunk;
             }
 
-            if (\preg_match('/Content-Length:\s*(\d+)/i', $request, $matches) === 1) {
-                $length = (int) $matches[1];
-                $headerEnd = \strpos($request, "\r\n\r\n");
-                $body = $headerEnd === false ? '' : \substr($request, $headerEnd + 4);
+            $headerEnd = \strpos($request, "\r\n\r\n");
+            $headersBlock = $headerEnd === false ? $request : \substr($request, 0, $headerEnd);
+            $body = $headerEnd === false ? '' : \substr($request, $headerEnd + 4);
+            $length = $this->contentLength($headersBlock);
+
+            if ($length !== null) {
                 while (\strlen($body) < $length) {
                     $chunk = \fread($connection, 8192);
                     if ($chunk === false || $chunk === '') {
@@ -59,10 +60,9 @@ final class ExpectHeaderTest extends TestCase
                     }
                     $body .= $chunk;
                 }
-                $request = ($headerEnd === false ? $request : \substr($request, 0, $headerEnd + 4)) . $body;
             }
 
-            \file_put_contents($captureFile, $request);
+            \file_put_contents($captureFile, ($headerEnd === false ? $request : \substr($request, 0, $headerEnd + 4)) . $body);
 
             $payload = \json_encode([
                 'statusCode' => 200,
@@ -119,7 +119,7 @@ final class ExpectHeaderTest extends TestCase
             $elapsed = \microtime(true) - $started;
 
             $this->assertSame(200, $result['statusCode']);
-            // A missing empty Expect header would stall ~1s waiting for 100 Continue.
+            // Without suppressing Expect, libcurl waits ~1s for a 100 Continue.
             $this->assertLessThan(0.75, $elapsed);
         } finally {
             if ($previousHost === false) {
@@ -140,7 +140,36 @@ final class ExpectHeaderTest extends TestCase
         @\unlink($captureFile);
 
         $this->assertNotSame('', $captured);
-        $this->assertMatchesRegularExpression('/(^|\r\n)Expect:\s*(\r\n|$)/i', $captured);
-        $this->assertDoesNotMatchRegularExpression('/(^|\r\n)Expect:\s*100-continue(\r\n|$)/i', $captured);
+        $headerEnd = \strpos($captured, "\r\n\r\n");
+        $headersBlock = $headerEnd === false ? $captured : \substr($captured, 0, $headerEnd);
+        $expect = $this->headerValue($headersBlock, 'Expect');
+        $this->assertNotSame('100-continue', $expect === null ? null : \strtolower(\trim($expect)));
+    }
+
+    private function contentLength(string $headersBlock): ?int
+    {
+        $value = $this->headerValue($headersBlock, 'Content-Length');
+        if ($value === null || !\ctype_digit(\trim($value))) {
+            return null;
+        }
+
+        return (int) \trim($value);
+    }
+
+    private function headerValue(string $headersBlock, string $name): ?string
+    {
+        foreach (\explode("\r\n", $headersBlock) as $line) {
+            $separator = \strpos($line, ':');
+            if ($separator === false) {
+                continue;
+            }
+
+            $header = \substr($line, 0, $separator);
+            if (\strtolower($header) === \strtolower($name)) {
+                return \substr($line, $separator + 1);
+            }
+        }
+
+        return null;
     }
 }
