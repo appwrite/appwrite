@@ -596,6 +596,31 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals(400, $repositoryBranches['headers']['status-code']);
     }
 
+    public function testListTotal(): void
+    {
+        $installationId = $this->setupInstallation();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $lists = [
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories', ['type' => 'runtime'], 'runtimeProviderRepositories'],
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', [], 'branches'],
+            ['/vcs/installations/' . $installationId . '/namespaces', [], 'namespaces'],
+        ];
+
+        foreach ($lists as [$path, $params, $key]) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => true]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertGreaterThan(0, $response['body']['total'], $path);
+
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => false]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(0, $response['body']['total'], $path);
+            $this->assertNotEmpty($response['body'][$key], $path);
+        }
+    }
+
     public function testCreateFunctionUsingVCS(): void
     {
         $installationId = $this->setupInstallation();
@@ -674,20 +699,42 @@ final class VCSGitHubConsoleClientTest extends Scope
         $headers = [
             'content-type' => 'application/json',
             'x-github-event' => 'push',
-        ];
-        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
-        if (!empty($secret)) {
-            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
                 'sha256',
                 \json_encode($payload, JSON_THROW_ON_ERROR),
-                $secret,
-            );
-        }
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ];
 
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
 
         return ['event' => $event, 'commit' => $commit];
+    }
+
+    public function testCreateEventWithInvalidSignature(): void
+    {
+        $payload = [
+            'action' => 'deleted',
+            'installation' => ['id' => (int) $this->providerInstallationId],
+        ];
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), 'wrong-secret'),
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
     }
 
     public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void

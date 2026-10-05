@@ -35,6 +35,7 @@ class Method
      * @param string $summary
      * @param bool $public Whether this method should be rendered on the website/documentation
      * @param array<string> $locationAuth Security scheme keys for location-type methods: first is the required project binding; additional keys supplement the base auth as an optional alternative
+     * @param array<string, array{summary?: string, value: array<string, mixed>}> $requestExamples Named OpenAPI request-body examples
      */
     public function __construct(
         protected string $namespace,
@@ -53,7 +54,8 @@ class Method
         protected array $additionalParameters = [],
         protected string $summary = '',
         protected bool $public = true,
-        protected array $locationAuth = []
+        protected array $locationAuth = [],
+        protected array $requestExamples = []
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -252,6 +254,14 @@ class Method
     public function getAdditionalParameters(): array
     {
         return $this->additionalParameters;
+    }
+
+    /**
+     * @return array<string, array{summary?: string, value: array<string, mixed>}>
+     */
+    public function getRequestExamples(): array
+    {
+        return $this->requestExamples;
     }
 
     public function getLocationAuth(): array

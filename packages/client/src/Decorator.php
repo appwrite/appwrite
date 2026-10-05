@@ -51,14 +51,19 @@ abstract class Decorator implements Adapter
         return $this->wrap($this->adapter->withMinTlsVersion($version));
     }
 
+    public function withDestinations(Destinations $destinations): static
+    {
+        return $this->wrap($this->adapter->withDestinations($destinations));
+    }
+
     public function withConnectionReuse(bool $enabled = true): static
     {
         return $this->wrap($this->adapter->withConnectionReuse($enabled));
     }
 
-    public function withFollowRedirects(bool $enabled = true): static
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
     {
-        return $this->wrap($this->adapter->withFollowRedirects($enabled));
+        return $this->wrap($this->adapter->withFollowRedirects($enabled, $maxHops));
     }
 
     /**

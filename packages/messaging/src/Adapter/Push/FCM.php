@@ -125,6 +125,9 @@ class FCM extends PushAdapter
         if (!\is_null($message->getTag())) {
             $shared['message']['android']['notification']['tag'] = $message->getTag();
         }
+        if (!\is_null($message->getChannelId())) {
+            $shared['message']['android']['notification']['channel_id'] = $message->getChannelId();
+        }
         if (!\is_null($message->getBadge())) {
             $shared['message']['apns']['payload']['aps']['badge'] = $message->getBadge();
         }

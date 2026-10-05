@@ -8,6 +8,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
@@ -22,6 +23,53 @@ final class RequestTest extends TestCase
     public function setUp(): void
     {
         $this->request = new Request(new SwooleRequest());
+    }
+
+    public function testGetIPIgnoresClientForwardedForWhenProxiesEmpty(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['x-forwarded-for' => '198.51.100.1'];
+            $request = new Request($swoole);
+
+            $this->assertSame('203.0.113.10', $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    #[DataProvider('forwardedForCases')]
+    public function testGetIPHonorsForwardedForFromTrustedProxy(string $forwardedFor, string $expected): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['x-forwarded-for' => $forwardedFor];
+            $request = new Request($swoole);
+
+            $this->assertSame($expected, $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: string}>
+     */
+    public static function forwardedForCases(): \Iterator
+    {
+        yield 'single client' => ['198.51.100.1', '198.51.100.1'];
+        yield 'appended chain ignores spoofed leftmost' => ['1.2.3.4, 198.51.100.1, 10.0.0.3', '198.51.100.1'];
+        yield 'invalid entries skipped' => ['not-an-ip, 198.51.100.1', '198.51.100.1'];
+        yield 'all trusted falls back to leftmost' => ['10.0.0.5, 10.0.0.3', '10.0.0.5'];
+        yield 'no valid entry uses connection' => ['not-an-ip', '10.0.0.2'];
     }
 
     public function testFilters(): void
