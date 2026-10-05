@@ -73,6 +73,9 @@ class Videos extends Action
         'ssa',
     ];
 
+    /** Packaged media segment length in seconds (HLS / DASH / CMAF). */
+    private const SEGMENT_DURATION = 4;
+
     /**
      * Must be exactly 'videos': app/worker.php derives the queue name
      * (`v1-videos`) and looks the action up by this key.
@@ -449,9 +452,9 @@ class Videos extends Action
             };
 
             $target = match ($output) {
-                Base::OUTPUT_DASH => (new Dash())->template(false)->timeline(false)->segment(6)->manifests(false),
-                Base::OUTPUT_CMAF => (new Cmaf())->segment(6)->manifests(false),
-                default => (new Hls())->segment(6)->manifests(false),
+                Base::OUTPUT_DASH => (new Dash())->template(false)->timeline(false)->segment(self::SEGMENT_DURATION)->manifests(false),
+                Base::OUTPUT_CMAF => (new Cmaf())->segment(self::SEGMENT_DURATION)->manifests(false),
+                default => (new Hls())->segment(self::SEGMENT_DURATION)->manifests(false),
             };
 
             Console::info(
@@ -531,7 +534,7 @@ class Videos extends Action
 
             // Drop any leftover segments from a previous attempt at the same id.
             // deleteDocuments paginates internally, so a long rendition's >1000
-            // segment rows (a ~100-minute HLS ladder at 6s segments) are all
+            // segment rows (a ~100-minute HLS ladder at 4s segments) are all
             // removed, not just the first APP_LIMIT_SUBQUERY page.
             $dbForProject->deleteDocuments('videos_renditions_segments', [
                 Query::equal('renditionInternalId', [$rendition->getSequence()]),
