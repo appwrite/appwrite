@@ -347,14 +347,15 @@ abstract class Git extends Adapter
 
     /**
      * Resolve a tag glob the way GitHub and Origin used to: the last tag
-     * `git ls-remote --tags` lists for the pattern
-     * (`tail -n 1 | awk -F/ '{print $3}'`). `--refs` omits the peeled `^{}`
-     * line of an annotated tag, so the name awk prints is the tag itself.
+     * `git ls-remote --tags` lists for the pattern. `--refs` omits the peeled
+     * `^{}` line of an annotated tag. The name is everything after
+     * `refs/tags/`, so a namespaced tag such as `release/0.1.2` stays whole.
      * The directory and the pattern arrive as `$1` and `$2`.
      */
     private const string TAG_GLOB_CHECKOUT = <<<'SCRIPT'
 refs=$(git -C "$1" ls-remote --refs --tags origin -- "$2") || exit
-tag=$(printf '%s\n' "$refs" | tail -n 1 | awk -F '/' '{print $3}')
+line=$(printf '%s\n' "$refs" | tail -n 1)
+tag=${line#*refs/tags/}
 if [ -z "$tag" ]; then
     printf 'fatal: no tag matching %s\n' "$2" >&2
     exit 1

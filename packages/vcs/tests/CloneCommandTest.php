@@ -127,9 +127,10 @@ final class CloneCommandTest extends TestCase
     }
 
     /**
-     * `git ls-remote` lists tags in refname order, and the old lookup kept the
-     * last line. 0.1.10 is the newest version and sorts before 0.1.2; the
-     * annotated 0.1.2 is the tag that line names.
+     * `git ls-remote` lists tags in refname order, and the lookup keeps the
+     * last line. 0.1.10 sorts before 0.1.2; the annotated 0.1.2 is the tag
+     * that line names. A namespaced pattern keeps the full name after
+     * `refs/tags/`, so `release/0.1.*` resolves to `release/0.1.2`.
      */
     public function testCloneChecksOutATagPattern(): void
     {
@@ -141,6 +142,16 @@ final class CloneCommandTest extends TestCase
         $this->assertSame(0, $this->clone('', '0.1.*', Git::CLONE_TYPE_TAG));
 
         $this->assertSame("tag-0.1.2\n", $this->read($this->directory . '/README.md'));
+
+        $this->tag('release/0.1.0', "tag-release-0.1.0\n");
+        $this->tag('release/0.1.10', "tag-release-0.1.10\n");
+        $this->tag('release/0.1.2', "tag-release-0.1.2\n", annotated: true);
+        $this->tag('release/0.2.0', "tag-release-0.2.0\n");
+
+        $this->execute(new Command('rm')->flag('-rf')->argument($this->directory));
+        $this->assertSame(0, $this->clone('', 'release/0.1.*', Git::CLONE_TYPE_TAG));
+
+        $this->assertSame("tag-release-0.1.2\n", $this->read($this->directory . '/README.md'));
     }
 
     public function testCloneChecksOutAnExactTag(): void
