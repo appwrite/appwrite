@@ -1683,13 +1683,13 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 Do not delete a post's `.markdoc` file or images. Add `removed: true` to its frontmatter instead. A removed post:
 
 - Is left out of the generated manifest (`src/lib/blog/generated/manifest.ts`) and the lazy body glob (`generated/post-loaders.ts`), so it never renders and its body is not bundled. It does not appear on the blog index, categories, author pages, search, related posts, RSS, sitemaps, or llms exports. An author whose posts are all removed has no author page (404, not prerendered or in the sitemap).
-- Redirects (301) to `/`, including its `.md` export (`getRemovedBlogPostRedirectTarget`, slugs in `generated/removed.ts`).
+- Redirects (301) to `/home`, including its `.md` export (`getRemovedBlogPostRedirectTarget`, slugs in `generated/removed.ts`).
 - Has its images pruned from `dist/client` after `vite build` (`bun run prune:removed-blog-assets`), except images that live content still references (e.g. a changelog cover).
 
 After flagging a post:
 
 1. Run `bun run generate:blog-manifest` and `bun run generate:cover-manifest`, and commit the regenerated files.
-2. Run `bun run lint:removed-blog-links` (also in CI) and remove every link it reports: drop "related reading" list items and `arrow_link` blocks, unwrap or rewrite inline links so the sentence still reads well. Point legacy redirects that targeted the post at `/`.
+2. Run `bun run lint:removed-blog-links` (also in CI) and remove every link it reports: drop "related reading" list items and `arrow_link` blocks, unwrap or rewrite inline links so the sentence still reads well. Point legacy redirects that targeted the post at `/home`.
 
 ### Static OG images
 

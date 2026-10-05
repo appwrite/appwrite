@@ -17,7 +17,7 @@ function resolvePathname(
 /**
  * Permanent (301) redirects for legacy URLs ported from the old website so
  * inbound links and search engine results keep resolving, and for blog posts
- * marked `removed: true` (sent to the home page). The incoming query string is
+ * marked `removed: true` (sent to `/home`). The incoming query string is
  * preserved on the target URL.
  */
 export const legacyRedirectsMiddleware = createMiddleware({

@@ -13,7 +13,7 @@ import { resolveCategorySlug } from '@/lib/blog/category-slugs'
  *   their TablesDB equivalents, `/products/sites/offer-300` ->
  *   `/products/sites`).
  * - Legacy URLs whose target post is now marked `removed: true` point at
- *   `/`, matching the removed post's own redirect.
+ *   `/home`, matching the removed post's own redirect.
  * - Query-string source variants (e.g. `?sdk=web-default`) are dropped;
  *   matching is by pathname and the incoming query string is preserved on
  *   redirect.
@@ -179,11 +179,11 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/blog/post/case-study-open-mind': '/blog/post/customer-stories-open-mind',
   '/blog/post/case-study-langx': '/blog/post/customer-stories-langx',
   '/blog/post/case-study-undo': '/blog/post/customer-stories-undo',
-  '/blog/post/top-5-tips-to-build-an-AI-agent-startup': '/',
+  '/blog/post/top-5-tips-to-build-an-AI-agent-startup': '/home',
   '/blog/post/5-MCP-startup-ideas-to-build-in-2025': '/blog/post/mcp-startup-ideas',
   '/blog/post/10-open-source-alternatives-to-popular-software-for-startups': '/blog/post/open-source-startup-tools',
-  '/blog/post/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know': '/',
-  '/blog/post/how-can-you-rapidly-build-an-mvp-for-your-startup': '/',
+  '/blog/post/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know': '/home',
+  '/blog/post/how-can-you-rapidly-build-an-mvp-for-your-startup': '/home',
   '/docs/tooling/command-line/collections': '/docs/tooling/command-line/tables',
   '/docs/tooling/terraform/databases': '/docs/tooling/terraform/resources/databases',
   '/docs/tooling/mcp/mcp-for-docs': '/docs/tooling/ai/mcp-servers',

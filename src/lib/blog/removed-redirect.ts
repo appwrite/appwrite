@@ -2,7 +2,7 @@ import { REMOVED_BLOG_POST_SLUGS } from './generated/removed'
 
 const BLOG_POST_PATH_PATTERN = /^\/blog\/post\/([^/]+?)(?:\.md)?\/*$/
 
-export const REMOVED_BLOG_POST_REDIRECT_TARGET = '/'
+export const REMOVED_BLOG_POST_REDIRECT_TARGET = '/home'
 
 /**
  * Returns the redirect target for a post marked `removed: true` (or its `.md`

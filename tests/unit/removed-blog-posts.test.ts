@@ -49,9 +49,9 @@ describe('getRemovedBlogPostRedirectTarget', () => {
 
   test('redirects removed posts and their markdown exports home', () => {
     expect(removedSlug).toBeDefined()
-    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}`)).toBe('/')
-    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}/`)).toBe('/')
-    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}.md`)).toBe('/')
+    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}`)).toBe('/home')
+    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}/`)).toBe('/home')
+    expect(getRemovedBlogPostRedirectTarget(`/blog/post/${removedSlug}.md`)).toBe('/home')
   })
 
   test('leaves live posts and other paths alone', () => {
