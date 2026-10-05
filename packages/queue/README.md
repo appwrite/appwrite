@@ -224,7 +224,7 @@ A key is held until its message can no longer be delivered without operator acti
 
 A refusal is an outcome, never an exception. Anything that leaves the broker's state unknown, such as a lost connection, throws, so a caller never mistakes a failed publish for a coalesced one.
 
-Keys are strings of any bytes, but the JSON codec only encodes valid UTF-8, so keys published through it must be valid UTF-8.
+Keys are strings of any bytes, but the JSON codec only encodes valid UTF-8, so keys published through it must be valid UTF-8. NATS hex-encodes the key into the message subject, which doubles its length, so a very long key can exceed the server's `max_control_line`.
 
 **Pool** and **Background** always implement `Coalescing` and delegate `coalesce()` synchronously to the publisher they wrap, bypassing the background buffer. When that publisher cannot coalesce they throw `LogicException` at call time, so `instanceof Coalescing` does not guarantee support. Know which broker a publisher wraps before relying on coalescing.
 
@@ -237,6 +237,18 @@ Redis frees a key on every `reject()`, terminal or not, because its failed list 
 Reaping keeps the key only while the hold lasts. A message reaped after its marker expired is requeued without a hold, so another publish for that key is accepted. `reapAfter` defaults to 25 hours, longer than the default `keyTtl`, so keep `keyTtl` well above the expected run time of a keyed job, and above `reapAfter` if a reaped message must keep its key.
 
 Workers still running the settle script from before coalescing never free markers, so keyed holds taken during a rolling deploy last until `keyTtl`. Deploy consumers before keyed publishers.
+
+#### NATS
+
+A keyed message goes to a per-key subject under the queue's work subject and is refused with `Nats-Expected-Last-Subject-Sequence: 0` while one is stored. A publish whose message id the stream saw within its duplicate window returns `Outcome::Coalesced`, whether or not the earlier message is still pending, so a deterministic `messageId` repeated inside that window coalesces even after its first message was committed. The broker's own retry after a lost connection is different: a duplicate there means the first attempt landed, so it returns `Outcome::Published`.
+
+NATS ignores `Queue::$keyTtl`. The message itself is the hold, so it is bounded by redelivery: a message whose consumer died is redelivered after `ackWait` and dead-lettered after `maxDeliver` attempts, about `ackWait` × `maxDeliver` in all, and the stream's `maxAge` removes anything older. A plain `reject()` NAKs the message and keeps the key; only a terminal or exhausted reject frees it. The server removes a message asynchronously after its ack or TERM, so a key is freed a few milliseconds after `commit()` or `reject()` returns.
+
+Provisioning is eager and fleet-wide: on the next `ensure()`, every queue's stream gains `<work>.*` and every worker consumer switches from `filterSubject` to `filterSubjects`, keyed or not. `filterSubjects` needs nats-server 2.10 or later on every server in the cluster. In `Require` provisioning mode a keyed publish to a queue not provisioned for it re-reads the stream and consumer at most once per `adoptInterval` (30 seconds by default) per queue, so it picks up an owner's later upgrade without a restart. Until the queue is provisioned for it, a keyed publish throws, without contacting the server between re-reads.
+
+During a rolling deploy, an older process that reprovisions the queue reverts its subjects and consumer filter. A keyed publish in `Ensure` mode reprovisions once and heals that, but keyed messages stored while the filter is reverted wait until an upgraded process reprovisions.
+
+While an older worker that reverted the consumer filter is still fetching, the consumer's position moves past keyed messages, and restoring the filter does not rewind it. Those messages are not delivered and their keys stay held until the stream's `maxAge`, or forever if it has none. Start keyed publishing on NATS only once every worker runs a version that provisions the key subjects.
 
 ### Batched receive
 
