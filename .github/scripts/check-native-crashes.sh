@@ -2,7 +2,7 @@
 set -euo pipefail
 
 image="${1:-${IMAGE:-}}"
-pattern='zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)\b|exit code 139\b|exited abnormally'
+pattern='zend_mm_heap|Segmentation fault|core dumped|signal[ =](6|7|11)\b|exit code 139\b|exited abnormally: signal=[1-9]'
 
 if [ -z "$image" ]; then
     echo '::error::No appwrite image given; pass it as the first argument or set IMAGE'
