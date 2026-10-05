@@ -22,7 +22,8 @@
         }
     },
     "require": {
-        "php": ">=8.3"
+        "php": ">=8.3",
+        "ext-intl": "*"
     },
     "scripts": {
         "test": "phpunit"

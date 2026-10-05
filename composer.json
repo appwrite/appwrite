@@ -148,6 +148,7 @@
         "ext-zlib": "*",
         "ext-simplexml": "*",
         "ext-sockets": "*",
+        "ext-intl": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/config": "1.*",

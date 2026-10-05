@@ -1,1 +1,1 @@
-Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](/docs/references/cloud/client-web/account#updateMfaChallenge) method.
+Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](/docs/references/cloud/client-web/account#updateMfaChallenge) method. Challenges are valid for 1 hour by default. Use the optional `expire` parameter to shorten this period, from 60 to 3600 seconds.

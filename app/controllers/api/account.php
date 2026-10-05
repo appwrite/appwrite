@@ -2450,6 +2450,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_CONFIRM), 'Token expiration period in seconds. The default and maximum expiration is 1 hour.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2463,7 +2464,9 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('platform')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, ?int $expire, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization, ?Key $apiKey) {
+        $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2579,7 +2582,8 @@ Http::post('/v1/account/tokens/magic-url')
         $proofForToken->setHash(new Sha());
 
         $tokenSecret = $proofForToken->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -2619,7 +2623,7 @@ Http::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
-        $preview = $locale->getText("emails.magicSession.preview");
+        $preview = $locale->getText("emails.magicSession.preview", plurals: $plurals);
 
         $customTemplate =
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
@@ -2633,7 +2637,7 @@ Http::post('/v1/account/tokens/magic-url')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
+            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton", plurals: $plurals))
             ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
             ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
             ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
@@ -2717,6 +2721,7 @@ Http::post('/v1/account/tokens/magic-url')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'redirect' => $url,
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
@@ -2784,6 +2789,7 @@ Http::post('/v1/account/tokens/email')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_OTP), 'Token expiration period in seconds. The default and maximum expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2798,7 +2804,9 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $userId, string $email, bool $phrase, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+        $expire ??= TOKEN_EXPIRATION_OTP;
+
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2931,7 +2939,8 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -2956,7 +2965,7 @@ Http::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
-        $preview = $locale->getText("emails.otpSession.preview");
+        $preview = $locale->getText("emails.otpSession.preview", plurals: $plurals);
         $heading = $locale->getText("emails.otpSession.heading");
 
         $customTemplate =
@@ -2979,7 +2988,7 @@ Http::post('/v1/account/tokens/email')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText("emails.otpSession.hello"))
-            ->setParam('{{description}}', $locale->getText("emails.otpSession.description"))
+            ->setParam('{{description}}', $locale->getText("emails.otpSession.description", plurals: $plurals))
             ->setParam('{{clientInfo}}', $locale->getText("emails.otpSession.clientInfo"))
             ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
@@ -3062,6 +3071,7 @@ Http::post('/v1/account/tokens/email')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'otp' => $tokenSecret,
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
@@ -3243,6 +3253,7 @@ Http::post('/v1/account/tokens/phone')
     ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_OTP), 'Token expiration period in seconds. The default and maximum expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3258,7 +3269,9 @@ Http::post('/v1/account/tokens/phone')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $userId, string $phone, ?int $expire, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+        $expire ??= TOKEN_EXPIRATION_OTP;
+
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3347,7 +3360,7 @@ Http::post('/v1/account/tokens/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -4065,6 +4078,7 @@ Http::post('/v1/account/recovery')
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
+    ->param('expire', TOKEN_EXPIRATION_RECOVERY, new Range(60, TOKEN_EXPIRATION_RECOVERY), 'Token expiration period in seconds. The default and maximum expiration is 1 hour.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -4077,7 +4091,8 @@ Http::post('/v1/account/recovery')
     ->inject('proofForToken')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $email, string $url, ?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization, ?Key $apiKey) {
+        $expire ??= TOKEN_EXPIRATION_RECOVERY;
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4098,7 +4113,7 @@ Http::post('/v1/account/recovery')
 
         $userId = $deliverable ? $profile->getId() : ID::unique();
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $secret = $proofForToken->generate();
         $recovery = new Document([
@@ -4835,6 +4850,7 @@ Http::post('/v1/account/verifications/email')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add built-in confirm page
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_CONFIRM), 'Token expiration period in seconds. The default and maximum expiration is 1 hour.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -4846,7 +4862,8 @@ Http::post('/v1/account/verifications/email')
     ->inject('publisherForMails')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $url, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
+        $expire ??= TOKEN_EXPIRATION_CONFIRM;
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4861,7 +4878,7 @@ Http::post('/v1/account/verifications/email')
         }
 
         $verificationSecret = $proofForToken->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5150,6 +5167,7 @@ Http::post('/v1/account/verifications/phone')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},userId:{userId}', 'url:{url},ip:{ip}'])
+    ->param('expire', TOKEN_EXPIRATION_CONFIRM, new Range(60, TOKEN_EXPIRATION_CONFIRM), 'Token expiration period in seconds. The default and maximum expiration is 1 hour.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -5162,7 +5180,9 @@ Http::post('/v1/account/verifications/phone')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (?int $expire, Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+        $expire ??= TOKEN_EXPIRATION_CONFIRM;
+
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -5188,7 +5208,7 @@ Http::post('/v1/account/verifications/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5719,6 +5739,7 @@ Http::post('/v1/account/verifications/email/otp')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+    ->param('expire', TOKEN_EXPIRATION_OTP, new Range(60, TOKEN_EXPIRATION_OTP), 'Token expiration period in seconds. The default and maximum expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -5730,7 +5751,9 @@ Http::post('/v1/account/verifications/email/otp')
     ->inject('publisherForMails')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (bool $phrase, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (bool $phrase, ?int $expire, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsCode $proofForCode, Authorization $authorization) {
+        $expire ??= TOKEN_EXPIRATION_OTP;
+
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -5748,7 +5771,8 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $plurals = ['expire' => $expire % 3600 === 0 ? ['emails.expire.hours', \intdiv($expire, 3600)] : ['emails.expire.minutes', \intdiv($expire, 60)]];
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5773,7 +5797,7 @@ Http::post('/v1/account/verifications/email/otp')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText('emails.otpVerification.subject');
-        $preview = $locale->getText('emails.otpVerification.preview');
+        $preview = $locale->getText('emails.otpVerification.preview', plurals: $plurals);
         $heading = $locale->getText('emails.otpVerification.heading');
 
         $customTemplate =
@@ -5796,7 +5820,7 @@ Http::post('/v1/account/verifications/email/otp')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText('emails.otpVerification.hello'))
-            ->setParam('{{description}}', $locale->getText('emails.otpVerification.description'))
+            ->setParam('{{description}}', $locale->getText('emails.otpVerification.description', plurals: $plurals))
             ->setParam('{{clientInfo}}', $locale->getText('emails.otpVerification.clientInfo'))
             ->setParam('{{thanks}}', $locale->getText('emails.otpVerification.thanks'))
             ->setParam('{{signature}}', $locale->getText('emails.otpVerification.signature'));
@@ -5876,6 +5900,7 @@ Http::post('/v1/account/verifications/email/otp')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'otp' => $secret,
+            'expire' => $locale->getPlural(...$plurals['expire']),
             'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
