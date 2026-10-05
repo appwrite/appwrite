@@ -334,6 +334,66 @@ trait TransactionPermissionsBase
         $this->assertEquals(['account'], $committed['body']['tags']);
     }
 
+    public function testStagedNumericUpdatesFollowEarlierBatchOperations(): void
+    {
+        if ($this->getSupportForAttributes()) {
+            $this->markTestSkipped('Schemaful adapters validate numeric operations against the column type.');
+        }
+
+        $databaseId = $this->getPermissionsDatabase();
+        $admin = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $admin, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Numeric batch',
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $admin, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['label' => 'text'],
+        ]);
+        $this->assertEquals(201, $record['headers']['status-code']);
+        $operation = fn (string $action, string $recordId, array $data) => [
+            'action' => $action,
+            'databaseId' => $databaseId,
+            $this->getContainerIdParam() => $collectionId,
+            $this->getRecordIdParam() => $recordId,
+            'data' => $data,
+        ];
+
+        // Test for SUCCESS: a field updated to a number earlier in the batch can be incremented.
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $admin);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transaction['body']['$id']) . '/operations', $admin, [
+            'operations' => [
+                $operation('update', $record['body']['$id'], ['label' => 5]),
+                $operation('increment', $record['body']['$id'], [$this->getSchemaParam() => 'label', 'value' => 1]),
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['operations']);
+
+        // Test for FAILURE: a field created as a string earlier in the batch cannot be incremented.
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $admin);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $recordId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transaction['body']['$id']) . '/operations', $admin, [
+            'operations' => [
+                $operation('create', $recordId, ['label' => 'text']),
+                $operation('increment', $recordId, [$this->getSchemaParam() => 'label', 'value' => 1]),
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('attribute_type_invalid', $response['body']['type']);
+        $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transaction['body']['$id']), $admin);
+        $this->assertEquals(0, $status['body']['operations']);
+    }
+
     /**
      * Regression: a commit whose write fails authorization at commit time must leave
      * the transaction in the terminal `failed` state, never stuck in `committing`.

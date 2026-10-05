@@ -118,7 +118,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = $dependants = [];
+        $databases = $collections = $staged = $dependants = $pending = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -236,9 +236,15 @@ class Create extends Action
                 }
             }
 
+            $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $documentId = $operation[$this->getResourceId()] ?? null;
+
             if (\in_array($operation['action'], ['increment', 'decrement'])) {
                 $attribute = (string) ($operation['data']['attribute'] ?? $operation['data']['column'] ?? '');
-                if (!$this->isNumeric($getDatabasesDB($database), $collection, $attribute, $document)) {
+                $current = isset($pending[$collectionKey][$documentId])
+                    ? new Document(\array_merge($document->getArrayCopy(), $pending[$collectionKey][$documentId]))
+                    : $document;
+                if (!$this->isNumeric($getDatabasesDB($database), $collection, $attribute, $current)) {
                     throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, ($this->isCollectionsAPI() ? 'Attribute' : 'Column') . ' "' . $attribute . '" is not a number');
                 }
             }
@@ -254,12 +260,18 @@ class Create extends Action
             ]);
 
             // Track create operations for dependent update/increment/decrement/delete operations in same batch
-            if ($operation['action'] === 'create') {
-                $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                $documentId = $operation[$this->getResourceId()] ?? null;
-                if ($documentId) {
-                    $dependants[$collectionKey][$documentId] = true;
-                }
+            if ($operation['action'] === 'create' && $documentId) {
+                $dependants[$collectionKey][$documentId] = true;
+            }
+
+            // Later numeric operations in this batch validate against the values staged before them
+            $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
+            if (\in_array($operation['action'], ['create', 'upsert']) && $documentId) {
+                $pending[$collectionKey][$documentId] = $data;
+            } elseif ($operation['action'] === 'update' && $documentId) {
+                $pending[$collectionKey][$documentId] = \array_merge($pending[$collectionKey][$documentId] ?? [], $data);
+            } elseif ($operation['action'] === 'delete') {
+                unset($pending[$collectionKey][$documentId]);
             }
         }
 
