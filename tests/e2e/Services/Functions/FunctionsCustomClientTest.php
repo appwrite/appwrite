@@ -520,6 +520,26 @@ final class FunctionsCustomClientTest extends Scope
         $this->assertEquals(404, $template['headers']['status-code']);
     }
 
+    public function testGetMcpServerTemplate(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $template = $this->getTemplate('mcp-server');
+        $this->assertSame(200, $template['headers']['status-code']);
+        $this->assertSame(['users.write'], $template['body']['scopes']);
+
+        $runtimes = \array_column($template['body']['runtimes'], 'name');
+        foreach ($runtimes as $runtime) {
+            $this->assertStringStartsWith('python-', $runtime);
+            $this->assertTrue(\version_compare(\substr($runtime, \strlen('python-')), '3.10', '>='), $runtime . ' is older than Python 3.10');
+        }
+
+        $newestFirst = $runtimes;
+        \usort($newestFirst, fn (string $a, string $b) => \version_compare($b, $a));
+        $this->assertSame($newestFirst, $runtimes);
+    }
+
     /**
      * Test that event-triggered functions work when the triggering request
      * comes from a client SDK (session auth) that doesn't have permission
