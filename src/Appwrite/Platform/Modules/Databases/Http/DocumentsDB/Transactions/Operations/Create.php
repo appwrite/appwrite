@@ -59,6 +59,7 @@ class Create extends OperationsCreate
             ->param('operations', [], new ArrayList(new Operation(type: 'documentsdb')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')

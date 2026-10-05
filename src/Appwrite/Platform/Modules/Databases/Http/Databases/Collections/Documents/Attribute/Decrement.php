@@ -23,7 +23,6 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -135,27 +134,7 @@ class Decrement extends Action
                 );
             }
 
-            // Resolve the real transaction view before staging so a failed read
-            // cannot leave a successful operation behind an error response.
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-            $document = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, resolveRelationships: false));
-            if ($document->isEmpty()) {
-                throw new Exception($this->getNotFoundException(), params: [$documentId]);
-            }
-            if (!$isAPIKey && !$isPrivilegedUser && !$authorization->isValid(new Input(Database::PERMISSION_UPDATE, [
-                ...$collection->getUpdate(),
-                ...($collection->getAttribute('documentSecurity', false) ? $document->getUpdate() : []),
-            ]))) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-            }
-            $currentValue = $document->getAttribute($attribute, 0);
-            if (!is_int($currentValue) && !is_float($currentValue)) {
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
-            }
-            $document
-                ->setAttribute($attribute, $currentValue - $value)
-                ->setAttribute('$databaseId', $databaseId)
-                ->setAttribute('$' . $this->getGroupId(), $collectionId);
+            $document = $this->preview($getDatabasesDB($database), $transactionState, $authorization, $database, $collection, $transactionId, $documentId, $attribute, -$value, $isAPIKey || $isPrivilegedUser);
 
             // Stage the operation in transaction logs
             $staged = new Document([
@@ -184,7 +163,6 @@ class Decrement extends Action
 
             $queueForEvents->reset();
 
-            // Return the projected row without committing the decrement.
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
                 ->dynamic($document, $this->getResponseModel());

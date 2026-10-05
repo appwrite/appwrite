@@ -74,6 +74,7 @@ class Create extends Action
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
@@ -81,7 +82,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
@@ -232,6 +233,13 @@ class Create extends Action
                     if (\in_array($operation['action'], ['create', 'update', 'upsert']) && \is_array($operation['data'] ?? null)) {
                         $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
                     }
+                }
+            }
+
+            if (\in_array($operation['action'], ['increment', 'decrement'])) {
+                $attribute = (string) ($operation['data']['attribute'] ?? $operation['data']['column'] ?? '');
+                if (!$this->isNumeric($getDatabasesDB($database), $collection, $attribute, $document)) {
+                    throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, ($this->isCollectionsAPI() ? 'Attribute' : 'Column') . ' "' . $attribute . '" is not a number');
                 }
             }
 

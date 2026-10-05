@@ -232,6 +232,11 @@ trait TransactionPermissionsBase
                 'required' => true,
             ]);
             $this->assertEquals(202, $attribute['headers']['status-code']);
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer'), $admin, [
+                'key' => 'bonus',
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
             foreach (['name' => false, 'tags' => true] as $key => $array) {
                 $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), $admin, [
                     'key' => $key,
@@ -281,7 +286,16 @@ trait TransactionPermissionsBase
             ]);
             $this->assertEquals(401, $response['headers']['status-code']);
         }
-        // Nonnumeric strings and arrays fail before another operation can be staged.
+
+        // Test for SUCCESS: a null optional numeric column counts from zero.
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']) . '/bonus/increment', $headers, [
+            'value' => 5,
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(5, $response['body']['bonus']);
+
+        // Test for FAILURE: nonnumeric strings and arrays fail before another operation can be staged.
         foreach (['name', 'tags'] as $attribute) {
             foreach (['increment', 'decrement'] as $operation) {
                 $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']) . '/' . $attribute . '/' . $operation, $headers, [
@@ -290,11 +304,29 @@ trait TransactionPermissionsBase
                 ]);
                 $this->assertEquals(400, $response['headers']['status-code']);
                 $this->assertEquals('attribute_type_invalid', $response['body']['type']);
+
+                $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                    'operations' => [[
+                        'action' => $operation,
+                        'databaseId' => $databaseId,
+                        $this->getContainerIdParam() => $collectionId,
+                        $this->getRecordIdParam() => $writable['body']['$id'],
+                        'data' => [$this->getSchemaParam() => $attribute, 'value' => 5],
+                    ]],
+                ]);
+                $this->assertEquals(400, $response['headers']['status-code']);
+                $this->assertEquals('attribute_type_invalid', $response['body']['type']);
             }
         }
         $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
         $this->assertEquals(200, $status['headers']['status-code']);
-        $this->assertEquals(2, $status['body']['operations']);
+        $this->assertEquals(3, $status['body']['operations']);
+        $staged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $admin, [
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertEquals(200, $staged['headers']['status-code']);
+        $this->assertEquals(50, $staged['body']['balance']);
+        $this->assertEquals(5, $staged['body']['bonus']);
         $committed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $writable['body']['$id']), $admin);
         $this->assertEquals(200, $committed['headers']['status-code']);
         $this->assertEquals(50, $committed['body']['balance']);

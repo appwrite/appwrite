@@ -147,6 +147,27 @@ class Action extends AppwriteAction
     }
 
     /**
+     * Mirrors Database::increaseDocumentAttribute, falling back to the stored value
+     * when the adapter keeps no schema.
+     */
+    protected function isNumeric(Database $dbForDatabases, Document $collection, string $attribute, Document $document): bool
+    {
+        if (!$dbForDatabases->getAdapter()->getSupportForAttributes()) {
+            $value = $document->getAttribute($attribute);
+            return $value === null || \is_int($value) || \is_float($value);
+        }
+
+        foreach ($collection->getAttribute('attributes', []) as $definition) {
+            if ($definition->getAttribute('key') === $attribute) {
+                return \in_array($definition->getAttribute('type'), [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT], true)
+                    && !$definition->getAttribute('array', false);
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Stable Redis key for a collection's cached list responses.
      *
      * All variations (schema × roles × queries) for a single collection live as

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -12,6 +13,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 
 abstract class Action extends DatabasesAction
 {
@@ -265,6 +267,37 @@ abstract class Action extends DatabasesAction
     {
         $resource = $this->isCollectionsAPI() ? 'document' : 'row';
         return $resource . 'Id';
+    }
+
+    /**
+     * The row as a staged increment or decrement would leave it, checked before
+     * staging so a rejected change never reaches the transaction log.
+     *
+     * @throws Exception
+     */
+    protected function preview(Database $dbForDatabases, TransactionState $transactionState, Authorization $authorization, Document $database, Document $collection, string $transactionId, string $documentId, string $attribute, int|float $delta, bool $isPrivileged): Document
+    {
+        $collectionId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $document = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionId, $documentId, $transactionId, resolveRelationships: false));
+        if ($document->isEmpty()) {
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
+        }
+
+        if (!$isPrivileged && !$authorization->isValid(new Input(Database::PERMISSION_UPDATE, [
+            ...$collection->getUpdate(),
+            ...($collection->getAttribute('documentSecurity', false) ? $document->getUpdate() : []),
+        ]))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+        }
+
+        if (!$this->isNumeric($dbForDatabases, $collection, $attribute, $document)) {
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+        }
+
+        return $document
+            ->setAttribute($attribute, ($document->getAttribute($attribute) ?? 0) + $delta)
+            ->setAttribute('$databaseId', $database->getId())
+            ->setAttribute('$' . $this->getGroupId(), $collection->getId());
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Databases;
 
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -448,44 +447,45 @@ class TransactionState
                     $attribute = $data['attribute'] ?? $data['column'] ?? null;
                     $value = $data['value'] ?? 1;
 
-                    if ($attribute) {
-                        if (isset($state[$collectionId][$documentId]) && !$state[$collectionId][$documentId]['exists']) {
+                    if (!$attribute) {
+                        break;
+                    }
+
+                    $currentState = $state[$collectionId][$documentId] ?? null;
+                    if ($currentState !== null && !$currentState['exists']) {
+                        break;
+                    }
+
+                    if (!($currentState['hydrated'] ?? false) && ($currentState['action'] ?? null) !== 'create') {
+                        $dbForDatabases = ($this->getDatabasesDB)($database);
+                        $document = $this->readDocument($dbForDatabases, $collectionId, $documentId, [], $resolveRelationships);
+                        if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
                             break;
                         }
-
-                        // Numeric operations are deltas, not replacement values. Start
-                        // from the committed row unless this transaction created it.
-                        $currentState = $state[$collectionId][$documentId] ?? null;
-                        if ($currentState === null || $currentState['action'] !== 'create') {
-                            $dbForDatabases = ($this->getDatabasesDB)($database);
-                            $document = $this->readDocument($dbForDatabases, $collectionId, $documentId, [], $resolveRelationships);
-                            if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
-                                break;
-                            }
-                            if ($currentState !== null) {
-                                $document->setAttributes($currentState['document']->getArrayCopy());
-                            }
-                            $state[$collectionId][$documentId] = [
-                                'action' => $currentState['action'] ?? 'update',
-                                'document' => $document,
-                                'exists' => true,
-                            ];
+                        if ($currentState !== null) {
+                            $document->setAttributes($currentState['document']->getArrayCopy());
                         }
+                        $currentState = $state[$collectionId][$documentId] = [
+                            'action' => $currentState['action'] ?? 'update',
+                            'document' => $document,
+                            'exists' => true,
+                            'hydrated' => true,
+                        ];
+                    }
 
-                        if (isset($state[$collectionId][$documentId])) {
-                            $existingDocument = $state[$collectionId][$documentId]['document'];
-                            $currentValue = $existingDocument->getAttribute($attribute, 0);
-                            if (!is_int($currentValue) && !is_float($currentValue)) {
-                                throw new AppwriteException(AppwriteException::ATTRIBUTE_TYPE_INVALID, 'Attribute "' . $attribute . '" is not a number');
-                            }
-                            $newValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
-                            $existingDocument->setAttribute($attribute, $newValue);
+                    if ($currentState === null) {
+                        break;
+                    }
 
-                            $currentAction = $state[$collectionId][$documentId]['action'];
-                            if ($currentAction !== 'create' && $currentAction !== 'upsert') {
-                                $state[$collectionId][$documentId]['action'] = 'update';
-                            }
-                        }
+                    $existingDocument = $currentState['document'];
+                    $currentValue = $existingDocument->getAttribute($attribute) ?? 0;
+                    if (!\is_int($currentValue) && !\is_float($currentValue)) {
+                        break;
+                    }
+                    $existingDocument->setAttribute($attribute, $action === 'increment' ? $currentValue + $value : $currentValue - $value);
+
+                    if ($currentState['action'] !== 'create' && $currentState['action'] !== 'upsert') {
+                        $state[$collectionId][$documentId]['action'] = 'update';
                     }
                     break;
 
