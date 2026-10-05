@@ -1493,6 +1493,55 @@ trait DatabasesBase
         $this->assertStringContainsString('Index length is longer than the maximum:', $attribute['body']['message']);
     }
 
+    public function testCreateIndexOnAttributeAsSoonAsAvailable(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Index on available attribute',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $keys = ['first', 'second', 'third', 'fourth', 'fifth'];
+        foreach ($keys as $key) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => $key,
+                'required' => false,
+                'size' => 64,
+            ]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+
+            $this->waitForAttribute($databaseId, $collectionId, $key, waitMs: 5);
+
+            $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $headers, [
+                'key' => $key . 'Index',
+                'type' => Database::INDEX_KEY,
+                $this->getIndexAttributesParam() => [$key],
+            ]);
+            $this->assertSame(202, $index['headers']['status-code'], "Index on '{$key}' was rejected right after the attribute reported available: " . ($index['body']['message'] ?? ''));
+        }
+
+        foreach ($keys as $key) {
+            $this->waitForIndex($databaseId, $collectionId, $key . 'Index');
+        }
+    }
+
     public function testUpdateEncryptedAttributeSize(): void
     {
         if (!$this->getSupportForAttributes()) {
