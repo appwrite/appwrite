@@ -1,0 +1,6 @@
+parameters:
+    level: 9
+    treatPhpDocTypesAsCertain: false
+    paths:
+        - src
+        - tests

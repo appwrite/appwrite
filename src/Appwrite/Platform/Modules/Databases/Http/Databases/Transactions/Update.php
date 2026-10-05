@@ -20,11 +20,13 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
@@ -59,6 +61,10 @@ class Update extends Action
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/databases/update-transaction.md',
+                requestExamples: [
+                    'commit' => ['summary' => 'Commit the transaction', 'value' => ['commit' => true]],
+                    'rollback' => ['summary' => 'Roll back the transaction', 'value' => ['rollback' => true]],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -217,7 +223,7 @@ class Update extends Action
                     }
                 }
 
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -245,6 +251,15 @@ class Update extends Action
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
+                            }
+                        }
+
+                        if (!$isAPIKey && !$isPrivilegedUser && \in_array($action, ['create', 'update', 'upsert']) && \is_array($data)) {
+                            try {
+                                $this->validateRelationships($dbForDatabases, $collection, $data, $authorization);
+                            } catch (Exception $e) {
+                                // Rethrown as a database exception so withTransaction() rolls back without retrying.
+                                throw new AuthorizationException($e->getMessage(), previous: $e);
                             }
                         }
 
@@ -319,6 +334,11 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
+            } catch (RelationshipException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
             } catch (StructureException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -339,11 +359,29 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            } catch (AuthorizationException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw new Exception(Exception::USER_UNAUTHORIZED, previous: $e);
+            } catch (\Throwable $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ])));
+                throw $e;
             }
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
+
                 $usage
                     ->setResource('database')
+                    ->setResourceId($database->getId())
                     ->setResourceInternalId((string) $databaseInternalId)
                     ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
             }
@@ -363,21 +401,30 @@ class Update extends Action
 
                 // using a dbCache so only one time database is set with databaseInternalId
                 if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$databaseInternalId])
-                    ]));
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->skipFilters(
+                        fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]),
+                        APP_DATABASES_SUBQUERIES
+                    ));
                     $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
                 }
 
                 $dbForDatabases = $dbCache[$databaseInternalId];
 
-                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                    Query::equal('$sequence', [$databaseInternalId])
-                ]));
+                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]),
+                    APP_DATABASES_SUBQUERIES
+                ));
 
-                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
-                    Query::equal('$sequence', [$collectionInternalId])
-                ]));
+                $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                    fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                        Query::equal('$sequence', [$collectionInternalId])
+                    ]),
+                    APP_COLLECTIONS_SUBQUERIES
+                ));
 
                 $groupId = $this->getGroupId();
                 $resourceId = $this->getResourceId();
@@ -450,9 +497,12 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    // Match the key set processDocument() gives every other row and document
+                    // event: the synthetic $databaseId, plus whichever of $tableId or
+                    // $collectionId belongs to the surface that was called.
                     $payload = $doc->getArrayCopy();
-                    $payload['$tableId'] = $collection->getId();
-                    $payload['$collectionId'] = $collection->getId();
+                    $payload['$databaseId'] = $database->getId();
+                    $payload['$' . $groupId] = $collection->getId();
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
@@ -462,7 +512,8 @@ class Update extends Action
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
                         $queueForEvents->getEvent(),
-                        $queueForEvents->getParams()
+                        $queueForEvents->getParams(),
+                        $queueForEvents->getContext('database')
                     );
 
                     $queueForRealtime->from($queueForEvents)->trigger();
@@ -479,6 +530,7 @@ class Update extends Action
                                     userId: $queueForEvents->getUserId(),
                                     payload: $queueForEvents->getPayload(),
                                     platform: $queueForEvents->getPlatform(),
+                                    database: $queueForEvents->getContext('database'),
                                 ));
                                 break;
                             }
@@ -519,6 +571,54 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Related documents nested in a staged operation are written with it, so the
+     * permissions they carry are checked against the related document as it exists
+     * at this point of the commit, after any earlier operations in the transaction.
+     *
+     * @param array<string, mixed> $data
+     * @throws Exception
+     */
+    private function validateRelationships(Database $dbForDatabases, Document $collection, array $data, Authorization $authorization): void
+    {
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute['type'] !== Database::VAR_RELATIONSHIP) {
+                continue;
+            }
+
+            $related = $data[$attribute['key']] ?? null;
+            if ($related instanceof Document) {
+                $related = $related->getArrayCopy();
+            }
+
+            if (empty($related) || !\is_array($related)) {
+                continue;
+            }
+
+            $relations = \array_is_list($related) ? $related : [$related];
+
+            $relatedCollection = $authorization->skip(fn () => $dbForDatabases->getCollection($attribute['options']['relatedCollection']));
+
+            foreach ($relations as $relation) {
+                if ($relation instanceof Document) {
+                    $relation = $relation->getArrayCopy();
+                }
+
+                if (!\is_array($relation) || \array_is_list($relation)) {
+                    continue;
+                }
+
+                $relationId = $relation['$id'] ?? null;
+                $current = \is_string($relationId)
+                    ? $authorization->skip(fn () => $dbForDatabases->getDocument($relatedCollection->getId(), $relationId))
+                    : new Document();
+
+                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
+                $this->validateRelationships($dbForDatabases, $relatedCollection, $relation, $authorization);
+            }
+        }
     }
 
     /**

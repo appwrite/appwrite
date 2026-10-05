@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -10,12 +11,13 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -69,12 +71,13 @@ class Create extends Action
             ->inject('response')
             ->inject('project')
             ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -85,13 +88,19 @@ class Create extends Action
         Response $response,
         Document $project,
         Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Event $queueForEvents,
         Database $dbForPlatform,
         Database $dbForProject,
         array $platform,
-        Log $log,
         Authorization $authorization,
+        Bus $bus,
     ) {
+
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
 
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -100,7 +109,21 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
+        // A branch-pinned rule must start on that branch's newest build, not on
+        // whatever the resource currently serves. Template deployments reuse
+        // providerBranch for their resolved ref, so they are not a branch build.
+        $deployment = $branch === ''
+            ? $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''))
+            : $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['functions']),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::equal('providerBranch', [$branch]),
+                Query::equal('status', ['ready']),
+                Query::isNotNull('installationId'),
+                Query::notEqual('installationId', ''),
+                Query::orderDesc('$createdAt'),
+                Query::orderDesc('$sequence'),
+            ]);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
@@ -134,16 +157,19 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
         }
 
-        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
 
-        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
+        $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
+            || $certificateIssuer->isAutoIssueEnabled($rule);
+
+        if ($needsCertificate) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
                 project: $project,
                 domain: new Document([
@@ -151,6 +177,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // A rule reaches this status only through verifyRule() above.
+                skipDomainValidation: $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING,
             ));
         }
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
@@ -13,9 +14,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
-use Utopia\Logger\Logger;
-use Utopia\Messaging\Adapter\Email as EmailAdapter;
-use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -81,7 +79,7 @@ class Doctor extends Action
             Console::log('🟢 AAAA record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
         }
 
-        if (System::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (EncryptionKey::isInsecure(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
@@ -132,7 +130,7 @@ class Doctor extends Action
 
             $providerName = $loggingProvider->getScheme();
 
-            if (empty($providerName) || !Logger::hasProvider($providerName)) {
+            if ($providerName !== 'sentry') {
                 Console::log('🔴 Logging adapter is disabled');
             } else {
                 Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
@@ -222,20 +220,23 @@ class Doctor extends Action
             }
         }
 
+        // Probe SMTP reachability only; do not send a live message.
         try {
-            /** @var EmailAdapter $smtp */
-            $smtp = $register->get('smtp');
+            $smtpHost = System::getEnv('_APP_SMTP_HOST', '');
+            $smtpPort = (int) System::getEnv('_APP_SMTP_PORT', '25');
 
-            $emailMessage = new EmailMessage(
-                to: ['demo@example.com'],
-                subject: 'Test SMTP Connection',
-                content: 'Hello World',
-                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
-                fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-            );
+            if ($smtpHost === '') {
+                Console::log('⚪ ' . str_pad("SMTP", 50, '.') . 'not configured');
+            } else {
+                $connection = @\fsockopen($smtpHost, $smtpPort > 0 ? $smtpPort : 25, $errno, $errstr, 3);
 
-            $smtp->send($emailMessage);
-            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                if ($connection !== false) {
+                    \fclose($connection);
+                    Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                } else {
+                    Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+                }
+            }
         } catch (\Throwable) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }

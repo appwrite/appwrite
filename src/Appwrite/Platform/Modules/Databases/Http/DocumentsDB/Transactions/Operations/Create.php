@@ -20,11 +20,6 @@ class Create extends OperationsCreate
         return 'createDocumentsDBOperations';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this
@@ -32,13 +27,25 @@ class Create extends OperationsCreate
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId/operations')
             ->desc('Create operations')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/documentsdb/create-operations.md',
+                requestExamples: [
+                    'createDocument' => [
+                        'summary' => 'Stage a document creation',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'collectionId' => '<COLLECTION_ID>',
+                            'documentId' => '<DOCUMENT_ID>',
+                            'data' => ['username' => 'walter.obrien'],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

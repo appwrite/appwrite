@@ -8,9 +8,9 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 /**
- * Emits build usage/billing metrics for a completed deployment. Shared by both
- * build backends — the executor (Builds worker) and the jobs-service (Jobs
- * worker) — so a build is counted identically however it was produced.
+ * Emits build usage/billing metrics for a completed deployment. Shared by the
+ * Jobs worker and the Builds worker, so a build is counted identically whether
+ * it finished on the jobs-service or failed before reaching it.
  */
 final class Build
 {
@@ -32,11 +32,18 @@ final class Build
         $buildDuration = (int) $deployment->getAttribute('buildDuration', 0) * 1000;
         $mbSeconds = (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus);
 
-        // Per-resource breakdown now travels as resource dimensions on the
-        // Context (resolved to resourceType + resourceId in the usage pipeline)
+        // Without a start stamp buildDuration falls back to wall clock since the
+        // deployment was created, which would bill queue wait as build compute.
+        if (empty($deployment->getAttribute('buildStartedAt'))) {
+            $buildDuration = 0;
+            $mbSeconds = 0;
+        }
+
+        // Per-resource breakdown travels as resource dimensions on the Context
         // instead of per-{resourceInternalId} metric-name templates.
         $usage
             ->setResource(rtrim($resourceType, 's'))
+            ->setResourceId($resource->getId())
             ->setResourceInternalId((string) $resource->getSequence());
 
         switch ($deployment->getAttribute('status')) {

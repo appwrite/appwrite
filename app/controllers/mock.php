@@ -2,10 +2,13 @@
 
 global $utopia, $request, $response;
 
+use Appwrite\Auth\OIDC\Mock\SigningKey;
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,6 +20,9 @@ use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -96,10 +102,47 @@ Http::get('/v1/mock/tests/general/oauth2/token')
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid refresh token');
             }
 
+            $responseJson['access_token'] = $canonicalEmail ? $client_id : 'refreshed-123456';
             $response->json($responseJson);
         } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid grant type');
         }
+    });
+
+/**
+ * Static profile picture for the mock OAuth2 user, served from the Appwrite
+ * container itself so the avatars OAuth2 provider can actually fetch it.
+ */
+Http::get('/v1/mock/tests/general/oauth2/photo')
+    ->desc('OAuth2 User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #00FF00 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAATUlEQVR42u3PQQ0AAAgEoNP+nbWBfzdoQGXyWicCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArcFUYYBf4Fjt4EAAAAASUVORK5CYII=';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/photo-refreshed')
+    ->desc('OAuth2 Refreshed User Photo')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        // Solid #FF0000 PNG, 64x64
+        $photo = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAPUlEQVR42u3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACEG12AAAH7Qv1cAAAAAElFTkSuQmCC';
+
+        $response
+            ->setContentType('image/png')
+            ->file(\base64_decode($photo));
     });
 
 Http::get('/v1/mock/tests/general/oauth2/user')
@@ -117,6 +160,15 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'User Name',
                 'email' => 'useroauth@localhost.test',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ];
+        } elseif ($token === 'refreshed-123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo-refreshed',
             ];
         } elseif (\str_starts_with($token, 'canonical-')) {
             $id = \substr($token, \strlen('canonical-'));
@@ -125,6 +177,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
                 'name' => 'Canonical Email User',
                 'email' => 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
+                'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
@@ -151,6 +204,130 @@ Http::get('/v1/mock/tests/general/oauth2/user-unverified')
             'name' => 'User Name Unverified',
             'email' => 'useroauthunverified@localhost.test',
             'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/user-no-email')
+    ->desc('OAuth2 User Without Email')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 3,
+            'name' => 'User Name NoEmail',
+        ]);
+    });
+
+Http::patch('/v1/mock/tests/general/oauth2/native')
+    ->desc('Configure native ID token sign-in for a mock provider')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('enabled', false, new Boolean(), 'Accept ID tokens minted by the mock provider.')
+    ->param('provider', 'mock', new WhiteList(\array_keys(\array_filter(Config::getParam('oAuthProviders', []), fn ($node) => !empty($node['mock']) && !empty($node['idToken']))), true), 'Mock provider to configure.', true)
+    ->param('appId', null, new Nullable(new Text(256, 0)), 'App ID to store for the provider. Null leaves it untouched, an empty string clears it.', true)
+    ->param('clientIds', [], new ArrayList(new Text(256, 0), 20), 'Native client IDs accepted as ID token audiences next to the app ID.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        // The mock providers have no console form of their own; this is the
+        // only way a test can reach the switches the real providers expose.
+        $providers = $project->getAttribute('oAuthProviders', []);
+        $providers[$provider . 'NativeEnabled'] = $enabled;
+        $providers[$provider . 'ClientIds'] = \array_values($clientIds);
+        if (!\is_null($appId)) {
+            $providers[$provider . 'Appid'] = $appId;
+        }
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'oAuthProviders' => $providers,
+        ]));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
+        $response->noContent();
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/jwks')
+    ->desc('OAuth2 JWKS')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->inject('cache')
+    ->inject('lock')
+    ->action(function (Response $response, Cache $cache, Lock $lock) {
+        $key = (new SigningKey($cache, $lock))->get();
+        $details = \openssl_pkey_get_details($key);
+
+        $response->json([
+            'keys' => [[
+                'kty' => 'RSA',
+                'use' => 'sig',
+                'alg' => 'RS256',
+                'kid' => SigningKey::getId($key),
+                'n' => \rtrim(\strtr(\base64_encode($details['rsa']['n']), '+/', '-_'), '='),
+                'e' => \rtrim(\strtr(\base64_encode($details['rsa']['e']), '+/', '-_'), '='),
+            ]],
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/id-token')
+    ->desc('OAuth2 ID Token')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('claims', '', new Text(4096, 0), 'JSON encoded ID token claims.')
+    ->param('header', '', new Text(1024, 0), 'JSON encoded ID token header overrides.', true)
+    ->inject('response')
+    ->inject('cache')
+    ->inject('lock')
+    ->action(function (string $claims, string $header, Response $response, Cache $cache, Lock $lock) {
+        $claims = \json_decode($claims, true);
+        $header = $header === '' ? [] : \json_decode($header, true);
+
+        if (!\is_array($claims) || !\is_array($header)) {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid claims or header');
+        }
+
+        $key = (new SigningKey($cache, $lock))->get();
+
+        // Header overrides let tests mint deliberately broken tokens (unknown kid, unsupported alg, ...)
+        $header = \array_merge([
+            'alg' => 'RS256',
+            'kid' => SigningKey::getId($key),
+            'typ' => 'JWT',
+        ], $header);
+
+        $headerEncoded = \rtrim(\strtr(\base64_encode(\json_encode($header)), '+/', '-_'), '=');
+        $payloadEncoded = \rtrim(\strtr(\base64_encode(\json_encode($claims)), '+/', '-_'), '=');
+        \openssl_sign($headerEncoded . '.' . $payloadEncoded, $signature, $key, OPENSSL_ALGO_SHA256);
+
+        $response->json([
+            'token' => $headerEncoded . '.' . $payloadEncoded . '.' . \rtrim(\strtr(\base64_encode($signature), '+/', '-_'), '='),
         ]);
     });
 

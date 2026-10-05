@@ -18,11 +18,6 @@ class Create extends TransactionsCreate
         return 'createVectorsDBTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this
@@ -30,7 +25,7 @@ class Create extends TransactionsCreate
             ->setHttpPath('/v1/vectorsdb/transactions')
             ->desc('Create transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',

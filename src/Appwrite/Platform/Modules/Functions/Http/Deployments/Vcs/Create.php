@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -76,6 +76,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -93,7 +94,8 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
-        Backend $deployments,
+        Deployments $deployments,
+        int $buildTimeout,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -123,7 +125,8 @@ class Create extends Base
             platform: $platform,
             reference: $reference,
             referenceType: $type,
-            deployments: $deployments
+            deployments: $deployments,
+            buildTimeout: $buildTimeout
         );
 
         $queueForEvents

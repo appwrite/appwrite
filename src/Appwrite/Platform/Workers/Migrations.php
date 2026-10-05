@@ -3,12 +3,16 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\AppwriteException;
+use Appwrite\Client;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Migration;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -44,17 +48,21 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
+    private const string SCOPE_PROBE_ID = 'migration-scope-probe';
+
     protected ?Database $dbForProject;
     protected ?Database $dbForPlatform;
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
+    protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
 
@@ -74,11 +82,6 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    /**
-     * @var callable|null
-     */
-    protected $logError = null;
-
     public static function getName(): string
     {
         return 'migrations';
@@ -97,7 +100,6 @@ class Migrations extends Action
             ->inject('dbForPlatform')
             ->inject('getDatabasesDB')
             ->inject('getProjectDB')
-            ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
@@ -106,6 +108,7 @@ class Migrations extends Action
             ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -119,7 +122,6 @@ class Migrations extends Action
         Database $dbForPlatform,
         callable $getDatabasesDB,
         callable $getProjectDB,
-        callable $logError,
         Realtime $queueForRealtime,
         Device $deviceForMigrations,
         Device $deviceForFiles,
@@ -128,6 +130,7 @@ class Migrations extends Action
         UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
+        PublicHostname $publicHostname,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -154,7 +157,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
-        $this->logError = $logError;
+        $this->publicHostname = $publicHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -172,7 +175,7 @@ class Migrations extends Action
             $this->dbForProject = null;
             $this->dbForPlatform = null;
             $this->project = null;
-            $this->logError = null;
+            $this->publicHostname = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -242,6 +245,14 @@ class Migrations extends Action
                 && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
+                if ($this->sourceProject->getSequence() !== $this->project->getSequence()) {
+                    $this->authenticateSource(
+                        $credentials['projectId'],
+                        $credentials['apiKey'] ?? '',
+                        $migration->getAttribute('resources', []),
+                    );
+                }
+
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
             } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
@@ -263,7 +274,8 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+                $this->publicHostname->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],
@@ -309,6 +321,60 @@ class Migrations extends Action
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * The database source reads the source project's tables directly, so the submitted
+     * key is never presented to the source API. Probe the source API with it first so
+     * only a key that can read those resources in that project reaches the database.
+     *
+     * @param array<string> $resources
+     * @throws Exception
+     */
+    private function authenticateSource(string $projectId, string $key, array $resources): void
+    {
+        $resources = empty($resources) ? SourceAppwrite::getSupportedResources() : $resources;
+
+        if (!Resource::isSupported(Transfer::GROUP_DATABASES_RESOURCES, $resources)) {
+            return;
+        }
+
+        $tablesDB = new TablesDB(
+            (new Client())
+                ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+                ->setProject($projectId)
+                ->setKey($key)
+        );
+
+        try {
+            $tablesDB->list();
+
+            if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
+                $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+            }
+
+            if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
+                $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+            }
+        } catch (AppwriteException $error) {
+            throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
+        }
+    }
+
+    /**
+     * The probe database never exists, so reaching its lookup means the key passed the scope check.
+     *
+     * @throws AppwriteException
+     */
+    private function probeScope(callable $probe): void
+    {
+        try {
+            $probe();
+        } catch (AppwriteException $error) {
+            if ($error->getType() !== Exception::DATABASE_NOT_FOUND) {
+                throw $error;
+            }
+        }
     }
 
     /**
@@ -496,14 +562,14 @@ class Migrations extends Action
         $transfer = $source = $destination = null;
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
-
         try {
+            $host = System::getEnv('_APP_MIGRATION_HOST');
+            if (empty($host)) {
+                throw new \Exception('_APP_MIGRATION_HOST is not set');
+            }
+
+            $endpoint = 'http://' . $host . '/v1';
+
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
@@ -588,7 +654,7 @@ class Migrations extends Action
 
             // Mirror general.php's HTTP-error pattern: typed AppwriteException uses its
             // registry-driven isPublishable() flag; library-thrown Migration\Exception is
-            // always user-facing; anything else is unknown and surfaced to Sentry.
+            // always user-facing; anything else is unknown and recorded as a warning.
             if ($th instanceof Exception) {
                 $publish = $th->isPublishable();
             } elseif ($th instanceof MigrationException) {
@@ -598,21 +664,18 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                $extras = [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ];
+                Span::add('warning.message', $th->getMessage());
+                Span::add('warning.code', $th->getCode());
+                Span::add('migration.id', $migration->getId());
+                Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+                Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
 
-                // Include source identifiers for Appwrite sources to make Sentry events
+                // Include source identifiers for Appwrite sources to make warning spans
                 // self-debuggable. Never include the apiKey or any other secret.
                 if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                    $credentials = $migration->getAttribute('credentials', []) ?? [];
-                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
-                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
+                    Span::add('migration.source_project_id', (string) ($migration->getAttribute('credentials', [])['projectId'] ?? ''));
+                    Span::add('migration.source_endpoint', (string) ($migration->getAttribute('credentials', [])['endpoint'] ?? ''));
                 }
-
-                $this->reportError($th, $migration, $extras);
             }
         } finally {
             try {
@@ -652,14 +715,23 @@ class Migrations extends Action
                     $destinationErrors,
                 ));
 
-                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
-
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
-                    $source?->error();
-                    $destination?->error();
+                    try {
+                        $source?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Source failure hook threw: ' . $error->getMessage());
+                    }
+
+                    try {
+                        $destination?->error();
+                    } catch (\Throwable $error) {
+                        Console::error('Destination failure hook threw: ' . $error->getMessage());
+                    }
                 }
+
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             } finally {
                 $source?->cleanup();
@@ -820,9 +892,8 @@ class Migrations extends Action
 
         Console::info("Created file document in bucket: $fileId");
 
-        // Generate JWT valid for 1 hour
-        $maxAge = 60 * 60;
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 0);
+        // The link is emailed, so it lives as long as the file itself does.
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', DATA_EXPORT_RETENTION, 0);
         $jwt = $encoder->encode([
             'bucketId' => $bucketId,
             'fileId' => $fileId,
@@ -868,9 +939,12 @@ class Migrations extends Action
 
         $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
         if (!$valid) {
-            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Invalid initiating user sequence for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Invalid initiating user sequence for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
             return new Document([]);
         }
 
@@ -879,9 +953,12 @@ class Migrations extends Action
         ]);
 
         if ($user->isEmpty()) {
-            $error = new \RuntimeException('Initiating user not found for export migration.');
-            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
-            $this->reportError($error, $migration);
+            Console::error('Initiating user not found for export migration. Migration: ' . $migration->getId());
+            Span::add('warning.message', 'Initiating user not found for export migration.');
+            Span::add('warning.code', 0);
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
 
         return $user;
@@ -913,33 +990,11 @@ class Migrations extends Action
             );
         } catch (\Throwable $error) {
             Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
-            $this->reportError($error, $migration);
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $extras
-     */
-    protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
-    {
-        if (!\is_callable($this->logError)) {
-            return;
-        }
-
-        try {
-            ($this->logError)(
-                $error,
-                'appwrite-worker',
-                'appwrite-queue-' . self::getName(),
-                [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source', ''),
-                    'destination' => $migration->getAttribute('destination', ''),
-                    ...$extras,
-                ]
-            );
-        } catch (\Throwable $loggingError) {
-            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+            Span::add('warning.message', $error->getMessage());
+            Span::add('warning.code', $error->getCode());
+            Span::add('migration.id', $migration->getId());
+            Span::add('migration.source', (string) $migration->getAttribute('source', ''));
+            Span::add('migration.destination', (string) $migration->getAttribute('destination', ''));
         }
     }
 
@@ -978,7 +1033,7 @@ class Migrations extends Action
         }
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback('en');
 
         $emailType = $success
             ? 'success'

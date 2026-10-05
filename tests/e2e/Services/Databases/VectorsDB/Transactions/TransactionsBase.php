@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\VectorsDB\Transactions;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -91,6 +92,31 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testListTransactionsTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/vectorsdb/transactions', $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/transactions', $headers, [
+            'total' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/transactions', $headers, [
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
     }
 
     /**
@@ -1050,9 +1076,9 @@ trait TransactionsBase
             }
         }
 
-        $this->assertEquals(0, $oldCategoryCount);
-        $this->assertEquals(4, $updatedCategoryCount); // 4 existing docs updated
-        $this->assertEquals(3, $newCategoryCount); // 3 new docs
+        $this->assertSame(0, $oldCategoryCount);
+        $this->assertSame(4, $updatedCategoryCount); // 4 existing docs updated
+        $this->assertSame(3, $newCategoryCount); // 3 new docs
     }
 
     /**
@@ -1489,6 +1515,27 @@ trait TransactionsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Created via normal route', $response['body']['metadata']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'doc_unknown_txn',
+            'data' => [
+                'embeddings' => $this->generateEmbeddings(3),
+                'metadata' => [
+                    'name' => 'Unknown transaction',
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**
@@ -1933,6 +1980,29 @@ trait TransactionsBase
             $this->assertEquals("Bulk created {$i}", $response['body']['metadata']['name']);
             $this->assertEquals('bulk_created', $response['body']['metadata']['category']);
         }
+
+        /**
+         * Test for FAILURE
+         */
+        $unknown = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documents' => [
+                [
+                    '$id' => 'bulk_unknown_txn',
+                    'embeddings' => $this->generateEmbeddings(3),
+                    'metadata' => [
+                        'name' => 'Unknown transaction',
+                    ]
+                ]
+            ],
+            'transactionId' => ID::unique()
+        ]);
+
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals(Exception::TRANSACTION_NOT_FOUND, $unknown['body']['type']);
     }
 
     /**

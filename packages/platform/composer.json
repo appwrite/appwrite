@@ -1,0 +1,42 @@
+{
+    "name": "utopia-php/platform",
+    "description": "Light and Fast Platform Library",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "platform"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Platform\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Platform\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-json": "*",
+        "ext-redis": "*",
+        "utopia-php/cli": "^0.24",
+        "utopia-php/http": "^2.0@RC",
+        "utopia-php/queue": "^6.0.0",
+        "utopia-php/servers": "^0.4"
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

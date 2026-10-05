@@ -30,11 +30,37 @@
     let sseSessionDetails = null;
     const csrfToken = document.querySelector('meta[name="appwrite-installer-csrf"]')?.getAttribute('content') || '';
 
-    const withCsrfHeader = (headers = {}) => {
-        if (!csrfToken) {
-            return headers;
+    const installerSecret = (() => {
+        const params = new URLSearchParams(window.location.search);
+        const fromQuery = params.get('secret') || '';
+        if (fromQuery) {
+            try {
+                sessionStorage.setItem('appwrite-installer-secret', fromQuery);
+            } catch (error) {
+                // ignore quota / private-mode failures
+            }
+            params.delete('secret');
+            const query = params.toString();
+            const next = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
+            history.replaceState({}, '', next);
+            return fromQuery;
         }
-        return { ...headers, 'X-Appwrite-Installer-CSRF': csrfToken };
+        try {
+            return sessionStorage.getItem('appwrite-installer-secret') || '';
+        } catch (error) {
+            return '';
+        }
+    })();
+
+    const withCsrfHeader = (headers = {}) => {
+        const next = { ...headers };
+        if (csrfToken) {
+            next['X-Appwrite-Installer-CSRF'] = csrfToken;
+        }
+        if (installerSecret) {
+            next['X-Appwrite-Installer-Secret'] = installerSecret;
+        }
+        return next;
     };
 
     const showCsrfToast = () => {
@@ -42,6 +68,15 @@
             status: 'error',
             title: 'Session expired',
             description: 'Refresh the page and try again.',
+            dismissible: true
+        });
+    };
+
+    const showSecretToast = () => {
+        showToast?.({
+            status: 'error',
+            title: 'Installer secret required',
+            description: 'Open the URL printed in the installer terminal, or add ?secret= from STDOUT.',
             dismissible: true
         });
     };
@@ -54,6 +89,10 @@
                     'Content-Type': 'application/json'
                 })
             });
+            if (response.status === 401) {
+                showSecretToast();
+                return false;
+            }
             if (!response.ok) {
                 showCsrfToast();
                 return false;
@@ -303,7 +342,7 @@
             try {
                 const response = await fetch(
                     `/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`,
-                    { cache: 'no-store' }
+                    { cache: 'no-store', headers: withCsrfHeader() }
                 );
                 if (response.ok) {
                     const data = await response.json();
@@ -368,10 +407,13 @@
             httpPort: normalizedHttpPort,
             httpsPort: normalizedHttpsPort,
             database: formState?.database || 'postgresql',
+            topology: formState?.topology || 'combined',
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
+            forceHttps: formState?.forceHttps === true,
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
+            accountName: (formState?.accountName || '').trim(),
             accountEmail: normalizedAccountEmail,
             accountPassword: normalizedAccountPassword,
             migrate: formState?.migrate ?? false
@@ -381,7 +423,8 @@
     const fetchInstallStatus = async (installId) => {
         if (!installId) return null;
         const response = await fetch(`/install/status?installId=${encodeURIComponent(installId)}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: withCsrfHeader()
         });
         if (!response.ok) return null;
         const json = await response.json();

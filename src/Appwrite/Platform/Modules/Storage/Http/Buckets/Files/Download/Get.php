@@ -136,10 +136,13 @@ class Get extends Action
             $unit = $request->getRangeUnit();
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
+                $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            // RFC 9110: a last-byte-pos past the end of the file is clamped, not rejected.
+            $end = min($end, $size - 1);
+
+            if ($unit !== 'bytes' || $start > $end) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
@@ -159,7 +162,7 @@ class Get extends Action
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $deviceForFiles->read($path);
+            $source = (string) $deviceForFiles->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -173,14 +176,14 @@ class Get extends Action
         switch ($file->getAttribute('algorithm', Compression::NONE)) {
             case Compression::ZSTD:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
             case Compression::GZIP:
                 if (empty($source)) {
-                    $source = $deviceForFiles->read($path);
+                    $source = (string) $deviceForFiles->read($path);
                 }
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
@@ -197,14 +200,14 @@ class Get extends Action
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($deviceForFiles->read($path, $start, ($end - $start + 1)));
+            $response->send((string) $deviceForFiles->read($path, $start, ($end - $start + 1)));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceForFiles->read(
+                    (string) $deviceForFiles->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -213,7 +216,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($deviceForFiles->read($path));
+            $response->send((string) $deviceForFiles->read($path));
         }
     }
 }

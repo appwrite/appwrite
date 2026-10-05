@@ -161,9 +161,11 @@ final class AppDomainTest extends TestCase
         $this->assertTrue($this->validator->isValid('  example.com  '));
     }
 
-    public function testAcceptsEmptyPortSegment(): void
+    public function testRejectsEmptyPortSegment(): void
     {
-        // 'localhost:' splits into host='localhost', port='' — empty port is skipped
-        $this->assertTrue($this->validator->isValid('localhost:'));
+        // Trailing colon with no digits is an explicit but empty port.
+        $this->assertFalse($this->validator->isValid('localhost:'));
+        $this->assertFalse($this->validator->isValid('example.com:'));
+        $this->assertFalse($this->validator->isValid('127.0.0.1:'));
     }
 }

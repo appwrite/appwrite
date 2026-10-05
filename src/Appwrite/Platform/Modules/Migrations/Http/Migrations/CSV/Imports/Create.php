@@ -27,6 +27,7 @@ use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -132,7 +133,7 @@ class Create extends Action
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
         if ($hasEncryption || $hasCompression) {
-            $source = $deviceForFiles->read($path);
+            $source = (string) $deviceForFiles->read($path);
 
             if ($hasEncryption) {
                 $source = OpenSSL::decrypt(
@@ -157,10 +158,10 @@ class Create extends Action
             }
 
             // Manual write after decryption and/or decompression
-            if (!$deviceForMigrations->write($newPath, $source, 'text/csv')) {
+            if (!$deviceForMigrations->write($newPath, new Stream($source), 'text/csv')) {
                 throw new \Exception('Unable to copy file');
             }
-        } elseif (!$deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
+        } elseif (!$deviceForFiles->copy($path, $newPath, $deviceForMigrations)) {
             throw new \Exception('Unable to copy file');
         }
 

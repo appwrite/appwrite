@@ -1,10 +1,13 @@
 <?php
 $isUpgrade ??= false;
 $lockedDatabase ??= null;
+$topology ??= 'combined';
+$selectedTopology = \in_array($topology, ['combined', 'separate'], true) ? $topology : 'combined';
 $defaultAppDomain ??= 'localhost';
 $defaultHttpPort ??= '80';
 $defaultHttpsPort ??= '443';
 $defaultEmailCertificates ??= '';
+$defaultForceHttps ??= false;
 $defaultAssistantOpenAIKey ??= '';
 $defaultDatabase ??= 'postgresql';
 $enabledDatabases ??= ['postgresql', 'mariadb', 'mongodb'];
@@ -33,7 +36,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
 
         <div class="stack-xl">
             <div class="input-group stack-xs">
-                <label for="hostname" class="label-text typography-text-m-500 text-neutral-secondary">Hostname</label>
+                <label for="hostname" class="label-text typography-text-xs-500 text-neutral-secondary">Hostname</label>
                 <input
                     type="text"
                     id="hostname"
@@ -41,11 +44,29 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                     class="input-field typography-text-m-400 text-neutral-primary"
                     placeholder="localhost"
                     value="<?php echo $hostnameValue; ?>"
+                    autocomplete="off"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    data-bwignore
+                    data-form-type="other"
                 >
             </div>
 
+            <label class="toggle-option" for="force-https">
+                <span class="toggle-option-content">
+                    <span class="typography-text-m-500 text-neutral-primary">Use HTTPS</span>
+                    <span id="force-https-description" class="typography-text-xs-400 text-neutral-tertiary">Turn this on when your Appwrite domain is served over HTTPS, including through a reverse proxy.</span>
+                </span>
+                <span class="toggle-switch">
+                    <input type="checkbox" id="force-https" name="forceHttps" class="sr-only" aria-describedby="force-https-description" <?php echo $defaultForceHttps ? 'checked' : ''; ?>>
+                    <span class="toggle-switch-track" aria-hidden="true">
+                        <span class="toggle-switch-thumb"></span>
+                    </span>
+                </span>
+            </label>
+
             <div class="input-group stack-xs">
-                <label class="label-text typography-text-m-500 text-neutral-secondary">Database</label>
+                <label class="label-text typography-text-xs-500 text-neutral-secondary">Database</label>
                 <div class="selector-group<?php echo $isDatabaseLocked ? ' is-locked' : ''; ?>">
                     <?php if ($postgresEnabled) { ?>
                     <label class="selector-card <?php echo ($selectedDatabase === 'postgresql') ? 'selected' : ''; ?><?php echo $postgresDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $postgresDisabled ? ' aria-disabled="true"' : ''; ?>>
@@ -103,9 +124,29 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                     </span>
                 </button>
                 <div class="accordion-content">
+                    <div class="input-group stack-xs">
+                        <label class="label-text typography-text-xs-500 text-neutral-secondary">Container topology</label>
+                        <div class="selector-group">
+                            <label class="selector-card<?php echo $selectedTopology === 'combined' ? ' selected' : ''; ?>">
+                                <input type="radio" name="topology" value="combined"<?php echo $selectedTopology === 'combined' ? ' checked' : ''; ?> class="sr-only">
+                                <div class="selector-content">
+                                    <div class="typography-text-m-500 text-neutral-primary">Combined</div>
+                                    <div class="typography-text-xs-400 text-neutral-secondary">One worker and one scheduler (recommended)</div>
+                                </div>
+                            </label>
+                            <label class="selector-card<?php echo $selectedTopology === 'separate' ? ' selected' : ''; ?>">
+                                <input type="radio" name="topology" value="separate"<?php echo $selectedTopology === 'separate' ? ' checked' : ''; ?> class="sr-only">
+                                <div class="selector-content">
+                                    <div class="typography-text-m-500 text-neutral-primary">Separate</div>
+                                    <div class="typography-text-xs-400 text-neutral-secondary">One container per queue (better for scaling)</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="input-row">
                         <div class="input-group stack-xs">
-                            <label for="http-port" class="label-text typography-text-m-500 text-neutral-secondary">HTTP port</label>
+                            <label for="http-port" class="label-text typography-text-xs-500 text-neutral-secondary">HTTP port</label>
                             <input
                                 type="number"
                                 id="http-port"
@@ -117,6 +158,11 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                                 min="1"
                                 max="65535"
                                 step="1"
+                                autocomplete="off"
+                                data-1p-ignore
+                                data-lpignore="true"
+                                data-bwignore
+                                data-form-type="other"
                             >
                         </div>
                         <button type="button" class="button secondary" data-reset-target="http-port" disabled>
@@ -126,7 +172,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
 
                     <div class="input-row">
                         <div class="input-group stack-xs">
-                            <label for="https-port" class="label-text typography-text-m-500 text-neutral-secondary">HTTPS port</label>
+                            <label for="https-port" class="label-text typography-text-xs-500 text-neutral-secondary">HTTPS port</label>
                             <input
                                 type="number"
                                 id="https-port"
@@ -138,6 +184,11 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                                 min="1"
                                 max="65535"
                                 step="1"
+                                autocomplete="off"
+                                data-1p-ignore
+                                data-lpignore="true"
+                                data-bwignore
+                                data-form-type="other"
                             >
                         </div>
                         <button type="button" class="button secondary" data-reset-target="https-port" disabled>
@@ -147,7 +198,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
 
                     <div class="input-row">
                         <div class="input-group stack-xs">
-                            <label for="ssl-email" class="label-text typography-text-m-500 text-neutral-secondary">SSL certificate email</label>
+                            <label for="ssl-email" class="label-text typography-text-xs-500 text-neutral-secondary">SSL certificate email</label>
                             <input
                                 type="email"
                                 id="ssl-email"
@@ -156,6 +207,11 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                                 placeholder="you@example.com"
                                 value="<?php echo $sslEmailValue; ?>"
                                 data-default="<?php echo $sslEmailValue; ?>"
+                                autocomplete="off"
+                                data-1p-ignore
+                                data-lpignore="true"
+                                data-bwignore
+                                data-form-type="other"
                             >
                         </div>
                         <button type="button" class="button secondary" data-reset-target="ssl-email" disabled>
@@ -165,7 +221,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
 
                     <div class="input-row">
                         <div class="input-group stack-xs">
-                            <label for="assistant-openai-key" class="label-text typography-text-m-500 text-neutral-secondary">
+                            <label for="assistant-openai-key" class="label-text typography-text-xs-500 text-neutral-secondary">
                                 OpenAI key
                                 <span class="label-optional typography-text-m-400 text-neutral-tertiary">optional</span>
                                 <span class="tooltip-wrapper">
@@ -183,6 +239,11 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                                 placeholder="Enter OpenAI key for Appwrite Assistant"
                                 value="<?php echo $assistantOpenAIKeyValue; ?>"
                                 data-default="<?php echo $assistantOpenAIKeyValue; ?>"
+                                autocomplete="off"
+                                data-1p-ignore
+                                data-lpignore="true"
+                                data-bwignore
+                                data-form-type="other"
                             >
                         </div>
                     </div>

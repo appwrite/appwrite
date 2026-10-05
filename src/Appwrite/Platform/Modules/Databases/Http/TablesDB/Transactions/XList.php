@@ -10,17 +10,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Transactions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 
 class XList extends TransactionsList
 {
     public static function getName(): string
     {
         return 'listTransactions';
-    }
-
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION_LIST;
     }
 
     public function __construct()
@@ -47,6 +43,7 @@ class XList extends TransactionsList
                 contentType: ContentType::JSON
             ))
             ->param('queries', [], new Transactions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries).', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

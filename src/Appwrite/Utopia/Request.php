@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Network\TrustedProxies;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
@@ -9,6 +10,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
 use Utopia\Http\Route;
+use Utopia\Http\TrustedHeaders;
 use Utopia\System\System;
 
 class Request extends UtopiaRequest
@@ -19,13 +21,49 @@ class Request extends UtopiaRequest
     private array $filters = [];
     private ?Route $route = null;
     private ?array $filteredParams = null;
+    private readonly TrustedProxies $trustedProxies;
 
     public function __construct(SwooleRequest $request)
     {
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
-        $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
+        $this->trustedProxies = TrustedProxies::fromEnvironment();
 
-        parent::__construct($request);
+        parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
+    }
+
+    #[\Override]
+    public function getIP(): string
+    {
+        $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
+
+        if (!$this->trustedProxies->contains($remoteAddr)) {
+            return $remoteAddr;
+        }
+
+        foreach ($this->trusted->ip as $header) {
+            $ips = [];
+            foreach (explode(',', $this->getHeaderLine($header)) as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
+                    $ips[] = $ip;
+                }
+            }
+
+            if ($ips === []) {
+                continue;
+            }
+
+            // Proxies that append keep client-supplied entries on the left, so the rightmost untrusted hop is the client.
+            foreach (array_reverse($ips) as $ip) {
+                if (!$this->trustedProxies->contains($ip)) {
+                    return $ip;
+                }
+            }
+
+            return $ips[0];
+        }
+
+        return $remoteAddr;
     }
 
     /**
@@ -121,17 +159,6 @@ class Request extends UtopiaRequest
     public function getFilters(): array
     {
         return $this->filters;
-    }
-
-    /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
-        $this->filteredParams = null;
     }
 
     /**

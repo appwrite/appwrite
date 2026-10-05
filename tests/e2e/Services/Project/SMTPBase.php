@@ -294,7 +294,7 @@ trait SMTPBase
 
     public function testUpdateSMTPEmptySenderName(): void
     {
-        // Empty sender name is valid — PHPMailer accepts '' as display name.
+        // Empty sender name is valid — an address may carry no display name.
         $response = $this->updateSMTP(
             senderName: '',
             senderEmail: 'sender@example.com',
@@ -403,7 +403,7 @@ trait SMTPBase
         );
 
         // Step 2: Clear senderEmail while keeping SMTP disabled.
-        // enabled=false skips the PHPMailer connection check so empty senderEmail is valid.
+        // enabled=false skips the connection check so empty senderEmail is valid.
         $clear = $this->updateSMTP(
             senderEmail: '',
             enabled: false,

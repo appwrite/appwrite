@@ -57,7 +57,7 @@ class Create extends EmailCreate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Nullable(new Email()), 'Default value for column when not provided. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new Email()), 'Default value for column when not provided. Cannot be set when column is required.', true, example: 'email@example.com')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')

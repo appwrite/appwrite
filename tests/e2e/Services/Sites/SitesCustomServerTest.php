@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Command;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -23,6 +26,88 @@ final class SitesCustomServerTest extends Scope
     use SitesBase;
     use ProjectCustom;
     use SideServer;
+
+    private function waitForSiteLog(string $siteId, string $requestPath): array
+    {
+        $logs = [];
+        $start = \time();
+
+        while (\time() - $start < 120) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', [$requestPath])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+
+            if (!empty($logs['body']['executions'][0]['logs']) && !empty($logs['body']['executions'][0]['errors'])) {
+                return $logs['body']['executions'][0];
+            }
+
+            \usleep(500000);
+        }
+
+        $this->assertNotEmpty($logs['body']['executions'] ?? [], 'Site execution log was not available within timeout');
+        $this->assertNotEmpty($logs['body']['executions'][0]['logs'] ?? '', 'Site execution log content was not populated within timeout');
+
+        return $logs['body']['executions'][0];
+    }
+
+    public function testSSRLogsPersistAndCanBeManaged(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => ID::unique(),
+                'name' => 'SSR site logs',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $this->setupSiteDomain($siteId);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
+
+            $this->assertEventually(function () use ($proxyClient) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+                $this->assertEquals(200, $response['headers']['status-code']);
+            });
+
+            $log = $this->waitForSiteLog($siteId, '/logs-inline');
+            $this->assertEquals($deploymentId, $log['deploymentId']);
+            $this->assertEquals('GET', $log['requestMethod']);
+            $this->assertStringContainsString('Log1', (string) $log['logs']);
+            $this->assertStringContainsString('Error1', (string) $log['errors']);
+
+            $logId = $log['$id'];
+            $stored = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $stored['headers']['status-code']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/logs/' . $logId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
 
     public function testListSpecs(): void
     {
@@ -278,6 +363,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('siteKey3', $secretVariable['body']['key']);
         $this->assertEquals('', $secretVariable['body']['value']);
         $this->assertEquals(true, $secretVariable['body']['secret']);
+
+        // A key that is not a valid env var name is refused
+        foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
+            $invalidVariable = $this->createVariable($siteId, [
+                'variableId' => ID::unique(),
+                'key' => $invalidKey,
+                'value' => 'siteValue',
+            ]);
+
+            $this->assertEquals(400, $invalidVariable['headers']['status-code'], 'Key ' . json_encode($invalidKey) . ' should be refused');
+        }
 
         $variable = $this->getVariable($siteId, $variable['body']['$id']);
 
@@ -739,6 +835,133 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testScopes(): void
+    {
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $siteId = $site['body']['$id'];
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read'], $site['body']['scopes']);
+
+        $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        // Build-time key (APPWRITE_SITE_API_KEY) can call the API with granted scopes
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertStringContainsStringIgnoringCase('200 OK', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"total":', $deployment['body']['buildLogs']);
+        $this->assertStringContainsStringIgnoringCase('"users":', $deployment['body']['buildLogs']);
+
+        $this->assertEquals(1, \preg_match('/KEY_FOR_TESTS=(\S+)/', $deployment['body']['buildLogs'], $matches));
+        $this->assertEphemeralKey($matches[1], ['users.read']);
+
+        // Runtime key (x-appwrite-key header) can call the API with granted scopes
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/api-key');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $body = $response['body'];
+        $this->assertIsArray($body);
+        $this->assertArrayHasKey('total', $body['users']);
+        $this->assertArrayHasKey('users', $body['users']);
+        $this->assertEphemeralKey($body['apiKey'], ['users.read']);
+
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => ['users.read', 'teams.read'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update omitting scopes preserves them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['users.read', 'teams.read'], $site['body']['scopes']);
+
+        // Update with empty scopes clears them
+        $site = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'sh api-key.sh && npm ci',
+            'fallbackFile' => '',
+            'scopes' => [],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals([], $site['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    private function assertEphemeralKey(string $key, array $scopes): void
+    {
+        $prefix = API_KEY_EPHEMERAL . '_';
+        $this->assertStringStartsWith($prefix, $key);
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $payload = $jwt->decode(\substr($key, \strlen($prefix)));
+
+        // Editions force extra grants onto every site key through computeScopes
+        // (empty here, cloud adds proxy.invalidations.write), so a key must carry
+        // the user-granted scopes plus those grants and nothing else.
+        $granted = Config::getParam('computeScopes', [])['sites'] ?? [];
+
+        $this->assertEquals($this->getProject()['$id'], $payload['projectId']);
+        $this->assertEquals(\array_values(\array_unique(\array_merge($scopes, $granted))), $payload['scopes']);
+    }
+
     public function testListSites(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
@@ -1030,7 +1253,13 @@ final class SitesCustomServerTest extends Scope
         file_put_contents($tempDir . '/large.bin', random_bytes(12 * 1024 * 1024)); // 12MB non-compressible
 
         $codePath = $tempDir . '/code.tar.gz';
-        Console::execute("cd $tempDir && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->flag('-czf')
+            ->argument($codePath)
+            ->option('-C', $tempDir)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         $totalSize = filesize($codePath);
         $chunkSize = 5 * 1024 * 1024; // 5MB chunks
@@ -1160,7 +1389,13 @@ final class SitesCustomServerTest extends Scope
             file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
 
             $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
-            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+            $tar = (new Command('tar'))
+                ->option('--exclude', 'code.tar.gz')
+                ->flag('-czf')
+                ->argument($source)
+                ->option('-C', $tmpDirectory)
+                ->argument('.');
+            Console::execute($tar, '', $this->stdout, $this->stderr);
 
             $totalSize = filesize($source);
             $chunkSize = 5 * 1024 * 1024;
@@ -1461,6 +1696,57 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCancelDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — canceling through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->cancelDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateDeployment(): void
     {
         $siteId = $this->setupSite([
@@ -1504,6 +1790,278 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateSiteDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'true'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — activating through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->updateSiteDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        // Owning site is unchanged.
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId, $site['body']['deploymentId']);
+
+        /**
+         * Test for SUCCESS — the owning site can still activate it.
+         */
+        $response = $this->updateSiteDeployment($siteId, $deploymentId);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testDeploymentEndpointsRequireMatchingResourceType(): void
+    {
+        $sharedId = ID::unique();
+
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Resource type site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => $sharedId,
+        ]);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'functionId' => $sharedId,
+            'name' => 'Resource type function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false',
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        /**
+         * Test for FAILURE — a function that shares the site custom ID must not
+         * read or mutate the site deployment (resourceType mismatch).
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $sharedId . '/deployment', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'deploymentId' => $deploymentId,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning site path still works.
+         */
+        $response = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['$id']);
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDuplicateDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — duplicating through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->createDuplicateDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning site can still duplicate it.
+         */
+        $response = $this->createDuplicateDeployment($siteId, $deploymentId);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentResumeRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — resuming via content-range + x-appwrite-id under a
+         * site that does not own the deployment must not succeed.
+         * x-appwrite-id is only honored when content-range is present.
+         */
+        $code = $this->packageSite('static-single-file');
+        $size = \filesize($code->getFilename());
+
+        $response = $this->client->call(Client::METHOD_POST, '/sites/' . $otherSiteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => $deploymentId,
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([
@@ -1543,6 +2101,16 @@ final class SitesCustomServerTest extends Scope
         $this->assertCount(2, $deployments['body']['deployments']);
         $this->assertArrayHasKey('sourceSize', $deployments['body']['deployments'][0]);
         $this->assertArrayHasKey('buildSize', $deployments['body']['deployments'][0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $deployments = $this->listDeployments($siteId, [
+            'search' => 'deployment',
+        ]);
+
+        $this->assertEquals(400, $deployments['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $deployments['body']['type']);
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
@@ -1737,7 +2305,9 @@ final class SitesCustomServerTest extends Scope
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertGreaterThan(0, $deployment['body']['buildDuration']);
+        // A build that finishes within the measured second can report zero.
+        $this->assertIsInt($deployment['body']['buildDuration']);
+        $this->assertGreaterThanOrEqual(0, $deployment['body']['buildDuration']);
         $this->assertNotEmpty($deployment['body']['status']);
         $this->assertNotEmpty($deployment['body']['buildLogs']);
         $this->assertArrayHasKey('sourceSize', $deployment['body']);
@@ -2023,6 +2593,74 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('installCommand', $framework['adapters'][0]);
         $this->assertArrayHasKey('buildCommand', $framework['adapters'][0]);
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
+    }
+
+    public function testListFrameworksAndSpecificationsTotal(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => true]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertCount($frameworks['body']['total'], $frameworks['body']['frameworks']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => false]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertEquals(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+
+        $specifications = $this->listSpecifications(['total' => true]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertCount($specifications['body']['total'], $specifications['body']['specifications']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+
+        $specifications = $this->listSpecifications(['total' => false]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertEquals(0, $specifications['body']['total']);
+        $this->assertNotEmpty($specifications['body']['specifications']);
+    }
+
+    public function testGetFrameworksHidesStartCommand(): void
+    {
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $this->assertStringNotContainsString('startCommand', (string) json_encode($frameworks['body']));
+    }
+
+    public function testCreateSiteHidesStartCommand(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SSR site without a start command',
+            'framework' => 'nextjs',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './.next',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+        ]);
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+
+        // An omitted start command stays empty; the runtime resolves its own default at boot.
+        $this->assertSame('', $site['body']['startCommand']);
+
+        $this->cleanupSite($siteId);
     }
 
     public function testSiteStatic(): void
@@ -2424,6 +3062,32 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertNotSame($deploymentMd5, $buildMd5);
 
+        // Range bounds are inclusive and an end past the last byte is clamped to it.
+        $size = \strlen($response['body']);
+
+        $range = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500),
+        ], $this->getHeaders()), [
+            'type' => 'output',
+        ]);
+
+        $this->assertEquals(206, $range['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $range['headers']['content-range']);
+        $this->assertEquals('1', $range['headers']['content-length']);
+        $this->assertEquals(\substr($response['body'], -1), $range['body']);
+
+        $rejected = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-',
+        ], $this->getHeaders()), [
+            'type' => 'output',
+        ]);
+
+        $this->assertEquals(416, $rejected['headers']['status-code']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -2668,6 +3332,7 @@ final class SitesCustomServerTest extends Scope
             'path' => '/contact'
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/contact', $response['headers']['location']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', (string) $response['headers']['set-cookie']);
         // due to swoole update; no more httponly
@@ -2685,6 +3350,45 @@ final class SitesCustomServerTest extends Scope
             $this->assertStringContainsString("Contact page", (string) $response['body']);
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
+
+        // Success: Path defaults to the site root
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => ''
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        // Failure: Path must be relative to the site root
+        $paths = [
+            ['contact'],
+            'contact',
+            'example.com',
+            '@example.com',
+            '.example.com',
+            '-example.com',
+            ':8080/contact',
+            'https://example.com/contact',
+            '//example.com/contact',
+            '/\\example.com/contact',
+            "/contact\r\nx-test: 1",
+        ];
+        foreach ($paths as $path) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $jwt['body']['jwt'],
+                'path' => $path
+            ], followRedirects: false);
+            $message = \var_export($path, true);
+            $this->assertEquals(400, $response['headers']['status-code'], $message);
+            $this->assertArrayNotHasKey('location', $response['headers'], $message);
+            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
+        }
 
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
@@ -3030,7 +3734,7 @@ final class SitesCustomServerTest extends Scope
         $stdout = '';
         $stderr = '';
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . '/empty';
-        Console::execute("mkdir -p $folderPath", '', $stdout, $stderr);
+        Console::execute((new Command('mkdir'))->flag('-p')->argument($folderPath), '', $stdout, $stderr);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('empty'),
@@ -3207,6 +3911,49 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(404, $deployment['headers']['status-code']);
         $this->assertEquals('installation_not_found', $deployment['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $code = $this->packageSite('static');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'true',
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupSite($siteId);
     }

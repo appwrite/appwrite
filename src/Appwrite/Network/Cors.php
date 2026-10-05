@@ -7,9 +7,9 @@ use Utopia\Validator\Hostname;
 /**
  * Generate CORS response headers for an incoming request.
  *
- * Allowed origins are matched by hostname only. Arrays passed to the
- * constructor (methods, headers, exposed headers) are formatted into
- * comma-separated header strings.
+ * Allowed origins are matched by hostname only, with loopback hostnames always
+ * accepted. Arrays passed to the constructor (methods, headers, exposed
+ * headers) are formatted into comma-separated header strings.
  */
 final class Cors
 {
@@ -77,13 +77,20 @@ final class Cors
             return $headers;
         }
 
-        // Match only by host
+        // Match only by host, falling back to the alias the host spells out.
+        // See Platform::LOOPBACK_ALIASES -- responses here carry credentials.
         $validator = new Hostname($this->allowedHosts);
         if (!$validator->isValid($host)) {
-            return $headers;
+            $alias = \in_array($host, Platform::LOOPBACK_ALIASES, true)
+                && $validator->isValid(Platform::LOOPBACK_HOSTNAME);
+
+            if (!$alias) {
+                return $headers;
+            }
         }
 
-        // Accepted
+        // Accepted. Echo the caller's origin exactly, never a wildcard, so the
+        // browser's own literal-match rule stays the last line of defence.
         $headers[self::HEADER_ALLOW_ORIGIN] = $origin;
 
         return $headers;

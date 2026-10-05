@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -9,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -62,6 +64,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -73,7 +76,8 @@ class Update extends Base
         Database $dbForProject,
         Event $queueForEvents,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Bus $bus
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -83,6 +87,13 @@ class Update extends Base
         }
 
         if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -98,25 +109,39 @@ class Update extends Base
             'deploymentCreatedAt' => $deployment->getCreatedAt(),
         ])));
 
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
+
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization) {
-            $rule = $rule
-                ->setAttribute('deploymentId', $deployment->getId())
-                ->setAttribute('deploymentInternalId', $deployment->getSequence());
+        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries) {
+            $updatedRules = [];
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $rule->getAttribute('deploymentId'),
-                'deploymentInternalId' => $rule->getAttribute('deploymentInternalId'),
-            ])));
-        }, $queries));
+            foreach ($dbForPlatform->iterate('rules', $queries) as $rule) {
+                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]));
+
+                $updatedRules[] = $rule->getArrayCopy();
+            }
+
+            return $updatedRules;
+        });
+
+        foreach ($updatedRules as $rule) {
+            $bus->dispatch(new RuleUpdated($rule));
+        }
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

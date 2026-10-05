@@ -30,8 +30,7 @@ class Base extends Queries
             $config['projects'],
             $config['buckets'],
             $config['databases'],
-            $config['console'],
-            $config['logs']
+            $config['console']
         );
 
         $collection = $collections[$collection];
@@ -91,7 +90,11 @@ class Base extends Queries
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
+            new Filter(
+                attributes: $attributes,
+                idAttributeType: Database::VAR_INTEGER,
+                maxValuesCount: APP_DATABASE_QUERY_MAX_VALUES
+            ),
             new Order($attributes),
         ];
 

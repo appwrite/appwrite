@@ -11,17 +11,12 @@ use Appwrite\Auth\OAuth2;
 
 class Appwrite extends OAuth2
 {
-    private const PKCE_STATE_KEY = '_pkce';
+    use PKCE;
 
     /**
      * @var string
      */
     private string $endpoint = 'https://cloud.appwrite.io/v1/oauth2/console';
-
-    /**
-     * @var string
-     */
-    private string $pkceVerifier = '';
 
     /**
      * @var array
@@ -59,7 +54,7 @@ class Appwrite extends OAuth2
         // state so it survives the redirect, since the adapter is reconstructed
         // statelessly on the callback before the token exchange.
         $state = $this->state;
-        $state[self::PKCE_STATE_KEY] = $this->getPKCEVerifier();
+        $state = $this->withPKCEState($state);
 
         return $this->endpoint . '/authorize?' . \http_build_query([
             'client_id' => $this->appID,
@@ -210,27 +205,6 @@ class Appwrite extends OAuth2
             return null;
         }
 
-        $verifier = $parsed[self::PKCE_STATE_KEY] ?? null;
-        if (\is_string($verifier)) {
-            $this->pkceVerifier = $verifier;
-        }
-
-        unset($parsed[self::PKCE_STATE_KEY]);
-
-        return $parsed;
-    }
-
-    private function getPKCEVerifier(): string
-    {
-        if ($this->pkceVerifier === '') {
-            $this->pkceVerifier = \rtrim(\strtr(\base64_encode(\random_bytes(64)), '+/', '-_'), '=');
-        }
-
-        return $this->pkceVerifier;
-    }
-
-    private function getPKCEChallenge(): string
-    {
-        return \rtrim(\strtr(\base64_encode(\hash('sha256', $this->getPKCEVerifier(), true)), '+/', '-_'), '=');
+        return $this->restorePKCEState($parsed);
     }
 }

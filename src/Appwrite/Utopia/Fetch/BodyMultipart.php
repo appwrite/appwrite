@@ -106,17 +106,6 @@ class BodyMultipart
         return $this;
     }
 
-    public function getBoundary(): string
-    {
-        return $this->boundary;
-    }
-
-    public function setBoundary(string $boundary): self
-    {
-        $this->boundary = $boundary;
-        return $this;
-    }
-
     public function exportHeader(): string
     {
         return 'multipart/form-data; boundary=' . $this->boundary;

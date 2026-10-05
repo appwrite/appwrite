@@ -32,7 +32,7 @@ class Get extends DocumentGet
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/:documentId')
             ->desc('Get document')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'vectorsdb.documents.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(

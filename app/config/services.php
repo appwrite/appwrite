@@ -174,7 +174,7 @@ return [
         'name' => 'Users',
         'subtitle' => 'The Users service allows you to manage your project users.',
         'description' => '/docs/services/users.md',
-        'controller' => 'api/users.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/users',
@@ -356,7 +356,7 @@ return [
         'name' => 'Messaging',
         'subtitle' => 'The Messaging service allows you to send messages to any provider type (SMTP, push notification, SMS, etc.).',
         'description' => '/docs/services/messaging.md',
-        'controller' => 'api/messaging.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/messaging',

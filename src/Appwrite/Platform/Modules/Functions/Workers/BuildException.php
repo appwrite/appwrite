@@ -9,7 +9,7 @@ use Appwrite\Extend\Exception;
  *
  * Every build error the worker raises intentionally is a BuildException, so the
  * failure handler can show its message to users while masking any other
- * throwable (e.g. database or executor failures) behind a generic message.
+ * throwable (e.g. database or jobs-service failures) behind a generic message.
  */
 class BuildException extends Exception
 {

@@ -29,21 +29,9 @@ class Parameter
         return $this->name;
     }
 
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-        return $this;
-    }
-
     public function getDescription(): string
     {
         return $this->description;
-    }
-
-    public function setDescription(string $description): static
-    {
-        $this->description = $description;
-        return $this;
     }
 
     public function getDefault(): mixed
@@ -56,21 +44,9 @@ class Parameter
         return $this->default !== Undefined::Value;
     }
 
-    public function setDefault(mixed $default): static
-    {
-        $this->default = $default;
-        return $this;
-    }
-
     public function getValidator(): mixed
     {
         return $this->validator;
-    }
-
-    public function setValidator(mixed $validator): static
-    {
-        $this->validator = $validator;
-        return $this;
     }
 
     public function getOptional(): bool
@@ -83,20 +59,8 @@ class Parameter
         return $this->optional !== Undefined::Value;
     }
 
-    public function setOptional(bool $optional): static
-    {
-        $this->optional = $optional;
-        return $this;
-    }
-
     public function getHide(): bool
     {
         return $this->hide;
-    }
-
-    public function setHide(bool $hide): static
-    {
-        $this->hide = $hide;
-        return $this;
     }
 }
