@@ -244,20 +244,26 @@ Http::init()
                     }
                 }
 
-                $userClone = clone $user;
-                $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
-                    default => ACTOR_TYPE_KEY_ORGANIZATION,
-                });
+                // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+                $auditUser = new Document([
+                    '$id' => $user->getId(),
+                    '$sequence' => $user->getSequence(),
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                    'type' => match ($apiKey->getType()) {
+                        API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                        API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                        default => ACTOR_TYPE_KEY_ORGANIZATION,
+                    },
+                ]);
 
                 if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
-                    $userClone
+                    $auditUser
                         ->setAttribute('$id', $dbKey->getId())
                         ->setAttribute('$sequence', $dbKey->getSequence());
                 }
 
-                $auditContext->user = $userClone;
+                $auditContext->user = $auditUser;
             }
 
             // Apply permission
@@ -702,12 +708,14 @@ Http::init()
 
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         }
 
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
@@ -1034,12 +1042,14 @@ Http::shutdown()
         }
 
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.
