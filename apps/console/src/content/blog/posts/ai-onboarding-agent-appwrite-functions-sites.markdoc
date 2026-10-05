@@ -180,6 +180,10 @@ export async function startJob(ctx, { user }) {
     return;
   }
   const startedAt = ctx.now();
+  // The journey row knows check 1 from the start. If this execution stops
+  // before it schedules check 1, the check becomes overdue, and the recovery
+  // sweep schedules it.
+  const at = checkTime(ctx.config, startedAt, 1, ctx.now());
   try {
     await ctx.tablesDB.createRow({
       databaseId: DATABASE_ID,
@@ -194,6 +198,8 @@ export async function startJob(ctx, { user }) {
         nudgesSent: 0,
         emailsSent: 0,
         stepsDone: 0,
+        nextCheck: 1,
+        nextCheckAt: at.toISOString(),
       },
       // The admins team reads every journey through the table permissions.
       permissions: [Permission.read(Role.user(user.$id))],
@@ -216,14 +222,13 @@ export async function startJob(ctx, { user }) {
     body: 'Four short steps take you from sign-up to your first invoice. Start with your business details, so every invoice shows who to pay.',
   });
 
-  const at = checkTime(ctx.config, startedAt, 1, ctx.now());
   const next = await scheduleCheck(ctx, user.$id, 1, at);
-  await updateJourney(ctx, user.$id, { nextCheck: 1, nextCheckAt: at.toISOString(), nextExecutionId: next.executionId });
+  await updateJourney(ctx, user.$id, { nextExecutionId: next.executionId });
   await addEvent(ctx, user.$id, { kind: 'scheduled', title: 'Check 1 scheduled', detail: at.toISOString(), check: 1 });
 }
 ```
 
-If the same event starts a second execution, `createRow` fails with a `409` error, and the second execution stops. Fernbill team accounts, which use the team email domain, and accounts without an email get no journey.
+If the same event starts a second execution, `createRow` fails with a `409` error, and the second execution stops. The journey row stores the time of check 1 before anything else happens. If the execution stops before it schedules check 1, that check becomes overdue, and the recovery sweep schedules it. Fernbill team accounts, which use the team email domain, and accounts without an email get no journey.
 
 # Schedule each check with a delayed execution
 
