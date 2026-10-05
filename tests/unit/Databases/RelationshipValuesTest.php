@@ -208,13 +208,45 @@ final class RelationshipValuesTest extends TestCase
         $this->assertSame('Renamed', $prepared['artist']['name']);
     }
 
-    public function testNestedDocumentWithoutPermissionsIsNotChecked(): void
+    public function testNestedDocumentsWithoutPermissionsNeverReadTheRelatedDocuments(): void
     {
-        $prepared = $this->prepareAsCaller([
-            'artist' => ['$id' => 'artist1', 'name' => 'Artist'],
-        ]);
+        $prepared = $this->prepareWith([
+            'artist' => [
+                '$id' => 'artist1',
+                'name' => 'Artist',
+                'label' => ['name' => 'Label'],
+            ],
+            'tracks' => [
+                'track1',
+                ['name' => 'Track 2'],
+            ],
+        ], $this->unreadable());
 
         $this->assertSame('artist1', $prepared['artist']['$id']);
+        $this->assertGeneratedId($prepared['artist']['label'], 'a nested document at depth 2');
+        $this->assertSame('track1', $prepared['tracks'][0], 'a related document ID stays a link');
+        $this->assertGeneratedId($prepared['tracks'][1], 'a new nested document in a to-many relationship');
+    }
+
+    public function testNestedDocumentWithNullPermissionsNeverReadsTheRelatedDocument(): void
+    {
+        $prepared = $this->prepareWith(
+            ['artist' => ['$id' => 'artist1', '$permissions' => null]],
+            $this->unreadable(),
+        );
+
+        $this->assertSame('artist1', $prepared['artist']['$id']);
+        $this->assertNull($prepared['artist']['$permissions']);
+    }
+
+    public function testNestedDocumentMayClearThePermissionsItHas(): void
+    {
+        $prepared = $this->prepareAsCaller(
+            ['artist' => ['$id' => 'artist1', '$permissions' => []]],
+            ['artists' => [new Document(['$id' => 'artist1', '$permissions' => [Permission::read(Role::user('other'))]])]],
+        );
+
+        $this->assertSame([], $prepared['artist']['$permissions']);
     }
 
     public function testNestedDocumentWithMalformedPermissionsIsRejected(): void
@@ -265,9 +297,6 @@ final class RelationshipValuesTest extends TestCase
      */
     private function prepareAsCaller(array $document, array $stored = []): array
     {
-        $authorization = new Authorization();
-        $authorization->addRole(Role::user(self::CALLER)->toString());
-
         $tables = [];
         foreach ($stored as $collection => $documents) {
             foreach ($documents as $related) {
@@ -275,12 +304,24 @@ final class RelationshipValuesTest extends TestCase
             }
         }
 
+        return $this->prepareWith($document, $this->tables($tables));
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     * @return array<string, mixed>
+     */
+    private function prepareWith(array $document, Database $relatedDocuments): array
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::user(self::CALLER)->toString());
+
         $collections = self::collections();
         $values = new RelationshipValues(
             $this->catalog($collections),
             new Document(['$id' => 'music', '$sequence' => self::DATABASE_SEQUENCE]),
             $authorization,
-            $this->tables($tables),
+            $relatedDocuments,
         );
 
         return $values->prepare($document, $collections['albums']);
@@ -328,6 +369,22 @@ final class RelationshipValuesTest extends TestCase
             public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
             {
                 return $this->catalog[$collection][$id] ?? new Document();
+            }
+        };
+    }
+
+    private function unreadable(): Database
+    {
+        return new class () extends Database {
+            public function __construct()
+            {
+                parent::__construct(new Memory(), new Cache(new None()));
+            }
+
+            #[\Override]
+            public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): Document
+            {
+                throw new \LogicException('related documents must not be read without permissions');
             }
         };
     }
