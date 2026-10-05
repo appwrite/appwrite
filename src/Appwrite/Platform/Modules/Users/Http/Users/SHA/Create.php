@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -62,17 +63,18 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('hooks')
             ->inject('plan')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
+    public function action(string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword): void
     {
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
         }
 
-        $user = $this->createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan, $proofForPassword);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

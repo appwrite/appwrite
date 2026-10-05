@@ -319,7 +319,8 @@ Http::post('/v1/account')
     ->inject('hooks')
     ->inject('plan')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword) {
         $name ??= '';
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -376,8 +377,7 @@ Http::post('/v1/account')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $proof = new ProofsPassword();
-        $hash = $proof->hash($password);
+        $hash = $proofForPassword->hash($password);
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -431,8 +431,8 @@ Http::post('/v1/account')
                 'password' => $hash,
                 'passwordHistory' => $passwordHistory > 0 ? [$hash] : [],
                 'passwordUpdate' => DateTime::now(),
-                'hash' => $proof->getHash()->getName(),
-                'hashOptions' => $proof->getHash()->getOptions(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
@@ -1111,11 +1111,10 @@ Http::post('/v1/account/sessions/email')
 
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
-            $proofForPasswordUpdated = new ProofsPassword();
             $user
-                ->setAttribute('password', $proofForPasswordUpdated->hash($password))
-                ->setAttribute('hash', $proofForPasswordUpdated->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPasswordUpdated->getHash()->getOptions());
+                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
             $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'password' => $user->getAttribute('password'),
                 'hash' => $user->getAttribute('hash'),
