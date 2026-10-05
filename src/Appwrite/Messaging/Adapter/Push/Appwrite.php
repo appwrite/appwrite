@@ -84,12 +84,13 @@ class Appwrite extends PushAdapter
                     [],
                     [$name],
                     [],
-                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
+                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence, 'publishedAt' => \microtime(true)],
                 );
 
                 $response->incrementDeliveredTo();
                 $response->addResult($to);
             } catch (\Throwable $error) {
+                $this->broker->messagesFailed->add(1);
                 $response->addResult($to, $error->getMessage());
             }
         }
@@ -154,6 +155,17 @@ class Appwrite extends PushAdapter
      * correctness backstop.
      */
     private function persist(string $topic, string $payload): int
+    {
+        $start = \microtime(true);
+
+        try {
+            return $this->persistLedger($topic, $payload);
+        } finally {
+            $this->broker->ledgerDuration->record(\microtime(true) - $start);
+        }
+    }
+
+    private function persistLedger(string $topic, string $payload): int
     {
         $authorization = $this->dbForProject->getAuthorization();
 
@@ -237,6 +249,10 @@ class Appwrite extends PushAdapter
     private function buildPayload(PushMessage $message): string
     {
         $envelope = [];
+
+        if ($this->messageId !== '') {
+            $envelope['messageId'] = $this->messageId;
+        }
 
         if ($message->getTitle() !== null) {
             $envelope['notification']['title'] = $message->getTitle();

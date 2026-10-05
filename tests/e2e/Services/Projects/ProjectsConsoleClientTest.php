@@ -4175,7 +4175,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertCount(2, $response['body']['events']);
         $this->assertEquals('https://appwrite.io', $response['body']['url']);
         $this->assertEquals('username', $response['body']['authUsername']);
-        $this->assertEquals('password', $response['body']['authPassword']);
+        $this->assertSame('', $response['body']['authPassword']);
 
         /**
          * Test for FAILURE

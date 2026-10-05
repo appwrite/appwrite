@@ -55,7 +55,7 @@ class Update extends Action
             ))
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('membershipId', '', new UID(), 'Membership ID.')
-            ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 81 characters long.', false, ['project'], example: '["editor"]') // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
+            ->param('roles', [], new ArrayList(new Key(maxLength: APP_LIMIT_ROLE_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each ' . APP_LIMIT_ROLE_LENGTH . ' characters long.', false, ['project'], example: '["editor"]')
             ->inject('request')
             ->inject('response')
             ->inject('user')
@@ -112,7 +112,10 @@ class Update extends Action
             }
         }
 
-        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        // Console organization developer/admin become bare privileged roles when
+        // X-Appwrite-Organization is applied. Those roles must not authorize
+        // membership role changes; only the team owner or an API key may.
+        if (!$isOwner && !$isAppUser && ($project->getId() === 'console' || !$isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
         }
 

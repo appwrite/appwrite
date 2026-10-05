@@ -31,9 +31,7 @@ class Shutdown extends Action
 
     public function action(Request $request, Response $response, ?SwooleServer $swooleServer): void
     {
-        if (!Validate::validateCsrf($request)) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['success' => false, 'message' => 'Invalid CSRF token']);
+        if (!Validate::authorize($request, $response)) {
             return;
         }
 

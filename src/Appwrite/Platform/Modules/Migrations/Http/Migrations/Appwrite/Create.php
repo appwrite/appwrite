@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -66,6 +68,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -80,8 +83,16 @@ class Create extends Action
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        PublicHostname $publicHostname
     ): void {
+        // Block a source endpoint that resolves to a private or reserved
+        // address to prevent SSRF into the internal network.
+        $hostname = $publicHostname;
+        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',

@@ -320,6 +320,7 @@ class DetectorTest extends TestCase
             [['public', 'src', 'astro.config.mjs', 'package-lock.json', 'package.json', 'tsconfig.json'], 'astro', 'pnpm install', 'pnpm run build', './dist'],
             [['src', 'static', 'scripts', 'eslint.config.js', 'package.json', 'pnpm-lock.yaml', 'svelte.config.js', 'tsconfig.js', 'vite.config.js', 'vite.config.lib.js'], 'sveltekit', 'pnpm install', 'pnpm run build', './build'],
             [['index.html', 'style.css'], null, null, null, null], // Test for FAILURE
+            [['package.json'], null, null, null, null], // bare package.json must not pick Angular
         ];
     }
 
@@ -788,6 +789,48 @@ class DetectorTest extends TestCase
         $this->assertNotNull($detection, $assertion);
 
         $this->assertSame($framework, $detection->getName(), $assertion);
+    }
+
+    /**
+     * A package.json with no framework dependencies must not resolve to Angular
+     * (or any other framework) via a multi-way package.json path-match tie.
+     *
+     * @see https://github.com/appwrite/appwrite/issues/13911
+     */
+    public function testFrameworkDetectionReturnsNullWithoutFrameworkSignals(): void
+    {
+        $cases = [
+            '{"dependencies":{"lodash":"^4"}}',
+            '{"devDependencies":{"turbo":"^2"}}',
+            '{}',
+        ];
+
+        foreach ($cases as $packageJson) {
+            $detector = new Framework('npm');
+            $detector
+                ->addOption(new Analog())
+                ->addOption(new Angular())
+                ->addOption(new Astro())
+                ->addOption(new Flutter())
+                ->addOption(new Lynx())
+                ->addOption(new NextJs())
+                ->addOption(new Nuxt())
+                ->addOption(new React())
+                ->addOption(new ReactNative())
+                ->addOption(new Remix())
+                ->addOption(new Svelte())
+                ->addOption(new SvelteKit())
+                ->addOption(new TanStackStart())
+                ->addOption(new Vue());
+
+            $detector->addInput('package.json', Framework::INPUT_FILE);
+            $detector->addInput($packageJson, Framework::INPUT_PACKAGES);
+
+            $this->assertNull(
+                $detector->detect(),
+                "Expected null for package.json content: {$packageJson}"
+            );
+        }
     }
 
     public function testTanStackStartAdapterDetection(): void

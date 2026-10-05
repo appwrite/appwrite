@@ -1,18 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string\|null, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 4
@@ -2014,12 +2002,6 @@ parameters:
 			message: '#^Parameter \#1 \$headers of method Utopia\\VCS\\Tests\\E2E\\Base\:\:findHeader\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: tests/E2E/Base.php
-
-		-
-			message: '#^Parameter \#1 \$needle of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: tests/E2E/Base.php
 
 		-

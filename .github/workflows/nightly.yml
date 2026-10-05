@@ -11,6 +11,11 @@ on:
   schedule:
     - cron: '0 0 * * *'  # 12am UTC daily
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Build the tip of the release branch even without a green CI run'
+        type: boolean
+        default: false
 
 concurrency:
   group: nightly
@@ -30,6 +35,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           REMOTE: ${{ github.server_url }}/${{ github.repository }}
+          FORCE: ${{ inputs.force || false }}
         run: |
           set -euo pipefail
 
@@ -41,12 +47,19 @@ jobs:
 
           [ -n "$branch" ] || { echo '::error::No X.Y.x release branch on origin.'; exit 1; }
 
-          # The newest CI-green commit rather than the tip, so a red branch
-          # delays the channel instead of shipping through it.
-          sha=$(gh run list --workflow=ci.yml --branch="$branch" --event=push \
-            --status=success --limit=1 --json headSha --jq '.[0].headSha // empty')
+          if [ "$FORCE" = "true" ]; then
+            # Manual override for when the branch is red and the channel still
+            # needs a build. Ships the tip as-is.
+            sha=$(git ls-remote "$REMOTE" "refs/heads/${branch}" | cut -f1)
+            echo "::warning::Forced build of ${branch} tip ${sha}, CI status not checked."
+          else
+            # The newest CI-green commit rather than the tip, so a red branch
+            # delays the channel instead of shipping through it.
+            sha=$(gh run list --workflow=ci.yml --branch="$branch" --event=push \
+              --status=success --limit=1 --json headSha --jq '.[0].headSha // empty')
 
-          [ -n "$sha" ] || { echo "::error::No green CI run on ${branch}."; exit 1; }
+            [ -n "$sha" ] || { echo "::error::No green CI run on ${branch}."; exit 1; }
+          fi
 
           line="${branch%.x}"
           version="${line}-nightly.$(date -u +%Y%m%d)"
