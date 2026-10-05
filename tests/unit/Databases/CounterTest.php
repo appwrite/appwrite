@@ -89,6 +89,7 @@ final class CounterTest extends TestCase
         yield 'exponent beyond the native integer range text' => ['5e-9223372036854775808', 0, 1];
         yield 'zero exponent text beyond float precision' => ['9007199254740993.5e0', 9007199254740993, 9007199254740994];
         yield 'padded fractional text' => [' 10.5 ', 10, 11];
+        yield 'fractional text padded with form feed and vertical tab' => ["\f10.5\v", 10, 11];
         yield 'signed fractional text' => ['+10.5', 10, 11];
         yield 'fraction without a whole part text' => ['.5', 0, 1];
         yield 'whole part without a fraction text' => ['5.', 5, 5];
