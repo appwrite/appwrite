@@ -7,6 +7,7 @@ cover: /images/blog/deno-runtime-announcment/cover.avif
 timeToRead: 3
 author: laura-du-ry
 category: announcements
+removed: true
 faqs:
   - question: "Does Appwrite Cloud support Deno?"
     answer: "Yes. Deno is a supported runtime for [Appwrite Functions](/docs/products/functions). You can create a new function using the Deno quick start, connect a GitHub repository, and deploy TypeScript or JavaScript code that runs on the Deno runtime."

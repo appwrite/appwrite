@@ -7,7 +7,3 @@ tags: messaging
 ---
 
 When we introduced Messaging during Init, we were overwhelmed by the excitement within the Appwrite community. Now we can also announce that Messaging will be free for the next six months.
-
-{% arrow_link href="/blog/post/appwrite-messaging-is-free-for-six-months" %}
-Read the announcement to learn more
-{% /arrow_link %}

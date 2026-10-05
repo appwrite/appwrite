@@ -78,7 +78,7 @@ Use object storage whenever you're dealing with large volumes of unstructured da
 * **User-generated content:** profile pictures, documents, and other uploads from your app's users.
 * **Media hosting:** serving images, video, and audio at scale to web and mobile clients.
 * **Backups and disaster recovery:** durable, off-site copies of critical data.
-* **Static website assets:** images, CSS, and downloads, often paired with a [CDN](/blog/post/what-is-cdn) for fast global delivery.
+* **Static website assets:** images, CSS, and downloads, often paired with a CDN for fast global delivery.
 * **Data lakes and analytics:** storing raw data cheaply for later processing.
 * **Archiving:** keeping large volumes of infrequently accessed data at low cost.
 
@@ -138,6 +138,5 @@ Object storage is the model that lets you store unstructured data as scalable, s
 * [Appwrite Storage documentation](/docs/products/storage)
 * [Working with storage buckets](/docs/products/storage/buckets)
 * [Upload and download files](/docs/products/storage/upload-download)
-* [What is cloud storage? An expert guide for developers](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers)
 * [File vs. object vs. block storage: What's the difference?](/blog/post/file-vs-object-vs-block-storage-whats-the-difference)
 * [Join the Appwrite Discord](https://appwrite.io/discord)

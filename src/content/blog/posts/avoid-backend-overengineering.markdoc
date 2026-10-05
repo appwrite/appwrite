@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is backend overengineering in early-stage products?"
     answer: "Backend overengineering is building infrastructure for a scale or set of requirements that does not yet exist. Common examples include premature microservices, over-abstracted database layers, custom authentication, and admin tooling built before there is a clear need. It typically delays product feedback, raises maintenance burden, and creates false confidence in unproven architectural choices."

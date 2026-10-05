@@ -97,8 +97,6 @@ Appwrite Sites now supports Next.js applications built with Turbopack, with fast
 
 With native support, your builds run without modification, deploy faster, and stay consistent between local and production. This update strengthens compatibility between Appwrite Sites and the modern Next.js toolchain.
 
-[Read the announcement to learn more](/blog/post/turbopack-support-appwrite-sites)
-
 # Performance improvements for Functions and static sites
 
 We've shipped significant performance improvements across functions and static sites.

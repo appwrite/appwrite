@@ -8,6 +8,7 @@ date: 2025-09-23
 author: veeresh-mulge
 callToAction: true
 unlisted: true
+removed: true
 category: tutorials
 faqs:
   - question: "What is a CDN in plain terms?"

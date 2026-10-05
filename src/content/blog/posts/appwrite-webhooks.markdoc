@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What are Appwrite Webhooks?"
     answer: "Appwrite Webhooks are HTTP POST callbacks that your project sends to a URL you control whenever a subscribed event fires. They let your server react to things like user signups, file uploads, or row updates without polling the API. Webhooks are configured per project from the Console under Settings."

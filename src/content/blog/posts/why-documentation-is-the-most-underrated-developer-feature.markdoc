@@ -9,6 +9,7 @@ author: atharva
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why is documentation considered a developer feature, not just a supplement?"
     answer: "A feature that nobody can figure out how to use is effectively a feature that does not exist. Documentation determines whether developers reach a working integration or abandon the trial, and it scales product knowledge across teams without requiring one-on-one explanations. For backend platforms specifically, where every adoption requires real integration work, documentation quality often decides which tool a team commits to."

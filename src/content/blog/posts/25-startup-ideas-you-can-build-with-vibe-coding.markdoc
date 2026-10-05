@@ -17,7 +17,7 @@ faqs:
   - question: "What backend should I use for these ideas?"
     answer: "Pick a backend that covers auth, databases, storage, server-side functions, and hosting under one model. [Appwrite Cloud](https://cloud.appwrite.io) gives you all of that with an MCP server so your AI tool can act on the project. It also reduces the number of vendors a solo founder has to manage in the first six months."
   - question: "How long does it take to build a startup with vibe coding?"
-    answer: "A working prototype takes hours. A launched product takes weeks because of the parts vibe coding does not solve: permissions, payments, support, marketing, and the production review every app needs before users touch it. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) covers the engineering side of that gap."
+    answer: "A working prototype takes hours. A launched product takes weeks because of the parts vibe coding does not solve: permissions, payments, support, marketing, and the production review every app needs before users touch it."
   - question: "Are these ideas original?"
     answer: "Some are crowded markets, some are open. The point is not that the idea is unique. The point is that vibe coding has lowered the cost of trying any of them to the point where the experiment is worth running. A founder can ship version one of three of these in a month and let users decide which one is the company."
 ---
@@ -118,7 +118,7 @@ User pastes a newsletter URL. The app generates a clean, listenable audio versio
 
 ## 23. AI bookkeeper for solo operators
 
-Connect a bank account, the app categorizes transactions, drafts a P&L, and answers questions about your finances. The market is large. The compliance work is real, which is why vibe coding lets you build a v1, but launch is when the real engineering starts. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is non-optional here.
+Connect a bank account, the app categorizes transactions, drafts a P&L, and answers questions about your finances. The market is large. The compliance work is real, which is why vibe coding lets you build a v1, but launch is when the real engineering starts. A full backend review before launch is non-optional here.
 
 ## 24. Photo organizer with smart albums
 

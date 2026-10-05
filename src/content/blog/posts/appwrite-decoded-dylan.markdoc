@@ -7,6 +7,7 @@ timeToRead: 8
 date: 2024-06-04
 author: laura-du-ry
 category: culture
+removed: true
 faqs:
   - question: "Who is Dylan Graham at Appwrite?"
     answer: "Dylan is the operations and finance lead at Appwrite. He moved from a background in safety operations and other non-tech fields into ops at Appwrite, where he runs internal logistics, finance, and the planning behind the team's offsites."

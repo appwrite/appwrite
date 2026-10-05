@@ -1,4 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { getRemovedBlogPostRedirectTarget } from '@/lib/blog/removed-redirect'
 import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
 
 function resolvePathname(
@@ -15,8 +16,9 @@ function resolvePathname(
 
 /**
  * Permanent (301) redirects for legacy URLs ported from the old website so
- * inbound links and search engine results keep resolving. The incoming query
- * string is preserved on the target URL.
+ * inbound links and search engine results keep resolving, and for blog posts
+ * marked `removed: true` (sent to `/home`). The incoming query string is
+ * preserved on the target URL.
  */
 export const legacyRedirectsMiddleware = createMiddleware({
   type: 'request',
@@ -27,7 +29,8 @@ export const legacyRedirectsMiddleware = createMiddleware({
   }
 
   const path = resolvePathname(pathname, request.url)
-  const target = getLegacyRedirectTarget(path)
+  const target =
+    getLegacyRedirectTarget(path) ?? getRemovedBlogPostRedirectTarget(path)
   if (!target) {
     return next()
   }

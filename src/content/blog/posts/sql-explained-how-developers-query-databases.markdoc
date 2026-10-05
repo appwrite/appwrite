@@ -217,7 +217,6 @@ To get started, see the [Appwrite Databases documentation](/docs/products/databa
 ## Resources
 
 * [Appwrite Databases documentation](/docs/products/databases)
-* [Appwrite Query API: filtering, sorting, and pagination](/blog/post/appwrite-query-api)
 * [SQL vs NoSQL: Choosing the right database for your project](/blog/post/sql-vs-nosql)
 * [Integrate SQL, NoSQL, Vector, Graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
 * Join the [Appwrite Discord community](https://appwrite.io/discord) to ask questions and share what you build.

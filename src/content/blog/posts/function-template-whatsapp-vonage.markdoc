@@ -7,6 +7,7 @@ cover: /images/blog/function-template-whatsapp-vonage/cover.avif
 timeToRead: 5
 author: aditya-oberai
 category: integrations
+removed: true
 faqs:
   - question: "What is an Appwrite Function template?"
     answer: "Function templates are prebuilt Appwrite Functions you can install in your project with a few clicks. They cover common integrations like WhatsApp via Vonage, Discord notifications, and Stripe webhooks, so you do not have to write the boilerplate yourself. See [Appwrite Functions](/docs/products/functions) for the product overview."

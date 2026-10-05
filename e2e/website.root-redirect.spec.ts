@@ -22,5 +22,5 @@ test('expired session reaches the homepage from the root', async ({
   )
   await page.goto('/')
   await expect(page).toHaveURL(new URL('/', baseURL).href)
-  await expect(page).toHaveTitle(/Home/)
+  await expect(page).toHaveTitle(/open-source cloud for developers and agents/)
 })

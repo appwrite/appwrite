@@ -13,6 +13,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import {
+  getBlogPostSourceFile,
+  readRemovedBlogPostSlugs,
+} from '../src/lib/blog/removed-posts.ts'
 import { MIN_COVER_IMAGE_WIDTH } from '../src/lib/seo/cover-constants.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -25,6 +29,10 @@ const COVER_FRONTMATTER_PATTERN = /^cover:\s+(\/images\/[^\s]+)\s*$/gm
 
 function collectCoverPathsFromContent(): string[] {
   const paths = new Set<string>()
+  // Removed posts never render, so their covers need no og:image dimensions.
+  const removedFiles = new Set(
+    [...readRemovedBlogPostSlugs()].map((slug) => getBlogPostSourceFile(slug)),
+  )
 
   function walk(dir: string) {
     for (const entry of readdirSync(dir)) {
@@ -34,7 +42,7 @@ function collectCoverPathsFromContent(): string[] {
         walk(entryPath)
         continue
       }
-      if (!entry.endsWith('.markdoc')) continue
+      if (!entry.endsWith('.markdoc') || removedFiles.has(entryPath)) continue
 
       const source = readFileSync(entryPath, 'utf8')
       for (const match of source.matchAll(COVER_FRONTMATTER_PATTERN)) {

@@ -7,6 +7,7 @@ cover: /images/blog/turbopack-support-appwrite-sites/cover.avif
 timeToRead: 3
 author: ebenezer-don
 category: announcements
+removed: true
 faqs:
   - question: "What is Turbopack?"
     answer: "Turbopack is a Rust based bundler developed by Vercel as a successor to webpack. It is designed for faster incremental updates and large project performance, and it is the default development bundler in recent versions of Next.js."

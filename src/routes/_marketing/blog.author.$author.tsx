@@ -23,9 +23,15 @@ export const Route = createFileRoute('/_marketing/blog/author/$author')({
       throw notFound()
     }
 
+    // Authors whose posts were all removed have no page.
+    const posts = getPostsForAuthor(params.author)
+    if (posts.length === 0) {
+      throw notFound()
+    }
+
     return {
       author,
-      posts: getPostsForAuthor(params.author),
+      posts,
       authors: getAllBlogAuthors(),
     }
   },
