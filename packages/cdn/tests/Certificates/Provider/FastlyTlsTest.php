@@ -531,7 +531,7 @@ final class FastlyTlsTest extends TestCase
         ]]];
     }
 
-    /** @return list<array{domain:string,certificate:string}> */
+    /** @return list<array<string, string>> */
     private function activations(TestClient $client): array
     {
         $activations = [];
@@ -547,23 +547,16 @@ final class FastlyTlsTest extends TestCase
                 continue;
             }
 
-            $activations[] = [
-                'domain' => $this->reference($relationships, 'tls_domain'),
-                'certificate' => $this->reference($relationships, 'tls_certificate'),
-            ];
+            $ids = [];
+            foreach (['domain' => 'tls_domain', 'certificate' => 'tls_certificate'] as $key => $name) {
+                $entry = $relationships[$name] ?? null;
+                $data = \is_array($entry) ? ($entry['data'] ?? null) : null;
+                $ids[$key] = \is_array($data) && \is_string($data['id'] ?? null) ? $data['id'] : '';
+            }
+            $activations[] = $ids;
         }
 
         return $activations;
-    }
-
-    /** @param array<array-key, mixed> $relationships */
-    private function reference(array $relationships, string $name): string
-    {
-        $entry = $relationships[$name] ?? null;
-        $data = \is_array($entry) ? ($entry['data'] ?? null) : null;
-        $id = \is_array($data) ? ($data['id'] ?? null) : null;
-
-        return \is_string($id) ? $id : '';
     }
 
     /** @param array<string, mixed>|string $body */
