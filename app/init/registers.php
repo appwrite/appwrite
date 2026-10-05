@@ -56,6 +56,15 @@ $register->set('pools', function () {
         'user' => \rawurlencode(System::getEnv('_APP_REDIS_USER', '')),
         'pass' => \rawurlencode(System::getEnv('_APP_REDIS_PASS', '')),
     ]);
+    // Queues can live on their own Redis so a backlog never evicts the cache
+    // (or gets evicted itself). Without _APP_REDIS_QUEUE_HOST they share the main one.
+    $fallbackForQueue = empty(System::getEnv('_APP_REDIS_QUEUE_HOST', '')) ? $fallbackForRedis : 'redis_main=' . AppwriteURL::unparse([
+        'scheme' => 'redis',
+        'host' => System::getEnv('_APP_REDIS_QUEUE_HOST', ''),
+        'port' => System::getEnv('_APP_REDIS_QUEUE_PORT', '6379'),
+        'user' => \rawurlencode(System::getEnv('_APP_REDIS_QUEUE_USER', '')),
+        'pass' => \rawurlencode(System::getEnv('_APP_REDIS_QUEUE_PASS', '')),
+    ]);
 
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
@@ -101,7 +110,7 @@ $register->set('pools', function () {
         ],
         'publisher' => [
             'type' => 'publisher',
-            'dsns' => $fallbackForRedis,
+            'dsns' => $fallbackForQueue,
             'multiple' => false,
             'schemes' => ['redis'],
         ],
