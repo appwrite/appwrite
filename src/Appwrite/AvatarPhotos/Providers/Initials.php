@@ -100,13 +100,14 @@ class Initials extends Photo
 
     /**
      * Words that start with a letter or digit, split on spaces — or on
-     * underscores when the label has none.
+     * underscores when the label has none. A leading @, as in a handle, is
+     * ignored.
      *
      * @return string[]
      */
     private function getWords(string $name): array
     {
-        $words = \explode(' ', \trim($name));
+        $words = \explode(' ', \ltrim(\trim($name), '@'));
 
         // Fallback: split on underscores when there is no space
         $words = (\count($words) === 1) ? \explode('_', $words[0]) : $words;

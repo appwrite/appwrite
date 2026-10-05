@@ -75,11 +75,11 @@ class Create extends Action
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = $vcsWebhookSecret('github');
 
-        $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable');
         }
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
@@ -333,7 +333,7 @@ class Create extends Action
                     $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
 
                     if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                        $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
+                        $providerPullRequestIds = \array_values(\array_diff($providerPullRequestIds, [$providerPullRequestId]));
                         $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
                         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
                     }

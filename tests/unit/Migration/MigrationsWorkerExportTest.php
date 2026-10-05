@@ -244,53 +244,55 @@ final class MigrationsWorkerExportTest extends TestCase
         ]));
     }
 
-    public function testNotificationAndLoggerFailuresDoNotEscape(): void
+    public function testNotificationFailureIsReportedAsWarning(): void
     {
-        $reported = 0;
-        $worker = new class () extends Migrations {
-            public function notify(Document $migration, MailPublisher $publisherForMails, callable $logError): void
-            {
-                $this->logError = $logError;
-                $this->notifyExport(
-                    migration: $migration,
-                    success: true,
-                    project: new Document([]),
-                    user: new Document([]),
-                    options: ['notify' => true],
-                    publisherForMails: $publisherForMails,
-                    platform: [],
-                );
-            }
+        \Utopia\Span\Span::setStorage(new \Utopia\Span\Storage\Memory());
+        try {
+            $span = \Utopia\Span\Span::init('worker.migrations');
+            $worker = new class () extends Migrations {
+                public function notify(Document $migration, MailPublisher $publisherForMails): void
+                {
+                    $this->notifyExport(
+                        migration: $migration,
+                        success: true,
+                        project: new Document([]),
+                        user: new Document([]),
+                        options: ['notify' => true],
+                        publisherForMails: $publisherForMails,
+                        platform: [],
+                    );
+                }
 
-            protected function sendExportEmail(
-                bool $success,
-                Document $project,
-                Document $user,
-                array $options,
-                MailPublisher $publisherForMails,
-                array $platform,
-                string $exportType = 'CSV',
-                string $downloadUrl = '',
-                float $sizeMB = 0.0,
-            ): void {
-                throw new \RuntimeException('Mail unavailable');
-            }
-        };
+                protected function sendExportEmail(
+                    bool $success,
+                    Document $project,
+                    Document $user,
+                    array $options,
+                    MailPublisher $publisherForMails,
+                    array $platform,
+                    string $exportType = 'CSV',
+                    string $downloadUrl = '',
+                    float $sizeMB = 0.0,
+                ): void {
+                    throw new \RuntimeException('Mail unavailable');
+                }
+            };
 
-        $worker->notify(
-            new Document([
-                '$id' => 'migration-id',
-                'source' => 'Appwrite',
-                'destination' => DestinationJSON::getName(),
-            ]),
-            $this->createStub(MailPublisher::class),
-            function () use (&$reported): void {
-                $reported++;
-                throw new \RuntimeException('Logger unavailable');
-            }
-        );
+            $worker->notify(
+                new Document([
+                    '$id' => 'migration-id',
+                    'source' => 'Appwrite',
+                    'destination' => DestinationJSON::getName(),
+                ]),
+                $this->createStub(MailPublisher::class),
+            );
 
-        $this->assertSame(1, $reported);
+            $this->assertSame('Mail unavailable', $span->get('warning.message'));
+            $this->assertSame('migration-id', $span->get('migration.id'));
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError());
+        } finally {
+            \Utopia\Span\Span::setStorage(null);
+        }
     }
 
     public function testArtifactFinalizationFailureMarksMigrationFailed(): void
@@ -320,8 +322,6 @@ final class MigrationsWorkerExportTest extends TestCase
                     '$id' => 'project-id',
                     '$sequence' => 1,
                 ]);
-                $this->logError = static function (): void {
-                };
 
                 $this->processMigration(
                     $migration,

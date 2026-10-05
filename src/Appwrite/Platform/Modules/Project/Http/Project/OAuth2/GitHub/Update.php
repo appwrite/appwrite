@@ -57,4 +57,9 @@ class Update extends Base
     {
         return '5e07c00000000000000000000000000000198bcc';
     }
+
+    public static function getPromptValues(): array
+    {
+        return ['select_account'];
+    }
 }

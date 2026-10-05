@@ -1,0 +1,121 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Adapter/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Adapter/Redis.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 4
+			path: src/Adapter/SwooleTable.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Adapter/SwooleTable.php
+
+		-
+			message: '#^Parameter \#1 of callable callable\(float\|int, iterable\<non\-empty\-string, array\<mixed\>\|bool\|float\|int\|string\|null\>\)\: void expects float\|int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/CircuitBreaker.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Method Utopia\\CircuitBreaker\\Tests\\CircuitBreakerTest\:\:observeSeries\(\) should return array\<string, array\<string, float\|int\>\> but returns array\<string, array\<float\|int\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Offset ''breaker\.state'' might not exist on array\<string, float\|int\>\|null\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Offset int\<0, max\>\|null might not exist on list\<array\{''set'', string, int\|string\|null\}\>\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Possibly invalid array key type int\<0, max\>\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Trying to invoke mixed but it''s not a callable\.$#'
+			identifier: callable.nonCallable
+			count: 1
+			path: tests/CircuitBreakerTest.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:close\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:del\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:isConnected\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Call to an undefined method object\:\:keys\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Cannot call method get\(\) on object\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/E2E/RedisAdapterTest.php
+
+		-
+			message: '#^Parameter \#1 \$redis of class Utopia\\CircuitBreaker\\Adapter\\Redis constructor expects object, object\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/E2E/RedisAdapterTest.php

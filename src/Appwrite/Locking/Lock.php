@@ -8,8 +8,7 @@ use Throwable;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Lock\Lock as UtopiaLock;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -52,7 +51,6 @@ final class Lock
     public function __construct(
         Closure $useLock,
         Telemetry $telemetry,
-        private readonly ?Logger $logger,
         Document $project,
     ) {
         $this->useLock = $useLock;
@@ -188,15 +186,11 @@ final class Lock
     }
 
     /**
-     * Rate-limit backend/release reports so outages don't flood Sentry.
+     * Rate-limit backend/release reports so outages don't flood the span exporters.
      */
     private function reportError(string $action, string $key, string $target, Throwable $e): void
     {
         Console::warning("Lock {$action} for {$key}: {$e->getMessage()}");
-
-        if ($this->logger === null) {
-            return;
-        }
 
         $bucket = $action.':'.$target;
         $now = time();
@@ -205,28 +199,12 @@ final class Lock
         }
         self::$lastReportAt[$bucket] = $now;
 
-        $log = new Log();
-        $log->setNamespace('http');
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion(APP_VERSION_STABLE);
-        $log->setType(Log::TYPE_WARNING);
-        $log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
-        $log->setAction("lock.{$action}");
-        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
-            ? Log::ENVIRONMENT_PRODUCTION
-            : Log::ENVIRONMENT_STAGING);
-        $log->addTag('lock.target', $target);
-        $log->addTag('lock.project', $this->projectInternalId);
+        Span::add('lock.action', $action);
+        Span::add('lock.target', $target);
+        Span::add('lock.project', $this->projectInternalId);
         // Strip trailing document ID to keep aggregator cardinality bounded.
-        $log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
-        $log->addTag('code', $e->getCode());
-        $log->addExtra('file', $e->getFile());
-        $log->addExtra('line', $e->getLine());
-        $log->addExtra('trace', $e->getTraceAsString());
-
-        try {
-            $this->logger->addLog($log);
-        } catch (Throwable) {
-        }
+        Span::add('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
+        Span::add('lock.error', $e->getMessage());
+        Span::add('lock.error_code', $e->getCode());
     }
 }

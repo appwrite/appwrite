@@ -17,7 +17,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
@@ -64,7 +63,6 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('log')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -77,7 +75,6 @@ class Update extends Action
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
-        Log $log,
         Authorization $authorization,
         Bus $bus,
     ) {
@@ -96,7 +93,7 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule);
             // Reset logs and status for the rule
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
@@ -119,13 +116,15 @@ class Update extends Action
             throw $err;
         }
 
-        // Issue a TLS certificate when DNS verification is successful
+        // Issue a TLS certificate when DNS verification is successful. The worker
+        // does not verify DNS again: verifyRule() above just did.
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
             project: $project,
             domain: new Document([
                 'domain' => $rule->getAttribute('domain'),
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]),
+            skipDomainValidation: true,
         ));
 
         if (!empty($certificate)) {

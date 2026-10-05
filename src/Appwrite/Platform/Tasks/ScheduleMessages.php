@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Row;
 use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -49,8 +50,13 @@ class ScheduleMessages extends Action
             source: $source,
             syncSeconds: self::UPDATE_TIMER,
             telemetry: $telemetry,
-            onError: function (\Throwable $error): void {
+            onError: function (\Throwable $error, ?Row $row = null): void {
                 Span::init('schedule.messages.reconcile');
+                if ($row?->data instanceof Document) {
+                    Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                    Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                    Span::add('schedule.id', $row->data->getId());
+                }
                 Span::current()?->finish(error: $error);
             },
         );

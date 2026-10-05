@@ -58,6 +58,20 @@ class Topic extends Model
                 'default' => ['users'],
                 'example' => 'users',
                 'array' => true,
+            ])
+            ->addRule('qos', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'MQTT QoS for delivery on this topic. Null lets the subscriber choose their level.',
+                'default' => null,
+                'example' => 1,
+                'required' => false,
+            ])
+            ->addRule('expiry', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Message retention in seconds for offline delivery.',
+                'default' => null,
+                'example' => 604800,
+                'required' => false,
             ]);
     }
 

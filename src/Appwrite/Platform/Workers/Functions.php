@@ -24,7 +24,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -57,7 +56,6 @@ class Functions extends Action
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
-            ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
             ->inject('locks')
@@ -74,7 +72,6 @@ class Functions extends Action
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
-        Log $log,
         Executor $executor,
         callable $getIsResourceBlocked,
         callable $locks
@@ -143,6 +140,7 @@ class Functions extends Action
             $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
             $jwt = $jwtObj->encode([
+                'projectId' => $project->getId(),
                 'userId' => $user->getId(),
             ]);
         }
@@ -155,15 +153,16 @@ class Functions extends Action
             $function = $dbForProject->getDocument('functions', $functionId);
         }
 
-        $log->addTag('functionId', $function->getId());
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('function.id', $function->getId());
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
             Span::add('function.id', $function->getId());
         }
 
         if (!empty($events)) {
+            $failure = null;
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -198,35 +197,45 @@ class Functions extends Action
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                    $this->execute(
-                        log: $log,
-                        dbForProject: $dbForProject,
-                        queueForWebhooks: $queueForWebhooks,
-                        publisherForFunctions: $publisherForFunctions,
-                        queueForRealtime: $queueForRealtime,
-                        queueForEvents: $queueForEvents,
-                        bus: $bus,
-                        project: $project,
-                        function: $function,
-                        executor:  $executor,
-                        trigger: 'event',
-                        path: '/',
-                        method: 'POST',
-                        headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
-                        ],
-                        platform: $platform,
-                        data: null,
-                        user: $user,
-                        jwt: null,
-                        event: $events[0],
-                        eventData: \json_encode($eventData) ?: null,
-                        executionId: null,
-                    );
-                    Console::success('Triggered function: ' . $events[0]);
+                    try {
+                        $this->execute(
+                            dbForProject: $dbForProject,
+                            queueForWebhooks: $queueForWebhooks,
+                            publisherForFunctions: $publisherForFunctions,
+                            queueForRealtime: $queueForRealtime,
+                            queueForEvents: $queueForEvents,
+                            bus: $bus,
+                            project: $project,
+                            function: $function,
+                            executor:  $executor,
+                            trigger: 'event',
+                            path: '/',
+                            method: 'POST',
+                            headers: [
+                                'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                                'content-type' => 'application/json'
+                            ],
+                            platform: $platform,
+                            data: null,
+                            user: $user,
+                            jwt: null,
+                            event: $events[0],
+                            eventData: \json_encode($eventData) ?: null,
+                            executionId: null,
+                        );
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        $failure ??= $th;
+                        Console::error('Failed to trigger function ' . $function->getId() . ': ' . $th->getMessage());
+                    }
                 }
             }
+
+            // Process every subscriber before preserving the failed job for retries.
+            if ($failure !== null) {
+                throw $failure;
+            }
+
             return;
         }
 
@@ -243,7 +252,6 @@ class Functions extends Action
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -279,7 +287,6 @@ class Functions extends Action
                 }
 
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     publisherForFunctions: $publisherForFunctions,
@@ -474,7 +481,6 @@ class Functions extends Action
     }
 
     /**
-     * @param Log $log
      * @param Database $dbForProject
      * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
@@ -495,7 +501,6 @@ class Functions extends Action
      * @return void
      */
     private function execute(
-        Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -526,7 +531,7 @@ class Functions extends Action
         Span::add('deployment.id', $deploymentId);
         Span::add('execution.trigger', $trigger);
 
-        $log->addTag('deploymentId', $deploymentId);
+        Span::add('deployment.id', $deploymentId);
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -685,7 +690,7 @@ class Functions extends Action
             $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),
@@ -748,12 +753,11 @@ class Functions extends Action
                 ->setAttribute('responseHeaders', $headersFiltered)
                 ->setAttribute('logs', $logs)
                 ->setAttribute('errors', $errors)
-                ->setAttribute('duration', $executionResponse['duration']);
+                ->setAttribute('duration', \microtime(true) - $durationStart);
 
         } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
             $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
+                ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());

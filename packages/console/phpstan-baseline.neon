@@ -1,0 +1,37 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#2 \$commands of static method Utopia\\Command\:\:compose\(\) expects array\<int, Utopia\\Command\>, array\<int\<0, max\>\|string, Utopia\\Command\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Command.php
+
+		-
+			message: '#^Method Utopia\\Console\:\:execute\(\) has parameter \$cmd with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Console.php
+
+		-
+			message: '#^Parameter \#1 \$command of function proc_open expects list\<string\>\|string, array\|non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgets expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console.php

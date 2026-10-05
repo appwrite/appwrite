@@ -6,7 +6,13 @@ namespace Tests\Unit\Migration\Version;
 
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
 final class V25Test extends TestCase
@@ -119,6 +125,49 @@ final class V25Test extends TestCase
         $this->assertSame('database', $document->getAttribute('parentResourceId'));
         $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('parentResourceType'));
         $this->assertSame($afterResolution, $document->getArrayCopy());
+    }
+
+    public function testAddsPushBrokerSchemaToProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.2.0 has no pushLedger and no topic sequence, qos or expiry.
+        $added = ['sequence', 'qos', 'expiry'];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if ($id === 'pushLedger' || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'topics'
+                ? \array_filter($collection['attributes'], fn (array $attribute) => !\in_array($attribute['$id'], $added, true))
+                : $collection['attributes'];
+            $database->createCollection(
+                $id,
+                \array_map(fn (array $attribute) => new Document($attribute), \array_values($attributes)),
+                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
+            );
+        }
+        $database->createCollection('audit');
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
+        $topics = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('topics')->getAttribute('attributes', [])
+        );
+        foreach ($added as $attribute) {
+            $this->assertContains($attribute, $topics);
+        }
     }
 
     public function testRejectsResourcesCreatedAfterMigration(): void

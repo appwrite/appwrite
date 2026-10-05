@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Image\Image;
 
@@ -1217,6 +1218,7 @@ trait Base
                         _id
                         _collectionId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_DOCUMENTS:
@@ -1269,6 +1271,7 @@ trait Base
                         _id
                         _tableId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_CUSTOM_ENTITY:
@@ -1505,8 +1508,12 @@ trait Base
                             status
                             email
                             emailVerification
+                            targets {
+                                providerType
+                                identifier
+                            }
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
@@ -3368,7 +3375,14 @@ trait Base
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

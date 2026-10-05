@@ -25,6 +25,10 @@ class Context
     protected string $ip = '';
     protected string $sdk = '';
     protected string $sdkVersion = '';
+    protected string $protocol = '';
+    protected string $accept = '';
+    protected string $acceptLanguage = '';
+    protected string $queryKeys = '';
 
     public function setPath(string $path): static
     {
@@ -122,6 +126,11 @@ class Context
         return $this;
     }
 
+    public function getCountry(): string
+    {
+        return $this->country;
+    }
+
     public function setRegion(string $region): static
     {
         $this->region = $region;
@@ -152,10 +161,20 @@ class Context
         return $this;
     }
 
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
     public function setUserAgent(string $userAgent): static
     {
         $this->userAgent = $userAgent;
         return $this;
+    }
+
+    public function getUserAgent(): string
+    {
+        return $this->userAgent;
     }
 
     public function setIp(string $ip): static
@@ -175,9 +194,46 @@ class Context
         return $this;
     }
 
+    public function getSdk(): string
+    {
+        return $this->sdk;
+    }
+
     public function setSdkVersion(string $sdkVersion): static
     {
         $this->sdkVersion = $sdkVersion;
+        return $this;
+    }
+
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
+    public function setProtocol(string $protocol): static
+    {
+        $this->protocol = $protocol;
+        return $this;
+    }
+
+    public function setAccept(string $accept): static
+    {
+        $this->accept = $accept;
+        return $this;
+    }
+
+    public function setAcceptLanguage(string $acceptLanguage): static
+    {
+        $this->acceptLanguage = $acceptLanguage;
+        return $this;
+    }
+
+    /**
+     * Comma-joined query parameter names (values are intentionally excluded).
+     */
+    public function setQueryKeys(string $queryKeys): static
+    {
+        $this->queryKeys = $queryKeys;
         return $this;
     }
 
@@ -206,6 +262,10 @@ class Context
             'ip' => $this->ip,
             'sdk' => $this->sdk,
             'sdkVersion' => $this->sdkVersion,
+            'protocol' => $this->protocol,
+            'accept' => $this->accept,
+            'acceptLanguage' => $this->acceptLanguage,
+            'queryKeys' => $this->queryKeys,
         ];
 
         return $this;
@@ -280,6 +340,10 @@ class Context
         $this->ip = '';
         $this->sdk = '';
         $this->sdkVersion = '';
+        $this->protocol = '';
+        $this->accept = '';
+        $this->acceptLanguage = '';
+        $this->queryKeys = '';
 
         return $this;
     }

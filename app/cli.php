@@ -20,11 +20,9 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\System\System;
+use Utopia\Span\Span;
 
 use function Swoole\Coroutine\run;
 
@@ -140,96 +138,9 @@ $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Data
     };
 }, ['databaseFactory', 'dbForPlatform']);
 
-$container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
-    $database = null;
-
-    return function (?Document $project = null) use ($pools, $cache, &$database, $authorization) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = $collections['logs'] ?? [];
-        $logsCollections = array_keys($logsCollections);
-
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setSharedTables(true)
-            ->setNamespace('logsV1')
-            ->setGlobalCollections($logsCollections)
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-        // set tenant
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        return $database;
-    };
-}, ['pools', 'cache', 'authorization']);
-
 $container->set('usage', function () {
     return new UsageContext();
 }, []);
-$container->set('logError', function (Registry $register) {
-    return function (Throwable $error, string $namespace, string $action) use ($register) {
-        Console::error('[Error] Timestamp: ' . date('c', time()));
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-        Console::error('[Error] Trace: ' . $error->getTraceAsString());
-
-        $logger = $register->get('logger');
-
-        if ($logger) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace($namespace);
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-
-            if ($error->getPrevious() !== null) {
-                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
-                }
-                $log->addExtra('previousFile', $error->getPrevious()->getFile());
-                $log->addExtra('previousLine', $error->getPrevious()->getLine());
-            }
-
-            $log->setAction($action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
-        }
-    };
-}, ['register']);
-
 $container->set('bus', function (Registry $register) use ($container) {
     return $register->get('bus')->setResolver(fn (string $name) => $container->get($name));
 }, ['register']);
@@ -239,19 +150,22 @@ $exitCode = 0;
 $cli
     ->error()
     ->inject('error')
-    ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
-        call_user_func_array($logError, [
-            $error,
-            'Task',
-            $taskName,
-        ]);
+    ->action(function (Throwable $error) use ($taskName, &$exitCode) {
+        $span = Span::current() ?? Span::init("task.$taskName");
+        $span->finish(error: $error);
 
         $exitCode = 1;
         Timer::clearAll();
     });
 
-$cli->shutdown()->action(fn () => Timer::clearAll());
+$cli->init()->action(function () use ($taskName) {
+    Span::init("task.$taskName");
+});
+
+$cli->shutdown()->action(function () {
+    Span::current()?->finish();
+    Timer::clearAll();
+});
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';

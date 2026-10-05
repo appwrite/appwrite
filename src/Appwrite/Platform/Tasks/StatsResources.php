@@ -4,14 +4,17 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
-use Appwrite\Platform\Action;
+use Appwrite\Schedule\Source;
 use Appwrite\Usage\Concurrency;
 use Appwrite\Usage\Connection;
 use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
+use Utopia\Platform\Action;
+use Utopia\Schedule\Occurrence;
+use Utopia\Schedule\Scheduler;
+use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class StatsResources extends Action
 {
@@ -31,57 +34,94 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('publisherForStatsResources')
             ->inject('usageConnection')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, StatsResourcesPublisher $publisherForStatsResources, Connection $usageConnection): void
+    public function action(Database $dbForPlatform, StatsResourcesPublisher $publisherForStatsResources, Connection $usageConnection, Telemetry $telemetry): void
     {
         if (!$usageConnection->isEnabled()) {
             Console::info('Usage statistics are disabled');
             return;
         }
 
-        $this->disableSubqueries();
-        // Floor of 1 guards against a zero/negative interval spinning the loop;
-        // test stacks legitimately run short intervals (Cloud CI uses 2s).
+        // Floor of 1 guards against a zero/negative interval; test stacks
+        // legitimately run short intervals (Cloud CI uses 2s).
         $interval = max(1, (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', 3600));
 
-        Console::loop(function () use ($dbForPlatform, $publisherForStatsResources, $usageConnection): void {
-            // Nothing here may end the loop. An exception escaping this closure
-            // ends Console::loop, and the process then stays alive and idle: it
-            // never exits, so restartPolicy never fires, and with no liveness
-            // probe nothing observes that scheduling has stopped. A single
-            // transient ClickHouse timeout on one tick silently ended gauge
-            // collection for a whole region, and the task went on reporting
-            // Ready for weeks while queueing nothing.
+        $source = new Source\Stats($dbForPlatform, $interval, $this->subqueries());
+
+        $scheduler = new Scheduler(
+            source: $source,
+            syncSeconds: min($interval, 60),
+            snapshotSeconds: $interval,
+            telemetry: $telemetry,
+            onError: function (\Throwable $error): void {
+                Span::init('schedule.stats.reconcile');
+                Span::current()?->finish(error: $error);
+            },
+        );
+
+        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForStatsResources, $usageConnection));
+
+        Span::init('schedule.stats.stopped');
+        Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
+    }
+
+    /**
+     * Project decode filters the listing skips. Editions that register more
+     * subqueries on projects extend this.
+     *
+     * @return list<string>
+     */
+    protected function subqueries(): array
+    {
+        return APP_PROJECTS_SUBQUERIES;
+    }
+
+    /**
+     * Nothing here may throw: an exception ends the scheduler loop, and the
+     * process then stays alive and idle with nothing observing that
+     * scheduling has stopped. A failure costs one occurrence, not the loop.
+     *
+     * @param list<Occurrence> $occurrences
+     */
+    private function dispatch(array $occurrences, StatsResourcesPublisher $publisherForStatsResources, Connection $usageConnection): null
+    {
+        if (!$usageConnection->isReady()) {
+            Console::error('stats resources: usage schema is not ready, skipping ' . \count($occurrences) . ' occurrences');
+            return null;
+        }
+
+        $batch = \count($occurrences);
+
+        foreach (\array_values($occurrences) as $index => $occurrence) {
+            Span::init('schedule.stats.enqueue');
+            $error = null;
+
             try {
-                if (!$usageConnection->isReady()) {
-                    Console::error('stats resources: usage schema is not ready, skipping cycle');
-                    return;
-                }
+                Span::add('occurrence.due', $occurrence->due->format('c'));
+                Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
+                Span::add('occurrence.batch', $batch);
+                Span::add('occurrence.index', $index);
 
-                // Concurrency sampling reads the usage store; project scheduling
-                // reads the platform DB. They share no data, so a failure in the
-                // first must not cost the second -- that coupling is what turned
-                // one bad read into no scheduling at all.
-                try {
+                if ($occurrence->id === Source\Stats::CONCURRENCY) {
                     $this->concurrency->sample($usageConnection->getUsage());
-                } catch (\Throwable $th) {
-                    Console::error('stats resources: concurrency sample failed, continuing: ' . $th->getMessage());
+                    continue;
                 }
 
-                $last24Hours = (new \DateTime())->sub(new \DateInterval('P1D'));
-                $this->foreachDocument($dbForPlatform, 'projects', [
-                    Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
-                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                ], function ($project) use ($publisherForStatsResources): void {
-                    $publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $project));
-                });
+                Span::add('project.id', $occurrence->id);
+                if ($publisherForStatsResources->enqueue(new StatsResourcesMessage(project: $occurrence->payload)) === false) {
+                    $error = new \RuntimeException('Failed to enqueue');
+                }
             } catch (\Throwable $th) {
-                // Cost a cycle, not the process: the next tick retries in full.
-                Console::error('stats resources: cycle failed, retrying next interval: ' . $th->getMessage());
+                $error = $th;
+                Console::error('stats resources: ' . $occurrence->id . ' failed: ' . $th->getMessage());
+            } finally {
+                Span::current()?->finish(error: $error);
             }
-        }, $interval);
+        }
+
+        return null;
     }
 }

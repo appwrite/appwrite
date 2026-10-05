@@ -48,7 +48,7 @@ final class RegistrationTest extends TestCase
         \sort($expected);
 
         $this->assertSame($expected, $registered);
-        $this->assertSame(1, Config::getParam('workers')['databases']['maxCoroutines']);
-        $this->assertSame(8, Config::getParam('workers')['stats-usage']['maxCoroutines']);
+        $this->assertSame(1, Config::getParam('workers')['databases']['coroutines']);
+        $this->assertSame(8, Config::getParam('workers')['stats-usage']['coroutines']);
     }
 }

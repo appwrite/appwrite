@@ -76,6 +76,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -94,6 +95,7 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Deployments $deployments,
+        int $buildTimeout,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -123,7 +125,8 @@ class Create extends Base
             platform: $platform,
             reference: $reference,
             referenceType: $type,
-            deployments: $deployments
+            deployments: $deployments,
+            buildTimeout: $buildTimeout
         );
 
         $queueForEvents

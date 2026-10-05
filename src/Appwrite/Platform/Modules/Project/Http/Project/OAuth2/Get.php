@@ -58,6 +58,7 @@ class Get extends Action
                             Response::MODEL_OAUTH2_YANDEX,
                             Response::MODEL_OAUTH2_X,
                             Response::MODEL_OAUTH2_WORDPRESS,
+                            Response::MODEL_OAUTH2_WEBFLOW,
                             Response::MODEL_OAUTH2_TWITCH,
                             Response::MODEL_OAUTH2_STRIPE,
                             Response::MODEL_OAUTH2_SPOTIFY,
@@ -86,6 +87,8 @@ class Get extends Action
                             Response::MODEL_OAUTH2_OKTA,
                             Response::MODEL_OAUTH2_KICK,
                             Response::MODEL_OAUTH2_MICROSOFT,
+                            Response::MODEL_OAUTH2_TIKTOK,
+                            Response::MODEL_OAUTH2_KAKAO,
                         ],
                     )
                 ]

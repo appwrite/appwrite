@@ -65,6 +65,18 @@ class Upsert extends Action
                     group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/databases/upsert-document.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update document data',
+                            'value' => ['data' => [
+                                'username' => 'walter.obrien',
+                                'email' => 'walter.obrien@example.com',
+                                'fullName' => "Walter O'Brien",
+                                'age' => 30,
+                                'isAdmin' => false,
+                            ]],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
@@ -233,6 +245,10 @@ class Upsert extends Action
                             $relation->getId()
                         ));
 
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
+                        }
+
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
                             '$collection',
@@ -260,6 +276,7 @@ class Upsert extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
 
