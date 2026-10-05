@@ -181,19 +181,10 @@ class Update extends Action
                 return;
             }
 
-            $databaseDoc = null;
-            switch ($this->getDatabaseType()) {
-                case DATABASE_TYPE_DOCUMENTSDB:
-                case DATABASE_TYPE_VECTORSDB:
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
-                    ]));
-                    break;
-                default:
-                    // Legacy/tablesdb: use project-level database
-                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
-                    break;
-            }
+            $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+            ]));
+            $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
@@ -210,11 +201,23 @@ class Update extends Action
                     Query::limit(PHP_INT_MAX),
                 ]));
 
+                $databaseDsns = [$firstOperation['databaseInternalId'] => $databaseDsn];
                 $collections = [];
                 foreach ($operations as $operation) {
                     $databaseInternalId = $operation['databaseInternalId'];
                     $collectionInternalId = $operation['collectionInternalId'];
                     $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
+
+                    if (!isset($databaseDsns[$databaseInternalId])) {
+                        $operationDatabase = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]));
+                        $databaseDsns[$databaseInternalId] = $operationDatabase->getAttribute('database') ?: $project->getAttribute('database');
+                    }
+
+                    if ($databaseDsns[$databaseInternalId] !== $databaseDsn) {
+                        throw new Exception(Exception::TRANSACTION_INVALID, 'All operations in a transaction must target databases hosted on the same database instance.');
+                    }
 
                     if (!isset($collections[$collectionId])) {
                         $collections[$collectionId] = $authorization->skip(
