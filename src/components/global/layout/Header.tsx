@@ -229,6 +229,9 @@ function getMarketingNavAnalyticsAction(
 const ACCOUNT_MENU_ITEM_CLASS =
   'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
 
+const HEADER_ICON_LINK_CLASS =
+  'flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+
 function MarketingNavLabel({
   label,
   showNewIndicator,
@@ -1505,10 +1508,43 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Feedback / Support - console tools; on marketing only at very wide
-                  widths so they cannot crowd the centered Changelog / stars. */}
+              {/* Docs / Feedback / Support - console tools; on marketing only at
+                  very wide widths so they cannot crowd the centered Changelog / stars. */}
               {!preLaunch ? (
                 <>
+                  {!showMarketingLinks ? (
+                    <div className="hidden shrink-0 @[800px]:flex">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {marketingNavLinksExternal ? (
+                            <a
+                              href={docsHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={headerCopy.actions.docs}
+                              className={HEADER_ICON_LINK_CLASS}
+                              {...analyticsAttrs('header-docs')}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <Link
+                              to="/docs"
+                              aria-label={headerCopy.actions.docs}
+                              className={HEADER_ICON_LINK_CLASS}
+                              {...analyticsAttrs('header-docs')}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Link>
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{headerCopy.actions.docs}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  ) : null}
+
                   <div
                     className={cn(
                       'hidden shrink-0',
