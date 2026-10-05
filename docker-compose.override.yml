@@ -674,6 +674,7 @@ networks:
     ipam:
       config:
         - subnet: 203.0.0.0/24
+          ip_range: 203.0.0.128/25
           gateway: 203.0.0.254
 volumes:
   appwrite-gitea: null
