@@ -533,7 +533,11 @@ class Nats implements Synchronous, Consumer, Bounded, Coalescing
         });
     }
 
-    /** Refused while the key's subject stores a message; WorkQueue removes it on ack or TERM. */
+    /**
+     * Refused while the key's subject stores a message; WorkQueue removes it on ack or TERM.
+     *
+     * @throws \RuntimeException when a lost acknowledgement leaves the outcome unknown
+     */
     public function coalesce(Queue $queue, array $payload, string $key): Outcome
     {
         if ($key === '') {
@@ -569,6 +573,10 @@ class Nats implements Synchronous, Consumer, Bounded, Coalescing
                 throw $error;
             }
 
+            if ($stored === null) {
+                throw new \RuntimeException("NATS keyed publish to \"{$queue->name}\" lost its acknowledgement and its id was already known; the outcome is unknown.");
+            }
+
             // A duplicate id on the first attempt means this call stored nothing.
             return $stored ? Outcome::Published : Outcome::Coalesced;
         });
@@ -577,7 +585,7 @@ class Nats implements Synchronous, Consumer, Bounded, Coalescing
     /**
      * @param array<string, mixed> $envelope
      */
-    private function publishKeyed(Queue $queue, string $subject, array $envelope): bool
+    private function publishKeyed(Queue $queue, string $subject, array $envelope): ?bool
     {
         $identity = $this->identity($queue);
         if (!isset($this->keyed[$identity]) && ($this->readopt[$identity] ?? 0.0) <= microtime(true)) {
@@ -618,9 +626,9 @@ class Nats implements Synchronous, Consumer, Bounded, Coalescing
      *
      * @param array<string, mixed> $envelope
      * @param int|null $expected The subject's required last sequence; null sends no expectation.
-     * @return bool Whether this call stored the message: false only for a duplicate on the first attempt.
+     * @return bool|null Whether this call stored the message: false for a duplicate on the first attempt, null when a retried duplicate cannot tell.
      */
-    private function publishEnvelope(string $subject, array $envelope, ?int $expected = null): bool
+    private function publishEnvelope(string $subject, array $envelope, ?int $expected = null): ?bool
     {
         /** @var string $id */
         $id = $envelope['pid'];
@@ -656,7 +664,17 @@ class Nats implements Synchronous, Consumer, Bounded, Coalescing
             ++$this->duplicates;
         }
 
-        return !$ack->duplicate || $retried;
+        if (!$ack->duplicate) {
+            return true;
+        }
+
+        if (!$retried) {
+            return false;
+        }
+
+        // A random id is minted per call, so its duplicate is our lost first attempt.
+        // A caller-supplied id may predate this call, so the duplicate proves nothing.
+        return $this->messageId instanceof \Closure ? null : true;
     }
 
     /**

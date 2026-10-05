@@ -523,6 +523,43 @@ final class NatsCoalesceTest extends TestCase
         }
     }
 
+    public function testRetriedDuplicateOfAStableIdIsUnknown(): void
+    {
+        $armed = false;
+        $url = $this->url;
+        $broker = new Nats(static function () use ($url, &$armed): Connection {
+            return Connection::connect(new ConnectionOptions(
+                servers: $url,
+                reconnectWait: 0.01,
+                transportFactory: static function () use (&$armed): Transport {
+                    return new DroppingTransport(new TcpTransport(), $armed);
+                },
+            ));
+        }, ackWait: 2.0, maxDeliver: 3, messageId: static fn (array $payload): string => 'stats-' . json_encode($payload));
+        try {
+            $this->assertSame(Outcome::Published, $broker->coalesce($this->queue, ['n' => 1], 'project'));
+            $broker->commit($this->queue, $this->receiveOne($broker, $this->queue));
+            $this->drained();
+
+            $armed = true;
+            $outcome = null;
+            $error = null;
+            try {
+                $outcome = $broker->coalesce($this->queue, ['n' => 1], 'project');
+            } catch (\RuntimeException $caught) {
+                $error = $caught;
+            }
+
+            $this->assertNull($outcome);
+            $this->assertNotNull($error);
+            $this->assertStringContainsString('outcome is unknown', $error->getMessage());
+            $this->assertSame(1, $broker->duplicates(), 'the retry after the dropped connection was a duplicate');
+            $this->assertSame(0, $this->js->getStreamInfo($this->workStream())->state->messages);
+        } finally {
+            $broker->close();
+        }
+    }
+
     public function testCoalescesWithIgbinary(): void
     {
         if (!\function_exists('igbinary_serialize')) {
