@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Template;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -13,6 +14,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -84,6 +86,8 @@ class Create extends Base
             ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('buildTimeout')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -106,6 +110,8 @@ class Create extends Base
         VcsFactory $vcsFactory,
         Authorization $authorization,
         Deployments $deployments,
+        int $buildTimeout,
+        Bus $bus,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -141,7 +147,9 @@ class Create extends Base
                 activate: $activate,
                 authorization: $authorization,
                 deployments: $deployments,
-                platform: $platform
+                bus: $bus,
+                platform: $platform,
+                buildTimeout: $buildTimeout
             );
 
             $queueForEvents
@@ -199,7 +207,7 @@ class Create extends Base
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -218,14 +226,16 @@ class Create extends Base
                 'region' => $project->getAttribute('region')
             ]))
         );
+        $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization, $bus);
 
         // Public template: pull the source straight from GitHub's public repo
         // as a codeload tarball; unarchive strips down to the rootDirectory.
         $deployment = $deployments->createFromRef(
             $site,
             $deployment,
+            $buildTimeout,
             $owner,
             $repository,
             $type,

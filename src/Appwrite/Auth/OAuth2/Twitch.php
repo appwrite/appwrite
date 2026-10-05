@@ -144,9 +144,20 @@ class Twitch extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
+        // email_verified lives on the OIDC userinfo endpoint, not Helix /users; unverified is the safe default until we migrate
+        return false;
+    }
 
-        return !empty($email);
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['profile_image_url'] ?? '';
     }
 
     /**

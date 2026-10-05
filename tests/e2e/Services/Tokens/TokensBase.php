@@ -191,6 +191,26 @@ trait TokensBase
         $this->assertEquals('No permissions provided for action \'read\'', $failedDownload['body']['message']);
     }
 
+    public function testPreviewFileWithInvalidTokenType(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $guestHeaders,
+            [
+                'token' => ['invalid']
+            ]
+        );
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testPreviewFileWithToken(): void
     {
         $data = $this->setupBucketAndFile();
@@ -218,9 +238,9 @@ trait TokensBase
         $image->readImageBlob($filePreview['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testCustomPreviewFileWithToken(): void
@@ -255,9 +275,9 @@ trait TokensBase
         $image->readImageBlob($customFilePreview['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testViewFileWithToken(): void
@@ -283,9 +303,9 @@ trait TokensBase
         $image->readImageBlob($fileView['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testDownloadFileWithToken(): void
@@ -311,9 +331,9 @@ trait TokensBase
         $image->readImageBlob($fileDownload['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
+        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
+        $this->assertSame('PNG', $image->getImageFormat());
     }
 
     public function testFileAccessWithFileSecurity(): void
@@ -392,9 +412,9 @@ trait TokensBase
                 $image->readImageBlob($response['body']);
                 $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
 
-                $this->assertEquals($original->getImageWidth(), $image->getImageWidth());
-                $this->assertEquals($original->getImageHeight(), $image->getImageHeight());
-                $this->assertEquals('PNG', $image->getImageFormat());
+                $this->assertSame($original->getImageWidth(), $image->getImageWidth());
+                $this->assertSame($original->getImageHeight(), $image->getImageHeight());
+                $this->assertSame('PNG', $image->getImageFormat());
             }
         }
 

@@ -12,7 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 
 class Upsert extends DocumentUpsert
@@ -49,6 +49,18 @@ class Upsert extends DocumentUpsert
                     group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/tablesdb/upsert-row.md',
+                    requestExamples: [
+                        'upsert' => [
+                            'summary' => 'Create or update row data',
+                            'value' => ['data' => [
+                                'username' => 'walter.obrien',
+                                'email' => 'walter.obrien@example.com',
+                                'fullName' => "Walter O'Brien",
+                                'age' => 30,
+                                'isAdmin' => false,
+                            ]],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
@@ -62,7 +74,7 @@ class Upsert extends DocumentUpsert
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('rowId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Row ID.', false, ['dbForProject'])
-            ->param('data', [], new JSON(), 'Row data as JSON object. Include all required columns of the row to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
+            ->param('data', [], new JSONObject(), 'Row data as JSON object. Include all required columns of the row to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')

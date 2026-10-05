@@ -91,6 +91,11 @@ class Create extends Action
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'passwordPwned' => [
+                'enabled' => true,
+                'sessions' => false,
+                'users' => false,
+            ],
             'disposableEmails' => false,
             'canonicalEmails' => false,
             'freeEmails' => false,
@@ -102,7 +107,13 @@ class Create extends Action
             'membershipsMfa' => false,
             'membershipsUserId' => false,
             'membershipsUserPhone' => false,
-            'invalidateSessions' => true
+            'invalidateSessions' => true,
+            'mfaFactors' => [
+                'totp' => true,
+                'email' => true,
+                'phone' => true,
+                'custom' => false,
+            ],
         ];
 
         foreach ($auth as $method) {

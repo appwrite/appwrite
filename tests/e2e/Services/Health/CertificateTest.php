@@ -18,6 +18,9 @@ final class CertificateTest extends HealthBase
         $this->assertCertificateFailure('doesnotexist.com', 404);
         $this->assertCertificateFailure('www.google.com/usr/src/local', 400);
         $this->assertCertificateFailure('', 400);
+
+        $response = $this->callGet('/health/certificate');
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     private function assertCertificate(string $domain, string $expectedName, string $expectedSN): void

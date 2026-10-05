@@ -147,7 +147,20 @@ class Kick extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return !empty($this->getUserEmail($accessToken));
+        // Provider exposes no email verification signal, so treat as unverified until one is confirmed
+        return false;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['profile_picture'] ?? '';
     }
 
     /**

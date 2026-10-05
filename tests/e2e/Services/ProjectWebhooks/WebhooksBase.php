@@ -39,15 +39,20 @@ trait WebhooksBase
     }
 
     /**
-     * Create a probe callback that filters webhooks by event pattern.
+     * Create a probe callback that filters webhooks by event pattern and optional payload key.
      */
-    private function webhookEventProbe(string $eventPattern): callable
+    private function webhookEventProbe(string $eventPattern, ?string $key = null): callable
     {
-        return function (array $request) use ($eventPattern) {
+        return function (array $request) use ($eventPattern, $key) {
             $this->assertStringContainsString(
                 $eventPattern,
                 $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
             );
+
+            // Delivery order is not guaranteed; select the resource inside the probe.
+            if ($key !== null) {
+                $this->assertSame($key, $request['data']['key'] ?? null);
+            }
         };
     }
 
@@ -436,7 +441,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors');
         $this->assertIsArray($webhook['data']['$permissions']);
@@ -521,7 +526,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create"));
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create", 'extra'));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -548,7 +553,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update"));
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", 'extra'));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -617,7 +622,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris');
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
@@ -676,7 +681,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris1');
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
@@ -743,7 +748,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Bradly');
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
@@ -805,7 +810,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors');
         $this->assertIsArray($webhook['data']['$permissions']);
@@ -888,7 +893,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.create"));
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.create", 'extra'));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -915,7 +920,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.update"));
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.update", 'extra'));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -984,7 +989,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris');
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
@@ -1043,7 +1048,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris1');
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
@@ -1110,7 +1115,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Bradly');
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
@@ -1156,7 +1161,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket', $webhook['data']['name']);
         $this->assertEquals(true, $webhook['data']['enabled']);
@@ -1198,7 +1203,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
         $this->assertEquals(false, $webhook['data']['enabled']);
@@ -1252,7 +1257,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
@@ -1306,7 +1311,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
@@ -1354,7 +1359,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
@@ -1406,7 +1411,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
         $this->assertEquals(true, $webhook['data']['enabled']);
@@ -1444,7 +1449,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Arsenal', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
@@ -1483,7 +1488,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Demo New', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
@@ -1528,7 +1533,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertEquals($webhook['data'], [
             'prefKey1' => 'prefValue1',
             'prefKey2' => 'prefValue2',
@@ -1571,7 +1576,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Chelsea', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
@@ -1639,7 +1644,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
@@ -1700,7 +1705,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertSame(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);

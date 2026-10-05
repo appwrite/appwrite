@@ -142,7 +142,22 @@ class X extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return !empty($this->getUserEmail($accessToken));
+        // X only populates confirmed_email once the address is confirmed, so its presence is the verification signal
+        $user = $this->getUser($accessToken);
+
+        return !empty($user['data']['confirmed_email']);
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['data']['profile_image_url'] ?? '';
     }
 
     /**
@@ -167,7 +182,7 @@ class X extends OAuth2
         if (empty($this->user)) {
             $this->user = $this->decodeJsonObject($this->request(
                 'GET',
-                'https://api.x.com/2/users/me?user.fields=confirmed_email',
+                'https://api.x.com/2/users/me?user.fields=confirmed_email,profile_image_url',
                 ['Authorization: Bearer ' . $accessToken]
             ));
         }

@@ -49,6 +49,21 @@ trait AccountBase
         $this->assertIsBool($response['body']['emailIsCorporate']);
         $this->assertIsBool($response['body']['emailIsCanonical']);
 
+        // An explicit null for an optional param must fall back to its default, not 500.
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => $password,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['name']);
+
         /**
          * Test for FAILURE
          */
@@ -137,6 +152,31 @@ trait AccountBase
             'password' => $password,
             'name' => $name,
         ];
+    }
+
+    /**
+     * Regression: the abuse hook stringifies every request param into the
+     * rate-limit key. An empty JSON object in the body decodes to a stdClass,
+     * which used to be passed straight to the string-only setParam() and threw
+     * a TypeError before the action ran. The request must succeed instead of
+     * returning a 500.
+     */
+    public function testCreateAccountWithObjectParam(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'objectparam@localhost.test',
+            'password' => 'password',
+            'name' => 'User Name',
+            'metadata' => (object) [], // serializes to `{}`, decoded as stdClass
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
     }
 
     public function testEmailOTPSession(): void
@@ -438,5 +478,75 @@ trait AccountBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 429);
+    }
+
+    /**
+     * Configure the mock OAuth2 provider on the project under test: the
+     * browser flow through the console endpoint, native sign-in through the
+     * mock route that stands in for the console form mock providers lack.
+     */
+    protected function updateMockProvider(bool $enabled, bool $nativeEnabled = true, array $clientIds = [], string $provider = 'mock'): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => $enabled,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'projectId' => $this->getProject()['$id'],
+            'provider' => $provider,
+            'enabled' => $nativeEnabled,
+            'clientIds' => $clientIds,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    protected function createIdTokenSession(array $body, array $headers = []): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers), $body);
+    }
+
+    /**
+     * Mint an ID token signed by the mock provider's test key. Claim and
+     * header overrides allow producing deliberately invalid tokens.
+     */
+    protected function mintIdToken(array $claims, array $header = []): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'claims' => \json_encode(array_merge([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+            ], $claims)),
+            'header' => empty($header) ? '' : \json_encode($header),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body']['token'];
     }
 }

@@ -1,0 +1,47 @@
+{
+    "name": "utopia-php/telemetry",
+    "description": "A lite & fast telemetry library, with adapters for OpenTelemetry",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Telemetry\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Telemetry\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit",
+        "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
+    },
+    "require": {
+        "php": ">=8.0",
+        "nyholm/psr7": "1.*",
+        "open-telemetry/exporter-otlp": "1.*",
+        "open-telemetry/sdk": "1.*",
+        "symfony/http-client": "7.*"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "6.*"
+    },
+    "suggest": {
+        "ext-protobuf": "For better performance, when dealing with the protobuf format",
+        "ext-swoole": "Required for the Swoole transport implementation",
+        "ext-sockets": "Required for the Swoole transport implementation"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}

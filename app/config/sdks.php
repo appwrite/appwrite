@@ -1,6 +1,8 @@
 <?php
 
-return [
+use Utopia\System\System;
+
+$platforms = [
     APP_SDK_PLATFORM_CLIENT => [
         'key' => APP_SDK_PLATFORM_CLIENT,
         'name' => 'Client',
@@ -126,7 +128,7 @@ return [
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_SDK_PLATFORM_CLIENT,
@@ -589,3 +591,18 @@ return [
         ],
     ],
 ];
+
+// A preview SDK is built from a PR to show the whole API surface that PR produces
+// and publishes nothing, so none of the exclusions above apply to it. Only the
+// preview workflow sets _APP_SDK_PREVIEW; every other run, releases included,
+// leaves it unset and keeps every rule. The per-endpoint counterpart is the `hide`
+// argument on Appwrite\SDK\Method, lifted under the same flag at its call sites.
+if (System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled') {
+    foreach ($platforms as $platformKey => $platform) {
+        foreach (\array_keys($platform['sdks']) as $index) {
+            unset($platforms[$platformKey]['sdks'][$index]['exclude']);
+        }
+    }
+}
+
+return $platforms;

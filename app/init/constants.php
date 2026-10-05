@@ -41,12 +41,57 @@ const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
+const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+
+const APP_PROJECTS_SUBQUERIES = [
+    'subQueryKeys',
+    'subQueryWebhooks',
+    'subQueryPlatforms',
+    'subQueryBlocks',
+];
+
+const APP_USERS_SUBQUERIES = [
+    'subQueryAuthenticators',
+    'subQuerySessions',
+    'subQueryTokens',
+    'subQueryChallenges',
+    'subQueryMemberships',
+    'subQueryTargets',
+    'subQueryAccountKeys',
+    'subQueryPaymentMethods',
+];
+
+const APP_TEAMS_SUBQUERIES = [
+    'subQueryOrganizationKeys',
+];
+
+const APP_TOPICS_SUBQUERIES = [
+    'subQueryTopicTargets',
+];
+
+const APP_FUNCTIONS_SUBQUERIES = [
+    'subQueryVariables',
+    'subQueryProjectVariables',
+];
+
+const APP_DATABASES_SUBQUERIES = [
+    'subQueryPolicies',
+    'subQueryArchives',
+];
+
+const APP_COLLECTIONS_SUBQUERIES = [
+    'subQueryAttributes',
+    'subQueryIndexes',
+];
+
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
-const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
+// Default maximum batch size for database operations. Self-hosted operators can raise this
+// for their own hardware; on Cloud the plan's databasesBatchSize takes precedence.
+\define('APP_LIMIT_DATABASE_BATCH', \max(1, (int) System::getEnv('_APP_LIMIT_DATABASE_BATCH', 100)));
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
@@ -54,8 +99,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4326;
-const APP_VERSION_STABLE = '1.9.6';
+const APP_CACHE_BUSTER = 4327;
+const APP_VERSION_STABLE = '2.3.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -86,6 +131,7 @@ const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -108,11 +154,15 @@ const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_SDK_PLATFORM_STATIC = 'static';
+const APP_SDK_INTEGRATIONS = ['terraform']; // Server-side tools built on a generated SDK that report their own x-sdk-name
+const APP_LIMIT_VCS_STATE = 4096; // Maximum length of the state the VCS authorize endpoints hand to a provider
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
+const APP_VCS_ORIGIN_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
@@ -156,6 +206,8 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_VERIFICATION_OTP = 10;
+const TOKEN_TYPE_RECOVERY_OTP = 11;
 
 /**
  * Session Providers.
@@ -230,7 +282,6 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
@@ -287,6 +338,8 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// Message providers
+const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
@@ -300,6 +353,8 @@ const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
 const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_OTP_VERIFICATION = 'otp-verification';
+const MAIL_TEMPLATE_OTP_RECOVERY = 'otp-recovery';
 const MAIL_TEMPLATE_RECOVERY = 'recovery';
 const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
 const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
@@ -331,6 +386,7 @@ const METRIC_MESSAGES_TYPE_FAILED  = METRIC_MESSAGES . '.{type}.failed';
 const METRIC_MESSAGES_TYPE_PROVIDER = METRIC_MESSAGES . '.{type}.{provider}';
 const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider}.sent';
 const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
+const METRIC_MESSAGES_RESOURCE_TYPE = 'message';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -364,6 +420,7 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 const METRIC_BUCKETS = 'buckets';
+const METRIC_STORAGE = 'storage';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
 const METRIC_FILES_TRANSFORMATIONS  = 'files.transformations';
@@ -415,14 +472,32 @@ const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_AVATARS_STORAGE = 'avatars.storage';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Realtime concurrency
+// `realtime.connections` is served from the gauges table as a concurrency
+// level. The same name in the events table is the raw +/-1 deltas it is folded
+// from, so reads of this metric must pass an explicit $type.
+
+// Peak is the highest 5-minute level; shorter bursts are smoothed away.
+const REALTIME_CONCURRENCY_INTERVAL = '5m';
+
+// Hold the window back so in-flight writes land first. The level is carried
+// forward and never recomputed, so a delta arriving after its bucket was
+// sampled is lost for good.
+const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
+// MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
+const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
+const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -522,6 +597,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_TABLESDB,
     DATABASE_TYPE_VECTORSDB
 ];
+
+const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',

@@ -10,7 +10,8 @@ use Utopia\System\System;
 class Comment
 {
     public function __construct(
-        private array $platform
+        private array $platform,
+        private bool $withImages = true,
     ) {
     }
 
@@ -146,7 +147,7 @@ class Comment
                 foreach ($project['site'] as $siteId => $site) {
                     $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
 
-                    $extension = $site['status'] === 'building' ? 'gif' : 'png';
+                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
 
                     $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
@@ -161,9 +162,7 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                            ? "{$protocol}://{$hostname}/console/project-{$site['region']}-{$projectId}/sites/site-{$siteId}/deployments/deployment-{$site['deploymentId']}"
-                            : "{$protocol}://{$hostname}/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
                         $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
@@ -172,8 +171,10 @@ class Comment
                     $qrImagePathLight = '/images/vcs/qr-light.svg';
                     $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
-                    $qr = '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')';
+                    $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
+                    $qr = $this->withImages
+                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
+                        : '[QR Code](' . $qrUrl . ')';
 
                     $preview = '[Preview URL](' . $site['previewUrl'] . ')';
 
@@ -212,9 +213,7 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                            ? "{$protocol}://{$hostname}/console/project-{$function['region']}-{$projectId}/functions/function-{$functionId}/deployment-{$function['deploymentId']}"
-                            : "{$protocol}://{$hostname}/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
                         $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
@@ -248,6 +247,11 @@ class Comment
 
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
+        // Providers without comment image support get the textual cells only.
+        if (!$this->withImages) {
+            return '';
+        }
+
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $this->platform['consoleHostname'] ?? '';
 

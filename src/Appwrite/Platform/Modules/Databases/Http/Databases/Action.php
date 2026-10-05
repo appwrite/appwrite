@@ -6,8 +6,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Permissions;
 
 class Action extends AppwriteAction
 {
@@ -26,10 +30,10 @@ class Action extends AppwriteAction
      * the list filter ({@see getDatabaseTypeQueryFilters()}) and the by-id guard
      * ({@see isDatabaseTypeMismatch()}) so they cannot diverge.
      *
-     * TablesDB is the compatibility successor to the legacy databases API, so it
-     * also serves legacy-typed databases; the other product APIs are scoped to
-     * their own type. Every database carries a non-null `type` (set on create
-     * and backfilled to 'legacy' by migration V23), so null is not represented.
+     * TablesDB and the legacy databases API are the same product either side of a
+     * rename, so each serves both types; DocumentsDB and VectorsDB are scoped to
+     * their own. Every database carries a non-null `type` (set on create and
+     * backfilled to 'legacy' by migration V23), so null is not represented.
      *
      * @return string[]
      */
@@ -37,22 +41,23 @@ class Action extends AppwriteAction
     {
         return match ($this->getDatabaseType()) {
             DATABASE_TYPE_TABLESDB => [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY],
+            DATABASE_TYPE_LEGACY => [DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB],
             default => [$this->getDatabaseType()],
         };
     }
 
     /**
-     * A database resolved by id on a product-DB path must be one of the path's
-     * allowed types; otherwise it is treated as not-found rather than proceeding
-     * to a type-mismatched backend operation that surfaces as an opaque 500. The
-     * legacy /v1/databases API is intentionally not type-guarded.
+     * A database resolved by id must be one of the path's allowed types; otherwise
+     * it is treated as not-found rather than proceeding to a type-mismatched backend
+     * operation that surfaces as an opaque 500.
+     *
+     * The legacy path was previously exempt, which left it resolving by id what its
+     * own list refused to return: `GET /v1/databases/{id}` answered for a DocumentsDB
+     * or VectorsDB database that `GET /v1/databases` had never listed, and
+     * `/collections` on one then 500'd against a table shaped for another product.
      */
     protected function isDatabaseTypeMismatch(Document $database): bool
     {
-        if ($this->getDatabaseType() === DATABASE_TYPE_LEGACY) {
-            return false;
-        }
-
         return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
     }
 
@@ -202,5 +207,39 @@ class Action extends AppwriteAction
     protected function purgeListCache(Database $dbForProject, string $collectionId): bool
     {
         return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $collectionId));
+    }
+
+    /**
+     * Users can only grant roles they hold on a related document written through
+     * its parent. Permissions the related document already has may be sent back
+     * unchanged.
+     *
+     * @throws Exception
+     */
+    protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
+    {
+        if ($permissions === null) {
+            return;
+        }
+
+        $validator = new Permissions();
+        if (!$validator->isValid($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+        }
+
+        $granted = \array_diff(Permission::aggregate($permissions), $current->getPermissions());
+
+        foreach ($granted as $permission) {
+            $permission = Permission::parse($permission);
+            $role = (new Role(
+                $permission->getRole(),
+                $permission->getIdentifier(),
+                $permission->getDimension()
+            ))->toString();
+
+            if (!$authorization->hasRole($role)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization->getRoles()) . ')');
+            }
+        }
     }
 }

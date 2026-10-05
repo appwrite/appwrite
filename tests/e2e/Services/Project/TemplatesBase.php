@@ -43,6 +43,8 @@ trait TemplatesBase
             'mfaChallenge',
             'sessionAlert',
             'otpSession',
+            'otpVerification',
+            'otpRecovery',
         ];
 
         foreach ($types as $type) {
@@ -1282,6 +1284,8 @@ trait TemplatesBase
             'mfaChallenge',
             'sessionAlert',
             'otpSession',
+            'otpVerification',
+            'otpRecovery',
         ];
 
         foreach ($types as $type) {

@@ -1,0 +1,7 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Usage\\Adapter\\SQL\:\:getAttribute\(\) should return array\<string, mixed\>\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: src/Adapter/SQL.php

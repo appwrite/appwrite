@@ -16,7 +16,7 @@ on:
 jobs:
   setup:
     name: Setup & Build SDK
-    runs-on: ubuntu-latest
+    runs-on: gcrunner=${{ github.run_id }}-setup-${{ strategy.job-index }}/runner=publish
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -48,11 +48,11 @@ jobs:
 
       - name: Generate Specs
         run: |
-          docker compose exec appwrite specs --version=latest --mode=normal --git=no
+          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite specs --version=latest --mode=normal --git=no
 
       - name: Generate SDK
         run: |
-          docker compose exec appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
+          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
           sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
 
       - name: Build and Publish SDK

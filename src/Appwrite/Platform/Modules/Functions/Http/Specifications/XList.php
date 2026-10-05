@@ -12,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
 class XList extends Base
@@ -47,13 +48,14 @@ class XList extends Base
                     )
                 ]
             ))
-            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds.', true)
+            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds. Defaults to runtimes.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Response $response, array $plan)
+    public function action(string $type, bool $includeTotal, Response $response, array $plan)
     {
         $allSpecs = Config::getParam('specifications', []);
         $planKey = $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications';
@@ -78,7 +80,7 @@ class XList extends Base
 
         $response->dynamic(new Document([
             'specifications' => $specs,
-            'total' => count($specs)
+            'total' => $includeTotal ? count($specs) : 0
         ]), Response::MODEL_SPECIFICATION_LIST);
     }
 }

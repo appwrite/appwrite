@@ -69,6 +69,11 @@ return [
         'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
+    Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE => [
+        'name' => Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE,
+        'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -116,8 +121,13 @@ return [
     ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
-        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
-        'code' => 501,
+        'description' => 'Usage stats are disabled. You can enable them by setting the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 403,
+    ],
+    Exception::GENERAL_USAGE_NOT_READY => [
+        'name' => Exception::GENERAL_USAGE_NOT_READY,
+        'description' => 'Usage storage is not ready. Please retry after the usage schema has been initialized.',
+        'code' => 503,
     ],
     Exception::GENERAL_NOT_IMPLEMENTED => [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
@@ -266,6 +276,11 @@ return [
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_PWNED => [
+        'name' => Exception::USER_PASSWORD_PWNED,
+        'description' => 'The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
@@ -342,6 +357,16 @@ return [
         'description' => 'OAuth2 provider rejected the unauthorized request.',
         'code' => 401,
     ],
+    Exception::USER_OAUTH2_TOKEN_INVALID => [
+        'name' => Exception::USER_OAUTH2_TOKEN_INVALID,
+        'description' => 'The provided ID token is invalid, expired, or failed verification.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_STATE_INVALID => [
+        'name' => Exception::USER_OAUTH2_STATE_INVALID,
+        'description' => 'The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again.',
+        'code' => 401,
+    ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
@@ -395,6 +420,16 @@ return [
     Exception::USER_JWT_AND_COOKIE_SET => [
         'name' => Exception::USER_JWT_AND_COOKIE_SET,
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
+        'code' => 403,
+    ],
+    Exception::USER_IMPERSONATION_READ_ONLY => [
+        'name' => Exception::USER_IMPERSONATION_READ_ONLY,
+        'description' => 'This account action is not allowed while impersonating a user.',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -724,6 +759,11 @@ return [
         'description' => 'Deployment with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::DEPLOYMENT_INVALID_FILE_SIZE => [
+        'name' => Exception::DEPLOYMENT_INVALID_FILE_SIZE,
+        'description' => 'The deployment file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.',
+        'code' => 400,
+    ],
 
     /** Executions */
     Exception::EXECUTION_NOT_FOUND => [
@@ -839,6 +879,11 @@ return [
         'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Document violates a unique attribute constraint. Try again with different value(s).',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -874,6 +919,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION,
+        'description' => 'Row violates a unique column constraint. Try again with different value(s).',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -1216,10 +1266,10 @@ return [
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
-    Exception::DEV_KEY_GONE => [
-        'name' => Exception::DEV_KEY_GONE,
-        'description' => 'Dev key creation is no longer available.',
-        'code' => 410,
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'code' => 403,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
@@ -1251,6 +1301,11 @@ return [
         'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
         'code' => 400,
     ],
+    Exception::VARIABLE_INVALID_KEY => [
+        'name' => Exception::VARIABLE_INVALID_KEY,
+        'description' => 'Variable key is not a valid environment variable name. Update or delete the variable, then retry the deployment.',
+        'code' => 400,
+    ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
         'description' => 'Param "query" is not optional.',
@@ -1260,6 +1315,11 @@ return [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',
         'code' => 400,
+    ],
+    Exception::GRAPHQL_METHOD_UNSUPPORTED => [
+        'name' => Exception::GRAPHQL_METHOD_UNSUPPORTED,
+        'description' => 'GET requests only support GraphQL query operations.',
+        'code' => 405,
     ],
 
     /** Migrations */
@@ -1292,6 +1352,11 @@ return [
         'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
         'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
         'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_UNAUTHORIZED => [
+        'name' => Exception::MIGRATION_SOURCE_UNAUTHORIZED,
+        'description' => 'The source API key cannot read the requested resources of the source project. Verify the projectId, the API key, and that the key has read scopes for every resource you are migrating.',
+        'code' => 401,
     ],
     Exception::MIGRATION_SOURCE_TYPE_INVALID => [
         'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
@@ -1468,6 +1533,11 @@ return [
     Exception::ORGANIZATION_ID_MISSING => [
         'name' => Exception::ORGANIZATION_ID_MISSING,
         'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
+        'code' => 403,
+    ],
+    Exception::ORGANIZATION_CREATION_PROHIBITED => [
+        'name' => Exception::ORGANIZATION_CREATION_PROHIBITED,
+        'description' => 'This self-hosted instance already has an organization. Ask an organization owner to invite you instead.',
         'code' => 403,
     ],
     Exception::PROJECT_ID_MISSING => [

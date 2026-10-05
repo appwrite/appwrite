@@ -2,10 +2,12 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -45,6 +47,7 @@ trait Deployment
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
+        Bus $bus,
         callable $getProjectDB,
         array $platform,
         callable $deploymentsFactory,
@@ -94,11 +97,7 @@ trait Deployment
                 return;
             }
 
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = $platform['consoleHostname'] ?? '';
-            $region = $project->getAttribute('region', 'default');
-            $type = $resourceCollection === 'sites' ? 'site' : 'function';
-            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$resourceCollection}/{$type}-{$resource->getId()}";
+            $targetUrl = ($platform['consoleUrl'] ?? '') . "/projects/{$project->getId()}/{$resourceCollection}/{$resource->getId()}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
             try {
@@ -136,7 +135,8 @@ trait Deployment
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
 
-                $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
+                $timeout = $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization)
+                    ?? (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
                 try {
                     $dsn = new DSN($project->getAttribute('database'));
@@ -156,11 +156,18 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
-
                 if ($resource->isEmpty()) {
-                    throw new Exception($resourceType === 'function' ? Exception::FUNCTION_NOT_FOUND : Exception::SITE_NOT_FOUND, 'Repository references non-existent ' . $resourceType);
+                    Span::add("{$logBase}.build.skipped.reason", 'resource not found');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
                 }
 
+                // Stale repository rows can outlive a disconnect, so only build for the repository the resource still links to.
+                if ($resource->getAttribute('repositoryId', '') !== $repositoryId) {
+                    Span::add("{$logBase}.build.skipped.reason", 'repository not connected');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
@@ -230,9 +237,9 @@ trait Deployment
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                $hostname = $platform['consoleHostname'] ?? '';
+                $consoleUrl = $platform['consoleUrl'] ?? '';
 
-                $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+                $authorizeUrl = $consoleUrl . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -251,7 +258,7 @@ trait Deployment
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
 
-                    if ($resource->getCollection() === 'sites') {
+                    if ($resource->getCollection() === 'sites' && !$existingDeployment->isEmpty()) {
                         $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                             Query::equal('projectInternalId', [$project->getSequence()]),
                             Query::equal('type', ['deployment']), // Not redirect
@@ -460,10 +467,14 @@ trait Deployment
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
                 $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromUrl(
+                    ->createFromVcs(
                         $resource,
                         $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $timeout,
+                        $vcs,
+                        $providerRepositoryOwner,
+                        $providerRepositoryName,
+                        $providerCommitHash,
                         $resource->getAttribute('providerRootDirectory', ''),
                     ));
 
@@ -475,7 +486,7 @@ trait Deployment
                     $domain = ID::unique() . "." . $sitesDomain;
                     $ruleId = md5($domain);
                     $previewRuleId = $ruleId;
-                    $authorization->skip(
+                    $rule = $authorization->skip(
                         fn () => $dbForPlatform->createDocument('rules', new Document([
                             '$id' => $ruleId,
                             'projectId' => $project->getId(),
@@ -496,18 +507,29 @@ trait Deployment
                             'region' => $project->getAttribute('region')
                         ]))
                     );
+                    $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
                     // VCS branch preview
+                    $branchDomain = null;
                     if (!empty($providerBranch)) {
-                        $domain = (new BranchDomainFilter())->apply([
-                            'branch' => $providerBranch,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $sitesDomain,
-                        ]);
+                        try {
+                            $branchDomain = (new BranchDomainFilter())->apply([
+                                'branch' => $providerBranch,
+                                'resourceId' => $resource->getId(),
+                                'projectId' => $project->getId(),
+                                'sitesDomain' => $sitesDomain,
+                            ]);
+                        } catch (\InvalidArgumentException $error) {
+                            // Deploy without a branch preview rather than store an unreachable rule
+                            Console::warning('Skipping branch preview rule: ' . $error->getMessage());
+                        }
+                    }
+
+                    if ($branchDomain !== null) {
+                        $domain = $branchDomain;
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -528,6 +550,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
@@ -538,7 +561,7 @@ trait Deployment
                         $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                         $ruleId = md5($domain);
                         try {
-                            $authorization->skip(
+                            $rule = $authorization->skip(
                                 fn () => $dbForPlatform->createDocument('rules', new Document([
                                     '$id' => $ruleId,
                                     'projectId' => $project->getId(),
@@ -559,6 +582,7 @@ trait Deployment
                                     'region' => $project->getAttribute('region')
                                 ]))
                             );
+                            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
                         } catch (Duplicate $err) {
                             // Ignore, rule already exists; will be updated by builds worker
                         }
@@ -612,11 +636,10 @@ trait Deployment
                 if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                     $resourceName = $resource->getAttribute('name');
                     $projectName = $project->getAttribute('name');
-                    $region = $project->getAttribute('region', 'default');
                     $name = "{$resourceName} ({$projectName})";
                     $message = 'Starting...';
 
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                    $providerTargetUrl = $consoleUrl . "/projects/$projectId/$resourceCollection/$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
@@ -641,8 +664,10 @@ trait Deployment
         }
     }
 
-    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
+    /** Validate the tenant before submission and optionally supply its build budget. */
+    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): ?int
     {
+        return null;
     }
 
 }
