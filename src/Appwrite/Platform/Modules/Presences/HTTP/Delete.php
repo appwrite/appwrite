@@ -40,7 +40,7 @@ class Delete extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'delete',
-                desc: 'Delete presence',
+                summary: 'Delete presence',
                 description: '/docs/references/presences/delete.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [

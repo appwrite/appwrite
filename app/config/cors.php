@@ -18,7 +18,6 @@ return [
         // Appwrite
         'X-Appwrite-Project',
         'X-Appwrite-Key',
-        'X-Appwrite-Dev-Key',
         'X-Appwrite-Locale',
         'X-Appwrite-Mode',
         'X-Appwrite-JWT',

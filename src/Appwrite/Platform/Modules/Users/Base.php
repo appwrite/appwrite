@@ -21,7 +21,7 @@ use Utopia\Emails\Email;
 
 class Base extends Action
 {
-    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan): Document
+    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ?bool $passwordPwned = null): Document
     {
         $name = $name ?? '';
         $plaintextPassword = $password;
@@ -144,6 +144,7 @@ class Base extends Action
                 'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
                 'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
                 'emailIsFree' => $emailMetadata['emailIsFree'],
+                'passwordPwned' => $passwordPwned,
             ]);
 
             if (!$isHashed && !empty($password)) {

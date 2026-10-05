@@ -1,0 +1,5 @@
+vendor/
+.phpunit.result.cache
+.phpunit.cache/
+tests/E2E/Benchmark/output/
+composer.lock

@@ -115,6 +115,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
@@ -154,6 +155,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Deployments $deployments,
+        int $buildTimeout,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
@@ -329,7 +331,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $deployments, $platform);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $deployments, $buildTimeout, $platform);
         }
 
         // Inform scheduler if function is still active

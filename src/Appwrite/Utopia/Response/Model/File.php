@@ -106,7 +106,7 @@ class File extends Model
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Compression algorithm used for the file. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
-                'default' => '',
+                'default' => Compression::NONE,
                 'example' => 'gzip'
             ])
         ;
@@ -134,7 +134,7 @@ class File extends Model
 
     public function filter(Document $document): Document
     {
-        $document->setAttribute('compression', $document->getAttribute('algorithm', ''));
+        $document->setAttribute('compression', $document->getAttribute('algorithm') ?: Compression::NONE);
 
         $encryption = !empty($document->getAttribute('openSSLCipher', ''));
         $document->setAttribute('encryption', $encryption);

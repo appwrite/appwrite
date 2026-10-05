@@ -5,6 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -29,6 +30,16 @@ use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Span\Span;
 use Utopia\System\System;
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 $files = new Files();
 $files->load(__DIR__ . '/../public');
@@ -193,9 +204,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
-
-        // create logs database first, `getLogsDB` is a callable.
-        createDatabase($container, 'getLogsDB', 'logs', $collections['logs'], $pools);
 
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
@@ -404,33 +412,31 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         /** @var \Appwrite\Execution\Store $executionStore */
         $executionStore = $container->get('executionStore');
 
-        if ($executionStore->isEnabled()) {
-            Span::init('executions.setup');
+        Span::init('executions.setup');
 
-            $max = 15;
-            $sleep = 2;
-            $attempts = 0;
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
 
-            while (true) {
-                try {
-                    $attempts++;
-                    $executionStore->setup();
-                    Console::success('[Setup] - Execution schema is ready');
+        while (true) {
+            try {
+                $attempts++;
+                $executionStore->setup();
+                Console::success('[Setup] - Execution schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('executions.ready', false);
+                    Console::warning('[Setup] - Skip: execution schema is not ready: ' . $e->getMessage());
                     break;
-                } catch (\Throwable $e) {
-                    if ($attempts >= $max) {
-                        Span::add('executions.ready', false);
-                        Console::warning('[Setup] - Skip: execution schema is not ready: ' . $e->getMessage());
-                        break;
-                    }
-
-                    Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
-                    sleep($sleep);
                 }
-            }
 
-            Span::current()?->finish();
+                Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
         }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');
