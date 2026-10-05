@@ -5,6 +5,9 @@
         "tests/resources/functions",
         "app/console"
     ],
+    "notPath": [
+        "data/data.php"
+    ],
     "rules": {
         "array_indentation": true,
         "single_import_per_statement": true,

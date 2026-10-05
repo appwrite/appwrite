@@ -60,7 +60,7 @@ class V26 extends Filter
         $content['authMembershipsUserId'] = $auths->getAttribute('membershipsUserId', false);
         $content['authMembershipsUserPhone'] = $auths->getAttribute('membershipsUserPhone', false);
         $content['authMembershipsUserAccessedAt'] = $auths->getAttribute('membershipsUserAccessedAt', false);
-        $content['authInvalidateSessions'] = $auths->getAttribute('invalidateSessions', false);
+        $content['authInvalidateSessions'] = $auths->getAttribute('invalidateSessions', true);
 
         $content['description'] = $raw->getAttribute('description', '');
         $content['logo'] = $raw->getAttribute('logo', '');

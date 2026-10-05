@@ -1651,11 +1651,26 @@ Http::get('/_appwrite/authorize')
             $host = $previewHostname;
         }
 
-        $referrer = $request->getReferer();
-        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+        $protocol = $request->getProtocol();
 
         $jwt = $request->getParam('jwt', '');
-        $path = $request->getParam('path', '');
+        $path = $request->getParam('path', '/');
+        if ($path === '') {
+            $path = '/';
+        }
+
+        // The path is appended to this host's origin, so it must stay a path:
+        // root-relative, not scheme-relative, and single-line.
+        if (
+            !\is_string($path)
+            || !\str_starts_with($path, '/')
+            || \str_starts_with($path, '//')
+            || \str_starts_with($path, '/\\')
+            || \str_contains($path, "\r")
+            || \str_contains($path, "\n")
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Path must be relative to the site root');
+        }
 
         $duration = 60 * 60 * 24; // 1 day in seconds
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));

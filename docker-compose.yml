@@ -55,6 +55,7 @@ services:
       start_period: 120s
     networks:
       - appwrite
+      - browser
       - compute
     labels:
       - traefik.enable=true
@@ -83,6 +84,8 @@ services:
       - appwrite-geo
       - appwrite-autogravity
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -257,6 +260,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
@@ -272,14 +276,13 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.159-self-hosted
+    image: appwrite/new:1.2.5-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
-      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -329,6 +332,8 @@ services:
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -442,6 +447,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -457,6 +463,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -691,6 +699,8 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
@@ -974,6 +984,8 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
@@ -1042,6 +1054,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
@@ -1339,6 +1352,8 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1402,6 +1417,8 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1660,7 +1677,12 @@ services:
     container_name: appwrite-browser
     image: appwrite/browser:0.3.4
     networks:
-      - appwrite
+      - browser
+    # Public resolvers only, so the browser cannot resolve internal service
+    # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
@@ -1683,6 +1705,7 @@ services:
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro
     ulimits:
       nofile:
         soft: 262144
@@ -1703,7 +1726,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.1
+    image: appwrite/geo:0.3.2
     restart: unless-stopped
     networks:
       - appwrite
@@ -1940,6 +1963,8 @@ networks:
     name: appwrite
   runtimes:
     name: runtimes
+  browser:
+    name: browser
   # Where runtimes reach the API, over plain HTTP, the way build containers already do.
   # Fixed name on purpose: the executor creates its own network with a bare
   # `docker network create`, and compose refuses to adopt a network it did not label,

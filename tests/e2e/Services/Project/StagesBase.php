@@ -5,14 +5,11 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StagesBase
 {
-    // =========================================================================
-    // List stages tests
-    // =========================================================================
-
     public function testListProjectStages(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -44,10 +41,6 @@ trait StagesBase
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
-
-    // =========================================================================
-    // Update stage (skip) tests
-    // =========================================================================
 
     public function testUpdateProjectStageSkip(): void
     {
@@ -103,10 +96,6 @@ trait StagesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
-    // =========================================================================
-    // CLI / MCP install stages (completed from x-sdk-name / x-sdk-language)
-    // =========================================================================
-
     public function testPingWithMcpSdkCompletesInstallStage(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -117,9 +106,7 @@ trait StagesBase
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $stage = $this->getStage($projectId, 'mcp.install');
-        $this->assertNotNull($stage);
-        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $stage = $this->awaitStage($projectId, 'mcp.install', ONBOARDING_STATUS_COMPLETED);
         $this->assertNotEmpty($stage['at']);
         $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
     }
@@ -134,9 +121,7 @@ trait StagesBase
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $stage = $this->getStage($projectId, 'cli.install');
-        $this->assertNotNull($stage);
-        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $stage = $this->awaitStage($projectId, 'cli.install', ONBOARDING_STATUS_COMPLETED);
         $this->assertNotEmpty($stage['at']);
         $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
     }
@@ -151,14 +136,13 @@ trait StagesBase
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $stage = $this->getStage($projectId, 'cli.install');
-        $this->assertNotNull($stage);
-        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $this->awaitStage($projectId, 'cli.install', ONBOARDING_STATUS_COMPLETED);
     }
 
     public function testMcpInstallStageIsNotRewritten(): void
     {
-        $projectId = $this->getProject()['$id'];
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
 
         $first = $this->client->call(Client::METHOD_GET, '/ping', [
             'x-appwrite-project' => $projectId,
@@ -166,19 +150,25 @@ trait StagesBase
         ]);
         $this->assertSame(200, $first['headers']['status-code']);
 
-        $stage = $this->getStage($projectId, 'mcp.install');
-        $this->assertNotNull($stage);
-        $this->assertSame(ONBOARDING_STATUS_COMPLETED, $stage['status']);
+        $stage = $this->awaitStage($projectId, 'mcp.install', ONBOARDING_STATUS_COMPLETED);
         $this->assertSame(ACTOR_TYPE_GUEST, $stage['actorType']);
         $at = $stage['at'];
         $this->assertNotEmpty($at);
 
-        $second = $this->client->call(Client::METHOD_GET, '/ping', [
+        $this->assertSame('pending', $this->getStage($projectId, 'teams.create')['status']);
+
+        // The second MCP request also completes teams.create, so its stage write is observable.
+        $second = $this->client->call(Client::METHOD_POST, '/teams', [
+            'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-key' => $project['apiKey'],
             'x-sdk-name' => 'mcp',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Onboarding',
         ]);
-        $this->assertSame(200, $second['headers']['status-code']);
+        $this->assertSame(201, $second['headers']['status-code']);
+        $this->awaitStage($projectId, 'teams.create', ONBOARDING_STATUS_COMPLETED);
 
         $again = $this->getStage($projectId, 'mcp.install');
         $this->assertNotNull($again);
@@ -187,9 +177,26 @@ trait StagesBase
         $this->assertSame(ACTOR_TYPE_GUEST, $again['actorType']);
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
+    public function testSkippedStageUpgradesToCompleted(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $skip = $this->updateStage($projectId, 'teams.create', true);
+        $this->assertSame(200, $skip['headers']['status-code']);
+        $this->assertSame(ONBOARDING_STATUS_SKIPPED, $skip['body']['status']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Onboarding',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $this->awaitStage($projectId, 'teams.create', ONBOARDING_STATUS_COMPLETED);
+    }
 
     protected function listStages(string $projectId, bool $authenticated = true): mixed
     {
@@ -239,5 +246,20 @@ trait StagesBase
         }
 
         return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function awaitStage(string $projectId, string $stageId, string $status): array
+    {
+        $stage = null;
+        $this->assertEventually(function () use ($projectId, $stageId, $status, &$stage) {
+            $stage = $this->getStage($projectId, $stageId);
+            $this->assertNotNull($stage);
+            $this->assertSame($status, $stage['status']);
+        });
+
+        return $stage;
     }
 }
