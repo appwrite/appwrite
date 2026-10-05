@@ -8,6 +8,7 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\OwnerNotFound;
 
 final class GitHubTest extends Base
 {
@@ -92,5 +93,13 @@ final class GitHubTest extends Base
         } finally {
             $this->vcsAdapter->deleteRepository(self::$owner, $repositoryName);
         }
+    }
+
+    public function testGetOwnerNameForUnknownInstallation(): void
+    {
+        // GitHub answers 404 for an installation that is not this app's, so the body has no account
+        $this->expectException(OwnerNotFound::class);
+
+        $this->vcsAdapter->getOwnerName('1');
     }
 }

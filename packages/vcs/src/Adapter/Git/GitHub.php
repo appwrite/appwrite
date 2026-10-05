@@ -8,6 +8,7 @@ use Utopia\Cache\Cache;
 use Utopia\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class GitHub extends Git
@@ -717,7 +718,7 @@ class GitHub extends Git
         $responseBodyAccount = $responseBody['account'] ?? [];
 
         if (!\array_key_exists('login', $responseBodyAccount)) {
-            throw new Exception('Owner name retrieval response is missing account login.');
+            throw new OwnerNotFound('Owner name retrieval response is missing account login.');
         }
 
         return $responseBodyAccount['login'] ?? '';
