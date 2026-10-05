@@ -14,7 +14,9 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Storage;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
@@ -23,16 +25,13 @@ use Utopia\Query\Schema\ColumnType;
 
 final class ProvisioningHooksTest extends TestCase
 {
-    private PDO $connection;
-
     private Factory $factory;
 
     private Document $project;
 
     protected function setUp(): void
     {
-        $this->connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $adapter = new SQLite($this->connection);
+        $adapter = new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]));
 
         $pools = new Group();
         $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): SQLite => $adapter, 1.0));
@@ -45,42 +44,35 @@ final class ProvisioningHooksTest extends TestCase
         ]);
     }
 
-    public function testACollectionCreatedWhileProvisioningKeepsItsPermissionRows(): void
+    public function testACollectionCreatedWhileProvisioningIsListedToTheRolesItGrantsRead(): void
     {
         $provisioning = $this->factory->provisioning($this->project);
         $provisioning->create();
-        $provisioning->createCollection($this->collection('provisioned'));
+        $provisioning->createCollection($this->collection('provisioned', [Permission::read(Role::any())]));
 
-        $this->factory->project($this->project)->createCollection($this->collection('created'));
+        $project = $this->factory->project($this->project);
+        $project->createCollection($this->collection('created', [Permission::read(Role::any())]));
 
-        $this->assertSame([['create', 'any']], $this->permissionRows($provisioning, 'created'));
+        $listed = $project->find(Database::METADATA, [Query::equal('$id', ['created', 'provisioned'])]);
+        $ids = \array_map(static fn (Document $collection): string => $collection->getId(), $listed);
+        \sort($ids);
+
         $this->assertSame(
-            $this->permissionRows($provisioning, 'created'),
-            $this->permissionRows($provisioning, 'provisioned'),
-            'A collection created while provisioning a project must store the same permission rows as one created through the project database'
-        );
-    }
-
-    private function collection(string $id): Collection
-    {
-        return new Collection(
-            id: $id,
-            attributes: [new Attribute('name', ColumnType::String, size: 255)],
+            ['created', 'provisioned'],
+            $ids,
+            'A collection created while provisioning a project must be listed to the roles it grants read, as one created through the project database is'
         );
     }
 
     /**
-     * @return list<array{0: string, 1: string}>
+     * @param list<string> $permissions
      */
-    private function permissionRows(Database $database, string $collection): array
+    private function collection(string $id, array $permissions): Collection
     {
-        $table = $database->getNamespace() . '_' . Storage::permissionsTable(Database::METADATA);
-        $statement = $this->connection->prepare("SELECT _type, _permission FROM `{$table}` WHERE _document = :document ORDER BY _id");
-        $statement->execute(['document' => $collection]);
-
-        /** @var list<array{0: string, 1: string}> $rows */
-        $rows = $statement->fetchAll(PDO::FETCH_NUM);
-
-        return $rows;
+        return new Collection(
+            id: $id,
+            attributes: [new Attribute('name', ColumnType::String, size: 255)],
+            permissions: $permissions,
+        );
     }
 }

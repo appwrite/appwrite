@@ -6,27 +6,23 @@ namespace Tests\Unit\Utopia\Database\Hooks;
 
 use Appwrite\Utopia\Database\Hooks\Metadata;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
-use Utopia\Database\Query;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Hook\Lifecycle;
 use Utopia\Database\Validator\Authorization;
 
 final class PublicIdTest extends TestCase
 {
     public function testResolvePublicIdParsesInternalName(): void
     {
-        $database = $this->database(
-            new Document(['$id' => 'libraries']),
-            function (string $collection, array $queries): void {
-                $this->assertSame('database_2', $collection);
-                $this->assertSame(
-                    [Query::equal('$sequence', ['17'])->toArray()],
-                    \array_map(static fn (Query $query): array => $query->toArray(), $queries),
-                );
-            },
-        );
+        $database = $this->database(new Document(['$id' => 'libraries']));
 
         $this->assertSame('libraries', Metadata::resolvePublicId($database, 'database_2_collection_17'));
     }
@@ -60,36 +56,37 @@ final class PublicIdTest extends TestCase
         );
     }
 
-    public function testResolvePublicIdWrapsLookupInSilentAndAuthorizationSkip(): void
+    public function testResolvePublicIdReadsACatalogTheCallerCannotReadWithoutFiringHooks(): void
     {
-        $silent = false;
-        $skip = false;
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+        $database = (new Database(new Memory(), new Cache(new None())))
+            ->setDatabase('public_ids')
+            ->setNamespace('catalog')
+            ->setAuthorization($authorization);
+        $authorization->skip(function () use ($database): void {
+            $database->create();
+            $database->createCollection(new Collection(id: 'database_2'));
+            $database->createDocument('database_2', new Document(['$id' => 'libraries', '$sequence' => '17']));
+        });
 
-        $authorization = $this->createMock(Authorization::class);
-        $authorization
-            ->expects($this->once())
-            ->method('skip')
-            ->willReturnCallback(function (callable $callback) use (&$skip): mixed {
-                $skip = true;
+        $hooks = new class () implements Lifecycle {
+            /** @var list<Event> */
+            public array $events = [];
 
-                return $callback();
-            });
+            public function handle(Event $event, mixed $data): void
+            {
+                $this->events[] = $event;
+            }
+        };
+        $database->addHook($hooks);
 
-        $database = $this->createMock(Database::class);
-        $database->method('getAuthorization')->willReturn($authorization);
-        $database
-            ->expects($this->once())
-            ->method('silent')
-            ->willReturnCallback(function (callable $callback) use (&$silent): mixed {
-                $silent = true;
-
-                return $callback();
-            });
-        $database->method('findOne')->willReturn(new Document(['$id' => 'libraries']));
+        $this->assertTrue($database->findOne('database_2')->isEmpty(), 'the caller cannot read the catalog');
+        $this->assertNotSame([], $hooks->events, 'a read the caller makes fires the hooks');
+        $hooks->events = [];
 
         $this->assertSame('libraries', Metadata::resolvePublicId($database, 'database_2_collection_17'));
-        $this->assertTrue($silent);
-        $this->assertTrue($skip);
+        $this->assertSame([], $hooks->events, 'resolving a public ID is not a read the hooks of the request observe');
     }
 
     public function testResolverDoesNotQueryCatalogDuringTenantTransaction(): void
@@ -176,37 +173,33 @@ final class PublicIdTest extends TestCase
         $this->assertSame('db1', $result->getAttribute('$databaseId'));
     }
 
-    private function database(?Document $catalog = null, ?callable $assertFindOne = null, bool $inTransaction = false, string $hostname = ''): Database
+    private function database(?Document $catalog = null, bool $inTransaction = false, string $hostname = ''): Database
     {
-        $authorization = $this->createStub(Authorization::class);
-        $authorization->method('skip')->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $adapter = new class ($inTransaction) extends Memory {
+            public function __construct(private readonly bool $transacting)
+            {
+                parent::__construct();
+            }
 
-        $adapter = $this->createStub(Adapter::class);
-        $adapter->method('inTransaction')->willReturn($inTransaction);
-        $adapter->method('getHostname')->willReturn($hostname);
+            #[\Override]
+            public function inTransaction(): bool
+            {
+                return $this->transacting;
+            }
+        };
+        $adapter->setHostname($hostname);
 
-        $database = $this->createMock(Database::class);
-        $database->method('getAuthorization')->willReturn($authorization);
-        $database->method('getAdapter')->willReturn($adapter);
-        $database->method('silent')->willReturnCallback(fn (callable $callback): mixed => $callback());
+        return new class ($adapter, $catalog) extends Database {
+            public function __construct(Adapter $adapter, private readonly ?Document $found)
+            {
+                parent::__construct($adapter, new Cache(new None()));
+            }
 
-        if ($catalog === null) {
-            $database->expects($this->never())->method('findOne');
-
-            return $database;
-        }
-
-        $database
-            ->expects($this->once())
-            ->method('findOne')
-            ->willReturnCallback(function (string $collection, array $queries) use ($catalog, $assertFindOne): Document {
-                if ($assertFindOne !== null) {
-                    $assertFindOne($collection, $queries);
-                }
-
-                return $catalog;
-            });
-
-        return $database;
+            #[\Override]
+            public function findOne(string $collection, array $queries = []): Document
+            {
+                return $this->found ?? throw new \LogicException('the catalog must not be queried');
+            }
+        };
     }
 }
