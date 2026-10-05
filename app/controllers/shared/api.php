@@ -596,33 +596,33 @@ Http::init()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
         $closestLimit = null;
 
+        $start = $request->getContentRangeStart();
+        $end = $request->getContentRangeEnd();
+        $params = [
+            '{projectId}' => (string) $project->getId(),
+            '{userId}' => (string) $user->getId(),
+            '{userAgent}' => (string) $request->getUserAgent(''),
+            '{ip}' => (string) $request->getIP(),
+            '{url}' => $request->getHostname() . $route->getPath(),
+            '{method}' => (string) $request->getMethod(),
+            '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+        ];
+
+        foreach ($request->getParams() as $key => $value) {
+            if ($value === null || $value === '' || $value === []) {
+                continue;
+            }
+            $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+            if ($encoded === false || $encoded === '') {
+                continue;
+            }
+            $params['{param-' . $key . '}'] = $encoded;
+        }
+
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
-                $params = [
-                    '{projectId}' => (string) $project->getId(),
-                    '{userId}' => (string) $user->getId(),
-                    '{userAgent}' => (string) $request->getUserAgent(''),
-                    '{ip}' => (string) $request->getIP(),
-                    '{url}' => $request->getHostname() . $route->getPath(),
-                    '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
-                ];
-
-                foreach ($request->getParams() as $key => $value) {
-                    if ($value === null || $value === '' || $value === []) {
-                        continue;
-                    }
-                    $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
-                    if ($encoded === false || $encoded === '') {
-                        continue;
-                    }
-                    $params['{param-' . $key . '}'] = $encoded;
-                }
-
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
@@ -984,30 +984,30 @@ Http::shutdown()
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $params = [
-                '{projectId}' => (string) $project->getId(),
-                '{userId}' => (string) $user->getId(),
-                '{userAgent}' => (string) $request->getUserAgent(''),
-                '{ip}' => (string) $request->getIP(),
-                '{url}' => $request->getHostname() . $route->getPath(),
-                '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
-            ];
+        $start = $request->getContentRangeStart();
+        $end = $request->getContentRangeEnd();
+        $params = [
+            '{projectId}' => (string) $project->getId(),
+            '{userId}' => (string) $user->getId(),
+            '{userAgent}' => (string) $request->getUserAgent(''),
+            '{ip}' => (string) $request->getIP(),
+            '{url}' => $request->getHostname() . $route->getPath(),
+            '{method}' => (string) $request->getMethod(),
+            '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+        ];
 
-            foreach ($request->getParams() as $key => $value) {
-                if ($value === null || $value === '' || $value === []) {
-                    continue;
-                }
-                $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
-                if ($encoded === false || $encoded === '') {
-                    continue;
-                }
-                $params['{param-' . $key . '}'] = $encoded;
+        foreach ($request->getParams() as $key => $value) {
+            if ($value === null || $value === '' || $value === []) {
+                continue;
             }
+            $encoded = \is_scalar($value) ? (string) $value : \json_encode($value);
+            if ($encoded === false || $encoded === '') {
+                continue;
+            }
+            $params['{param-' . $key . '}'] = $encoded;
+        }
 
+        foreach ($abuseKeyLabel as $abuseKey) {
             $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
                 $timeLimit->withParams($params)->reset();
             });

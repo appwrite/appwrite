@@ -86,7 +86,6 @@ final readonly class Database extends TimeLimit
 
                     return 0;
                 } catch (Duplicate) {
-                    // Duplicate in case of race condition
                     $document = $this->find($key, $time);
 
                     if ($document->isEmpty()) {
@@ -143,7 +142,6 @@ final readonly class Database extends TimeLimit
 
                     return;
                 } catch (Duplicate) {
-                    // Duplicate in case of race condition - update existing document
                     $document = $this->find($key, $time);
 
                     if ($document->isEmpty()) {

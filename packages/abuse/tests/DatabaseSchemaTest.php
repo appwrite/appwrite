@@ -18,7 +18,6 @@ use Utopia\Database\Exception\Duplicate;
 
 final class DatabaseSchemaTest extends TestCase
 {
-    // One window spans the whole run, so no two requests of a test fall into different windows.
     private const int SECONDS = 1_000_000_000;
 
     private Database $database;
