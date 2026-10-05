@@ -11,9 +11,7 @@ final readonly class Zone
 {
     public string $name;
 
-    /**
-     * @var list<Record>
-     */
+    /** @var list<Record> */
     public array $records;
 
     /**
@@ -36,6 +34,7 @@ final readonly class Zone
         }
 
         $zoneSuffix = $this->name === '.' ? '.' : ".$this->name";
+        $unique = [];
 
         // Validate that all records belong to the zone
         foreach ($records as $record) {
@@ -47,51 +46,21 @@ final readonly class Zone
                     "Record name '$record->name' does not belong to zone '$this->name'",
                 );
             }
-        }
 
-        // An RRset is a set. The same record twice is not two records, it is one
-        // published twice, which RFC 2181 section 5 makes invalid rather than
-        // merely redundant. Appwrite arrives here with the apex stored both as
-        // "@" and as the apex FQDN: two documents that absolutize to the same
-        // owner carrying the same rdata. Publish the first copy only.
-        //
-        // TTL is deliberately not part of the identity. RFC 2181 section 5.2
-        // requires one TTL across an RRset, so where two copies disagree the
-        // first one's TTL is the answer.
-        $this->records = self::withoutDuplicates($records);
-    }
-
-    /**
-     * @param list<Record> $records
-     * @return list<Record>
-     */
-    private static function withoutDuplicates(array $records): array
-    {
-        $published = [];
-        $seen = [];
-
-        foreach ($records as $record) {
-            // Everything that distinguishes one resource record from another:
-            // MX and SRV carry part of their meaning outside rdata.
-            $key = \implode("\0", [
+            // An RRset holds each record once, whatever its TTL (RFC 2181 section 5)
+            $key = serialize([
                 $record->name,
                 $record->class,
                 $record->type,
                 $record->rdata,
-                $record->priority ?? '',
-                $record->weight ?? '',
-                $record->port ?? '',
+                $record->priority,
+                $record->weight,
+                $record->port,
             ]);
-
-            if (isset($seen[$key])) {
-                continue;
-            }
-
-            $seen[$key] = true;
-            $published[] = $record;
+            $unique[$key] ??= $record;
         }
 
-        return $published;
+        $this->records = array_values($unique);
     }
 
     /**

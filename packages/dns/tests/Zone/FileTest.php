@@ -653,29 +653,22 @@ ZONE,
         $this->assertSame($record->rdata, $roundTripCaa->rdata);
     }
 
-    public function testImportCollapsesAtAndFqdnCopiesOfTheSameApexCaa(): void
+    public function testImportDropsDuplicateRecords(): void
     {
         $contents = \sprintf(
             <<<'ZONE'
-$ORIGIN caudit.com.
+$ORIGIN example.com.
 %s
-@ 3600 IN CAA 0 issue "certainly.com"
-caudit.com. 300 IN CAA 0 issue "certainly.com"
-www 3600 IN CAA 0 issue "certainly.com"
+@ 3600 IN CAA 0 issue "letsencrypt.org"
+example.com. 300 IN CAA 0 issue "letsencrypt.org"
 ZONE,
             self::DEFAULT_SOA,
         );
 
         $zone = File::import($contents);
-        $apex = array_values(array_filter(
-            $zone->records,
-            static fn (Record $record): bool => $record->name === 'caudit.com' && $record->type === Record::TYPE_CAA,
-        ));
 
-        $this->assertCount(1, $apex);
-        $this->assertSame(3600, $apex[0]->ttl);
-        $this->assertSame('0 issue "certainly.com"', $apex[0]->rdata);
-        $this->assertCount(2, $zone->records);
+        $this->assertCount(1, $zone->records);
+        $this->assertSame(3600, $zone->records[0]->ttl);
     }
 
     public function testImportCaaMissingQuotedValueFails(): void
