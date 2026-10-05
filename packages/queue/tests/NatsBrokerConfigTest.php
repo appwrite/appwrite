@@ -10,6 +10,7 @@ use Utopia\NATS\Connection;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Provisioning;
+use Utopia\Queue\Queue;
 
 /**
  * Constructor validation for the JetStream knob coupling. The Closure source is
@@ -135,6 +136,12 @@ final class NatsBrokerConfigTest extends TestCase
         new Nats($this->neverConnect(), inactiveThreshold: 0.0);
     }
 
+    public function testAdoptIntervalRejectsNegativeValues(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Nats($this->neverConnect(), adoptInterval: -1.0);
+    }
+
     public function testSizeAndInFlightKnobsConstructTogether(): void
     {
         $broker = new Nats(
@@ -150,5 +157,14 @@ final class NatsBrokerConfigTest extends TestCase
             provisioning: Provisioning::Require,
         );
         $this->assertInstanceOf(Nats::class, $broker);
+    }
+
+    public function testCoalesceRefusesAnEmptyKeyBeforeConnecting(): void
+    {
+        $broker = new Nats(fn (): Connection => $this->fail('an empty key must be refused before connecting'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot coalesce with an empty key.');
+        $broker->coalesce(new Queue('stats'), [], '');
     }
 }

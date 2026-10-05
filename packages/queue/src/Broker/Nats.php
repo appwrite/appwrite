@@ -8,6 +8,7 @@ use Utopia\Lock\Mutex;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
+use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Headers;
@@ -26,6 +27,8 @@ use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Consumer\Bounded;
 use Utopia\Queue\Message;
+use Utopia\Queue\Publisher\Coalescing;
+use Utopia\Queue\Publisher\Outcome;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 
@@ -33,7 +36,8 @@ use Utopia\Queue\Queue;
  * NATS JetStream broker.
  *
  * Each queue is a WorkQueue-retention stream (a message is removed once acked)
- * with one work subject served by a durable pull consumer.
+ * with one work subject, plus one subject per coalescing key under it, served by a
+ * durable pull consumer.
  * Redelivery and dead-lettering are native: a rejected message is NAK'd and
  * redelivered until MaxDeliver, after which it is TERM'd and copied to a per-queue
  * dead stream. This replaces the Redis broker's hand-rolled processing/failed/dead
@@ -74,7 +78,7 @@ use Utopia\Queue\Queue;
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
  */
-class Nats implements Synchronous, Consumer, Bounded
+class Nats implements Synchronous, Consumer, Bounded, Coalescing
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';
@@ -86,6 +90,9 @@ class Nats implements Synchronous, Consumer, Bounded
     private const string CONSUMER_RETRY = 'retry';
     private const string CONTENT_TYPE = 'Content-Type';
     private const string ADVISORY_MAX_DELIVERIES = '$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES';
+
+    // What the client throws when no stream listens on a subject.
+    private const string NO_RESPONDERS = 'No responders for request';
 
     // Queue group for the advisory subscription, so one worker per queue acts
     // on an exhausted message rather than every worker acting on it at once.
@@ -112,8 +119,17 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     private const float ACQUIRE_TIMEOUT = -1;
 
+    // Each re-adoption is several JetStream calls, so an unupgraded queue is re-read at most this often.
+    private const float ADOPT_INTERVAL = 30.0;
+
     /** @var array<string, bool> queues whose streams/consumers have been provisioned */
     private array $provisioned = [];
+
+    /** @var array<string, bool> provisioned queues whose stream and worker consumer carry key subjects */
+    private array $keyed = [];
+
+    /** @var array<string, float> per unkeyed adopted queue, when coalesce() may re-adopt it */
+    private array $readopt = [];
 
     /** @var array<string, NatsConsumer> */
     private array $consumers = [];
@@ -261,6 +277,7 @@ class Nats implements Synchronous, Consumer, Bounded
      *        out of deliveries without running: a fleet scaled down 8 -> 1 lost messages
      *        that way. The delay has to outlast the stopping workers' last fetch. 0
      *        redelivers at once.
+     * @param float $adoptInterval How long, in seconds, Require mode waits before re-reading a queue found without key subjects.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -286,6 +303,7 @@ class Nats implements Synchronous, Consumer, Bounded
         // it on a stream that already holds messages.
         private readonly Codec $codec = new Json(),
         private readonly float $releaseDelay = 5.0,
+        private readonly float $adoptInterval = self::ADOPT_INTERVAL,
     ) {
         $this->lock = new Mutex();
 
@@ -311,6 +329,9 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         if ($this->releaseDelay < 0) {
             throw new \InvalidArgumentException('releaseDelay must be zero or a positive number of seconds');
+        }
+        if ($this->adoptInterval < 0) {
+            throw new \InvalidArgumentException('adoptInterval must be zero or a positive number of seconds');
         }
         if ($this->maxAge !== null && $this->maxAge <= 0) {
             throw new \InvalidArgumentException('maxAge must be a positive number of seconds, or null to derive it from the queue\'s jobTtl');
@@ -512,6 +533,79 @@ class Nats implements Synchronous, Consumer, Bounded
         });
     }
 
+    /** Refused while the key's subject stores a message; WorkQueue removes it on ack or TERM. */
+    public function coalesce(Queue $queue, array $payload, string $key): Outcome
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cannot coalesce with an empty key.');
+        }
+
+        // Enveloped before the lock, for the reason publish() gives.
+        $subject = $this->keySubject($queue, $key);
+        $envelope = $this->envelope($queue, $payload) + ['key' => $key];
+
+        return $this->synchronize(function () use ($queue, $subject, $envelope): Outcome {
+            $this->ensure($queue);
+
+            try {
+                try {
+                    $stored = $this->publishKeyed($queue, $subject, $envelope);
+                } catch (NatsException $error) {
+                    // An older process reprovisioned the queue without key subjects.
+                    if ($this->provisioning !== Provisioning::Ensure || !$this->unrouted($error)) {
+                        throw $error;
+                    }
+
+                    $identity = $this->identity($queue);
+                    unset($this->provisioned[$identity], $this->keyed[$identity], $this->readopt[$identity]);
+                    $this->ensure($queue);
+                    $stored = $this->publishKeyed($queue, $subject, $envelope);
+                }
+            } catch (JetStreamException $error) {
+                if ($error->apiError?->errCode === JetStream::ERR_WRONG_LAST_SEQUENCE) {
+                    return Outcome::Coalesced;
+                }
+
+                throw $error;
+            }
+
+            // A duplicate id on the first attempt means this call stored nothing.
+            return $stored ? Outcome::Published : Outcome::Coalesced;
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $envelope
+     */
+    private function publishKeyed(Queue $queue, string $subject, array $envelope): bool
+    {
+        $identity = $this->identity($queue);
+        if (!isset($this->keyed[$identity]) && ($this->readopt[$identity] ?? 0.0) <= microtime(true)) {
+            // Adopted before its owner upgraded it: look again.
+            unset($this->provisioned[$identity]);
+            $this->ensure($queue);
+            if (!isset($this->keyed[$identity])) {
+                $this->readopt[$identity] = microtime(true) + $this->adoptInterval;
+            }
+        }
+
+        if (!isset($this->keyed[$identity])) {
+            throw new \RuntimeException("NATS queue \"{$queue->name}\" is not provisioned for keyed publishing; reprovision it from its owner.");
+        }
+
+        return $this->publishEnvelope($subject, $envelope, expected: 0);
+    }
+
+    /** Whether a publish reached no stream: its subject is not, or no longer, stored. */
+    private function unrouted(NatsException $error): bool
+    {
+        if ($error instanceof JetStreamException) {
+            return $error->apiError?->code === 404;
+        }
+
+        return $error->getMessage() === self::NO_RESPONDERS;
+    }
+
     /**
      * Publish one envelope under its own id, so the stream can recognise it.
      *
@@ -523,15 +617,18 @@ class Nats implements Synchronous, Consumer, Bounded
      * nothing downstream can tell from a genuine second message.
      *
      * @param array<string, mixed> $envelope
+     * @param int|null $expected The subject's required last sequence; null sends no expectation.
+     * @return bool Whether this call stored the message: false only for a duplicate on the first attempt.
      */
-    private function publishEnvelope(string $subject, array $envelope): void
+    private function publishEnvelope(string $subject, array $envelope, ?int $expected = null): bool
     {
         /** @var string $id */
         $id = $envelope['pid'];
         $data = $this->codec->encode($envelope);
 
+        $retried = false;
         try {
-            $ack = $this->publishOnce($subject, $data, $id);
+            $ack = $this->publishOnce($subject, $data, $id, $expected);
         } catch (ConnectionException|ProtocolException $lost) {
             // A socket the server has already closed -- an idle publisher whose
             // pings went unanswered -- is found out by the next publish, in one of
@@ -546,7 +643,8 @@ class Nats implements Synchronous, Consumer, Bounded
                 throw $lost;
             }
 
-            $ack = $this->publishOnce($subject, $data, $id);
+            $ack = $this->publishOnce($subject, $data, $id, $expected);
+            $retried = true;
         }
 
         // Not discarded: a duplicate ack means the stream already held this id,
@@ -557,6 +655,8 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($ack->duplicate) {
             ++$this->duplicates;
         }
+
+        return !$ack->duplicate || $retried;
     }
 
     /**
@@ -571,13 +671,14 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /** One attempt at the stream, waiting for its PubAck. */
-    private function publishOnce(string $subject, string $data, string $id): PubAck
+    private function publishOnce(string $subject, string $data, string $id, ?int $expected = null): PubAck
     {
         return $this->js()->publish(
             $subject,
             $data,
             headers: $this->contentTypeHeader(),
             msgId: $id,
+            expectedLastSubjectSeq: $expected,
         );
     }
 
@@ -915,6 +1016,8 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->advisories = [];
         $this->spareDelivery = [];
         $this->provisioned = [];
+        $this->keyed = [];
+        $this->readopt = [];
         $this->inFlight = [];
 
         return true;
@@ -1055,11 +1158,30 @@ class Nats implements Synchronous, Consumer, Bounded
                     break;
                 }
                 // Re-drive onto the work queue, then remove it from the dead stream.
-                $this->js()->publish($this->workSubject($queue), $jsMessage->getData());
+                $this->redrive($queue, $jsMessage->getData());
                 $jsMessage->ackSync();
                 $remaining--;
             }
         });
+    }
+
+    /** Re-drive a dead letter unkeyed, so it neither holds nor is refused by its key. */
+    private function redrive(Queue $queue, string $data): void
+    {
+        try {
+            $envelope = $this->codec->decode($data);
+        } catch (\Throwable) {
+            $envelope = null;
+        }
+
+        if (!\is_array($envelope) || !\array_key_exists('key', $envelope)) {
+            $this->js()->publish($this->workSubject($queue), $data);
+
+            return;
+        }
+
+        unset($envelope['key']);
+        $this->js()->publish($this->workSubject($queue), $this->codec->encode($envelope), headers: $this->contentTypeHeader());
     }
 
     /**
@@ -1289,7 +1411,8 @@ class Nats implements Synchronous, Consumer, Bounded
 
         $this->js()->createOrUpdateStream(new StreamConfig(
             name: $this->workStream($queue),
-            subjects: [$this->workSubject($queue)],
+            // The wildcard carries keyed publishes, one subject per key; see coalesce().
+            subjects: $this->workSubjects($queue),
             description: $key,
             retention: RetentionPolicy::WorkQueue,
             maxMsgs: $this->maxMsgs,
@@ -1332,7 +1455,8 @@ class Nats implements Synchronous, Consumer, Bounded
             // At exactly maxDeliver the server would retire it silently instead, left
             // on the work stream where nothing delivers or counts it.
             maxDeliver: $this->maxDeliver + 1,
-            filterSubject: $this->workSubject($queue),
+            // Listed rather than q.<name>.>, so it cannot overlap a legacy consumer's subject.
+            filterSubjects: $this->workSubjects($queue),
             maxWaiting: $this->maxWaiting,
             maxAckPending: $this->maxAckPending,
             inactiveThreshold: $this->inactiveThreshold,
@@ -1350,13 +1474,14 @@ class Nats implements Synchronous, Consumer, Bounded
         // of them then publishes its own copy of the exhausted message onto the
         // dead stream — so the dead letter multiplies by the worker count, on
         // exactly the messages an operator is trying to read. With a group the
-        // server picks one subscriber.
-        $this->advisories[$key] = $this->connection()->subscribe(
+        // server picks one subscriber. Kept across a reprovision.
+        $this->advisories[$key] ??= $this->connection()->subscribe(
             self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
             queue: self::ADVISORY_GROUP,
         );
 
         $this->spareDelivery[$key] = $this->maxDeliver + 1;
+        $this->keyed[$key] = true;
         $this->provisioned[$key] = true;
     }
 
@@ -1379,9 +1504,10 @@ class Nats implements Synchronous, Consumer, Bounded
         // here, and neither sends configuration.
         $this->guardStreamName($queue, $key);
 
+        $subjects = [];
         foreach ([$this->workStream($queue), $this->deadStream($queue)] as $stream) {
             try {
-                $this->js()->getStreamInfo($stream);
+                $subjects[$stream] = $this->js()->getStreamInfo($stream)->config->subjects;
             } catch (JetStreamException $e) {
                 if ($e->apiError?->code === 404) {
                     throw new \RuntimeException("NATS stream \"{$stream}\" is not provisioned; queue \"{$queue->name}\" must be created by its own producer or consumer before this broker can use it.", $e->getCode(), $e);
@@ -1407,10 +1533,16 @@ class Nats implements Synchronous, Consumer, Bounded
         // Same advisory subscription provision() takes: a core subscription carries no
         // configuration, and a broker consuming a pre-provisioned queue still owes its
         // exhausted messages a dead letter.
-        $this->advisories[$key] = $this->connection()->subscribe(
+        $this->advisories[$key] ??= $this->connection()->subscribe(
             self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
             queue: self::ADVISORY_GROUP,
         );
+
+        // Keyed only once the owner has stored and delivered key subjects; see coalesce().
+        $wildcard = $this->workSubject($queue) . '.*';
+        if (\in_array($wildcard, $subjects[$this->workStream($queue)] ?? [], true) && \in_array($wildcard, $config->filterSubjects ?? [], true)) {
+            $this->keyed[$key] = true;
+        }
 
         $this->provisioned[$key] = true;
     }
@@ -1546,6 +1678,18 @@ class Nats implements Synchronous, Consumer, Bounded
     private function workSubject(Queue $queue): string
     {
         return $this->subjectBase($queue) . '.' . self::SUBJECT_NORMAL;
+    }
+
+    /** @return list<string> the work subject and one subject per coalescing key under it */
+    private function workSubjects(Queue $queue): array
+    {
+        return [$this->workSubject($queue), $this->workSubject($queue) . '.*'];
+    }
+
+    /** Hex keeps the token injective: subjectToken() lowercases and collapses dots. */
+    private function keySubject(Queue $queue, string $key): string
+    {
+        return $this->workSubject($queue) . '.' . bin2hex($key);
     }
 
     private function deadSubject(Queue $queue): string

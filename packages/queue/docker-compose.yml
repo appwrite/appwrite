@@ -30,6 +30,7 @@ services:
     command: ["-js", "-m", "8222"]
     ports:
       - "14225:4222"
+      - "18222:8222"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
       interval: 2s
