@@ -2958,12 +2958,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4519cf6466406b5e2c2ba8253da6131e2579a2dd"
+                "reference": "54022b2fc3ddfb7fe034aede8c628e46896443f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4519cf6466406b5e2c2ba8253da6131e2579a2dd",
-                "reference": "4519cf6466406b5e2c2ba8253da6131e2579a2dd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/54022b2fc3ddfb7fe034aede8c628e46896443f1",
+                "reference": "54022b2fc3ddfb7fe034aede8c628e46896443f1",
                 "shasum": ""
             },
             "require": {
@@ -2975,7 +2975,7 @@
                 "utopia-php/async": "^0.2",
                 "utopia-php/cache": "^4.0 || ^5.0",
                 "utopia-php/console": "^0.1 || ^0.2",
-                "utopia-php/mongo": "^1.0",
+                "utopia-php/mongo": "^1.5.4",
                 "utopia-php/pools": "^2.0",
                 "utopia-php/query": "^0.6",
                 "utopia-php/validators": "^1.0"
@@ -2993,8 +2993,7 @@
             "suggest": {
                 "ext-pdo": "Needed to support MariaDB, MySQL or SQLite Database Adapter",
                 "ext-redis": "Needed to support Redis Cache Adapter",
-                "ext-swoole": "Needed to scope lifecycle hook silencing per coroutine and to detect lost connections",
-                "mongodb/mongodb": "Needed to support MongoDB Database Adapter"
+                "ext-swoole": "Needed to scope lifecycle hook silencing per coroutine and to detect lost connections"
             },
             "type": "library",
             "extra": {
@@ -3024,7 +3023,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-10-02T10:26:41+00:00"
+            "time": "2026-10-05T03:11:01+00:00"
         },
         {
             "name": "utopia-php/migration",
