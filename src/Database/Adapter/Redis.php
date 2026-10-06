@@ -2728,7 +2728,7 @@ class Redis extends Adapter
                         }
                         $hash = \serialize($signature);
                         if (isset($seen[$hash])) {
-                            throw new DuplicateException('Cannot create unique index: existing rows already contain duplicate values');
+                            throw new UniqueException('Cannot create unique index: existing rows already contain duplicate values');
                         }
                         $seen[$hash] = true;
                     }

@@ -1893,6 +1893,11 @@ class MariaDB extends SQL
             return new DuplicateException('Index already exists', $e->getCode(), $e);
         }
 
+        // Index key too long
+        if ($e->getCode() === '42000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 1071) {
+            return new LimitException('Index key length exceeds the maximum', $e->getCode(), $e);
+        }
+
         // Duplicate row
         if ($e->getCode() === '23000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 1062) {
             $key = $this->getViolatedKey($e->getMessage());

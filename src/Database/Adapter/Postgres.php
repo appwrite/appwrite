@@ -2198,6 +2198,11 @@ class Postgres extends SQL
             return new LimitException('Datetime field overflow', $e->getCode(), $e);
         }
 
+        // Index row too large
+        if ($e->getCode() === '54000' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 7 && \str_contains($e->getMessage(), 'index row')) {
+            return new LimitException('Index row size exceeds the maximum', $e->getCode(), $e);
+        }
+
         // Unknown table
         if ($e->getCode() === '42P01' && isset($e->errorInfo[1]) && $e->errorInfo[1] === 7) {
             return new NotFoundException('Collection not found', $e->getCode(), $e);
