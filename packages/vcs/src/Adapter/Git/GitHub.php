@@ -770,9 +770,13 @@ class GitHub extends Git
             ]);
 
             $statusCode = $response['headers']['status-code'] ?? 0;
-            $files = $response['body'] ?? [];
-            if ($statusCode >= 400 || !\is_array($files)) {
+            if ($statusCode >= 400) {
                 throw new Exception("Failed to get pull request files: HTTP {$statusCode}", $statusCode);
+            }
+
+            $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode} returned a non-JSON body");
             }
 
             $allFiles = array_merge($allFiles, $files);
