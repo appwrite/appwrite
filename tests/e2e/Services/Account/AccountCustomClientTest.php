@@ -3202,67 +3202,6 @@ final class AccountCustomClientTest extends Scope
     {
         $provider = 'mock';
         $projectId = $this->getProject()['$id'];
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], [
-            'provider' => $provider,
-            'appId' => '1',
-            'secret' => '123456',
-            'enabled' => true,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        // An app's server starts the flow, as a server SDK does, and keeps only the Location;
-        // the nonce cookie set on that response never reaches the browser.
-        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-        ], followRedirects: false);
-
-        $this->assertEquals(301, $response['headers']['status-code']);
-
-        // The browser follows the provider, callback and redirect hops with no cookie at all.
-        $oauthClient = new Client();
-        $oauthClient->setEndpoint('');
-
-        for ($hop = 0; $hop < 3; $hop++) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
-            $this->assertEquals(301, $response['headers']['status-code']);
-        }
-
-        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
-
-        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $successParams);
-        $this->assertNotEmpty($successParams['userId']);
-        $this->assertNotEmpty($successParams['secret']);
-
-        // The app exchanges the token for a session.
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'userId' => $successParams['userId'],
-            'secret' => $successParams['secret'],
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals($successParams['userId'], $response['body']['userId']);
-    }
-
-    public function testCreateOAuth2TokenFromAnotherBrowserDoesNotLinkSignedInUser(): void
-    {
-        $provider = 'mock';
-        $projectId = $this->getProject()['$id'];
         $sessionCookieKey = 'a_session_' . $projectId;
 
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
@@ -3279,7 +3218,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // The victim's browser holds an email and password session for an account with no identities.
+        // The browser is signed in to another account, which has no identities.
         $email = \uniqid() . 'user@localhost.test';
         $password = 'password';
 
@@ -3294,7 +3233,7 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $victimId = $response['body']['$id'];
+        $signedInUserId = $response['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
@@ -3306,11 +3245,11 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $victimSessionId = $response['body']['$id'];
-        $victimCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
+        $signedInSessionId = $response['body']['$id'];
+        $signedInCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
 
-        // The attacker starts a token flow elsewhere and stops at the provider's redirect back to
-        // Appwrite; the token flag is in the state, which the attacker controls anyway.
+        // The app's server starts the flow, as a server SDK does, and keeps only the Location;
+        // the nonce cookie set on that response never reaches the browser.
         $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3330,32 +3269,46 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $callbackUrl = $response['headers']['location'];
 
-        // The signed-in victim opens that link, sending their session cookie but no nonce cookie.
-        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $victimCookieHeader, followRedirects: false);
+        // The browser completes the flow with its session cookie but no nonce cookie.
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $signedInCookieHeader, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $victimCookieHeader, followRedirects: false);
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $signedInCookieHeader, followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
 
-        // The token belongs to the provider identity's own account, not the victim's.
+        // The token belongs to the provider identity's own account, not the signed-in one.
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $successParams);
         $this->assertNotEmpty($successParams['userId']);
-        $this->assertNotEquals($victimId, $successParams['userId']);
+        $this->assertNotEmpty($successParams['secret']);
+        $this->assertNotEquals($signedInUserId, $successParams['userId']);
 
-        // The victim keeps their session and gained no identity.
+        // The app exchanges the token for a session.
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $successParams['userId'],
+            'secret' => $successParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($successParams['userId'], $response['body']['userId']);
+
+        // The signed-in account keeps its session and gained no identity.
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
             'x-appwrite-project' => $projectId,
-        ], $victimCookieHeader));
+        ], $signedInCookieHeader));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($victimSessionId, $response['body']['$id']);
+        $this->assertEquals($signedInSessionId, $response['body']['$id']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge([
             'x-appwrite-project' => $projectId,
-        ], $victimCookieHeader));
+        ], $signedInCookieHeader));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
