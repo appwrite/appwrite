@@ -48,7 +48,7 @@ const config: PlaywrightTestConfig = {
     baseURL: 'http://localhost:4173/',
     viewport: E2E_VIEWPORT,
     screen: E2E_VIEWPORT,
-    trace: 'retain-on-failure',
+    trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   projects: [
