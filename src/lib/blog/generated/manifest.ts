@@ -9,7 +9,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "description": "Build Murmur, a tiny 3D town where ten AI residents work, talk, and pass rumors on. A scheduled function moves the world forward every minute, and Realtime shows the same town to every visitor.",
     "date": "2026-10-06",
     "lastUpdated": "2026-10-06",
-    "timeToRead": 15,
+    "timeToRead": 12,
     "author": "atharva",
     "category": "tutorials",
     "cover": "/images/blog/build-a-living-ai-town-appwrite-functions-realtime/cover.avif",
