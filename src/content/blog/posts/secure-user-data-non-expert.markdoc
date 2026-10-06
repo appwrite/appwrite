@@ -9,6 +9,7 @@ author: aditya-oberai
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Do you need to be a security expert to protect user data?"
     answer: "No. Most application security incidents do not happen because developers lacked advanced security knowledge. They happen because basic, well-understood practices were not followed. Applying a small set of consistent practices (managed authentication, least-privilege access, dependency updates, HTTPS, secrets management, and input validation) prevents the majority of real-world incidents."

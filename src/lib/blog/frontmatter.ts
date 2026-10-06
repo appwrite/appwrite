@@ -21,6 +21,14 @@ export function parseBlogFrontmatter(raw: string): {
   }
 }
 
+/**
+ * `removed: true` takes a post off the site while keeping its markdoc source:
+ * it is never rendered, listed, linked, or built, and its URL redirects home.
+ */
+export function isRemovedBlogPost(frontmatter: Record<string, unknown>): boolean {
+  return frontmatter.removed === true || frontmatter.removed === 'true'
+}
+
 export function getFrontmatterString(
   frontmatter: Record<string, unknown>,
   key: string,

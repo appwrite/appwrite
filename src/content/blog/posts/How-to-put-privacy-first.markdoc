@@ -7,6 +7,7 @@ cover: /images/blog/privacy.avif
 timeToRead: 9
 author: laura-du-ry
 category: security
+removed: true
 faqs:
   - question: "What is the difference between pixels, tags, and cookies?"
     answer: "Tags are snippets of code (often managed via Google Tag Manager) that fire actions like analytics events. Pixels are tiny transparent images embedded in a page that report visit data back to a vendor. Cookies are key/value pairs the browser stores, used either by the site (first-party) or by third parties for cross-site tracking."

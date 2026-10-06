@@ -10,6 +10,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the most common prompting mistake developers make?"
     answer: "Writing vague, context-free prompts is the most common mistake. Asking an AI to fix a bug or write a function without specifying the language, framework, constraints, naming conventions, or expected behavior forces the model to fill gaps with assumptions, which are usually wrong. Including the stack, the goal, and the failure mode gives the model real direction."

@@ -1,5 +1,6 @@
 import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
+import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const INIT_PAGE_SEO_TITLE =
@@ -42,4 +43,10 @@ export function getInitPageMetaTags(siteOrigin?: string) {
     ogImage: getInitPageOgImageUrl(origin),
     siteOrigin: origin,
   })]
+}
+
+export function getInitPageRouteHead(siteOrigin?: string) {
+  const origin = siteOrigin ?? getRequestSiteOrigin()
+  const canonical = resolveSiteAssetUrl('/init', origin)
+  return asRouteHead(getInitPageMetaTags(origin), { canonicalHref: canonical })
 }

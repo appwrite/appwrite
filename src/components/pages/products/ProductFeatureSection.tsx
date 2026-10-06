@@ -82,7 +82,7 @@ export function ProductFeatureSection({
   )
 
   const splitGridClassName = cn(
-    'grid items-center gap-10 lg:gap-14 xl:gap-16',
+    'grid grid-cols-1 items-center gap-10 lg:gap-14 xl:gap-16',
     featureStyle === 'alternate' && 'lg:grid-cols-2',
     aligned && 'lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
     rail && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]',

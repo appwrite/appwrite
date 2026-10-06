@@ -5,20 +5,22 @@ import {
 } from '@/lib/marketing/route-static-data'
 import { LegalPolicyView } from '@/components/pages/legal/View'
 import cookiesContent from '@/content/legal/cookies.md?raw'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import { useT } from '@/lib/i18n/translate'
 
 export const Route = createFileRoute('/_marketing/cookies')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/cookies',
       pageName: 'Cookies Policy',
       description:
         'This cookie policy explains what cookies are, how we use them at Appwrite, and how you can manage and customize your preferences.',
-    }),
-  }),
+    });
+    return seo;
+  },
   loader: async ({ context }) => {
   },
   component: CookiesPage,

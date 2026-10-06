@@ -7,6 +7,7 @@ timeToRead: 12
 date: 2024-04-22
 author: laura-du-ry
 category: culture
+removed: true
 faqs:
   - question: "Who is Dennis Ivy?"
     answer: "Dennis Ivy is a self-taught developer, YouTube creator, and Developer Advocate at Appwrite. He built a digital marketing and web development agency before moving into DevRel, and now focuses on teaching developers through tutorials, content, and community work."

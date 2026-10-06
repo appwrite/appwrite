@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is an Appwrite Team?"
     answer: "An Appwrite Team is a group of users with named roles. The user who creates a team automatically becomes a member with the owner role, and only owners can invite or remove other members. Roles are arbitrary strings you define, such as owner, admin, editor, or viewer, depending on your app's needs."

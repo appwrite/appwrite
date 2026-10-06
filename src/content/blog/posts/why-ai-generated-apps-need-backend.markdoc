@@ -7,6 +7,7 @@ cover: /images/blog/why-ai-generated-apps-need-backend/cover.avif
 timeToRead: 8
 author: atharva
 unlisted: true
+removed: true
 category: ai
 faqs:
   - question: "Do AI-generated apps still need a real backend?"

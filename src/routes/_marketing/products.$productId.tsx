@@ -6,7 +6,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
   siteFrameworksQueryOptions,
@@ -42,7 +42,8 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
         : translate(product.tagline)
 
     return {
-      meta: getMarketingPageMetaTags({
+      ...getMarketingRouteHead({
+        canonicalPath: `/products/${params.productId}`,
         pageName,
         description: metaDescription,
         ogImageEyebrow: 'Products',

@@ -4,7 +4,7 @@ import {
   getIntegration,
   getIntegrationMarkdownExport,
 } from '@/lib/integrations/content'
-import { getIntegrationDetailRouteMetaTags } from '@/lib/integrations/route-meta'
+import { getIntegrationDetailRouteHead } from '@/lib/integrations/route-meta'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
@@ -54,9 +54,11 @@ export const Route = createFileRoute('/_marketing/integrations/$slug')({
   },
   head: ({ loaderData }) => {
     if (!loaderData?.integration) return {}
+    const seo = getIntegrationDetailRouteHead(loaderData.integration)
     return {
-      meta: getIntegrationDetailRouteMetaTags(loaderData.integration),
+      ...seo,
       links: [
+        ...seo.links,
         {
           rel: 'alternate',
           type: 'text/markdown',

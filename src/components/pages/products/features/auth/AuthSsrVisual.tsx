@@ -19,7 +19,7 @@ export function AuthSsrVisual() {
   const t = useT()
 
   return (
-    <div className="relative mx-auto w-full max-w-[540px] px-2 pb-14 pt-12 sm:px-6">
+    <div className="relative mx-auto w-full max-w-[540px] px-2 pb-24 pt-12 sm:px-6 sm:pb-14">
       <div className="absolute start-0 top-0 z-[2] flex gap-1.5">
         {FRAMEWORKS.map((framework, index) => (
           <span
@@ -61,7 +61,7 @@ export function AuthSsrVisual() {
         </pre>
       </ArtWindow>
 
-      <ArtChip className="bottom-2 end-0" delayMs={900}>
+      <ArtChip className="bottom-12 end-0 sm:bottom-2" delayMs={900}>
         <div className="flex items-center gap-2">
           <ArtIconBadge icon={Check} tone="success" />
           <p className="text-[12px] font-medium text-foreground">{t('Session verified')}</p>

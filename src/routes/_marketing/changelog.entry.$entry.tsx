@@ -10,9 +10,11 @@ import {
   getChangelogMarkdownExport,
 } from '@/lib/changelog/content'
 import {
+  getChangelogCanonicalUrl,
   getChangelogEntryMetaTags,
   getChangelogEntrySchema,
 } from '@/lib/changelog/seo'
+import { asRouteHead } from '@/lib/seo/route-head'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { CHANGELOG_RSS_PATH } from '@/lib/seo/rss'
@@ -62,11 +64,17 @@ export const Route = createFileRoute('/_marketing/changelog/entry/$entry')({
   head: ({ loaderData }) => {
     if (!loaderData?.entry) return {}
 
-    return {
-      meta: getChangelogEntryMetaTags(loaderData.entry, {
+    const seo = asRouteHead(
+      getChangelogEntryMetaTags(loaderData.entry, {
         siteOrigin: getRequestSiteOrigin(),
       }),
+      { canonicalHref: getChangelogCanonicalUrl(loaderData.entry.href) },
+    )
+
+    return {
+      ...seo,
       links: [
+        ...seo.links,
         {
           rel: 'alternate',
           type: 'application/rss+xml',

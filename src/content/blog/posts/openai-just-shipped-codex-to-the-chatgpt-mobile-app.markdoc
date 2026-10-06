@@ -8,6 +8,7 @@ timeToRead: 5
 author: aishwari
 category: ai
 featured: false
+removed: true
 faqs:
   - question: Is Codex on mobile free?
     answer: Codex in the ChatGPT mobile app is rolling out in preview on iOS and Android across all plans, including Free and Go, in all supported regions. Update the ChatGPT mobile app and the Codex app on macOS to try it.

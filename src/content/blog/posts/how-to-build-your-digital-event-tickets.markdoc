@@ -8,6 +8,7 @@ cover: /images/blog/tickets-cover.avif
 timeToRead: 12
 author: laura-du-ry
 category: init
+removed: true
 faqs:
   - question: "How did Appwrite build the Init tickets?"
     answer: "Appwrite used GitHub OAuth (through [Appwrite Auth](/docs/products/auth)) to connect users' accounts, then scraped the GitHub contributions graph server-side using `node-html-parser`. The team converted the HTML grid into a matrix of contribution levels and rendered that as the side panel of each ticket."

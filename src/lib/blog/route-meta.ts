@@ -1,3 +1,4 @@
+import { asRouteHead } from '@/lib/seo/route-head'
 import type { BlogAuthor, BlogCategory, BlogPost } from './types'
 import type { BlogSeoOptions } from './seo'
 import {
@@ -36,4 +37,27 @@ export function getBlogCategoryRouteMetaTags(
 
 export function getBlogAuthorRouteMetaTags(author: BlogAuthor, options?: BlogSeoOptions) {
   return asRouteMetaTags(buildBlogAuthorMetaTags(author, options) as unknown as MetaTag[])
+}
+
+export function getBlogIndexRouteHead(options?: BlogSeoOptions) {
+  return asRouteHead(getBlogIndexRouteMetaTags(options))
+}
+
+export function getBlogPostRouteHead(
+  post: BlogPost,
+  authors: BlogAuthor[] = [],
+  options?: BlogSeoOptions,
+) {
+  return asRouteHead(getBlogPostRouteMetaTags(post, authors, options))
+}
+
+export function getBlogCategoryRouteHead(
+  category: BlogCategory,
+  options?: BlogSeoOptions,
+) {
+  return asRouteHead(getBlogCategoryRouteMetaTags(category, options))
+}
+
+export function getBlogAuthorRouteHead(author: BlogAuthor, options?: BlogSeoOptions) {
+  return asRouteHead(getBlogAuthorRouteMetaTags(author, options))
 }

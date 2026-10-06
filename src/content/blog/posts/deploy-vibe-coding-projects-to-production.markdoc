@@ -8,6 +8,7 @@ timeToRead: 10
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "How do I deploy a vibe-coded app to production?"
     answer: "Move the code into a real git repository, point the frontend at a production host like [Appwrite Sites](/docs/products/sites) with a custom domain and SSL, move all secrets to server-side environment variables, narrow permissions on tables and buckets to owner-only where applicable, enable logs on every server-side function, run a pre-launch review against the [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps), and connect a real email inbox before testing auth flows."

@@ -10,6 +10,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is Claude's extended thinking mode?"
     answer: "Extended thinking lets Claude pause and reason step by step before responding, instead of producing a quick pattern-matched answer. The reasoning chain is visible in the response, so you can follow how it broke the problem apart, checked assumptions, and caught edge cases. It is most useful for debugging logic errors, designing system architecture, or working through tricky algorithm problems."

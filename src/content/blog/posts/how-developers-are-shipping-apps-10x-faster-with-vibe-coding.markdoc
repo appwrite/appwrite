@@ -9,6 +9,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: What is vibe coding?
     answer: Vibe coding is a development style where developers describe what they want in natural language and use an AI coding assistant to generate, review, and iterate on the implementation. The developer still guides the work, reviews the output, and decides what should actually ship.
