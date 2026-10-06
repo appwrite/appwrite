@@ -25,7 +25,7 @@ import {
   isVideoMetadataReady,
   useProjectVideo,
   useVideoRenditions,
-  useVideoSubtitles,
+  useVideoCaptions,
   videoSourceHasAudio,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
@@ -41,7 +41,7 @@ import { useT } from '@/lib/i18n/translate'
 export type VideoOverviewInitialData = {
   video: Models.Video
   renditions: Models.VideoRenditionList
-  subtitles: Models.VideoSubtitleList
+  captions: Models.VideoCaptionList
 }
 
 type ViewProps = {
@@ -56,13 +56,13 @@ export function View({ initialData }: ViewProps = {}) {
   }
   const { data: videoFromHook } = useProjectVideo(projectId, videoId)
   const { data: renditionsFromHook } = useVideoRenditions(projectId, videoId)
-  const { data: subtitlesFromHook } = useVideoSubtitles(projectId, videoId)
+  const { data: captionsFromHook } = useVideoCaptions(projectId, videoId)
 
   const video = videoFromHook ?? initialData?.video
   const renditions =
     renditionsFromHook?.renditions ?? initialData?.renditions.renditions ?? []
-  const subtitles =
-    subtitlesFromHook?.subtitles ?? initialData?.subtitles.subtitles ?? []
+  const captions =
+    captionsFromHook?.captions ?? initialData?.captions.captions ?? []
 
   if (!video) return null
 
@@ -123,7 +123,7 @@ export function View({ initialData }: ViewProps = {}) {
                 projectId={projectId}
                 video={video}
                 renditions={renditions}
-                subtitles={subtitles}
+                captions={captions}
               />
             </div>
           </Collapse>
@@ -344,7 +344,7 @@ function FactGroup({
 
 type DetailPath =
   | '/projects/$projectId/videos/$videoId/renditions'
-  | '/projects/$projectId/videos/$videoId/subtitles'
+  | '/projects/$projectId/videos/$videoId/captions'
   | '/projects/$projectId/videos/$videoId/timeline'
   | '/projects/$projectId/videos/$videoId/streaming'
 
@@ -419,15 +419,15 @@ function SetupChecklist({
   projectId,
   video,
   renditions,
-  subtitles,
+  captions,
 }: {
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  captions: Models.VideoCaption[]
 }) {
   const t = useT()
-  const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =
+  const { openCreateRenditions, openCreateCaption, writeDisabledReason } =
     useVideoDetailActions()
   const navigate = useNavigate()
 
@@ -460,21 +460,21 @@ function SetupChecklist({
       ),
     },
     {
-      id: 'subtitles',
-      title: t('Add subtitles'),
+      id: 'captions',
+      title: t('Add captions'),
       description: t('Upload WebVTT or SRT files per language, or write them in the editor.'),
       optional: true,
-      done: subtitles.length > 0,
+      done: captions.length > 0,
       action: (
         <div className="flex flex-wrap gap-2">
           <VideoActionButton
             size="sm"
             variant="outline"
             className="h-8 text-[12px]"
-            onClick={openCreateSubtitle}
+            onClick={openCreateCaption}
             disabledReason={writeDisabledReason}
           >
-            {t('Upload subtitle')}
+            {t('Upload caption')}
           </VideoActionButton>
           <VideoActionButton
             size="sm"
@@ -482,13 +482,13 @@ function SetupChecklist({
             className="h-8 text-[12px]"
             onClick={() =>
               void navigate({
-                to: '/projects/$projectId/videos/$videoId/subtitles/create',
+                to: '/projects/$projectId/videos/$videoId/captions/create',
                 params: { projectId, videoId: video.$id },
               })
             }
             disabledReason={writeDisabledReason}
           >
-            {t('Create subtitle')}
+            {t('Create caption')}
           </VideoActionButton>
         </div>
       ),

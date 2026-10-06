@@ -13,6 +13,7 @@ export const jaVideosDictionary: Record<string, string> = {
   Renditions: 'レンディション',
   Rendition: 'レンディション',
   Subtitles: '字幕',
+  Captions: '字幕',
   'Back to videos': '動画一覧に戻る',
   'Switch video': '動画を切り替え',
   'No videos found': '動画が見つかりません',
@@ -90,8 +91,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Failed to save profile': 'プロファイルを保存できませんでした',
   'Failed to delete profile': 'プロファイルを削除できませんでした',
   'Failed to load profiles': 'プロファイルを読み込めませんでした',
-  'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
-    'コンソールはプロジェクト API の GET /videos/profiles を呼び出します。ここでサーバーエラーになる場合、ブラウザではなく、このプロジェクトの Videos サービスがプロファイルの読み込みまたはシードに失敗している可能性が高いです。',
+  'The console calls GET /project/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
+    'コンソールはプロジェクト API の GET /project/profiles を呼び出します。ここでサーバーエラーになる場合、ブラウザではなく、このプロジェクトの Videos サービスがプロファイルの読み込みまたはシードに失敗している可能性が高いです。',
   'No profiles': 'プロファイルがありません',
   'Create a profile to choose the resolution and bitrate of your renditions.':
     'プロファイルを作成して、レンディションの解像度とビットレートを指定します。',
@@ -1124,5 +1125,49 @@ export const jaVideosDictionary: Record<string, string> = {
     'ストレージから WebVTT または SRT ファイルを取り込みます。ソースに埋め込まれたトラックは自動で抽出されます。',
   'Ship with every stream': 'すべてのストリームで配信',
   'Subtitles are listed in the manifest, so viewers can pick a language in any player.':
+    '字幕はマニフェストに含まれるため、視聴者はどのプレーヤーでも言語を選択できます。',
+
+  // Captions (Stream v4 UI)
+  'Create caption': '字幕を作成',
+  'Update caption': '字幕を更新',
+  'Delete caption': '字幕を削除',
+  'Caption added': '字幕を追加しました',
+  'Caption updated': '字幕を更新しました',
+  'Caption deleted': '字幕を削除しました',
+  'Default caption updated': 'デフォルト字幕を更新しました',
+  'Failed to save caption': '字幕の保存に失敗しました',
+  'Failed to delete caption': '字幕の削除に失敗しました',
+  'Failed to download captions': '字幕のダウンロードに失敗しました',
+  'Upload caption': '字幕をアップロード',
+  'Add captions': '字幕を追加',
+  'Add captions to this video': 'この動画に字幕を追加',
+  'Back to captions': '字幕一覧に戻る',
+  'Caption editor': '字幕エディター',
+  'New caption': '新しい字幕',
+  'Caption created': '字幕を作成しました',
+  'Caption saved. The track is re-packaged in the background.':
+    '字幕を保存しました。トラックはバックグラウンドで再パッケージ化されます。',
+  'Caption not found': '字幕が見つかりません',
+  'This caption may have been deleted. Go back to the list to pick another track.':
+    'この字幕は削除された可能性があります。一覧に戻って別のトラックを選んでください。',
+  'The caption file could not be read.': '字幕ファイルを読み取れませんでした。',
+  'Failed to import captions': '字幕のインポートに失敗しました',
+  'Import caption file': '字幕ファイルをインポート',
+  'Your caption changes have not been saved. Leaving this page discards them.':
+    '字幕の変更は保存されていません。このページを離れると変更は破棄されます。',
+  'Default caption': 'デフォルト字幕',
+  'Players turn this caption on automatically.':
+    'プレーヤーはこの字幕を自動的にオンにします。',
+  'Select caption file': '字幕ファイルを選択',
+  'Attach a WebVTT or SRT file from Storage. Captions are segmented to match the stream and listed in every manifest.':
+    'ストレージから WebVTT または SRT ファイルを添付します。字幕はストリームに合わせてセグメント化され、すべてのマニフェストに載ります。',
+  'Caption URL': '字幕 URL',
+  'Copy HLS caption URL': 'HLS 字幕 URL をコピー',
+  'Copy DASH caption URL': 'DASH 字幕 URL をコピー',
+  'Copy CMAF caption URL': 'CMAF 字幕 URL をコピー',
+  'Open caption file': '字幕ファイルを開く',
+  'No caption tracks. Add them from the Captions page.':
+    '字幕トラックがありません。Captions ページから追加してください。',
+  'Captions are listed in the manifest, so viewers can pick a language in any player.':
     '字幕はマニフェストに含まれるため、視聴者はどのプレーヤーでも言語を選択できます。',
 }

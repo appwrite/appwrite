@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
+  getVideoEncodingStatus,
   isVideoMetadataReady,
   isVideoRenditionActive,
   parseVideoProgress,
@@ -560,7 +561,7 @@ export function VideoStreamPlayer({
     readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
 
   const sourceMissingAudio =
-    video.status === 'ready' &&
+    getVideoEncodingStatus(renditions) === 'ready' &&
     (video.duration ?? 0) > 0 &&
     !videoSourceHasAudio(video)
 

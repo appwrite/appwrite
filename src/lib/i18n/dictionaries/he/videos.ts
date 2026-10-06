@@ -13,6 +13,7 @@ export const heVideosDictionary: Record<string, string> = {
   Renditions: 'גרסאות קידוד',
   Rendition: 'גרסת קידוד',
   Subtitles: 'כתוביות',
+  Captions: 'כתוביות',
   'Back to videos': 'חזרה לסרטונים',
   'Switch video': 'החלפת סרטון',
   'No videos found': 'לא נמצאו סרטונים',
@@ -86,8 +87,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Failed to save profile': 'שמירת הפרופיל נכשלה',
   'Failed to delete profile': 'מחיקת הפרופיל נכשלה',
   'Failed to load profiles': 'טעינת הפרופילים נכשלה',
-  'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
-    'ה-Console קורא ל-GET /videos/profiles ב-API של הפרויקט. שגיאת שרת כאן בדרך כלל מצביעה על כשל בטעינה או ב-seed של פרופילים בשירות Videos בפרויקט, לא על בעיה בדפדפן.',
+  'The console calls GET /project/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
+    'ה-Console קורא ל-GET /project/profiles ב-API של הפרויקט. שגיאת שרת כאן בדרך כלל מצביעה על כשל בטעינה או ב-seed של פרופילים בשירות Videos בפרויקט, לא על בעיה בדפדפן.',
   'No profiles': 'אין פרופילים',
   'Create a profile to choose the resolution and bitrate of your renditions.':
     'צרו פרופיל כדי לבחור את הרזולוציה וה-Bitrate של גרסאות הקידוד.',
@@ -1112,5 +1113,49 @@ export const heVideosDictionary: Record<string, string> = {
     'ייבאו קובצי WebVTT או SRT מהאחסון. רצועות שמוטמעות בקובץ המקור מחולצות אוטומטית.',
   'Ship with every stream': 'זמינות בכל הזרמה',
   'Subtitles are listed in the manifest, so viewers can pick a language in any player.':
+    'הכתוביות מופיעות במניפסט, כך שהצופים יכולים לבחור שפה בכל נגן.',
+
+  // Captions (Stream v4 UI)
+  'Create caption': 'יצירת כתובית',
+  'Update caption': 'עדכון כתובית',
+  'Delete caption': 'מחיקת כתובית',
+  'Caption added': 'הכתובית נוספה',
+  'Caption updated': 'הכתובית עודכנה',
+  'Caption deleted': 'הכתובית נמחקה',
+  'Default caption updated': 'כתובית ברירת המחדל עודכנה',
+  'Failed to save caption': 'שמירת הכתובית נכשלה',
+  'Failed to delete caption': 'מחיקת הכתובית נכשלה',
+  'Failed to download captions': 'הורדת הכתוביות נכשלה',
+  'Upload caption': 'העלאת כתובית',
+  'Add captions': 'הוספת כתוביות',
+  'Add captions to this video': 'הוספת כתוביות לסרטון',
+  'Back to captions': 'חזרה לכתוביות',
+  'Caption editor': 'עורך כתוביות',
+  'New caption': 'כתובית חדשה',
+  'Caption created': 'הכתובית נוצרה',
+  'Caption saved. The track is re-packaged in the background.':
+    'הכתובית נשמרה. הרצועה נארזת מחדש ברקע.',
+  'Caption not found': 'הכתובית לא נמצאה',
+  'This caption may have been deleted. Go back to the list to pick another track.':
+    'ייתכן שהכתובית נמחקה. חזרו לרשימה כדי לבחור רצועה אחרת.',
+  'The caption file could not be read.': 'לא ניתן לקרוא את קובץ הכתוביות.',
+  'Failed to import captions': 'ייבוא הכתוביות נכשל',
+  'Import caption file': 'ייבוא קובץ כתוביות',
+  'Your caption changes have not been saved. Leaving this page discards them.':
+    'שינויי הכתוביות לא נשמרו. יציאה מהדף תמחק אותם.',
+  'Default caption': 'כתובית ברירת מחדל',
+  'Players turn this caption on automatically.':
+    'נגנים מפעילים את הכתובית הזו אוטומטית.',
+  'Select caption file': 'בחירת קובץ כתוביות',
+  'Attach a WebVTT or SRT file from Storage. Captions are segmented to match the stream and listed in every manifest.':
+    'צרפו קובץ WebVTT או SRT מהאחסון. הכתוביות מחולקות לסגמנטים בהתאם לסטרים ומופיעות בכל מניפסט.',
+  'Caption URL': 'כתובת הכתובית',
+  'Copy HLS caption URL': 'העתקת כתובת כתובית HLS',
+  'Copy DASH caption URL': 'העתקת כתובת כתובית DASH',
+  'Copy CMAF caption URL': 'העתקת כתובת כתובית CMAF',
+  'Open caption file': 'פתיחת קובץ הכתובית',
+  'No caption tracks. Add them from the Captions page.':
+    'אין רצועות כתוביות. הוסיפו אותן מדף הכתוביות.',
+  'Captions are listed in the manifest, so viewers can pick a language in any player.':
     'הכתוביות מופיעות במניפסט, כך שהצופים יכולים לבחור שפה בכל נגן.',
 }

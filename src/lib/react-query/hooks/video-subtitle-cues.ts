@@ -1,5 +1,5 @@
 /**
- * Subtitle editor data: reading a track's cues and saving edited cues back
+ * Caption editor data: reading a track's cues and saving edited cues back
  * as a WebVTT file in Storage.
  */
 
@@ -27,12 +27,12 @@ import {
 import { DEFAULT_STALE_TIME } from './constants'
 import { videoKeys } from './videos'
 
-type SubtitleSource = Pick<Models.VideoSubtitle, '$id' | 'bucketId' | 'fileId'>
+type CaptionSource = Pick<Models.VideoCaption, '$id' | 'bucketId' | 'fileId'>
 
-async function fetchSubtitleResource(url: string): Promise<string> {
+async function fetchCaptionResource(url: string): Promise<string> {
   const response = await fetch(withAdminMode(url), { credentials: 'include' })
   if (!response.ok) {
-    throw new Error(`Subtitle request failed (HTTP ${response.status})`)
+    throw new Error(`Caption request failed (HTTP ${response.status})`)
   }
   return await response.text()
 }
@@ -50,76 +50,76 @@ function resolvePlaylistUri(uri: string, playlistUrl: string): string {
 }
 
 /** Embedded tracks have no Storage file: read the packaged WebVTT instead. */
-async function fetchPackagedSubtitleCues(
+async function fetchPackagedCaptionCues(
   projectId: string,
   videoId: string,
-  subtitleId: string,
+  captionId: string,
 ): Promise<SubtitleCue[]> {
   const videos = sdk.forProject(projectId).videos
   const dashUrl = String(
-    videos.getSubtitleManifest({
+    videos.getCaptionManifest({
       videoId,
-      subtitleId,
+      captionId,
       output: VideoOutput.Dash,
     }),
   )
   try {
-    const text = await fetchSubtitleResource(dashUrl)
+    const text = await fetchCaptionResource(dashUrl)
     if (text.trimStart().startsWith('WEBVTT')) return parseSubtitleText(text)
   } catch {
     // Fall back to the HLS playlist below.
   }
   const playlistUrl = String(
-    videos.getSubtitleManifest({
+    videos.getCaptionManifest({
       videoId,
-      subtitleId,
+      captionId,
       output: VideoOutput.Hls,
     }),
   )
-  const playlist = await fetchSubtitleResource(playlistUrl)
+  const playlist = await fetchCaptionResource(playlistUrl)
   const segments = playlist
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'))
     .map((uri) => resolvePlaylistUri(uri, playlistUrl))
-  const texts = await Promise.all(segments.map(fetchSubtitleResource))
+  const texts = await Promise.all(segments.map(fetchCaptionResource))
   return dedupeSubtitleCues(texts.flatMap((text) => parseSubtitleText(text)))
 }
 
-export async function fetchVideoSubtitleCues(
+export async function fetchVideoCaptionCues(
   projectId: string,
   videoId: string,
-  subtitle: SubtitleSource,
+  caption: CaptionSource,
 ): Promise<SubtitleCue[]> {
-  if (subtitle.bucketId && subtitle.fileId) {
+  if (caption.bucketId && caption.fileId) {
     const url = String(
       sdk.forProject(projectId).storage.getFileDownload({
-        bucketId: subtitle.bucketId,
-        fileId: subtitle.fileId,
+        bucketId: caption.bucketId,
+        fileId: caption.fileId,
       }),
     )
-    return parseSubtitleText(await fetchSubtitleResource(url))
+    return parseSubtitleText(await fetchCaptionResource(url))
   }
-  return await fetchPackagedSubtitleCues(projectId, videoId, subtitle.$id)
+  return await fetchPackagedCaptionCues(projectId, videoId, caption.$id)
 }
 
 /** Keyed by file so a saved track (new file) never reuses the old cues. */
-export function videoSubtitleCuesQueryOptions(
+export function videoCaptionCuesQueryOptions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
-  subtitle: SubtitleSource | null,
+  caption: CaptionSource | null,
 ) {
   return queryOptions({
     queryKey: [
-      'video-subtitle-cues',
+      'video-caption-cues',
       'project',
       projectId,
       videoId,
-      subtitle?.$id,
-      subtitle?.fileId,
+      caption?.$id,
+      caption?.fileId,
     ],
-    queryFn: () => fetchVideoSubtitleCues(projectId!, videoId!, subtitle!),
-    enabled: !!projectId && !!videoId && !!subtitle,
+    queryFn: () => fetchVideoCaptionCues(projectId!, videoId!, caption!),
+    enabled: !!projectId && !!videoId && !!caption,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -129,49 +129,49 @@ export function videoSubtitleCuesQueryOptions(
 }
 
 /** Reads a track's cues (from cache when fresh) and downloads them as a file. */
-export function useDownloadVideoSubtitle(
+export function useDownloadVideoCaption(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
   return async (
-    subtitle: SubtitleSource & Pick<Models.VideoSubtitle, 'name' | 'code'>,
+    caption: CaptionSource & Pick<Models.VideoCaption, 'name' | 'code'>,
     format: SubtitleDownloadFormat,
   ) => {
     const cues = await queryClient.fetchQuery(
-      videoSubtitleCuesQueryOptions(projectId, videoId, subtitle),
+      videoCaptionCuesQueryOptions(projectId, videoId, caption),
     )
-    downloadSubtitleCues(cues, subtitle.name, subtitle.code, format)
+    downloadSubtitleCues(cues, caption.name, caption.code, format)
   }
 }
 
-export function useVideoSubtitleCues(
+export function useVideoCaptionCues(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
-  subtitle: SubtitleSource | null,
+  caption: CaptionSource | null,
 ) {
-  return useQuery(videoSubtitleCuesQueryOptions(projectId, videoId, subtitle))
+  return useQuery(videoCaptionCuesQueryOptions(projectId, videoId, caption))
 }
 
 /**
- * Saves editor cues as a new WebVTT file in Storage, then creates the subtitle
+ * Saves editor cues as a new WebVTT file in Storage, then creates the caption
  * or points the existing one at the new file (which re-packages the track).
  * The previous file is kept.
  */
-export function useSaveVideoSubtitleCues(
+export function useSaveVideoCaptionCues(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
-      subtitleId?: string
+      captionId?: string
       cues: SubtitleCue[]
       bucketId: string
       name: string
       code: string
       isDefault: boolean
-    }): Promise<Models.VideoSubtitle> => {
+    }): Promise<Models.VideoCaption> => {
       const projectSdk = sdk.forProject(projectId!)
       const file = new File(
         [serializeWebVtt(input.cues)],
@@ -191,16 +191,16 @@ export function useSaveVideoSubtitleCues(
         code: input.code,
         xdefault: input.isDefault,
       }
-      return input.subtitleId
-        ? await projectSdk.videos.updateSubtitle({
+      return input.captionId
+        ? await projectSdk.videos.updateCaption({
             ...params,
-            subtitleId: input.subtitleId,
+            captionId: input.captionId,
           })
-        : await projectSdk.videos.createSubtitle(params)
+        : await projectSdk.videos.createCaption(params)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: videoKeys.subtitles(projectId, videoId),
+        queryKey: videoKeys.captions(projectId, videoId),
       })
     },
   })

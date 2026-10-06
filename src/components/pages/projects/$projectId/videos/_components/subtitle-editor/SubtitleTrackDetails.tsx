@@ -117,10 +117,10 @@ export function SubtitleTrackDetails({
       <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-3 py-2.5">
         <div className="min-w-0">
           <Label htmlFor="subtitle-editor-default" className="text-[13px]">
-            {t('Default subtitle')}
+            {t('Default caption')}
           </Label>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            {t('Players turn this subtitle on automatically.')}
+            {t('Players turn this caption on automatically.')}
           </p>
         </div>
         <Switch

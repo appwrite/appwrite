@@ -1,17 +1,20 @@
 /**
  * Create a video end to end: get the source into Storage, register the video,
- * prepare its working copy, then queue the timeline and renditions.
+ * then queue the timeline and renditions.
  *
  * Runs outside React so it keeps going when the wizard closes; callers follow
  * along through `onStep`.
  */
 
-import { AppwriteException, ID } from '@appwrite.io/console'
+import { ID } from '@appwrite.io/console'
 import type { Models, VideoOutput } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
-import { videoKeys } from '@/lib/react-query/hooks/videos'
+import {
+  isVideoMetadataReady,
+  videoKeys,
+} from '@/lib/react-query/hooks/videos'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   downloadDemoVideo,
@@ -34,7 +37,6 @@ export type CreateVideoStepId =
   | 'import'
   | 'upload'
   | 'create'
-  | 'prepare'
   | 'timeline'
   | 'renditions'
 
@@ -74,17 +76,10 @@ export function getCreateVideoSteps(
   if (source.kind === 'demo') steps.push('import')
   if (source.kind !== 'storage') steps.push('upload')
   steps.push('create')
-  if (options.timeline || options.profileIds.length > 0) steps.push('prepare')
   if (options.timeline) steps.push('timeline')
   if (options.profileIds.length > 0) steps.push('renditions')
   return steps
 }
-
-const POLL_INTERVAL_MS = 2000
-const PREPARE_TIMEOUT_MS = 30 * 60 * 1000
-
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, ms))
 
 /** Thrown when a step before video creation fails; nothing usable exists yet. */
 export class CreateVideoError extends Error {
@@ -108,59 +103,6 @@ async function uploadSource(
     file,
     onProgress: (event) => onProgress(event.progress),
   })
-}
-
-/**
- * Ask the worker to materialise the working copy and wait for `ready`.
- * Returns `null` when the server predates create-source (renditions and
- * timelines probe the source themselves there).
- */
-async function prepareSource(
-  projectId: string,
-  video: Models.Video,
-  onProgress: (progress: number) => void,
-): Promise<Models.Video | null> {
-  const videos = sdk.forProject(projectId).videos
-  let current = video
-  try {
-    current = await videos.createSource({ videoId: video.$id })
-  } catch (error) {
-    if (!(error instanceof AppwriteException)) throw error
-    // Older servers have no route; their edge may answer with a non-JSON 404
-    // that leaves `type` empty.
-    if (
-      error.type === 'general_route_not_found' ||
-      (error.code === 404 && !error.type)
-    ) {
-      return null
-    }
-    if (
-      error.type !== 'video_source_in_progress' &&
-      error.type !== 'video_source_already_exists'
-    ) {
-      throw error
-    }
-    current = await videos.get({ videoId: video.$id })
-  }
-
-  const deadline = Date.now() + PREPARE_TIMEOUT_MS
-  for (;;) {
-    if (current.status === 'ready') {
-      onProgress(100)
-      return current
-    }
-    if (current.status === 'error' || current.status === 'aborted') {
-      throw new Error('The source file could not be prepared.')
-    }
-    if (current.chunksTotal > 0) {
-      onProgress((current.chunksUploaded / current.chunksTotal) * 100)
-    }
-    if (Date.now() > deadline) {
-      throw new Error('Preparing the source is taking longer than expected.')
-    }
-    await sleep(POLL_INTERVAL_MS)
-    current = await videos.get({ videoId: video.$id })
-  }
 }
 
 export async function runCreateVideoPipeline(input: {
@@ -221,7 +163,7 @@ export async function runCreateVideoPipeline(input: {
     )
   }
 
-  // 2. Register the video.
+  // 2. Register the video (timeline generation is queued automatically).
   let video: Models.Video
   try {
     video = await runStep('create', () =>
@@ -249,43 +191,20 @@ export async function runCreateVideoPipeline(input: {
     return { video, failedSteps, renditionsQueued: 0 }
   }
 
-  // 3. Prepare the working copy.
-  let probed = false
-  try {
-    const prepared = await runStep('prepare', (onProgress) =>
-      prepareSource(projectId, video, onProgress),
-    )
-    if (prepared) {
-      video = prepared
-      probed = true
-      queryClient.setQueryData(videoKeys.detail(projectId, video.$id), video)
-    } else {
-      onStep('prepare', { status: 'skipped' })
-    }
-  } catch {
-    failedSteps.push('prepare')
-    skipRemaining()
-    return { video, failedSteps, renditionsQueued: 0 }
-  }
-
-  // 4. Timeline and renditions are independent; run both.
-  const audioOnly = probed && !video.width && !video.height
+  // 3. Timeline and renditions are independent; workers probe the source per job.
+  const audioOnly =
+    (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
   const timelineTask = options.timeline
     ? audioOnly
       ? Promise.resolve(onStep('timeline', { status: 'skipped' }))
-      : runStep('timeline', () =>
-          videos.createTimeline({ videoId: video.$id }),
-        ).then(
-          () => {
-            markTimelinePending(projectId, video.$id)
-            return queryClient.invalidateQueries({
-              queryKey: videoKeys.timeline(projectId, video.$id),
-            })
-          },
-          () => {
-            failedSteps.push('timeline')
-          },
-        )
+      : runStep('timeline', async () => {
+          markTimelinePending(projectId, video.$id)
+          await queryClient.invalidateQueries({
+            queryKey: videoKeys.timeline(projectId, video.$id),
+          })
+        }).catch(() => {
+          failedSteps.push('timeline')
+        })
     : Promise.resolve()
 
   let renditionsQueued = 0

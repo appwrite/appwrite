@@ -56,7 +56,7 @@ import {
   useProject,
   useProjectVideo,
   useVideoRenditions,
-  useVideoSubtitles,
+  useVideoCaptions,
   useVideoTimeline,
   type VideoEncodingStatus,
   type VideoTimelineCue,
@@ -81,7 +81,7 @@ export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [renditionsOpen, setRenditionsOpen] = useState(false)
-  const [subtitleOpen, setSubtitleOpen] = useState(false)
+  const [captionOpen, setCaptionOpen] = useState(false)
 
   const activeTab = useMemo<VideoTab>(() => {
     const parts = location.pathname.split('/').filter(Boolean)
@@ -110,7 +110,7 @@ export function Layout() {
       }
     : undefined
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
-  const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
+  const { data: subtitlesData } = useVideoCaptions(projectId, videoId)
   const {
     data: timeline,
     isLoading: timelineLoading,
@@ -138,7 +138,7 @@ export function Layout() {
   const actions = useMemo<VideoDetailActions>(
     () => ({
       openCreateRenditions: () => setRenditionsOpen(true),
-      openCreateSubtitle: () => setSubtitleOpen(true),
+      openCreateCaption: () => setCaptionOpen(true),
       canWrite,
       writeDisabledReason,
     }),
@@ -197,7 +197,7 @@ export function Layout() {
   }
 
   const renditions = renditionsData?.renditions ?? []
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
   const encodingStatus = getVideoEncodingStatus(renditions)
 
   const switchVideo = (nextVideoId: string) => {
@@ -309,8 +309,8 @@ export function Layout() {
         video={video}
       />
       <CreateSubtitle
-        open={subtitleOpen}
-        onOpenChange={setSubtitleOpen}
+        open={captionOpen}
+        onOpenChange={setCaptionOpen}
         projectId={projectId}
         videoId={videoId}
       />
@@ -404,7 +404,7 @@ function SubnavLink({
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -520,7 +520,7 @@ function SubnavTrailing({
 }: {
   tab: VideoTab
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -575,7 +575,7 @@ function SubnavTrailing({
         </span>
       )
     }
-    case 'subtitles':
+    case 'captions':
       if (
         subtitles.some((s) => s.status === 'pending' || s.status === 'started')
       ) {

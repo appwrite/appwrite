@@ -27,10 +27,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  useDeleteVideoSubtitle,
-  useDownloadVideoSubtitle,
-  useUpdateVideoSubtitle,
-  useVideoSubtitles,
+  useDeleteVideoCaption,
+  useDownloadVideoCaption,
+  useUpdateVideoCaption,
+  useVideoCaptions,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -39,7 +39,7 @@ import type { SubtitleDownloadFormat } from '@/lib/videos/subtitle-download'
 import { getVideoSubtitleLanguage } from '@/lib/videos/subtitle-languages'
 
 type ViewProps = {
-  initialData?: { subtitles: Models.VideoSubtitleList }
+  initialData?: { captions: Models.VideoCaptionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -49,33 +49,33 @@ export function View({ initialData }: ViewProps = {}) {
     videoId: string
   }
   const navigate = useNavigate()
-  const { openCreateSubtitle, canWrite, writeDisabledReason } =
+  const { openCreateCaption, canWrite, writeDisabledReason } =
     useVideoDetailActions()
-  const { data } = useVideoSubtitles(projectId, videoId)
-  const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
-  const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
-  const downloadSubtitle = useDownloadVideoSubtitle(projectId, videoId)
-  const [deleting, setDeleting] = useState<Models.VideoSubtitle | null>(null)
+  const { data } = useVideoCaptions(projectId, videoId)
+  const updateMutation = useUpdateVideoCaption(projectId, videoId)
+  const deleteMutation = useDeleteVideoCaption(projectId, videoId)
+  const downloadCaption = useDownloadVideoCaption(projectId, videoId)
+  const [deleting, setDeleting] = useState<Models.VideoCaption | null>(null)
 
-  const subtitles = data?.subtitles ?? initialData?.subtitles.subtitles ?? []
+  const captions = data?.captions ?? initialData?.captions.captions ?? []
 
-  const toggleDefault = (subtitle: Models.VideoSubtitle) => {
+  const toggleDefault = (caption: Models.VideoCaption) => {
     updateMutation.mutate(
-      { subtitleId: subtitle.$id, isDefault: !subtitle.default },
+      { captionId: caption.$id, isDefault: !caption.default },
       {
-        onSuccess: () => toast.success(t('Default subtitle updated')),
+        onSuccess: () => toast.success(t('Default caption updated')),
         onError: (error) =>
-          toast.error(getErrorMessage(error) || t('Failed to save subtitle')),
+          toast.error(getErrorMessage(error) || t('Failed to save caption')),
       },
     )
   }
 
   const download = (
-    subtitle: Models.VideoSubtitle,
+    caption: Models.VideoCaption,
     format: SubtitleDownloadFormat,
   ) => {
-    downloadSubtitle(subtitle, format).catch((error: unknown) =>
-      toast.error(getErrorMessage(error) || t('Failed to download subtitles')),
+    downloadCaption(caption, format).catch((error: unknown) =>
+      toast.error(getErrorMessage(error) || t('Failed to download captions')),
     )
   }
 
@@ -83,24 +83,24 @@ export function View({ initialData }: ViewProps = {}) {
     if (!deleting) return
     deleteMutation.mutate(deleting.$id, {
       onSuccess: () => {
-        toast.success(t('Subtitle deleted'))
+        toast.success(t('Caption deleted'))
         setDeleting(null)
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error) || t('Failed to delete subtitle'))
+        toast.error(getErrorMessage(error) || t('Failed to delete caption'))
       },
     })
   }
 
-  const openEditor = (subtitleId?: string) =>
+  const openEditor = (captionId?: string) =>
     void navigate(
-      subtitleId
+      captionId
         ? {
-            to: '/projects/$projectId/videos/$videoId/subtitles/$subtitleId',
-            params: { projectId, videoId, subtitleId },
+            to: '/projects/$projectId/videos/$videoId/captions/$captionId',
+            params: { projectId, videoId, captionId },
           }
         : {
-            to: '/projects/$projectId/videos/$videoId/subtitles/create',
+            to: '/projects/$projectId/videos/$videoId/captions/create',
             params: { projectId, videoId },
           },
     )
@@ -110,62 +110,62 @@ export function View({ initialData }: ViewProps = {}) {
       variant="outline"
       size="sm"
       className="h-9 text-[13px]"
-      onClick={openCreateSubtitle}
+      onClick={openCreateCaption}
       disabledReason={writeDisabledReason}
     >
-      {t('Upload subtitle')}
+      {t('Upload caption')}
     </VideoActionButton>
   )
 
-  const menuProps = (subtitle: Models.VideoSubtitle) => ({
+  const menuProps = (caption: Models.VideoCaption) => ({
     projectId,
     videoId,
-    subtitle,
+    caption,
     canWrite,
-    onOpen: () => openEditor(subtitle.$id),
-    onToggleDefault: () => toggleDefault(subtitle),
-    onDownload: (format: SubtitleDownloadFormat) => download(subtitle, format),
-    onDelete: () => openDialogAfterOverlayCloses(() => setDeleting(subtitle)),
+    onOpen: () => openEditor(caption.$id),
+    onToggleDefault: () => toggleDefault(caption),
+    onDownload: (format: SubtitleDownloadFormat) => download(caption, format),
+    onDelete: () => openDialogAfterOverlayCloses(() => setDeleting(caption)),
   })
 
   return (
     <VideoPage
-      title={t('Subtitles')}
+      title={t('Captions')}
       actions={importButton}
-      createLabel={t('Create subtitle')}
+      createLabel={t('Create caption')}
       onCreate={() => openEditor()}
       createDisabled={Boolean(writeDisabledReason)}
       createDisabledTooltip={writeDisabledReason ?? undefined}
-      hideToolbar={subtitles.length === 0}
+      hideToolbar={captions.length === 0}
     >
-      {subtitles.length === 0 ? (
+      {captions.length === 0 ? (
         <SubtitlesEmptyState
           onCreate={() => openEditor()}
-          onUpload={openCreateSubtitle}
+          onUpload={openCreateCaption}
           disabledReason={writeDisabledReason}
         />
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {subtitles.map((subtitle) => (
-            <li key={subtitle.$id}>
+          {captions.map((caption) => (
+            <li key={caption.$id}>
               <ContextMenu>
                 <ContextMenuTrigger asChild>
-                  <SubtitleRow
+                  <CaptionRow
                     projectId={projectId}
                     videoId={videoId}
-                    subtitle={subtitle}
-                    onOpen={() => openEditor(subtitle.$id)}
+                    caption={caption}
+                    onOpen={() => openEditor(caption.$id)}
                     menu={
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <RowActionsMenuTrigger
-                            aria-label={`${t('Actions for')} ${subtitle.name}`}
+                            aria-label={`${t('Actions for')} ${caption.name}`}
                           />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                           <SubtitleMenuItems
                             variant="dropdown"
-                            {...menuProps(subtitle)}
+                            {...menuProps(caption)}
                           />
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -173,7 +173,7 @@ export function View({ initialData }: ViewProps = {}) {
                   />
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-56">
-                  <SubtitleMenuItems variant="context" {...menuProps(subtitle)} />
+                  <SubtitleMenuItems variant="context" {...menuProps(caption)} />
                 </ContextMenuContent>
               </ContextMenu>
             </li>
@@ -194,24 +194,24 @@ export function View({ initialData }: ViewProps = {}) {
   )
 }
 
-function SubtitleRow({
+function CaptionRow({
   projectId,
   videoId,
-  subtitle,
+  caption,
   onOpen,
   menu,
   ...triggerProps
 }: ComponentProps<'div'> & {
   projectId: string
   videoId: string
-  subtitle: Models.VideoSubtitle
+  caption: Models.VideoCaption
   onOpen: () => void
   menu: ReactNode
 }) {
   const t = useT()
-  const language = getVideoSubtitleLanguage(subtitle.code)
+  const language = getVideoSubtitleLanguage(caption.code)
   const languageLabel =
-    language && language.name !== subtitle.name ? language.name : null
+    language && language.name !== caption.name ? language.name : null
   const native =
     language?.nativeName && language.nativeName !== language.name
       ? language.nativeName
@@ -234,18 +234,18 @@ function SubtitleRow({
         aria-hidden
         className="flex h-10 w-11 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-[11px] font-semibold uppercase text-muted-foreground"
       >
-        <span className="truncate px-1">{subtitle.code || '-'}</span>
+        <span className="truncate px-1">{caption.code || '-'}</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
-            to="/projects/$projectId/videos/$videoId/subtitles/$subtitleId"
-            params={{ projectId, videoId, subtitleId: subtitle.$id }}
+            to="/projects/$projectId/videos/$videoId/captions/$captionId"
+            params={{ projectId, videoId, captionId: caption.$id }}
             className="truncate text-[13px] font-medium text-foreground hover:underline"
           >
-            {subtitle.name}
+            {caption.name}
           </Link>
-          {subtitle.default ? (
+          {caption.default ? (
             <Badge variant="success" className="text-[10px] shrink-0">
               {t('Default')}
             </Badge>
@@ -262,13 +262,13 @@ function SubtitleRow({
           ) : null}
           {languageLabel || native ? <span aria-hidden>·</span> : null}
           <span className="shrink-0">
-            {subtitle.embedded ? t('Embedded in source') : t('Storage file')}
+            {caption.embedded ? t('Embedded in source') : t('Storage file')}
           </span>
         </p>
       </div>
-      <VideoStatusBadge status={subtitle.status} kind="subtitle" />
+      <VideoStatusBadge status={caption.status} kind="caption" />
       <DateTooltip
-        date={subtitle.$createdAt}
+        date={caption.$createdAt}
         className="hidden w-24 shrink-0 whitespace-nowrap text-end text-[12px] font-normal text-muted-foreground md:block"
       />
       <div className="shrink-0">{menu}</div>

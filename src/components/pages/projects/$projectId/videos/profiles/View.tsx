@@ -8,7 +8,7 @@ import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
 import { CreateProfile } from '../_components/CreateProfile'
 import { ProfilesListTable } from '../_components/ProfilesListTable'
 import { SpreadsheetBulkActionsBar } from '../_components/SpreadsheetBulkActionsBar'
-import { sdk } from '@/lib/appwrite/sdk'
+import { getProjectProfilesApi } from '@/lib/videos/project-profiles-api'
 import { getVideosServiceTabs } from '../_components/videos-service-tabs'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
@@ -106,9 +106,9 @@ export function View() {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (profileIds: string[]) => {
-      const videos = sdk.forProject(projectId).videos
+      const projectApi = getProjectProfilesApi(projectId)
       await Promise.all(
-        profileIds.map((profileId) => videos.deleteProfile({ profileId })),
+        profileIds.map((profileId) => projectApi.deleteProfile({ profileId })),
       )
     },
     onSuccess: async (_data, profileIds) => {
@@ -315,7 +315,7 @@ export function View() {
           </p>
           <p className="mx-auto mt-3 text-[12px] leading-relaxed text-muted-foreground">
             {t(
-              'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
+              'The console calls GET /project/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
             )}
           </p>
           {apiError?.type || apiError?.code ? (

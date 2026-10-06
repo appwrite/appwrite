@@ -11,7 +11,7 @@ export function DeleteSubtitle({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  subtitle: Pick<Models.VideoSubtitle, 'name' | 'embedded'> | null
+  subtitle: Pick<Models.VideoCaption, 'name' | 'embedded'> | null
   onConfirm: () => void
   isConfirming: boolean
 }) {
@@ -20,7 +20,7 @@ export function DeleteSubtitle({
     <ConfirmActionDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t('Delete subtitle')}
+      title={t('Delete caption')}
       description={`${t('Delete')} "${subtitle?.name ?? ''}"? ${
         subtitle?.embedded
           ? t(

@@ -1,34 +1,34 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/videos/$videoId/subtitles/View'
+import { View } from '@/components/pages/projects/$projectId/videos/$videoId/captions/View'
 import {
   projectQueryOptions,
+  videoCaptionsQueryOptions,
   videoQueryOptions,
-  videoSubtitlesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/videos/$videoId/subtitles/',
+  '/_public/projects/$projectId/videos/$videoId/captions/',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Subtitles', 'Videos') }] }),
+  head: () => ({ meta: [{ title: pageTitle('Captions', 'Videos') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
     const { projectId, videoId } = params
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const [, subtitles] = await Promise.all([
+    const [, captions] = await Promise.all([
       queryClient.ensureQueryData(videoQueryOptions(projectId, videoId)),
       queryClient.ensureQueryData(
-        videoSubtitlesQueryOptions(projectId, videoId),
+        videoCaptionsQueryOptions(projectId, videoId),
       ),
     ])
-    return { subtitles }
+    return { captions }
   },
-  component: SubtitlesPage,
+  component: CaptionsPage,
 })
 
-function SubtitlesPage() {
+function CaptionsPage() {
   const initialData = Route.useLoaderData()
   return <View initialData={initialData} />
 }

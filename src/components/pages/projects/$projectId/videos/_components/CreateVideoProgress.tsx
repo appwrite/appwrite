@@ -29,10 +29,6 @@ export const CREATE_VIDEO_STEP_COPY: Record<
     title: 'Register video',
     description: 'Create the video from the source file.',
   },
-  prepare: {
-    title: 'Prepare source',
-    description: 'Download, probe, and extract embedded subtitles.',
-  },
   timeline: {
     title: 'Generate timeline',
     description: 'Queue sprite sheet thumbnails for scrubbing previews.',
@@ -44,7 +40,7 @@ export const CREATE_VIDEO_STEP_COPY: Record<
 }
 
 /** Steps that report a meaningful percentage. */
-const PROGRESS_STEPS = new Set<CreateVideoStepId>(['import', 'upload', 'prepare'])
+const PROGRESS_STEPS = new Set<CreateVideoStepId>(['import', 'upload'])
 
 function StepIcon({ status }: { status: CreateVideoStepState['status'] }) {
   switch (status) {

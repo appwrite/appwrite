@@ -402,9 +402,9 @@ import { Route as PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImpor
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.git'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
 import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
-import { Route as PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.subtitles.index'
-import { Route as PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.subtitles.$subtitleId'
-import { Route as PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.subtitles.create'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.index'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.$captionId'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.create'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
@@ -2750,22 +2750,22 @@ const PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute =
     path: '/templates/$template',
     getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
   } as any)
-const PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute =
-  PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRouteImport.update({
-    id: '/subtitles/',
-    path: '/subtitles/',
+const PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport.update({
+    id: '/captions/',
+    path: '/captions/',
     getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
-const PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute =
-  PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRouteImport.update({
-    id: '/subtitles/$subtitleId',
-    path: '/subtitles/$subtitleId',
+const PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport.update({
+    id: '/captions/$captionId',
+    path: '/captions/$captionId',
     getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
-const PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute =
-  PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRouteImport.update({
-    id: '/subtitles/create',
-    path: '/subtitles/create',
+const PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport.update({
+    id: '/captions/create',
+    path: '/captions/create',
     getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
@@ -3714,8 +3714,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
-  '/projects/$projectId/videos/$videoId/subtitles/$subtitleId': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute
-  '/projects/$projectId/videos/$videoId/subtitles/create': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute
+  '/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -3726,7 +3726,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
-  '/projects/$projectId/videos/$videoId/subtitles/': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute
+  '/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
@@ -4121,8 +4121,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
-  '/projects/$projectId/videos/$videoId/subtitles/$subtitleId': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute
-  '/projects/$projectId/videos/$videoId/subtitles/create': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute
+  '/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -4133,7 +4133,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
-  '/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute
+  '/projects/$projectId/videos/$videoId/captions': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -4581,8 +4581,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/_public/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/_public/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
-  '/_public/projects/$projectId/videos/$videoId/subtitles/$subtitleId': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute
-  '/_public/projects/$projectId/videos/$videoId/subtitles/create': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -4593,7 +4593,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
-  '/_public/projects/$projectId/videos/$videoId/subtitles/': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
@@ -5040,8 +5040,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/git'
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/create/templates/$template'
-    | '/projects/$projectId/videos/$videoId/subtitles/$subtitleId'
-    | '/projects/$projectId/videos/$videoId/subtitles/create'
+    | '/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/projects/$projectId/videos/$videoId/captions/create'
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/projects/$projectId/databases/mysql/$databaseId/'
     | '/projects/$projectId/databases/postgres/$databaseId/'
@@ -5052,7 +5052,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments/'
     | '/projects/$projectId/sites/$siteId/domains/'
     | '/projects/$projectId/sites/$siteId/settings/'
-    | '/projects/$projectId/videos/$videoId/subtitles/'
+    | '/projects/$projectId/videos/$videoId/captions/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
@@ -5447,8 +5447,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/git'
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/create/templates/$template'
-    | '/projects/$projectId/videos/$videoId/subtitles/$subtitleId'
-    | '/projects/$projectId/videos/$videoId/subtitles/create'
+    | '/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/projects/$projectId/videos/$videoId/captions/create'
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
@@ -5459,7 +5459,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/settings'
-    | '/projects/$projectId/videos/$videoId/subtitles'
+    | '/projects/$projectId/videos/$videoId/captions'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
@@ -5906,8 +5906,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/settings/git'
     | '/_public/projects/$projectId/sites/$siteId/settings/runtime'
     | '/_public/projects/$projectId/sites/create/templates/$template'
-    | '/_public/projects/$projectId/videos/$videoId/subtitles/$subtitleId'
-    | '/_public/projects/$projectId/videos/$videoId/subtitles/create'
+    | '/_public/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/_public/projects/$projectId/videos/$videoId/captions/create'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/'
@@ -5918,7 +5918,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/deployments/'
     | '/_public/projects/$projectId/sites/$siteId/domains/'
     | '/_public/projects/$projectId/sites/$siteId/settings/'
-    | '/_public/projects/$projectId/videos/$videoId/subtitles/'
+    | '/_public/projects/$projectId/videos/$videoId/captions/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
@@ -8783,25 +8783,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
     }
-    '/_public/projects/$projectId/videos/$videoId/subtitles/': {
-      id: '/_public/projects/$projectId/videos/$videoId/subtitles/'
-      path: '/subtitles'
-      fullPath: '/projects/$projectId/videos/$videoId/subtitles/'
-      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRouteImport
+    '/_public/projects/$projectId/videos/$videoId/captions/': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/'
+      path: '/captions'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
-    '/_public/projects/$projectId/videos/$videoId/subtitles/$subtitleId': {
-      id: '/_public/projects/$projectId/videos/$videoId/subtitles/$subtitleId'
-      path: '/subtitles/$subtitleId'
-      fullPath: '/projects/$projectId/videos/$videoId/subtitles/$subtitleId'
-      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRouteImport
+    '/_public/projects/$projectId/videos/$videoId/captions/$captionId': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/$captionId'
+      path: '/captions/$captionId'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/$captionId'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
-    '/_public/projects/$projectId/videos/$videoId/subtitles/create': {
-      id: '/_public/projects/$projectId/videos/$videoId/subtitles/create'
-      path: '/subtitles/create'
-      fullPath: '/projects/$projectId/videos/$videoId/subtitles/create'
-      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRouteImport
+    '/_public/projects/$projectId/videos/$videoId/captions/create': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/create'
+      path: '/captions/create'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport
       parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
@@ -10769,9 +10769,9 @@ interface PublicProjectsProjectIdVideosVideoIdRouteChildren {
   PublicProjectsProjectIdVideosVideoIdStreamingRoute: typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
   PublicProjectsProjectIdVideosVideoIdTimelineRoute: typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   PublicProjectsProjectIdVideosVideoIdIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
-  PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute
-  PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute
-  PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
 }
 
 const PublicProjectsProjectIdVideosVideoIdRouteChildren: PublicProjectsProjectIdVideosVideoIdRouteChildren =
@@ -10788,12 +10788,12 @@ const PublicProjectsProjectIdVideosVideoIdRouteChildren: PublicProjectsProjectId
       PublicProjectsProjectIdVideosVideoIdTimelineRoute,
     PublicProjectsProjectIdVideosVideoIdIndexRoute:
       PublicProjectsProjectIdVideosVideoIdIndexRoute,
-    PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute:
-      PublicProjectsProjectIdVideosVideoIdSubtitlesSubtitleIdRoute,
-    PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute:
-      PublicProjectsProjectIdVideosVideoIdSubtitlesCreateRoute,
-    PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute:
-      PublicProjectsProjectIdVideosVideoIdSubtitlesIndexRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute,
   }
 
 const PublicProjectsProjectIdVideosVideoIdRouteWithChildren =

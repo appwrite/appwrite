@@ -23,8 +23,8 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  useCreateVideoSubtitle,
-  useUpdateVideoSubtitle,
+  useCreateVideoCaption,
+  useUpdateVideoCaption,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -41,7 +41,7 @@ type CreateSubtitleProps = {
   projectId: string
   videoId: string
   /** When set, the dialog updates this subtitle instead of creating one. */
-  subtitle?: Models.VideoSubtitle | null
+  subtitle?: Models.VideoCaption | null
 }
 
 export function CreateSubtitle({
@@ -58,8 +58,8 @@ export function CreateSubtitle({
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [isDefault, setIsDefault] = useState(false)
-  const createMutation = useCreateVideoSubtitle(projectId, videoId)
-  const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
+  const createMutation = useCreateVideoCaption(projectId, videoId)
+  const updateMutation = useUpdateVideoCaption(projectId, videoId)
   const isPending = createMutation.isPending || updateMutation.isPending
 
   useEffect(() => {
@@ -120,12 +120,12 @@ export function CreateSubtitle({
   const handleSubmit = () => {
     if (!canSubmit) return
     const onError = (error: Error) =>
-      toast.error(getErrorMessage(error) || t('Failed to save subtitle'))
+      toast.error(getErrorMessage(error) || t('Failed to save caption'))
 
     if (subtitle) {
       updateMutation.mutate(
         {
-          subtitleId: subtitle.$id,
+          captionId: subtitle.$id,
           name: name.trim(),
           code,
           isDefault,
@@ -135,7 +135,7 @@ export function CreateSubtitle({
         },
         {
           onSuccess: () => {
-            toast.success(t('Subtitle updated'))
+            toast.success(t('Caption updated'))
             onOpenChange(false)
           },
           onError,
@@ -154,7 +154,7 @@ export function CreateSubtitle({
       },
       {
         onSuccess: () => {
-          toast.success(t('Subtitle added'))
+          toast.success(t('Caption added'))
           onOpenChange(false)
         },
         onError,
@@ -168,11 +168,11 @@ export function CreateSubtitle({
         <DialogContent className="sm:max-w-md p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
-              {isUpdate ? t('Update subtitle') : t('Upload subtitle')}
+              {isUpdate ? t('Update caption') : t('Upload caption')}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'Attach a WebVTT or SRT file from Storage. Subtitles are segmented to match the stream and listed in every manifest.',
+                'Attach a WebVTT or SRT file from Storage. Captions are segmented to match the stream and listed in every manifest.',
               )}
             </DialogDescription>
           </DialogHeader>
@@ -256,10 +256,10 @@ export function CreateSubtitle({
             <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-3 py-2.5">
               <div className="min-w-0">
                 <Label htmlFor="video-subtitle-default" className="text-[13px]">
-                  {t('Default subtitle')}
+                  {t('Default caption')}
                 </Label>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  {t('Players turn this subtitle on automatically.')}
+                  {t('Players turn this caption on automatically.')}
                 </p>
               </div>
               <Switch
@@ -287,7 +287,7 @@ export function CreateSubtitle({
         open={explorerOpen}
         onOpenChange={setExplorerOpen}
         projectId={projectId}
-        title={t('Select subtitle file')}
+        title={t('Select caption file')}
         description={t(
           'Choose a bucket, then pick or upload a .vtt or .srt file.',
         )}

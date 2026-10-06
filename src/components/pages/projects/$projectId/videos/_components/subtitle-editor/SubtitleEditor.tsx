@@ -79,12 +79,12 @@ import {
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import {
-  fetchVideoSubtitleCues,
+  fetchVideoCaptionCues,
   useProjectBuckets,
   useProjectVideo,
-  useDeleteVideoSubtitle,
-  useSaveVideoSubtitleCues,
-  useUpdateVideoSubtitle,
+  useDeleteVideoCaption,
+  useSaveVideoCaptionCues,
+  useUpdateVideoCaption,
   useVideoRenditions,
   useVideoTimeline,
 } from '@/lib/react-query/hooks'
@@ -166,7 +166,7 @@ export function SubtitleEditor({
   projectId: string
   videoId: string
   /** The track being updated; omitted when creating a new one. */
-  subtitle?: Models.VideoSubtitle | null
+  subtitle?: Models.VideoCaption | null
   initialCues: SubtitleCue[]
 }) {
   const t = useT()
@@ -181,8 +181,8 @@ export function SubtitleEditor({
     0,
     100,
   )
-  const saveMutation = useSaveVideoSubtitleCues(projectId, videoId)
-  const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
+  const saveMutation = useSaveVideoCaptionCues(projectId, videoId)
+  const updateMutation = useUpdateVideoCaption(projectId, videoId)
   const saving = saveMutation.isPending || updateMutation.isPending
 
   const history = useSubtitleHistory(initialCues)
@@ -493,7 +493,7 @@ export function SubtitleEditor({
     try {
       importCues(parseSubtitleText(await file.text()))
     } catch (error) {
-      toast.error(getErrorMessage(error) || t('Failed to import subtitles'))
+      toast.error(getErrorMessage(error) || t('Failed to import captions'))
     }
   }
 
@@ -503,14 +503,14 @@ export function SubtitleEditor({
   }) => {
     try {
       importCues(
-        await fetchVideoSubtitleCues(projectId, videoId, {
+        await fetchVideoCaptionCues(projectId, videoId, {
           $id: '',
           bucketId: selection.bucketId,
           fileId: selection.fileId,
         }),
       )
     } catch (error) {
-      toast.error(getErrorMessage(error) || t('Failed to import subtitles'))
+      toast.error(getErrorMessage(error) || t('Failed to import captions'))
     }
   }
 
@@ -523,7 +523,7 @@ export function SubtitleEditor({
     )
 
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
+  const deleteMutation = useDeleteVideoCaption(projectId, videoId)
   const confirmDelete = () => {
     if (!subtitle) return
     deleteMutation.mutate(subtitle.$id, {
@@ -532,13 +532,13 @@ export function SubtitleEditor({
         setDeleteOpen(false)
         toast.success(t('Subtitle deleted'))
         void navigate({
-          to: '/projects/$projectId/videos/$videoId/subtitles',
+          to: '/projects/$projectId/videos/$videoId/captions',
           params: { projectId, videoId },
           replace: true,
         })
       },
       onError: (error) =>
-        toast.error(getErrorMessage(error) || t('Failed to delete subtitle')),
+        toast.error(getErrorMessage(error) || t('Failed to delete caption')),
     })
   }
 
@@ -570,7 +570,7 @@ export function SubtitleEditor({
   const save = () => {
     if (saveDisabledReason || saving) return
     const onError = (error: Error) =>
-      toast.error(getErrorMessage(error) || t('Failed to save subtitle'))
+      toast.error(getErrorMessage(error) || t('Failed to save caption'))
     const track = {
       name: draft.name.trim(),
       code: draft.code,
@@ -579,9 +579,9 @@ export function SubtitleEditor({
 
     if (subtitle && !history.dirty) {
       updateMutation.mutate(
-        { subtitleId: subtitle.$id, ...track },
+        { captionId: subtitle.$id, ...track },
         {
-          onSuccess: () => toast.success(t('Subtitle updated')),
+          onSuccess: () => toast.success(t('Caption updated')),
           onError,
         },
       )
@@ -590,7 +590,7 @@ export function SubtitleEditor({
 
     saveMutation.mutate(
       {
-        subtitleId: subtitle?.$id,
+        captionId: subtitle?.$id,
         cues,
         bucketId: draft.bucketId,
         ...track,
@@ -600,15 +600,15 @@ export function SubtitleEditor({
           history.markSaved()
           if (subtitle) {
             toast.success(
-              t('Subtitle saved. The track is re-packaged in the background.'),
+              t('Caption saved. The track is re-packaged in the background.'),
             )
             return
           }
-          toast.success(t('Subtitle created'))
+          toast.success(t('Caption created'))
           dirtyRef.current = false
           void navigate({
-            to: '/projects/$projectId/videos/$videoId/subtitles/$subtitleId',
-            params: { projectId, videoId, subtitleId: saved.$id },
+            to: '/projects/$projectId/videos/$videoId/captions/$captionId',
+            params: { projectId, videoId, captionId: saved.$id },
             replace: true,
           })
         },
@@ -747,16 +747,16 @@ export function SubtitleEditor({
           className="-my-1 -ms-1 h-7 w-7 shrink-0"
         >
           <Link
-            to="/projects/$projectId/videos/$videoId/subtitles"
+            to="/projects/$projectId/videos/$videoId/captions"
             params={{ projectId, videoId }}
-            aria-label={t('Back to subtitles')}
+            aria-label={t('Back to captions')}
           >
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </Button>
       </TooltipTrigger>
       <TooltipContent className="text-[12px]">
-        {t('Back to subtitles')}
+        {t('Back to captions')}
       </TooltipContent>
     </Tooltip>
   )
@@ -764,11 +764,11 @@ export function SubtitleEditor({
   const title = (
     <span className="flex min-w-0 items-center gap-2">
       <span className="truncate">
-        {isCreate ? t('New subtitle') : subtitle.name}
+        {isCreate ? t('New caption') : subtitle.name}
       </span>
       {subtitle ? (
         <span className="hidden shrink-0 sm:inline-flex">
-          <VideoStatusBadge status={subtitle.status} kind="subtitle" />
+          <VideoStatusBadge status={subtitle.status} kind="caption" />
         </span>
       ) : null}
       {dirty ? (
@@ -1054,7 +1054,7 @@ export function SubtitleEditor({
         open={storageImportOpen}
         onOpenChange={setStorageImportOpen}
         projectId={projectId}
-        title={t('Import subtitle file')}
+        title={t('Import caption file')}
         description={t('Choose a .vtt or .srt file. Its cues replace the cues in the editor.')}
         confirmLabel={t('Import')}
         accept={STORAGE_FILE_ACCEPT_SUBTITLE}
@@ -1081,7 +1081,7 @@ export function SubtitleEditor({
           if (!open && blocker.status === 'blocked') blocker.reset()
         }}
         title={t('Discard unsaved changes?')}
-        description={t('Your subtitle changes have not been saved. Leaving this page discards them.')}
+        description={t('Your caption changes have not been saved. Leaving this page discards them.')}
         confirmLabel={t('Discard')}
         confirmVariant="destructive"
         onConfirm={() => {

@@ -27,7 +27,7 @@ const STEPS: ProductEmptyStateStep[] = [
     icon: Captions,
     title: 'Ship with every stream',
     description:
-      'Subtitles are listed in the manifest, so viewers can pick a language in any player.',
+      'Captions are listed in the manifest, so viewers can pick a language in any player.',
   },
 ]
 
@@ -133,7 +133,7 @@ export function SubtitlesEmptyState({
       <ProductEmptyStateHero
         visual={<SubtitlesVisual />}
         icon={Captions}
-        title={t('Add subtitles to this video')}
+        title={t('Add captions to this video')}
         description={t(
           'Make this video accessible in every language your viewers speak. Players show the tracks you add here alongside the stream.',
         )}
@@ -144,7 +144,7 @@ export function SubtitlesEmptyState({
               disabled={Boolean(disabledReason)}
               disabledTooltip={disabledReason ? t(disabledReason) : undefined}
             >
-              {t('Create subtitle')}
+              {t('Create caption')}
             </ProductEmptyStateCreateButton>
             <VideoActionButton
               variant="outline"
@@ -152,7 +152,7 @@ export function SubtitlesEmptyState({
               onClick={onUpload}
               disabledReason={disabledReason}
             >
-              {t('Upload subtitle')}
+              {t('Upload caption')}
             </VideoActionButton>
           </>
         }

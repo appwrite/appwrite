@@ -85,6 +85,33 @@ const SOURCE_KIND_LABEL: Record<CreateVideoSourceTab, string> = {
   demo: 'Demo video by Blender Studio',
 }
 
+/** Storage bucket `maximumFileSize` API cap (5 GiB). */
+const STORAGE_BUCKET_MAXIMUM_FILE_SIZE_BYTES = 5_368_709_120
+
+function createBucketMaximumFileSizeFromPlan(
+  plan: Models.BillingPlan | null | undefined,
+): number | undefined {
+  const fileSize = plan?.fileSize
+  const fileSizeNumber =
+    fileSize == null
+      ? null
+      : typeof fileSize === 'bigint'
+        ? Number(fileSize)
+        : Number(fileSize)
+
+  if (
+    fileSizeNumber == null ||
+    !Number.isFinite(fileSizeNumber) ||
+    fileSizeNumber <= 0 ||
+    fileSizeNumber === -1
+  ) {
+    return undefined
+  }
+
+  const planBytes = fileSizeNumber * 1000 * 1000
+  return Math.min(planBytes, STORAGE_BUCKET_MAXIMUM_FILE_SIZE_BYTES)
+}
+
 type RunState = {
   steps: CreateVideoStepId[]
   states: Partial<Record<CreateVideoStepId, CreateVideoStepState>>
@@ -218,10 +245,10 @@ function CreateVideoWizard({
   }, [buckets, bucketId])
   const bucket = buckets.find((b) => b.$id === bucketId) ?? null
 
-  const planMaxFileSize =
-    plan?.fileSize && Number(plan.fileSize) > 0
-      ? Number(plan.fileSize) * 1000 * 1000
-      : undefined
+  const createBucketMaximumFileSize = useMemo(
+    () => createBucketMaximumFileSizeFromPlan(plan),
+    [plan],
+  )
   const bucketLimitReached =
     (plan?.buckets ?? 0) > 0 && bucketsTotal >= (plan?.buckets ?? 0)
   const createBucketDisabledReason = !canCreateBucket(access, features)
@@ -235,7 +262,9 @@ function CreateVideoWizard({
       sdk.forProject(projectId).storage.createBucket({
         bucketId: ID.unique(),
         name: 'Videos',
-        maximumFileSize: planMaxFileSize,
+        ...(createBucketMaximumFileSize != null
+          ? { maximumFileSize: createBucketMaximumFileSize }
+          : {}),
       }),
     onSuccess: async (created) => {
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })

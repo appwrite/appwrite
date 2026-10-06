@@ -4,7 +4,7 @@ import {
   projectQueryOptions,
   videoQueryOptions,
   videoRenditionsQueryOptions,
-  videoSubtitlesQueryOptions,
+  videoCaptionsQueryOptions,
   videoTimelineQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -17,13 +17,13 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    const [video, renditions, subtitles] = await Promise.all([
+    const [video, renditions, captions] = await Promise.all([
       queryClient.ensureQueryData(videoQueryOptions(projectId, videoId)),
       queryClient.ensureQueryData(
         videoRenditionsQueryOptions(projectId, videoId),
       ),
       queryClient.ensureQueryData(
-        videoSubtitlesQueryOptions(projectId, videoId),
+        videoCaptionsQueryOptions(projectId, videoId),
       ),
     ]).catch(() => [null, null, null] as const)
 
@@ -32,8 +32,8 @@ export const Route = createFileRoute(
       .prefetchQuery(videoTimelineQueryOptions(projectId, videoId))
       .catch(() => {})
 
-    return video && renditions && subtitles
-      ? { video, renditions, subtitles }
+    return video && renditions && captions
+      ? { video, renditions, captions }
       : undefined
   },
   component: VideoOverviewPage,

@@ -8,15 +8,15 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import {
-  useVideoSubtitleCues,
-  useVideoSubtitles,
+  useVideoCaptionCues,
+  useVideoCaptions,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { SubtitleCue } from '@/lib/videos/subtitle-cues'
 
 type ViewProps = {
   initialData?: {
-    subtitle: Models.VideoSubtitle | null
+    caption: Models.VideoCaption | null
     cues: SubtitleCue[] | null
   }
 }
@@ -25,19 +25,19 @@ const NO_CUES: SubtitleCue[] = []
 
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
-  const { projectId, videoId, subtitleId } = useParams({
+  const { projectId, videoId, captionId } = useParams({
     strict: false,
-  }) as { projectId: string; videoId: string; subtitleId: string }
-  const { data: subtitlesData, isLoading: subtitlesLoading } =
-    useVideoSubtitles(projectId, videoId)
-  const subtitle =
-    subtitlesData?.subtitles.find((item) => item.$id === subtitleId) ??
-    initialData?.subtitle ??
+  }) as { projectId: string; videoId: string; captionId: string }
+  const { data: captionsData, isLoading: captionsLoading } =
+    useVideoCaptions(projectId, videoId)
+  const caption =
+    captionsData?.captions.find((item) => item.$id === captionId) ??
+    initialData?.caption ??
     null
 
   // Saving points the track at a new file; keep reading the file the editor opened with.
-  const [loadTarget] = useState(subtitle)
-  const cuesQuery = useVideoSubtitleCues(projectId, videoId, loadTarget)
+  const [loadTarget] = useState(caption)
+  const cuesQuery = useVideoCaptionCues(projectId, videoId, loadTarget)
   const [startCues, setStartCues] = useState<SubtitleCue[] | null>(
     () => initialData?.cues ?? null,
   )
@@ -46,23 +46,23 @@ export function View({ initialData }: ViewProps = {}) {
   const backAction = (
     <Button asChild variant="outline" size="sm" className="h-9 text-[13px]">
       <Link
-        to="/projects/$projectId/videos/$videoId/subtitles"
+        to="/projects/$projectId/videos/$videoId/captions"
         params={{ projectId, videoId }}
       >
-        {t('Back to subtitles')}
+        {t('Back to captions')}
       </Link>
     </Button>
   )
 
-  if (!subtitle) {
-    if (subtitlesLoading) return null
+  if (!caption) {
+    if (captionsLoading) return null
     return (
-      <VideoPage title={t('Subtitle editor')}>
+      <VideoPage title={t('Caption editor')}>
         <EmptyState
           icon={Captions}
-          title={t('Subtitle not found')}
+          title={t('Caption not found')}
           description={t(
-            'This subtitle may have been deleted. Go back to the list to pick another track.',
+            'This caption may have been deleted. Go back to the list to pick another track.',
           )}
           isEmpty
           hasFilters={false}
@@ -84,14 +84,14 @@ export function View({ initialData }: ViewProps = {}) {
       )
     }
     return (
-      <VideoPage title={subtitle.name}>
+      <VideoPage title={caption.name}>
         <EmptyState
           icon={Captions}
           title={t("Couldn't load this track")}
           description={`${
-            subtitle.embedded && subtitle.status !== 'ready'
+            caption.embedded && caption.status !== 'ready'
               ? t('Embedded tracks can be read once they are packaged.')
-              : t('The subtitle file could not be read.')
+              : t('The caption file could not be read.')
           } ${getErrorMessage(cuesQuery.error) ?? ''}`.trim()}
           isEmpty
           hasFilters={false}
@@ -124,7 +124,7 @@ export function View({ initialData }: ViewProps = {}) {
     <SubtitleEditor
       projectId={projectId}
       videoId={videoId}
-      subtitle={subtitle}
+      subtitle={caption}
       initialCues={initialCues}
     />
   )

@@ -44,12 +44,12 @@ import {
   SUBTITLE_DOWNLOAD_FORMATS,
   type SubtitleDownloadFormat,
 } from '@/lib/videos/subtitle-download'
-import { getVideoSubtitleManifestUrl } from '@/lib/videos/urls'
+import { getVideoCaptionManifestUrl } from '@/lib/videos/urls'
 
-const SUBTITLE_OUTPUTS = [
-  { id: 'hls', label: 'Copy HLS subtitle URL' },
-  { id: 'dash', label: 'Copy DASH subtitle URL' },
-  { id: 'cmaf', label: 'Copy CMAF subtitle URL' },
+const CAPTION_OUTPUTS = [
+  { id: 'hls', label: 'Copy HLS caption URL' },
+  { id: 'dash', label: 'Copy DASH caption URL' },
+  { id: 'cmaf', label: 'Copy CMAF caption URL' },
 ] as const
 
 const PRIMITIVES = {
@@ -77,7 +77,7 @@ export function SubtitleMenuItems({
   variant,
   projectId,
   videoId,
-  subtitle,
+  caption,
   canWrite,
   onOpen,
   onToggleDefault,
@@ -87,7 +87,7 @@ export function SubtitleMenuItems({
   variant: 'context' | 'dropdown'
   projectId: string
   videoId: string
-  subtitle: Models.VideoSubtitle
+  caption: Models.VideoCaption
   canWrite: boolean
   onOpen: () => void
   onToggleDefault: () => void
@@ -96,10 +96,10 @@ export function SubtitleMenuItems({
 }) {
   const t = useT()
   const { Item, Separator, Sub, SubTrigger, SubContent } = PRIMITIVES[variant]
-  const ready = subtitle.status === 'ready'
-  const hasFile = !subtitle.embedded && !!subtitle.fileId
+  const ready = caption.status === 'ready'
+  const hasFile = !caption.embedded && !!caption.fileId
   const editorHref = buildConsoleUrl(
-    `/projects/${projectId}/videos/${videoId}/subtitles/${subtitle.$id}`,
+    `/projects/${projectId}/videos/${videoId}/captions/${caption.$id}`,
   )
 
   const row = (icon: LucideIcon, label: ReactNode) => (
@@ -114,7 +114,7 @@ export function SubtitleMenuItems({
       <Item onSelect={onOpen}>{row(SquarePen, t('Open in editor'))}</Item>
       <Separator />
       <Item disabled={!canWrite} onSelect={onToggleDefault}>
-        {subtitle.default
+        {caption.default
           ? row(StarOff, t('Remove default'))
           : row(Star, t('Make default'))}
       </Item>
@@ -122,26 +122,26 @@ export function SubtitleMenuItems({
       <Sub>
         <SubTrigger>{row(Copy, t('Copy'))}</SubTrigger>
         <SubContent className="w-60">
-          <Item onSelect={() => copyToClipboard(t('ID'), subtitle.$id)}>
+          <Item onSelect={() => copyToClipboard(t('ID'), caption.$id)}>
             {row(Copy, t('Copy ID'))}
           </Item>
-          <Item onSelect={() => copyToClipboard(t('Name'), subtitle.name)}>
+          <Item onSelect={() => copyToClipboard(t('Name'), caption.name)}>
             {row(Copy, t('Copy name'))}
           </Item>
           <Item onSelect={() => copyToClipboard(t('Link'), editorHref)}>
             {row(Link2, t('Copy link'))}
           </Item>
-          {SUBTITLE_OUTPUTS.map((output) => (
+          {CAPTION_OUTPUTS.map((output) => (
             <Item
               key={output.id}
               disabled={!ready}
               onSelect={() =>
                 copyToClipboard(
-                  t('Subtitle URL'),
-                  getVideoSubtitleManifestUrl(
+                  t('Caption URL'),
+                  getVideoCaptionManifestUrl(
                     projectId,
                     videoId,
-                    subtitle.$id,
+                    caption.$id,
                     output.id,
                   ),
                 )
@@ -150,7 +150,7 @@ export function SubtitleMenuItems({
               {row(ListVideo, t(output.label))}
             </Item>
           ))}
-          <Item onSelect={() => void copyResourceAsJson(() => subtitle)}>
+          <Item onSelect={() => void copyResourceAsJson(() => caption)}>
             {row(FileJson, t('Copy as JSON'))}
           </Item>
         </SubContent>
@@ -174,14 +174,14 @@ export function SubtitleMenuItems({
             openInNewTab(
               withAdminMode(
                 sdk.forProject(projectId).storage.getFileView({
-                  bucketId: subtitle.bucketId,
-                  fileId: subtitle.fileId,
+                  bucketId: caption.bucketId,
+                  fileId: caption.fileId,
                 }),
               ),
             )
           }
         >
-          {row(FileText, t('Open subtitle file'))}
+          {row(FileText, t('Open caption file'))}
         </Item>
       ) : null}
       <Item onSelect={() => openInNewTab(editorHref)}>
