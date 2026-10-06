@@ -470,6 +470,9 @@ abstract class Scope extends TestCase
             return $request;
         }
 
+        // Signatures cover the delivered bytes; re-encoding the decoded data turns `{}` into `[]`.
+        $request['body'] = $request['data'];
+
         $decoded = json_decode($request['data'], true);
         if (json_last_error() === JSON_ERROR_NONE) {
             $request['data'] = $decoded;
