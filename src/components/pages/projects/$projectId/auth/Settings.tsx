@@ -122,7 +122,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
   const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
-  const passkeysAllowed = useProjectPasskeysAllowed(projectId)
+  const passkeysAllowed = useProjectPasskeysAllowed()
   const visibleAuthMethods = useMemo(
     () =>
       AUTH_METHODS.filter(

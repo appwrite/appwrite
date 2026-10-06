@@ -117,7 +117,7 @@ function PoliciesLayoutContent({
   const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
     usePoliciesSettingsSearch()
 
-  const passkeysAllowed = useProjectPasskeysAllowed(projectId)
+  const passkeysAllowed = useProjectPasskeysAllowed()
 
   const navItems = useMemo(
     () =>

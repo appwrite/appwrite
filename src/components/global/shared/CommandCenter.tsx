@@ -354,9 +354,7 @@ export function CommandCenter({
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
-  const projectPasskeys = useProjectPasskeysAllowed(
-    isProjectContext ? projectId : undefined,
-  )
+  const projectPasskeys = useProjectPasskeysAllowed()
   const accountPasskeys = useAccountPasskeysAllowed()
   const postgresSqlEditorActions = usePostgresSqlEditorActions()
 

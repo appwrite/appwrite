@@ -5,7 +5,7 @@ import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { canUseProjectPasskeys } from '@/lib/passkeys'
 import {
-  organizationQueryOptions,
+  ensureConsoleAccountQueryData,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
@@ -36,13 +36,10 @@ export const Route = createFileRoute(
       projectQueryOptions(projectId).queryKey,
     )
     const features = getActiveProfileFeatures()
-    const organization =
-      features.passkeysFlag && project?.teamId
-        ? await queryClient
-            .ensureQueryData(organizationQueryOptions(project.teamId))
-            .catch(() => null)
-        : null
-    if (!canUseProjectPasskeys(features, organization?.prefs)) {
+    const account = features.passkeysFlag
+      ? await ensureConsoleAccountQueryData(queryClient).catch(() => null)
+      : null
+    if (!canUseProjectPasskeys(features, account?.prefs)) {
       throw redirect({
         to: '/projects/$projectId/auth/policies/sessions',
         params: { projectId },

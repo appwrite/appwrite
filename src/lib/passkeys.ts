@@ -2,26 +2,25 @@ import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import type { Translator } from '@/lib/i18n/translate'
-import { parsePasskeysFlag } from '@/lib/team-prefs-keys'
+import { parsePasskeysFlag } from '@/lib/user-prefs-keys'
 
 type Prefs = Record<string, unknown> | null | undefined
 
-/** Project passkeys: Cloud allows them only for organizations carrying the rollout flag. */
+/** On Cloud, passkeys show only to console users whose prefs carry the rollout flag. */
 export function canUseProjectPasskeys(
   features: ConsoleProfileFeatures,
-  organizationPrefs: Prefs,
+  accountPrefs: Prefs,
 ): boolean {
-  return !features.passkeysFlag || parsePasskeysFlag(organizationPrefs)
+  return !features.passkeysFlag || parsePasskeysFlag(accountPrefs)
 }
 
-/** Console passkeys: Cloud allows them only for users carrying the rollout flag. */
+/** Console passkeys need the profile feature as well as the rollout flag. */
 export function canUseAccountPasskeys(
   features: ConsoleProfileFeatures,
   accountPrefs: Prefs,
 ): boolean {
   return (
-    features.accountPasskeys &&
-    (!features.passkeysFlag || parsePasskeysFlag(accountPrefs))
+    features.accountPasskeys && canUseProjectPasskeys(features, accountPrefs)
   )
 }
 

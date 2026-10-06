@@ -38,9 +38,8 @@ export type ConsoleProfileFeatures = {
   /** Console passkeys (sign in with a passkey, manage the account's passkeys) */
   accountPasskeys: boolean
   /**
-   * Passkeys follow Cloud's rollout flag (`flags-passkeys` in the organization's
-   * prefs for project passkeys, in the user's prefs for console passkeys).
-   * Self-hosted servers do not gate passkeys.
+   * Passkeys show only to console users whose prefs carry Cloud's rollout flag
+   * (`flags-passkeys`). Off on self-hosted, where passkeys always show.
    */
   passkeysFlag: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */

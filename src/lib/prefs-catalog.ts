@@ -16,10 +16,7 @@ import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-refer
 import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
-import {
-  PREFS_KEY_PASSKEYS_FLAG,
-  TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
-} from '@/lib/team-prefs-keys'
+import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
 import {
   USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
   USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
@@ -87,6 +84,7 @@ import {
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_VIDEOS_PLAYER,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
+  USER_PREFS_KEY_PASSKEYS_FLAG,
 } from '@/lib/user-prefs-keys'
 
 export type PrefsCatalogScope = 'account' | 'team' | 'both'
@@ -670,10 +668,10 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
   // Cloud flags (written by Cloud's task-manage-flags, read-only here)
   {
     id: 'passkeysFlag',
-    scope: 'both',
-    key: PREFS_KEY_PASSKEYS_FLAG,
+    scope: 'account',
+    key: USER_PREFS_KEY_PASSKEYS_FLAG,
     description:
-      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: org prefs allow project passkeys, account prefs allow console passkeys.",
+      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: shows project and account passkeys to this user.",
     category: 'Cloud flags',
   },
 ] as const

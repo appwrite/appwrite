@@ -278,7 +278,7 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
   const showOAuth2Server = canShowProjectOAuth2Server(access, features)
-  const passkeysAllowed = useProjectPasskeysAllowed(projectId)
+  const passkeysAllowed = useProjectPasskeysAllowed()
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE

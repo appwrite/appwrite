@@ -12,8 +12,8 @@ import { expect, test } from './fixtures'
  * asserted: what the policy card reads back, what its Update button sends, and that
  * the Passkey auth method only becomes switchable once the policy is configured.
  *
- * On Cloud, passkeys are rolled out per organization: only an organization whose
- * prefs carry `flags-passkeys` sees them. Self-hosted servers do not gate them.
+ * On Cloud, passkeys are rolled out per user: only a console user whose prefs
+ * carry `flags-passkeys` sees them. Self-hosted consoles always show them.
  */
 
 const NOW = '2026-09-09T09:30:00.000+00:00'
@@ -111,7 +111,7 @@ const ACCOUNT = {
   emailVerification: true,
   phoneVerification: false,
   mfa: false,
-  prefs: {},
+  prefs: { [PASSKEYS_FLAG]: true },
   targets: [],
   accessedAt: NOW,
 } satisfies Partial<Models.User<Models.Preferences>>
@@ -124,7 +124,7 @@ const ORGANIZATION = {
   billingPlan: 'tier-0',
   billingEmail: ACCOUNT.email,
   status: 'active',
-  prefs: { [PASSKEYS_FLAG]: true },
+  prefs: {},
 } satisfies Partial<Models.Organization<Models.Preferences>>
 
 const PROJECT_ID = 'proj0000000000000000001'
@@ -161,8 +161,8 @@ function project() {
 
 type MockOptions = {
   policy?: PasskeyPolicy
-  /** The organization's prefs; carries the passkeys flag by default. */
-  organizationPrefs?: Models.Preferences
+  /** The console user's prefs; carries the passkeys flag by default. */
+  accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
   patchError?: { message: string; code: number; type: string }
 }
@@ -193,10 +193,7 @@ async function mockAppwriteApi(
 ): Promise<Calls> {
   let policy = options.policy ?? CONFIGURED
   const projectDocument = project()
-  const organization = {
-    ...ORGANIZATION,
-    prefs: options.organizationPrefs ?? ORGANIZATION.prefs,
-  }
+  const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = { policyPatches: [], methodPatches: [] }
 
@@ -230,8 +227,8 @@ async function mockAppwriteApi(
       return json(200, projectDocument)
     }
 
-    if (apiPath === '/account') return json(200, ACCOUNT)
-    if (apiPath === '/account/prefs') return json(200, {})
+    if (apiPath === '/account') return json(200, account)
+    if (apiPath === '/account/prefs') return json(200, account.prefs)
     if (apiPath === '/account/sessions')
       return json(200, { total: 0, sessions: [] })
     if (apiPath === '/health/version') return json(200, { version: '1.8.0' })
@@ -254,12 +251,12 @@ async function mockAppwriteApi(
     )
       return json(200, { roles: OWNER_ROLES, scopes: OWNER_SCOPES })
     if (apiPath === '/organizations' || apiPath === '/teams')
-      return json(200, { total: 1, teams: [organization] })
+      return json(200, { total: 1, teams: [ORGANIZATION] })
     if (
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
-      return json(200, organization)
+      return json(200, ORGANIZATION)
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
@@ -532,11 +529,11 @@ test.describe('passkeys (mocked API)', () => {
     expect(calls.methodPatches[0].postDataJSON()).toEqual({ enabled: true })
   })
 
-  test('organizations without the passkeys flag see no passkey settings', async ({
+  test('users without the passkeys flag see no passkey settings', async ({
     page,
   }) => {
     await useProfile(page, 'cloud')
-    await mockAppwriteApi(page, { organizationPrefs: {} })
+    await mockAppwriteApi(page, { accountPrefs: {} })
 
     await openAuthSettings(page)
     await expect(page.locator('#jwt')).toBeVisible()
@@ -566,7 +563,7 @@ test.describe('passkeys (mocked API)', () => {
     page,
   }) => {
     await useProfile(page, 'self-hosted')
-    await mockAppwriteApi(page, { policy: CONFIGURED, organizationPrefs: {} })
+    await mockAppwriteApi(page, { policy: CONFIGURED, accountPrefs: {} })
 
     await openPasskeyPolicies(page)
     await expect(rpIdInput(page)).toHaveValue('example.com')
