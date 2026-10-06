@@ -188,13 +188,22 @@ class Update extends Action
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
-            try {
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committing'])
-                ));
+            $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
+                $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
+                if ($current->getAttribute('status', '') !== 'pending') {
+                    return new Document();
+                }
+
+                return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
+            }));
+
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            try {
                 $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     Query::orderAsc(),
