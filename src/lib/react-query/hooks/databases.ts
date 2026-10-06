@@ -507,7 +507,7 @@ function readProductDatabaseSpecification(db: Models.Database): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
-function readProductDatabaseLifecycleStatus(
+export function readProductDatabaseLifecycleStatus(
   db: Models.Database,
 ): string | null {
   const value = db.status as unknown
@@ -517,8 +517,12 @@ function readProductDatabaseLifecycleStatus(
   if (value && typeof value === 'object') {
     const status = value as Models.DatabaseStatus
     if (status.ready === true) return 'ready'
-    if (status.health === 'unhealthy') return 'failed'
-    if (status.health === 'degraded') return 'provisioning'
+    // `health` is a live probe: new compute reads unhealthy until its pods come
+    // up. Only `error` or a failed container means the backing has failed.
+    if (db.error?.trim() || db.containerStatus === 'failed') return 'failed'
+    if (status.health === 'unhealthy' || status.health === 'degraded') {
+      return 'provisioning'
+    }
   }
   return null
 }
