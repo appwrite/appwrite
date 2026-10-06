@@ -24,18 +24,30 @@ Add a new `POST` route to handle the redirect.
 ```js
 // src/pages/oauth.js
 
+import crypto from "node:crypto";
 import { createAdminClient } from "../server/appwrite";
 import { OAuthProvider } from "node-appwrite";
 
-export const POST = async ({ redirect, url }) => {
+export const POST = async ({ redirect, url, cookies }) => {
   // Create the Appwrite client
   const { account } = createAdminClient();
+
+  // A random value only this browser will hold, checked in the callback
+  const state = crypto.randomBytes(32).toString("hex");
+  cookies.set("oauth-state", state, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    maxAge: 600,
+  });
 
   // Create an OAuth token
   const redirectUrl = await account.createOAuth2Token({
     provider: OAuthProvider.Github,
     success: `${url.origin}/oauth`,
-    failure: `${url.origin}/signup`
+    failure: `${url.origin}/signup`,
+    state: state,
   });
 
   // Redirect the end-user to the OAuth2 provider authentication
@@ -43,7 +55,7 @@ export const POST = async ({ redirect, url }) => {
 };
 ```
 
-The `createOAuth2Token` method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the `/oauth` route with the `userId` and `secret` URL query parameters.
+The `createOAuth2Token` method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the `/oauth` route with the `userId`, `secret` and `state` URL query parameters. The `state` is the value stored in the `oauth-state` cookie, which lets the callback check that this browser started the sign-in.
 
 Create a new `GET` route to handle the callback and create a session for the user.
 
@@ -59,6 +71,14 @@ export const GET = async ({ redirect, cookies, url }) => {
   // Get the user ID and secret from the URL
   const userId = url.searchParams.get("userId");
   const secret = url.searchParams.get("secret");
+  const state = url.searchParams.get("state");
+
+  // Only accept a sign-in this browser started
+  const expected = cookies.get("oauth-state")?.value;
+  cookies.delete("oauth-state", { path: "/" });
+  if (!expected || state !== expected) {
+    return redirect("/signup");
+  }
 
   // Create the Appwrite client
   const { account } = createAdminClient();

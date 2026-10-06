@@ -118,6 +118,7 @@ Errors found when using Appwrite Authentication.
 | 401  | user_session_already_exists | Creation of anonymous users is prohibited when a session is active. |
 | 401  | user_unauthorized | The current user is not authorized to perform the requested action. |
 | 401  | user_oauth2_unauthorized | OAuth2 provider rejected the unauthorized request. |
+| 401  | user_oauth2_state_invalid | The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again. |
 | 401  | team_invalid_secret | The team invitation secret is invalid. Please request a new invitation and try again. |
 | 401  | team_invite_mismatch | The invite does not belong to the current user. |
 | 404  | user_not_found | User with the requested ID could not be found. |
