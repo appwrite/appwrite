@@ -114,12 +114,6 @@ export const convexAlternativeContent: AlternativeContent = {
       href: '/blog/post/appwrite-vs-convex-ai-agents',
     },
     {
-      kind: 'blog',
-      title: 'The rise of agent-native backend platforms',
-      description: 'What an agent needs from a backend, and who delivers it.',
-      href: '/blog/post/agent-native-backend-platforms',
-    },
-    {
       kind: 'product',
       title: 'Appwrite Realtime',
       description: 'Live events from every service over one socket.',
