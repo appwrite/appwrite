@@ -1730,35 +1730,13 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
-        $limit = 1000;
-        $sum = $limit;
-        $cursor = null;
-
         $start = \microtime(true);
 
-        while ($sum === $limit) {
-
-            $queries = \array_merge([Query::limit($limit)], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
+        foreach ($database->iterate($collection, [Query::limit(1000), ...$queries]) as $document) {
+            if ($callback !== null) {
+                $callback($document);
             }
-
-            $results = $database->find($collection, $queries);
-
-            $sum = \count($results);
-
-            if ($sum > 0) {
-                $cursor = $results[$sum - 1];
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-
-                $count++;
-            }
+            $count++;
         }
 
         $end = \microtime(true);
