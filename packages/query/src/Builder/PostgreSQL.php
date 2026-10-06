@@ -80,6 +80,8 @@ class PostgreSQL extends SQL implements
         upsertSelect as private baseUpsertSelect;
     }
 
+    private const string PLAIN_ARRAY_ELEMENT_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+
     protected string $wrapChar = '"';
 
     #[\Override]
@@ -620,7 +622,11 @@ class PostgreSQL extends SQL implements
 
     private function quoteArrayElement(string $element): string
     {
-        if (\preg_match('/^[A-Za-z0-9_]+$/', $element) === 1 && \strcasecmp($element, 'NULL') !== 0) {
+        $isPlain = $element !== ''
+            && \strspn($element, self::PLAIN_ARRAY_ELEMENT_CHARACTERS) === \strlen($element)
+            && \strcasecmp($element, 'NULL') !== 0;
+
+        if ($isPlain) {
             return $element;
         }
 

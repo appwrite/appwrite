@@ -864,18 +864,34 @@ class PostgreSQLIntegrationTest extends IntegrationTestCase
         }
     }
 
-    public function testJsonbSetPathWritesKeyContainingArraySyntax(): void
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function jsonPathKeyProvider(): array
+    {
+        return [
+            'comma' => ['a,b'],
+            'closing brace' => ['a}'],
+            'double quote' => ['a"b'],
+            'trailing newline' => ["a\n"],
+            'leading space' => [' a'],
+            'null keyword' => ['NULL'],
+        ];
+    }
+
+    #[DataProvider('jsonPathKeyProvider')]
+    public function testJsonbSetPathWritesOnlyTheNamedKey(string $key): void
     {
         $this->createObjectDocuments();
 
         $update = new Builder()
             ->from('documents')
-            ->setJsonPath('meta', '$.a,b', 'v')
+            ->setJsonPath('meta', '$.' . $key, 'v')
             ->filter([Query::equal('id', [1])])
             ->update();
         $this->executeOnPostgres($update);
 
-        $this->assertSame([1], $this->findObjectDocuments(Query::equal('meta.a,b', ['v'])));
+        $this->assertSame([1], $this->findObjectDocuments(Query::equal('meta.' . $key, ['v'])));
         $this->assertSame([1], $this->findObjectDocuments(Query::equal('meta.a', ['x'])));
     }
 
