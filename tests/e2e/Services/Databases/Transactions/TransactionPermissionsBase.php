@@ -440,6 +440,12 @@ trait TransactionPermissionsBase
             'required' => false,
         ]);
         $this->assertEquals(202, $attribute['headers']['status-code']);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'string'), $admin, [
+            'key' => 'category',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $admin, [
             $this->getRelatedIdParam() => $childId,
             'type' => 'oneToOne',
@@ -455,7 +461,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(201, $childRecord['headers']['status-code']);
         $parentRecord = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $admin, [
             $this->getRecordIdParam() => ID::unique(),
-            'data' => ['count' => 1, 'child' => $childRecord['body']['$id']],
+            'data' => ['count' => 1, 'category' => 'active', 'child' => $childRecord['body']['$id']],
         ]);
         $this->assertEquals(201, $parentRecord['headers']['status-code']);
         $recordId = $parentRecord['body']['$id'];
@@ -479,6 +485,8 @@ trait TransactionPermissionsBase
         ]);
         $this->assertEquals(200, $staged['headers']['status-code']);
         $this->assertEquals(4, $staged['body']['count']);
+        $this->assertEquals('Title', $staged['body']['child']['title']);
+        $this->assertArrayNotHasKey('note', $staged['body']['child']);
 
         $staged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $parentId, $recordId), $admin, [
             'transactionId' => $transactionId,
@@ -487,6 +495,16 @@ trait TransactionPermissionsBase
         $this->assertEquals(200, $staged['headers']['status-code']);
         $this->assertEquals('Title', $staged['body']['child']['title']);
         $this->assertArrayNotHasKey('note', $staged['body']['child']);
+
+        // Test for SUCCESS: filters on attributes the increment did not touch still count the row.
+        $list = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $parentId), $admin, [
+            'transactionId' => $transactionId,
+            'queries' => [Query::equal('category', ['active'])->toString()],
+        ]);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body'][$this->getRecordResource()]);
+        $this->assertEquals(4, $list['body'][$this->getRecordResource()][0]['count']);
     }
 
     /**

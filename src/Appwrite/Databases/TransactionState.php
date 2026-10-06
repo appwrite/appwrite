@@ -201,7 +201,7 @@ class TransactionState
         $committedDocs = $dbForDatabases->find($collectionId, $queries);
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
-            $committedDocIds[$doc->getId()] = true;
+            $committedDocIds[$doc->getId()] = $doc;
         }
 
         $adjustedCount = $baseCount;
@@ -219,7 +219,10 @@ class TransactionState
                 }
             } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 $wasInResults = isset($committedDocIds[$docId]);
-                $nowMatches = $this->documentMatchesFilters($docState['document'], $filters);
+                $current = $wasInResults
+                    ? new Document(\array_merge($committedDocIds[$docId]->getArrayCopy(), $docState['document']->getArrayCopy()))
+                    : $docState['document'];
+                $nowMatches = $this->documentMatchesFilters($current, $filters);
 
                 if (!$wasInResults && $nowMatches && $docState['action'] === 'upsert') {
                     $adjustedCount++;
@@ -604,10 +607,7 @@ class TransactionState
             if ($query->getMethod() === Query::TYPE_SELECT) {
                 $values = $query->getValues();
                 foreach ($values as $value) {
-                    // Skip relationship selections (containing '.')
-                    if (!\str_contains($value, '.')) {
-                        $selections[] = $value;
-                    }
+                    $selections[] = \explode('.', $value)[0];
                 }
             }
         }
