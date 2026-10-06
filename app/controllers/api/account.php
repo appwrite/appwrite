@@ -1481,7 +1481,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             'failure' => $failure,
             'token' => false,
             'nonce' => $nonce,
-            'appState' => $state,
+            'state' => $state,
         ], $scopes);
 
         $response
@@ -1679,14 +1679,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failure = URLParser::parse($state['failure']);
         }
 
-        $appState = \is_string($state['appState'] ?? null) ? $state['appState'] : '';
-
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback, $appState) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback, $state) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
-                if ($appState !== '') {
-                    $query['state'] = $appState;
+                if (\is_string($state['state'] ?? null) && $state['state'] !== '') {
+                    $query['state'] = $state['state'];
                 }
                 $query['error'] = json_encode([
                     'message' => $exception->getMessage(),
@@ -2329,8 +2327,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        if ($appState !== '') {
-            $query['state'] = $appState;
+        if (\is_string($state['state'] ?? null) && $state['state'] !== '') {
+            $query['state'] = $state['state'];
         }
 
         $state['success']['query'] = URLParser::unparseQuery($query);
@@ -2436,7 +2434,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
-            'appState' => $state,
+            'state' => $state,
         ], $scopes);
 
         $loginURL = $oauth2->getLoginURL();
