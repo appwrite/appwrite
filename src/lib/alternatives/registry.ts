@@ -9,6 +9,9 @@ export const ALTERNATIVE_IDS = [
   'auth0',
   'convex',
   'cloudinary',
+  'clerk',
+  'amplify',
+  'planetscale',
 ] as const satisfies readonly AlternativeId[]
 
 /** Month the competitor facts on these pages were last checked against public sources. */
@@ -107,6 +110,41 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     tone: 'mint',
     secondaryTone: 'pink',
     focusProduct: 'storage',
+  },
+  clerk: {
+    id: 'clerk',
+    name: 'Clerk',
+    category: 'User management and authentication',
+    metaTitle: 'Appwrite Auth vs Clerk: an open-source Clerk alternative',
+    metaDescription:
+      'Compare Appwrite Auth and Clerk. 200K monthly active users on Pro, then $3 per 1,000, MFA on every plan, and your users stored next to your data in one open-source backend.',
+    summary: 'Users and data in one place, no webhooks to sync.',
+    tone: 'purple',
+    secondaryTone: 'pink',
+    focusProduct: 'auth',
+  },
+  amplify: {
+    id: 'amplify',
+    name: 'AWS Amplify',
+    category: 'Full-stack framework on AWS',
+    metaTitle: 'Appwrite vs AWS Amplify: an open-source Amplify alternative',
+    metaDescription:
+      'Compare Appwrite and AWS Amplify. One open-source backend with auth, databases, storage, functions, messaging, and hosting, one Console, and one bill instead of a stack of AWS services.',
+    summary: 'One project instead of a stack of AWS services.',
+    tone: 'orange',
+    secondaryTone: 'mint',
+  },
+  planetscale: {
+    id: 'planetscale',
+    name: 'PlanetScale',
+    category: 'Managed MySQL and Postgres',
+    metaTitle: 'Appwrite vs PlanetScale: managed PostgreSQL and MySQL plus a complete backend',
+    metaDescription:
+      'Compare Appwrite and PlanetScale. Managed PostgreSQL and MySQL with replicas and PITR, three more database models, a free plan, and auth, storage, functions, and hosting in one open-source project.',
+    summary: 'Postgres and MySQL, plus the backend around them.',
+    tone: 'mint',
+    secondaryTone: 'purple',
+    focusProduct: 'postgres',
   },
 }
 

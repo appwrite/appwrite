@@ -497,7 +497,7 @@ export function ConvexComparison() {
         <div className={comparisonHeroCenteredClassName}>
           <VersusPill name="Convex" />
           <ComparisonHeroTitle
-            className="mx-auto mt-7 max-w-4xl lg:pb-1.5 lg:leading-[1.06]"
+            className="mx-auto mt-7 max-w-4xl lg:pb-1.5 lg:text-[56px] lg:leading-[1.06] xl:text-[64px]"
             title="Reactive everywhere."
             accent="Open by design."
           />
@@ -542,7 +542,7 @@ export function ConvexComparison() {
       <DatabaseModelsSection
         id="convex"
         title="More than one way to model your data"
-        description="Convex stores everything as documents on its own serverless database. Appwrite gives you five database models in one project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL."
+        description="Convex stores everything as documents on its own serverless database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute."
       />
 
       <PlatformBreadthSection

@@ -145,7 +145,7 @@ export const neonAlternativeContent: AlternativeContent = {
     {
       question: 'Does Neon support databases other than PostgreSQL?',
       answer:
-        'No. Every Neon database is PostgreSQL on serverless compute. Appwrite runs managed PostgreSQL and MySQL on dedicated compute, plus TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, so you get five database models in one project.',
+        'No. Every Neon database is PostgreSQL on serverless compute. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.',
       links: [{ label: 'Appwrite Databases', href: '/products/databases' }],
     },
     {
@@ -182,7 +182,7 @@ export const neonAlternativeContent: AlternativeContent = {
     {
       question: 'What does managed PostgreSQL cost on Appwrite?',
       answer:
-        'Dedicated compute starts at $10/mo per database, and every Pro plan includes $10/mo in compute credits. High availability replicas add 50% of the base tier each, and point-in-time recovery adds 20%. Managed databases need a paid plan.',
+        'Dedicated compute starts at $10/mo per database, and every Pro plan includes $10/mo in compute credits. Each high availability replica is billed at the full compute tier price, and point-in-time recovery adds 20%. Managed databases need a paid plan.',
       links: [{ label: 'Database pricing', href: '/pricing#database-pricing' }],
     },
   ],

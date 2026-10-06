@@ -198,6 +198,9 @@ export const heCatalog: EnCatalog = {
           vsCloudinary: 'Appwrite מול Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite מול Auth0', // pragma: allowlist secret
           vsConvex: 'Appwrite מול Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite מול Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite מול AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite מול PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'אירוח Next.js',
           reactHosting: 'אירוח React',
           vueHosting: 'אירוח Vue.js',

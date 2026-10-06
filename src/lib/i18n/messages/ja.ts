@@ -199,6 +199,9 @@ export const jaCatalog: EnCatalog = {
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
           vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',

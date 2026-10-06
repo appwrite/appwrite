@@ -384,16 +384,16 @@ export function VercelComparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
+            'xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Vercel" />
             <ComparisonHeroTitle className="mt-7" title="Deploy the frontend." accent="Bring the whole backend." />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Vercel hosts your frontend and sends you elsewhere for the rest. Appwrite Sites hosts the same frameworks next to first-party auth, databases, storage, functions, messaging, and realtime. Open source, in one project, with no per-seat pricing.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton
                 href="/docs/products/sites/migrations/vercel"

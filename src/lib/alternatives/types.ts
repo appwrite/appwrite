@@ -11,6 +11,9 @@ export type AlternativeId =
   | 'auth0'
   | 'convex'
   | 'cloudinary'
+  | 'clerk'
+  | 'amplify'
+  | 'planetscale'
 
 /**
  * `true` renders a check, `false` a dash, `'partial'` a half mark, `'soon'` a "Coming soon" pill,

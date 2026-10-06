@@ -108,9 +108,10 @@ export function VersusPill({ name, className }: { name: string; className?: stri
 
 /** Shared hero grid: copy column + visual; stacks on small screens. */
 export const comparisonHeroGridClassName =
-  'relative z-[1] mx-auto grid min-w-0 max-w-7xl items-center gap-10 px-4 pb-12 pt-12 sm:gap-12 sm:px-6 sm:pb-16 sm:pt-20 lg:gap-14 lg:pb-24 lg:pt-24'
+  'relative z-[1] mx-auto grid min-w-0 max-w-7xl items-center gap-10 px-4 pb-12 pt-12 sm:gap-12 sm:px-6 sm:pb-16 sm:pt-20 xl:gap-14 xl:pb-24 xl:pt-24'
 
-export const comparisonHeroCopyClassName = 'min-w-0 text-center lg:text-start'
+export const comparisonHeroCopyClassName =
+  'relative z-[1] min-w-0 overflow-x-clip text-center xl:text-start'
 
 /** Centered hero (single column + art below). */
 export const comparisonHeroCenteredClassName =
@@ -242,7 +243,7 @@ export function ComparisonHeroTitle({
   return (
     <h1
       className={cn(
-        'font-aeonik-pro max-w-full text-pretty pb-0.5 text-[32px] font-normal leading-[1.08] tracking-[-0.02em] text-foreground sm:text-[44px] sm:pb-1 sm:tracking-[-0.022em] lg:text-[56px] xl:text-[64px]',
+        'font-aeonik-pro min-w-0 max-w-full text-pretty pb-0.5 text-[32px] font-normal leading-[1.1] tracking-[-0.02em] text-foreground sm:text-[44px] sm:pb-1 sm:leading-[1.08] sm:tracking-[-0.022em] lg:text-[48px] xl:text-[56px] 2xl:text-[64px]',
         className,
       )}
     >
@@ -250,8 +251,8 @@ export function ComparisonHeroTitle({
       {accent ? (
         <>
           {' '}
-          <span className="inline-block max-w-full whitespace-normal sm:whitespace-nowrap">
-            <span className="pe-[0.04em] text-gradient-brand">{t(accent)}</span>
+          <span className="text-gradient-brand">
+            {t(accent)}
             <span className="text-[var(--brand-cta)]">_</span>
           </span>
         </>

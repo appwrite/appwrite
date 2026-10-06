@@ -439,24 +439,24 @@ export function CloudinaryComparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]',
+            'xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Cloudinary" />
             <ComparisonHeroTitle
-              className="mx-auto mt-7 max-w-md lg:mx-0"
+              className="mx-auto mt-7 max-w-md xl:mx-0"
               title="Media lives with"
               accent="your app stack"
             />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Cloudinary is a separate media service priced in shared credits. Appwrite Storage keeps files next to your auth and database, transforms images on the fly, and bills per origin image, not per variant.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton href="/products/storage" label="Explore Appwrite Storage" />
             </div>
-            <p className="mt-7 flex flex-wrap items-start justify-center gap-2.5 text-start text-[13px] leading-6 text-muted-foreground sm:items-center lg:justify-start">
+            <p className="mt-7 flex flex-wrap items-start justify-center gap-2.5 text-start text-[13px] leading-6 text-muted-foreground sm:items-center xl:justify-start">
               <Clapperboard className="size-4 shrink-0 text-[var(--tone-ink)]" aria-hidden />
               <span>
                 <span className="font-medium text-foreground">{t('Appwrite Videos')}</span>{' '}

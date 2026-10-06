@@ -275,8 +275,8 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Databases with SDKs': 'מסדי נתונים עם SDKs',
   'Dedicated Postgres vs. serverless databases: Which one should developers choose?':
     'Postgres ייעודי מול מסדי נתונים serverless: במה כדאי למפתחים לבחור?',
-  'Dedicated compute starts at $10/mo per database, and every Pro plan includes $10/mo in compute credits. High availability replicas add 50% of the base tier each, and point-in-time recovery adds 20%. Managed databases need a paid plan.':
-    'מחשוב ייעודי מתחיל ב-$10 לחודש לכל מסד נתונים, וכל תוכנית Pro כוללת $10 לחודש בקרדיטים למחשוב. כל רפליקה לזמינות גבוהה מוסיפה 50% ממחיר מדרגת הבסיס, ושחזור לנקודת זמן מוסיף 20%. מסדי נתונים מנוהלים דורשים תוכנית בתשלום.',
+  'Dedicated compute starts at $10/mo per database, and every Pro plan includes $10/mo in compute credits. Each high availability replica is billed at the full compute tier price, and point-in-time recovery adds 20%. Managed databases need a paid plan.':
+    'מחשוב ייעודי מתחיל ב-$10 לחודש לכל מסד נתונים, וכל תוכנית Pro כוללת $10 לחודש בקרדיטים למחשוב. כל רפליקת זמינות גבוהה מחויבת במחיר מלא של שכבת המחשוב, ושחזור לנקודת זמן מוסיף 20%. מסדי נתונים מנוהלים דורשים תוכנית בתשלום.',
   'Delivers push through FCM and APNs': 'שליחת push דרך FCM ו-APNs',
   'Deno-compatible runtime': 'סביבת ריצה תואמת Deno',
   'Denormalize or join in code (Firestore)': 'דה-נורמליזציה או join בקוד (Firestore)',
@@ -1307,34 +1307,445 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Every Neon database is PostgreSQL on serverless compute.':
     'כל מסד נתונים ב-Neon הוא PostgreSQL על compute מסוג serverless.',
   'The right database for every kind of data': 'מסד הנתונים הנכון לכל סוג של נתונים',
-  'Supabase puts everything in one PostgreSQL instance per project. Appwrite gives you five database models in the same project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL.':
-    'Supabase שמה הכול במופע PostgreSQL אחד לכל פרויקט. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים באותו פרויקט: טבלאות, מסמכים ווקטורים על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים.',
   'Documents are just one way to model data': 'מסמכים הם רק דרך אחת למדל נתונים',
-  'Firebase is built around Firestore documents. Appwrite gives you five database models in one project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL.':
-    'Firebase בנויה סביב מסמכי Firestore. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: טבלאות, מסמכים ווקטורים על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים.',
   'More than one way to model your data': 'יותר מדרך אחת למדל את הנתונים שלכם',
-  'Convex stores everything as documents on its own serverless database. Appwrite gives you five database models in one project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL.':
-    'Convex שומרת הכול כמסמכים במסד הנתונים ה-serverless שלה. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: טבלאות, מסמכים ווקטורים על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים.',
   'Postgres, plus four more database models': 'Postgres, ועוד ארבעה מודלים של מסדי נתונים',
-  'Neon runs one engine, PostgreSQL, on serverless compute. Appwrite adds tables, documents, and vectors on serverless or dedicated compute, plus MySQL, next to managed PostgreSQL in the same project.':
-    'Neon מריצה מנוע אחד, PostgreSQL, על compute מסוג serverless. Appwrite מוסיפה טבלאות, מסמכים ווקטורים על compute מסוג serverless או ייעודי, ועוד MySQL, לצד PostgreSQL מנוהל באותו פרויקט.',
   'Database models': 'מודלים של מסדי נתונים',
   'Tables, documents, vectors, PostgreSQL, MySQL': 'טבלאות, מסמכים, וקטורים, PostgreSQL ו-MySQL',
   'Documents, optional schema': 'מסמכים, סכמה אופציונלית',
   'Serverless or dedicated databases': 'מסדי נתונים מסוג serverless או ייעודיים',
-  'Choose per database': 'בחירה לכל מסד נתונים',
+  'Serverless TablesDB, or dedicated compute for any engine': 'TablesDB מסוג serverless, או compute ייעודי לכל מנוע',
   'Firestore is serverless only': 'Firestore היא serverless בלבד',
   'SQL Connect, a separate product billed through Cloud SQL': 'SQL Connect, מוצר נפרד שמחויב דרך Cloud SQL',
   'Does Supabase support more than one database model?': 'האם Supabase תומכת ביותר ממודל מסד נתונים אחד?',
-  'No. Supabase is built on PostgreSQL, with one dedicated instance per project. Appwrite gives you five database models in the same project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL.':
-    'לא. Supabase בנויה על PostgreSQL, עם מופע ייעודי אחד לכל פרויקט. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים באותו פרויקט: TablesDB, DocumentsDB ו-VectorsDB על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים.',
   'Does Firebase support relational databases?': 'האם Firebase תומכת במסדי נתונים רלציוניים?',
-  'Firebase is built around Firestore documents. Relational data needs SQL Connect, a separate PostgreSQL service billed through Cloud SQL. Appwrite gives you five database models in one project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL, all with the same permissions and Console.':
-    'Firebase בנויה סביב מסמכי Firestore. נתונים רלציוניים דורשים את SQL Connect, שירות PostgreSQL נפרד שמחויב דרך Cloud SQL. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB, DocumentsDB ו-VectorsDB על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים, כולם עם אותן הרשאות ואותה קונסולה.',
   'Does Convex support more than one database model?': 'האם Convex תומכת ביותר ממודל מסד נתונים אחד?',
-  'No. Convex stores all data as documents in its own serverless database. Appwrite gives you five database models in one project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL.':
-    'לא. Convex שומרת את כל הנתונים כמסמכים במסד הנתונים ה-serverless שלה. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB, DocumentsDB ו-VectorsDB על compute מסוג serverless או ייעודי, ועוד PostgreSQL ו-MySQL מנוהלים.',
   'Does Neon support databases other than PostgreSQL?': 'האם Neon תומכת במסדי נתונים מלבד PostgreSQL?',
-  'No. Every Neon database is PostgreSQL on serverless compute. Appwrite runs managed PostgreSQL and MySQL on dedicated compute, plus TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, so you get five database models in one project.':
-    'לא. כל מסד נתונים ב-Neon הוא PostgreSQL על compute מסוג serverless. Appwrite מריצה PostgreSQL ו-MySQL מנוהלים על compute ייעודי, ועוד TablesDB, DocumentsDB ו-VectorsDB על compute מסוג serverless או ייעודי, כך שאתם מקבלים חמישה מודלים של מסדי נתונים בפרויקט אחד.',
+
+  // Database models (revised)
+  'Supabase puts everything in one PostgreSQL instance per project. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'Supabase שמה הכול במופע PostgreSQL אחד לכל פרויקט. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'Firebase is built around Firestore documents. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'Firebase בנויה סביב מסמכי Firestore. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'Convex stores everything as documents on its own serverless database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'Convex שומרת הכול כמסמכים במסד הנתונים ה-serverless שלה. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'Neon runs one engine, PostgreSQL, on serverless compute. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'Neon מריץ מנוע אחד, PostgreSQL, על compute מסוג serverless. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'No. Supabase is built on PostgreSQL, with one dedicated instance per project. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'לא. Supabase בנויה על PostgreSQL, עם מופע ייעודי אחד לכל פרויקט. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'Firebase is built around Firestore documents. Relational data needs SQL Connect, a separate PostgreSQL service billed through Cloud SQL. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute, all in the same Console.':
+    'Firebase בנויה סביב מסמכי Firestore. נתונים רלציוניים דורשים את SQL Connect, שירות PostgreSQL נפרד שמחויב דרך Cloud SQL. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי, והכול באותה קונסולה.',
+  'No. Convex stores all data as documents in its own serverless database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'לא. Convex שומרת את כל הנתונים כמסמכים במסד הנתונים ה-serverless שלה. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'No. Every Neon database is PostgreSQL on serverless compute. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'לא. כל מסד נתונים ב-Neon הוא PostgreSQL על compute מסוג serverless. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'PostgreSQL and MySQL': 'PostgreSQL ו-MySQL',
+  'Billed through Cloud SQL': 'בחיוב דרך Cloud SQL',
+  'Serverless, behind AppSync': 'Serverless, מאחורי AppSync',
+  'Bring your own database': 'מסד נתונים משלכם',
+  'Provisioned and run by you': 'אתם מקימים ומתפעלים אותו',
+  'Single node, HA, or Metal': 'צומת יחיד, HA או Metal',
+  'Sharded MySQL clusters': 'אשכולות MySQL עם sharding',
+  'Amplify Data stores models in DynamoDB. SQL works only by connecting a PostgreSQL or MySQL database you provision, scale, and back up yourself.':
+    'Amplify Data שומרת מודלים ב-DynamoDB. SQL עובד רק אם מחברים מסד נתונים של PostgreSQL או MySQL שאתם מקימים, מגדילים ומגבים בעצמכם.',
+  'Both engines are relational, and every database is a paid cluster with no free tier. There is no document or vector database.':
+    'שני המנועים רלציוניים, וכל מסד נתונים הוא אשכול בתשלום בלי מדרגה חינמית. אין מסד נתונים של מסמכים או של וקטורים.',
+
+  // Shared sections (new competitors)
+  'Backend': 'Backend',
+  'Appwrite vs Clerk': 'Appwrite מול Clerk',
+  'Appwrite vs AWS Amplify': 'Appwrite מול AWS Amplify',
+  'Appwrite vs PlanetScale': 'Appwrite מול PlanetScale',
+  'Why developers choose Appwrite over Clerk': 'למה מפתחים בוחרים ב-Appwrite על פני Clerk',
+  'Why developers choose Appwrite over AWS Amplify': 'למה מפתחים בוחרים ב-Appwrite על פני AWS Amplify',
+  'Why developers choose Appwrite over PlanetScale': 'למה מפתחים בוחרים ב-Appwrite על פני PlanetScale',
+  'Not offered by Clerk': 'לא מוצעים ב-Clerk',
+  'Not offered by PlanetScale': 'לא מוצעים ב-PlanetScale',
+  'User management and authentication': 'ניהול משתמשים ואימות',
+  'Appwrite Auth vs Clerk: an open-source Clerk alternative': 'Appwrite Auth מול Clerk: חלופה בקוד פתוח ל-Clerk',
+  'Compare Appwrite Auth and Clerk. 200K monthly active users on Pro, then $3 per 1,000, MFA on every plan, and your users stored next to your data in one open-source backend.':
+    'השוו בין Appwrite Auth ל-Clerk. 200K משתמשים פעילים חודשיים ב-Pro, ואחר כך $3 לכל 1,000, MFA בכל תוכנית, והמשתמשים שלכם נשמרים לצד הנתונים שלכם ב-backend אחד בקוד פתוח.',
+  'Users and data in one place, no webhooks to sync.': 'משתמשים ונתונים במקום אחד, בלי webhooks לסנכרן.',
+  'Full-stack framework on AWS': 'Framework ל-full-stack על AWS',
+  'Appwrite vs AWS Amplify: an open-source Amplify alternative': 'Appwrite מול AWS Amplify: חלופה בקוד פתוח ל-Amplify',
+  'Compare Appwrite and AWS Amplify. One open-source backend with auth, databases, storage, functions, messaging, and hosting, one Console, and one bill instead of a stack of AWS services.':
+    'השוו בין Appwrite ל-AWS Amplify. Backend אחד בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואירוח, קונסולה אחת וחשבון אחד, במקום ערימה של שירותי AWS.',
+  'One project instead of a stack of AWS services.': 'פרויקט אחד במקום ערימה של שירותי AWS.',
+  'Managed MySQL and Postgres': 'MySQL ו-Postgres מנוהלים',
+  'Appwrite vs PlanetScale: managed PostgreSQL and MySQL plus a complete backend':
+    'Appwrite מול PlanetScale: PostgreSQL ו-MySQL מנוהלים וגם backend שלם',
+  'Compare Appwrite and PlanetScale. Managed PostgreSQL and MySQL with replicas and PITR, three more database models, a free plan, and auth, storage, functions, and hosting in one open-source project.':
+    'השוו בין Appwrite ל-PlanetScale. PostgreSQL ו-MySQL מנוהלים עם רפליקות ו-PITR, עוד שלושה מודלים של מסדי נתונים, תוכנית חינמית, וגם אימות, אחסון, פונקציות ואירוח בפרויקט אחד בקוד פתוח.',
+  'Postgres and MySQL, plus the backend around them.': 'Postgres ו-MySQL, וגם ה-backend שסביבם.',
+  'The SDKs are public, but the service that stores your users is closed source and runs only on Clerk.':
+    'ה-SDKs פתוחים לציבור, אבל השירות ששומר את המשתמשים שלכם הוא קוד סגור ורץ רק ב-Clerk.',
+  'Runs only on AWS': 'פועלת רק ב-AWS',
+  'The Amplify libraries are open source, but every backend service behind them runs only on AWS.':
+    'הספריות של Amplify הן קוד פתוח, אבל כל שירותי ה-backend שמאחוריהן רצים רק ב-AWS.',
+  'Platform not self-hostable': 'הפלטפורמה לא זמינה לאירוח עצמי',
+  'Vitess is open source, but the PlanetScale platform, branching, and Postgres service run only on PlanetScale.':
+    'Vitess הוא קוד פתוח, אבל הפלטפורמה של PlanetScale, ה-branching ושירות ה-Postgres רצים רק ב-PlanetScale.',
+
+  // Clerk
+  'users live here': 'המשתמשים נמצאים כאן',
+  'Your API': 'ה-API שלכם',
+  'verify and retry': 'אימות וניסיון חוזר',
+  'Your database': 'מסד הנתונים שלכם',
+  'a copy of each user': 'עותק של כל משתמש',
+  'With Clerk, users and data live apart': 'ב-Clerk, המשתמשים והנתונים נמצאים בנפרד',
+  'Sync code you write and maintain: signatures, retries, and backfills.':
+    'קוד סנכרון שאתם כותבים ומתחזקים: חתימות, ניסיונות חוזרים ו-backfills.',
+  'With Appwrite, they share one project': 'ב-Appwrite, הם חולקים פרויקט אחד',
+  'MFA on every plan': 'MFA בכל תוכנית',
+  'Monthly users': 'משתמשים חודשיים',
+  'Monthly cost as users grow, Clerk Pro compared with Appwrite Pro.':
+    'העלות החודשית ככל שמספר המשתמשים גדל, Clerk Pro בהשוואה ל-Appwrite Pro.',
+  '50,000 users included, then about $20 per 1,000.': '50,000 משתמשים כלולים, ואחר כך כ-$20 לכל 1,000.',
+  'Clerk list prices for Pro, which counts monthly retained users. Appwrite counts monthly active users, so treat this as a guide. Both plans start at $25/mo.':
+    'מחירי המחירון של Clerk לתוכנית Pro, שסופרת משתמשים חוזרים חודשיים. Appwrite סופרת משתמשים פעילים חודשיים, אז התייחסו לזה כהערכה. שתי התוכניות מתחילות ב-$25 לחודש.',
+  '50,000 per app': '50,000 לכל אפליקציה',
+  'Pro only': 'רק ב-Pro',
+  'Social sign-in providers': 'ספקי OAuth',
+  'Up to 3': 'עד 3',
+  'Configurable': 'ניתן להגדרה',
+  'Fixed to 7 days': 'קבוע ל-7 ימים',
+  'Ban or block users': 'חסימת משתמשים',
+  'Vendor badge on your sign-in': 'תג של הספק במסך ההתחברות',
+  'Your users,': 'המשתמשים שלכם,',
+  'right next to your data.': 'ממש לצד הנתונים שלכם.',
+  'Clerk keeps your users in its own cloud, so most apps copy them into a database with webhooks. Appwrite Auth stores users in the same open-source project as your databases, files, and functions, with MFA on every plan and 200,000 users on Pro.':
+    'Clerk שומרת את המשתמשים שלכם בענן שלה, ולכן רוב האפליקציות מעתיקות אותם למסד נתונים באמצעות webhooks. Appwrite Auth שומרת את המשתמשים באותו פרויקט בקוד פתוח שבו נמצאים מסדי הנתונים, הקבצים והפונקציות שלכם, עם MFA בכל תוכנית ו-200,000 משתמשים ב-Pro.',
+  'Growth should not be a pricing event': 'צמיחה לא אמורה להקפיץ את המחיר',
+  'Both Pro plans start at $25/mo. Clerk includes 50,000 users and then charges about $20 for every 1,000 more. Appwrite includes 200,000 and then charges $3. Slide to see where the lines go.':
+    'שתי תוכניות ה-Pro מתחילות ב-$25 לחודש. Clerk כוללת 50,000 משתמשים ואז גובה כ-$20 על כל 1,000 נוספים. Appwrite כוללת 200,000 ואז גובה $3. הזיזו את המחוון כדי לראות לאן הקווים הולכים.',
+  'The security basics, unlocked from day one': 'יסודות האבטחה, פתוחים מהיום הראשון',
+  'Clerk keeps MFA, extra social providers, custom sessions, and user bans behind Pro. On Appwrite, they are part of the Free plan.':
+    'ב-Clerk, MFA, ספקי OAuth נוספים, סשנים מותאמים וחסימת משתמשים זמינים רק ב-Pro. ב-Appwrite, הם חלק מתוכנית Free.',
+  'Clerk is sign-in. Appwrite is the whole backend behind it.': 'Clerk היא התחברות. Appwrite היא כל ה-backend שמאחוריה.',
+  'Appwrite Auth is one of ten products in the same open-source platform, so your users, data, files, functions, and hosting share one Console and one bill.':
+    'Appwrite Auth היא חלק מפלטפורמת קוד פתוח אחת שכוללת עשרה מוצרים, כך שהמשתמשים, הנתונים, הקבצים, הפונקציות והאירוח שלכם חולקים קונסולה אחת וחשבון אחד.',
+  'Keep your user table yours': 'טבלת המשתמשים שלכם נשארת שלכם',
+  'Clerk is closed source and cloud only. Appwrite Auth is open source, so your users can live on Appwrite Cloud or on your own servers with the same APIs.':
+    'Clerk היא קוד סגור וזמינה בענן בלבד. Appwrite Auth היא קוד פתוח, כך שהמשתמשים שלכם יכולים להיות ב-Appwrite Cloud או בשרתים שלכם, עם אותם APIs.',
+  'The sign-in you expect, without the per-user surprise': 'ההתחברות שאתם מצפים לה, בלי הפתעות בתמחור לפי משתמש',
+  'Sign-in methods line up closely. The gaps are price at scale, what the free plan unlocks, and where your users live.':
+    'שיטות ההתחברות דומות מאוד. הפערים הם במחיר כשגדלים, במה שהתוכנית החינמית פותחת ובמקום שבו המשתמשים שלכם נמצאים.',
+  'Put your users next to your data': 'שימו את המשתמשים שלכם לצד הנתונים שלכם',
+  'Add sign-in in minutes with 75,000 monthly active users free and MFA on every plan.':
+    'הוסיפו התחברות בתוך דקות, עם 75,000 משתמשים פעילים חודשיים בחינם ו-MFA בכל תוכנית.',
+  'Free users': 'משתמשים בחינם',
+  'Monthly retained users per app': 'משתמשים חוזרים חודשיים לכל אפליקציה',
+  'Pro, $20/mo billed yearly, 50,000 users included': 'Pro, $20 לחודש בחיוב שנתי, 50,000 משתמשים כלולים',
+  '$20 per 1,000': '$20 לכל 1,000',
+  'Then $18 per 1,000 past 100,000': 'ואז $18 לכל 1,000 מעל 100,000',
+  'Cloud only': 'ענן בלבד',
+  '40+ OAuth providers on every plan': 'יותר מ-40 ספקי OAuth בכל תוכנית',
+  'Up to 3 providers on the free plan': 'עד 3 ספקים בתוכנית החינמית',
+  'Magic URL and email OTP': 'Magic URL ו-Email OTP',
+  'Phone and SMS sign-in': 'התחברות עם טלפון ו-SMS',
+  'Paid plans only': 'בתוכניות בתשלום בלבד',
+  'Prebuilt sign-in components': 'רכיבי התחברות מוכנים מראש',
+  'SDKs and starter templates': 'SDKs ותבניות התחלה',
+  'A Clerk strength': 'נקודת חוזק של Clerk',
+  'TOTP, email, SMS, and recovery codes on every plan': 'TOTP, אימייל, SMS וקודי שחזור בכל תוכנית',
+  'Password dictionary, history, and personal data checks': 'בדיקות מילון סיסמאות, היסטוריית סיסמאות ונתונים אישיים',
+  'Custom requirements on paid plans': 'דרישות מותאמות בתוכניות בתשלום',
+  'Session limits and lengths': 'מגבלות ומשך של סשנים',
+  'Configurable on every plan': 'ניתן להגדרה בכל תוכנית',
+  'Fixed to 7 days on the free plan': 'קבוע ל-7 ימים בתוכנית החינמית',
+  'Custom email templates': 'תבניות אימייל מותאמות',
+  'With your own SMTP server': 'עם שרת SMTP משלכם',
+  'Beyond sign-in': 'מעבר להתחברות',
+  'Teams and organizations': 'צוותים וארגונים',
+  'Unlimited teams and members on Pro': 'צוותים וחברים ללא הגבלה ב-Pro',
+  '20 members per organization without the $100/mo add-on': '20 חברים לכל ארגון בלי התוסף של $100 לחודש',
+  'Users stored next to your data': 'משתמשים שנשמרים לצד הנתונים שלכם',
+  'Permissions reference users and teams directly': 'ההרשאות מפנות ישירות למשתמשים ולצוותים',
+  'Sync users to your database with webhooks': 'סנכרון משתמשים למסד הנתונים שלכם עם webhooks',
+  'When Clerk might still fit': 'מתי Clerk עדיין יכולה להתאים',
+  'Clerk is a polished sign-in product. It may still suit you if these describe your project.':
+    'Clerk היא מוצר התחברות מלוטש. היא עדיין עשויה להתאים לכם אם המשפטים האלה מתארים את הפרויקט שלכם.',
+  'You want drop-in React components for sign-in, profiles, and organization switching with almost no UI work.':
+    'אתם רוצים רכיבי React מוכנים להתחברות, לפרופילים ולמעבר בין ארגונים, כמעט בלי עבודת UI.',
+  'You sell to enterprises and need SAML connections and SCIM directory sync today.':
+    'אתם מוכרים לארגונים גדולים וצריכים כבר היום חיבורי SAML וסנכרון ספריות SCIM.',
+  'Your backend already lives elsewhere and you only need identity in front of it.':
+    'ה-backend שלכם כבר נמצא במקום אחר, ואתם צריכים רק שכבת זהות לפניו.',
+  'You plan to charge for subscriptions with Clerk Billing on top of Stripe.':
+    'אתם מתכננים לגבות תשלום על מינויים עם Clerk Billing מעל Stripe.',
+  'Appwrite Auth explained: every auth method, compared': 'Appwrite Auth בהסבר: השוואה של כל שיטות האימות',
+  'Email, OAuth, magic URLs, OTP, and MFA, and when to use each.':
+    'אימייל, OAuth, Magic URL, OTP ו-MFA, ומתי להשתמש בכל אחת מהשיטות.',
+  'Why developers choose Appwrite over Auth0 and Firebase': 'למה מפתחים בוחרים ב-Appwrite על פני Auth0 ו-Firebase',
+  'How the main auth providers compare on security and cost.': 'איך ספקי האימות המובילים משתווים באבטחה ובעלות.',
+  'Everything you need to know about RBAC and how to use it in Appwrite':
+    'כל מה שצריך לדעת על RBAC ואיך להשתמש בו ב-Appwrite',
+  'Teams, roles, and permissions in one model.': 'צוותים, תפקידים והרשאות במודל אחד.',
+  'Import, export, and update users from the Users API.': 'ייבוא, ייצוא ועדכון של משתמשים דרך Users API.',
+  'Is Appwrite better than Clerk?': 'האם Appwrite עדיפה על Clerk?',
+  'For most apps that need a backend, yes. Appwrite Auth covers the sign-in methods users expect, includes MFA on every plan, and costs $3 per 1,000 users past 200,000 instead of about $20. Your users also live next to your databases, files, and functions, so permissions reference them directly and there are no webhooks to keep in sync.':
+    'עבור רוב האפליקציות שצריכות backend, כן. Appwrite Auth מכסה את שיטות ההתחברות שמשתמשים מצפים להן, כוללת MFA בכל תוכנית ועולה $3 לכל 1,000 משתמשים מעבר ל-200,000, במקום כ-$20. בנוסף, המשתמשים שלכם נמצאים לצד מסדי הנתונים, הקבצים והפונקציות שלכם, כך שההרשאות מפנות אליהם ישירות ואין webhooks שצריך לשמור מסונכרנים.',
+  'Is Appwrite cheaper than Clerk?': 'האם Appwrite זולה יותר מ-Clerk?',
+  'Yes, as soon as you grow past the free tiers. At 250,000 users, Clerk Pro comes to about $3,700 a month at list price, while Appwrite Pro is $175. Clerk counts monthly retained users and Appwrite counts monthly active users, so treat the comparison as a guide.':
+    'כן, ברגע שאתם גדלים מעבר למדרגות החינמיות. ב-250,000 משתמשים, Clerk Pro מגיעה לכ-$3,700 לחודש לפי מחיר המחירון, בעוד ש-Appwrite Pro עולה $175. Clerk סופרת משתמשים חוזרים חודשיים ו-Appwrite סופרת משתמשים פעילים חודשיים, אז התייחסו להשוואה כהערכה.',
+  'What is the best open-source alternative to Clerk?': 'מהי החלופה הטובה ביותר בקוד פתוח ל-Clerk?',
+  'Appwrite is the best open-source alternative to Clerk. Appwrite Auth is fully open source, self-hosts with Docker so user data stays on your servers, and includes email, OAuth, magic URL, OTP, SMS, MFA, teams, and password policies, with the same APIs on Appwrite Cloud and your own servers.':
+    'Appwrite היא החלופה הטובה ביותר בקוד פתוח ל-Clerk. Appwrite Auth היא קוד פתוח לגמרי, רצה באירוח עצמי עם Docker כך שנתוני המשתמשים נשארים על השרתים שלכם, וכוללת אימייל, OAuth, Magic URL, OTP, SMS, MFA, צוותים ומדיניות סיסמאות, עם אותם APIs ב-Appwrite Cloud ובשרתים שלכם.',
+  'Do I need webhooks to keep users in sync with my database?':
+    'האם צריך webhooks כדי לשמור על סנכרון בין המשתמשים למסד הנתונים שלי?',
+  'Not on Appwrite. Users, teams, and your data live in the same project, so a row or file can grant access to a user or team directly. With Clerk, users live in Clerk, and most apps mirror them into their own database with webhooks.':
+    'לא ב-Appwrite. משתמשים, צוותים והנתונים שלכם נמצאים באותו פרויקט, כך ששורה או קובץ יכולים להעניק גישה ישירות למשתמש או לצוות. ב-Clerk, המשתמשים נמצאים ב-Clerk, ורוב האפליקציות משכפלות אותם למסד הנתונים שלהן באמצעות webhooks.',
+  'Can I migrate users from Clerk to Appwrite?': 'האם אפשר להעביר משתמשים מ-Clerk ל-Appwrite?',
+  'Yes. Export your users from Clerk, then import them through the Appwrite Users API with their bcrypt password hashes, so nobody has to reset a password. Appwrite upgrades each hash to Argon2 on the first sign-in.':
+    'כן. ייצאו את המשתמשים שלכם מ-Clerk, ואז ייבאו אותם דרך Users API של Appwrite יחד עם ה-hashes של הסיסמאות שלהם ב-bcrypt, כך שאף אחד לא צריך לאפס סיסמה. Appwrite משדרגת כל hash ל-Argon2 בהתחברות הראשונה.',
+  'Does Appwrite have prebuilt sign-in components like Clerk?': 'האם יש ל-Appwrite רכיבי התחברות מוכנים כמו ב-Clerk?',
+  'Appwrite ships SDKs for web, mobile, and server, plus starter templates for popular frameworks, rather than a hosted component library. Most teams build sign-in with their own design system in a few lines of SDK code.':
+    'Appwrite מספקת SDKs ל-Web, למובייל ולשרת, וגם תבניות התחלה ל-frameworks פופולריים, במקום ספריית רכיבים מתארחת. רוב הצוותים בונים את ההתחברות עם מערכת העיצוב שלהם בכמה שורות קוד של SDK.',
+  'Auth docs': 'תיעוד האימות',
+
+  // AWS Amplify
+  'User pool': 'מאגר משתמשים',
+  'Identity pool': 'מאגר זהויות',
+  'Roles and policies': 'תפקידים ומדיניות',
+  'Model tables': 'טבלאות מודלים',
+  'Storage bucket': 'באקט אחסון',
+  'Nested stacks': 'סטאקים מקוננים',
+  'One Amplify backend': 'Backend אחד של Amplify',
+  'The same backend on Appwrite': 'אותו backend ב-Appwrite',
+  '1 project': 'פרויקט אחד',
+  'Appwrite products': 'מוצרי Appwrite',
+  'Illustrative. Amplify Gen 2 deploys your backend as AWS CloudFormation stacks across these services.':
+    'להמחשה. Amplify Gen 2 פורסת את ה-backend שלכם כסטאקים של AWS CloudFormation על פני השירותים האלה.',
+  'Build minutes, bandwidth, SSR': 'דקות Build, רוחב פס, SSR',
+  'Requests and realtime minutes': 'בקשות ודקות Realtime',
+  'Reads, writes, and storage': 'קריאות, כתיבות ואחסון',
+  'Requests and duration': 'בקשות ומשך ריצה',
+  'Storage and requests': 'אחסון ובקשות',
+  'Per app, plus usage': 'לכל אפליקציה, ועוד שימוש',
+  'Metered': 'לפי שימוש',
+  '3.5M function executions': '3.5M הרצות של פונקציות',
+  'Firewall rules included': 'כללי חומת אש כלולים',
+  'An Amplify month': 'חודש ב-Amplify',
+  'Seven meters, seven sets of limits, one AWS invoice to decode.':
+    'שבעה מונים, שבע מערכות של מגבלות, וחשבונית AWS אחת לפענח.',
+  'An Appwrite month': 'חודש ב-Appwrite',
+  'Pay as you go above the allowances, up to a budget cap you set.':
+    'תשלום לפי שימוש מעבר למכסות, עד תקרת תקציב שאתם קובעים.',
+  'May 20, 2025': '20 במאי 2025',
+  'Amazon Pinpoint stops accepting new customers': 'Amazon Pinpoint מפסיק לקבל לקוחות חדשים',
+  'October 30, 2026': '30 באוקטובר 2026',
+  'Pinpoint reaches end of support, and Amplify analytics and push notifications stop working':
+    'התמיכה ב-Pinpoint מסתיימת, והאנליטיקה והתראות ה-push של Amplify מפסיקות לעבוד',
+  'FCM and APNs': 'FCM ו-APNs',
+  'SMTP and email providers': 'SMTP וספקי אימייל',
+  'Global SMS providers': 'ספקי SMS גלובליים',
+  'Amplify messaging timeline': 'ציר הזמן של ההודעות ב-Amplify',
+  'One API for push, email, and SMS, with topics, scheduling, and your users and teams as targets.':
+    'API אחד ל-push, אימייל ו-SMS, עם נושאים ותזמון, והמשתמשים והצוותים שלכם כיעדים.',
+  'One project,': 'פרויקט אחד,',
+  'not a stack of AWS services.': 'לא ערימה של שירותי AWS.',
+  'Amplify assembles your backend from Cognito, AppSync, DynamoDB, Lambda, and S3, each with its own console, limits, and bill, and it only runs on AWS. Appwrite gives you auth, five database models, storage, functions in 13+ runtimes, messaging, and hosting in one open-source platform.':
+    'Amplify מרכיבה את ה-backend שלכם מ-Cognito, AppSync, DynamoDB, Lambda ו-S3, כל אחד עם קונסולה, מגבלות וחשבון משלו, והיא רצה רק ב-AWS. Appwrite נותנת לכם אימות, חמישה מודלים של מסדי נתונים, אחסון, פונקציות ביותר מ-13 סביבות ריצה, הודעות ואירוח בפלטפורמת קוד פתוח אחת.',
+  'One plan instead of seven meters': 'תוכנית אחת במקום שבעה מונים',
+  'Every AWS service behind Amplify bills on its own. Appwrite Pro starts at $25/mo with allowances for each resource, including 2TB of bandwidth that would cost about $300 a month on Amplify Hosting.':
+    'כל שירות AWS שמאחורי Amplify מחייב בנפרד. Appwrite Pro מתחילה ב-$25 לחודש עם מכסה לכל משאב, כולל 2TB של רוחב פס שהיו עולים כ-$300 לחודש ב-Amplify Hosting.',
+  'More than DynamoDB behind a GraphQL API': 'יותר מ-DynamoDB מאחורי GraphQL API',
+  'Amplify Data puts every model in DynamoDB, and SQL means running your own database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'Amplify Data שמה כל מודל ב-DynamoDB, ו-SQL פירושו להריץ מסד נתונים משלכם. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'Any language, no CDK required': 'כל שפה, בלי צורך ב-CDK',
+  'Amplify functions are defined for Node.js, and every other language means writing custom CDK code. Appwrite Functions run in 13+ runtimes with Git deploys, cron, events, and local development built in.':
+    'הפונקציות של Amplify מוגדרות ל-Node.js, וכל שפה אחרת מחייבת כתיבת קוד CDK מותאם. Appwrite Functions רצות ביותר מ-13 סביבות ריצה, עם פריסות מ-Git, Cron, אירועים ופיתוח מקומי מובנים.',
+  'Other languages need custom CDK code': 'שפות אחרות דורשות קוד CDK מותאם',
+  'Push notifications with no end-of-support date': 'התראות push בלי תאריך סיום תמיכה',
+  'Amplify analytics and push notifications run on Amazon Pinpoint, which reaches end of support on October 30, 2026. Appwrite Messaging is part of the platform, next to your users and data.':
+    'האנליטיקה והתראות ה-push של Amplify רצות על Amazon Pinpoint, שהתמיכה בו מסתיימת ב-30 באוקטובר 2026. Appwrite Messaging היא חלק מהפלטפורמה, לצד המשתמשים והנתונים שלכם.',
+  'Your backend should not need an AWS account': 'ה-backend שלכם לא אמור לדרוש חשבון AWS',
+  'Amplify libraries are open source, but everything behind them runs only on AWS. Appwrite is open source end to end, so the same backend runs on Appwrite Cloud, any other cloud, or your own servers.':
+    'הספריות של Amplify הן קוד פתוח, אבל כל מה שמאחוריהן רץ רק ב-AWS. Appwrite היא קוד פתוח מקצה לקצה, כך שאותו backend רץ ב-Appwrite Cloud, בכל ענן אחר או בשרתים שלכם.',
+  'The full-stack features, without the AWS overhead': 'יכולות ה-full-stack, בלי התקורה של AWS',
+  'Both cover auth, data, storage, functions, and hosting. The difference is how many services, consoles, and bills it takes.':
+    'שתיהן מכסות אימות, נתונים, אחסון, פונקציות ואירוח. ההבדל הוא בכמה שירותים, קונסולות וחשבונות זה דורש.',
+  'Ship a full stack from one Console': 'שחררו full stack מקונסולה אחת',
+  'Create a project and get auth, databases, storage, functions, messaging, and hosting, with no AWS account required.':
+    'צרו פרויקט וקבלו אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואירוח, בלי צורך בחשבון AWS.',
+  'Where it runs': 'איפה זה רץ',
+  'Appwrite Cloud or any server': 'Appwrite Cloud או כל שרת',
+  'Same APIs, SDKs, and Console': 'אותם APIs, SDKs וקונסולה',
+  'AWS only': 'AWS בלבד',
+  'Libraries are open source, services are not': 'הספריות הן קוד פתוח, השירותים לא',
+  'Consoles to manage': 'קונסולות לניהול',
+  'One': 'אחת',
+  'Every product in one project': 'כל המוצרים בפרויקט אחד',
+  'Several': 'כמה',
+  'Amplify, Cognito, AppSync, DynamoDB, Lambda, S3, IAM': 'Amplify, Cognito, AppSync, DynamoDB, Lambda, S3 ו-IAM',
+  'Backend definition': 'הגדרת ה-backend',
+  'Console, CLI, or Terraform': 'קונסולה, CLI או Terraform',
+  'Plus SDKs in 13+ languages': 'ועוד SDKs ביותר מ-13 שפות',
+  'TypeScript with AWS CDK': 'TypeScript עם AWS CDK',
+  'Deployed as CloudFormation stacks': 'נפרס כסטאקים של CloudFormation',
+  'Per-seat pricing': 'תמחור לפי מושב',
+  'Appwrite Auth, 40+ OAuth providers, MFA, teams': 'Appwrite Auth, יותר מ-40 ספקי OAuth, MFA וצוותים',
+  'DynamoDB through AppSync GraphQL': 'DynamoDB דרך AppSync GraphQL',
+  'Bring a database you run yourself': 'מסד נתונים שאתם מתפעלים בעצמכם',
+  'Other languages through custom CDK code': 'שפות אחרות דרך קוד CDK מותאם',
+  'Every service, one socket': 'כל השירותים, socket אחד',
+  'GraphQL subscriptions on AppSync': 'GraphQL subscriptions ב-AppSync',
+  'One API, 12 providers': 'API אחד, 12 ספקים',
+  'Pinpoint-backed features end on October 30, 2026': 'היכולות שמבוססות על Pinpoint מסתיימות ב-30 באוקטובר 2026',
+  'Git deploys, previews, and SSR': 'פריסות מ-Git, תצוגות מקדימות ו-SSR',
+  'Bandwidth on the base plan': 'רוחב פס בתוכנית הבסיסית',
+  'On Pro': 'ב-Pro',
+  '$0.15 per GB': '$0.15 ל-GB',
+  'After 15GB a month': 'מעבר ל-15GB בחודש',
+  'Web application firewall': 'חומת אש לאפליקציות Web',
+  'Rules per project, included': 'כללים לכל פרויקט, כלולים',
+  '$15/mo per app': '$15 לחודש לכל אפליקציה',
+  'Plus AWS WAF usage': 'ועוד שימוש ב-AWS WAF',
+  'Through Route 53': 'דרך Route 53',
+  'One plan with allowances': 'תוכנית אחת עם מכסות',
+  'From $25/mo, budget caps': 'החל מ-$25/חודש, תקרות תקציב',
+  'Per service, per request': 'לפי שירות, לפי בקשה',
+  'Each AWS service is metered separately': 'כל שירות AWS נמדד בנפרד',
+  'AWS Budgets sends alerts': 'AWS Budgets שולח התראות',
+  'When Amplify might still fit': 'מתי Amplify עדיין יכולה להתאים',
+  'Amplify is a capable way into AWS. It may still suit you if these describe your project.':
+    'Amplify היא דרך טובה להיכנס ל-AWS. היא עדיין עשויה להתאים לכם אם המשפטים האלה מתארים את הפרויקט שלכם.',
+  'Your company already runs on AWS and wants every resource inside its own accounts and IAM policies.':
+    'החברה שלכם כבר רצה על AWS ורוצה שכל משאב יהיה בתוך החשבונות ומדיניות ה-IAM שלה.',
+  'You want to define your backend in TypeScript and extend it with any AWS service through CDK.':
+    'אתם רוצים להגדיר את ה-backend שלכם ב-TypeScript ולהרחיב אותו עם כל שירות AWS דרך CDK.',
+  'You rely on AWS credits, enterprise agreements, or compliance programs tied to AWS.':
+    'אתם נשענים על קרדיטים של AWS, הסכמים ארגוניים או תוכניות תאימות שקשורות ל-AWS.',
+  'Your data model fits DynamoDB access patterns and GraphQL through AppSync.':
+    'מודל הנתונים שלכם מתאים לדפוסי הגישה של DynamoDB ול-GraphQL דרך AppSync.',
+  'Choosing the right platform to deploy your web apps: Vercel, Netlify, Amplify, and Appwrite Sites compared':
+    'בחירת הפלטפורמה הנכונה לפריסת אפליקציות ה-Web שלכם: השוואה בין Vercel, Netlify, Amplify ו-Appwrite Sites',
+  'Hosting, previews, and pricing across four platforms.': 'אירוח, תצוגות מקדימות ותמחור בארבע פלטפורמות.',
+  'How to evaluate backend tools without locking yourself in': 'איך להעריך כלי backend בלי להינעל אצל ספק אחד',
+  'A practical framework for keeping your options open.': 'מסגרת מעשית לשמירה על האפשרויות שלכם פתוחות.',
+  'Native databases vs Appwrite databases: which one should you pick?':
+    'מסדי נתונים נייטיב מול מסדי הנתונים של Appwrite: במה כדאי לבחור?',
+  'Tables, documents, vectors, and native SQL compared.': 'השוואה בין טבלאות, מסמכים, וקטורים ו-SQL נייטיב.',
+  'Run the whole platform on your own servers.': 'הריצו את כל הפלטפורמה על השרתים שלכם.',
+  'Is Appwrite better than AWS Amplify?': 'האם Appwrite עדיפה על AWS Amplify?',
+  'For most teams that want to ship rather than operate AWS, yes. Appwrite gives you auth, five database models, storage, functions in 13+ runtimes, realtime, messaging, and hosting in one open-source project, with one Console and one bill. Amplify wires the same features together from Cognito, AppSync, DynamoDB, Lambda, and S3, each with its own console, limits, and pricing.':
+    'עבור רוב הצוותים שרוצים לשחרר מוצר ולא לתפעל את AWS, כן. Appwrite נותנת לכם אימות, חמישה מודלים של מסדי נתונים, אחסון, פונקציות ביותר מ-13 סביבות ריצה, Realtime, הודעות ואירוח בפרויקט אחד בקוד פתוח, עם קונסולה אחת וחשבון אחד. Amplify מחברת את אותן יכולות מ-Cognito, AppSync, DynamoDB, Lambda ו-S3, כל אחד עם קונסולה, מגבלות ותמחור משלו.',
+  'What is the best open-source alternative to AWS Amplify?': 'מהי החלופה הטובה ביותר בקוד פתוח ל-AWS Amplify?',
+  'Appwrite is the best open-source alternative to AWS Amplify. The whole platform is open source, so it runs on Appwrite Cloud, on any cloud provider, or on your own servers with the same APIs and Console. Amplify libraries are open source, but the services behind them run only on AWS.':
+    'Appwrite היא החלופה הטובה ביותר בקוד פתוח ל-AWS Amplify. כל הפלטפורמה היא קוד פתוח, כך שהיא רצה ב-Appwrite Cloud, אצל כל ספק ענן או בשרתים שלכם, עם אותם APIs ואותה קונסולה. הספריות של Amplify הן קוד פתוח, אבל השירותים שמאחוריהן רצים רק ב-AWS.',
+  'What replaces Amplify push notifications and analytics?': 'מה מחליף את התראות ה-push והאנליטיקה של Amplify?',
+  'Amplify push notifications and analytics are built on Amazon Pinpoint, which reaches end of support on October 30, 2026. On Appwrite, Messaging sends push, email, and SMS from one API with 12 providers, and it lives in the same project as your users and data.':
+    'התראות ה-push והאנליטיקה של Amplify בנויות על Amazon Pinpoint, שהתמיכה בו מסתיימת ב-30 באוקטובר 2026. ב-Appwrite, שירות ההודעות שולח push, אימייל ו-SMS מ-API אחד עם 12 ספקים, והוא נמצא באותו פרויקט עם המשתמשים והנתונים שלכם.',
+  'Does Amplify support SQL databases?': 'האם Amplify תומכת במסדי נתונים מסוג SQL?',
+  'Amplify Data stores models in DynamoDB. It can connect to an existing PostgreSQL or MySQL database, but you provision, scale, and back up that database yourself. Appwrite runs managed PostgreSQL and MySQL for you, next to TablesDB, DocumentsDB, and VectorsDB in the same project.':
+    'Amplify Data שומרת מודלים ב-DynamoDB. היא יכולה להתחבר למסד נתונים קיים של PostgreSQL או MySQL, אבל את ההקמה, ההגדלה והגיבוי של מסד הנתונים הזה אתם מבצעים בעצמכם. Appwrite מריצה בשבילכם PostgreSQL ו-MySQL מנוהלים, לצד TablesDB, DocumentsDB ו-VectorsDB באותו פרויקט.',
+  'Can I write functions in Python or Go?': 'האם אפשר לכתוב פונקציות ב-Python או ב-Go?',
+  'On Appwrite, yes. Functions run in 13+ runtimes, including Python, Go, Dart, PHP, Ruby, Java, Kotlin, Swift, .NET, and Node.js. Amplify Gen 2 functions use Node.js, and other languages need custom CDK code.':
+    'ב-Appwrite, כן. פונקציות רצות ביותר מ-13 סביבות ריצה, כולל Python, Go, Dart, PHP, Ruby, Java, Kotlin, Swift, .NET ו-Node.js. הפונקציות של Amplify Gen 2 משתמשות ב-Node.js, ושפות אחרות דורשות קוד CDK מותאם.',
+  'How does hosting cost compare?': 'איך משתווה עלות האירוח?',
+  'Amplify Hosting charges $0.15 per GB served after 15GB a month, plus build minutes, storage, and SSR requests. Serving 2TB comes to about $300 a month in bandwidth alone. Appwrite Pro starts at $25/mo and includes 2TB of bandwidth, with the backend in the same plan.':
+    'Amplify Hosting גובה $0.15 לכל GB שמוגש מעבר ל-15GB בחודש, ועוד דקות Build, אחסון ובקשות SSR. הגשה של 2TB מגיעה לכ-$300 לחודש על רוחב פס בלבד. Appwrite Pro מתחילה ב-$25 לחודש וכוללת 2TB של רוחב פס, עם ה-backend באותה תוכנית.',
+
+  // PlanetScale
+  'Session check': 'בדיקת סשן',
+  'File link': 'קישור לקובץ',
+  'Auth vendor': 'ספק אימות',
+  'Function host': 'ספק פונקציות',
+  'Storage vendor': 'ספק אחסון',
+  'Network hop between providers': 'קפיצת רשת בין ספקים',
+  'PlanetScale plus three other vendors': 'PlanetScale ועוד שלושה ספקים',
+  'Appwrite, one project and one region': 'Appwrite, פרויקט אחד ואזור אחד',
+  'Illustrative. Every extra provider adds a network hop, a set of credentials, and a bill.':
+    'להמחשה. כל ספק נוסף מוסיף קפיצת רשת, סט של פרטי גישה וחשבון.',
+  'No free tier': 'אין מדרגה חינמית',
+  'Removed in 2024': 'בוטלה ב-2024',
+  '$5/mo': '$5/חודש',
+  'Single-node Postgres': 'Postgres בצומת יחיד',
+  'For development and low traffic': 'לפיתוח ולתעבורה נמוכה',
+  '$50/mo': '$50/חודש',
+  'Local NVMe storage': 'אחסון NVMe מקומי',
+  '+ vendors': '+ ספקים',
+  'Auth, storage, functions, hosting': 'אימות, אחסון, פונקציות, אירוח',
+  'Bought and billed elsewhere': 'נרכשים ומחויבים במקום אחר',
+  'Serverless TablesDB, auth, storage, functions, and hosting': 'TablesDB מסוג Serverless, אימות, אחסון, פונקציות ואירוח',
+  '$10/mo in compute credits covers the smallest dedicated PostgreSQL or MySQL tier':
+    '$10 לחודש בקרדיטים למחשוב מכסים את המדרגה הקטנה ביותר של PostgreSQL או MySQL ייעודי',
+  '+ add-ons': '+ תוספות',
+  'Replicas and PITR': 'רפליקות ו-PITR',
+  'The rest of the backend': 'שאר ה-backend',
+  'Already in the same project': 'כבר באותו פרויקט',
+  'Growing on PlanetScale': 'לגדול ב-PlanetScale',
+  'Growing on Appwrite': 'לגדול ב-Appwrite',
+  'Your queries are fast.': 'השאילתות שלכם מהירות.',
+  'Is the rest of the request?': 'ושאר הבקשה?',
+  'PlanetScale runs fast MySQL and Postgres, and leaves auth, files, functions, and hosting to other vendors, each one another network hop and another bill. Appwrite runs managed PostgreSQL and MySQL next to the rest of your backend, in the same open-source project.':
+    'PlanetScale מריצה MySQL ו-Postgres מהירים, ומשאירה את האימות, הקבצים, הפונקציות והאירוח לספקים אחרים, כשכל אחד מהם הוא עוד קפיצת רשת ועוד חשבון. Appwrite מריצה PostgreSQL ו-MySQL מנוהלים לצד שאר ה-backend שלכם, באותו פרויקט בקוד פתוח.',
+  'Start free. Pay for a database when you need one.': 'התחילו בחינם. שלמו על מסד נתונים כשתצטרכו אחד.',
+  'PlanetScale removed its free tier in 2024, so every database starts as a paid cluster. Appwrite starts free with serverless TablesDB and the whole backend, and Pro adds managed PostgreSQL and MySQL with $10/mo in compute credits.':
+    'PlanetScale ביטלה את המדרגה החינמית שלה ב-2024, כך שכל מסד נתונים מתחיל כאשכול בתשלום. ב-Appwrite מתחילים בחינם עם TablesDB מסוג serverless וכל ה-backend, ו-Pro מוסיפה PostgreSQL ו-MySQL מנוהלים עם $10 לחודש בקרדיטים למחשוב.',
+  'Relational is one model. Appwrite has five.': 'רלציוני הוא רק מודל אחד. ל-Appwrite יש חמישה.',
+  'PlanetScale runs PostgreSQL and MySQL. Appwrite runs both, plus TablesDB on serverless or dedicated compute, DocumentsDB, and VectorsDB, all in one project.':
+    'PlanetScale מריצה PostgreSQL ו-MySQL. Appwrite מריצה את שניהם, וגם TablesDB על compute מסוג serverless או ייעודי, DocumentsDB ו-VectorsDB, והכול בפרויקט אחד.',
+  'A great database still needs a backend': 'גם מסד נתונים מצוין צריך backend',
+  'PlanetScale stops at the database. Appwrite adds auth, storage, functions, realtime, messaging, hosting, domains, and a firewall in the same project, with one Console and one bill.':
+    'PlanetScale עוצרת במסד הנתונים. Appwrite מוסיפה אימות, אחסון, פונקציות, Realtime, הודעות, אירוח, דומיינים וחומת אש באותו פרויקט, עם קונסולה אחת וחשבון אחד.',
+  'Run the whole stack anywhere': 'הריצו את כל הסטאק בכל מקום',
+  'Vitess is open source, but the PlanetScale platform runs only on PlanetScale. Appwrite is open source end to end, so your databases and the backend around them run on Appwrite Cloud or on your own servers.':
+    'Vitess הוא קוד פתוח, אבל הפלטפורמה של PlanetScale רצה רק ב-PlanetScale. Appwrite היא קוד פתוח מקצה לקצה, כך שמסדי הנתונים שלכם וה-backend שסביבם רצים ב-Appwrite Cloud או בשרתים שלכם.',
+  'Managed SQL on both sides. A backend on one.': 'SQL מנוהל בשני הצדדים. Backend רק באחד.',
+  'Both run managed PostgreSQL and MySQL. Only one gives you the rest of the backend in the same project.':
+    'שתיהן מריצות PostgreSQL ו-MySQL מנוהלים. רק אחת נותנת לכם את שאר ה-backend באותו פרויקט.',
+  'Bring your database home to a full backend': 'הביאו את מסד הנתונים שלכם הביתה, ל-backend שלם',
+  'Start free, add managed PostgreSQL or MySQL on Pro, and keep auth, files, and functions in the same project.':
+    'התחילו בחינם, הוסיפו PostgreSQL או MySQL מנוהלים ב-Pro, ושמרו את האימות, הקבצים והפונקציות באותו פרויקט.',
+  'PostgreSQL and MySQL through Vitess': 'PostgreSQL ו-MySQL דרך Vitess',
+  'PostgreSQL 18, in beta': 'PostgreSQL 18, בבטא',
+  'Managed MySQL': 'MySQL מנוהל',
+  'In beta': 'בבטא',
+  'Vitess, with horizontal sharding': 'Vitess, עם sharding אופקי',
+  'Serverless database with no fixed fee': 'מסד נתונים Serverless בלי תשלום קבוע',
+  'TablesDB, including on the Free plan': 'TablesDB, גם בתוכנית Free',
+  'Up to 5 replicas': 'עד 5 רפליקות',
+  '1 primary and 2 replicas across 3 zones': 'Primary אחד ו-2 רפליקות על פני 3 אזורי זמינות',
+  'Branches and deploy requests': 'Branches ו-deploy requests',
+  'A PlanetScale strength': 'נקודת חוזק של PlanetScale',
+  'File storage with image transformations': 'אחסון קבצים עם טרנספורמציות תמונה',
+  'Functions in 13+ runtimes': 'פונקציות ביותר מ-13 סביבות ריצה',
+  'Pricing and platform': 'תמחור ופלטפורמה',
+  'Entry price for a managed database': 'מחיר כניסה למסד נתונים מנוהל',
+  'Pro includes $10/mo in compute credits': 'Pro כוללת $10 לחודש בקרדיטים למחשוב',
+  'From $5/mo': 'החל מ-$5/חודש',
+  'Vitess is open source, the platform is not': 'Vitess הוא קוד פתוח, הפלטפורמה לא',
+  'When PlanetScale might still fit': 'מתי PlanetScale עדיין יכולה להתאים',
+  'PlanetScale builds excellent databases. It may still suit you if these sound like your workload.':
+    'PlanetScale בונה מסדי נתונים מצוינים. היא עדיין עשויה להתאים לכם אם זה נשמע כמו עומס העבודה שלכם.',
+  'You need horizontal sharding for a very large MySQL or Postgres workload today.':
+    'אתם צריכים כבר היום sharding אופקי לעומס עבודה גדול מאוד של MySQL או Postgres.',
+  'Branching with deploy requests is central to how your team ships schema changes.':
+    'Branching עם deploy requests הוא חלק מרכזי באופן שבו הצוות שלכם משחרר שינויי סכמה.',
+  'You want local NVMe storage on Metal for the highest IOPS.': 'אתם רוצים אחסון NVMe מקומי ב-Metal בשביל IOPS מקסימלי.',
+  'You only need a database, and your backend already lives elsewhere.':
+    'אתם צריכים רק מסד נתונים, וה-backend שלכם כבר נמצא במקום אחר.',
+  'Managed PostgreSQL and MySQL on Appwrite are in beta.': 'PostgreSQL ו-MySQL מנוהלים ב-Appwrite נמצאים בבטא.',
+  'How Appwrite Databases can replace your PlanetScale database':
+    'איך Appwrite Databases יכולים להחליף את מסד הנתונים שלכם ב-PlanetScale',
+  'Moving off PlanetScale onto a full backend.': 'מעבר מ-PlanetScale ל-backend שלם.',
+  'Is Appwrite better than PlanetScale?': 'האם Appwrite עדיפה על PlanetScale?',
+  'For apps that need more than a database, yes. Appwrite runs managed PostgreSQL and MySQL next to TablesDB, DocumentsDB, and VectorsDB, and the same project includes auth, storage, functions in 13+ runtimes, realtime, messaging, and hosting. PlanetScale focuses on the database and leaves the rest of the backend to other vendors.':
+    'עבור אפליקציות שצריכות יותר ממסד נתונים, כן. Appwrite מריצה PostgreSQL ו-MySQL מנוהלים לצד TablesDB, DocumentsDB ו-VectorsDB, ואותו פרויקט כולל אימות, אחסון, פונקציות ביותר מ-13 סביבות ריצה, Realtime, הודעות ואירוח. PlanetScale מתמקדת במסד הנתונים ומשאירה את שאר ה-backend לספקים אחרים.',
+  'What is the best PlanetScale alternative with a free plan?': 'מהי החלופה הטובה ביותר ל-PlanetScale עם תוכנית חינמית?',
+  'Appwrite is the best PlanetScale alternative with a free plan. PlanetScale removed its free tier in 2024. Appwrite Free includes a serverless TablesDB database, auth for 75,000 monthly active users, storage, functions, and hosting, and Pro adds managed PostgreSQL and MySQL with $10/mo in compute credits.':
+    'Appwrite היא החלופה הטובה ביותר ל-PlanetScale עם תוכנית חינמית. PlanetScale ביטלה את המדרגה החינמית שלה ב-2024. Appwrite Free כוללת מסד נתונים TablesDB מסוג serverless, אימות ל-75,000 משתמשים פעילים חודשיים, אחסון, פונקציות ואירוח, ו-Pro מוסיפה PostgreSQL ו-MySQL מנוהלים עם $10 לחודש בקרדיטים למחשוב.',
+  'Does PlanetScale support more than one database model?': 'האם PlanetScale תומכת ביותר ממודל מסד נתונים אחד?',
+  'PlanetScale offers two relational engines, PostgreSQL and MySQL through Vitess, and no document or vector database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.':
+    'PlanetScale מציעה שני מנועים רלציוניים, PostgreSQL ו-MySQL דרך Vitess, ואין לה מסד נתונים של מסמכים או של וקטורים. Appwrite נותנת לכם חמישה מודלים של מסדי נתונים בפרויקט אחד: TablesDB על compute מסוג serverless או ייעודי, ועוד DocumentsDB, VectorsDB, PostgreSQL ו-MySQL על compute ייעודי.',
+  'How do I migrate from PlanetScale?': 'איך עוברים מ-PlanetScale?',
+  'For PostgreSQL, run pg_dump against PlanetScale and pg_restore into Appwrite. For MySQL, use mysqldump and import into an Appwrite MySQL database. Any standard client works, so there is no Appwrite-specific tooling to learn.':
+    'ב-PostgreSQL, הריצו pg_dump מול PlanetScale ו-pg_restore לתוך Appwrite. ב-MySQL, השתמשו ב-mysqldump וייבאו למסד נתונים MySQL ב-Appwrite. כל לקוח סטנדרטי עובד, כך שאין כלים ייעודיים ל-Appwrite שצריך ללמוד.',
+  'Is Appwrite managed PostgreSQL production ready?': 'האם PostgreSQL המנוהל של Appwrite מוכן לפרודקשן?',
+  'Managed PostgreSQL and MySQL on Appwrite are in beta. They run on dedicated compute with connection pooling, up to five HA replicas, and point-in-time recovery. TablesDB is generally available and runs on serverless or dedicated compute.':
+    'PostgreSQL ו-MySQL מנוהלים ב-Appwrite נמצאים בבטא. הם רצים על compute ייעודי עם מאגר חיבורים, עד חמש רפליקות HA ושחזור לנקודת זמן. TablesDB זמין לכלל המשתמשים (GA) ורץ על compute מסוג serverless או ייעודי.',
+  'Yes. Appwrite is fully open source and self-hosts with Docker, with the same APIs, SDKs, and Console as Appwrite Cloud. PlanetScale publishes Vitess as open source, but the PlanetScale platform runs only on PlanetScale.':
+    'כן. Appwrite היא קוד פתוח לגמרי ורצה באירוח עצמי עם Docker, עם אותם APIs, SDKs וקונסולה כמו ב-Appwrite Cloud. PlanetScale מפרסמת את Vitess כקוד פתוח, אבל הפלטפורמה של PlanetScale רצה רק ב-PlanetScale.',
+  'PostgreSQL connections': 'חיבורים ל-PostgreSQL',
 }

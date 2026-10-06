@@ -130,6 +130,42 @@ export const PLATFORM_COVERAGE: Record<AlternativeId, Record<PlatformProductId, 
     domains: 'no',
     firewall: 'no',
   },
+  clerk: {
+    auth: 'yes',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
+  amplify: {
+    auth: 'yes',
+    databases: 'yes',
+    postgres: 'partial',
+    storage: 'yes',
+    functions: 'partial',
+    realtime: 'yes',
+    messaging: 'partial',
+    sites: 'yes',
+    domains: 'partial',
+    firewall: 'yes',
+  },
+  planetscale: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'yes',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
 }
 
 /** How each competitor ships its source, shown next to Appwrite being open source. */
@@ -165,5 +201,17 @@ export const COMPETITOR_SOURCE: Record<AlternativeId, { status: string; detail: 
   cloudinary: {
     status: 'Proprietary',
     detail: 'Closed source and cloud only.',
+  },
+  clerk: {
+    status: 'Proprietary',
+    detail: 'The SDKs are public, but the service that stores your users is closed source and runs only on Clerk.',
+  },
+  amplify: {
+    status: 'Runs only on AWS',
+    detail: 'The Amplify libraries are open source, but every backend service behind them runs only on AWS.',
+  },
+  planetscale: {
+    status: 'Platform not self-hostable',
+    detail: 'Vitess is open source, but the PlanetScale platform, branching, and Postgres service run only on PlanetScale.',
   },
 }

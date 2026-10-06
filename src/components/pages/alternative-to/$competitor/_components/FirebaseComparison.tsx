@@ -485,7 +485,7 @@ export function FirebaseComparison() {
         <div className={comparisonHeroCenteredClassName}>
           <VersusPill name="Firebase" />
           <ComparisonHeroTitle
-            className="mx-auto mt-7 max-w-4xl"
+            className="mx-auto mt-7 max-w-4xl lg:text-[56px] xl:text-[64px]"
             title="Keep the speed."
             accent="Lose the lock-in."
           />
@@ -523,7 +523,7 @@ export function FirebaseComparison() {
       <DatabaseModelsSection
         id="firebase"
         title="Documents are just one way to model data"
-        description="Firebase is built around Firestore documents. Appwrite gives you five database models in one project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL."
+        description="Firebase is built around Firestore documents. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute."
       />
 
       <ComparisonSection backdrop={<FirebaseSideGlow />}>

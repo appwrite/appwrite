@@ -24,9 +24,14 @@ export const APPWRITE_RUNTIMES = [
 export function RuntimeWall({
   competitorName,
   competitorRuntime,
+  competitorIcon = '/icons/ts.svg',
+  competitorNote,
 }: {
   competitorName: string
   competitorRuntime: string
+  competitorIcon?: string
+  /** Replaces the "1 language" count when the other platform has a caveat worth stating. */
+  competitorNote?: string
 }) {
   const t = useT()
   return (
@@ -69,14 +74,18 @@ export function RuntimeWall({
           <CompetitorMonogram name={competitorName} />
           {competitorName}
           <span className="inline-flex items-center gap-1.5 text-foreground/70">
-            <ProductFeaturePublicIcon src="/icons/ts.svg" tone="muted-foreground" className="size-3.5" />
+            <ProductFeaturePublicIcon src={competitorIcon} tone="muted-foreground" className="size-3.5" />
             {t(competitorRuntime)}
           </span>
         </p>
-        <p className="flex shrink-0 items-baseline gap-2">
-          <span className="font-aeonik-pro text-[28px] leading-none text-foreground/40">1</span>
-          <span className="text-[12px] text-muted-foreground">{t('language')}</span>
-        </p>
+        {competitorNote ? (
+          <p className="max-w-xs text-[12px] leading-5 text-muted-foreground sm:text-end">{t(competitorNote)}</p>
+        ) : (
+          <p className="flex shrink-0 items-baseline gap-2">
+            <span className="font-aeonik-pro text-[28px] leading-none text-foreground/40">1</span>
+            <span className="text-[12px] text-muted-foreground">{t('language')}</span>
+          </p>
+        )}
       </div>
     </ProductVisualAura>
   )

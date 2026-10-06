@@ -220,16 +220,16 @@ export function SupabaseComparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:pb-20 lg:pt-20',
+            'xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] xl:pb-20 xl:pt-20',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Supabase" />
             <ComparisonHeroTitle className="mt-7" title="Your whole stack," accent="not just the database" />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Supabase is Postgres with tools around it. Appwrite is the complete open-source platform: auth, databases, storage, functions in 13+ runtimes, and realtime, plus web hosting, messaging, domains, and a firewall that Supabase does not offer. One project, one Console, one bill.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton
                 href="/docs/advanced/migrations/supabase"
@@ -261,7 +261,7 @@ export function SupabaseComparison() {
       <DatabaseModelsSection
         id="supabase"
         title="The right database for every kind of data"
-        description="Supabase puts everything in one PostgreSQL instance per project. Appwrite gives you five database models in the same project: tables, documents, and vectors on serverless or dedicated compute, plus managed PostgreSQL and MySQL."
+        description="Supabase puts everything in one PostgreSQL instance per project. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute."
       />
 
       <ComparisonSection>

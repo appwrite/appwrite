@@ -68,7 +68,7 @@ export const postgresProductContent: ProductPageContent = {
     {
       question: 'How do specifications and pricing work?',
       answer:
-        'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are +50% of base per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.',
+        'PostgreSQL uses the same dedicated compute tiers as pricing: reserved CPU, memory, and connections, from $10/mo per database. Reads and writes are included in the tier. High availability replicas are billed at the full compute tier price per replica, and point-in-time recovery is +20% of base. Extra storage and bandwidth are usage-based overage. Managed databases need a paid plan.',
       links: [
         { label: 'Pricing', href: '/pricing' },
         {

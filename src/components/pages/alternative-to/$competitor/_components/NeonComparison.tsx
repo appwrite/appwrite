@@ -193,16 +193,16 @@ export function NeonComparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
+            'xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Neon" />
             <ComparisonHeroTitle className="mt-7" title="Postgres, plus" accent="everything around it." />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Neon gives you serverless Postgres and leaves most of the stack to you. Appwrite runs managed PostgreSQL inside a complete open-source backend, with auth, storage, functions in 13+ runtimes, realtime, messaging, and hosting in one project.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton href="/products/postgres" label="Explore managed PostgreSQL" />
             </div>
@@ -231,7 +231,7 @@ export function NeonComparison() {
       <DatabaseModelsSection
         id="neon"
         title="Postgres, plus four more database models"
-        description="Neon runs one engine, PostgreSQL, on serverless compute. Appwrite adds tables, documents, and vectors on serverless or dedicated compute, plus MySQL, next to managed PostgreSQL in the same project."
+        description="Neon runs one engine, PostgreSQL, on serverless compute. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute."
       />
 
       <IntegrationHubSection

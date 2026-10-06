@@ -406,16 +406,16 @@ export function NetlifyComparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]',
+            'xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Netlify" />
             <ComparisonHeroTitle className="mt-7" title="Push the site." accent="The backend is already there." />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Netlify hosts your site and sends you to add-ons and other vendors for the rest. Appwrite Sites deploys the same frameworks from Git, right next to first-party auth, databases, storage, functions, realtime, and messaging. Open source, in one project, with no credits to count.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton href="/products/sites" label="Explore Appwrite Sites" />
             </div>

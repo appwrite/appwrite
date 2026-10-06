@@ -35,7 +35,7 @@ export const convexAlternativeContent: AlternativeContent = {
         },
         {
           label: 'Serverless or dedicated databases',
-          appwrite: { value: true, note: 'Choose per database' },
+          appwrite: { value: true, note: 'Serverless TablesDB, or dedicated compute for any engine' },
           competitor: { value: false, note: 'Serverless only' },
         },
         {
@@ -159,7 +159,7 @@ export const convexAlternativeContent: AlternativeContent = {
     {
       question: 'Does Convex support more than one database model?',
       answer:
-        'No. Convex stores all data as documents in its own serverless database. Appwrite gives you five database models in one project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL.',
+        'No. Convex stores all data as documents in its own serverless database. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.',
       links: [{ label: 'Appwrite Databases', href: '/products/databases' }],
     },
     {

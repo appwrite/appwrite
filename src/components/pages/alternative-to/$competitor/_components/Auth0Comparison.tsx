@@ -319,20 +319,20 @@ export function Auth0Comparison() {
         <div
           className={cn(
             comparisonHeroGridClassName,
-            'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]',
+            'xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]',
           )}
         >
           <div className={comparisonHeroCopyClassName}>
             <VersusPill name="Auth0" />
             <ComparisonHeroTitle className="mt-7" title="Authentication without" accent="the growth penalty." />
-            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground sm:text-[16px] sm:leading-8 xl:mx-0">
               {t('Auth0 charges by the user and stops at sign-in. Appwrite Auth is open source, includes 200,000 monthly active users on Pro, and plugs straight into the database, storage, functions, and hosting in the same project.')}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 xl:justify-start">
               <StartBuildingButton />
               <SecondaryLinkButton href="/products/auth" label="Explore Appwrite Auth" />
             </div>
-            <dl className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-8 text-start sm:mt-12 sm:grid-cols-3 sm:gap-6 lg:mx-0">
+            <dl className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-8 text-start sm:mt-12 sm:grid-cols-3 sm:gap-6 xl:mx-0">
               {[
                 { value: '3x', label: 'Free monthly active users' },
                 { value: '40+', label: 'OAuth providers' },

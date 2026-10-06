@@ -1,11 +1,14 @@
 import type { ComponentType } from 'react'
+import { AmplifyComparison } from './_components/AmplifyComparison'
 import { Auth0Comparison } from './_components/Auth0Comparison'
+import { ClerkComparison } from './_components/ClerkComparison'
 import { CloudinaryComparison } from './_components/CloudinaryComparison'
 import { ComparisonShell } from './_components/ComparisonParts'
 import { ConvexComparison } from './_components/ConvexComparison'
 import { FirebaseComparison } from './_components/FirebaseComparison'
 import { NeonComparison } from './_components/NeonComparison'
 import { NetlifyComparison } from './_components/NetlifyComparison'
+import { PlanetScaleComparison } from './_components/PlanetScaleComparison'
 import { SupabaseComparison } from './_components/SupabaseComparison'
 import { VercelComparison } from './_components/VercelComparison'
 import type { AlternativeId } from '@/lib/alternatives/types'
@@ -20,6 +23,9 @@ const COMPARISON_PAGES: Record<AlternativeId, ComponentType> = {
   auth0: Auth0Comparison,
   convex: ConvexComparison,
   cloudinary: CloudinaryComparison,
+  clerk: ClerkComparison,
+  amplify: AmplifyComparison,
+  planetscale: PlanetScaleComparison,
 }
 
 export function View({ competitor }: { competitor: AlternativeId }) {

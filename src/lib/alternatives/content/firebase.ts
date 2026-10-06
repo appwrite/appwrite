@@ -33,7 +33,7 @@ export const firebaseAlternativeContent: AlternativeContent = {
         },
         {
           label: 'Serverless or dedicated databases',
-          appwrite: { value: true, note: 'Choose per database' },
+          appwrite: { value: true, note: 'Serverless TablesDB, or dedicated compute for any engine' },
           competitor: { value: false, note: 'Firestore is serverless only' },
         },
         {
@@ -162,7 +162,7 @@ export const firebaseAlternativeContent: AlternativeContent = {
     {
       question: 'Does Firebase support relational databases?',
       answer:
-        'Firebase is built around Firestore documents. Relational data needs SQL Connect, a separate PostgreSQL service billed through Cloud SQL. Appwrite gives you five database models in one project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL, all with the same permissions and Console.',
+        'Firebase is built around Firestore documents. Relational data needs SQL Connect, a separate PostgreSQL service billed through Cloud SQL. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute, all in the same Console.',
       links: [{ label: 'Appwrite Databases', href: '/products/databases' }],
     },
     {

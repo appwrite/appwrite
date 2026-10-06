@@ -5,10 +5,12 @@ import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
 } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
+import { Badge } from '@/components/ui/badge'
 import { APPWRITE_DATABASE_MODELS, COMPETITOR_DATABASE_MODEL } from '@/lib/alternatives/database-models'
 import type { DatabaseCompute, DatabaseModelId } from '@/lib/alternatives/database-models'
 import { ALTERNATIVE_REGISTRY } from '@/lib/alternatives/registry'
 import type { AlternativeId } from '@/lib/alternatives/types'
+import { isBetaDatabaseType } from '@/lib/databases/database-type-display'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { AppwriteMark, ComparisonHeading, ComparisonSection, CompetitorMonogram } from './ComparisonParts'
@@ -43,6 +45,7 @@ export function DatabaseModelsSection({
   const meta = ALTERNATIVE_REGISTRY[id]
   const competitor = COMPETITOR_DATABASE_MODEL[id]
   if (!competitor) return null
+  const fullSlots = competitor.slots.filter((slot) => !slot.partial).length
 
   return (
     <ComparisonSection
@@ -68,11 +71,11 @@ export function DatabaseModelsSection({
             <dt className="flex max-w-[11rem] items-start gap-2 text-[13px] leading-5 text-muted-foreground">
               <CompetitorMonogram name={meta.name} className="mt-0.5 shrink-0" />
               <span className="min-w-0 break-words">
-                {meta.name}: {t(competitor.engine)}
+                {meta.name}: {t(competitor.summary)}
               </span>
             </dt>
             <dd className="font-aeonik-pro text-[40px] leading-none tracking-tight text-foreground/40 tabular-nums sm:text-[52px] lg:text-[64px]">
-              1
+              {fullSlots}
             </dd>
           </div>
         </dl>
@@ -92,8 +95,9 @@ export function DatabaseModelsSection({
       <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-6">
         {APPWRITE_DATABASE_MODELS.map((model, index) => {
           const Icon = MODEL_ICONS[model.id]
-          const isSlot = competitor.slot === model.id
-          const extra = competitor.extra?.slot === model.id ? competitor.extra : null
+          const slot = competitor.slots.find((item) => item.id === model.id)
+          const isSlot = Boolean(slot && !slot.partial)
+          const extra = slot?.partial ? slot : null
           return (
             <li key={model.id} className="product-hero-rise flex flex-col" style={riseStyle(120 + index * 90)}>
               <span className="relative flex size-12">
@@ -105,7 +109,14 @@ export function DatabaseModelsSection({
                   <Icon className="size-5" aria-hidden />
                 </span>
               </span>
-              <p className="mt-4 font-aeonik-pro text-[18px] tracking-tight text-foreground">{model.name}</p>
+              <p className="mt-4 flex flex-wrap items-center gap-2 font-aeonik-pro text-[18px] tracking-tight text-foreground">
+                {model.name}
+                {isBetaDatabaseType(model.id) ? (
+                  <Badge variant="info" className="shrink-0 font-sans text-[10px]">
+                    {t('Beta')}
+                  </Badge>
+                ) : null}
+              </p>
               <p className="mt-1 text-[12px] text-muted-foreground">{t(model.model)}</p>
               <p className="mt-3 flex flex-wrap gap-1.5">
                 {model.compute.map((compute) => (
@@ -128,14 +139,14 @@ export function DatabaseModelsSection({
                       : 'border-dashed border-foreground/15',
                 )}
               >
-                {isSlot ? (
+                {slot && isSlot ? (
                   <>
                     <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                       <CompetitorMonogram name={meta.name} className="size-4 text-[9px]" />
                       {meta.name}
                     </p>
-                    <p className="mt-1.5 text-[13px] font-medium text-foreground/80">{t(competitor.engine)}</p>
-                    <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{t(competitor.compute)}</p>
+                    <p className="mt-1.5 text-[13px] font-medium text-foreground/80">{t(slot.engine)}</p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{t(slot.compute)}</p>
                   </>
                 ) : extra ? (
                   <>
@@ -143,7 +154,8 @@ export function DatabaseModelsSection({
                       <CompetitorMonogram name={meta.name} className="size-4 text-[9px]" />
                       {meta.name}
                     </p>
-                    <p className="mt-1.5 text-[12px] leading-4 text-muted-foreground">{t(extra.label)}</p>
+                    <p className="mt-1.5 text-[12px] leading-4 text-muted-foreground">{t(extra.engine)}</p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground/80">{t(extra.compute)}</p>
                   </>
                 ) : (
                   <p className="text-center font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">

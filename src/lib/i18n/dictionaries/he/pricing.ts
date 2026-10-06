@@ -5,7 +5,9 @@
 export const hePricingDictionary: Record<string, string> = {
   '-': 'לא כלול',
   '+20% of base': '+20% מהבסיס',
-  '+50% of base per replica': '+50% מהבסיס לכל replica',
+  'Full tier price per replica': 'מחיר מלא של שכבת המחשוב לכל replica',
+  'Full tier price per replica, +20% for point-in-time recovery':
+    'מחיר מלא של שכבת המחשוב לכל replica, +20% ל-point-in-time recovery',
   '$0': '$0',
   '$0 fixed fee': '$0 דמי קבועים',
   '$0.004 per screenshot': '$0.004 לכל צילום מסך',

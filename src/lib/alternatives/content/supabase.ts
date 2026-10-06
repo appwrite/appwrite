@@ -39,7 +39,7 @@ export const supabaseAlternativeContent: AlternativeContent = {
         },
         {
           label: 'Serverless or dedicated databases',
-          appwrite: { value: true, note: 'Choose per database' },
+          appwrite: { value: true, note: 'Serverless TablesDB, or dedicated compute for any engine' },
           competitor: { value: false, note: 'One dedicated instance per project' },
         },
         {
@@ -174,7 +174,7 @@ export const supabaseAlternativeContent: AlternativeContent = {
     {
       question: 'Does Supabase support more than one database model?',
       answer:
-        'No. Supabase is built on PostgreSQL, with one dedicated instance per project. Appwrite gives you five database models in the same project: TablesDB, DocumentsDB, and VectorsDB on serverless or dedicated compute, plus managed PostgreSQL and MySQL.',
+        'No. Supabase is built on PostgreSQL, with one dedicated instance per project. Appwrite gives you five database models in one project: TablesDB on serverless or dedicated compute, plus DocumentsDB, VectorsDB, PostgreSQL, and MySQL on dedicated compute.',
       links: [{ label: 'Appwrite Databases', href: '/products/databases' }],
     },
     {
