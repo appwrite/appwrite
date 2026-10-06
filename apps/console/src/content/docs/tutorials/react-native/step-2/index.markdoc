@@ -7,10 +7,11 @@ step: 2
 
 ## Create React Native project {% #create-react-project %}
 
-Create a React Native app with the `npm create` command.
+Create a React Native app with the `create-expo-app` command.
+This tutorial uses React Navigation for routing, so start from the blank template. The default template uses Expo Router instead.
 
 ```sh
-npx create-expo-app ideas-tracker
+npx create-expo-app@latest ideas-tracker --template blank
 cd ideas-tracker
 ```
 
@@ -32,12 +33,4 @@ Install peer dependencies needed for React Navigation.
 
 ```sh
 npx expo install react-native-screens react-native-safe-area-context
-```
-
-For iOS with bare React Native project, make sure you have CocoaPods installed. Then install the pods to complete the installation:
-
-```
-cd ios
-pod install
-cd ..
 ```

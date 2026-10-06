@@ -15,10 +15,10 @@ Follow the [React quickstart](/docs/quick-starts/react) and [React tutorial](/do
 {% /info %}
 
 {% section #step-1 step=1 title="Create React Native project" %}
-Create a React Native project using [npx](https://www.npmjs.com/package/npx).
+Create a React Native project using [npx](https://www.npmjs.com/package/npx) and the blank TypeScript template.
 
 ```sh
-npx create-expo-app my-app
+npx create-expo-app@latest my-app --template blank-typescript
 cd my-app
 ```
 {% /section %}
@@ -87,7 +87,7 @@ Find your project's ID in the **Settings** page.
 ![Project settings screen](/images/docs/quick-starts/project-id.avif)
 {% /only_light %}
 
-Open `app/(tabs)/index.tsx` and add the following code to it, replace `<PROJECT_ID>` with your project ID and `<YOUR_PLATFORM>` with your application id or package name.
+Open `App.tsx` and replace its contents with the following code. Replace `<PROJECT_ID>` with your project ID and `<YOUR_PLATFORM>` with your application id or package name.
 
 This imports and initializes Appwrite and defines some basic authentication methods.
 
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
 {% section #step-5 step=5 title="Create a login form" %}
 With `Client` and `Account` service initialized, you can now use them to make your first requests to Appwrite.
 
-Add the following components to your `App.js` file to create a simple login form.
+Return the following components from the `App` component in your `App.tsx` file to create a simple login form.
 
 ```client-react-native
 <View style={styles.root}>
@@ -201,7 +201,7 @@ Add the following components to your `App.js` file to create a simple login form
 </View>
 ```
 
-You can also add some simple styling to your app by adding the following styles to your `App.js` file.
+You can also add some simple styling to your app by adding the following styles to your `App.tsx` file.
 
 ```client-react-native
 const styles = StyleSheet.create({
