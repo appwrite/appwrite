@@ -44,6 +44,8 @@ use Utopia\Query\Hook\Filter;
 use Utopia\Query\Query;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Tests\AssertsBindingCount;
+use Utopia\Query\Tokenizer\PostgreSQL as PostgreSQLTokenizer;
+use Utopia\Query\Tokenizer\TokenType;
 
 class PostgreSQLTest extends TestCase
 {
@@ -4394,6 +4396,67 @@ class PostgreSQLTest extends TestCase
         $this->assertBindingCount($result);
 
         $this->assertSame('SELECT * FROM "t" WHERE "data"->\'level1\'->\'level2\'->>\'leaf\' IN (?)', $result->query);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function nestedObjectKeyProvider(): array
+    {
+        return [
+            'quote in the last key' => ["meta.a' IN ('x') OR secret='s2' OR 'x", 'meta.a'],
+            'quote in a middle key' => ["meta.n' OR secret='s2' OR 'x.c", 'meta.n.c'],
+            'concatenated subquery' => ["meta.a'||(select 1)||'", 'meta.a'],
+            'trailing line comment' => ["meta.a' OR 1=1 --", 'meta.a'],
+            'backslash before a quote' => ["meta.a\\' OR secret='s2' OR 'x", 'meta.a\\b'],
+        ];
+    }
+
+    #[DataProvider('nestedObjectKeyProvider')]
+    public function testObjectFilterNestedKeyDoesNotChangeStatementShape(string $attribute, string $plainAttribute): void
+    {
+        $this->assertSame(
+            $this->objectFilterShape($plainAttribute),
+            $this->objectFilterShape($attribute),
+        );
+    }
+
+    public function testObjectFilterNestedKeyRejectsNulByte(): void
+    {
+        $query = Query::equal("meta.a\0b", ['x']);
+        $query->setAttributeType(ColumnType::Object->value);
+
+        $this->expectException(ValidationException::class);
+
+        new Builder()
+            ->from('t')
+            ->filter([$query])
+            ->build();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function objectFilterShape(string $attribute): array
+    {
+        $query = Query::equal($attribute, ['x']);
+        $query->setAttributeType(ColumnType::Object->value);
+
+        $result = new Builder()
+            ->from('t')
+            ->filter([$query])
+            ->build();
+        $this->assertSame(['x'], $result->bindings);
+
+        $shape = [];
+        foreach (new PostgreSQLTokenizer()->tokenize($result->query) as $token) {
+            if ($token->type === TokenType::Whitespace) {
+                continue;
+            }
+            $shape[] = $token->type === TokenType::String ? '<string>' : $token->value;
+        }
+
+        return $shape;
     }
 
     public function testVectorFilterDefault(): void

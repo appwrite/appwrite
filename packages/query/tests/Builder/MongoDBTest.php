@@ -1556,6 +1556,33 @@ class MongoDBTest extends TestCase
         ]], $op['filter']);
     }
 
+    /**
+     * @return array<string, array{Query}>
+     */
+    public static function operatorFieldFilterProvider(): array
+    {
+        return [
+            'equal' => [Query::equal('$where', ['this.secret == "s2"'])],
+            'greater than' => [Query::greaterThan('$expr', 1)],
+            'nested in or' => [Query::or([Query::equal('name', ['a']), Query::equal('$where', ['true'])])],
+            'nested in and' => [Query::and([Query::equal('name', ['a']), Query::isNull('$where')])],
+            'exists' => [Query::exists(['email', '$where'])],
+            'not exists' => [Query::notExists(['$where'])],
+            'empty field' => [Query::equal('', ['a'])],
+        ];
+    }
+
+    #[DataProvider('operatorFieldFilterProvider')]
+    public function testFilterRejectsOperatorAsFieldName(Query $filter): void
+    {
+        $this->expectException(ValidationException::class);
+
+        new Builder()
+            ->from('users')
+            ->filter([$filter])
+            ->build();
+    }
+
     public function testContainsAnyOnArray(): void
     {
         $query = Query::containsAny('tags', ['php', 'js']);
