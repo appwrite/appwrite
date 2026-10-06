@@ -58,7 +58,7 @@ In the [Appwrite Console](https://appwrite.io/console), create a project named `
 3. Select these scopes: `databases.read`, `databases.write`, `tables.read`, `tables.write`, `columns.read`, `columns.write`, `indexes.read`, `indexes.write`, `rows.read`, `rows.write`, `functions.read`, `functions.write`, `executions.write`, `sites.read`, `sites.write`, `rules.read`, `rules.write`, `platforms.read`, and `platforms.write`.
 4. Select **Create API key** and copy the key.
 
-Copy `.env.example` to `.env` in the root of the repository and fill in these values:
+Copy [`.env.example`](https://github.com/appwrite-community/murmur-ai-town/blob/main/.env.example) to `.env` in the root of the repository and fill in these values:
 
 ```bash
 APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
@@ -95,7 +95,7 @@ Open **Databases** and select the **Town** database. It has one table for each k
 | `whispers` | What visitors whisper and the reply | visitors create, `whisper` updates |
 | `whisper_slots` | One row per rate-limit slot that a whisper took | `whisper` |
 
-To create the tables by hand, copy the columns from `scripts/schema.ts`.
+To create the tables by hand, copy the columns from [`scripts/schema.ts`](https://github.com/appwrite-community/murmur-ai-town/blob/main/scripts/schema.ts).
 
 # Review the table permissions
 
@@ -142,11 +142,11 @@ const ctx = await loadTown(tablesDB);
 const next = nextClock(ctx.world); // tick + 1, 30 more minutes of town time
 ```
 
-`loadTown` returns the world row, the places, and the residents. For each resident, it also returns the four newest memories that are not rumors, the three newest rumors the resident knows, and the strongest relationships. The resident card in the game shows the same data.
+[`loadTown`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/town.js) returns the world row, the places, and the residents. For each resident, it also returns the four newest memories that are not rumors, the three newest rumors the resident knows, and the strongest relationships. The resident card in the game shows the same data.
 
 ## Ask the model for actions from a closed set
 
-The prompt describes the time, the places, and each resident. The function sends a JSON schema with the request as a structured output. This excerpt from `prompts.js` shows the fields of one action. Each value comes from a fixed list:
+The prompt describes the time, the places, and each resident. The function sends a JSON schema with the request as a structured output. This excerpt from [`prompts.js`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/prompts.js) shows the fields of one action. Each value comes from a fixed list:
 
 ```javascript
 properties: {
@@ -164,7 +164,7 @@ Memories and rumors go into the prompt between `«` and `»`. The system prompt 
 
 ## Check every action
 
-The schema shapes the answer, but the function does not trust it. `validatePlan` checks each action against the map and the town rules. It replaces anything invalid with the resident's normal routine, which is work during the day and rest at night. An unknown emote becomes a shrug:
+The schema shapes the answer, but the function does not trust it. [`validatePlan`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/rules.js) checks each action against the map and the town rules. It replaces anything invalid with the resident's normal routine, which is work during the day and rest at night. An unknown emote becomes a shrug:
 
 ```javascript
 switch (raw.action) {
@@ -194,13 +194,13 @@ if (!action) {
 }
 ```
 
-`cleanText` removes control characters and the `«»` marks from every spoken line. It also shortens long lines at a word boundary.
+[`cleanText`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/rules.js) removes control characters and the `«»` marks from every spoken line. It also shortens long lines at a word boundary.
 
 ## Write the conversations
 
 ![Mae and Dot talk by the fountain and Wren talks at the pond, their lines appear in speech bubbles, and the Town Crier shows the same conversations](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/app-conversation.avif)
 
-Two residents can only talk when they stand at the same place and neither of them walks away in this tick. A resident who wants to talk to someone elsewhere walks to that person's place instead. `pairConversations` makes these pairs, at most three per tick.
+Two residents can only talk when they stand at the same place and neither of them walks away in this tick. A resident who wants to talk to someone elsewhere walks to that person's place instead. [`pairConversations`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/rules.js) makes these pairs, at most three per tick.
 
 A second model call writes all the conversations of the tick. The game shows each line above the speaker and the full conversation in the **Town Crier**.
 
@@ -223,7 +223,7 @@ Each accepted share becomes a `heard` memory of the listener, with the rumor ID 
 
 ## Commit the tick in one transaction
 
-A tick changes the world row, ten residents, and about 40 memories, events, relationships, and rumor counts. `buildOperations` turns all of these changes into [transaction operations](/docs/products/databases/tablesdb/transactions). The first operation creates the row `tick-<n>` in the `ticks` table:
+A tick changes the world row, ten residents, and about 40 memories, events, relationships, and rumor counts. [`buildOperations`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/commit.js) turns all of these changes into [transaction operations](/docs/products/databases/tablesdb/transactions). The first operation creates the row `tick-<n>` in the `ticks` table:
 
 ```javascript
 // The tick row is the lock: a second run that tries to create the same
@@ -234,7 +234,7 @@ const core = [
 ];
 ```
 
-`commitTick` stages every operation and commits them together:
+[`commitTick`](https://github.com/appwrite-community/murmur-ai-town/blob/main/functions/tick/src/commit.js) stages every operation and commits them together:
 
 ```javascript
 export async function commitTick(tablesDB, operations) {
@@ -392,13 +392,13 @@ A tick only says where each resident is. The game animates everything between tw
 - The clock on screen moves forward 30 minutes of town time over one minute of wall-clock time. The sun, the sky, the lamps, and the windows follow this clock.
 - A conversation arrives as one event with all its lines, and the game shows one line every few seconds.
 
-The 3D scene lives in `apps/web/src/scene` in the companion repository.
+The 3D scene lives in [`apps/web/src/scene`](https://github.com/appwrite-community/murmur-ai-town/tree/main/apps/web/src/scene) in the companion repository.
 
 # Ship the game as an Appwrite Site
 
 ![The Build settings of the Murmur Site in the Appwrite Console with the Vite framework, the Static site adapter, the output directory ./dist, and the fallback file index.html](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/console-site.avif)
 
-The provision script deploys `apps/web` as a Site. Open **Sites** > **Murmur** > **Settings** > **Build**. The Site uses these settings:
+The provision script deploys [`apps/web`](https://github.com/appwrite-community/murmur-ai-town/tree/main/apps/web) as a Site. Open **Sites** > **Murmur** > **Settings** > **Build**. The Site uses these settings:
 
 - **Framework:** Vite
 - **Adapter:** Static site
@@ -426,7 +426,7 @@ Murmur uses four patterns that work for any AI agent that changes shared state:
 - **One TablesDB transaction per step**, with a lock row, makes a failed or overlapping run write nothing.
 - **Unique row IDs** give a rate limit without a cache, and **Realtime** shows every visitor the same state.
 
-In testing, the town ran 30 scheduled ticks in a row without a failed execution, and a whispered rumor traveled from Mae to Bea and then to Dot. To grow the town, add places and residents in `scripts/town.json`. To give the residents a new kind of action, add it to the closed set and to `validatePlan`.
+In testing, the town ran 30 scheduled ticks in a row without a failed execution, and a whispered rumor traveled from Mae to Bea and then to Dot. To grow the town, add places and residents in [`scripts/town.json`](https://github.com/appwrite-community/murmur-ai-town/blob/main/scripts/town.json). To give the residents a new kind of action, add it to the closed set and to `validatePlan`.
 
 # Resources
 
