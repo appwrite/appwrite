@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "android-sdk-r8-support",
+    "href": "/blog/post/android-sdk-r8-support",
+    "title": "R8 code shrinking now works with the Appwrite Android SDK",
+    "description": "Appwrite Android SDK 29.0.0 works with R8 full mode and lifts R8 obfuscation and optimization scores ahead of Google Play's February 2027 DEX requirement.",
+    "date": "2026-10-07",
+    "lastUpdated": "2026-10-07",
+    "timeToRead": 8,
+    "author": "aditya-oberai",
+    "category": "products, announcements",
+    "featured": false,
+    "cover": "/images/blog/android-sdk-r8-support/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "build-a-living-ai-town-appwrite-functions-realtime",
     "href": "/blog/post/build-a-living-ai-town-appwrite-functions-realtime",
     "title": "Build a living AI town with Appwrite Functions, TablesDB, and Realtime",
