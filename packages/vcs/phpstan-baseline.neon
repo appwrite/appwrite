@@ -465,7 +465,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''status\-code'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 23
+			count: 24
 			path: src/Adapter/Git/GitHub.php
 
 		-
@@ -675,7 +675,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 2
 			path: src/Adapter/Git/GitHub.php
 
 		-
@@ -699,13 +699,7 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
 			identifier: argument.type
-			count: 15
-			path: src/Adapter/Git/GitHub.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 16
 			path: src/Adapter/Git/GitHub.php
 
 		-
@@ -723,7 +717,7 @@ parameters:
 		-
 			message: '#^Part \$statusCode \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 6
+			count: 7
 			path: src/Adapter/Git/GitHub.php
 
 		-
