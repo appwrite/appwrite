@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ApiKeysList } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from './ApiKeyDrawer'
+import { ApiKeysEmptyState } from './_components/ApiKeysEmptyState'
 import {
   useApiKeys,
   useCreateApiKey,
@@ -29,23 +30,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import type { Models } from '@appwrite.io/console'
-
-const supportedLanguages = [
-  { id: 'node', name: 'Node.js' },
-  { id: 'python', name: 'Python' },
-  { id: 'php', name: 'PHP' },
-  { id: 'ruby', name: 'Ruby' },
-  { id: 'go', name: 'Go' },
-  { id: 'deno', name: 'Deno' },
-  { id: 'bun', name: 'Bun' },
-  { id: 'dart', name: 'Dart' },
-  { id: 'swift', name: 'Swift' },
-  { id: 'kotlin', name: 'Kotlin' },
-  { id: 'java', name: 'Java' },
-  { id: 'dotnet', name: '.NET' },
-] as const
 
 export type ApiKeysInitialData = {
   project?: Awaited<
@@ -239,6 +224,7 @@ export function View({ initialData }: ViewProps = {}) {
         }
         showFilters={false}
         fullWidthBorder
+        hideToolbar={!showLoading && apiKeys.length === 0}
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -270,51 +256,13 @@ export function View({ initialData }: ViewProps = {}) {
           </div>
         ) : filteredApiKeys.length === 0 ? (
           apiKeys.length === 0 ? (
-            <EmptyState icon={Key} variant="card" isEmpty={true}>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Key className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  {t('No API keys created')}
-                </h3>
-                <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  {t(
-                    'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.', // pragma: allowlist secret
-                  )}
-                </p>
-                <div className="w-full">
-                  <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="font-medium text-foreground/80">
-                      {t('Get started with your language of choice')}
-                    </span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <div className="flex w-full flex-wrap justify-center gap-2">
-                    {supportedLanguages.map(({ id, name }) => (
-                      <Button
-                        key={id}
-                        onClick={() =>
-                          !noCreatePermission && setCreateDrawerOpen(true)
-                        }
-                        variant="outline"
-                        size="lg"
-                        disabled={noCreatePermission}
-                        title={
-                          noCreatePermission
-                            ? t("You don't have permission to create API keys.")
-                            : undefined
-                        }
-                      >
-                        <LanguageIcon language={id} size="sm" />
-                        <span>{name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </EmptyState>
+            <ApiKeysEmptyState
+              onCreate={() => setCreateDrawerOpen(true)}
+              createDisabled={noCreatePermission}
+              createDisabledTooltip={t(
+                "You don't have permission to create API keys.",
+              )}
+            />
           ) : (
             <EmptyState
               icon={Key}

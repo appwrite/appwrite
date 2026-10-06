@@ -9,6 +9,7 @@ timeToRead: 8
 author: aditya-oberai
 category: products
 featured: false
+removed: true
 faqs:
   - question: "Which Go version does the Appwrite Functions runtime support?"
     answer: "Appwrite ships a Go runtime starting from version 1.6, with `go-1.23` available as a runtime identifier. You enable it by adding `go-1.23` to your `_APP_FUNCTIONS_RUNTIMES` environment variable when self-hosting, or simply selecting it from the dropdown on Appwrite Cloud."

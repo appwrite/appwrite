@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/integrations/View'
 import { getFilteredIntegrationsCatalog } from '@/lib/integrations/content'
-import { getIntegrationsIndexRouteMetaTags } from '@/lib/integrations/route-meta'
+import { getIntegrationsIndexRouteHead } from '@/lib/integrations/route-meta'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
@@ -23,9 +23,7 @@ export const Route = createFileRoute('/_marketing/integrations/')({
     const search = integrationsSearchSchema.parse(location.search)
     return getFilteredIntegrationsCatalog(search)
   },
-  head: () => ({
-    meta: getIntegrationsIndexRouteMetaTags(),
-  }),
+  head: () => getIntegrationsIndexRouteHead(),
   component: IntegrationsIndexPage,
 })
 

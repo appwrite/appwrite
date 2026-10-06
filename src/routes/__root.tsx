@@ -46,6 +46,7 @@ import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
+import { PasswordBreachCurtain } from '@/components/global/shared/PasswordBreachCurtain'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
@@ -61,6 +62,7 @@ import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
+import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import {
   isPreLaunchAllowedPath,
   isPreLaunchModeEnabled,
@@ -588,6 +590,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <RootConsoleScopesPrefetch />
           <ClientThemeProvider>
               <PreLaunchRedirect />
+              <SelfHostedRouteRedirect />
               <AnalyticsSessionPropsSync />
               <PageDirectionProvider>
                 <CookieConsentProvider>
@@ -601,6 +604,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               <RootAppProviders>{children}</RootAppProviders>
                               <ClientOnly>
                                 <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                              <ClientOnly>
+                                <PasswordBreachCurtain />
                               </ClientOnly>
                               </ConsoleRightPaneProvider>
                             </ScreenshotModeProvider>

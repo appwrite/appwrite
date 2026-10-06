@@ -141,6 +141,21 @@ export function canCreateSite(
   return whenOrgRoles(access, features, access.canWriteSites)
 }
 
+/** Create videos, renditions, subtitles, timelines, and profiles (`videos.write`). */
+export function canCreateVideo(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
+export function canShowVideoSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
 export function canCreateUser(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -294,6 +309,8 @@ export function canSeeProjectNavItem(
       return access.canSeeMessages
     case 'sites':
       return access.canWriteSites
+    case 'videos':
+      return access.canSeeVideos
     case 'usage':
     case 'realtime':
     case 'analytics':

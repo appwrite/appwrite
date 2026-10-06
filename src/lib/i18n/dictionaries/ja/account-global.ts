@@ -23,7 +23,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'All sessions have been deleted': 'すべてのセッションを削除しました',
   'Apt, suite, etc. (optional)': '部屋番号など (任意)',
   Application: 'アプリケーション',
-  'Application access has been revoked': 'アプリケーションのアクセスを取り消しました',
+  'Application access has been revoked':
+    'アプリケーションのアクセスを取り消しました',
   Applications: 'アプリケーション',
   "Applications you've authorized to access your Appwrite account.":
     'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
@@ -63,7 +64,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   clicks: 'クリック',
   'Choose an organization you own to receive these affiliate credits.':
     'これらのアフィリエイトクレジットを受け取る、所有している Organization を選択してください。',
-  'Could not load affiliate analytics': 'アフィリエイト分析を読み込めませんでした',
+  'Could not load affiliate analytics':
+    'アフィリエイト分析を読み込めませんでした',
   Converted: 'コンバート済み',
   Conversions: 'コンバージョン',
   conversions: 'コンバージョン',
@@ -77,7 +79,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $15 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
   'Create your first invite link to start referring users.':
     '最初の招待リンクを作成してユーザーの紹介を始めましょう。',
-  'Credits claimed for organization': 'Organization 向けにクレジットを受け取りました',
+  'Credits claimed for organization':
+    'Organization 向けにクレジットを受け取りました',
   '1 pending reward': '保留中の報酬 1 件',
   'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
     'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization で受け取れます。',
@@ -181,10 +184,12 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Failed to delete identity': 'ID の削除に失敗しました',
   'Failed to delete payment method': '支払い方法の削除に失敗しました',
   'Failed to delete session': 'セッションの削除に失敗しました',
-  'Failed to revoke application access': 'アプリケーションのアクセス取り消しに失敗しました',
+  'Failed to revoke application access':
+    'アプリケーションのアクセス取り消しに失敗しました',
   'Failed to delete sessions': 'セッションの削除に失敗しました',
   'Failed to get recovery codes': 'リカバリーコードの取得に失敗しました',
-  'Failed to regenerate recovery codes': 'リカバリーコードの再生成に失敗しました',
+  'Failed to regenerate recovery codes':
+    'リカバリーコードの再生成に失敗しました',
   'Failed to save billing address': '請求先住所の保存に失敗しました',
   'Failed to update email': 'メールアドレスの更新に失敗しました',
   'Failed to update MFA': 'MFA の更新に失敗しました',
@@ -233,7 +238,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Payment methods': '支払い方法',
   'Please fill in all required fields': '必須項目をすべて入力してください',
   'Please select a state': '都道府県を選択してください',
-  'Please select expiration month and year': '有効期限の月と年を選択してください',
+  'Please select expiration month and year':
+    '有効期限の月と年を選択してください',
   'Postal Code': '郵便番号',
   'Recovery code': 'リカバリーコード',
   'Recovery codes': 'リカバリーコード',
@@ -278,7 +284,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Enter name': '名前を入力',
   'Enter password': 'パスワードを入力',
   'Enter recovery code': 'リカバリーコードを入力',
-  'Enter your new password below.': '新しいパスワードを以下に入力してください。',
+  'Enter your new password below.':
+    '新しいパスワードを以下に入力してください。',
   'Failed to authorize the application': 'アプリケーションの承認に失敗しました',
   'Failed to send verification email': '確認メールの送信に失敗しました',
   'Forgot your password?': 'パスワードをお忘れですか?',
@@ -295,7 +302,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   "Passwords don't match": 'パスワードが一致しません',
   'Phone verification': '電話番号の確認',
   'Please confirm your password': 'パスワードを確認してください',
-  'Please enter a valid email address': '有効なメールアドレスを入力してください',
+  'Please enter a valid email address':
+    '有効なメールアドレスを入力してください',
   'Preparing verification...': '確認の準備中...',
   'Privacy Policy': 'プライバシーポリシー',
   'Remember your password?': 'パスワードを覚えていますか?',
@@ -327,7 +335,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Full access to your account': 'アカウントへのフルアクセス',
   'Verify your identity': '本人確認',
   'View your profile': 'プロフィールを表示',
-  'Read your name and profile details.': '名前とプロフィールの詳細を読み取ります。',
+  'Read your name and profile details.':
+    '名前とプロフィールの詳細を読み取ります。',
   'View your email address': 'メールアドレスを表示',
   'Dismiss all': 'すべて閉じる',
   'Open in new window': '新しいウィンドウで開く',
@@ -389,7 +398,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'build was canceled.': 'ビルドがキャンセルされました。',
   // Promo banner mock content
   'Introducing Imagine': 'Imagine をご紹介',
-  'The most complete AI builder to date': 'これまでで最も完成度の高い AI ビルダー',
+  'The most complete AI builder to date':
+    'これまでで最も完成度の高い AI ビルダー',
   'Try it now': '今すぐ試す',
   'Edge Functions': 'エッジ Functions',
   'Learn more': '詳細',
@@ -469,7 +479,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'New agent': '新しいエージェント',
   'Focus prompt': 'プロンプトにフォーカス',
   'New automation': '新しいオートメーション',
-  'Agent': 'エージェント',
+  Agent: 'エージェント',
   Today: '今日',
   Yesterday: '昨日',
   'Next image': '次の画像',
@@ -567,7 +577,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   // AI chat suggested questions
   'How do I create a new database?': '新しいデータベースを作成するには?',
   'How do I set up authentication?': '認証を設定するには?',
-  'How do I upload files to storage?': 'ストレージにファイルをアップロードするには?',
+  'How do I upload files to storage?':
+    'ストレージにファイルをアップロードするには?',
   'How do I deploy a function?': '関数をデプロイするには?',
   'List the databases and tables in this project':
     'このプロジェクトのデータベースとテーブルを一覧表示',
@@ -625,14 +636,16 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Match endpoint': 'エンドポイントに一致',
   'Missing required field:': '必須フィールドがありません:',
   'Missing scopes': 'スコープが不足しています',
-  'No body fields for this endpoint.': 'このエンドポイントにボディフィールドはありません。',
+  'No body fields for this endpoint.':
+    'このエンドポイントにボディフィールドはありません。',
   'No methods available.': '利用可能なメソッドがありません。',
   'No methods match your search.': '検索に一致するメソッドがありません。',
   'No object': 'オブジェクトなし',
   'No permissions': '権限なし',
   'No queries': 'クエリなし',
   'No response headers': 'レスポンスヘッダーがありません',
-  'No services available for this API.': 'この API で利用可能なサービスがありません。',
+  'No services available for this API.':
+    'この API で利用可能なサービスがありません。',
   'No users found': 'ユーザーが見つかりません',
   'No value needed': '値は不要',
   'OpenAPI spec': 'OpenAPI 仕様',
@@ -729,7 +742,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   "You've been invited to join": '次の組織への参加に招待されています',
   'Accept the invitation to get started.': '招待を承認して開始してください。',
   'By continuing, you agree to our': '続行すると、次に同意したことになります',
-  'Failed to initiate Bitbucket login': 'Bitbucket ログインの開始に失敗しました',
+  'Failed to initiate Bitbucket login':
+    'Bitbucket ログインの開始に失敗しました',
   'Failed to initiate GitHub login': 'GitHub ログインの開始に失敗しました',
   'Failed to initiate GitLab login': 'GitLab ログインの開始に失敗しました',
   'Failed to initiate Google login': 'Google ログインの開始に失敗しました',
@@ -776,66 +790,126 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   // Global shell
   'Skip to content': 'コンテンツへスキップ',
   'Loading wizard...': 'ウィザードを読み込み中...',
-  'Add a new billing address to your account.': 'アカウントに新しい請求先住所を追加します。',
-  'Are you sure you want to delete this billing address? This action cannot be undone.': 'この請求先住所を削除してもよろしいですか? この操作は元に戻せません。',
-  'Are you sure you want to delete this identity?': 'この ID を削除してもよろしいですか?',
-  'Are you sure you want to delete this payment method? This action cannot be undone.': 'この支払い方法を削除してもよろしいですか? この操作は元に戻せません。',
-  'Are you sure you want to delete your account? This action cannot be undone.': 'アカウントを削除してもよろしいですか? この操作は元に戻せません。',
-  'Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.': 'すべてのデバイスからログアウトしてもよろしいですか? どのデバイスからアカウントにアクセスするにも、再度サインインする必要があります。',
-  'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.': 'このデバイスからログアウトしてもよろしいですか? サインインページにリダイレクトされ、アカウントにアクセスするには再度サインインする必要があります。',
-  'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.': 'このデバイスからログアウトしてもよろしいですか? このデバイスからアカウントにアクセスするには、再度サインインする必要があります。',
-  'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.': 'すべてのリカバリーコードを再生成してもよろしいですか? 以前に生成されたリカバリーコードはすべて無効になります。',
-  'Billing address has been added to your organization': '請求先住所が組織に追加されました',
-  'Change your account password. Includes link to password recovery if forgotten.': 'アカウントのパスワードを変更します。パスワードを忘れた場合のリカバリーリンクも含まれます。',
-  'Deleting it will remove it from those organizations.': '削除すると、それらの組織からも削除されます。',
-  "Enhance your account's security by requiring a second sign-in method": '2 つ目のサインイン方法を必須にして、アカウントのセキュリティを強化できます',
-  'Enter the 6-digit one-time code generated by the app.': 'アプリで生成された 6 桁のワンタイムコードを入力してください。',
-  'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.': 'モバイルデバイスに認証アプリをインストールし、アプリを開いて表示された QR コードをスキャンするか、コードを手動で入力してください。',
-  'Manage your billing addresses for invoices and payments.': '請求書と支払いのための請求先住所を管理します。',
-  'Manage your payment methods and billing information.': '支払い方法と請求情報を管理します。',
-  'Manually enter the following code into the authenticator app': '以下のコードを認証アプリに手動で入力してください',
-  "Once you sign in via GitHub, you'll see it here.": 'GitHub でサインインすると、ここに表示されます。',
-  'Password must be at least 8 characters': 'パスワードは 8 文字以上で入力してください',
-  "Save these recovery codes now. They won't be shown again.": '今すぐこれらのリカバリーコードを保存してください。二度と表示されません。',
-  'This removes authenticator app codes from your account.': 'この操作により、アカウントから認証アプリのコードが削除されます。',
-  'To continue, verify your identity with a one-time code.': '続行するには、ワンタイムコードで本人確認を行ってください。',
-  'Verification is required to view your recovery codes.': 'リカバリーコードを表示するには本人確認が必要です。',
-  'Update the expiration date for this payment method.': 'この支払い方法の有効期限を更新します。',
-  'Update your account email address. Requires password verification when changing email.': 'アカウントのメールアドレスを更新します。メールアドレスの変更にはパスワードによる確認が必要です。',
-  'Use an authentication app to generate two-factor authentication codes.': '認証アプリを使って二要素認証コードを生成します。',
-  "Use in case you can't receive two-factor authentication codes.": '二要素認証コードを受け取れない場合に使用してください。',
-  'Use these codes to access your account if you lose your authenticator.': '認証アプリを紛失した場合は、これらのコードを使ってアカウントにアクセスできます。',
-  'Use this ID when integrating with the Appwrite API or SDKs. Support may also ask for this ID when assisting with issues.': 'Appwrite の API や SDK と連携する際は、この ID を使用してください。サポートが問題対応の際にこの ID を尋ねる場合もあります。',
-  "You don't have any active sessions at the moment.": '現在アクティブなセッションはありません。',
-  'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.': 'アカウントは完全に削除され、すべてのチームとデータへのアクセスを失います。この操作は取り消せません。',
-  'A 6-digit verification code was sent to your email. Enter it below.': '6 桁の確認コードをメールに送信しました。以下に入力してください。',
-  'A 6-digit verification code was sent to your phone. Enter it below.': '6 桁の確認コードを電話に送信しました。以下に入力してください。',
-  'After authorizing, return to your device.': '承認後、デバイスに戻ってください。',
-  'Enter a 6-digit one-time code from your authenticator app.': '認証アプリに表示された 6 桁のワンタイムコードを入力してください。',
-  'Enter one of the recovery codes you received when enabling MFA.': 'MFA を有効化した際に受け取ったリカバリーコードのいずれかを入力してください。',
-  'Enter your details to create a new account': '新しいアカウントを作成するには情報を入力してください',
-  "Enter your email address and we'll send you a link to reset your password.": 'メールアドレスを入力すると、パスワードをリセットするためのリンクをお送りします。',
-  'No verification methods are available for this account. Contact support if you need help signing in.': 'このアカウントで利用できる確認方法がありません。サインインでお困りの場合はサポートにお問い合わせください。',
-  'Please wait while we confirm your email address.': 'メールアドレスを確認していますので、しばらくお待ちください。',
-  'Verified but could not open the console': '確認は完了しましたが、コンソールを開けませんでした',
-  'wants to access your Appwrite account.': 'があなたの Appwrite アカウントへのアクセスを求めています。',
-  "We'll send a recovery link to this email address.": 'このメールアドレスにリカバリーリンクを送信します。',
-  "We've sent a password recovery link to your email address.": 'パスワードのリカバリーリンクをメールアドレスに送信しました。',
-  "We've sent a verification link to your email address. Click the link to verify your account and access the console.": '確認リンクをメールアドレスに送信しました。リンクをクリックしてアカウントを確認し、コンソールにアクセスしてください。',
-  'Your password has been successfully reset. You can now sign in with your new password.': 'パスワードが正常にリセットされました。新しいパスワードでサインインできます。',
-  'This account cannot use the Appwrite Console - access is blocked or restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review of your account, contact support@appwrite.io.': 'このアカウントは Appwrite Console を利用できません。利用規約違反などにより、アクセスがブロックまたは制限されている可能性があります。この制限についてのご質問や、アカウントの再審査をご希望の場合は、support@appwrite.io までお問い合わせください。',
-  'Manage your organizations, projects, and all their resources on your behalf.': 'あなたに代わって、組織、プロジェクト、およびそれらのすべてのリソースを管理します。',
-  'Confirm who you are using your Appwrite account.': 'Appwrite アカウントを使ってご本人であることを確認します。',
-  'Read the email address associated with your account.': 'アカウントに関連付けられたメールアドレスを読み取ります。',
-  'You have file uploads in progress. Are you sure you want to leave?': 'ファイルのアップロードが進行中です。このページを離れてもよろしいですか?',
-  'Could not load this documentation page.': 'このドキュメントページを読み込めませんでした。',
-  'You can re-enable them anytime from your browser settings.': 'ブラウザの設定からいつでも再度有効にできます。',
-  'Allow browser notifications to hear about build completion even when this tab is in the background.': 'ブラウザの通知を許可すると、このタブがバックグラウンドにあってもビルドの完了を知ることができます。',
-  'Deploy serverless functions at the edge for ultra-low latency': 'エッジでサーバーレス関数をデプロイし、超低遅延を実現',
-  "We've expanded to 12 new regions worldwide": '世界中に新たに 12 のリージョンを追加しました',
-  'Check out our latest updates and improvements to enhance your development experience.': '開発体験を向上させる最新のアップデートと改善をご確認ください。',
-  'Attachments upload in background. Sending waits until they are ready.': '添付ファイルはバックグラウンドでアップロードされます。準備が整うまで送信は待機します。',
-  'I can inspect your project, explain issues, suggest next steps, and run approved actions.': 'プロジェクトを確認し、問題を説明し、次のステップを提案し、承認されたアクションを実行できます。',
+  'Add a new billing address to your account.':
+    'アカウントに新しい請求先住所を追加します。',
+  'Are you sure you want to delete this billing address? This action cannot be undone.':
+    'この請求先住所を削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to delete this identity?':
+    'この ID を削除してもよろしいですか?',
+  'Are you sure you want to delete this payment method? This action cannot be undone.':
+    'この支払い方法を削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to delete your account? This action cannot be undone.':
+    'アカウントを削除してもよろしいですか? この操作は元に戻せません。',
+  'Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.':
+    'すべてのデバイスからログアウトしてもよろしいですか? どのデバイスからアカウントにアクセスするにも、再度サインインする必要があります。',
+  'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.':
+    'このデバイスからログアウトしてもよろしいですか? サインインページにリダイレクトされ、アカウントにアクセスするには再度サインインする必要があります。',
+  'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.':
+    'このデバイスからログアウトしてもよろしいですか? このデバイスからアカウントにアクセスするには、再度サインインする必要があります。',
+  'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.':
+    'すべてのリカバリーコードを再生成してもよろしいですか? 以前に生成されたリカバリーコードはすべて無効になります。',
+  'Billing address has been added to your organization':
+    '請求先住所が組織に追加されました',
+  'Change your account password. Includes link to password recovery if forgotten.':
+    'アカウントのパスワードを変更します。パスワードを忘れた場合のリカバリーリンクも含まれます。',
+  'Deleting it will remove it from those organizations.':
+    '削除すると、それらの組織からも削除されます。',
+  "Enhance your account's security by requiring a second sign-in method":
+    '2 つ目のサインイン方法を必須にして、アカウントのセキュリティを強化できます',
+  'Enter the 6-digit one-time code generated by the app.':
+    'アプリで生成された 6 桁のワンタイムコードを入力してください。',
+  'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.':
+    'モバイルデバイスに認証アプリをインストールし、アプリを開いて表示された QR コードをスキャンするか、コードを手動で入力してください。',
+  'Manage your billing addresses for invoices and payments.':
+    '請求書と支払いのための請求先住所を管理します。',
+  'Manage your payment methods and billing information.':
+    '支払い方法と請求情報を管理します。',
+  'Manually enter the following code into the authenticator app':
+    '以下のコードを認証アプリに手動で入力してください',
+  "Once you sign in via GitHub, you'll see it here.":
+    'GitHub でサインインすると、ここに表示されます。',
+  'Password must be at least 8 characters':
+    'パスワードは 8 文字以上で入力してください',
+  "Save these recovery codes now. They won't be shown again.":
+    '今すぐこれらのリカバリーコードを保存してください。二度と表示されません。',
+  'This removes authenticator app codes from your account.':
+    'この操作により、アカウントから認証アプリのコードが削除されます。',
+  'To continue, verify your identity with a one-time code.':
+    '続行するには、ワンタイムコードで本人確認を行ってください。',
+  'Verification is required to view your recovery codes.':
+    'リカバリーコードを表示するには本人確認が必要です。',
+  'Update the expiration date for this payment method.':
+    'この支払い方法の有効期限を更新します。',
+  'Update your account email address. Requires password verification when changing email.':
+    'アカウントのメールアドレスを更新します。メールアドレスの変更にはパスワードによる確認が必要です。',
+  'Use an authentication app to generate two-factor authentication codes.':
+    '認証アプリを使って二要素認証コードを生成します。',
+  "Use in case you can't receive two-factor authentication codes.":
+    '二要素認証コードを受け取れない場合に使用してください。',
+  'Use these codes to access your account if you lose your authenticator.':
+    '認証アプリを紛失した場合は、これらのコードを使ってアカウントにアクセスできます。',
+  'Use this ID when integrating with the Appwrite API or SDKs. Support may also ask for this ID when assisting with issues.':
+    'Appwrite の API や SDK と連携する際は、この ID を使用してください。サポートが問題対応の際にこの ID を尋ねる場合もあります。',
+  "You don't have any active sessions at the moment.":
+    '現在アクティブなセッションはありません。',
+  'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.':
+    'アカウントは完全に削除され、すべてのチームとデータへのアクセスを失います。この操作は取り消せません。',
+  'A 6-digit verification code was sent to your email. Enter it below.':
+    '6 桁の確認コードをメールに送信しました。以下に入力してください。',
+  'A 6-digit verification code was sent to your phone. Enter it below.':
+    '6 桁の確認コードを電話に送信しました。以下に入力してください。',
+  'After authorizing, return to your device.':
+    '承認後、デバイスに戻ってください。',
+  'Enter a 6-digit one-time code from your authenticator app.':
+    '認証アプリに表示された 6 桁のワンタイムコードを入力してください。',
+  'Enter one of the recovery codes you received when enabling MFA.':
+    'MFA を有効化した際に受け取ったリカバリーコードのいずれかを入力してください。',
+  'Enter your details to create a new account':
+    '新しいアカウントを作成するには情報を入力してください',
+  "Enter your email address and we'll send you a link to reset your password.":
+    'メールアドレスを入力すると、パスワードをリセットするためのリンクをお送りします。',
+  'No verification methods are available for this account. Contact support if you need help signing in.':
+    'このアカウントで利用できる確認方法がありません。サインインでお困りの場合はサポートにお問い合わせください。',
+  'Please wait while we confirm your email address.':
+    'メールアドレスを確認していますので、しばらくお待ちください。',
+  'Verified but could not open the console':
+    '確認は完了しましたが、コンソールを開けませんでした',
+  'wants to access your Appwrite account.':
+    'があなたの Appwrite アカウントへのアクセスを求めています。',
+  "We'll send a recovery link to this email address.":
+    'このメールアドレスにリカバリーリンクを送信します。',
+  "We've sent a password recovery link to your email address.":
+    'パスワードのリカバリーリンクをメールアドレスに送信しました。',
+  "We've sent a verification link to your email address. Click the link to verify your account and access the console.":
+    '確認リンクをメールアドレスに送信しました。リンクをクリックしてアカウントを確認し、コンソールにアクセスしてください。',
+  'Your password has been successfully reset. You can now sign in with your new password.':
+    'パスワードが正常にリセットされました。新しいパスワードでサインインできます。',
+  'This account cannot use the Appwrite Console - access is blocked or restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review of your account, contact support@appwrite.io.':
+    'このアカウントは Appwrite Console を利用できません。利用規約違反などにより、アクセスがブロックまたは制限されている可能性があります。この制限についてのご質問や、アカウントの再審査をご希望の場合は、support@appwrite.io までお問い合わせください。',
+  'Manage your organizations, projects, and all their resources on your behalf.':
+    'あなたに代わって、組織、プロジェクト、およびそれらのすべてのリソースを管理します。',
+  'Confirm who you are using your Appwrite account.':
+    'Appwrite アカウントを使ってご本人であることを確認します。',
+  'Read the email address associated with your account.':
+    'アカウントに関連付けられたメールアドレスを読み取ります。',
+  'You have file uploads in progress. Are you sure you want to leave?':
+    'ファイルのアップロードが進行中です。このページを離れてもよろしいですか?',
+  'Could not load this documentation page.':
+    'このドキュメントページを読み込めませんでした。',
+  'You can re-enable them anytime from your browser settings.':
+    'ブラウザの設定からいつでも再度有効にできます。',
+  'Allow browser notifications to hear about build completion even when this tab is in the background.':
+    'ブラウザの通知を許可すると、このタブがバックグラウンドにあってもビルドの完了を知ることができます。',
+  'Deploy serverless functions at the edge for ultra-low latency':
+    'エッジでサーバーレス関数をデプロイし、超低遅延を実現',
+  "We've expanded to 12 new regions worldwide":
+    '世界中に新たに 12 のリージョンを追加しました',
+  'Check out our latest updates and improvements to enhance your development experience.':
+    '開発体験を向上させる最新のアップデートと改善をご確認ください。',
+  'Attachments upload in background. Sending waits until they are ready.':
+    '添付ファイルはバックグラウンドでアップロードされます。準備が整うまで送信は待機します。',
+  'I can inspect your project, explain issues, suggest next steps, and run approved actions.':
+    'プロジェクトを確認し、問題を説明し、次のステップを提案し、承認されたアクションを実行できます。',
   'No accessible project found to create an agent.':
     'エージェントを作成できるアクセス可能なプロジェクトが見つかりません。',
   'No accessible project found to start a new agent.':
@@ -850,53 +924,95 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Send next': '次に送信',
   'Press Enter to send, Shift+Enter for new line':
     '送信するには Enter、改行するには Shift+Enter を押してください',
-  'Some attachments failed to upload. Remove them and try again.': '一部の添付ファイルのアップロードに失敗しました。削除してもう一度お試しください。',
-  'Add one Appwrite Query condition for this entry.': 'このエントリに Appwrite Query の条件を 1 つ追加します。',
-  'Build a permission string for this entry. Changes apply when you click Done.': 'このエントリの権限文字列を構築します。変更は完了をクリックすると適用されます。',
-  'This endpoint is deprecated and may be removed in a future version.': 'このエンドポイントは非推奨であり、将来のバージョンで削除される可能性があります。',
-  'Draft scopes already match this endpoint.': '下書きのスコープは、すでにこのエンドポイントと一致しています。',
-  'Ephemeral API key generated (expires in 1 hour)': '一時的な API キーを生成しました (1 時間で期限切れ)',
-  'Expires in 1 hour. Regenerate after editing scopes below.': '1 時間で期限切れになります。下のスコープを編集した後に再生成してください。',
-  'Invalid JSON. Fix the payload before switching to form view.': 'JSON が無効です。フォーム表示に切り替える前にペイロードを修正してください。',
-  'No session or JWT is sent on the request.': 'リクエストにセッションや JWT は送信されません。',
-  'A JWT is created for this user when you send the request.': 'リクエストを送信すると、このユーザー用の JWT が作成されます。',
-  'Paste a project API key (optional)': 'プロジェクトの API キーを貼り付け (任意)',
-  'Provide an API key or generate an ephemeral key.': 'API キーを入力するか、一時的なキーを生成してください。',
-  'Reset draft scopes to the scopes required by this endpoint.': '下書きのスコープを、このエンドポイントに必要なスコープにリセットします。',
-  'Reused across methods. Stored locally in this browser.': 'すべてのメソッドで再利用されます。このブラウザにローカル保存されます。',
-  'Search by name, email, phone, or ID...': '名前、メール、電話番号、ID で検索…',
+  'Some attachments failed to upload. Remove them and try again.':
+    '一部の添付ファイルのアップロードに失敗しました。削除してもう一度お試しください。',
+  'Add one Appwrite Query condition for this entry.':
+    'このエントリに Appwrite Query の条件を 1 つ追加します。',
+  'Build a permission string for this entry. Changes apply when you click Done.':
+    'このエントリの権限文字列を構築します。変更は完了をクリックすると適用されます。',
+  'This endpoint is deprecated and may be removed in a future version.':
+    'このエンドポイントは非推奨であり、将来のバージョンで削除される可能性があります。',
+  'Draft scopes already match this endpoint.':
+    '下書きのスコープは、すでにこのエンドポイントと一致しています。',
+  'Ephemeral API key generated (expires in 1 hour)':
+    '一時的な API キーを生成しました (1 時間で期限切れ)',
+  'Expires in 1 hour. Regenerate after editing scopes below.':
+    '1 時間で期限切れになります。下のスコープを編集した後に再生成してください。',
+  'Invalid JSON. Fix the payload before switching to form view.':
+    'JSON が無効です。フォーム表示に切り替える前にペイロードを修正してください。',
+  'No session or JWT is sent on the request.':
+    'リクエストにセッションや JWT は送信されません。',
+  'A JWT is created for this user when you send the request.':
+    'リクエストを送信すると、このユーザー用の JWT が作成されます。',
+  'Paste a project API key (optional)':
+    'プロジェクトの API キーを貼り付け (任意)',
+  'Provide an API key or generate an ephemeral key.':
+    'API キーを入力するか、一時的なキーを生成してください。',
+  'Reset draft scopes to the scopes required by this endpoint.':
+    '下書きのスコープを、このエンドポイントに必要なスコープにリセットします。',
+  'Reused across methods. Stored locally in this browser.':
+    'すべてのメソッドで再利用されます。このブラウザにローカル保存されます。',
+  'Search by name, email, phone, or ID...':
+    '名前、メール、電話番号、ID で検索…',
   'Select a method': 'メソッドを選択',
-  'Select a method to inspect and send a request.': '確認してリクエストを送信するメソッドを選択してください。',
+  'Select a method to inspect and send a request.':
+    '確認してリクエストを送信するメソッドを選択してください。',
   'Select a service': 'サービスを選択',
-  'Select a user to act as, or choose Guest.': '操作するユーザーを選択するか、Guest を選んでください。',
-  'Select at least one scope for the ephemeral key.': '一時的なキーには、少なくとも 1 つのスコープを選択してください。',
-  'Send a request to see the response here.': 'リクエストを送信すると、ここにレスポンスが表示されます。',
+  'Select a user to act as, or choose Guest.':
+    '操作するユーザーを選択するか、Guest を選んでください。',
+  'Select at least one scope for the ephemeral key.':
+    '一時的なキーには、少なくとも 1 つのスコープを選択してください。',
+  'Send a request to see the response here.':
+    'リクエストを送信すると、ここにレスポンスが表示されます。',
   'Request and response': 'リクエストとレスポンス',
   Methods: 'メソッド',
   Request: 'リクエスト',
-  "You've successfully joined. Redirecting you now...": '参加が完了しました。移動しています...',
-  'This invitation link is missing required parameters. Please use the link from your invitation email.': 'この招待リンクには必要なパラメーターが含まれていません。招待メールに記載されたリンクをご利用ください。',
-  "You've been invited to join an organization. Accept the invitation to get started.": '組織への参加に招待されています。招待を承認して始めましょう。',
-  'By clicking continue, you agree to our': '続行をクリックすると、次に同意したことになります:',
-  'Signed in but could not open the console': 'サインインは完了しましたが、コンソールを開けませんでした',
-  'Account created but verification email could not be sent': 'アカウントは作成されましたが、確認メールを送信できませんでした',
-  'Account created but could not open the console': 'アカウントは作成されましたが、コンソールを開けませんでした',
-  'Verification link is invalid or has expired.': '確認リンクが無効か、有効期限が切れています。',
-  'This password reset link is invalid or has expired. Please request a new one.': 'このパスワードリセットリンクは無効か、有効期限が切れています。新しいリンクをリクエストしてください。',
-  'This authorization request is invalid or has expired.': 'この承認リクエストは無効か、有効期限が切れています。',
-  'Missing authorization request. Open this page from an application sign-in.': '承認リクエストが見つかりません。アプリケーションのサインインからこのページを開いてください。',
-  'That code is invalid or has expired. Check your device and try again.': 'そのコードは無効か、有効期限が切れています。デバイスを確認してもう一度お試しください。',
-  'Make sure this matches the code shown on your device, then continue.': 'デバイスに表示されているコードと一致することを確認してから、続行してください。',
-  'Enter the code shown on your device to continue.': '続行するには、デバイスに表示されているコードを入力してください。',
-  'You can return to your device, it will continue automatically.': 'デバイスに戻っていただければ、自動的に続行されます。',
-  'No access was granted. You can close this page.': 'アクセスは許可されませんでした。このページを閉じても構いません。',
-  'Some Appwrite Cloud services are temporarily unavailable.': '一部の Appwrite Cloud サービスが一時的に利用できません。',
-  'We’re experiencing issues with some services.': '一部のサービスで問題が発生しています。',
-  'You may have trouble accessing some services. We’re working to restore full access.': '一部のサービスにアクセスしにくい状況が発生する可能性があります。全面復旧に向けて対応中です。',
-  'A subset of Appwrite Cloud services is degraded.': '一部の Appwrite Cloud サービスでパフォーマンスが低下しています。',
-  'Failed to resume project. Please try again.': 'プロジェクトの再開に失敗しました。もう一度お試しください。',
-  'This project has been paused due to inactivity. Your data is safe and will remain intact.': 'このプロジェクトは非アクティブのため一時停止されています。データは安全に保持されています。',
-  'Upgrade your plan to avoid pausing, or restore the project to continue using it now.': '一時停止を避けるにはプランをアップグレードするか、プロジェクトを復元して今すぐ利用を続けられます。',
+  "You've successfully joined. Redirecting you now...":
+    '参加が完了しました。移動しています...',
+  'This invitation link is missing required parameters. Please use the link from your invitation email.':
+    'この招待リンクには必要なパラメーターが含まれていません。招待メールに記載されたリンクをご利用ください。',
+  "You've been invited to join an organization. Accept the invitation to get started.":
+    '組織への参加に招待されています。招待を承認して始めましょう。',
+  'By clicking continue, you agree to our':
+    '続行をクリックすると、次に同意したことになります:',
+  'Signed in but could not open the console':
+    'サインインは完了しましたが、コンソールを開けませんでした',
+  'Account created but verification email could not be sent':
+    'アカウントは作成されましたが、確認メールを送信できませんでした',
+  'Account created but could not open the console':
+    'アカウントは作成されましたが、コンソールを開けませんでした',
+  'Verification link is invalid or has expired.':
+    '確認リンクが無効か、有効期限が切れています。',
+  'This password reset link is invalid or has expired. Please request a new one.':
+    'このパスワードリセットリンクは無効か、有効期限が切れています。新しいリンクをリクエストしてください。',
+  'This authorization request is invalid or has expired.':
+    'この承認リクエストは無効か、有効期限が切れています。',
+  'Missing authorization request. Open this page from an application sign-in.':
+    '承認リクエストが見つかりません。アプリケーションのサインインからこのページを開いてください。',
+  'That code is invalid or has expired. Check your device and try again.':
+    'そのコードは無効か、有効期限が切れています。デバイスを確認してもう一度お試しください。',
+  'Make sure this matches the code shown on your device, then continue.':
+    'デバイスに表示されているコードと一致することを確認してから、続行してください。',
+  'Enter the code shown on your device to continue.':
+    '続行するには、デバイスに表示されているコードを入力してください。',
+  'You can return to your device, it will continue automatically.':
+    'デバイスに戻っていただければ、自動的に続行されます。',
+  'No access was granted. You can close this page.':
+    'アクセスは許可されませんでした。このページを閉じても構いません。',
+  'Some Appwrite Cloud services are temporarily unavailable.':
+    '一部の Appwrite Cloud サービスが一時的に利用できません。',
+  'We’re experiencing issues with some services.':
+    '一部のサービスで問題が発生しています。',
+  'You may have trouble accessing some services. We’re working to restore full access.':
+    '一部のサービスにアクセスしにくい状況が発生する可能性があります。全面復旧に向けて対応中です。',
+  'A subset of Appwrite Cloud services is degraded.':
+    '一部の Appwrite Cloud サービスでパフォーマンスが低下しています。',
+  'Failed to resume project. Please try again.':
+    'プロジェクトの再開に失敗しました。もう一度お試しください。',
+  'This project has been paused due to inactivity. Your data is safe and will remain intact.':
+    'このプロジェクトは非アクティブのため一時停止されています。データは安全に保持されています。',
+  'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':
+    '一時停止を避けるにはプランをアップグレードするか、プロジェクトを復元して今すぐ利用を続けられます。',
   Account: 'アカウント',
   Active: 'アクティブ',
   Add: '追加',
@@ -1146,7 +1262,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
-  'GitHub and Appwrite': 'GitHub と Appwrite',
+  'Appwrite and GitHub': 'Appwrite と GitHub',
   'Join the Appwrite Education Program': 'Appwrite Education Program に参加',
   'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
     'GitHub Student Developer Pack の特典として、学生の間は Appwrite Cloud を無料でご利用いただけます。',
@@ -1167,7 +1283,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'Appwrite に進み、組織の切り替えメニューから Education プランを探してください。',
   'We could not check your GitHub connection':
     'GitHub との接続を確認できませんでした',
-  'We could not set up your Education plan': 'Education プランを設定できませんでした',
+  'We could not set up your Education plan':
+    'Education プランを設定できませんでした',
   'We could not reach GitHub': 'GitHub に接続できませんでした',
   'Try again in a moment, or sign in and explore Appwrite.':
     '少し時間をおいてもう一度お試しいただくか、サインインして Appwrite をご覧ください。',
@@ -1200,7 +1317,39 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
 
   // Console account password breach check result
   breached: '漏洩',
-  'no known breach': '既知の漏洩なし',
   'This password was found in a known data breach. Change it as soon as possible.':
     'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
+
+  // Full-screen curtain for console accounts with a breached password
+  'Your password was found in a data breach':
+    'パスワードがデータ漏洩で見つかりました',
+  'Your security is important to us. We continuously check console passwords against known data breaches, and yours was found in one, which means others may be able to sign in as you.':
+    'お客様のセキュリティは私たちにとって重要です。コンソールのパスワードを既知のデータ漏洩と継続的に照合しており、お客様のパスワードがその中で見つかりました。第三者があなたとしてサインインできる可能性があります。',
+  'Set a new password': '新しいパスワードを設定',
+  "Pick a strong password you don't use anywhere else.":
+    '他の場所で使用していない強力なパスワードを選択してください。',
+  'Turn on multi-factor authentication': '多要素認証を有効にする',
+  'Require a second verification step every time you sign in.':
+    'サインインのたびに追加の認証ステップを求めます。',
+  'Secure account': 'アカウントを保護',
+  'Remind me later': '後で通知',
+
+  // Profile photo
+  'Profile photo': 'プロフィール写真',
+  'Shown next to your name across the Console and to the members of your organizations.':
+    'コンソール全体であなたの名前の横に表示され、所属する組織のメンバーにも表示されます。',
+  'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.':
+    'PNG、JPEG、または WebP（最大 5MB）。写真がない場合は、連携したサインインプロバイダーの画像、Gravatar、またはイニシャルが使用されます。',
+  'Upload photo': '写真をアップロード',
+  'Remove photo': '写真を削除',
+  'Photo must be a PNG, JPEG, or WebP image':
+    '写真は PNG、JPEG、または WebP 形式である必要があります',
+  'Photo must be at most 5MB': '写真のサイズは 5MB 以下である必要があります',
+  'Profile photo updated': 'プロフィール写真を更新しました',
+  'Failed to update profile photo': 'プロフィール写真の更新に失敗しました',
+  'Profile photo removed': 'プロフィール写真を削除しました',
+  'Failed to remove profile photo': 'プロフィール写真の削除に失敗しました',
+  'Remove profile photo': 'プロフィール写真を削除',
+  'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
+    'アバターは連携したサインインプロバイダーの画像、Gravatar、またはイニシャルに戻ります。新しい写真はいつでもアップロードできます。',
 }

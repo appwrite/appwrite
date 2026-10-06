@@ -10,13 +10,14 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { canShowAgentMcpConnectCta } from '@/lib/console-access-checks'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useT } from '@/lib/i18n/translate'
 import {
   buildConnectMcpPrompt,
   hasAccountMcpAgentConnected,
 } from '@/lib/mcp-adoption'
 import {
-  useAccountConnectedApps,
+  useAccountConsents,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -37,16 +38,19 @@ export function ConnectAgentCta({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { data: connectedApps, isFetched } = useAccountConnectedApps({
+  const { showProjectAgents } = useDebugOverrides()
+  const { data: consents, isFetched } = useAccountConsents({
     enabled: isAuthenticated,
   })
   const projectConnect = useProjectConnectDialog()
   const [copied, setCopied] = useState(false)
 
   const canShow =
-    isAuthenticated && canShowAgentMcpConnectCta(access, features)
+    isAuthenticated &&
+    showProjectAgents &&
+    canShowAgentMcpConnectCta(access, features)
   const connected = isFetched
-    ? hasAccountMcpAgentConnected(connectedApps?.groups)
+    ? hasAccountMcpAgentConnected(consents)
     : initialConnected !== false
   const projectName = project?.name ?? projectId
   const connectPrompt = useMemo(

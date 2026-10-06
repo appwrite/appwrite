@@ -19,7 +19,7 @@ import {
   useSidebarCollapsed,
   useProject,
   useOrganizationScopes,
-  useAccountConnectedApps,
+  useAccountConsents,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -37,6 +37,7 @@ import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import {
   LayoutDashboard,
   Database,
@@ -111,6 +112,7 @@ interface SidebarCopy {
     storage: string
     functions: string
     messaging: string
+    videos: string
     sites: string
     distribution: string
     activity: string
@@ -207,6 +209,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.messaging,
           icon: MessageSquare,
           path: `/projects/${projectId}/messaging`,
+        },
+        {
+          id: 'videos',
+          label: sidebarCopy.items.videos,
+          icon: VIDEOS_PRODUCT_ICON,
+          path: `/projects/${projectId}/videos`,
         },
       ],
     },
@@ -356,6 +364,10 @@ export function ConsoleSidebar({
               features.analytics &&
               canSeeProjectNavItem(access, features, item.id)
             )
+          if (item.id === 'videos')
+            return (
+              features.videos && canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'agents')
             return (
               showProjectAgents && canShowAgentMcpConnectCta(access, features)
@@ -382,10 +394,10 @@ export function ConsoleSidebar({
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
-  const { data: connectedApps } = useAccountConnectedApps({
+  const { data: consents } = useAccountConsents({
     enabled: showAgentNav && !!account,
   })
-  const agentMcpConnected = hasAccountMcpAgentConnected(connectedApps?.groups)
+  const agentMcpConnected = hasAccountMcpAgentConnected(consents)
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
 

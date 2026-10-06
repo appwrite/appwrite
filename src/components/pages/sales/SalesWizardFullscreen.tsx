@@ -480,8 +480,8 @@ export function SalesWizardFullscreen() {
     <WizardLayout
       title={submitted ? t('Inquiry submitted') : t('Contact sales')}
       fullscreen
-      useSidebar={true}
-      sidebar={sidebar}
+      useSidebar={!submitted}
+      sidebar={submitted ? undefined : sidebar}
       footerAlign="right"
       skipInitialFieldFocus
       initialFocusKey={submitted ? 'submitted' : 'form'}

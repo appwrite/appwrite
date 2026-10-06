@@ -12,6 +12,25 @@ export const TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX = 480
 export const TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX = TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX
 export const TABLE_VIEW_MAIN_MIN_WIDTH_PX = 360
 
+export type SidebarWidthBounds = {
+  minPx: number
+  maxPx: number
+  defaultPx: number
+}
+
+export const TABLE_VIEW_SIDEBAR_BOUNDS: SidebarWidthBounds = {
+  minPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+  maxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+  defaultPx: TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
+}
+
+/** Videos workspace list renders table columns, so it needs a wider pane. */
+export const VIDEOS_SIDEBAR_BOUNDS: SidebarWidthBounds = {
+  minPx: 300,
+  maxPx: 760,
+  defaultPx: 340,
+}
+
 /** Functions local editor explorer split. */
 export const FUNCTIONS_EDITOR_EXPLORER_MIN_WIDTH_PX = 200
 export const FUNCTIONS_EDITOR_EXPLORER_MAX_WIDTH_PX = 480
@@ -189,11 +208,11 @@ export function computeTwoPanelHorizontalLayout(input: {
   }
 }
 
-export function clampTableViewSidebarWidthPx(px: number): number {
-  return Math.min(
-    TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
-    Math.max(TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
-  )
+export function clampTableViewSidebarWidthPx(
+  px: number,
+  bounds: SidebarWidthBounds = TABLE_VIEW_SIDEBAR_BOUNDS,
+): number {
+  return Math.min(bounds.maxPx, Math.max(bounds.minPx, Math.round(px)))
 }
 
 export function clampCliShellSessionsSidebarWidthPx(px: number): number {

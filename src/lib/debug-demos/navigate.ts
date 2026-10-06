@@ -24,6 +24,7 @@ type DemoNavigate = (options: NavigateOptions) => void
 const PATHNAME_ONLY_DEMO_IDS: Record<string, string> = {
   '/debug/authorize-contributor-preview': 'git-contributor-authorization',
   '/debug/education-join-preview': 'auth-education-join',
+  '/debug/education-plan-preview': 'education-plan-curtain',
   '/debug/join-invite-preview': 'auth-join-invite',
   '/debug/verify-email-preview': 'auth-verify-email',
   '/debug/oauth2-relay-preview': 'oauth2-relay',

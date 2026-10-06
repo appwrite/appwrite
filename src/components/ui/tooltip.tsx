@@ -45,12 +45,18 @@ function TooltipContent({
   className,
   sideOffset = 0,
   children,
+  container,
+  arrow = true,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Content> & {
+  container?: HTMLElement | null
+  /** Translucent surfaces should drop the arrow; it can't blend with a blurred backdrop. */
+  arrow?: boolean
+}) {
   const pageDirection = usePageDirection()
 
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         dir={pageDirection}
@@ -62,7 +68,9 @@ function TooltipContent({
         {...props}
       >
         {children}
-        <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-[120] size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
+        {arrow ? (
+          <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-[120] size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
+        ) : null}
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   )

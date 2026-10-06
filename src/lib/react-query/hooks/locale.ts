@@ -5,14 +5,14 @@
  */
 
 import { useMemo } from 'react'
-import {
-  queryOptions,
-  useQuery,
-  type QueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
-import { persistVisitorCountryCode } from '@/lib/locale/visitor-country'
+import {
+  persistVisitorCountryCode,
+  readMockLocaleCountryCookie,
+} from '@/lib/locale/visitor-country'
 import { readPrefetchedLocale } from '@/lib/locale/prefetch-locale'
 import { normalizeCountryCode } from '@/lib/pricing/start-plan'
 import { LONG_STALE_TIME } from './constants'
@@ -62,11 +62,31 @@ export async function fetchContinents() {
  * Uses the console SDK locale service to get user's locale information.
  * @returns Locale information from the API
  */
-export async function fetchLocale() {
+export async function fetchLocale(): Promise<Models.Locale> {
   const prefetched = await readPrefetchedLocale()
   const response = prefetched ?? (await sdk.forConsole.locale.get())
+  const mockCountry = readMockLocaleCountryCookie()
+  if (mockCountry) {
+    // The mocked country must not leak into the persisted real visitor country.
+    return maskLocaleCountry(response, mockCountry)
+  }
   persistVisitorCountryCode(response.countryCode)
   return response
+}
+
+function maskLocaleCountry(
+  locale: Models.Locale,
+  countryCode: string,
+): Models.Locale {
+  let country = countryCode
+  try {
+    country =
+      new Intl.DisplayNames(['en'], { type: 'region' }).of(countryCode) ??
+      countryCode
+  } catch {
+    // Invalid region codes keep the ISO code as the name.
+  }
+  return { ...locale, countryCode, country }
 }
 
 // ============================================================================

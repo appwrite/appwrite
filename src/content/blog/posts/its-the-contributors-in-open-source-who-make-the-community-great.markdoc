@@ -8,6 +8,7 @@ timeToRead: 4
 author: haimantika-mitra
 category: hackathons, contributors, open-source
 featured: false
+removed: true
 faqs:
   - question: "What is Hacktoberfest and how does it work?"
     answer: "Hacktoberfest is an annual open source celebration held every October by DigitalOcean. Participants submit pull requests to participating open source projects throughout the month, and those who complete the required number of accepted PRs earn rewards. It is a low pressure way for first time contributors to get started in open source."

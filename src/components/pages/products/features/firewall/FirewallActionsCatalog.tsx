@@ -7,6 +7,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ArtIconBadge, ArtPanel, riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +18,8 @@ type FirewallActionTile = {
   outcome: string
   icon: LucideIcon
   badgeVariant: 'error' | 'processing' | 'warning' | 'info'
+  /** Centers the two-tile second row on the six-column `sm` grid. */
+  smColStart?: string
 }
 
 const FIREWALL_ACTION_TILES: FirewallActionTile[] = [
@@ -51,6 +54,7 @@ const FIREWALL_ACTION_TILES: FirewallActionTile[] = [
     outcome: '3xx',
     icon: ArrowRightLeft,
     badgeVariant: 'info',
+    smColStart: 'sm:col-start-2 lg:col-start-auto',
   },
   {
     id: 'challenge',
@@ -63,55 +67,54 @@ const FIREWALL_ACTION_TILES: FirewallActionTile[] = [
   },
 ]
 
-function ActionIcon({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
-      <Icon className="size-3.5 text-muted-foreground" aria-hidden />
-    </span>
-  )
-}
-
-function ActionCard({ action }: { action: FirewallActionTile }) {
-  const t = useT()
-  return (
-    <div className="rounded-xl border border-border bg-background/80 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <ActionIcon icon={action.icon} />
-          <div className="min-w-0">
-            <h4 className="text-[14px] font-semibold text-foreground">{t(action.title)}</h4>
-            <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">
-              {t(action.description)}
-            </p>
-          </div>
-        </div>
-        <Badge
-          variant={action.badgeVariant}
-          className={cn('shrink-0 text-[10px]')}
-        >
-          {t(action.outcome)}
-        </Badge>
-      </div>
-    </div>
-  )
-}
-
 export function FirewallActionsCatalog() {
   const t = useT()
   return (
-    <div className="space-y-4">
-      <p className="text-center text-[13px] leading-5 text-muted-foreground sm:text-[14px]">
-        {t('One action per matching rule. Evaluation stops at the first match.')}
-      </p>
-      <div className="flex flex-wrap justify-center gap-3">
-        {FIREWALL_ACTION_TILES.map((action) => (
-          <div
-            key={action.id}
-            className="w-full sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]"
-          >
-            <ActionCard action={action} />
-          </div>
-        ))}
+    <div className="space-y-6">
+      <div className="flex flex-col items-center">
+        <div
+          className="product-hero-rise inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 shadow-sm dark:bg-card"
+          style={riseStyle(0)}
+        >
+          <span className="size-1.5 rounded-full bg-[var(--tone-ink)] shadow-[0_0_8px_rgb(var(--tone-rgb))]" aria-hidden />
+          <span className="text-[12px] text-muted-foreground sm:text-[13px]">
+            {t('One action per matching rule. Evaluation stops at the first match.')}
+          </span>
+        </div>
+        <div className="hidden h-6 w-0 border-s border-dashed border-foreground/25 lg:block" aria-hidden />
+      </div>
+
+      <div className="relative">
+        <span
+          className="absolute inset-x-[10%] -top-6 hidden border-t border-dashed border-foreground/25 lg:block"
+          aria-hidden
+        />
+        <div className="grid gap-3 sm:grid-cols-6 lg:grid-cols-5">
+          {FIREWALL_ACTION_TILES.map((action, index) => (
+            <div key={action.id} className={cn('relative sm:col-span-2 lg:col-span-1', action.smColStart)}>
+              <span
+                className="absolute -top-6 start-1/2 hidden h-6 w-0 border-s border-dashed border-foreground/25 lg:block"
+                aria-hidden
+              />
+              <ArtPanel
+                className="h-full"
+                innerClassName="flex h-full flex-col p-4"
+                delayMs={120 + index * 100}
+                float
+                floatDelayMs={index * 400}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <ArtIconBadge icon={action.icon} tone={index % 2 === 0 ? 'primary' : 'secondary'} className="size-8" />
+                  <Badge variant={action.badgeVariant} className="shrink-0 text-[10px]">
+                    {/^\d/.test(action.outcome) ? <span dir="ltr">{action.outcome}</span> : t(action.outcome)}
+                  </Badge>
+                </div>
+                <h4 className="mt-3 text-[14px] font-semibold text-foreground">{t(action.title)}</h4>
+                <p className="mt-1 text-[12.5px] leading-5 text-muted-foreground">{t(action.description)}</p>
+              </ArtPanel>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

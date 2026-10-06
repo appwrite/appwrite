@@ -205,7 +205,7 @@ export function CLISection({
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden flex flex-col min-h-0 flex-1">
+      <div className="rounded-xl border border-border bg-card/50 overflow-y-auto flex flex-col min-h-0 flex-1">
         <div className="px-4 py-3 border-b border-border space-y-2 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-[13px] font-semibold text-foreground">
@@ -257,7 +257,7 @@ export function CLISection({
         </div>
 
         {mode === 'interactive' ? (
-          <div className="grid grid-cols-2 divide-x divide-border flex-1 min-h-0">
+          <div className="grid grid-cols-2 divide-x divide-border flex-1">
             <div className="px-4 py-3 space-y-2 min-w-0">
               <div>
                 <h4 className="text-[13px] font-semibold text-foreground">
@@ -295,7 +295,7 @@ export function CLISection({
             </div>
           </div>
         ) : (
-          <div className="px-4 py-3 space-y-2 flex-1 min-h-0">
+          <div className="px-4 py-3 space-y-2 flex-1">
             <div>
               <h4 className="text-[13px] font-semibold text-foreground">
                 {t('2. Authenticate with an API key')}

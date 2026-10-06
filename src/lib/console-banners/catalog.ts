@@ -5,7 +5,11 @@ import type {
 } from '@/lib/console-banners/floating-card-layout'
 
 export type ConsoleBannerScope = 'project' | 'console'
-export type ConsoleBannerPlacement = 'header' | 'bottom-left' | 'fullscreen'
+export type ConsoleBannerPlacement =
+  | 'header'
+  | 'bottom-left'
+  | 'fullscreen'
+  | 'overlay'
 
 export type ConsoleBannerDefinition = {
   id: string
@@ -33,9 +37,7 @@ export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
-
-/** Set to `true` to ship the fullscreen Firewall promo (heavy video asset). */
-export const FIREWALL_PROMO_BANNER_ENABLED = false
+export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
 
 /** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
@@ -101,13 +103,38 @@ export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
 )
 
 /**
- * Firewall fullscreen takeover: two weeks from launch (inclusive, UTC).
+ * Firewall fullscreen takeover: retired early in favour of the spider promo
+ * (inclusive, UTC).
  */
-export const FIREWALL_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 28, 0, 0, 0, 0)
+export const FIREWALL_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 29, 0, 0, 0, 0)
 export const FIREWALL_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   9,
-  11,
+  1,
+  23,
+  59,
+  59,
+  999,
+)
+
+/**
+ * Firewall spider overlay: seven days starting the day after the fullscreen
+ * takeover was retired, so the two Firewall promos never run together
+ * (inclusive, UTC).
+ */
+export const FIREWALL_SPIDER_PROMO_BANNER_START_MS = Date.UTC(
+  2026,
+  9,
+  2,
+  0,
+  0,
+  0,
+  0,
+)
+export const FIREWALL_SPIDER_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  9,
+  8,
   23,
   59,
   59,
@@ -175,6 +202,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     endMs: FIREWALL_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'firewall-promo-banner-learn-more',
+  },
+  {
+    id: FIREWALL_SPIDER_PROMO_BANNER_ID,
+    title: 'Firewall spider',
+    scope: 'project',
+    placement: 'overlay',
+    startMs: FIREWALL_SPIDER_PROMO_BANNER_START_MS,
+    endMs: FIREWALL_SPIDER_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'firewall-spider-promo-block',
   },
 ] as const
 

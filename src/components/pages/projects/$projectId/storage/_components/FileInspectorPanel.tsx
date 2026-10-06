@@ -38,6 +38,7 @@ import {
   getStorageFileIcon,
   isStoragePreviewSupportedMimeType,
   isStorageVideoPreviewSupportedMimeType,
+  STORAGE_VIDEO_PREVIEW_MAX_BYTES,
 } from '@/components/global/shared/StorageFilePreviewThumb'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -45,6 +46,7 @@ import {
   STORAGE_FILES_SPLIT_PANE_BG_CLASS,
 } from './files-documents-layout'
 import { FileSecurity } from './FileSecurity'
+import { FileVideoAction } from './FileVideoAction'
 import { TransformImageWizard } from './TransformImageWizard'
 import {
   buildAdminFileViewUrl,
@@ -167,6 +169,7 @@ export function FileInspectorPanel({
   const videoSourceUrl = useMemo(() => {
     if (!file || !projectId || !bucketId) return null
     if (!isStorageVideoPreviewSupportedMimeType(file.mimeType)) return null
+    if (file.sizeOriginal > STORAGE_VIDEO_PREVIEW_MAX_BYTES) return null
     return buildAdminFileViewUrl(projectId, bucketId, file.$id)
   }, [file, projectId, bucketId])
 
@@ -558,6 +561,15 @@ export function FileInspectorPanel({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {!isPending ? (
+        <FileVideoAction
+          projectId={projectId}
+          bucketId={bucketId}
+          file={file}
+          access={access}
+        />
       ) : null}
 
       <div>

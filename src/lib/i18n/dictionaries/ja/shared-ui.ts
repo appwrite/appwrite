@@ -339,6 +339,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search projects...': 'プロジェクトを検索…',
   'Search providers...': 'プロバイダーを検索…',
   'Search providers by name or ID...': '名前または ID でプロバイダーを検索…',
+  'Search videos by name or ID...': '名前または ID で動画を検索…',
   'Search rows by ID...': 'ID で行を検索…',
   'Search sites...': 'サイトを検索…',
   'Search sites by name or ID...': '名前または ID でサイトを検索…',
@@ -653,6 +654,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'プッシュ通知、メール、SMS メッセージ',
   'Deployed websites and hosting': 'デプロイ済みのウェブサイトとホスティング',
+  'Adaptive video streaming, renditions and subtitles': 'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
   'Realtime channels and live messages':
     'Realtime チャンネルとライブメッセージ',
@@ -683,6 +685,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Sent and scheduled messages': '送信済みおよびスケジュール済みのメッセージ',
   'Messaging · Topics': 'メッセージング · トピック',
   'Messaging · Providers': 'メッセージング · プロバイダー',
+  'Videos · Encoding profiles': '動画 · エンコードプロファイル',
+  'Resolution and bitrate targets for renditions': 'レンディションの解像度とビットレートの目標値',
   'Email, SMS and push providers': 'メール、SMS、プッシュプロバイダー',
   'Settings · Overview': '設定 · 概要',
   'Settings · Custom domains': '設定 · カスタムドメイン',
@@ -720,6 +724,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Create a new bucket': '新しいバケットを作成',
   'Create a new function': '新しい関数を作成',
   'Create a new site': '新しいサイトを作成',
+  'Create a new video': '新しい動画を作成',
   'Create a new team': '新しいチームを作成',
   'Create a new user': '新しいユーザーを作成',
   // Command center: organization navigation
@@ -735,6 +740,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search messages': 'メッセージを検索',
   'Search topics': 'トピックを検索',
   'Search providers': 'プロバイダーを検索',
+  'Search videos': '動画を検索',
   'Search projects': 'プロジェクトを検索',
   'Find a database by name or ID': '名前または ID でデータベースを検索',
   'Find a user by name, email or ID':
@@ -747,6 +753,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Find a message by content or ID': '内容または ID でメッセージを検索',
   'Find a topic by name or ID': '名前または ID でトピックを検索',
   'Find a provider by name or ID': '名前または ID でプロバイダーを検索',
+  'Find a video by name or ID': '名前または ID で動画を検索',
   'Find a project in this organization': 'この組織のプロジェクトを検索',
   // Command center: local actions and groups
   'See all keyboard shortcuts': 'すべてのキーボードショートカットを表示',
@@ -792,6 +799,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'User (optional)': 'ユーザー (任意)',
   'Topic (optional)': 'トピック (任意)',
   'Provider (optional)': 'プロバイダー (任意)',
+  'Video (optional)': '動画 (任意)',
   'Resource (optional)': 'リソース (任意)',
   'Table (optional)': 'テーブル (任意)',
   'File (optional)': 'ファイル (任意)',
@@ -1285,4 +1293,43 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Created by': '作成者',
+  'Authorized resources': '認可済みリソース',
+  'No scopes granted': '付与されたスコープはありません',
+  Installations: 'インストール一覧',
+  'Installations appear here once a team installs this app.':
+    'チームがこのアプリをインストールすると、ここに表示されます。',
+  'No installations': 'インストールはありません',
+  'Remove installation': 'インストールを削除',
+  'Installation removed': 'インストールを削除しました',
+  'Failed to remove installation': 'インストールの削除に失敗しました',
+  'Teams that installed this app and the scopes they granted. Removing an installation revokes its access tokens.':
+    'このアプリをインストールしたチームと、付与されたスコープです。インストールを削除すると、そのアクセストークンは取り消されます。',
+  'The app loses access to this team immediately and its installation tokens stop working. The team can install the app again later.':
+    'アプリはこのチームへのアクセスを直ちに失い、インストールトークンは動作しなくなります。チームは後で再度インストールできます。',
+  'App keys': 'アプリキー',
+  'App key created': 'アプリキーを作成しました',
+  'App key deleted': 'アプリキーを削除しました',
+  'Create key': 'キーを作成',
+  'Delete app key': 'アプリキーを削除',
+  'Failed to create app key': 'アプリキーの作成に失敗しました',
+  'Failed to delete app key': 'アプリキーの削除に失敗しました',
+  'Key value': 'キーの値',
+  'No app keys': 'アプリキーはありません',
+  'Create a key when your app needs to authenticate as itself, such as when it mints installation tokens.':
+    'アプリ自身として認証する必要があるとき (インストールトークンを発行するときなど) にキーを作成します。',
+  'Copy the key into your server environment. You can copy it again later from the keys list.':
+    'キーをサーバー環境にコピーしてください。後からキー一覧で再度コピーできます。',
+  'Never ship app keys in mobile apps, SPAs, or public repositories. Store them in a secrets manager.':
+    'アプリキーをモバイルアプリ、SPA、公開リポジトリに含めないでください。シークレットマネージャーに保存してください。',
+  'Requests signed with this key stop working immediately. This cannot be undone.':
+    'このキーで署名されたリクエストは直ちに動作しなくなります。この操作は取り消せません。',
+  'Your app signs a JWT with an app key to authenticate as itself, for example to mint installation access tokens. Delete a key to revoke it.':
+    'アプリはアプリキーで JWT に署名して自身を認証します (インストールアクセストークンの発行など)。キーを削除すると取り消されます。',
+  'Self-registered': '自己登録',
+  'Suggested app': 'おすすめアプリ',
+  'App key copied': 'アプリキーをコピーしました',
+  'Load more': 'さらに読み込む',
+  'Loading more failed. Try again.':
+    'さらに読み込めませんでした。もう一度お試しください。',
 }

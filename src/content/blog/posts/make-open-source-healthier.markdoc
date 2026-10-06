@@ -7,6 +7,7 @@ cover: /images/blog/make-open-source-healthier.avif
 timeToRead: 5
 author: aditya-oberai
 category: open-source
+removed: true
 faqs:
   - question: "What does community health mean in open source?"
     answer: "Community health refers to how welcoming, sustainable, and effective an open source project's community is. It covers active participation, inclusive behavior, clear communication, transparent decisions, strong leadership, a code of conduct, good documentation, and recognition of contributors. Healthy communities tend to retain contributors and produce better software."

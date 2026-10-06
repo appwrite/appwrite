@@ -4,10 +4,10 @@ import {
   Archive,
   File,
   FileText,
-  Film,
   Image,
   Music,
 } from 'lucide-react'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { ImageFormat } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
@@ -23,7 +23,7 @@ export function getStorageFileIcon(
 ): LucideIcon {
   const type = mimeType ?? ''
   if (type.startsWith('image/')) return Image
-  if (type.startsWith('video/')) return Film
+  if (type.startsWith('video/')) return VIDEOS_PRODUCT_ICON
   if (type.startsWith('audio/')) return Music
   if (type.includes('pdf') || type.includes('document')) return FileText
   if (type.includes('zip') || type.includes('archive')) return Archive
@@ -57,6 +57,9 @@ export function isStoragePreviewSupportedMimeType(
   ])
   return supported.has(t)
 }
+
+/** Larger videos skip inline playback so the inspector doesn't stream the whole original file. */
+export const STORAGE_VIDEO_PREVIEW_MAX_BYTES = 50 * 1024 * 1024
 
 /** MIME types suitable for inline playback in a `<video>` element (original file via `getFileView`). */
 export function isStorageVideoPreviewSupportedMimeType(

@@ -9,6 +9,7 @@ timeToRead: 8
 author: atharva
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "When should I use Next.js instead of plain React with Vite?"
     answer: "Use Next.js when you need server side rendering, static generation, or server components for SEO, fast initial loads, or smaller client bundles. For internal dashboards and admin tools behind a login, plain React with Vite is usually simpler and lighter."

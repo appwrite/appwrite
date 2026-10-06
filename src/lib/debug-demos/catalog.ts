@@ -138,6 +138,13 @@ function buildCatalog(): DebugDemoEntry[] {
       type: 'route',
       href: '/debug/education-join-preview',
     },
+    {
+      id: 'education-plan-curtain',
+      label: 'Education plan curtain',
+      category: 'GitHub Education',
+      type: 'route',
+      href: '/debug/education-plan-preview?view=reminder',
+    },
   ]
 
   const gitRoutes: DebugDemoEntry[] = [

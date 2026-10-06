@@ -8,6 +8,7 @@ timeToRead: 5
 author: jake-barnby
 category: products
 featured: false
+removed: true
 faqs:
   - question: "What is a schema-less database?"
     answer: "A schema-less database stores records without enforcing a fixed, predefined structure across them. Each record can have different fields, and new fields can be added without migrations or downtime. The term overlaps heavily with NoSQL, especially document databases like MongoDB."

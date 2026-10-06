@@ -9,6 +9,7 @@ import { heSharedUiDictionary } from './shared-ui'
 import { heMarketingDictionary } from './marketing'
 import { heProductPagesDictionary } from './product-pages'
 import { hePricingDictionary } from './pricing'
+import { heVideosDictionary } from './videos'
 
 /**
  * Merged Hebrew dictionary keyed by English source strings.
@@ -26,4 +27,5 @@ export const heDictionary: Record<string, string> = {
   ...heFunctionsDictionary,
   ...heSitesDictionary,
   ...heDatabasesDictionary,
+  ...heVideosDictionary,
 }

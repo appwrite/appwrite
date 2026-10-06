@@ -3,7 +3,7 @@ import { View } from '@/components/pages/projects/$projectId/agents/View'
 import { canAccessProjectAgentConnect } from '@/lib/console-rbac-loader'
 import { loadDebugOverrides } from '@/lib/debug-overrides'
 import {
-  accountConnectedAppsQueryOptions,
+  accountConsentsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/agents')({
 
     await Promise.all([
       queryClient.ensureQueryData(projectQueryOptions(projectId)),
-      queryClient.ensureQueryData(accountConnectedAppsQueryOptions()),
+      queryClient.ensureQueryData(accountConsentsQueryOptions()),
     ])
 
     return undefined

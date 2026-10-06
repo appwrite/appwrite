@@ -3,7 +3,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { PauseCircle, Pin, PinOff } from '@/lib/icons'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
-import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -217,9 +216,7 @@ export function ProjectsListTable({
                             <PauseCircle className="h-3 w-3" />
                             {t('Paused')}
                           </Badge>
-                        ) : (
-                          <TerraformIndicator projectId={project.$id} />
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </TableCell>

@@ -11,6 +11,9 @@ import { join } from 'path'
 const ROOT = join(import.meta.dirname, '..')
 const PREVIEW_HOST = 'pkg.vc'
 
+/** Preview builds allowed until they ship on npm (see package.json comment). */
+const PREVIEW_PIN_ALLOWLIST = new Set(['@appwrite.io/console'])
+
 // Lockfiles too: a pin survives there after package.json is fixed.
 const MANIFEST = 'package.json'
 const LOCKFILES = ['bun.lock', 'pnpm-lock.yaml', 'package-lock.json']
@@ -39,6 +42,9 @@ async function main() {
     if (!version.includes(PREVIEW_HOST)) {
       continue
     }
+    if (PREVIEW_PIN_ALLOWLIST.has(name)) {
+      continue
+    }
     const line =
       manifestLines.findIndex((text) => text.includes(`"${name}"`)) + 1
     findings.push({ file: MANIFEST, line, text: `${name}: ${version}` })
@@ -51,9 +57,13 @@ async function main() {
     }
     const lines = (await Bun.file(path).text()).split('\n')
     lines.forEach((text, index) => {
-      if (text.includes(PREVIEW_HOST)) {
-        findings.push({ file, line: index + 1, text: text.trim() })
+      if (!text.includes(PREVIEW_HOST)) {
+        return
       }
+      if (text.includes('@appwrite.io/console')) {
+        return
+      }
+      findings.push({ file, line: index + 1, text: text.trim() })
     })
   }
 

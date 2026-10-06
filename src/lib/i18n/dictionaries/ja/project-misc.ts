@@ -2767,6 +2767,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'API、Functions、Sites へのトラフィックに到達する前に適用されるプロジェクトルール。',
   'Deny, rate limit, redirect, or challenge requests before they hit your API, Functions, or Sites.':
     'API、Functions、サイトに届く前に、リクエストを拒否、レート制限、リダイレクト、またはチャレンジできます。',
+  'This one is harmless. Firewall stops the rest before they reach your API, Functions, or Sites.':
+    'このクモは無害です。それ以外は API、Functions、サイトに届く前に Firewall が止めます。',
+  'Block this crawler': 'このクローラーをブロック',
+  'Blocked by Firewall': 'Firewall によりブロック',
+  'Keep unwanted bots out of your app': '不要なボットをアプリから締め出す',
+  'Deny crawlers and scrapers': 'クローラーやスクレイパーを拒否',
+  'Return a 403 to any request that matches your conditions.':
+    '条件に一致するリクエストに 403 を返します。',
+  'Rate limit noisy clients': '過剰なリクエストをレート制限',
+  'Throttle each client IP and return a 429 once it goes over quota.':
+    'クライアント IP ごとにリクエストを抑制し、上限を超えると 429 を返します。',
+  'Preview impact first': '事前に影響をプレビュー',
+  'See how much recent traffic a rule would match before you enable it.':
+    'ルールを有効にする前に、最近のトラフィックのうち一致する量を確認できます。',
   Rules: 'ルール',
   Analytics: 'アナリティクス',
   Logs: 'ログ',
@@ -3176,8 +3190,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '「有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
   'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
     '「有効にする」をクリックすると、請求サイクルの残日数分の按分額が支払い方法に請求され、今後のサイクル向けにこのプロジェクトのサブスクリプションへアドオンが追加されます。',
-  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
-    'Premium Geo DB は、タイムゾーン、郵便番号、ISP、接続タイプ、組織などの詳細な位置情報でセッションとリクエストデータを補強します。',
+  'Richer geolocation on users and usage for better security and observability.':
+    'ユーザーと利用状況の位置情報を強化し、セキュリティとオブザーバビリティを向上します。',
   'Due today (prorated)': '本日お支払い (按分)',
   '* Plus applicable tax and fees': '* 税および手数料が別途かかる場合があります',
   'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
@@ -3208,34 +3222,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このデータセットではエージェントクローラーの内訳はまだ利用できません',
   'This view does not include mock ChatGPT, Claude, or Perplexity counts. Measure coding-agent fetches on llms.txt and Markdown docs in Plausible instead of chatgpt.com referrers.':
     'このビューに ChatGPT、Claude、Perplexity のモック件数は含まれません。chatgpt.com リファラではなく、llms.txt と Markdown ドキュメントへのコーディングエージェント取得を Plausible で計測してください。',
-  'No changes were made. This resource is managed by Terraform.':
-    '変更は行われませんでした。このリソースは Terraform で管理されています。',
-  'Managed by Terraform': 'Terraform で管理',
-  'The Appwrite Terraform provider created this resource. Update it in your Terraform configuration.':
-    'Appwrite Terraform プロバイダーがこのリソースを作成しました。Terraform の構成で更新してください。',
-  'Resources in this project were created by the Appwrite Terraform provider. Update them in your Terraform configuration.':
-    'このプロジェクトのリソースは Appwrite Terraform プロバイダーによって作成されました。Terraform の構成で更新してください。',
-  'Managed resources': '管理対象のリソース',
-  'Last apply': '最終 apply',
-  'View activity': 'アクティビティを表示',
-  'Changed outside Terraform': 'Terraform 外で変更',
-  'This resource is managed by Terraform, but it changed after the last apply. Run terraform plan to see what differs from your configuration.':
-    'このリソースは Terraform で管理されていますが、最後の apply の後に変更されました。terraform plan を実行して構成との差分を確認してください。',
-  'Last change:': '最終変更:',
-  'Changes you make here are not in your Terraform configuration. The next terraform apply may revert them.':
-    'ここで行った変更は Terraform の構成に含まれません。次回の terraform apply で元に戻される可能性があります。',
-  'Delete a Terraform-managed resource?':
-    'Terraform で管理されているリソースを削除しますか？',
-  'Update a Terraform-managed resource?':
-    'Terraform で管理されているリソースを更新しますか？',
-  'Terraform created this resource. Your next terraform apply will recreate it unless you also remove it from your Terraform configuration.':
-    'このリソースは Terraform によって作成されました。Terraform の構成からも削除しない限り、次回の terraform apply で再作成されます。',
-  'Terraform created this resource. Your next terraform apply may overwrite this change unless you also update your Terraform configuration.':
-    'このリソースは Terraform によって作成されました。Terraform の構成も更新しない限り、次回の terraform apply でこの変更が上書きされる可能性があります。',
-  "Don't ask again for this project": 'このプロジェクトでは今後確認しない',
-  'Delete anyway': '削除を続行',
-  'Update anyway': '更新を続行',
-  'Via Terraform': 'Terraform 経由',
 
   // Project environment switcher
   Environments: '環境',
@@ -3245,4 +3231,147 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Environment switched': '環境を切り替えました',
   'Create environment': '環境を作成',
   'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
+  'Send your first message': '最初のメッセージを送信',
+  'Reach your users by email, SMS, and push notifications from one place.':
+    'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
+  'Connect an email, SMS, or push provider like SendGrid, Twilio, or FCM.':
+    'SendGrid、Twilio、FCM などのメール、SMS、プッシュのプロバイダーを接続します。',
+  'Group users into topics so you can reach all of them with one message.':
+    'ユーザーをトピックにまとめると、1 通のメッセージで全員に届けられます。',
+  'Send a message': 'メッセージを送信',
+  'Write it once, then send it now or schedule it for later.':
+    '一度作成したら、すぐに送信することも、後で送信するよう予約することもできます。',
+  'Create your first topic': '最初のトピックを作成',
+  'Topics group subscribers so you can message everyone who opted in at once.':
+    'トピックは購読者をまとめます。登録したすべての人に一度にメッセージを送れます。',
+  'Name it after what people subscribe to, like product updates or alerts.':
+    '製品のお知らせやアラートなど、購読内容がわかる名前を付けます。',
+  'Subscribe users through their email, phone, or push targets.':
+    'メール、電話番号、プッシュのターゲットを通じてユーザーを登録します。',
+  'Message the topic': 'トピックにメッセージを送信',
+  'Choose the topic as the audience when you create a message.':
+    'メッセージを作成するときに、トピックを送信先として選択します。',
+  'Connect your first provider': '最初のプロバイダーを接続',
+  'Providers deliver your messages. Connect services like SendGrid, Twilio, or Firebase Cloud Messaging.':
+    'プロバイダーがメッセージを配信します。SendGrid、Twilio、Firebase Cloud Messaging などのサービスを接続しましょう。',
+  'Choose a channel': 'チャネルを選択',
+  'Pick email, SMS, or push, then a provider for it.':
+    'メール、SMS、プッシュのいずれかを選び、そのプロバイダーを選択します。',
+  'Add credentials': 'アクセス資格情報を追加',
+  'Paste the API key or credentials from your provider account.':
+    'プロバイダーのアカウントから API キーまたはアクセス資格情報を貼り付けます。',
+  'Start sending': '送信を開始',
+  'Messages on that channel go through the provider you enabled.':
+    'そのチャネルのメッセージは、有効にしたプロバイダー経由で送信されます。',
+  'Every change is recorded': 'すべての変更を記録',
+  'Creates, updates, deletes, and sign-ins from the Console, SDKs, CLI, and API all land here.':
+    'コンソール、SDK、CLI、API からの作成、更新、削除、サインインがすべてここに記録されます。',
+  'Filter what matters': '必要な情報に絞り込む',
+  'Narrow the log by actor, event, resource, or time range to answer who changed what.':
+    '実行者、イベント、リソース、期間でログを絞り込み、誰が何を変更したかを確認できます。',
+  'Inspect any entry': '各エントリを詳しく確認',
+  'Open an event to see the IP address, location, device, and the full payload.':
+    'イベントを開くと、IP アドレス、場所、デバイス、ペイロード全体を確認できます。',
+  'Your project audit trail': 'プロジェクトの監査ログ',
+  'Every change to this project is logged here: who made it, from where, and when. New activity shows up as soon as you or your apps start working with the project.':
+    'このプロジェクトへのすべての変更が、誰が、どこから、いつ行ったかとともにここに記録されます。あなたやアプリがプロジェクトを使い始めると、すぐに新しいアクティビティが表示されます。',
+  'Pick the scopes': 'スコープを選択',
+  'Grant only what your server needs, from reading users to writing rows. You can change scopes later.':
+    'ユーザーの読み取りから行の書き込みまで、サーバーに必要な権限だけを付与します。スコープは後から変更できます。',
+  'Set an expiration': '有効期限を設定',
+  'Keys can live forever or expire on a date, so short-lived scripts never leave access behind.':
+    'キーは無期限にも、指定日に失効させることもできます。一時的なスクリプトのアクセスが残ることはありません。',
+  'Use it on your server': 'サーバーで使用',
+  'Pass the secret to a server SDK or the CLI. Keep it out of browsers and mobile apps.':
+    'シークレットはサーバー SDK または CLI に渡します。ブラウザーやモバイルアプリには含めないでください。',
+  'Create your first API key': '最初の API キーを作成',
+  'API keys let your servers, scripts, and CI talk to Appwrite with exactly the access you grant, without a user session.':
+    'API キーを使うと、サーバー、スクリプト、CI から、ユーザーセッションなしで、付与した権限の範囲だけで Appwrite にアクセスできます。',
+  'Register your app': 'アプリを登録',
+  'Add its hostname, bundle ID, or package name so Appwrite accepts requests from it.':
+    'ホスト名、バンドル ID、パッケージ名を追加すると、Appwrite がそのアプリからのリクエストを受け付けます。',
+  'Install the SDK': 'SDK をインストール',
+  'Pick the SDK for your stack and point it at this project with its ID and endpoint.':
+    'スタックに合った SDK を選び、プロジェクト ID と Endpoint でこのプロジェクトに接続します。',
+  'Make your first request': '最初のリクエストを送信',
+  'Ping Appwrite from your app to confirm the connection, then start using Auth, Databases, and more.':
+    'アプリから Appwrite に ping を送って接続を確認し、認証やデータベースなどを使い始めましょう。',
+  'Connect your first app': '最初のアプリを接続',
+  'Register the web, mobile, or desktop apps that talk to this project. Appwrite only accepts client requests from apps you add here.':
+    'このプロジェクトと通信する Web、モバイル、デスクトップのアプリを登録します。Appwrite は、ここで追加したアプリからのクライアントリクエストのみを受け付けます。',
+  'Connect to Realtime': 'Realtime に接続',
+  'Act as a guest or a project user, then press Connect.':
+    'ゲストまたはプロジェクトユーザーとして実行し、接続を押します。',
+  'Subscribe to a channel': 'チャンネルをサブスクライブ',
+  'Pick channels such as rows, files, or account events.':
+    '行、ファイル、アカウントイベントなどのチャンネルを選択します。',
+  'Watch frames arrive': '受信フレームを確認',
+  'Every event and heartbeat is logged here with its payload.':
+    'すべてのイベントとハートビートが、ペイロードとともにここに記録されます。',
+  'Match requests': 'リクエストを照合',
+  'Target traffic by IP, country, path, method, headers, or user agent.':
+    'IP、国、パス、メソッド、ヘッダー、ユーザーエージェントでトラフィックを絞り込みます。',
+  'Choose an action': 'アクションを選択',
+  'Deny, challenge, rate limit, redirect, or bypass whatever the rule matches.':
+    'ルールに一致したリクエストを、拒否、チャレンジ、レート制限、リダイレクト、バイパスできます。',
+  'Set the priority': '優先度を設定',
+  'Lower numbers run first, and the first rule that matches decides what happens to a request.':
+    '数値の小さいルールから評価され、最初に一致したルールでリクエストの扱いが決まります。',
+  'Protect your project API': 'プロジェクトの API を保護',
+  'Firewall rules run on every request before it reaches Appwrite. Block countries, rate limit sign-ins, challenge bots, or allow only trusted IPs.':
+    'Firewall のルールは、Appwrite に届く前のすべてのリクエストに適用されます。国のブロック、サインインのレート制限、ボットへのチャレンジ、信頼できる IP のみの許可などが可能です。',
+  'Protect this function': 'この Function を保護',
+  'Firewall rules run on every request to this function before your code executes, so abusive traffic never costs you an execution.':
+    'Firewall のルールは、コードが実行される前にこの Function へのすべてのリクエストに適用されるため、悪意のあるトラフィックで実行回数を消費することはありません。',
+  'Protect this site': 'このサイトを保護',
+  'Firewall rules run on every request to this site before it is served. Block scrapers, rate limit forms, or put the site behind a maintenance page.':
+    'Firewall のルールは、配信前にこのサイトへのすべてのリクエストに適用されます。スクレイパーのブロック、フォームのレート制限、メンテナンスページの表示などが可能です。',
+  'Pick the events': 'イベントを選ぶ',
+  'Subscribe to the changes you care about, from new users to uploaded files and finished executions.':
+    '新規ユーザーからアップロードされたファイル、完了した実行まで、必要な変更を購読できます。',
+  'Point it at your endpoint': 'エンドポイントを指定する',
+  'Appwrite sends a POST request with the event payload to your URL as soon as the event happens.':
+    'イベントが発生するとすぐに、Appwrite がイベントのペイロードを含む POST リクエストを URL に送信します。',
+  'Verify the signature': '署名を検証する',
+  'Check the X-Appwrite-Webhook-Signature header to confirm every request came from your project.':
+    'X-Appwrite-Webhook-Signature ヘッダーを確認して、すべてのリクエストがプロジェクトから送信されたことを確かめます。',
+  'React to changes in your project': 'プロジェクトの変更に反応する',
+  'Webhooks notify your servers the moment something happens in your project, so you can sync data, send notifications, or kick off workflows.':
+    'Webhook はプロジェクトで何かが起きた瞬間にサーバーへ通知するため、データの同期、通知の送信、ワークフローの開始ができます。',
+  'Add your domain': 'ドメインを追加する',
+  'Use a subdomain you own, like api.example.com, as the endpoint for your project.':
+    'api.example.com のような所有するサブドメインを、プロジェクトのエンドポイントとして使用します。',
+  'Update your DNS': 'DNS を更新する',
+  'Add the CNAME record we show you at your DNS provider, then verify the domain.':
+    '表示される CNAME レコードを DNS プロバイダーに追加し、ドメインを検証します。',
+  'Get a certificate': '証明書を取得する',
+  'Appwrite issues a TLS certificate once the domain verifies, so traffic is served over HTTPS.':
+    'ドメインの検証後に Appwrite が TLS 証明書を発行し、トラフィックは HTTPS で配信されます。',
+  'Serve your API on your own domain': '独自ドメインで API を提供',
+  'Point a domain you own at this project so your apps call your brand instead of a shared endpoint. Cookies stay first party, which keeps sessions working in every browser.':
+    '所有するドメインをこのプロジェクトに向けると、アプリは共有エンドポイントではなく自社ブランドのドメインを呼び出します。Cookie はファーストパーティのままなので、どのブラウザでもセッションが機能します。',
+  'Connect a source': '移行元を接続する',
+  'Choose another Appwrite project, Firebase, Supabase, or NHost and enter its access credentials.':
+    '別の Appwrite プロジェクト、Firebase、Supabase、NHost のいずれかを選び、アクセス資格情報を入力します。',
+  'Review the report': 'レポートを確認する',
+  'See how many users, tables, files, and functions the source has before anything moves.':
+    '移行を始める前に、移行元のユーザー、テーブル、ファイル、Functions の数を確認できます。',
+  'Pick what to import': 'インポート対象を選ぶ',
+  'Select the resources you want and follow the progress here while the migration runs.':
+    '必要なリソースを選択し、マイグレーションの実行中はここで進行状況を確認できます。',
+  'Bring your data to Appwrite': 'データを Appwrite に移行',
+  'Move users, databases, files, and functions from another Appwrite project or a different platform. Your source stays untouched while the import runs.':
+    '別の Appwrite プロジェクトや他のプラットフォームから、ユーザー、データベース、ファイル、Functions を移行できます。インポート中も移行元は変更されません。',
+  'Create the app': 'アプリを作成する',
+  'Pick the framework, from Flutter and React Native to native Android, iOS, or .NET MAUI, and the platforms you ship to.':
+    'Flutter や React Native からネイティブの Android、iOS、.NET MAUI までのフレームワークと、配布先のプラットフォームを選びます。',
+  'Build every platform': '全プラットフォームをビルドする',
+  'Each version gets its own build per platform, with status and duration tracked here.':
+    '各バージョンはプラットフォームごとにビルドされ、ステータスと所要時間をここで確認できます。',
+  'Submit to the stores': 'ストアに提出する',
+  'Send builds to Google Play, App Store Connect, and the Microsoft Store, or turn on auto submit.':
+    'ビルドを Google Play、App Store Connect、Microsoft Store に送信するか、自動送信をオンにします。',
+  'Ship your apps to every store': 'アプリをすべてのストアに配信',
+  'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
+    'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
 }

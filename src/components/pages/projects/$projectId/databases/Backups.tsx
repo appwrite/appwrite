@@ -86,6 +86,7 @@ import {
   supportsAdvancedBackupPolicies,
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { BackupsEmptyState } from './_components/BackupsEmptyState'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 
@@ -220,6 +221,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     policiesLoading && policies.length === 0 && !policiesData
   const isArchivesActuallyLoading =
     archivesLoading && archives.length === 0 && !archivesData
+  const showsFirstRunEmptyState =
+    !isPoliciesActuallyLoading &&
+    !isArchivesActuallyLoading &&
+    policies.length === 0 &&
+    archivesTotal === 0
 
   // Check if backups are disabled
   // Wait for plan to load before determining if backups are disabled
@@ -619,6 +625,15 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
+      {showsFirstRunEmptyState ? (
+        <BackupsEmptyState
+          docsPath="/docs/products/databases/tablesdb/backups"
+          onCreatePolicy={() => setCreatePolicyDialogOpen(true)}
+          onManualBackup={() => setCreateManualBackupDialogOpen(true)}
+          createPolicyDisabled={isAtBackupPoliciesLimit}
+          createPolicyDisabledTooltip={createPolicyDisabledTooltip}
+        />
+      ) : (
       <div className={backupsViewGridClass}>
         {/* Policies Section */}
         <div className={backupsViewPoliciesColumnClass}>
@@ -1002,6 +1017,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           </div>
         </div>
       </div>
+      )}
       </div>
 
       {/* Bulk Delete Action Bar */}

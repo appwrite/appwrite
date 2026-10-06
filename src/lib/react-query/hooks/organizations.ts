@@ -22,6 +22,11 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
+import {
+  isStartPlanEligibleCountry,
+  START_PLAN_ID,
+} from '@/lib/pricing/start-plan'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
@@ -694,11 +699,11 @@ export async function fetchBillingPlans() {
   try {
     // Use console service to fetch plans
     // Console service exposes getPlans() (not plans()) - SDK types may not include it in all builds
-    const response = await (
-      sdk.forConsole.console as unknown as {
-        getPlans(): Promise<{ plans: unknown[]; total: number }>
-      }
-    ).getPlans()
+    const consoleService = sdk.forConsole.console as unknown as {
+      getPlans(): Promise<{ plans: unknown[]; total: number }>
+      getPlan(params: { planId: string }): Promise<unknown>
+    }
+    const response = await consoleService.getPlans()
 
     // Transform array response to object format keyed by plan $id
     // Response format: { total: number, plans: BillingPlan[] }
@@ -714,9 +719,24 @@ export async function fetchBillingPlans() {
       })
     }
 
+    // The API gates Start by request IP, so the debug country mock adds it back.
+    let total = response.total || 0
+    if (
+      isStartPlanEligibleCountry(readMockLocaleCountryCookie()) &&
+      !plansObject[START_PLAN_ID]
+    ) {
+      const startPlan = (await consoleService
+        .getPlan({ planId: START_PLAN_ID })
+        .catch(() => null)) as Models.BillingPlan | null
+      if (startPlan?.$id) {
+        plansObject[startPlan.$id] = startPlan
+        total += 1
+      }
+    }
+
     return {
       plans: plansObject,
-      total: response.total || 0,
+      total,
     }
   } catch {
     return { plans: {} as Record<string, Models.BillingPlan>, total: 0 }

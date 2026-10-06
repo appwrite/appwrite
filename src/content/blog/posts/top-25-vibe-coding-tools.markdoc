@@ -10,6 +10,7 @@ category: tutorials
 featured: false
 callToAction: true
 unlisted: true
+removed: true
 faqs:
   - question: "What is vibe coding?"
     answer: "Vibe coding is a style of programming where developers rely on AI models to generate and debug code. You describe what you want in plain English and the AI scaffolds the implementation, while you focus on guiding the system, validating outputs, and refining the result through iteration."

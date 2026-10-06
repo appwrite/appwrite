@@ -1,6 +1,7 @@
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { GbHoursUnitInfo } from './GbHoursUnitInfo'
 import { MetricValueWithUnit } from './MetricValueWithUnit'
 import { OVERVIEW_METRIC_NOT_AVAILABLE } from './chart-panel'
@@ -85,7 +86,12 @@ export function OverviewTabMetricContent({
   const isNegative = showChange && change < 0
 
   return (
-    <div className={OVERVIEW_TAB_METRIC_ROW_CLASS}>
+    <div
+      className={cn(
+        OVERVIEW_TAB_METRIC_ROW_CLASS,
+        USAGE_CHART_FADE_IN_CLASS_NAME,
+      )}
+    >
       <MetricValueWithUnit
         value={value}
         className={cn(

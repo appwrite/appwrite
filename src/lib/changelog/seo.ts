@@ -79,7 +79,6 @@ export function getChangelogEntryMetaTags(
     { name: 'twitter:title', content: entry.title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ]
 }
 

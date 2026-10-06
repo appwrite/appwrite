@@ -44,7 +44,10 @@ import {
 } from '@/lib/usage/chart-interval'
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
-import { usageChartRefreshingClassName } from '@/lib/usage/usage-chart-loading'
+import {
+  USAGE_CHART_FADE_IN_CLASS_NAME,
+  usageChartRefreshingClassName,
+} from '@/lib/usage/usage-chart-loading'
 
 type MetricType = OverviewChartTabId
 
@@ -406,7 +409,13 @@ export const RequestsChart = memo(function RequestsChart({
               </div>
             ) : null}
             {renderChart ? (
-              <div className={overviewChartPanelChartFillClass}>
+              <div
+                key={isSkeleton ? 'skeleton' : 'data'}
+                className={cn(
+                  overviewChartPanelChartFillClass,
+                  !isSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
+                )}
+              >
                 <ResponsiveContainer
                   {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}

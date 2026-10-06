@@ -9,6 +9,7 @@ import { jaSharedUiDictionary } from './shared-ui'
 import { jaMarketingDictionary } from './marketing'
 import { jaProductPagesDictionary } from './product-pages'
 import { jaPricingDictionary } from './pricing'
+import { jaVideosDictionary } from './videos'
 
 /**
  * Merged Japanese dictionary keyed by English source strings.
@@ -26,4 +27,5 @@ export const jaDictionary: Record<string, string> = {
   ...jaFunctionsDictionary,
   ...jaSitesDictionary,
   ...jaDatabasesDictionary,
+  ...jaVideosDictionary,
 }

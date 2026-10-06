@@ -203,6 +203,43 @@ await messaging.createEmail({
 }`,
     },
   },
+  realtime: {
+    codeExample: {
+      language: 'typescript',
+      caption: 'One WebSocket, filtered server-side.',
+      code: `import { Client, Realtime, Channel, Query } from 'appwrite';
+
+const client = new Client()
+  .setEndpoint('${PRODUCT_TOOLS_ENDPOINT}')
+  .setProject('<PROJECT_ID>');
+
+const realtime = new Realtime(client);
+
+const subscription = await realtime.subscribe(
+  Channel.tablesdb('<DATABASE_ID>').table('orders').row(),
+  (response) => {
+    console.log(response.events, response.payload);
+  },
+  [Query.equal('status', 'paid')],
+);`,
+    },
+    realtime: {
+      channels: ['tablesdb.*.tables.*.rows.*', 'presences'],
+      events: [
+        'tablesdb.*.tables.*.rows.*.create',
+        'tablesdb.*.tables.*.rows.*.update',
+        'tablesdb.*.tables.*.rows.*.delete',
+      ],
+    },
+    terraform: {
+      href: '/docs/tooling/terraform/resources/databases',
+      snippet: `resource "appwrite_tablesdb_table" "orders" {
+  database_id = appwrite_tablesdb.main.database_id
+  table_id    = "orders"
+  name        = "Orders"
+}`,
+    },
+  },
   sites: {
     codeExample: {
       language: 'typescript',

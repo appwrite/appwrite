@@ -3,6 +3,190 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "firewall-network-rules-premium-geo-db",
+    "href": "/blog/post/firewall-network-rules-premium-geo-db",
+    "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
+    "description": "Use Premium Geo DB network attributes in Appwrite Firewall to stop bots that rotate IP addresses on rented servers, with rules for your API, Functions, and Sites.",
+    "date": "2026-10-05",
+    "lastUpdated": "2026-10-05",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "security",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/firewall-network-rules-premium-geo-db/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-jaspr-support",
+    "href": "/blog/post/announcing-jaspr-support",
+    "title": "Announcing Jaspr support in Appwrite Sites: SSR in Dart",
+    "description": "Appwrite Sites now supports Jaspr with server-side rendering. Build websites in Dart, deploy them from Git, and render every request on Appwrite Cloud.",
+    "date": "2026-10-02",
+    "lastUpdated": "2026-10-02",
+    "timeToRead": 7,
+    "author": "matej-baco",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-jaspr-support/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-premium-geo-db",
+    "href": "/blog/post/announcing-premium-geo-db",
+    "title": "Announcing Premium Geo DB: city, ISP, and connection data",
+    "description": "Premium Geo DB adds city, time zone, ISP, ASN, and connection type to IP geolocation on Appwrite Cloud, for Firewall rules, usage, and the Locale API.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-premium-geo-db/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "multi-tenant-app-appwrite-teams-documentsdb",
+    "href": "/blog/post/multi-tenant-app-appwrite-teams-documentsdb",
+    "title": "How to build a multi-tenant SaaS app with Appwrite Teams",
+    "description": "Step-by-step tutorial for building a multi-tenant SaaS app with Appwrite Teams for tenant isolation and DocumentsDB for schemaless data, using a real forms app.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 15,
+    "author": "aditya-oberai",
+    "category": "tutorials",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/multi-tenant-app-appwrite-teams-documentsdb/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "nextjs-september-2026-security-release-key-updates",
+    "href": "/blog/post/nextjs-september-2026-security-release-key-updates",
+    "title": "Next.js September 2026 security release: Key updates",
+    "description": "Next.js September 2026 security release patches seven vulnerabilities. See what is affected, the risks, and which versions developers should update to.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/nextjs-september-2026-security-release-key-updates/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "september-product-update-native-sign-in-databases-and-more",
+    "href": "/blog/post/september-product-update-native-sign-in-databases-and-more",
+    "title": "September product update: Native sign-in, databases and more",
+    "description": "See what's new in Appwrite with native sign-in, databases across all regions, Resend setup, user photos, CLI config files, and more.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/september-product-update-native-sign-in-databases-and-more/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "tanstack-start-server-function-xss",
+    "href": "/blog/post/tanstack-start-server-function-xss",
+    "title": "TanStack Start XSS (CVE-2026-102989): what to do on Appwrite",
+    "description": "A critical XSS in TanStack Start server functions lets a crafted link run scripts on your domain. Here's how to upgrade, and what Appwrite Sites blocks for you.",
+    "date": "2026-10-01",
+    "lastUpdated": "2026-10-01",
+    "timeToRead": 7,
+    "author": "torsten-dittmann",
+    "category": "security",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/tanstack-start-server-function-xss/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "ai-agent-live-collaborator-appwrite-presences",
+    "href": "/blog/post/ai-agent-live-collaborator-appwrite-presences",
+    "title": "Build an AI agent that collaborates live with Appwrite Presences and Realtime",
+    "description": "Build Weft, a planning board where an AI agent works next to your team. Appwrite Presences show the agent's progress to every teammate, and Realtime delivers each of its changes as it happens.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/ai-agent-live-collaborator-appwrite-presences/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "build-a-permission-aware-ai-copilot",
+    "href": "/blog/post/build-a-permission-aware-ai-copilot",
+    "title": "Build a permission-aware AI copilot with Appwrite Functions",
+    "description": "Build a CRM copilot that acts as the signed-in user. An Appwrite Function receives the caller's JWT, so every tool call gets the same row permissions and team roles as the user's own requests.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/build-a-permission-aware-ai-copilot/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "expense-tracker-receipt-intake-agent",
+    "href": "/blog/post/expense-tracker-receipt-intake-agent",
+    "title": "Build an expense tracker with an AI receipt intake agent",
+    "description": "Upload a receipt, and an Appwrite Function reads it with GPT-6 Luna, files the expense in TablesDB, and sends unclear fields to a review queue.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 12,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/expense-tracker-receipt-intake-agent/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "refund-agent-human-approval-appwrite-functions",
+    "href": "/blog/post/refund-agent-human-approval-appwrite-functions",
+    "title": "Build an AI refund agent with human approval on Appwrite Functions",
+    "description": "Build a refund desk where an AI agent refunds small cases on its own, hands the rest to staff, and resumes from TablesDB when they decide.",
+    "date": "2026-09-30",
+    "lastUpdated": "2026-09-30",
+    "timeToRead": 13,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/refund-agent-human-approval-appwrite-functions/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-breached-password-detection",
+    "href": "/blog/post/announcing-breached-password-detection",
+    "title": "Announcing breached password detection for Appwrite Auth",
+    "description": "Appwrite Auth now checks passwords against Have I Been Pwned, so you can flag, reject, or block sign-in with passwords exposed in known data breaches.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-breached-password-detection/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
+    "href": "/blog/post/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less",
+    "title": "Claude Sonnet 5.5 costs up to 30% less per task",
+    "description": "Claude Sonnet 5.5 costs up to 30% less per task and improves coding, agentic work, and everyday tasks at the same Sonnet 5 pricing.",
+    "date": "2026-09-29",
+    "lastUpdated": "2026-09-29",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "discord-bot-appwrite-functions",
     "href": "/blog/post/discord-bot-appwrite-functions",
     "title": "Build a Discord bot for your Appwrite projects with Appwrite Functions",
@@ -1540,21 +1724,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "what-is-cloud-storage-an-expert-guide-for-developers",
-    "href": "/blog/post/what-is-cloud-storage-an-expert-guide-for-developers",
-    "title": "What is cloud storage? An expert guide for developers",
-    "description": "Learn what cloud storage is, how it works, key types, benefits, trade-offs, and best practices for developers.",
-    "date": "2026-07-01",
-    "lastUpdated": "2026-07-01",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "architectures",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/what-is-cloud-storage-an-expert-guide-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-1-9-5-self-hosted-release",
     "href": "/blog/post/appwrite-1-9-5-self-hosted-release",
     "title": "Announcing Appwrite 1.9.5 for self-hosted deployments",
@@ -1566,36 +1735,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/appwrite-1-9-5-self-hosted-release/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "what-is-redis-a-complete-guide-for-developers",
-    "href": "/blog/post/what-is-redis-a-complete-guide-for-developers",
-    "title": "What is Redis? A complete guide for developers",
-    "description": "Learn what Redis is, why it's so fast, how it works, its data structures, what it's used for, and how it compares to databases, in this guide for developers.",
-    "date": "2026-06-30",
-    "lastUpdated": "2026-06-30",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "architectures",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/what-is-redis-a-complete-guide-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "what-is-serverless-an-expert-guide-for-developers",
-    "href": "/blog/post/what-is-serverless-an-expert-guide-for-developers",
-    "title": "What is serverless? An expert guide for developers",
-    "description": "Learn what serverless means, how it works, FaaS vs BaaS, how it compares to servers and containers, plus benefits and trade-offs, in this developer guide.",
-    "date": "2026-06-30",
-    "lastUpdated": "2026-06-30",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "architectures",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/what-is-serverless-an-expert-guide-for-developers/cover.avif",
     "hasCover": true
   },
   {
@@ -1624,21 +1763,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/what-is-cicd-a-complete-guide-for-developers/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "what-is-docker-a-simple-guide-for-developers",
-    "href": "/blog/post/what-is-docker-a-simple-guide-for-developers",
-    "title": "What is Docker? A simple guide for developers",
-    "description": "Learn what Docker is, how images, containers, Dockerfiles, registries, and Compose work, and how Docker helps you ship apps faster with confidence.",
-    "date": "2026-06-19",
-    "lastUpdated": "2026-06-19",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "devops",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/what-is-docker-a-simple-guide-for-developers/cover.avif",
     "hasCover": true
   },
   {
@@ -1839,36 +1963,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "best-vibe-coding-tools-for-beginners-in-2026",
-    "href": "/blog/post/best-vibe-coding-tools-for-beginners-in-2026",
-    "title": "Best vibe coding tools for beginners in 2026",
-    "description": "Compare the best vibe coding tools for beginners in 2026 and learn how to choose the right AI coding tool to build faster with Appwrite.",
-    "date": "2026-05-25",
-    "lastUpdated": "2026-05-25",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/best-vibe-coding-tools-for-beginners-in-2026/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-developers-are-shipping-apps-10x-faster-with-vibe-coding",
-    "href": "/blog/post/how-developers-are-shipping-apps-10x-faster-with-vibe-coding",
-    "title": "How developers are shipping apps 10x faster with vibe coding",
-    "description": "Learn what vibe coding is, how developers use AI to ship faster, where the workflow breaks down, and why Appwrite gives AI-built apps the real backend they need.",
-    "date": "2026-05-25",
-    "lastUpdated": "2026-05-25",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-developers-are-shipping-apps-10x-faster-with-vibe-coding/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "faster-storage-uploads-parallel-chunks",
     "href": "/blog/post/faster-storage-uploads-parallel-chunks",
     "title": "Up to 7x faster Appwrite Storage uploads with parallel chunks",
@@ -1924,20 +2018,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "openai-just-shipped-codex-to-the-chatgpt-mobile-app",
-    "href": "/blog/post/openai-just-shipped-codex-to-the-chatgpt-mobile-app",
-    "title": "OpenAI just shipped Codex to the ChatGPT mobile app",
-    "description": "OpenAI just brought Codex to mobile. Here’s why async AI coding workflows are about to change how developers build.",
-    "date": "2026-05-19",
-    "lastUpdated": "2026-05-19",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "cover": "/images/blog/openai-just-shipped-codex-to-the-chatgpt-mobile-app/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "7-vibe-coding-trends-every-developer-should-know-in-2026",
     "href": "/blog/post/7-vibe-coding-trends-every-developer-should-know-in-2026",
     "title": "7 vibe coding trends every developer should know in 2026",
@@ -1967,21 +2047,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "the-ultimate-guide-to-vibe-coding-in-2026",
-    "href": "/blog/post/the-ultimate-guide-to-vibe-coding-in-2026",
-    "title": "The ultimate guide to vibe coding in 2026",
-    "description": "Learn how vibe coding works in 2026, from AI coding workflows to the backend stack powering modern apps.",
-    "date": "2026-05-18",
-    "lastUpdated": "2026-05-18",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/the-ultimate-guide-to-vibe-coding-in-2026/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "vibe-coding-vs-traditional-development",
     "href": "/blog/post/vibe-coding-vs-traditional-development",
     "title": "Vibe coding vs traditional development",
@@ -2007,62 +2072,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-deployment-retention/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-vibe-coding-is-changing-software-development",
-    "href": "/blog/post/how-vibe-coding-is-changing-software-development",
-    "title": "How vibe coding is changing software development",
-    "description": "Vibe coding shifts software development from typing code to describing intent. Here is what changes for developers, teams, and the stacks they pick.",
-    "date": "2026-05-15",
-    "lastUpdated": "2026-05-15",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/how-vibe-coding-is-changing-software-development/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "vibe-coding-security-mistakes",
-    "href": "/blog/post/vibe-coding-security-mistakes",
-    "title": "Vibe coding security mistakes developers ignore",
-    "description": "The vibe coding security mistakes developers ignore: leaked keys, open permissions, prompt-history leaks, weak auth defaults, and the fixes that actually work.",
-    "date": "2026-05-15",
-    "lastUpdated": "2026-05-20",
-    "timeToRead": 10,
-    "author": "aditya-oberai",
-    "category": "security",
-    "unlisted": true,
-    "cover": "/images/blog/vibe-coding-security-mistakes/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "deploy-vibe-coding-projects-to-production",
-    "href": "/blog/post/deploy-vibe-coding-projects-to-production",
-    "title": "How to deploy vibe coding projects to production",
-    "description": "A step-by-step guide to deploying vibe-coded apps to production: hosting, domains, secrets, permissions, logs, backups, and a pre-launch review path.",
-    "date": "2026-05-14",
-    "lastUpdated": "2026-05-14",
-    "timeToRead": 10,
-    "author": "aditya-oberai",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/deploy-vibe-coding-projects-to-production/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "hidden-costs-of-vibe-coding-platforms",
-    "href": "/blog/post/hidden-costs-of-vibe-coding-platforms",
-    "title": "The hidden costs of vibe coding platforms",
-    "description": "Token bills, lock-in, leaky permissions, schema rot, and vendor risk. The hidden costs of vibe coding platforms and how to keep them from compounding.",
-    "date": "2026-05-14",
-    "lastUpdated": "2026-05-14",
-    "timeToRead": 9,
-    "author": "aditya-oberai",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/hidden-costs-of-vibe-coding-platforms/cover.avif",
     "hasCover": true
   },
   {
@@ -2175,20 +2184,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/3-things-you-can-build-with-rust-runtime/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "agencies-vibe-coding-client-projects",
-    "href": "/blog/post/agencies-vibe-coding-client-projects",
-    "title": "How agencies are using vibe coding to ship client projects faster",
-    "description": "How agencies use vibe coding tools like Cursor, Claude Code, and Lovable to shorten client cycles, standardize backends, and keep margins on fixed-fee work.",
-    "date": "2026-05-11",
-    "lastUpdated": "2026-05-11",
-    "timeToRead": 9,
-    "author": "aditya-oberai",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/agencies-vibe-coding-client-projects/cover.avif",
     "hasCover": true
   },
   {
@@ -2388,36 +2383,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "7-prompting-mistakes-you-need-to-stop-making-right-now",
-    "href": "/blog/post/7-prompting-mistakes-you-need-to-stop-making-right-now",
-    "title": "7 prompting mistakes you need to stop making right now",
-    "description": "Avoid these 7 common prompting mistakes that lead to poor AI outputs. Learn how to write better prompts and get more accurate and reliable results.",
-    "date": "2026-04-27",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/7-prompting-mistakes-you-need-to-stop-making-right-now/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "7-things-claude-can-do-that-will-blow-your-mind",
-    "href": "/blog/post/7-things-claude-can-do-that-will-blow-your-mind",
-    "title": "7 things Claude can do that will blow your mind",
-    "description": "Discover 7 things Claude can do that most people don't use. From better prompts to smarter workflows, learn how to get more out of your AI.",
-    "date": "2026-04-27",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "ai",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/7-things-claude-can-do-that-will-blow-your-mind/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-vs-firebase-ai-development",
     "href": "/blog/post/appwrite-vs-firebase-ai-development",
     "title": "Appwrite vs Firebase for AI-assisted development",
@@ -2517,20 +2482,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "backend-checklist-vibe-coded-apps",
-    "href": "/blog/post/backend-checklist-vibe-coded-apps",
-    "title": "The backend checklist for vibe-coded apps before launch",
-    "description": "The vibe coding backend checklist: auth, permissions, tables, files, secrets, logs, domains, backups, and AI-generated code review before launch.",
-    "date": "2026-04-25",
-    "lastUpdated": "2026-05-20",
-    "timeToRead": 9,
-    "author": "atharva",
-    "category": "best-practices",
-    "unlisted": true,
-    "cover": "/images/blog/backend-checklist-vibe-coded-apps/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "backend-for-claude-code-apps",
     "href": "/blog/post/backend-for-claude-code-apps",
     "title": "How to add a backend to apps built with Claude Code",
@@ -2542,34 +2493,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/backend-for-claude-code-apps/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "best-backend-for-lovable-apps",
-    "href": "/blog/post/best-backend-for-lovable-apps",
-    "title": "The best backend for Lovable apps: what to look for beyond the default integration",
-    "description": "Picking the best backend for Lovable apps means looking past the default integration. Here is what to evaluate for auth, data, storage, functions, and hosting.",
-    "date": "2026-04-25",
-    "lastUpdated": "2026-04-25",
-    "timeToRead": 9,
-    "author": "aishwari",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/best-backend-for-lovable-apps/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "agent-native-backend-platforms",
-    "href": "/blog/post/agent-native-backend-platforms",
-    "title": "The rise of agent-native backend platforms",
-    "description": "Agent-native backend platforms let AI coding agents inspect, provision, and operate backend resources through MCP, structured APIs, and agent skills.",
-    "date": "2026-04-24",
-    "lastUpdated": "2026-04-24",
-    "timeToRead": 9,
-    "author": "aishwari",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/agent-native-backend-platforms/cover.avif",
     "hasCover": true
   },
   {
@@ -2612,20 +2535,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/terraform-provider-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "open-source-backend-for-ai-apps",
-    "href": "/blog/post/open-source-backend-for-ai-apps",
-    "title": "Open-source backend for AI apps: why ownership matters",
-    "description": "Why the open-source backend for AI apps matters in 2026. Compare licenses and self-hosting across Appwrite, Supabase, Convex, Neon, Cloudflare, and Firebase.",
-    "date": "2026-04-24",
-    "lastUpdated": "2026-04-24",
-    "timeToRead": 9,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "unlisted": true,
-    "cover": "/images/blog/open-source-backend-for-ai-apps/cover.avif",
     "hasCover": true
   },
   {
@@ -2680,20 +2589,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "ai",
     "unlisted": true,
     "cover": "/images/blog/what-is-an-ai-backend/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "why-ai-generated-apps-need-backend",
-    "href": "/blog/post/why-ai-generated-apps-need-backend",
-    "title": "Why AI-generated apps still need a real backend",
-    "description": "AI builders can scaffold a UI in minutes, but durable data, identity, access control, and server-side logic still decide whether the app survives launch.",
-    "date": "2026-04-23",
-    "lastUpdated": "2026-04-23",
-    "timeToRead": 8,
-    "author": "atharva",
-    "category": "ai",
-    "unlisted": true,
-    "cover": "/images/blog/why-ai-generated-apps-need-backend/cover.avif",
     "hasCover": true
   },
   {
@@ -2807,21 +2702,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "why-documentation-is-the-most-underrated-developer-feature",
-    "href": "/blog/post/why-documentation-is-the-most-underrated-developer-feature",
-    "title": "Why documentation is the most underrated developer feature",
-    "description": "Why documentation is one of the most important developer features, and how great docs improve onboarding, usability, and backend adoption.",
-    "date": "2026-04-17",
-    "lastUpdated": "2026-04-17",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/why-documentation-is-the-most-underrated-developer-feature/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-api-keys-api",
     "href": "/blog/post/announcing-api-keys-api",
     "title": "Announcing the Keys API: Create and manage API keys with Server SDKs",
@@ -2833,36 +2713,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/improve-devex-dev-keys/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "what-developers-actually-want-from-a-backend-platform",
-    "href": "/blog/post/what-developers-actually-want-from-a-backend-platform",
-    "title": "What developers actually want from a backend platform",
-    "description": "Explore what developers expect from modern backend platforms, from scalability and permissions to pricing predictability and long-term flexibility.",
-    "date": "2026-04-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/what-developers-actually-want-from-a-backend-platform/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "the-underrated-value-of-great-sdk-design",
-    "href": "/blog/post/the-underrated-value-of-great-sdk-design",
-    "title": "The underrated value of great SDK design",
-    "description": "Great SDK design can make or break developer adoption. Here's why SDK quality matters, and what developers actually expect from modern backend platforms.",
-    "date": "2026-04-15",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/the-underrated-value-of-great-sdk-design/cover.avif",
     "hasCover": true
   },
   {
@@ -2893,51 +2743,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "how-to-avoid-framework-fatigue-when-building-backends",
-    "href": "/blog/post/how-to-avoid-framework-fatigue-when-building-backends",
-    "title": "How to avoid \"framework fatigue\" when building backends",
-    "description": "Avoid framework fatigue when building backends. Learn how to choose stable tools, reduce stack complexity, and ship faster without constantly switching frameworks.",
-    "date": "2026-04-09",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "best-practices",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-to-avoid-framework-fatigue-when-building-backends/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-to-build-and-ship-a-side-project-alone-the-backend-stack-that-works",
-    "href": "/blog/post/how-to-build-and-ship-a-side-project-alone-the-backend-stack-that-works",
-    "title": "How to build and ship a side project alone",
-    "description": "Build and ship a side project alone using a backend stack that actually works. Learn how to choose the right tools, simplify infrastructure, and launch faster without managing multiple services.",
-    "date": "2026-04-09",
-    "lastUpdated": "2026-04-09",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "startups",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-to-build-and-ship-a-side-project-alone-the-backend-stack-that-works/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "the-mental-model-every-developer-needs-for-backend-architecture",
-    "href": "/blog/post/the-mental-model-every-developer-needs-for-backend-architecture",
-    "title": "The mental model every developer needs for backend architecture",
-    "description": "A practical mental model for backend architecture that helps developers design scalable systems, reduce complexity, and choose the right backend components with confidence.",
-    "date": "2026-04-09",
-    "lastUpdated": "2026-04-09",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "architectures",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/the-mental-model-every-developer-needs-for-backend-architecture/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "x-oauth2-appwrite",
     "href": "/blog/post/x-oauth2-appwrite",
     "title": "Announcing X OAuth support in Appwrite Auth",
@@ -2963,36 +2768,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-rust-sdk/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "backend-platform-longevity-what-to-look-for-beyond-features",
-    "href": "/blog/post/backend-platform-longevity-what-to-look-for-beyond-features",
-    "title": "Backend platform longevity: What to look for beyond features",
-    "description": "Learn what to look for beyond features when choosing a backend platform: maintenance cadence, governance, security posture, data portability, and long-term stability.",
-    "date": "2026-04-07",
-    "lastUpdated": "2026-04-07",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "open-source",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/backend-platform-longevity-what-to-look-for-beyond-features/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-to-evaluate-open-source-maturity-before-using-it-in-production",
-    "href": "/blog/post/how-to-evaluate-open-source-maturity-before-using-it-in-production",
-    "title": "How to evaluate open-source maturity before using it in production",
-    "description": "Evaluate open-source maturity before using it in production. Learn what to check, common risks, and a practical framework to choose reliable tools with confidence.",
-    "date": "2026-04-07",
-    "lastUpdated": "2026-04-07",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-to-evaluate-open-source-maturity-before-using-it-in-production/cover.avif",
     "hasCover": true
   },
   {
@@ -3080,20 +2855,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings",
-    "href": "/blog/post/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings",
-    "title": "How NoSQL databases handle unstructured AI data (text, images, embeddings)",
-    "description": "Learn how NoSQL for unstructured data handles text, images, and embeddings in AI applications and why it outperforms relational databases for modern AI pipelines.",
-    "date": "2026-04-02",
-    "lastUpdated": "2026-04-02",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/how-nosql-databases-handle-unstructured-ai-data-text-images-embeddings/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "scaling-ai-workloads-why-mongodb-works-well-for-high-velocity-data",
     "href": "/blog/post/scaling-ai-workloads-why-mongodb-works-well-for-high-velocity-data",
     "title": "Scaling AI workloads: Why MongoDB works well for high-velocity data",
@@ -3152,20 +2913,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "why-schema-less-databases-are-better-for-modern-ai-workloads",
-    "href": "/blog/post/why-schema-less-databases-are-better-for-modern-ai-workloads",
-    "title": "Why schema-less databases are better for modern AI workloads",
-    "description": "Discover why schema-less databases outperform relational databases for AI workloads, covering flexibility, scalability, key use cases, and how to build faster AI backends.",
-    "date": "2026-04-01",
-    "lastUpdated": "2026-04-01",
-    "timeToRead": 5,
-    "author": "jake-barnby",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/why-schema-less-databases-are-better-for-modern-ai-workloads/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "security-update-regarding-the-axios-npm-incident",
     "href": "/blog/post/security-update-regarding-the-axios-npm-incident",
     "title": "Security update regarding the Axios npm incident",
@@ -3208,110 +2955,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "appwrite-for-hackathons-build-fast-ship-faster",
-    "href": "/blog/post/appwrite-for-hackathons-build-fast-ship-faster",
-    "title": "Appwrite for hackathons: Build fast, ship faster",
-    "description": "Learn how Appwrite helps hackathon teams go from idea to working prototype in hours, not days.",
-    "date": "2026-03-30",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "hackathons",
-    "featured": false,
-    "cover": "/images/blog/appwrite-for-hackathons-build-fast-ship-faster/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "self-serve-compliance-what-teams-expect-in-2026",
-    "href": "/blog/post/self-serve-compliance-what-teams-expect-in-2026",
-    "title": "Self-serve compliance: What teams expect in 2026",
-    "description": "Learn what self-serve compliance means in 2026, why developer teams expect it by default, and how platforms like Appwrite make it possible.",
-    "date": "2026-03-30",
-    "lastUpdated": "2026-03-30",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/self-serve-compliance-what-teams-expect-in-2026/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-open-source-developers-use-appwrite",
-    "href": "/blog/post/how-open-source-developers-use-appwrite",
-    "title": "How open-source developers use Appwrite",
-    "description": "Discover how open-source developers around the world use Appwrite to build, ship, and scale their projects, without the backend headaches.",
-    "date": "2026-03-29",
-    "lastUpdated": "2026-03-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "open-source",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-open-source-developers-use-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-modern-developers-choose-tech-stacks-today",
-    "href": "/blog/post/how-modern-developers-choose-tech-stacks-today",
-    "title": "How modern developers choose tech stacks today",
-    "description": "Learn how modern developers choose tech stacks based on speed, developer experience, flexibility, and lock-in risk to find a backend that scales.",
-    "date": "2026-03-28",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-modern-developers-choose-tech-stacks-today/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-custom-domains",
-    "href": "/blog/post/appwrite-custom-domains",
-    "title": "Appwrite custom domains: setting up and managing endpoints",
-    "description": "Learn why custom domains matter for Appwrite security, how to configure a CNAME record, verify your domain, and update your SDK endpoint for same-domain cookies.",
-    "date": "2026-03-27",
-    "lastUpdated": "2026-03-27",
-    "timeToRead": 4,
-    "author": "aditya-oberai",
-    "category": "products, tutorials, security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-custom-domains/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-magic-link",
-    "href": "/blog/post/appwrite-magic-link",
-    "title": "How Appwrite's Magic Link auth improves user experience",
-    "description": "Learn how Appwrite's Magic Link authentication works, how to implement the two-step flow, and when to use it over passwords or email OTP for better UX.",
-    "date": "2026-03-27",
-    "lastUpdated": "2026-03-27",
-    "timeToRead": 4,
-    "author": "aditya-oberai",
-    "category": "products, tutorials, security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-magic-link/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "choosing-a-backend-when-you-manage-multiple-client-projects",
-    "href": "/blog/post/choosing-a-backend-when-you-manage-multiple-client-projects",
-    "title": "Choosing a backend when you manage multiple client projects",
-    "description": "Managing multiple client projects? Learn how to standardize your backend with Appwrite and ship faster, reduce maintenance debt, and scale with confidence.",
-    "date": "2026-03-27",
-    "lastUpdated": "2026-03-27",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "startups",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/choosing-a-backend-when-you-manage-multiple-client-projects/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-indexes",
     "href": "/blog/post/appwrite-indexes",
     "title": "Appwrite Indexes: how to speed up your database queries",
@@ -3324,21 +2967,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-indexes/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-messaging-push-email",
-    "href": "/blog/post/appwrite-messaging-push-email",
-    "title": "Using Appwrite Messaging for push notifications and email",
-    "description": "Learn how to set up Appwrite Messaging to send push notifications and emails, when to use each channel, and how to target users and topics effectively.",
-    "date": "2026-03-26",
-    "lastUpdated": "2026-03-26",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-messaging-push-email/cover.avif",
     "hasCover": true
   },
   {
@@ -3372,36 +3000,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "appwrite-query-api",
-    "href": "/blog/post/appwrite-query-api",
-    "title": "Appwrite's Query API: filtering, sorting, and pagination",
-    "description": "Learn how to use Appwrite's Query API to filter, sort, and paginate database results efficiently, including offset and cursor pagination.",
-    "date": "2026-03-25",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-query-api/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-webhooks",
-    "href": "/blog/post/appwrite-webhooks",
-    "title": "Appwrite Webhooks: triggering events the right way",
-    "description": "Learn how to configure Appwrite Webhooks, select the right events, verify payloads with HMAC-SHA1, and build reliable real-world integrations.",
-    "date": "2026-03-25",
-    "lastUpdated": "2026-03-25",
-    "timeToRead": 4,
-    "author": "aditya-oberai",
-    "category": "products, tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-webhooks/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-functions-guide",
     "href": "/blog/post/appwrite-functions-guide",
     "title": "Appwrite Functions: everything you need to know",
@@ -3417,36 +3015,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "appwrite-storage-file-manager",
-    "href": "/blog/post/appwrite-storage-file-manager",
-    "title": "How to build a file manager with Appwrite Storage",
-    "description": "Learn how to create buckets, upload and download files, set permissions, and build a complete file manager UI using Appwrite Storage.",
-    "date": "2026-03-24",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-storage-file-manager/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-teams-roles",
-    "href": "/blog/post/appwrite-teams-roles",
-    "title": "Appwrite Teams and Roles: managing multi-tenant access",
-    "description": "Learn how Appwrite Teams work, how to create and manage teams with roles, and how to use team-based permissions for multi-tenant SaaS apps.",
-    "date": "2026-03-24",
-    "lastUpdated": "2026-03-24",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-teams-roles/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-auth-methods",
     "href": "/blog/post/appwrite-auth-methods",
     "title": "Appwrite Auth explained: every auth method, compared",
@@ -3459,21 +3027,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/appwrite-auth-methods/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-permissions",
-    "href": "/blog/post/appwrite-permissions",
-    "title": "Understanding Appwrite permissions: a complete breakdown",
-    "description": "A complete breakdown of Appwrite's permission system, covering permission types, role types, common patterns, and pitfalls to avoid in your app.",
-    "date": "2026-03-23",
-    "lastUpdated": "2026-03-23",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, tutorials, security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-permissions/cover.avif",
     "hasCover": true
   },
   {
@@ -3521,36 +3074,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "backend-platform-security-responsibilities",
-    "href": "/blog/post/backend-platform-security-responsibilities",
-    "title": "Security responsibilities when using backend platforms",
-    "description": "Understanding the shared responsibility model for security when building on backend-as-a-service platforms, and what that means for your application.",
-    "date": "2026-03-20",
-    "lastUpdated": "2026-03-20",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/backend-platform-security-responsibilities/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "client-dashboards-internal-tools",
-    "href": "/blog/post/client-dashboards-internal-tools",
-    "title": "Building client dashboards and internal tools faster",
-    "description": "How to ship admin panels, dashboards, and internal tools quickly for clients without rebuilding the same backend infrastructure from scratch each time.",
-    "date": "2026-03-20",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/client-dashboards-internal-tools/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "firebase-vs-open-source-tradeoffs",
     "href": "/blog/post/firebase-vs-open-source-tradeoffs",
     "title": "Firebase vs open source: the trade-offs developers miss",
@@ -3563,21 +3086,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/firebase-vs-open-source-tradeoffs/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "open-source-regulated-environments",
-    "href": "/blog/post/open-source-regulated-environments",
-    "title": "Open-source backends in regulated industries: what to check",
-    "description": "How to evaluate open-source backend tools for regulated industries like healthcare and finance, covering maintenance cadence, licensing, and compliance fit.",
-    "date": "2026-03-20",
-    "lastUpdated": "2026-03-20",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/open-source-regulated-environments/cover.avif",
     "hasCover": true
   },
   {
@@ -3608,36 +3116,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "unlisted": true,
     "cover": "/images/blog/building-a-production-ready-backend-with-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "evaluate-backend-tools-no-lock-in",
-    "href": "/blog/post/evaluate-backend-tools-no-lock-in",
-    "title": "How to evaluate backend tools without locking yourself in",
-    "description": "A practical framework for evaluating backend platforms and services in a way that minimizes lock-in and preserves your team's ability to change direction.",
-    "date": "2026-03-19",
-    "lastUpdated": "2026-03-19",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/evaluate-backend-tools-no-lock-in/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-developer-tools-are-evolving-in-2026",
-    "href": "/blog/post/how-developer-tools-are-evolving-in-2026",
-    "title": "How developer tools are evolving in 2026",
-    "description": "The developer tools landscape is shifting toward cohesive, integrated backends. See what's changing in 2026 and how Appwrite is built for exactly this moment.",
-    "date": "2026-03-19",
-    "lastUpdated": "2026-03-19",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-developer-tools-are-evolving-in-2026/cover.avif",
     "hasCover": true
   },
   {
@@ -3685,36 +3163,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "avoid-backend-overengineering",
-    "href": "/blog/post/avoid-backend-overengineering",
-    "title": "How to avoid backend overengineering in early-stage products",
-    "description": "The patterns that lead early-stage teams to overengineer their backend and the decisions that keep systems simple while still being production-ready.",
-    "date": "2026-03-18",
-    "lastUpdated": "2026-03-18",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/avoid-backend-overengineering/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "build-internal-tools-quickly",
-    "href": "/blog/post/build-internal-tools-quickly",
-    "title": "How to build internal tools quickly: Admin panels",
-    "description": "A practical guide to building admin panels and operations dashboards quickly using Appwrite as the backend, without sacrificing security or reliability.",
-    "date": "2026-03-18",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/build-internal-tools-quickly/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "easiest-file-uploads",
     "href": "/blog/post/easiest-file-uploads",
     "title": "The easiest way to add file uploads to your app",
@@ -3745,21 +3193,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "when-custom-backend-stops-being-worth-it",
-    "href": "/blog/post/when-custom-backend-stops-being-worth-it",
-    "title": "When 'custom backend' stops being worth it for small teams",
-    "description": "The real costs of maintaining a custom backend and how to decide when switching to a managed backend platform makes more business sense for your team.",
-    "date": "2026-03-18",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/when-custom-backend-stops-being-worth-it/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-appwrite-arena",
     "href": "/blog/post/announcing-appwrite-arena",
     "title": "Introducing Appwrite Arena: Which AI model knows Appwrite best?",
@@ -3771,126 +3204,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": true,
     "cover": "/images/blog/announcing-appwrite-arena/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-for-startups-ship-faster-without-backend-headaches",
-    "href": "/blog/post/appwrite-for-startups-ship-faster-without-backend-headaches",
-    "title": "Appwrite for startups: ship faster without backend headaches",
-    "description": "Learn how Appwrite helps startups move from idea to launch faster by handling authentication, databases, storage, and backend workflows in one place. This guide shows why teams choose Appwrite to cut complexity, reduce development time, and stay focused on building the product instead of managing backend headaches.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "startups",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/appwrite-for-startups-ship-faster-without-backend-headaches/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "backend-mistakes-that-quietly-cost-small-teams-weeks",
-    "href": "/blog/post/backend-mistakes-that-quietly-cost-small-teams-weeks",
-    "title": "Backend mistakes that quietly cost small teams weeks",
-    "description": "Small teams don't lose velocity because of talent, they lose it because of backend mistakes made early. Here are the 6 that cost you the most, and how to avoid them.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/backend-mistakes-that-quietly-cost-small-teams-weeks/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "build-from-scratch-productivity",
-    "href": "/blog/post/build-from-scratch-productivity",
-    "title": "Why building from scratch is killing developer productivity",
-    "description": "The hidden costs of building custom solutions for solved problems and how to develop better judgment about when to build versus when to use existing tools.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/build-from-scratch-productivity/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "developer-compliance-thinking",
-    "href": "/blog/post/developer-compliance-thinking",
-    "title": "Developer-first thinking about compliance requirements",
-    "description": "A developer-first guide to understanding compliance requirements, identifying what applies to your application, and making informed architecture decisions.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/developer-compliance-thinking/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "indie-hackers-shipping-faster",
-    "href": "/blog/post/indie-hackers-shipping-faster",
-    "title": "How indie hackers are shipping apps faster than ever",
-    "description": "The tools, habits, and shipping decisions that let solo developers and small teams get production-ready applications in front of users in days, not months.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/indie-hackers-shipping-faster/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "scaling-applications-with-appwrite-what-you-need-to-know",
-    "href": "/blog/post/scaling-applications-with-appwrite-what-you-need-to-know",
-    "title": "Scaling applications with Appwrite: What you need to know",
-    "description": "Learn how to scale applications with Appwrite by building a scalable backend architecture without complexity, bottlenecks, or vendor lock-in.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/scaling-applications-with-appwrite-what-you-need-to-know/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "secure-user-data-non-expert",
-    "href": "/blog/post/secure-user-data-non-expert",
-    "title": "How to secure user data without becoming a security expert",
-    "description": "Practical security steps that every developer can implement to protect user data, without needing deep security expertise or a dedicated security team.",
-    "date": "2026-03-17",
-    "lastUpdated": "2026-03-17",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/secure-user-data-non-expert/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "agency-backend-standardization",
-    "href": "/blog/post/agency-backend-standardization",
-    "title": "How agencies standardize backend stacks across clients",
-    "description": "Why development agencies benefit from standardizing their backend stack and how to choose a platform flexible enough to serve diverse client needs.",
-    "date": "2026-03-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/agency-backend-standardization/cover.avif",
     "hasCover": true
   },
   {
@@ -3909,21 +3222,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "cname-flattening-for-appwrite-sites",
-    "href": "/blog/post/cname-flattening-for-appwrite-sites",
-    "title": "CNAME flattening for Appwrite sites",
-    "description": "Appwrite Sites now supports CNAME flattening, making it easier to connect custom domains without transferring DNS control or changing nameservers.",
-    "date": "2026-03-16",
-    "lastUpdated": "2026-03-16",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/cname-flattening-for-appwrite-sites/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "common-appwrite-mistakes-and-how-to-avoid-them",
     "href": "/blog/post/common-appwrite-mistakes-and-how-to-avoid-them",
     "title": "Common Appwrite mistakes (and how to avoid them)",
@@ -3935,51 +3233,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/common-appwrite-mistakes-and-how-to-avoid-them/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "compliant-architectures",
-    "href": "/blog/post/compliant-architectures",
-    "title": "Designing compliant architectures without slowing your team",
-    "description": "How to build compliance into your backend architecture from the start without creating bottlenecks or blocking your team from shipping faster.",
-    "date": "2026-03-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/compliant-architectures/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-appwrite-simplifies-backend-development-for-frontend-devs",
-    "href": "/blog/post/how-appwrite-simplifies-backend-development-for-frontend-devs",
-    "title": "How Appwrite simplifies backend development for frontend devs",
-    "description": "See how Appwrite makes backend development easier for frontend developers by handling auth, databases, storage, and server-side logic through simple APIs and tools. This guide shows how you can build full-stack apps faster without getting buried in backend complexity or infrastructure setup.",
-    "date": "2026-03-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/how-appwrite-simplifies-backend-development-for-frontend-devs/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "save-weeks-managed-backends",
-    "href": "/blog/post/save-weeks-managed-backends",
-    "title": "How developers can save weeks by using managed backends",
-    "description": "A concrete look at the development time saved when using a managed backend platform instead of building and maintaining backend infrastructure from scratch.",
-    "date": "2026-03-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/save-weeks-managed-backends/cover.avif",
     "hasCover": true
   },
   {
@@ -3995,35 +3248,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": false,
     "draft": false,
     "cover": "/images/blog/managing-website-assets-repo-cold-start/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better",
-    "href": "/blog/post/solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better",
-    "title": "Solving the headaches of screenshot automation (and why an API-First approach works better)",
-    "description": "Generating screenshots at scale is harder than it looks. This guide breaks down the challenges of screenshot automation and why an API-first approach works better.",
-    "date": "2026-03-11",
-    "lastUpdated": "2026-03-11",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/solving-the-headaches-of-screenshot-automation-and-why-an-api-first-approach-works-better/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "tooling-checklist-for-hipaa-ready-applications",
-    "href": "/blog/post/tooling-checklist-for-hipaa-ready-applications",
-    "title": "Tooling checklist for HIPAA-Ready applications",
-    "description": "A practical tooling checklist for teams building HIPAA-ready healthcare apps, covering authentication, access control, encryption, monitoring, and secure infrastructure.",
-    "date": "2026-03-11",
-    "lastUpdated": "2026-03-11",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/tooling-checklist-for-hipaa-ready-applications/cover.avif",
     "hasCover": true
   },
   {
@@ -4052,21 +3276,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-cname-flattening/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "hipaa-compliance-for-web-apps-a-practical-guide",
-    "href": "/blog/post/hipaa-compliance-for-web-apps-a-practical-guide",
-    "title": "HIPAA compliance for web apps: A practical guide",
-    "description": "This guide breaks down what HIPAA compliance actually requires for modern web architectures, and how to design secure, PHI-safe systems from the backend up.",
-    "date": "2026-02-25",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aishwari",
-    "category": "security",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/hipaa-compliance-for-web-apps-a-practical-guide/cover.avif",
     "hasCover": true
   },
   {
@@ -4152,34 +3361,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-csv-export/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "screenshots-best-practices",
-    "href": "/blog/post/screenshots-best-practices",
-    "title": "Best practices for handling screenshots in your app",
-    "description": "Learn how to efficiently capture, store, and serve webpage screenshots without wasting resources or slowing down your app.",
-    "date": "2026-01-30",
-    "lastUpdated": "2026-01-30",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/screenshots-best-practices/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "using-nextjs-wrong",
-    "href": "/blog/post/using-nextjs-wrong",
-    "title": "You're probably using Next.js wrong",
-    "description": "Next.js isn't just React with extra steps. Learn when server-side rendering actually matters and how to use it properly with Appwrite.",
-    "date": "2026-01-22",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 8,
-    "author": "atharva",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/using-nextjs-wrong/cover.avif",
     "hasCover": true
   },
   {
@@ -4353,19 +3534,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "nextjs-standalone-support-in-appwrite-sites",
-    "href": "/blog/post/nextjs-standalone-support-in-appwrite-sites",
-    "title": "Next.js standalone builds now supported on Appwrite Sites",
-    "description": "Deploy Next.js apps in standalone mode on Appwrite Sites with full Next.js 16 support, smaller builds, faster cold starts, and lighter deployments.",
-    "date": "2025-11-12",
-    "lastUpdated": "2025-11-12",
-    "timeToRead": 4,
-    "author": "ebenezer-don",
-    "category": "announcements",
-    "cover": "/images/blog/nextjs-standalone-builds/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "product-update-october-2025",
     "href": "/blog/post/product-update-october-2025",
     "title": "October product update: Unlimited Sites, Transactions API, and 1.8 to Self-hosted",
@@ -4377,20 +3545,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/product-update-october-2025/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "race-conditions-db-operators",
-    "href": "/blog/post/race-conditions-db-operators",
-    "title": "Handle race conditions when running operations in Appwrite DB",
-    "description": "Learn how race conditions can occur while running operations on your Appwrite database and how operators can help avoid them.",
-    "date": "2025-11-06",
-    "lastUpdated": "2025-11-06",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/race-conditions-db-operators/cover.avif",
     "hasCover": true
   },
   {
@@ -4503,20 +3657,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "unlisted": true,
     "cover": "/images/blog/best-vibe-coding-tips/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "context-engineering-intro",
-    "href": "/blog/post/context-engineering-intro",
-    "title": "Context engineering intro: Why prompts alone aren't enough anymore",
-    "description": "Learn what context engineering is, how it evolved from prompt engineering, and why it's key to building reliable AI systems.",
-    "date": "2025-10-31",
-    "lastUpdated": "2025-10-31",
-    "timeToRead": 10,
-    "author": "veeresh-mulge",
-    "category": "tutorials",
-    "unlisted": true,
-    "cover": "/images/blog/context-engineering-intro/cover.avif",
     "hasCover": true
   },
   {
@@ -4643,20 +3783,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "reasons-to-run-your-ci-pipeline-on-appwrite",
-    "href": "/blog/post/reasons-to-run-your-ci-pipeline-on-appwrite",
-    "title": "Simplify your CI pipeline and ship faster with Appwrite",
-    "description": "Tired of juggling multiple tools for builds and tests? See how Appwrite unifies your CI pipeline, cuts costs, and helps your team ship faster with full visibility and production-level confidence.",
-    "date": "2025-10-23",
-    "lastUpdated": "2025-10-23",
-    "timeToRead": 6,
-    "author": "eldad-fux",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/reasons-to-run-your-ci-pipeline-on-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "migrate-from-vercel-to-appwrite-sites",
     "href": "/blog/post/migrate-from-vercel-to-appwrite-sites",
     "title": "7 reasons to not think twice before migrating from Vercel to Appwrite Sites",
@@ -4724,20 +3850,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "unlisted": true,
     "cover": "/images/blog/best-free-static-website-hosting/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "best-push-notification-strategies",
-    "href": "/blog/post/best-push-notification-strategies",
-    "title": "Push notifications 101: Best strategies to engage and retain users",
-    "description": "Learn how you can leverage push notifications for improved user engagement.",
-    "date": "2025-10-04",
-    "lastUpdated": "2025-10-04",
-    "timeToRead": 10,
-    "author": "veeresh-mulge",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/best-push-notification-strategies/cover.avif",
     "hasCover": true
   },
   {
@@ -4810,20 +3922,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "what-is-cdn",
-    "href": "/blog/post/what-is-cdn",
-    "title": " What is a content delivery network (CDN)?",
-    "description": "Explore the basics of CDNs, their benefits, and why they're essential for fast and secure content delivery to websites and applications",
-    "date": "2025-09-23",
-    "lastUpdated": "2025-09-23",
-    "timeToRead": 5,
-    "author": "veeresh-mulge",
-    "category": "tutorials",
-    "unlisted": true,
-    "cover": "/images/blog/what-is-cdn/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-spatial-columns",
     "href": "/blog/post/announcing-spatial-columns",
     "title": "Announcing API for spatial columns: Build scalable location-aware apps with ease",
@@ -4865,19 +3963,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "metaTitle": "Best vibe coding tools in 2026: Cursor, Windsurf, Claude Code, Antigravity, and more",
     "cover": "/images/blog/comparing-vibe-coding-tools/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "turbopack-support-appwrite-sites",
-    "href": "/blog/post/turbopack-support-appwrite-sites",
-    "title": "Announcing Turbopack support for Appwrite Sites",
-    "description": "Appwrite Sites now supports Next.js applications built with Turbopack, with faster builds and better compatibility for your deployments.",
-    "date": "2025-09-17",
-    "lastUpdated": "2025-09-17",
-    "timeToRead": 3,
-    "author": "ebenezer-don",
-    "category": "announcements",
-    "cover": "/images/blog/turbopack-support-appwrite-sites/cover.avif",
     "hasCover": true
   },
   {
@@ -4962,20 +4047,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "master-prompt-engineering-tools",
-    "href": "/blog/post/master-prompt-engineering-tools",
-    "title": "Mastering prompt engineering tools for AI apps",
-    "description": "A practical guide to prompt engineering best practices, tools, skills, and career opportunities.",
-    "date": "2025-09-03",
-    "lastUpdated": "2025-09-03",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/master-prompt-engineering-tools/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "product-update-august-2025",
     "href": "/blog/post/product-update-august-2025",
     "title": "August product update: Cloud GA, new TablesDB UI & Sites Hackathon",
@@ -5019,21 +4090,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "startups-program-benefits",
-    "href": "/blog/post/startups-program-benefits",
-    "title": "The real benefits of startup founder programs beyond credits",
-    "description": "Learn more about the benefits of startup programs and what founders need to build their business.",
-    "date": "2025-09-02",
-    "lastUpdated": "2025-09-02",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "products",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/startups-benefits.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-opt-in-relationship-loading",
     "href": "/blog/post/announcing-opt-in-relationship-loading",
     "title": "Announcing Opt-in relationship loading: Granular control for smarter data fetching",
@@ -5048,19 +4104,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "deploy-nextjs-app-to-appwrite-sites",
-    "href": "/blog/post/deploy-nextjs-app-to-appwrite-sites",
-    "title": "Deploy a Next.js app to Appwrite Sites",
-    "description": "Learn how to deploy a Next.js app to Appwrite Sites.",
-    "date": "2025-08-28",
-    "lastUpdated": "2025-08-28",
-    "timeToRead": 5,
-    "author": "atharva",
-    "category": "tutorials",
-    "cover": "/images/blog/deploy-nextjs-app-to-appwrite-sites/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-appwrite-databases-new-ui",
     "href": "/blog/post/announcing-appwrite-databases-new-ui",
     "title": "Announcing an improved Appwrite Databases experience. A completely new look and feel",
@@ -5072,19 +4115,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-databases-new-ui/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "ai-vibe-coding-insights",
-    "href": "/blog/post/ai-vibe-coding-insights",
-    "title": "Exploring AI and vibe coding: Insights from the Appwrite developer community",
-    "description": "Survey insights on how developers are using AI, vibe coding tools, and the Appwrite MCP server.",
-    "date": "2025-08-25",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "tutorials",
-    "cover": "/images/blog/ai-vibe-coding-insights/cover.avif",
     "hasCover": true
   },
   {
@@ -5170,21 +4200,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "top-25-vibe-coding-tools",
-    "href": "/blog/post/top-25-vibe-coding-tools",
-    "title": "Top 25 vibe coding tools that will transform your development workflow in 2026",
-    "description": "Explore the top vibe coding tools reshaping how we build software in 2026.",
-    "date": "2025-07-21",
-    "lastUpdated": "2025-07-21",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "tutorials",
-    "featured": false,
-    "unlisted": true,
-    "cover": "/images/blog/top-25-vibe-coding-tools/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "track-document-order-with-sequence",
     "href": "/blog/post/track-document-order-with-sequence",
     "title": "Using $sequence to track row order in Appwrite",
@@ -5209,20 +4224,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-auto-increment-support/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "role-based-access-control-with-appwrite",
-    "href": "/blog/post/role-based-access-control-with-appwrite",
-    "title": "Everything you need to know about RBAC and how to use it in Appwrite",
-    "description": "Understand the basics of RBAC, why it matters, and how to set it up with Appwrite.",
-    "date": "2025-07-11",
-    "lastUpdated": "2025-07-11",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/role-based-access-control-with-appwrite/cover.avif",
     "hasCover": true
   },
   {
@@ -5264,20 +4265,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-database-upsert/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "30-dev-tools-for-agencies",
-    "href": "/blog/post/30-dev-tools-for-agencies",
-    "title": "Top 30 software development tools for agencies and teams",
-    "description": "Explore 30 essential tools that help software agencies and development teams build faster, collaborate better, and scale efficiently.",
-    "date": "2025-07-04",
-    "lastUpdated": "2025-07-04",
-    "timeToRead": 10,
-    "author": "veeresh-mulge",
-    "category": "tutorials",
-    "unlisted": true,
-    "cover": "/images/blog/dev-tools-for-agencies/cover.avif",
     "hasCover": true
   },
   {
@@ -5379,20 +4366,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "what-is-ciam",
-    "href": "/blog/post/what-is-ciam",
-    "title": "What is CIAM (Customer Identity and Access Management)?",
-    "description": "Understand what CIAM is and why it’s key to secure, personalized customer experiences.",
-    "date": "2025-06-25",
-    "lastUpdated": "2025-06-25",
-    "timeToRead": 6,
-    "author": "laura-du-ry",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/what-is-ciam/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-type-generation-feature",
     "href": "/blog/post/announcing-type-generation-feature",
     "title": "Introducing Type generation: Automate your type definitions with Appwrite",
@@ -5403,34 +4376,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "chirag-aggarwal",
     "category": "announcements",
     "cover": "/images/blog/type-generation-feature/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "how-appwrite-makes-auth-easy-for-ecommerce",
-    "href": "/blog/post/how-appwrite-makes-auth-easy-for-ecommerce",
-    "title": "Secure, scalable e-commerce: How Appwrite makes authentication easy",
-    "description": "Learn how Appwrite simplifies secure, scalable authentication for e-commerce platforms.",
-    "date": "2025-06-23",
-    "lastUpdated": "2025-06-23",
-    "timeToRead": 6,
-    "author": "laura-du-ry",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/how-appwrite-makes-auth-easy-for-ecommerce/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "startup-accelerator-guide",
-    "href": "/blog/post/startup-accelerator-guide",
-    "title": "What is an accelerator? A guide for tech startups",
-    "description": "Considering an accelerator for your startup? This guide breaks down what they actually offer, when they make sense, and which ones are worth your time.",
-    "date": "2025-06-23",
-    "lastUpdated": "2025-06-23",
-    "timeToRead": 10,
-    "author": "veeresh-mulge",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/startup-accelerator-guide/cover.avif",
     "hasCover": true
   },
   {
@@ -5448,34 +4393,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "rethinking-saas-authentication",
-    "href": "/blog/post/rethinking-saas-authentication",
-    "title": "Rethinking SaaS Authentication: Build secure, scalable experiences with Appwrite",
-    "description": "Learn the essentials of secure, scalable SaaS authentication with modern best practices.",
-    "date": "2025-06-19",
-    "lastUpdated": "2025-06-19",
-    "timeToRead": 6,
-    "author": "laura-du-ry",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/rethinking-saas-authentication/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "startup-incubator-guide",
-    "href": "/blog/post/startup-incubator-guide",
-    "title": "What is an Incubator? A guide for tech startups",
-    "description": "Explore what startup incubators really offer, their pros and cons, and a list of top programs to consider.",
-    "date": "2025-06-18",
-    "lastUpdated": "2025-06-18",
-    "timeToRead": 10,
-    "author": "veeresh-mulge",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/startup-incubator-guide/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "understanding-idp-vs-sp-initiated-sso",
     "href": "/blog/post/understanding-idp-vs-sp-initiated-sso",
     "title": "Understanding IdP vs SP-Initiated SSO",
@@ -5487,34 +4404,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "unlisted": true,
     "cover": "/images/blog/understanding-idp-vs-sp-initiated-sso/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "understand-oauth2",
-    "href": "/blog/post/understand-oauth2",
-    "title": "Understanding OAuth2: The backbone of modern authorization",
-    "description": "A quick guide to OAuth2, its flows, and when to use each one.",
-    "date": "2025-06-12",
-    "lastUpdated": "2025-06-12",
-    "timeToRead": 6,
-    "author": "laura-du-ry",
-    "category": "products",
-    "unlisted": true,
-    "cover": "/images/blog/understand-oauth2/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-homepage-redesign",
-    "href": "/blog/post/appwrite-homepage-redesign",
-    "title": "Redesigning our homepage to reflect Appwrite’s new positioning",
-    "description": "A behind-the-scenes look at how we redesigned the Appwrite homepage to reflect our evolution from a BaaS to an all-in-one open-source development platform.",
-    "date": "2025-06-11",
-    "lastUpdated": "2025-06-11",
-    "timeToRead": 8,
-    "author": "sara-kaandorp",
-    "category": "design",
-    "featured": false,
-    "cover": "/images/blog/appwrite-homepage-redesign/cover-image.avif",
     "hasCover": true
   },
   {
@@ -5546,34 +4435,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "portfolio-template-sites",
-    "href": "/blog/post/portfolio-template-sites",
-    "title": "Build and deploy a personal portfolio on Appwrite Sites",
-    "description": "Learn how to configure the Appwrite Sites portfolio template and deploy your changes via the GitHub integration.",
-    "date": "2025-05-28",
-    "lastUpdated": "2025-10-14",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/portfolio-template-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "saas-to-vertical-ai",
-    "href": "/blog/post/saas-to-vertical-ai",
-    "title": "The shift from SaaS to Vertical AI: What startup founders need to know",
-    "description": "Learn how vertical AI agents are revolutionizing industries and why now is the best time to build a vertical AI startup.",
-    "date": "2025-05-24",
-    "lastUpdated": "2025-05-24",
-    "timeToRead": 5,
-    "author": "veeresh-mulge",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/the-shift-from-SaaS-to-Vertical-AI-what-startup-founders-need-to-know/cover-image.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-file-tokens",
     "href": "/blog/post/announcing-file-tokens",
     "title": "Announcing File Tokens: secure file sharing without the hassle",
@@ -5585,20 +4446,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/file-tokens.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "avif-in-storage",
-    "href": "/blog/post/avif-in-storage",
-    "title": "How to use AVIF in Appwrite Storage",
-    "description": "Learn how to use AVIF, a new image format that offers better compression without sacrificing image quality, in Appwrite Storage.",
-    "date": "2025-05-22",
-    "lastUpdated": "2025-05-22",
-    "timeToRead": 6,
-    "author": "ebenezer-don",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/avif-in-storage/cover.avif",
     "hasCover": true
   },
   {
@@ -5627,34 +4474,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/dev-keys.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "improve-devex-dev-keys",
-    "href": "/blog/post/improve-devex-dev-keys",
-    "title": "Improve your Appwrite developer experience with dev keys",
-    "description": "Learn how you can create a dev key on Appwrite and use it in a web project to improve your developer experience.",
-    "date": "2025-05-21",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/improve-devex-dev-keys/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "flutter-starter-sites",
-    "href": "/blog/post/flutter-starter-sites",
-    "title": "How to setup the Flutter starter template on Appwrite Sites",
-    "description": "Learn the process of deploying the Flutter starter template on Appwrite Sites.",
-    "date": "2025-05-20",
-    "lastUpdated": "2025-05-20",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/flutter-starter-sites/cover.avif",
     "hasCover": true
   },
   {
@@ -5756,20 +4575,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "free-remix-hosting",
-    "href": "/blog/post/free-remix-hosting",
-    "title": "Free Remix hosting with Appwrite Sites - Deploy and scale seamlessly",
-    "description": "Learn how to deploy your Remix app for free with Appwrite Sites.",
-    "date": "2025-05-20",
-    "lastUpdated": "2025-05-20",
-    "timeToRead": 6,
-    "author": "eldad-fux",
-    "category": "tutorials",
-    "unlisted": true,
-    "cover": "/images/blog/free-remix-hosting/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "free-svelte-and-sveltekit-hosting",
     "href": "/blog/post/free-svelte-and-sveltekit-hosting",
     "title": "Free Svelte and SvelteKit hosting with Appwrite Sites - Deploy and scale effortlessly",
@@ -5809,62 +4614,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products, init",
     "featured": false,
     "cover": "/images/blog/hosting-flutter-web/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "nextjs-starter-sites",
-    "href": "/blog/post/nextjs-starter-sites",
-    "title": "How to setup the Next.js starter template on Appwrite Sites",
-    "description": "Learn the process of deploying the Next.js starter template on Appwrite Sites.",
-    "date": "2025-05-20",
-    "lastUpdated": "2025-05-20",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/nextjs-starter-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "nuxt-starter-sites",
-    "href": "/blog/post/nuxt-starter-sites",
-    "title": "How to setup the Nuxt starter template on Appwrite Sites",
-    "description": "Learn the process of deploying the Nuxt starter template on Appwrite Sites.",
-    "date": "2025-05-20",
-    "lastUpdated": "2025-05-20",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/nuxt-starter-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "sveltekit-starter-sites",
-    "href": "/blog/post/sveltekit-starter-sites",
-    "title": "How to setup the SvelteKit starter template on Appwrite Sites",
-    "description": "Learn the process of deploying the SvelteKit starter template on Appwrite Sites.",
-    "date": "2025-05-20",
-    "lastUpdated": "2025-05-20",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/sveltekit-starter-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "ai-agent-startup-tips",
-    "href": "/blog/post/ai-agent-startup-tips",
-    "title": "Top 5 tips to build an AI agent startup",
-    "description": "Learn how AI agents are transforming industries and get essential tips for building a successful AI agent startup.",
-    "date": "2025-05-19",
-    "lastUpdated": "2025-05-19",
-    "timeToRead": 5,
-    "author": "veeresh-mulge",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/top-5-tips-to-build-an-AI-agent-startup/cover-image.avif",
     "hasCover": true
   },
   {
@@ -5993,20 +4742,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "startup-mvp-guide",
-    "href": "/blog/post/startup-mvp-guide",
-    "title": "How can you rapidly build an MVP for your startup?",
-    "description": "Learn how to quickly build an MVP that solves real problems, focuses on speed, and attracts early adopters to set your startup on the right path.",
-    "date": "2025-05-09",
-    "lastUpdated": "2025-05-09",
-    "timeToRead": 5,
-    "author": "veeresh-mulge",
-    "category": "startups",
-    "unlisted": true,
-    "cover": "/images/blog/how-can-you-rapidly-build-an-mvp-for-your-startup/cover-image.avif",
-    "hasCover": true
-  },
-  {
     "slug": "init-may-2025",
     "href": "/blog/post/init-may-2025",
     "title": "Announcing Init: a new era begins",
@@ -6072,19 +4807,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "integrations",
     "cover": "/images/blog/offline-first-journal/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "why-multi-cloud-is-taking-over",
-    "href": "/blog/post/why-multi-cloud-is-taking-over",
-    "title": "Why multi-cloud is taking over",
-    "description": "Multi-cloud is becoming the go-to solution for organizations of all sizes. Learn how it offers better flexibility, control, and performance.",
-    "date": "2025-04-17",
-    "lastUpdated": "2025-04-17",
-    "timeToRead": 4,
-    "author": "aditya-oberai",
-    "category": "products",
-    "cover": "/images/blog/why-multi-cloud-is-taking-over/cover.avif",
     "hasCover": true
   },
   {
@@ -6333,20 +5055,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "appwrite-partners-program",
-    "href": "/blog/post/appwrite-partners-program",
-    "title": "Introducing the Appwrite Partners program",
-    "description": "A new program to provide more benefits to agencies, development studios, freelancers, and system integrators.",
-    "date": "2025-01-28",
-    "lastUpdated": "2025-01-28",
-    "timeToRead": 6,
-    "author": "laura-du-ry",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/partners.avif",
-    "hasCover": true
-  },
-  {
     "slug": "budget-caps-stop-unexpected-cloud-bills",
     "href": "/blog/post/budget-caps-stop-unexpected-cloud-bills",
     "title": "Budget caps: How to stop unexpected cloud bills before they happen",
@@ -6412,19 +5120,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/5-vs-code-extensions-that-replace-entire-dev-tools/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "hooks-appwrite-databases",
-    "href": "/blog/post/hooks-appwrite-databases",
-    "title": "How Appwrite streamlines database operations using hooks",
-    "description": "Learn how Appwrite implemented hook functions to develop custom filters in the Databases services.",
-    "date": "2025-01-18",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 10,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/hooks-appwrite-databases/cover.avif",
     "hasCover": true
   },
   {
@@ -6494,19 +5189,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "tutorials",
     "featured": false,
     "cover": "/images/blog/10-git-commands-you-should-start-using/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "memberships-privacy-announcement",
-    "href": "/blog/post/memberships-privacy-announcement",
-    "title": "Memberships privacy is now available for all Appwrite plans",
-    "description": "Appwrite now offers memberships privacy for all plans, making it easier to protect your members' personal information.",
-    "date": "2024-12-10",
-    "lastUpdated": "2024-12-10",
-    "timeToRead": 4,
-    "author": "ebenezer-don",
-    "category": "products, announcements",
-    "cover": "/images/blog/memberships-privacy-announcement/cover.avif",
     "hasCover": true
   },
   {
@@ -6590,32 +5272,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "build-a-currency-converter-with-deno2",
-    "href": "/blog/post/build-a-currency-converter-with-deno2",
-    "title": "Building a currency converter API with Deno 2 and Appwrite",
-    "description": "Learn how to build a currency converter API with Deno 2 and how to use Appwrite Functions to deploy and run your API.",
-    "date": "2024-10-18",
-    "lastUpdated": "2024-10-18",
-    "timeToRead": 12,
-    "author": "ebenezer-don",
-    "category": "tutorials",
-    "cover": "/images/blog/build-a-currency-converter-with-deno2/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "custom-backup-policy",
-    "href": "/blog/post/custom-backup-policy",
-    "title": "Custom backup policies for compliance and security",
-    "description": "Learn why regular backups are no longer enough for data security.",
-    "date": "2024-10-16",
-    "lastUpdated": "2026-05-22",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "products, security",
-    "cover": "/images/blog/custom-backup-policy/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "backup-encryption",
     "href": "/blog/post/backup-encryption",
     "title": "Should I encrypt my backups?",
@@ -6681,32 +5337,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "metaTitle": "Backend as a Service (BaaS): Firebase vs Supabase vs Appwrite",
     "cover": "/images/blog/baas-backend-as-a-service/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "deno-2-appwrite-functions",
-    "href": "/blog/post/deno-2-appwrite-functions",
-    "title": "Deno 2.0 and what it means for Appwrite Functions",
-    "description": "Explore Deno 2.0's key features, what they mean for Appwrite Functions, and why you should consider using it.",
-    "date": "2024-10-09",
-    "lastUpdated": "2024-10-09",
-    "timeToRead": 6,
-    "author": "ebenezer-don",
-    "category": "products",
-    "cover": "/images/blog/deno-2-appwrite-functions/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "deno-runtime-announcment",
-    "href": "/blog/post/deno-runtime-announcment",
-    "title": "Announcing Deno support on Appwrite Cloud",
-    "description": "Appwrite expands the Cloud Function ecosystem with Deno, a runtime that offers developers simplicity and security.",
-    "date": "2024-10-09",
-    "lastUpdated": "2024-10-09",
-    "timeToRead": 3,
-    "author": "laura-du-ry",
-    "category": "announcements",
-    "cover": "/images/blog/deno-runtime-announcment/cover.avif",
     "hasCover": true
   },
   {
@@ -6790,19 +5420,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "building-culture-remote-camp",
-    "href": "/blog/post/building-culture-remote-camp",
-    "title": "Building culture in a remote world: Camp 5.0 recap",
-    "description": "Regular company meet-ups, known as Camps, are one of the key ways we foster an amazing culture at our remote company.",
-    "date": "2024-09-29",
-    "lastUpdated": "2024-09-29",
-    "timeToRead": 5,
-    "author": "snezhanna",
-    "category": "culture",
-    "cover": "/images/blog/camp-5-barcelona/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "best-ios-android-app-development-platforms",
     "href": "/blog/post/best-ios-android-app-development-platforms",
     "title": "7 best app development frameworks for iOS and Android",
@@ -6840,20 +5457,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "snezhanna",
     "category": "hackathons",
     "cover": "/images/blog/get-inspired-for-hackathon/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-hacktoberfest-hackathon-2024",
-    "href": "/blog/post/appwrite-hacktoberfest-hackathon-2024",
-    "title": "Announcing Appwrite’s Hacktoberfest 2024 Hackathon: Build, innovate, and win!",
-    "description": "Join us for the first official Appwrite Hacktoberfest Hackathon!",
-    "date": "2024-09-26",
-    "lastUpdated": "2024-09-26",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "hackathons",
-    "featured": false,
-    "cover": "/images/blog/hf-hackathon-24/hf-hackathon.avif",
     "hasCover": true
   },
   {
@@ -7036,20 +5639,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "designing-init-event-logo",
-    "href": "/blog/post/designing-init-event-logo",
-    "title": "Designing Init: Event logo and theme",
-    "description": "How the Appwrite Visual Design team crafted Init 2.0",
-    "date": "2024-08-23",
-    "lastUpdated": "2024-08-23",
-    "timeToRead": 5,
-    "author": "jesse-winton",
-    "category": "design",
-    "featured": false,
-    "cover": "/images/blog/designing-init/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "mock-numbers-best-practices",
     "href": "/blog/post/mock-numbers-best-practices",
     "title": "Mock numbers for phone sign-in: Use cases and best practices",
@@ -7061,34 +5650,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/mock-numbers-use-cases/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "open-source-contributors-16",
-    "href": "/blog/post/open-source-contributors-16",
-    "title": "Celebrating the open source contributors for Appwrite 1.6",
-    "description": "With this release, we’d like to highlight and celebrate our open source contributors that made Appwrite what it is today.",
-    "date": "2024-08-23",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "featured": false,
-    "cover": "/images/blog/contributors-16/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "3-things-you-can-build-with-go-runtime",
-    "href": "/blog/post/3-things-you-can-build-with-go-runtime",
-    "title": "3 things you can build with the Go runtime",
-    "description": "Explore a few use cases of how to leverage Go's speed in your app.",
-    "date": "2024-08-22",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/building-with-go-cover.avif",
     "hasCover": true
   },
   {
@@ -7256,19 +5817,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "bradley-schofield",
     "category": "products",
     "cover": "/images/blog/appwrite-backups-and-restores/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "image-classification",
-    "href": "/blog/post/image-classification",
-    "title": "A technical deep dive into image classification",
-    "description": "Learn all about image classification and how to integrate it into your Appwrite project using TensorFlow",
-    "date": "2024-08-06",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 9,
-    "author": "bradley-schofield",
-    "category": "products",
-    "cover": "/images/blog/image-classification.avif",
     "hasCover": true
   },
   {
@@ -7445,19 +5993,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "public-roadmap-announcement",
-    "href": "/blog/post/public-roadmap-announcement",
-    "title": "Announcing Appwrite's public roadmap",
-    "description": "We just released our product roadmap to increase transparency and foster better collaboration.",
-    "date": "2024-06-19",
-    "lastUpdated": "2024-06-19",
-    "timeToRead": 5,
-    "author": "eldad-fux",
-    "category": "open-source, announcements",
-    "cover": "/images/blog/public-roadmap-announcement/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "developer-tools-appwrite",
     "href": "/blog/post/developer-tools-appwrite",
     "title": "12 developer tools to supercharge your Appwrite project",
@@ -7468,19 +6003,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "open-source",
     "cover": "/images/blog/developer-tools-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-decoded-dylan",
-    "href": "/blog/post/appwrite-decoded-dylan",
-    "title": "Appwrite Decoded: Dylan Graham",
-    "description": "In this blog, we hear from our finance and operations lead, Dylan Graham.",
-    "date": "2024-06-04",
-    "lastUpdated": "2024-06-04",
-    "timeToRead": 8,
-    "author": "laura-du-ry",
-    "category": "culture",
-    "cover": "/images/blog/appwrite-decoded-dylan/appwrite-decoded-dylan-blog-cover.avif",
     "hasCover": true
   },
   {
@@ -7539,32 +6061,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "personal-chatbot-gpt-4o",
-    "href": "/blog/post/personal-chatbot-gpt-4o",
-    "title": "Build a chatbot with GPT-4o and Appwrite Functions",
-    "description": "Learn how to use OpenAI's new flagship model, GPT-4o to create an intelligent chatbot.",
-    "date": "2024-05-17",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/personal-chatbot-gpt-4o/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "building-with-ai-function-templates",
-    "href": "/blog/post/building-with-ai-function-templates",
-    "title": "Building with Appwrite AI Function templates",
-    "description": "Get an overview of Appwrite AI Function templates and what you can build.",
-    "date": "2024-05-16",
-    "lastUpdated": "2024-05-16",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/building-with-ai-function-templates/function-templates.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-appwrite-new-ai-integrations",
     "href": "/blog/post/announcing-appwrite-new-ai-integrations",
     "title": "Announcing new Appwrite AI integrations",
@@ -7576,32 +6072,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "integrations, announcements",
     "featured": false,
     "cover": "/images/blog/ai-announcement.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "ai-crystal-ball",
-    "href": "/blog/post/ai-crystal-ball",
-    "title": "Predicting your developer destiny: how I built the AI Crystal Ball",
-    "description": "How I used Appwrite, OpenAI, GitHub, and SvelteKit to develop an AI prank app.",
-    "date": "2024-05-10",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 9,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/ai-crystal-ball/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-messaging-is-free-for-six-months",
-    "href": "/blog/post/appwrite-messaging-is-free-for-six-months",
-    "title": "Appwrite Messaging is free for six months",
-    "description": "We're happy to share our plans for Messaging for the next six months.",
-    "date": "2024-05-08",
-    "lastUpdated": "2024-05-08",
-    "timeToRead": 5,
-    "author": "eldad-fux",
-    "category": "products",
-    "cover": "/images/blog/messaging-pricing.avif",
     "hasCover": true
   },
   {
@@ -7632,19 +6102,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "scan-receipts-with-appwrite-functions",
-    "href": "/blog/post/scan-receipts-with-appwrite-functions",
-    "title": "Streamline receipt scanning with Appwrite Cloud",
-    "description": "Learn how to extract information from receipts with Appwrite Cloud and Appwrite Functions.",
-    "date": "2024-05-01",
-    "lastUpdated": "2024-05-01",
-    "timeToRead": 15,
-    "author": "vincent-ge",
-    "category": "tutorials",
-    "cover": "/images/blog/receipt-scan.avif",
-    "hasCover": true
-  },
-  {
     "slug": "appwrite-1.5-now-available-on-cloud",
     "href": "/blog/post/appwrite-1.5-now-available-on-cloud",
     "title": "Appwrite 1.5 is now available on Cloud",
@@ -7670,19 +6127,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/startups.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-decoded-dennis-ivy",
-    "href": "/blog/post/appwrite-decoded-dennis-ivy",
-    "title": "Appwrite Decoded: Dennis Ivy",
-    "description": "In this blog, we put Dennis Ivy in the spotlight and share his side of the story.",
-    "date": "2024-04-22",
-    "lastUpdated": "2024-04-22",
-    "timeToRead": 12,
-    "author": "laura-du-ry",
-    "category": "culture",
-    "cover": "/images/blog/appwrite-decoded-dennis/dennis-cover.avif",
     "hasCover": true
   },
   {
@@ -7765,20 +6209,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "ensuring-security-amidst-xz-concern",
-    "href": "/blog/post/ensuring-security-amidst-xz-concern",
-    "title": "Ensuring security amidst the XZ Utils backdoor concern",
-    "description": "Learn about Appwrite's response to XZ Utils backdoor concerns and how to safeguard your Appwrite projects.",
-    "date": "2024-04-02",
-    "lastUpdated": "2024-04-02",
-    "timeToRead": 7,
-    "author": "jake-barnby",
-    "category": "security",
-    "featured": false,
-    "cover": "/images/blog/ensuring-security-amidst-xz-concern/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "state-of-audio-processing",
     "href": "/blog/post/state-of-audio-processing",
     "title": "State of audio processing",
@@ -7790,34 +6220,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/state-of-audio-processing/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "state-of-natural-language-processing",
-    "href": "/blog/post/state-of-natural-language-processing",
-    "title": "State of natural language processing",
-    "description": "The latest trends in natural language processing and how they are shaping the future.",
-    "date": "2024-03-27",
-    "lastUpdated": "2024-03-27",
-    "timeToRead": 15,
-    "author": "luke-silver",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/state-of-natural-language-processing/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "state-of-computer-vision",
-    "href": "/blog/post/state-of-computer-vision",
-    "title": "State of computer vision",
-    "description": "Get up to speed on the latest trends in computer vision and how they are shaping the future of the industry.",
-    "date": "2024-03-25",
-    "lastUpdated": "2024-03-25",
-    "timeToRead": 15,
-    "author": "bradley-schofield",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/state-of-computer-vision/cover.avif",
     "hasCover": true
   },
   {
@@ -7900,32 +6302,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "valentines-day-sonnet-generator",
-    "href": "/blog/post/valentines-day-sonnet-generator",
-    "title": "Building a Valentine's Day sonnet generator using OpenAI and Appwrite Functions",
-    "description": "How we used Appwrite Functions and OpenAI's GPT-4 API to a create a fun, yet creative project.",
-    "date": "2024-03-08",
-    "lastUpdated": "2024-03-08",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "functions",
-    "cover": "/images/blog/valentines-day-sonnet-generator/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "bun-function-resume",
-    "href": "/blog/post/bun-function-resume",
-    "title": "Share your resume using Appwrite Functions",
-    "description": "How you can create a resume using HTML and use a Bun Appwrite Function to share it with the world.",
-    "date": "2024-03-07",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/bun-function-resume/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "oauth-openid",
     "href": "/blog/post/oauth-openid",
     "title": "Understanding OAuth and OpenID Connect",
@@ -7936,46 +6312,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "aditya-oberai",
     "category": "authentication, security",
     "cover": "/images/blog/oauth-openid.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "preventing-password-sharing",
-    "href": "/blog/post/preventing-password-sharing",
-    "title": "The cost of convenience: preventing password sharing",
-    "description": "How we as developers can prevent password sharing and make our applications more secure.",
-    "date": "2024-03-07",
-    "lastUpdated": "2024-03-07",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "security",
-    "cover": "/images/blog/preventing-password-sharing.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "building-init-giveaway-app",
-    "href": "/blog/post/building-init-giveaway-app",
-    "title": "Building the giveaway app for Init Discord sessions",
-    "description": "How we used Appwrite and SvelteKit to develop a custom roulette-style giveaway web application.",
-    "date": "2024-03-06",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "cover": "/images/blog/building-init-giveaway-app/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "celebrating-1.5-contributors",
-    "href": "/blog/post/celebrating-1.5-contributors",
-    "title": "Appwrite 1.5: celebrating the contributors",
-    "description": "Appreciating the contributors from our community who help shape Appwrite as it is today.",
-    "date": "2024-03-06",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "featured": false,
-    "cover": "/images/blog/celebrating-1.5-contributors.avif",
     "hasCover": true
   },
   {
@@ -8020,19 +6356,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "how-to-build-your-digital-event-tickets",
-    "href": "/blog/post/how-to-build-your-digital-event-tickets",
-    "title": "How to build your digital event tickets",
-    "description": "Did you enjoy the Init tickets? In this blog we share how you can create your own.",
-    "date": "2024-03-04",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 12,
-    "author": "laura-du-ry",
-    "category": "init",
-    "cover": "/images/blog/tickets-cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-more-and-updated-runtimes",
     "href": "/blog/post/announcing-more-and-updated-runtimes",
     "title": "New and Updated Runtimes in the Appwrite Ecosystem",
@@ -8057,20 +6380,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "unlisted": true,
     "cover": "/images/blog/appwrite-competitor-comparison/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "sound-null-safety-for-your-dart-functions",
-    "href": "/blog/post/sound-null-safety-for-your-dart-functions",
-    "title": "Sound null-safety for your Dart functions",
-    "description": "Learn to reduce null related runtime errors with Dart 3.",
-    "date": "2024-03-01",
-    "lastUpdated": "2024-03-01",
-    "timeToRead": 12,
-    "author": "vincent-ge",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/sound-null-safety-for-your-dart-functions/cover.avif",
     "hasCover": true
   },
   {
@@ -8113,20 +6422,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "engineering, tutorials",
     "featured": false,
     "cover": "/images/blog/understand-data-queries.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "enhancing-type-safety",
-    "href": "/blog/post/enhancing-type-safety",
-    "title": "Enhancing type safety in software development with enums",
-    "description": "Explore the fundamentals of enums, their practical advantages, and their impact on code maintenance and readability.",
-    "date": "2024-02-28",
-    "lastUpdated": "2024-02-28",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "engineering",
-    "featured": false,
-    "cover": "/images/blog/enhancing-type-safety.avif",
     "hasCover": true
   },
   {
@@ -8242,20 +6537,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "simplify-messaging-twilio",
-    "href": "/blog/post/simplify-messaging-twilio",
-    "title": "How Twilio simplifies messaging for developers",
-    "description": "Learn the challenges of building a messaging system and how Twilio helps in simplifying implementation.",
-    "date": "2024-02-26",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "integrations",
-    "featured": false,
-    "cover": "/images/blog/simplify-messaging-twilio.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-init",
     "href": "/blog/post/announcing-init",
     "title": "Announcing Init. The start of something new.",
@@ -8267,32 +6548,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "init, announcements, products",
     "featured": false,
     "cover": "/images/blog/init-announcement.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "three-important-steps-you-need-to-complete-with-appwrite",
-    "href": "/blog/post/three-important-steps-you-need-to-complete-with-appwrite",
-    "title": "Three important steps you need to complete before setting up your first Appwrite project",
-    "description": "Are you getting errors when setting up your first project in Appwrite? Take a look at these steps.",
-    "date": "2024-02-15",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 3,
-    "author": "dennis-ivy",
-    "category": "products",
-    "cover": "/images/blog/three-important-steps-you-need-to-complete-with-appwrite/3-important-steps.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-decoded-bradley-schofield",
-    "href": "/blog/post/appwrite-decoded-bradley-schofield",
-    "title": "Appwrite Decoded: Bradley Schofield",
-    "description": "In this blog, we put Bradley Schofield in the spotlight and share his side of the story.",
-    "date": "2024-02-08",
-    "lastUpdated": "2024-02-08",
-    "timeToRead": 4,
-    "author": "laura-du-ry",
-    "category": "culture",
-    "cover": "/images/blog/appwrite-decoded-bradley/bradley-cover.avif",
     "hasCover": true
   },
   {
@@ -8349,33 +6604,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "manage-user-permissions-with-labels-and-teams",
-    "href": "/blog/post/manage-user-permissions-with-labels-and-teams",
-    "title": "How to use Appwrite Labels and Team to manage user permissions",
-    "description": "Understanding the difference between Teams and Labels and how to use them for managing users and permissions.",
-    "date": "2024-01-16",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 8,
-    "author": "dennis-ivy",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/manage-user-permissions-with-labels-and-teams/labels_cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "How-to-put-privacy-first",
-    "href": "/blog/post/How-to-put-privacy-first",
-    "title": "How to create a privacy-first growth strategy",
-    "description": "Appwrite is working towards a completely privacy-friendly and open-source growth stack. We are committed to putting developers first and building a company that values your personal data. We want to treat you as we want to be treated by any vendors we use.",
-    "date": "2024-01-12",
-    "lastUpdated": "2024-01-12",
-    "timeToRead": 9,
-    "author": "laura-du-ry",
-    "category": "security",
-    "cover": "/images/blog/privacy.avif",
-    "hasCover": true
-  },
-  {
     "slug": "building-apps-with-bun-and-appwrite",
     "href": "/blog/post/building-apps-with-bun-and-appwrite",
     "title": "Building apps with Bun and Appwrite",
@@ -8415,19 +6643,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "everyone-can-do-devrel-but-should-they",
-    "href": "/blog/post/everyone-can-do-devrel-but-should-they",
-    "title": "Everyone can do DevRel (but should they?)",
-    "description": "Exploring the question if everyone should be rushing towards a job in Developer Relations?",
-    "date": "2024-01-07",
-    "lastUpdated": "2024-01-07",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "devrel",
-    "cover": "/images/blog/everyone-can-do-devrel-but-should-they/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "simplify-your-data-management-with-relationships",
     "href": "/blog/post/simplify-your-data-management-with-relationships",
     "title": "Simplify your data management with relationships",
@@ -8438,32 +6653,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "jake-barnby",
     "category": "accessibility",
     "cover": "/images/blog/simplify-your-data-management-with-relationships/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "appwrite-decoded-sara-kaandorp",
-    "href": "/blog/post/appwrite-decoded-sara-kaandorp",
-    "title": "Appwrite Decoded: Sara Kaandorp",
-    "description": "In this blog, we put our Design Lead Sara in the spotlight and share her side of the story.",
-    "date": "2024-01-03",
-    "lastUpdated": "2024-01-03",
-    "timeToRead": 4,
-    "author": "laura-du-ry",
-    "category": "culture",
-    "cover": "/images/blog/appwrite-decoded/cover-sara.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "oss-journey-blog",
-    "href": "/blog/post/oss-journey-blog",
-    "title": "Supporting the future of open source",
-    "description": "A short walk down memory lane to learn about Appwrite’s open-source journey so far and why we owe the community our support.",
-    "date": "2023-12-29",
-    "lastUpdated": "2023-12-29",
-    "timeToRead": 10,
-    "author": "laura-du-ry",
-    "category": "open-source",
-    "cover": "/images/blog/Blog-cover-oss-journey.avif",
     "hasCover": true
   },
   {
@@ -8547,32 +6736,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "function-template-prompt-chatgpt",
-    "href": "/blog/post/function-template-prompt-chatgpt",
-    "title": "Build an intelligent chatbot with ChatGPT and Appwrite Functions",
-    "description": "Learn how to use an Appwrite Function Template to create an interactive bot using GPT-3.5.",
-    "date": "2023-11-15",
-    "lastUpdated": "2023-11-15",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "tutorials",
-    "cover": "/images/blog/function-template-prompt-chatgpt/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "function-template-whatsapp-vonage",
-    "href": "/blog/post/function-template-whatsapp-vonage",
-    "title": "Send WhatsApp messages with Vonage and Appwrite Functions",
-    "description": "Learn how to use an Appwrite Function Template to create a Whatsapp bot that will programmatically respond to incoming WhatsApp messages via Vonage.",
-    "date": "2023-11-15",
-    "lastUpdated": "2023-11-15",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "integrations",
-    "cover": "/images/blog/function-template-whatsapp-vonage/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "deploy-a-pdf-generation-service-with-appwrite-functions",
     "href": "/blog/post/deploy-a-pdf-generation-service-with-appwrite-functions",
     "title": "Deploy a PDF generation service in minutes with Appwrite Functions",
@@ -8583,73 +6746,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "luke-silver",
     "category": "tutorials",
     "cover": "/images/blog/pdf-generation/pdf.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "adding-url-shortener-function",
-    "href": "/blog/post/adding-url-shortener-function",
-    "title": "Add a URL shortener function to your application",
-    "description": "Learning how to add the URL shortener function template to your application.",
-    "date": "2023-11-08",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 5,
-    "author": "haimantika-mitra",
-    "category": "tutorials",
-    "featured": false,
-    "cover": "/images/blog/adding-url-shortener/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "migrate-firebase-projects-to-appwrite",
-    "href": "/blog/post/migrate-firebase-projects-to-appwrite",
-    "title": "Migrate Firebase projects to Appwrite",
-    "description": "Migrate your Firebase projects to Appwrite Cloud in just one click.",
-    "date": "2023-11-06",
-    "lastUpdated": "2026-06-29",
-    "timeToRead": 10,
-    "author": "vincent-ge",
-    "category": "migrations",
-    "cover": "/images/blog/migrate-firebase-projects-to-appwrite/migrate-firebase-projects-to-appwrite.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "hf-2023-journey",
-    "href": "/blog/post/hf-2023-journey",
-    "title": "Appwrite's Hacktoberfest 2023 journey",
-    "description": "Summing up Appwrite's participation in Hacktoberfest 2023.",
-    "date": "2023-11-01",
-    "lastUpdated": "2023-11-01",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "hackathons",
-    "cover": "/images/blog/hf-2023-journey/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "behind-the-pr-tales-from-the-open-source-world",
-    "href": "/blog/post/behind-the-pr-tales-from-the-open-source-world",
-    "title": "Behind the pull request - tales from the open source world",
-    "description": "Celebrating the largest open source event, Hacktoberfest, with inspiring stories from contributors.",
-    "date": "2023-10-30",
-    "lastUpdated": "2023-10-30",
-    "timeToRead": 4,
-    "author": "haimantika-mitra",
-    "category": "hackathons, contributors, open-source",
-    "featured": false,
-    "cover": "/images/blog/Behind_the_pull_request_Stories_from_contributors.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "make-open-source-healthier",
-    "href": "/blog/post/make-open-source-healthier",
-    "title": "Make open source healthier by being a better contributor",
-    "description": "How you can improve community health of an open-source project through healthy contribution practices.",
-    "date": "2023-10-23",
-    "lastUpdated": "2023-10-23",
-    "timeToRead": 5,
-    "author": "aditya-oberai",
-    "category": "open-source",
-    "cover": "/images/blog/make-open-source-healthier.avif",
     "hasCover": true
   },
   {
@@ -8666,32 +6762,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "defying-the-laws-of-web-animations",
-    "href": "/blog/post/defying-the-laws-of-web-animations",
-    "title": "Defying the laws of web animations",
-    "description": "Web animations can be scary, and come with a lot of obstacles. But what if we could bend the rules to our will?",
-    "date": "2023-10-18",
-    "lastUpdated": "2023-10-18",
-    "timeToRead": 10,
-    "author": "thomas-g-lopes",
-    "category": "tutorials",
-    "cover": "/images/blog/defying-the-laws-of-web-animations/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "designing-the-new-appwrite-website",
-    "href": "/blog/post/designing-the-new-appwrite-website",
-    "title": "Designing the new Appwrite website",
-    "description": "Our new website is one of the most important communication channels in which current and potential new Appwrite developers can access relevant information and learn more about our products and our company. We decided to rethink its structure from scratch and incorporate an experience that was on par with our rebrand.",
-    "date": "2023-10-11",
-    "lastUpdated": "2023-10-11",
-    "timeToRead": 5,
-    "author": "caio-arias",
-    "category": "design",
-    "cover": "/images/blog/designing-the-new-appwrite-website/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "password-protection",
     "href": "/blog/post/password-protection",
     "title": "Password protection for developers: best practices",
@@ -8705,32 +6775,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "dont-blame-the-readers-write-the-docs-they-need",
-    "href": "/blog/post/dont-blame-the-readers-write-the-docs-they-need",
-    "title": "Don’t blame the readers, write the documentation they need",
-    "description": "Unveiling Appwrite's new documentation. More details, just as simple, and more welcoming to contributors.",
-    "date": "2023-10-10",
-    "lastUpdated": "2023-10-10",
-    "timeToRead": 10,
-    "author": "vincent-ge",
-    "category": "design, brand",
-    "cover": "/images/blog/dont-blame-the-readers-write-the-docs-they-need/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "the-journey-and-meaning-behind-our-new-logo",
-    "href": "/blog/post/the-journey-and-meaning-behind-our-new-logo",
-    "title": "The journey and meaning behind our new logo",
-    "description": "",
-    "date": "2023-10-03",
-    "lastUpdated": "2023-10-03",
-    "timeToRead": 5,
-    "author": "jade-baudchon",
-    "category": "design",
-    "cover": "/images/blog/the-journey-and-meaning-behind-our-new-logo/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "hacktoberfest-2023",
     "href": "/blog/post/hacktoberfest-2023",
     "title": "Celebrate Open Source with Appwrite and Hacktoberfest 2023!",
@@ -8741,34 +6785,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "eldad-fux",
     "category": "hackathons",
     "cover": "/images/blog/hacktoberfest-2023.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "its-the-contributors-in-open-source-who-make-the-community-great",
-    "href": "/blog/post/its-the-contributors-in-open-source-who-make-the-community-great",
-    "title": "Open-source contributors make the community great",
-    "description": "Celebrating open source, Appwrite 1.4 contributors, and the largest open source event,  Hacktoberfest. Discover more about contributing and why you should start.",
-    "date": "2023-10-01",
-    "lastUpdated": "2023-10-01",
-    "timeToRead": 4,
-    "author": "haimantika-mitra",
-    "category": "hackathons, contributors, open-source",
-    "featured": false,
-    "cover": "/images/blog/contributors-post-1.4.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "leveraging-baas-tools-to-scale-faster",
-    "href": "/blog/post/leveraging-baas-tools-to-scale-faster",
-    "title": "Leveraging backend as a service tools to scale faster",
-    "description": "Discover what thousands of developers already know, and learn how a BaaS platform can benefit you.",
-    "date": "2023-09-27",
-    "lastUpdated": "2023-09-27",
-    "timeToRead": 6,
-    "author": "dennis-ivy",
-    "category": "products",
-    "featured": false,
-    "cover": "/images/blog/baas.avif",
     "hasCover": true
   },
   {
@@ -8809,19 +6825,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "author": "christy-jacob",
     "category": "cloud, announcements",
     "cover": "/images/blog/cloud-beta.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "accessibility-in-pink-design",
-    "href": "/blog/post/accessibility-in-pink-design",
-    "title": "How Pink Design helped us improve web accessibility",
-    "description": "Appwrite’s open-source UI library drastically improved our web accessibility.",
-    "date": "2022-11-14",
-    "lastUpdated": "2022-11-14",
-    "timeToRead": 3,
-    "author": "arman",
-    "category": "accessibility, design",
-    "cover": "/images/blog/accessibility-in-pink-design/cover.avif",
     "hasCover": true
   }
 ] as BlogPostMeta[]

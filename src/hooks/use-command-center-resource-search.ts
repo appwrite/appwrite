@@ -12,6 +12,7 @@ import {
   messagesQueryOptions,
   topicsQueryOptions,
   providersQueryOptions,
+  videosQueryOptions,
 } from '@/lib/react-query/hooks'
 import {
   buildBucketHits,
@@ -23,6 +24,7 @@ import {
   buildTeamHits,
   buildTopicHits,
   buildUserHits,
+  buildVideoHits,
   COMMAND_CENTER_RESOURCE_LIMIT,
   mergeScoredResourceHits,
   type ProjectResourceHit,
@@ -46,6 +48,7 @@ const RESOURCE_QUERY_ORDER: ProjectResourceKind[] = [
   'message',
   'topic',
   'provider',
+  'video',
 ]
 
 export function useCommandCenterResourceSearch({
@@ -113,6 +116,11 @@ export function useCommandCenterResourceSearch({
         case 'provider':
           return {
             ...providersQueryOptions(pid, 0, limit, search),
+            enabled: baseEnabled,
+          }
+        case 'video':
+          return {
+            ...videosQueryOptions(pid, 0, limit, search),
             enabled: baseEnabled,
           }
       }
@@ -197,6 +205,13 @@ export function useCommandCenterResourceSearch({
           const providers = (data as { providers?: Models.Provider[] }).providers
           if (providers?.length) {
             groups.push(buildProviderHits(trimmedQuery, providers))
+          }
+          break
+        }
+        case 'video': {
+          const videos = (data as { videos?: Models.Video[] }).videos
+          if (videos?.length) {
+            groups.push(buildVideoHits(trimmedQuery, videos))
           }
           break
         }

@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/date-utils'
 import type { BlogAuthor } from '@/lib/blog/types'
 import {
   BLOG_PAGE_DESCRIPTION_CLASS,
-  BLOG_PAGE_TITLE_CLASS,
+  BLOG_POST_TITLE_CLASS,
   BLOG_STICKY_TITLE_CLASS,
 } from '@/lib/blog/prose-typography'
 import { ArticleStickyToolbar } from '@/components/global/shared/ArticleStickyToolbar'
@@ -69,7 +69,7 @@ export function BlogArticleHeader({
 
       <header className="border-b border-border py-4">
         <div ref={contentAnchorRef} className="min-w-0">
-          <h1 className={BLOG_PAGE_TITLE_CLASS}>
+          <h1 className={BLOG_POST_TITLE_CLASS}>
             {title}
             {BLOG_TITLE_SUFFIX}
           </h1>

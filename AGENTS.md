@@ -1169,7 +1169,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
 
-- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `true` / `1` / `enabled` turns it on. Debug menu → Settings → Flags → **Pre-launch** overrides this (stored in localStorage).
+- `VITE_CONSOLE_PRE_LAUNCH` – locks the site so only `/init` is public (`/` redirects there). Sign-in/sign-up stay open and return to `/init` instead of the console. `true` / `1` / `enabled` turns it on.
 
 **Init day unlocks** (always controlled; never calendar-driven):
 
@@ -1678,6 +1678,19 @@ Blog posts and changelog entries are optimized for Google Search and Google Disc
 
 - RSS feeds are served at `/blog/rss.xml` and `/changelog/rss.xml` (`src/routes/_api/*/rss[.]xml.tsx`, built with `buildRssFeed` from `src/lib/seo/rss.ts`). Blog and changelog pages expose them via `<link rel="alternate" type="application/rss+xml">`. No manual updates needed; feeds are generated from content at request time.
 
+### Removing a blog post
+
+Do not delete a post's `.markdoc` file or images. Add `removed: true` to its frontmatter instead. A removed post:
+
+- Is left out of the generated manifest (`src/lib/blog/generated/manifest.ts`) and the lazy body glob (`generated/post-loaders.ts`), so it never renders and its body is not bundled. It does not appear on the blog index, categories, author pages, search, related posts, RSS, sitemaps, or llms exports. An author whose posts are all removed has no author page (404, not prerendered or in the sitemap).
+- Redirects (301) to `/home`, including its `.md` export (`getRemovedBlogPostRedirectTarget`, slugs in `generated/removed.ts`).
+- Has its images pruned from `dist/client` after `vite build` (`bun run prune:removed-blog-assets`), except images that live content still references (e.g. a changelog cover).
+
+After flagging a post:
+
+1. Run `bun run generate:blog-manifest` and `bun run generate:cover-manifest`, and commit the regenerated files.
+2. Run `bun run lint:removed-blog-links` (also in CI) and remove every link it reports: drop "related reading" list items and `arrow_link` blocks, unwrap or rewrite inline links so the sentence still reads well. Point legacy redirects that targeted the post at `/home`.
+
 ### Static OG images
 
 - Do not reference static files under `/images/open-graph/` (removed). Default OG images use the dynamic `/og/image.png` endpoint via `buildOgImageUrl` - see `getMarketingHomeOgImage` in `src/lib/marketing/route-meta.ts` for the pattern.
@@ -1698,7 +1711,7 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
 - **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`). Database write suites need `E2E_ORG_ID` (Frankfurt). Use `bun run e2e:mysql`, `bun run e2e:postgres`, `bun run e2e:tablesdb`, `bun run e2e:documentsdb`, `bun run e2e:vectorsdb`, or `bun run e2e:databases` to run only those projects.
 - **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
-- **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env or debug menu, turn it off first (debug menu → Settings → Flags → Pre-launch, or unset / set `VITE_CONSOLE_PRE_LAUNCH=false`). The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
+- **Login for manual testing**: Log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. Pre-launch is off by default; if it was enabled via env, unset or set `VITE_CONSOLE_PRE_LAUNCH=false` before testing the full site. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
 
 ### Console database e2e

@@ -11,6 +11,7 @@ import {
   BLOG_SPOTLIGHT_CATEGORY_SLUGS,
 } from './constants'
 import { BLOG_POST_MAP, BLOG_POSTS } from './generated/manifest'
+import { BLOG_POST_LOADERS } from './generated/post-loaders'
 import { normalizeCategorySlug, resolveCategorySlug } from './category-slugs'
 import { preprocessBlogMarkdocContent } from './preprocess'
 import {
@@ -31,12 +32,10 @@ import type {
 
 /**
  * Lazy glob keeps the full blog corpus out of the server bundle until a post
- * body is requested. Metadata comes from the build-time manifest.
+ * body is requested. Metadata comes from the build-time manifest. Both are
+ * generated without posts marked `removed: true`, so those never ship.
  */
-const postLoaders = import.meta.glob('/src/content/blog/posts/*.markdoc', {
-  query: '?raw',
-  import: 'default',
-}) as Record<string, () => Promise<string>>
+const postLoaders = BLOG_POST_LOADERS
 
 const categoryLoaders = import.meta.glob('/src/content/blog/categories/*.markdoc', {
   query: '?raw',

@@ -8,7 +8,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
+import { isRemovedBlogPost, parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
 import { parseChangelogFrontmatter } from '../src/lib/changelog/frontmatter'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
 import {
@@ -82,13 +82,17 @@ async function readMarkdocFiles(
   )
 }
 
-/** Public blog posts (drafts and unlisted excluded), newest first. */
+/** Public blog posts (drafts, unlisted, and removed excluded), newest first. */
 async function collectBlogMeta(): Promise<(LlmsContentMeta & { date: string })[]> {
   const postsBySlug = new Map<string, LlmsContentMeta & { date: string }>()
 
   for (const { slug, raw } of await readMarkdocFiles(BLOG_POSTS_DIR)) {
     const { frontmatter } = parseBlogFrontmatter(raw)
-    if (parseBoolean(frontmatter.draft) || parseBoolean(frontmatter.unlisted)) {
+    if (
+      parseBoolean(frontmatter.draft) ||
+      parseBoolean(frontmatter.unlisted) ||
+      isRemovedBlogPost(frontmatter)
+    ) {
       postsBySlug.delete(slug)
       continue
     }

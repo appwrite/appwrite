@@ -6,7 +6,9 @@
 
 import { useMemo } from 'react'
 import {
+  infiniteQueryOptions,
   keepPreviousData,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -24,6 +26,7 @@ import {
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
 import { DEFAULT_STALE_TIME } from './constants'
+import { nextCursorAfter } from './cursor'
 
 export const MARKETPLACE_APPS_LIMIT = 100
 export const MARKETPLACE_PAGE_SIZE = 15
@@ -277,6 +280,12 @@ export type UpdateOrganizationAppInput = {
   postLogoutRedirectUris?: string[]
   type?: string
   deviceFlow?: boolean
+  /**
+   * The update endpoint replaces the whole document: leaving these out resets
+   * them to empty, so callers must always pass the current values.
+   */
+  installationScopes?: string[]
+  installationRedirectUrl?: string
 }
 
 // ============================================================================
@@ -670,6 +679,8 @@ export function useUpdateOrganizationApp(
         postLogoutRedirectUris: input.postLogoutRedirectUris,
         type: input.type,
         deviceFlow: input.deviceFlow,
+        installationScopes: input.installationScopes,
+        installationRedirectUrl: input.installationRedirectUrl,
       })
     },
     onSuccess: async (app) => {
@@ -735,6 +746,231 @@ export function useDeleteOrganizationApp(
       queryClient.removeQueries({ queryKey: ['app', appId] })
       await queryClient.refetchQueries({
         queryKey: ['apps', 'organization', organizationId],
+      })
+    },
+  })
+}
+
+// ============================================================================
+// INSTALLATION SCOPES, INSTALLATIONS, AND APP KEYS
+// ============================================================================
+
+export const ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE = 50
+export const ORGANIZATION_APP_KEYS_PAGE_SIZE = 50
+
+/**
+ * Scopes an app may request when installed on an organization: the Console
+ * project's installation scopes, with catalog metadata (category, description).
+ */
+export async function fetchConsoleInstallationScopes() {
+  const response = await sdk.forConsole.apps.listInstallationScopes()
+  return response.scopes ?? []
+}
+
+/** One cursor page of an app's installations, newest first. */
+export async function fetchOrganizationAppInstallations(
+  appId: string,
+  cursor?: string,
+) {
+  if (!appId) throw new Error('App ID is required')
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
+  const response = await sdk.forConsole.apps.listInstallations({
+    appId,
+    queries,
+    total: false,
+  })
+  return { installations: response.installations ?? [] }
+}
+
+/** One cursor page of an app's keys, newest first. */
+export async function fetchOrganizationAppKeys(appId: string, cursor?: string) {
+  if (!appId) throw new Error('App ID is required')
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(ORGANIZATION_APP_KEYS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
+  const response = await sdk.forConsole.apps.listKeys({
+    appId,
+    queries,
+    total: false,
+  })
+  return { keys: response.keys ?? [] }
+}
+
+export function consoleInstallationScopesQueryOptions() {
+  return queryOptions({
+    queryKey: ['apps', 'installation-scopes', 'console'],
+    queryFn: fetchConsoleInstallationScopes,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+export function organizationAppInstallationsInfiniteQueryOptions(
+  appId: string | null | undefined,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['app', appId, 'installations'],
+    queryFn: ({ pageParam }) =>
+      fetchOrganizationAppInstallations(appId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(
+        lastPage.installations,
+        ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE,
+      ),
+    enabled: !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function organizationAppKeysInfiniteQueryOptions(
+  appId: string | null | undefined,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['app', appId, 'keys'],
+    queryFn: ({ pageParam }) => fetchOrganizationAppKeys(appId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(lastPage.keys, ORGANIZATION_APP_KEYS_PAGE_SIZE),
+    enabled: !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useConsoleInstallationScopes() {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    consoleInstallationScopesQueryOptions(),
+  )
+
+  return {
+    scopes: data ?? [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useOrganizationAppInstallations(
+  appId: string | null | undefined,
+) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery(organizationAppInstallationsInfiniteQueryOptions(appId))
+
+  return {
+    installations: data?.pages.flatMap((page) => page.installations) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useOrganizationAppKeys(appId: string | null | undefined) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery(organizationAppKeysInfiniteQueryOptions(appId))
+
+  return {
+    keys: data?.pages.flatMap((page) => page.keys) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useDeleteOrganizationAppInstallation(
+  appId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      if (!appId) throw new Error('App ID is required')
+      await sdk.forConsole.apps.deleteInstallation({ appId, installationId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useCreateOrganizationAppKey(appId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!appId) throw new Error('App ID is required')
+      return await sdk.forConsole.apps.createKey({ appId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'keys'],
+      })
+    },
+  })
+}
+
+export function useDeleteOrganizationAppKey(appId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (keyId: string) => {
+      if (!appId) throw new Error('App ID is required')
+      await sdk.forConsole.apps.deleteKey({ appId, keyId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['app', appId, 'keys'],
       })
     },
   })

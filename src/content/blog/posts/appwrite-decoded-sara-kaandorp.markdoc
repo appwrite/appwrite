@@ -7,6 +7,7 @@ timeToRead: 4
 date: 2024-01-03
 author: laura-du-ry
 category: culture
+removed: true
 faqs:
   - question: "Who is Sara Kaandorp?"
     answer: "Sara is Appwrite's Design Lead. She leads a small in-house design team that shapes both Appwrite's visual brand and the UX/UI of the product, bringing experience as a UX designer across diverse industries."

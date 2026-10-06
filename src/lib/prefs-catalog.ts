@@ -17,7 +17,6 @@ import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
-import { USER_PREFS_KEY_TERRAFORM_SKIP_CONFIRM } from '@/lib/terraform/prefs'
 import {
   USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
   USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX,
@@ -46,6 +45,7 @@ import {
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   USER_PREFS_KEY_DISMISSED_BANNERS,
   USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
+  USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
   USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
@@ -80,6 +80,9 @@ import {
   USER_PREFS_KEY_STORES_LIST_VIEW_MODE,
   USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX,
   USER_PREFS_KEY_USAGE_CHART_DATE_RANGE,
+  USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
+  USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
+  USER_PREFS_KEY_VIDEOS_PLAYER,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -140,6 +143,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
       'Project IDs where the Agents landing was dismissed (JSON string array).',
     category: 'Account',
   },
+  {
+    id: 'premiumGeoOverviewDismissedProjectIds',
+    scope: 'account',
+    key: USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+    description:
+      'Project IDs where the Premium Geo DB overview promo was dismissed (JSON string array).',
+    category: 'Account',
+  },
   // Layout / chrome
   {
     id: 'sidebarCollapsed',
@@ -159,7 +170,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'sidebarCollapsedLegacy',
     scope: 'account',
     key: 'sidebarCollapsed',
-    description: 'Legacy sidebar collapsed key (migrated to console.sidebarCollapsed).',
+    description:
+      'Legacy sidebar collapsed key (migrated to console.sidebarCollapsed).',
     category: 'Layout',
     legacy: true,
   },
@@ -254,7 +266,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'savedFilters',
     scope: 'both',
     prefix: USER_PREFS_KEY_SAVED_FILTERS_PREFIX,
-    description: 'Saved filter presets per list view scope (JSON SavedFilter[]).',
+    description:
+      'Saved filter presets per list view scope (JSON SavedFilter[]).',
     category: 'Filters',
   },
   {
@@ -269,6 +282,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_SITES_LIST_VIEW_MODE,
     description: 'Sites list view mode (list or grid).',
+    category: 'List views',
+  },
+  {
+    id: 'videosListViewMode',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
+    description: 'Videos list view mode (list or grid).',
     category: 'List views',
   },
   {
@@ -300,6 +320,21 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_STORAGE_SIDEBAR_WIDTH,
     description: 'Storage buckets sidebar width in pixels.',
     category: 'Storage',
+  },
+  {
+    id: 'videosSidebarWidth',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
+    description: 'Videos list sidebar width in pixels.',
+    category: 'Videos',
+  },
+  {
+    id: 'videosPlayer',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_PLAYER,
+    description:
+      'Video player settings (JSON): volume, mute, playback format, quality height, subtitle language.',
+    category: 'Videos',
   },
   {
     id: 'storageFilesListColumnWidths',
@@ -522,14 +557,6 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     category: 'Generators',
   },
   {
-    id: 'terraformSkipConfirmProjectIds',
-    scope: 'account',
-    key: USER_PREFS_KEY_TERRAFORM_SKIP_CONFIRM,
-    description:
-      'Projects where changes to Terraform-managed resources skip the confirmation (JSON string[]).',
-    category: 'Projects',
-  },
-  {
     id: 'diagramGeneratorPropertiesSplit',
     scope: 'account',
     key: USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
@@ -624,7 +651,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'initPresence',
     scope: 'account',
     prefix: INIT_PRESENCE_PREFS_KEY_PREFIX,
-    description: 'Per-event Init presence prefs (identity visibility, online list).',
+    description:
+      'Per-event Init presence prefs (identity visibility, online list).',
     category: 'Init',
   },
 
@@ -663,7 +691,9 @@ export function matchKnownPref(
   const candidates = PREFS_CATALOG.filter((entry) =>
     entryAppliesToScope(entry, scope),
   )
-  const exact = candidates.find((entry) => entry.key != null && entry.key === key)
+  const exact = candidates.find(
+    (entry) => entry.key != null && entry.key === key,
+  )
   if (exact) return exact
   return (
     candidates.find(
@@ -725,9 +755,11 @@ export function classifyPrefs(
   })
 }
 
-export function summarizePrefsClassification(
-  entries: ClassifiedPrefEntry[],
-): { known: number; unknown: number; total: number } {
+export function summarizePrefsClassification(entries: ClassifiedPrefEntry[]): {
+  known: number
+  unknown: number
+  total: number
+} {
   let known = 0
   let unknown = 0
   for (const entry of entries) {

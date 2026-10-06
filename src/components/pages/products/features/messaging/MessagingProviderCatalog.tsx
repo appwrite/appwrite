@@ -1,13 +1,7 @@
-import {
-  Bell,
-  Globe,
-  Mail,
-  MessageSquare,
-  MessagesSquare,
-  Smartphone,
-} from 'lucide-react'
+import { Bell, Globe, Mail, MessageSquare, MessagesSquare, Smartphone } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ArtIconBadge, riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -27,18 +21,7 @@ type MessagingChannelTile = {
   providers: MessagingProviderItem[]
 }
 
-const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
-  {
-    id: 'push',
-    title: 'Push notifications',
-    description:
-      'Reach users instantly on iOS, Android, and web with APNS and FCM.',
-    icon: Smartphone,
-    providers: [
-      { id: 'apns', name: 'APNS', icon: '/icons/apple.svg' },
-      { id: 'fcm', name: 'FCM', icon: '/icons/firebase.svg' },
-    ],
-  },
+const AVAILABLE_CHANNELS: MessagingChannelTile[] = [
   {
     id: 'email',
     title: 'Emails',
@@ -53,6 +36,33 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
       { id: 'smtp', name: 'SMTP' },
     ],
   },
+  {
+    id: 'sms',
+    title: 'SMS',
+    description:
+      'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.',
+    icon: MessageSquare,
+    providers: [
+      { id: 'twilio', name: 'Twilio', icon: '/icons/twilio.svg' },
+      { id: 'vonage', name: 'Vonage', icon: '/icons/vonage.svg' },
+      { id: 'msg91', name: 'MSG91', icon: '/icons/msg91.svg' },
+      { id: 'telesign', name: 'Telesign', icon: '/icons/telesign.svg' },
+      { id: 'textmagic', name: 'Textmagic', icon: '/icons/textmagic.svg' },
+    ],
+  },
+  {
+    id: 'push',
+    title: 'Push notifications',
+    description: 'Reach users instantly on iOS, Android, and web with APNS and FCM.',
+    icon: Smartphone,
+    providers: [
+      { id: 'apns', name: 'APNS', icon: '/icons/apple.svg' },
+      { id: 'fcm', name: 'FCM', icon: '/icons/firebase.svg' },
+    ],
+  },
+]
+
+const UPCOMING_CHANNELS: MessagingChannelTile[] = [
   {
     id: 'chat',
     title: 'Chat',
@@ -73,80 +83,88 @@ const MESSAGING_CHANNEL_TILES: MessagingChannelTile[] = [
     comingSoon: true,
     providers: [],
   },
-  {
-    id: 'sms',
-    title: 'SMS',
-    description:
-      'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.',
-    icon: MessageSquare,
-    providers: [
-      { id: 'twilio', name: 'Twilio', icon: '/icons/twilio.svg' },
-      { id: 'vonage', name: 'Vonage', icon: '/icons/vonage.svg' },
-      { id: 'msg91', name: 'MSG91', icon: '/icons/msg91.svg' },
-      { id: 'telesign', name: 'Telesign', icon: '/icons/telesign.svg' },
-      { id: 'textmagic', name: 'Textmagic', icon: '/icons/textmagic.svg' },
-    ],
-  },
 ]
 
-const pushTile = MESSAGING_CHANNEL_TILES[0]
-const emailTile = MESSAGING_CHANNEL_TILES[1]
-const chatTile = MESSAGING_CHANNEL_TILES[2]
-const inAppTile = MESSAGING_CHANNEL_TILES[3]
-const smsTile = MESSAGING_CHANNEL_TILES[4]
-
-function ChannelTileIcon({ icon: Icon }: { icon: LucideIcon }) {
+function ProviderPill({ provider, muted }: { provider: MessagingProviderItem; muted?: boolean }) {
   return (
-    <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
-      <Icon className="size-3.5 text-muted-foreground" aria-hidden />
-    </span>
-  )
-}
-
-function ProviderLogo({ provider }: { provider: MessagingProviderItem }) {
-  if (provider.icon) {
-    return <ProductFeaturePublicIcon src={provider.icon} />
-  }
-
-  return <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-}
-
-function ProviderPill({ provider }: { provider: MessagingProviderItem }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground">
-      <ProviderLogo provider={provider} />
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+        muted
+          ? 'border-dashed border-border text-muted-foreground'
+          : 'border-border bg-background text-foreground shadow-sm dark:bg-card',
+      )}
+    >
+      {provider.icon ? (
+        <ProductFeaturePublicIcon
+          src={provider.icon}
+          className="size-3.5"
+          tone={muted ? 'muted-foreground' : 'foreground'}
+        />
+      ) : (
+        <Globe className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      )}
       {provider.name}
     </span>
   )
 }
 
-function ChannelTile({
+function AvailableChannel({
   tile,
+  delayMs,
   className,
 }: {
   tile: MessagingChannelTile
+  delayMs: number
   className?: string
 }) {
   const t = useT()
   return (
-    <div className={cn('p-4 sm:p-5', className)}>
-      <ChannelTileIcon icon={tile.icon} />
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <h3 className="text-[14px] font-semibold text-foreground">{t(tile.title)}</h3>
-        {tile.comingSoon ? (
-          <Badge variant="warning" className="text-[10px] shrink-0">
+    <div
+      className={cn(
+        'product-hero-rise rounded-2xl border border-border/70 bg-background/40 p-5 backdrop-blur-[2px] dark:border-white/[0.07] dark:bg-white/[0.015] lg:col-span-2',
+        className,
+      )}
+      style={riseStyle(delayMs)}
+    >
+      <ArtIconBadge icon={tile.icon} className="size-8" />
+      <h3 className="mt-4 text-[15px] font-semibold text-foreground">{t(tile.title)}</h3>
+      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(tile.description)}</p>
+      <div className="mt-4 flex flex-wrap gap-1.5">
+        {tile.providers.map((provider, index) => (
+          <span key={provider.id} className="product-hero-rise" style={riseStyle(delayMs + 200 + index * 60)}>
+            <ProviderPill provider={provider} />
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function UpcomingChannel({ tile, delayMs }: { tile: MessagingChannelTile; delayMs: number }) {
+  const t = useT()
+  return (
+    <div
+      className="product-hero-rise flex flex-col gap-4 rounded-2xl border border-dashed border-border p-5 sm:flex-row sm:items-start lg:col-span-3"
+      style={riseStyle(delayMs)}
+    >
+      <ArtIconBadge icon={tile.icon} tone="neutral" className="size-8" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-foreground">{t(tile.title)}</h3>
+          <Badge variant="warning" className="shrink-0 text-[10px]">
             {t('Coming soon')}
           </Badge>
+        </div>
+        <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(tile.description)}</p>
+        {tile.providers.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {tile.providers.map((provider) => (
+              <ProviderPill key={provider.id} provider={provider} muted />
+            ))}
+          </div>
         ) : null}
       </div>
-      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(tile.description)}</p>
-      {tile.providers.length > 0 ? (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {tile.providers.map((provider) => (
-            <ProviderPill key={provider.id} provider={provider} />
-          ))}
-        </div>
-      ) : null}
     </div>
   )
 }
@@ -157,29 +175,18 @@ type MessagingProviderCatalogProps = {
 
 export function MessagingProviderCatalog({ className }: MessagingProviderCatalogProps) {
   return (
-    <div
-      className={cn(
-        'grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2 lg:grid-cols-3',
-        className,
-      )}
-    >
-      <ChannelTile
-        tile={pushTile}
-        className="border-b border-border sm:border-e lg:border-e"
-      />
-      <ChannelTile tile={emailTile} className="border-b border-border lg:border-e" />
-      <ChannelTile
-        tile={chatTile}
-        className="border-b border-border sm:border-e lg:border-e-0"
-      />
-      <ChannelTile
-        tile={inAppTile}
-        className="border-b border-border sm:border-e lg:border-e lg:border-b-0"
-      />
-      <ChannelTile
-        tile={smsTile}
-        className="border-b border-border sm:col-span-2 sm:border-b-0 lg:col-span-2 lg:border-b-0"
-      />
+    <div className={cn('grid gap-3 text-start sm:grid-cols-2 lg:grid-cols-6 lg:gap-4', className)}>
+      {AVAILABLE_CHANNELS.map((tile, index) => (
+        <AvailableChannel
+          key={tile.id}
+          tile={tile}
+          delayMs={100 + index * 120}
+          className={index === AVAILABLE_CHANNELS.length - 1 ? 'sm:col-span-2' : undefined}
+        />
+      ))}
+      {UPCOMING_CHANNELS.map((tile, index) => (
+        <UpcomingChannel key={tile.id} tile={tile} delayMs={500 + index * 120} />
+      ))}
     </div>
   )
 }

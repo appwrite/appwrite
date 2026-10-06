@@ -1,3 +1,4 @@
+import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -29,17 +30,21 @@ export function SitesGitProviders({ className }: SitesGitProvidersProps) {
     <div className={cn('mt-6', className)}>
       <p className="text-[12px] font-medium text-muted-foreground">{t('Supported Git providers')}</p>
       <div className="mt-2.5 flex flex-wrap gap-2">
-        {GIT_PROVIDERS.map((provider) => (
+        {GIT_PROVIDERS.map((provider, index) => (
           <span
             key={provider.id}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium',
+              'product-hero-rise inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
               provider.comingSoon
-                ? 'border-border/60 bg-muted/10 text-muted-foreground'
-                : 'bg-background/80 text-foreground',
+                ? 'border-dashed border-border text-muted-foreground'
+                : 'border-border bg-background text-foreground shadow-sm dark:bg-card',
             )}
+            style={riseStyle(150 + index * 60)}
           >
-            <ProductFeaturePublicIcon src={provider.icon} inactive={provider.comingSoon} />
+            <ProductFeaturePublicIcon
+              src={provider.icon}
+              className={cn('size-3.5', provider.comingSoon && 'opacity-60')}
+            />
             {provider.name}
           </span>
         ))}

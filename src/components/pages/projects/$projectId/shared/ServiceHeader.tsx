@@ -116,6 +116,8 @@ interface ServiceHeaderProps {
   contentAfterBorder?: React.ReactNode
   /** Show a bottom border under the toolbar row (search/filters/actions) */
   showToolbarBottomBorder?: boolean
+  /** Hide the toolbar row (e.g. while the page shows an empty state with its own actions) */
+  hideToolbar?: boolean
 }
 
 const createButtonClassName = cn(
@@ -268,6 +270,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       titleRightContent,
       contentAfterBorder,
       showToolbarBottomBorder = false,
+      hideToolbar = false,
     },
     ref,
   ) {
@@ -289,7 +292,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       beforeRefreshButtons ||
       afterRefreshButtons ||
       beforeSearchButtons
-    const showToolbarRow = hasToolbar || collapsible
+    const showToolbarRow = !hideToolbar && (hasToolbar || collapsible)
 
     // Show tabs if we have tabs and either:
     // 1. activeTab + onTabChange (button-based tabs), OR

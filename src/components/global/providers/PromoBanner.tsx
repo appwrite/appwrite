@@ -11,11 +11,12 @@ import {
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InitRecapPromoBanner } from '@/components/global/shared/InitRecapPromoBanner'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useDebugConsoleBannerPreviews } from '@/lib/console-banners'
 import {
-  FIREWALL_PROMO_BANNER_ENABLED,
   FIREWALL_PROMO_BANNER_ID,
-  useDebugConsoleBannerPreviews,
-} from '@/lib/console-banners'
+  FIREWALL_SPIDER_PROMO_BANNER_ID,
+} from '@/lib/console-banners/catalog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 
@@ -25,15 +26,22 @@ const FirewallPromoBannerLazy = lazy(() =>
   })),
 )
 
+const FirewallSpiderPromoLazy = lazy(() =>
+  import('@/components/global/shared/firewall-spider/FirewallSpiderPromo').then(
+    (module) => ({ default: module.FirewallSpiderPromo }),
+  ),
+)
+
 function FirewallPromoBannerGate() {
+  const { isAuthenticated } = useAuth()
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
-  const show =
-    FIREWALL_PROMO_BANNER_ENABLED ||
-    isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
-  if (!show) return null
+  // The fullscreen takeover is retired; it only renders in debug preview.
+  const preview = isPreviewEnabled(FIREWALL_PROMO_BANNER_ID)
+  const spiderPreview = isPreviewEnabled(FIREWALL_SPIDER_PROMO_BANNER_ID)
   return (
     <Suspense fallback={null}>
-      <FirewallPromoBannerLazy />
+      {preview ? <FirewallPromoBannerLazy /> : null}
+      {spiderPreview || isAuthenticated ? <FirewallSpiderPromoLazy /> : null}
     </Suspense>
   )
 }

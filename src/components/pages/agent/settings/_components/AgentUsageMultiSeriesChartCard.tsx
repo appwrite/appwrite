@@ -14,6 +14,7 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
+import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import {
   createAgentCountAxisTickFormatter,
   type AgentUsageMultiSeriesPoint,
@@ -192,7 +193,12 @@ export function AgentUsageMultiSeriesChartCard({
             {isLoading ? (
               <ChartMetricHeaderSkeleton />
             ) : (
-              <>
+              <div
+                className={cn(
+                  'flex flex-wrap items-baseline gap-x-2 gap-y-1',
+                  USAGE_CHART_FADE_IN_CLASS_NAME,
+                )}
+              >
                 <span className="text-[24px] font-semibold tabular-nums text-foreground">
                   {formattedTotal}
                 </span>
@@ -219,7 +225,7 @@ export function AgentUsageMultiSeriesChartCard({
                     0% {t('vs previous period')}
                   </span>
                 ) : null}
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -262,7 +268,7 @@ export function AgentUsageMultiSeriesChartCard({
         ) : (
           <ChartArea>
             <div
-              className={surfaceClassName}
+              className={cn(surfaceClassName, USAGE_CHART_FADE_IN_CLASS_NAME)}
               aria-label={
                 canSelect
                   ? t('Drag on the chart to select a date range')

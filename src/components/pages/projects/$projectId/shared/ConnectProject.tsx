@@ -955,7 +955,7 @@ export function ConnectProject({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 min-h-0 flex-1">
-                  <div className="min-w-0 rounded-xl border border-border bg-card/50 overflow-hidden flex flex-col">
+                  <div className="min-w-0 rounded-xl border border-border bg-card/50 overflow-y-auto flex flex-col">
                     <div className="px-4 py-2.5 border-b border-border shrink-0">
                       <h4 className="text-[13px] font-semibold text-foreground">
                         {t('1. Install')}

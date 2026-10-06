@@ -321,6 +321,10 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'this function': 'この関数',
   'Timeout updated successfully': 'タイムアウトを更新しました',
+  'Enterprise runtime options': 'Enterprise ランタイムオプション',
+  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
+    'Enterprise プランには、コールドスタートを最小化する Always-on 関数に加え、より高負荷なワークロード向けの CPU とメモリ構成が含まれます。',
+  'Contact us to learn more.': '詳しくはお問い合わせください。',
   'to unlock additional specifications.': 'して、追加の仕様を利用できます。',
   'Total size': '合計サイズ',
   'Total Size': '合計サイズ',
@@ -680,4 +684,16 @@ export const jaFunctionsDictionary: Record<string, string> = {
   Key: 'キー',
   Value: '値',
   Errors: 'エラー',
+  'Create your first function': '最初の Function を作成',
+  'Run backend code without managing servers. Respond to HTTP requests, events in your project, and schedules.':
+    'サーバーを管理せずにバックエンドのコードを実行できます。HTTP リクエスト、プロジェクト内のイベント、スケジュールに応答します。',
+  'Start from a template': 'テンプレートから始める',
+  'Use a ready-made function, or pick a runtime like Node.js, Python, Dart, or Go.':
+    '既製の Function を使うか、Node.js、Python、Dart、Go などのランタイムを選択します。',
+  'Deploy your code': 'コードをデプロイ',
+  'Connect a Git repository to deploy on every push, or upload your code manually.':
+    'Git リポジトリを接続してプッシュごとにデプロイするか、コードを手動でアップロードします。',
+  'Trigger it': '実行する',
+  'Run it over HTTP, on events in your project, or on a schedule.':
+    'HTTP 経由、プロジェクト内のイベント、またはスケジュールで実行します。',
 }

@@ -1,8 +1,5 @@
 // Database product workspace (see ../Workspace.tsx router).
 import { cn } from '@/lib/utils'
-import { TerraformIndicator } from '@/components/global/shared/TerraformIndicator'
-import { TerraformResourceAlert } from '@/components/global/shared/TerraformResourceAlert'
-import { getTerraformResourcePath } from '@/lib/terraform/resource'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
   SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -1496,16 +1493,6 @@ export function Workspace({
                   className="shrink-0"
                 />
               ) : null}
-              {selectedTable ? (
-                <TerraformIndicator
-                  projectId={projectId}
-                  resource={getTerraformResourcePath(
-                    'table',
-                    selectedTable.$id,
-                    databaseId,
-                  )}
-                />
-              ) : null}
             </div>
           )
         }
@@ -1788,19 +1775,6 @@ export function Workspace({
         }
         contentAfterBorder={
           <>
-            {/* Rows are data; only structure and configuration tabs are Terraform's. */}
-            {isDatabaseLevelView ||
-            activeTab === 'rows' ||
-            activeTab === 'documents' ? null : (
-              <TerraformResourceAlert
-                projectId={projectId}
-                resource={getTerraformResourcePath(
-                  'table',
-                  tableId ?? '',
-                  databaseId,
-                )}
-              />
-            )}
             {databaseTab === 'monitor' ? (
               <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
                 <DatabaseMonitorMobileNav

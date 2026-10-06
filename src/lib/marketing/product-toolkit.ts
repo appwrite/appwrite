@@ -1,7 +1,7 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
+  getMarketingProductMenuCategories,
   PRODUCT_NAV_REGISTRY,
-  isProductNavItemComingSoon,
 } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 
@@ -10,41 +10,26 @@ export type MarketingProductToolkitItem = {
   href: string
 }
 
-const MARKETING_TOOLKIT_NAV_IDS = {
-  build: [
-    'auth',
-    'databases',
-    'storage',
-    'functions',
-    'messaging',
-    'realtime',
-    'agent',
-  ],
-  deploy: ['sites'],
-  protect: ['firewall', 'advisor'],
-} as const satisfies Record<
-  'build' | 'deploy' | 'protect',
-  readonly ProductNavItemId[]
->
-
-function isToolkitNavItemVisible(id: ProductNavItemId): boolean {
-  if (isProductNavItemComingSoon(id)) return false
-  if (id === 'agent') return getActiveProfileFeatures().agent
-  return true
-}
-
 function toToolkitItems(ids: readonly ProductNavItemId[]) {
-  return ids.filter(isToolkitNavItemVisible).map((id) => {
+  return ids.map((id) => {
     const item = PRODUCT_NAV_REGISTRY[id]
     return { label: item.name, href: item.href }
   })
 }
 
 function getMarketingProductToolkit() {
+  const categories = getMarketingProductMenuCategories({
+    agent: getActiveProfileFeatures().agent,
+  })
+  const byId = Object.fromEntries(categories.map((c) => [c.id, c.productIds])) as Record<
+    'build' | 'deploy' | 'protect',
+    readonly ProductNavItemId[]
+  >
+
   return {
-    build: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.build),
-    deploy: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.deploy),
-    protect: toToolkitItems(MARKETING_TOOLKIT_NAV_IDS.protect),
+    build: toToolkitItems(byId.build ?? []),
+    deploy: toToolkitItems(byId.deploy ?? []),
+    protect: toToolkitItems(byId.protect ?? []),
   } as const
 }
 

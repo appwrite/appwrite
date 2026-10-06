@@ -8,6 +8,7 @@ timeToRead: 08
 author: sara-kaandorp
 category: design
 featured: false
+removed: true
 callToAction: true
 faqs:
   - question: "Why did Appwrite redesign its homepage?"

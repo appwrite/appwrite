@@ -4,7 +4,7 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/pricing/View'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import {
   isPricingHashTarget,
   resetPricingPageScrollContainers,
@@ -15,13 +15,13 @@ export const Route = createFileRoute('/_marketing/pricing')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () =>
+    getMarketingRouteHead({
+      canonicalPath: '/pricing',
       pageName: 'Pricing',
       description:
         'All your cloud services under one subscription. Build, deploy, and observe your app from a unified stack under one subscription.',
     }),
-  }),
   loader: async ({ context }) => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.slice(1)

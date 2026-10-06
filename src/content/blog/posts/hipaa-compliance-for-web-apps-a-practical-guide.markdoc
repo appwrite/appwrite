@@ -10,6 +10,7 @@ author: aishwari
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is PHI and when does HIPAA apply to my app?"
     answer: "PHI (Protected Health Information) is individually identifiable health information about a person's health status, care, or payment for care. HIPAA applies when your organization is a covered entity or a business associate handling PHI in that context. Not every health-adjacent app falls under HIPAA, the legal relationship and how data is handled matter."

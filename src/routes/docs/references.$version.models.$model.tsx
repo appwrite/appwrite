@@ -4,7 +4,7 @@ import { ApiReferenceModelView } from '@/components/pages/docs/references/ApiRef
 import { isReferenceVersion } from '@/lib/docs/references/constants'
 import { isApiReferenceNotFoundError } from '@/lib/docs/references/errors'
 import { getApiReferenceCanonicalSlug } from '@/lib/docs/references/seo'
-import { getDocsMetaTags } from '@/lib/docs/route-meta'
+import { getDocsRouteHead } from '@/lib/docs/route-meta'
 import {
   getDocsBreadcrumbSchema,
   getDocsArticleSchema,
@@ -46,7 +46,7 @@ export const Route = createFileRoute('/docs/references/$version/models/$model')(
     const seoOptions = { canonicalSlug }
 
     return {
-      meta: getDocsMetaTags(meta, seoOptions),
+      ...getDocsRouteHead(meta, seoOptions),
       scripts: [
         {
           type: 'application/ld+json',
