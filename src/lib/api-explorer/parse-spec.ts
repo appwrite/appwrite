@@ -1,11 +1,7 @@
 import { getPlatformAuth, getSdkMethodName } from './spec-metadata'
 import { getOpenApiEnumValues } from './openapi-schema'
 import { normalizeDatabaseOpenApiSpec } from './normalize-database-spec'
-import {
-  compareServices,
-  getServiceLabel,
-  isConsoleOnlyDatabaseApiService,
-} from './services'
+import { compareServices, getServiceLabel } from './services'
 import type {
   ApiExplorerMethod,
   ApiExplorerService,
@@ -465,28 +461,6 @@ export function parseOpenApiSpec(
  * from a console OpenAPI parse onto a client/server parse.
  * Existing services with the same id are left unchanged.
  */
-export function mergeConsoleOnlyDatabaseServices(
-  base: ParsedApiSpec,
-  consoleParsed: ParsedApiSpec,
-): ParsedApiSpec {
-  const existingIds = new Set(base.services.map((service) => service.id))
-  const extras = consoleParsed.services.filter(
-    (service) =>
-      isConsoleOnlyDatabaseApiService(service.id) &&
-      service.methods.length > 0 &&
-      !existingIds.has(service.id),
-  )
-
-  if (extras.length === 0) return base
-
-  return {
-    ...base,
-    services: [...base.services, ...extras].sort((a, b) =>
-      compareServices(a.id, b.id),
-    ),
-  }
-}
-
 export function formatResourceGroupLabel(group: string): string {
   if (!group) return ''
   return group.replace(/([a-z])([A-Z])/g, '$1 $2')
