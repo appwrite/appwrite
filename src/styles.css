@@ -652,6 +652,10 @@ html:not([lang='en']):not([lang='he']) {
     );
     -webkit-background-clip: text;
     background-clip: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding-inline-end: 0.075em;
+    padding-block-end: 0.08em;
     color: transparent;
   }
 
@@ -2683,6 +2687,42 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
 
   .product-hero-type {
     max-width: none;
+    animation: none;
+  }
+}
+
+/* Comparison pages (/alternative-to/*): continuous event feed. */
+@keyframes alternative-feed-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.alternative-feed-scroll {
+  animation: alternative-feed-scroll var(--feed-duration, 24s) linear infinite;
+}
+
+.alternative-feed-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Comparison pages: data flowing along dashed connectors. */
+@keyframes alternative-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.alternative-flow {
+  animation: alternative-flow 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alternative-feed-scroll,
+  .alternative-flow {
     animation: none;
   }
 }

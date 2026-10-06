@@ -3,7 +3,7 @@ import {
   DEFAULT_HA_REPLICA_RATE,
   DEFAULT_PITR_RATE,
 } from '@/lib/database-create-pricing'
-import { SERVERLESS_DATABASE_SPEC_ID, TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
+import { NATIVE_DATABASE_COMPUTE_SPEC_OPTIONS } from '@/lib/database-specs'
 
 export const PRICING_DATABASE_ANCHOR_ID = 'database-pricing'
 
@@ -97,7 +97,6 @@ export const DEDICATED_DATABASE_PRICING = {
   computeCreditsNote: DATABASE_COMPUTE_CREDITS_NOTE,
 } as const
 
-/** Dedicated compute tiers shown on the pricing page (excludes serverless tier). */
-export const DEDICATED_DATABASE_PRICING_TIERS = TABLE_DB_SPEC_OPTIONS.filter(
-  (spec) => spec.id !== SERVERLESS_DATABASE_SPEC_ID,
-)
+/** Dedicated compute tiers shown on the pricing page and product marketing tables. */
+export const DEDICATED_DATABASE_PRICING_TIERS =
+  NATIVE_DATABASE_COMPUTE_SPEC_OPTIONS

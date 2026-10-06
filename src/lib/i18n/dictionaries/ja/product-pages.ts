@@ -1241,11 +1241,11 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Databases, Storage, Functions, Auth, teams, and presence all stream on the same socket. The Channel helper builds the string with a fluent API, so leave an ID blank for a wildcard or append .create() to narrow the stream.':
     'データベース、ストレージ、Functions、認証、チーム、Presence は、すべて同じソケットでストリームします。Channel ヘルパーがフルエントな API で文字列を組み立てるため、ID を空にするとワイルドカードになり、.create() を付ければストリームを絞り込めます。',
   'Auth, teams, and presence': '認証、チーム、Presence',
-  'Connection pooling for short-lived clients': '短命なクライアント向けのコネクションプーリング',
-  'PostgreSQL spends a backend process per connection, so serverless functions exhaust a specification fast. Point runtime traffic at the pooler, same hostname and credentials, and short-lived clients share a small pool.':
-    'PostgreSQL は接続ごとにバックエンドプロセスを 1 つ使うため、サーバーレス関数は仕様の上限をすぐに使い切ります。同じホスト名と認証情報のまま、実行時のトラフィックをプーラーに向ければ、短命なクライアントが少数のプールを共有します。',
-  'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many short-lived clients share a small pool. Keep migrations and long administrative sessions on a direct connection.':
-    '接続上限は仕様によって決まり、最小の階層では 100、プラットフォーム全体の上限は 10,000 です。PostgreSQL は接続ごとにバックエンドプロセスを 1 つ使うため、実行時のトラフィックはプーラーに向けてください。そこでは多数の短命なクライアントが少数のプールを共有します。マイグレーションや長時間の管理用セッションは直接接続のままにします。',
+  'Built-in connection pooling': '組み込みのコネクションプーリング',
+  'PostgreSQL spends a backend process per connection, so serverless functions and horizontally scaled app servers exhaust a specification fast. Point runtime traffic at the pooler, same hostname and credentials, and many clients share a small pool of server connections.':
+    'PostgreSQL は接続ごとにバックエンドプロセスを 1 つ使うため、サーバーレス関数や水平スケールするアプリサーバーは仕様の上限をすぐに使い切ります。同じホスト名と認証情報のまま、実行時のトラフィックをプーラーに向けると、多数のクライアントが少数のサーバー接続プールを共有します。',
+  'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many clients share a small pool of server connections. Keep migrations and long administrative sessions on a direct connection.':
+    '接続上限は仕様によって決まり、最小の階層では 100、プラットフォーム全体の上限は 10,000 です。PostgreSQL は接続ごとにバックエンドプロセスを 1 つ使うため、実行時のトラフィックはプーラーに向けてください。そこでは多数のクライアントが少数のサーバー接続プールを共有します。マイグレーションや長時間の管理用セッションは直接接続のままにします。',
   'Yes, with the standard PostgreSQL tooling you already use. Run your dump and restore over a direct connection, because tools like pg_dump expect one session for the whole run, then point your application runtime at the pooler. Any client that speaks the wire protocol works, including pgAdmin and DataGrip.':
     'はい。すでに使っている標準の PostgreSQL ツールでそのまま移行できます。pg_dump のようなツールは処理全体で 1 つのセッションを前提とするため、ダンプと復元は直接接続で実行し、そのうえでアプリケーションの実行時トラフィックをプーラーに向けてください。pgAdmin や DataGrip など、ワイヤープロトコルを話すクライアントであれば何でも利用できます。',
   'A full extension catalog, at no extra cost':

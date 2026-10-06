@@ -24,6 +24,8 @@ import {
   type MarketingPagePath,
 } from '@/lib/marketing/urls'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
+import { getAlternativePath } from '@/lib/alternatives/registry'
+import type { AlternativeId } from '@/lib/alternatives/types'
 import { isProductNavItemNew } from '@/lib/products/new-badge'
 import type { ProductNavItemId } from '@/lib/products/types'
 import {
@@ -82,6 +84,19 @@ function blogFooterLink(
     label,
     href: getBlogPageUrl(`/blog/post/${slug}`, marketing),
     external: isBlogPageExternal(marketing),
+  }
+}
+
+function comparisonFooterLink(
+  label: string,
+  competitor: AlternativeId,
+  marketing: boolean,
+): FooterLink {
+  const path = getAlternativePath(competitor)
+  return {
+    label,
+    href: marketing ? path : `${MARKETING_SITE_ORIGIN}${path}`,
+    external: isMarketingPageExternal(marketing),
   }
 }
 
@@ -291,18 +306,19 @@ function getExpandedFooterGroups(
   {
     title: footerCopy.groups.compare,
     links: [
-      blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
-      blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
-      blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
+      comparisonFooterLink(footerCopy.expanded.compare.vsSupabase, 'supabase', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsFirebase, 'firebase', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsNeon, 'neon', marketing),
       productFooterLink(
         footerCopy.expanded.compare.postgresqlHosting,
         '/products/postgres',
         marketing,
       ),
-      blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
-      blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
-      blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
-      blogFooterLink(footerCopy.expanded.compare.vsAuth0, 'appwrite-vs-auth0', marketing), // pragma: allowlist secret
+      comparisonFooterLink(footerCopy.expanded.compare.vsVercel, 'vercel', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsNetlify, 'netlify', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsCloudinary, 'cloudinary', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsAuth0, 'auth0', marketing),
+      comparisonFooterLink(footerCopy.expanded.compare.vsConvex, 'convex', marketing),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),

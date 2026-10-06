@@ -80,7 +80,7 @@ export const postgresProductContent: ProductPageContent = {
     {
       question: 'How many connections can I open, and when do I need the pooler?',
       answer:
-        'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many short-lived clients share a small pool. Keep migrations and long administrative sessions on a direct connection.',
+        'The limit comes from your specification, from 100 on the smallest tier up to a platform cap of 10,000. Since PostgreSQL spends a backend process per connection, point runtime traffic at the pooler, where many clients share a small pool of server connections. Keep migrations and long administrative sessions on a direct connection.',
       links: [
         {
           label: 'Connection pooling docs',

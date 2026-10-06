@@ -93,6 +93,7 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as MarketingAlternativeToCompetitorRouteImport } from './routes/_marketing/alternative-to.$competitor'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
@@ -883,6 +884,12 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   path: '/oauth2/device',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingAlternativeToCompetitorRoute =
+  MarketingAlternativeToCompetitorRouteImport.update({
+    id: '/alternative-to/$competitor',
+    path: '/alternative-to/$competitor',
+    getParentRoute: () => MarketingRoute,
+  } as any)
 const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -3382,6 +3389,7 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -3830,6 +3838,7 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -4239,6 +4248,7 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_marketing/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -4693,6 +4703,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -5141,6 +5152,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -5549,6 +5561,7 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_marketing/alternative-to/$competitor'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
@@ -6554,6 +6567,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth2/device'
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_marketing/alternative-to/$competitor': {
+      id: '/_marketing/alternative-to/$competitor'
+      path: '/alternative-to/$competitor'
+      fullPath: '/alternative-to/$competitor'
+      preLoaderRoute: typeof MarketingAlternativeToCompetitorRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/_marketing/blog/': {
       id: '/_marketing/blog/'
@@ -9204,6 +9224,7 @@ interface MarketingRouteChildren {
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
+  MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -9238,6 +9259,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
   MarketingIndexRoute: MarketingIndexRoute,
+  MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
