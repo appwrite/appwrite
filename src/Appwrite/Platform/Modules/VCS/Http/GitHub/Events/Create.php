@@ -303,7 +303,13 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-            $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            try {
+                $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            } catch (\Throwable $e) {
+                // Without affected files, path triggers are skipped and the deployment still runs.
+                Console::warning("Failed to fetch files of pull request '{$providerPullRequestId}': " . $e->getMessage());
+                $prFiles = [];
+            }
             $providerAffectedFiles = [
                 ...array_column($prFiles, 'filename'),
                 // Only renamed files include previous_filename; skip missing values from other file changes.

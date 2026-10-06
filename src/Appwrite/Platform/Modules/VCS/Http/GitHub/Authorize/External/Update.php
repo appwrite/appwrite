@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -133,7 +134,13 @@ class Update extends Action
         $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
         $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
 
-        $prFiles = $vcs->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
+        try {
+            $prFiles = $vcs->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
+        } catch (\Throwable $e) {
+            // Without affected files, path triggers are skipped and the deployment still runs.
+            Console::warning("Failed to fetch files of pull request '{$providerPullRequestId}': " . $e->getMessage());
+            $prFiles = [];
+        }
         $providerAffectedFiles = [
             ...array_column($prFiles, 'filename'),
             // Only renamed files include previous_filename; skip missing values from other file changes.
