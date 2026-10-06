@@ -507,7 +507,7 @@ function readProductDatabaseSpecification(db: Models.Database): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
-export function readProductDatabaseLifecycleStatus(
+function readProductDatabaseLifecycleStatus(
   db: Models.Database,
 ): string | null {
   const value = db.status as unknown
