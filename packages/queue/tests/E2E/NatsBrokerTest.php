@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
+use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
@@ -1533,6 +1534,109 @@ final class NatsBrokerTest extends TestCase
         } finally {
             $broker->close();
         }
+    }
+
+    public function testProvisionCreatesTheQueueBeforeAnythingIsPublished(): void
+    {
+        // What a KEDA nats-jetstream trigger reads is the work consumer. On a worker
+        // that scales from zero nothing receives, so without this it is created only
+        // by the first enqueue and the trigger reports it missing until then.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 1, maxAckPending: 2);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        $broker->provision($queue);
+
+        $admin = Connection::connect($url);
+        try {
+            $js = $admin->jetStream();
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'provisioning must not publish');
+            $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages);
+
+            $consumer = $js->getConsumer($stream, 'worker')->info(true);
+            $this->assertSame(0, $consumer->numPending);
+            $this->assertSame(2, $consumer->config->maxAckPending, 'the consumer must carry the broker\'s own settings');
+            $this->assertSame(2, $consumer->config->maxDeliver, 'maxDeliver plus the spare delivery, as receive() would provision it');
+        } finally {
+            $admin->close();
+            $broker->close();
+        }
+
+        // And it is the same queue a producer and a consumer then use.
+        $producer = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 1, maxAckPending: 2);
+        $producer->publish($queue, ['task' => 'after']);
+        $message = $producer->receive($queue, 2)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $message);
+        $this->assertSame('after', $message->getPayload()['task']);
+        $producer->commit($queue, $message);
+        $producer->close();
+    }
+
+    public function testProvisionIsIdempotent(): void
+    {
+        // A deploy step runs it on every sync, against a queue the fleet is already using.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        $first = new Nats(Connection::connect($url), maxAckPending: 4);
+        $first->provision($queue);
+        $first->publish($queue, ['task' => 'waiting']);
+        $first->close();
+
+        $admin = Connection::connect($url);
+        $js = $admin->jetStream();
+        $snapshot = static fn (): array => [
+            'work' => $js->getStreamInfo($stream)->config->toArray(),
+            'dead' => $js->getStreamInfo($stream . '_DEAD')->config->toArray(),
+            'worker' => $js->getConsumer($stream, 'worker')->info(true)->config->toArray(),
+        ];
+        $before = $snapshot();
+
+        $again = new Nats(Connection::connect($url), maxAckPending: 4);
+        $again->provision($queue);
+        $again->provision($queue);
+
+        $this->assertSame($before, $snapshot());
+        $this->assertSame(1, $again->getQueueSize($queue), 'a waiting message must survive re-provisioning');
+
+        $again->close();
+        $admin->close();
+    }
+
+    public function testARequireBrokerProvisionChecksWithoutCreating(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        $check = new Nats(Connection::connect($url), provisioning: Provisioning::Require);
+        try {
+            $check->provision($queue);
+            $this->fail('a Require broker must refuse a queue nobody has provisioned');
+        } catch (\RuntimeException $e) {
+            $this->assertMatchesRegularExpression('/is not provisioned/', $e->getMessage());
+        }
+        $check->close();
+
+        $admin = Connection::connect($url);
+        try {
+            $admin->jetStream()->getStreamInfo('Q_' . strtoupper($queue->name));
+            $this->fail('a Require broker must not have created the queue it refused');
+        } catch (JetStreamException $e) {
+            $this->assertSame(404, $e->apiError?->code);
+        } finally {
+            $admin->close();
+        }
+
+        $owner = new Nats(Connection::connect($url));
+        $owner->provision($queue);
+        $owner->close();
+
+        $check = new Nats(Connection::connect($url), provisioning: Provisioning::Require);
+        $check->provision($queue);
+        $this->assertSame(0, $check->getQueueSize($queue));
+        $check->close();
     }
 
     public function testRequireLeavesStreamAndConsumerConfigUntouched(): void
