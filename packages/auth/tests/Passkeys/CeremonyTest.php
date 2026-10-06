@@ -69,7 +69,7 @@ final class CeremonyTest extends TestCase
         $stored = \json_decode(\json_encode($registered->record, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
         $this->assertIsArray($stored);
 
-        $this->assertSame($registered->identifier, $this->signIn($authenticator, new Credential($registered->identifier, $stored, true))->identifier);
+        $this->assertSame($registered->identifier, $this->signIn($authenticator, new Credential($registered->identifier, $stored))->identifier);
     }
 
     public function testSyncedPasskeyAllowsNonIncreasingCounter(): void
