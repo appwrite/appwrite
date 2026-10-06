@@ -85,10 +85,10 @@ return [
 
     // Videos
     'videos.create' => true,
-    'videos.createProfile' => true,
+    'project.createProfile' => true,
     'videos.createRendition' => true,
-    'videos.createSubtitle' => true,
-    'videos.createTimeline' => true,
+    'videos.createCaption' => true,
+    'videos.getTimeline' => true,
     // Master-manifest SDK methods; OR them in the UI for a single
     // "played a video" milestone.
     'videos.getHlsManifest' => true,

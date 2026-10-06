@@ -203,9 +203,9 @@ trait StagesBase
         $project = $this->getProject(fresh: true);
         $projectId = $project['$id'];
 
-        $this->assertSame('pending', $this->getStage($projectId, 'videos.createProfile')['status']);
+        $this->assertSame('pending', $this->getStage($projectId, 'project.createProfile')['status']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', [
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $project['apiKey'],
@@ -218,7 +218,7 @@ trait StagesBase
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
 
-        $stage = $this->awaitStage($projectId, 'videos.createProfile', ONBOARDING_STATUS_COMPLETED);
+        $stage = $this->awaitStage($projectId, 'project.createProfile', ONBOARDING_STATUS_COMPLETED);
         $this->assertSame(ACTOR_TYPE_KEY_PROJECT, $stage['actorType']);
         $this->assertSame('pending', $this->getStage($projectId, 'videos.create')['status']);
     }

@@ -425,7 +425,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertMatchesRegularExpression('/previews\/[a-zA-Z0-9]+#xywh=\d+,\d+,\d+,\d+/', $response['body']);
 
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
-        $this->assertEquals(320, (int) $xywh[2], 'timeline thumbnails should be 320px wide');
+        $this->assertEquals(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
     }
 
     // --------------------------------------------------------------- captions

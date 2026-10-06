@@ -177,8 +177,6 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
-                $queueForRealtime,
-                $project,
                 $video,
                 $workspace,
                 $queueForRealtime,
@@ -498,8 +496,6 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
-                $queueForRealtime,
-                $project,
                 $dbForProject->getDocument('videos', $videoId),
                 $workspace,
                 $queueForRealtime,
@@ -1217,8 +1213,6 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
-        Realtime $queueForRealtime,
-        Document $project,
         Document $video,
         array $workspace,
         Realtime $queueForRealtime,
@@ -1242,7 +1236,7 @@ class Videos extends Action
                 $queueForRealtime,
                 $project,
                 $video,
-                $this->sourceReadPermissions($dbForProject, $project, $video)
+                $permissions
             );
         }
 
@@ -1744,32 +1738,6 @@ class Videos extends Action
         }
 
         $queueForRealtime
-            ->setPayload($payload)
-            ->trigger();
-    }
-
-    /**
-     * Publishes a subtitle status change. Subtitle rows carry no ACL either; see notify().
-     *
-     * @param array<string> $permissions
-     */
-    private function notifySubtitle(
-        Realtime $queueForRealtime,
-        Document $project,
-        Document $subtitle,
-        array $permissions
-    ): void {
-        $payload = $subtitle->getArrayCopy();
-        if (empty($payload['$permissions'])) {
-            $payload['$permissions'] = $permissions;
-        }
-
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
-            ->setEvent('videos.[videoId].subtitles.[subtitleId].update')
-            ->setParam('videoId', $subtitle->getAttribute('videoId', ''))
-            ->setParam('subtitleId', $subtitle->getId())
             ->setPayload($payload)
             ->trigger();
     }
