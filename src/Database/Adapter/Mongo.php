@@ -1146,6 +1146,11 @@ class Mongo extends Adapter
 
             return $result;
         } catch (\Exception $e) {
+            // Existing documents violate the new unique index, whatever index the message names
+            if ($e->getCode() === 11000 || $e->getCode() === 11001) {
+                throw new UniqueException('Unique index violation', $e->getCode(), $e);
+            }
+
             throw $this->processException($e);
         }
     }
