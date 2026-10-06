@@ -1232,10 +1232,12 @@ class Videos extends Action
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
             $video = $this->probe($dbForProject, $video, $file, $inPath);
-            $this->notifyVideo(
+            $this->notify(
                 $queueForRealtime,
                 $project,
                 $video,
+                'videos.[videoId].update',
+                ['videoId' => $video->getId()],
                 $permissions
             );
         }
@@ -1738,31 +1740,6 @@ class Videos extends Action
         }
 
         $queueForRealtime
-            ->setPayload($payload)
-            ->trigger();
-    }
-
-    /**
-     * Publishes probed metadata (duration, dimensions, codecs) so video lists refresh.
-     *
-     * @param array<string> $permissions
-     */
-    private function notifyVideo(
-        Realtime $queueForRealtime,
-        Document $project,
-        Document $video,
-        array $permissions
-    ): void {
-        $payload = $video->getArrayCopy();
-        if (empty($payload['$permissions'])) {
-            $payload['$permissions'] = $permissions;
-        }
-
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
-            ->setEvent('videos.[videoId].update')
-            ->setParam('videoId', $video->getId())
             ->setPayload($payload)
             ->trigger();
     }
