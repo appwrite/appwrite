@@ -21,6 +21,7 @@ import {
   isValidRelativeRedirect,
   requiresConsoleEmailVerification,
 } from '@/lib/post-auth-navigation'
+import { maybeMeasureOpenAiAdsRegistrationAfterAuth } from '@/lib/openai-ads'
 import {
   applyScreenshotModeAccount,
   subscribeScreenshotMode,
@@ -304,6 +305,10 @@ export function RequireAuth({
   }, [])
 
   const account = applyScreenshotModeAccount(accountData)
+
+  useEffect(() => {
+    maybeMeasureOpenAiAdsRegistrationAfterAuth(accountData)
+  }, [accountData])
 
   useAuthErrorNavigation(error, location)
 

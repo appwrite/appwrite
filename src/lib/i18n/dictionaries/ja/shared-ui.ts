@@ -79,9 +79,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Contact sales': '営業に連絡',
   'Cookie preferences': 'Cookie の設定',
   'Cookies Policy': 'Cookie ポリシー',
-  'Crash and performance diagnostics to help us fix issues in Appwrite.':
-    'クラッシュとパフォーマンスの診断を送信し、Appwrite の不具合修正に役立てます。',
-  'Error reporting': 'エラー報告',
+  'Crash diagnostics and advertising measurement to help us improve Appwrite and measure campaigns.':
+    'クラッシュ診断と広告効果測定を行い、Appwrite の改善とキャンペーン測定に役立てます。',
+  'Diagnostics and advertising': '診断と広告',
   'We use cookies to improve Appwrite.':
     'Appwrite の改善のために Cookie を使用しています。',
   'Copied line': '行をコピーしました',

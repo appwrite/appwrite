@@ -3,7 +3,9 @@ import {
   getPlausibleInitScript,
   getPlausibleScriptSrc,
 } from '@/lib/analytics'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { deferAfterPaint } from '@/lib/defer-after-paint'
+import { loadOpenAiAdsPixel } from '@/lib/openai-ads'
 import { initSentryClient } from '@/lib/sentry/init-client'
 
 let plausibleLoaded = false
@@ -41,12 +43,15 @@ export function loadPlausibleScript() {
   flushPendingPageView()
 }
 
-/** Sentry (session cookies / diagnostics). Call only after analytics consent. */
+/** Sentry and ads pixel. Call only after analytics consent. */
 export function loadTrackingScriptsAfterConsent() {
   if (typeof window === 'undefined') return
 
   deferAfterPaint(() => {
     // Idempotent. A failed/early call must be allowed to retry.
     initSentryClient()
+    if (isCloudProfile()) {
+      loadOpenAiAdsPixel()
+    }
   })
 }

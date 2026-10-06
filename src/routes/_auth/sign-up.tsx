@@ -31,6 +31,10 @@ import {
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
 import {
+  markOpenAiAdsRegistrationIntent,
+  measureOpenAiAdsRegistrationCompleted,
+} from '@/lib/openai-ads'
+import {
   isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
@@ -98,6 +102,7 @@ function SignUpPage() {
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       setLastLoginMethod(provider)
+      markOpenAiAdsRegistrationIntent()
 
       const url = await sdk.forConsole.account.createOAuth2Session({
         provider: CONSOLE_OAUTH_PROVIDERS[provider],
@@ -182,6 +187,10 @@ function SignUpPage() {
           search: search.redirect ? { redirect: search.redirect } : undefined,
         })
         return
+      }
+
+      if (account?.$id) {
+        measureOpenAiAdsRegistrationCompleted(account.$id)
       }
 
       try {

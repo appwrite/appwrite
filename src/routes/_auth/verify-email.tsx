@@ -23,6 +23,7 @@ import {
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
 import { useRouter } from '@tanstack/react-router'
 
 const searchSchema = z.object({
@@ -118,8 +119,9 @@ function VerifyEmailPage() {
         secret: params.secret,
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       toast.success(t('Email verified successfully'))
+      measureOpenAiAdsRegistrationCompleted(variables.userId)
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
         await prefetchPostAuthDestination(queryClient, account, search.redirect)
@@ -155,6 +157,7 @@ function VerifyEmailPage() {
           const account = await refreshConsoleAccountAfterAuth(queryClient)
           if (account?.emailVerification) {
             toast.success(t('Email verified successfully'))
+            measureOpenAiAdsRegistrationCompleted(account.$id)
             await router.invalidate()
             const targetRedirect = resolvePostAuthRedirect(search.redirect)
             if (targetRedirect) {
