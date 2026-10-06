@@ -230,7 +230,17 @@ class Action extends AppwriteAction
                 continue;
             }
 
+            // HTTP attribute responses expose top-level min/max via the platform
+            // `range` filter. Raw collection schemas from getCollection() keep the
+            // same values under formatOptions only — transaction commits use that
+            // shape, so both must be checked.
             $schemaBound = $attribute->getAttribute($bound);
+            if ($schemaBound === null || $schemaBound === '') {
+                $formatOptions = $attribute->getAttribute('formatOptions', []);
+                if (\is_array($formatOptions) && \array_key_exists($bound, $formatOptions)) {
+                    $schemaBound = $formatOptions[$bound];
+                }
+            }
             break;
         }
 
