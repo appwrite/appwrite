@@ -226,7 +226,7 @@ Now, you have a solid foundation for authentication ready, and you can use this 
 
 # Build a UI and fetch user data
 
-Delete the `src/app/explore.tsx` file, then replace the contents of `src/app/_layout.tsx` with the following. This wraps the app in the `AppwriteProvider` and renders the index screen in a stack:
+Delete the `src/app/explore.tsx` file and the `src/components/app-tabs.tsx` and `src/components/app-tabs.web.tsx` files, which only the template's tab layout uses. Then, replace the contents of `src/app/_layout.tsx` with the following. This wraps the app in the `AppwriteProvider` and renders the index screen in a stack:
 
 ```tsx
 import { AppwriteProvider } from "@/components/AppwriteProvider";
@@ -250,7 +250,7 @@ export default function RootLayout() {
 }
 ```
 
-Now, go to the `src/app/index.tsx` file and replace its contents with the code from our [GitHub repository](https://github.com/atharvadeosthale/appwrite-expo-google-oauth/blob/main/app/index.tsx). Remember, this is an example, and from here on out, you can implement the `useUser()` hook with your own UI and implementation.
+Now, go to the `src/app/index.tsx` file and replace its contents with the code from our [GitHub repository](https://github.com/atharvadeosthale/appwrite-expo-google-oauth/blob/main/src/app/index.tsx). Remember, this is an example, and from here on out, you can implement the `useUser()` hook with your own UI and implementation.
 
 This should help you test your authentication flow. In this file, we have imported the `useUser()` hook and used functions like `login()` and `logout()` on buttons, and also displayed the user's email. To add additional functionality, you can create more functions under `AppwriteProvider`.
 
