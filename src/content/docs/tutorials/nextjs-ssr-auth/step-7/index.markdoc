@@ -28,11 +28,11 @@ import { OAuthProvider } from "node-appwrite";
 export async function signUpWithGithub() {
 	const { account } = await createAdminClient();
 
-  const origin = headers().get("origin");
+  const origin = (await headers()).get("origin");
 
   // A random value only this browser will hold, checked in the callback
   const state = crypto.randomBytes(32).toString("hex");
-  cookies().set("oauth-state", state, {
+  (await cookies()).set("oauth-state", state, {
     path: "/",
     httpOnly: true,
     sameSite: "lax",
@@ -96,8 +96,9 @@ export async function GET(request) {
   const state = request.nextUrl.searchParams.get("state");
 
   // Only accept a sign-in this browser started
-  const expected = cookies().get("oauth-state")?.value;
-  cookies().delete("oauth-state");
+  const cookieStore = await cookies();
+  const expected = cookieStore.get("oauth-state")?.value;
+  cookieStore.delete("oauth-state");
   if (!expected || state !== expected) {
     return NextResponse.redirect(`${request.nextUrl.origin}/signup`);
   }
@@ -108,7 +109,7 @@ export async function GET(request) {
     secret
   });
 
-  cookies().set("my-custom-session", session.secret, {
+  cookieStore.set("my-custom-session", session.secret, {
     path: "/",
     httpOnly: true,
     sameSite: "strict",
