@@ -72,13 +72,6 @@ Cloudflare's free Universal SSL only covers your apex and first-level wildcard (
 
 Dokploy stores the template's environment variables in the service's **Environment** tab. You can modify these variables and redeploy the service to apply the changes. To enable additional features, you may need to configure some environment variables manually.
 
-**Assistant**
-To enable the assistant, which allows you to generate code snippets and assist with documentation for your Appwrite project, set your OpenAI API key:
-
-```bash
-_APP_ASSISTANT_OPENAI_API_KEY=sk-1234567890
-```
-
 **SMS Notifications**
 To enable SMS-based OTP authentication, configure the following environment variables:
 

@@ -85,7 +85,7 @@ Configure your Appwrite instance's basic settings.
 - **Hostname** - The domain or IP address where your Appwrite instance will be accessible.
 - **Use HTTPS** - Turn this on when your Appwrite domain uses HTTPS, including behind a reverse proxy.
 - **Database** - Choose [PostgreSQL, MariaDB, or MongoDB](/docs/advanced/self-hosting/configuration/databases) as your database backend. PostgreSQL is selected by default.
-- **Advanced settings** - Optionally configure the [worker topology](/docs/advanced/self-hosting/configuration/topologies) under **Workers and schedulers**, HTTP and HTTPS ports, SSL certificate email, and an OpenAI API key for the [Appwrite Assistant](/docs/tooling/assistant).
+- **Advanced settings** - Optionally configure the [worker topology](/docs/advanced/self-hosting/configuration/topologies) under **Workers and schedulers**, HTTP and HTTPS ports, and SSL certificate email.
 
 ## Step 2: Secure your app {% #wizard-secure %}
 

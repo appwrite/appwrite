@@ -19,7 +19,6 @@ Developers can also utilize global shortcuts anywhere in the Appwrite Console, a
 |`T` then `L`|Set theme to light|
 |`T` then `D`|Set theme to dark|
 |`T` then `A`|Set theme to dark|
-|`A` then `I`|Open Appwrite Assistant|
 |`C` then `O`|Create organization|
 
 ## Command center
@@ -30,6 +29,7 @@ Use the command center to search for commands or the current page's content.
 |PC (Windows / Linux)|macOS|Action|
 |----|----|----|
 |`Ctrl` + `K`|`⌘` + `K`|Access Command Center|
+|`Ctrl` + `I`|`⌘` + `I`|Toggle [Appwrite Agent](/docs/products/agent)|
 
 ## Project shortcuts {% #project-shortcuts %}
 
