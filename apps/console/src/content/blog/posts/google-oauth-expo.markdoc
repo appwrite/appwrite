@@ -48,25 +48,21 @@ To support deep-linking back to our app after successful authentication, you nee
 
 ```json
 {
-	...
-	"ios": {
-    "supportsTablet": true,
-    "bundleIdentifier": "[BUNDLE_ID]"
-  },
-  "android": {
-    "adaptiveIcon": {
-      "foregroundImage": "./assets/images/adaptive-icon.png",
-      "backgroundColor": "#ffffff"
+  "expo": {
+    ...
+    "ios": {
+      ...
+      "bundleIdentifier": "[BUNDLE_ID]"
     },
-    "edgeToEdgeEnabled": true,
-    "package": "[PACKAGE_NAME]",
-    "versionCode": 1
-  },
-  ...
+    "android": {
+      ...
+      "package": "[PACKAGE_NAME]"
+    }
+  }
 }
 ```
 
-Replace the `[BUNDLE_ID]` and `[PACKAGE_ID]` to be your desired IDs. A common way to construct such an ID is `com.company.appname`.
+Replace the `[BUNDLE_ID]` and `[PACKAGE_NAME]` to be your desired IDs. A common way to construct such an ID is `com.company.appname`.
 
 In this case, we’ve used `com.example.expo-google-oauth` as our bundle ID and package name. However, this only matters in production when your apps are built; while developing, Expo uses its own identifiers to simplify things, and we will look at how to detect and handle these conditions gracefully later in this tutorial.
 
@@ -85,13 +81,13 @@ Doing this will allow your app to use Appwrite services without any problems.
 
 # Setting up Appwrite in your Expo app
 
-Now, let’s install the Appwrite React Native SDK. Run the following command in your terminal.
+Now, let’s install the Appwrite React Native SDK, along with the icon library that the example UI uses. Run the following command in your terminal.
 
 ```bash
-npm install react-native-appwrite
+npx expo install react-native-appwrite @expo/vector-icons
 ```
 
-In the project root, create a new folder called `lib`. Inside this folder, create a new file called `appwrite.ts` and have the following contents.
+In the `src` folder, create a new folder called `lib`. Inside this folder, create a new file called `appwrite.ts` and have the following contents.
 
 ```tsx
 import { Account, Client } from "react-native-appwrite";
@@ -111,7 +107,7 @@ Make sure to replace the configuration variables with your project details! This
 
 Now, you need to create a provider to help you access authentication status and methods anywhere in your app. This will ensure that every screen in your app can access the logged-in user's information.
 
-Inside the `./components` folder, create a new file called `AppwriteProvider.tsx` and have the following contents. We will look at the code in more detail below. 
+Inside the `src/components` folder, create a new file called `AppwriteProvider.tsx` and have the following contents. We will look at the code in more detail below. 
 
 ```tsx
 import * as Linking from "expo-linking";
@@ -230,21 +226,31 @@ Now, you have a solid foundation for authentication ready, and you can use this 
 
 # Build a UI and fetch user data
 
-Remove the `(tabs)` folder, and create a new file called `index.tsx` in the `app` directory. Also, go to the `_layout.tsx` file and make sure your index file is mentioned:
+Delete the `src/app/explore.tsx` file, then replace the contents of `src/app/_layout.tsx` with the following. This wraps the app in the `AppwriteProvider` and renders the index screen in a stack:
 
 ```tsx
-<AppwriteProvider>
-  <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-    </Stack>
-    <StatusBar style="auto" />
-  </ThemeProvider>
-</AppwriteProvider>
+import { AppwriteProvider } from "@/components/AppwriteProvider";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "react-native";
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <AppwriteProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AppwriteProvider>
+  );
+}
 ```
 
-Now, go to `index.tsx` file and use the content from our [GitHub repository](https://github.com/atharvadeosthale/appwrite-expo-google-oauth/blob/main/app/index.tsx). Remember, this is an example, and from here on out, you can implement the `useUser()` hook with your own UI and implementation.
+Now, go to the `src/app/index.tsx` file and replace its contents with the code from our [GitHub repository](https://github.com/atharvadeosthale/appwrite-expo-google-oauth/blob/main/app/index.tsx). Remember, this is an example, and from here on out, you can implement the `useUser()` hook with your own UI and implementation.
 
 This should help you test your authentication flow. In this file, we have imported the `useUser()` hook and used functions like `login()` and `logout()` on buttons, and also displayed the user's email. To add additional functionality, you can create more functions under `AppwriteProvider`.
 
