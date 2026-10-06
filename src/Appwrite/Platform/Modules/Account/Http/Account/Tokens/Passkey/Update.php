@@ -41,7 +41,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/account/tokens/passkey')
             ->desc('Update passkey token')
-            ->groups(['api', 'account', 'passkeys'])
+            ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('audits.event', 'passkey.token.create')
             ->label('audits.resource', 'user/{response.userId}')

@@ -31,7 +31,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/account/tokens/passkey')
             ->desc('Create passkey token')
-            ->groups(['api', 'account', 'auth', 'passkeys'])
+            ->groups(['api', 'account', 'auth'])
             ->label('auth.type', 'passkey')
             ->label('scope', 'sessions.write')
             ->label('sdk', new Method(

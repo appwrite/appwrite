@@ -22,7 +22,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testPasskeysDisabledByDefault(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
         $this->assertSame(200, $response['headers']['status-code']);
@@ -53,7 +53,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testUpdatePasskeyPolicy(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $headers = $this->getServerHeaders($project);
 
         /**
@@ -116,7 +116,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testRegisterAndSignIn(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
 
@@ -232,7 +232,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testRegistrationFailures(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
@@ -306,7 +306,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testConcurrentVerificationSucceedsOnce(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
 
@@ -325,7 +325,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testConcurrentTokenExchangeCreatesOneSession(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -349,7 +349,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testSignInFailures(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -392,7 +392,7 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame('user_passkey_invalid', $response['body']['type']);
 
         // Challenges from another project
-        $otherProject = $this->createProject();
+        $otherProject = $this->getProject(true);
         $this->configurePasskeys($otherProject);
         $challenge = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($otherProject));
         $response = $this->client->call(Client::METHOD_PUT, '/account/tokens/passkey', $this->getGuestHeaders($project), [
@@ -418,7 +418,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testDeviceBoundCounter(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session, new Authenticator(backupEligible: false));
@@ -438,7 +438,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testConcurrentSignInsCannotReuseDeviceBoundCounter(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session, new Authenticator(backupEligible: false));
@@ -469,7 +469,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testSyncedPasskeyCounter(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -483,7 +483,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testToggleOff(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -513,7 +513,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testRelyingPartyLockedByPasskeys(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
 
@@ -542,7 +542,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testPasskeyLimit(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
 
@@ -558,7 +558,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testListPasskeys(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
@@ -626,7 +626,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testGetPasskey(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [$other, $otherSession] = $this->createUserWithSession($project);
@@ -678,7 +678,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testCustomPasskeyId(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
@@ -727,7 +727,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testRestartedRegistrationRejectsOldChallenge(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $headers = $this->getSessionHeaders($project, $session);
@@ -759,7 +759,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testRestartCannotRemoveConcurrentlyVerifiedPasskey(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [, $session] = $this->createUserWithSession($project);
         $headers = $this->getSessionHeaders($project, $session);
@@ -800,7 +800,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testPasskeySatisfiesMfa(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -838,7 +838,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testPasskeyIsNeverLockedOutByMfa(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -890,7 +890,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testAdminDeletePasskey(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [$other] = $this->createUserWithSession($project);
@@ -922,7 +922,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testPasskeyOnlyAccount(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
 
         // An anonymous account has no email, phone or password
@@ -953,7 +953,7 @@ final class PasskeysCustomClientTest extends Scope
 
     public function testDeletedUserCannotSignIn(): void
     {
-        $project = $this->createProject();
+        $project = $this->getProject(true);
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         $authenticator = $this->registerPasskey($project, $session);
@@ -977,26 +977,6 @@ final class PasskeysCustomClientTest extends Scope
     /**
      * @return array<string, mixed>
      */
-    /**
-     * Cloud rolls passkeys out per organization, behind this team pref
-     */
-    private function createProject(): array
-    {
-        $project = $this->getProject(true);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $project['teamId'] . '/prefs', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'prefs' => ['flags-passkeys' => true],
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-
-        return $project;
-    }
-
     private function signIn(array $project, Authenticator $authenticator, string $origin = self::ORIGIN, ?string $rpId = null, bool $crossOrigin = false): array
     {
         $challenge = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
