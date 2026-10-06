@@ -237,8 +237,8 @@ export function dbNavLink(kind: DatabaseRouteKind) {
 
 export type DedicatedDatabaseLinkInput = {
   $id: string
-  api: string
-  engine: string
+  api?: string
+  engine?: string
 }
 
 export type TanStackNavLink = {
@@ -359,7 +359,7 @@ export function dedicatedDatabaseHomeLink(
   db: DedicatedDatabaseLinkInput,
   productRouteKind?: DatabaseRouteKind | null,
 ): TanStackNavLink | null {
-  const apiKind = dedicatedApiToRouteKind(db.api)
+  const apiKind = dedicatedApiToRouteKind(db.api ?? '')
   if (apiKind) {
     return productDatabaseDeepLink(projectId, db.$id, apiKind)
   }
