@@ -63,6 +63,21 @@ return [
                 'array' => false,
             ],
             [
+                // Structure only; nothing reads or writes it yet. Optional with a
+                // false default, unlike documentSecurity above: every collection row
+                // written before this attribute existed carries no value, and a
+                // required attribute would make the next write of such a row invalid.
+                '$id' => ID::custom('columnSecurity'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('attributes'),
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,

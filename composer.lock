@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "561ec89792d8a1ec0dcba8dbe552bc75",
+    "content-hash": "b40ae24f510297ea54fdb973772e974b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2827,16 +2827,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "7.4.0",
+            "version": "dev-column-security-structure",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1c99c2179d13f79476a51dd3b73ecc0025058d14"
+                "reference": "3f25570969d594a299353f961d41151909c10c4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1c99c2179d13f79476a51dd3b73ecc0025058d14",
-                "reference": "1c99c2179d13f79476a51dd3b73ecc0025058d14",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/3f25570969d594a299353f961d41151909c10c4d",
+                "reference": "3f25570969d594a299353f961d41151909c10c4d",
                 "shasum": ""
             },
             "require": {
@@ -2881,9 +2881,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/7.4.0"
+                "source": "https://github.com/utopia-php/database/tree/column-security-structure"
             },
-            "time": "2026-09-29T10:10:07+00:00"
+            "time": "2026-10-04T12:26:58+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -6301,9 +6301,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-column-security-structure",
+            "alias": "7.4.999",
+            "alias_normalized": "7.4.999.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
