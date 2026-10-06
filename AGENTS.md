@@ -286,6 +286,21 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
 
+## Collections
+
+Project collections are defined in [`app/config/collections/projects.php`](app/config/collections/projects.php) (merged with `common.php` into `Config::getParam('collections')['projects']`). That config is the source of truth for which collections a project owns.
+
+When a project is deleted, [`Deletes::cleanDatabaseCollections()`](src/Appwrite/Platform/Workers/Deletes.php) walks every collection in `_metadata`. On a shared-tables host, a collection **in** the config gets only the deleted tenant's rows removed; a collection **not** in the config gets `deleteCollection()`, which drops the shared table and its global (`_tenant` null) metadata for **every project on the host**.
+
+Order matters when a patch script creates a new project collection:
+
+1. **First** add the collection to `app/config/collections/projects.php`, then merge and deploy it.
+2. **Only then** run the patch script that creates the collection.
+
+On a shared-tables host, the patch script must create the collection as a **global shared collection**: call `$dbForProject->setTenant(null)` before `createCollection()` so the table and its `_metadata` row belong to no tenant and are shared by every project on the host. If it is created while a project's tenant is set, its `_metadata` row gets that project's tenant and the collection is missing for every other project on the host.
+
+Never hardcode a collection schema only inside a patch script. If the collection exists before it is in the config, the next project deletion on that host wipes it for every tenant. This happened to `analyticsProperties` on every Cloud shared-tables host within minutes of the patch running.
+
 ## Tests
 
 **E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.

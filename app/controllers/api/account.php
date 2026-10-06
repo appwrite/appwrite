@@ -319,7 +319,8 @@ Http::post('/v1/account')
     ->inject('hooks')
     ->inject('plan')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword) {
         $name ??= '';
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -376,8 +377,7 @@ Http::post('/v1/account')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $proof = new ProofsPassword();
-        $hash = $proof->hash($password);
+        $hash = $proofForPassword->hash($password);
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -431,8 +431,8 @@ Http::post('/v1/account')
                 'password' => $hash,
                 'passwordHistory' => $passwordHistory > 0 ? [$hash] : [],
                 'passwordUpdate' => DateTime::now(),
-                'hash' => $proof->getHash()->getName(),
-                'hashOptions' => $proof->getHash()->getOptions(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
@@ -1109,13 +1109,15 @@ Http::post('/v1/account/sessions/email')
             }
         }
 
-        // Re-hash if not using recommended algo
-        if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
-            $proofForPasswordUpdated = new ProofsPassword();
+        // Re-hash if not using recommended algo or its configured costs (read from the hash, not hashOptions)
+        if (
+            $user->getAttribute('hash') !== $proofForPassword->getHash()->getName()
+            || \password_needs_rehash($user->getAttribute('password'), PASSWORD_ARGON2ID, $proofForPassword->getHash()->getOptions())
+        ) {
             $user
-                ->setAttribute('password', $proofForPasswordUpdated->hash($password))
-                ->setAttribute('hash', $proofForPasswordUpdated->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPasswordUpdated->getHash()->getOptions());
+                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
             $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'password' => $user->getAttribute('password'),
                 'hash' => $user->getAttribute('hash'),
@@ -1727,12 +1729,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
+        $oauth2ID = '';
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
-
+            $oauth2ID = $oauth2->getUserID($accessToken);
         } catch (OAuth2Exception $ex) {
             $providerError = $ex->getError() ?: $ex->getMessage();
 
@@ -1743,7 +1746,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             );
         }
 
-        $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
         }
