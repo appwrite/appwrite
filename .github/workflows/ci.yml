@@ -1,422 +1,22 @@
 name: CI
 
 concurrency:
-  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.run_id }}
+  cancel-in-progress: false
 
 env:
-  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
+  COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml:docker-compose.probe.yml
   IMAGE: appwrite-dev
-  K6_VERSION: '0.53.0'
   DOCKERHUB_AUTH_AVAILABLE: ${{ secrets.DOCKERHUB_TOKEN != '' }}
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      # Every release branch, so the nightly channel always has green commits to
-      # resolve on the active line without anyone remembering to add it here.
-      - '*.x'
   workflow_dispatch:
-    inputs:
-      response_format:
-        description: 'Response format version to test (e.g., 1.5.0, 1.4.0)'
-        required: false
-        type: string
-        default: ''
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  dependencies:
-    name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
-    permissions:
-      actions: read
-      security-events: write
-      contents: read
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc" # v2.6.0
-    with:
-      runs-on: ubuntu-24.04
-
-  security:
-    name: Checks / Image
-    if: github.event_name == 'pull_request'
-    runs-on: >-
-      ${{ (github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-security-{1}/runner=standard', github.run_id, strategy.job-index)
-      || 'ubuntu-24.04' }}
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Check out code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-
-      - name: Build the Docker image
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        with:
-          context: .
-          push: false
-          load: true
-          tags: pr_image:${{ github.sha }}
-          target: production
-
-      - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: 'pr_image:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy vulnerability scanner on source code
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          skip-setup-trivy: true
-
-      - name: Upload image scan results
-        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
-        if: always() && hashFiles('trivy-image-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-image-results.sarif'
-          category: 'trivy-image'
-
-      - name: Upload source code scan results
-        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
-        if: always() && hashFiles('trivy-fs-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-fs-results.sarif'
-          category: 'trivy-source'
-
-  checks:
-    name: Checks
-    runs-on: >-
-      ${{ (github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-checks-{1}/runner=standard', github.run_id, strategy.job-index)
-      || 'ubuntu-24.04' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.5'
-          extensions: swoole
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: '24'
-
-      - name: Validate composer.json
-        run: composer validate
-
-      - name: Install dependencies
-        id: install
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - parallel:
-          - name: Install Node dependencies
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: npm ci
-
-          - name: Cache PHPStan result cache
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-            with:
-              path: .phpstan-cache
-              key: phpstan-${{ github.sha }}
-              restore-keys: |
-                phpstan-
-
-      - parallel:
-          - name: Audit dependencies
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            env:
-              COMPOSER_NO_AUDIT: 0
-            run: composer audit
-
-          - name: Run Linter
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: composer lint
-
-          - name: Validate packages
-            run: bin/monorepo validate
-
-          - name: Check Docker Compose formatting
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: npm run lint:compose
-
-          - name: Run Rector
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: composer refactor:check
-
-          - name: Run PHPStan
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: composer analyze -- --no-progress
-
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
-
-  locale:
-    name: Checks / Locale
-    runs-on: >-
-      ${{ (github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-locale-{1}/runner=small', github.run_id, strategy.job-index)
-      || 'ubuntu-24.04' }}
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: '24'
-
-      - name: Run Locale check
-        run: node .github/workflows/static-analysis/locale/index.js
-
-  matrix:
-    name: Tests / Matrix
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      databases: ${{ steps.generate.outputs.databases }}
-      modes: ${{ steps.generate.outputs.modes }}
-      services: ${{ steps.generate.outputs.services }}
-    steps:
-      - name: Generate matrix
-        id: generate
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const services = [
-              { name: 'Account',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Avatars',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Console',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Databases',         runner: 'e2e-large', functional: false, processes: 3, documentsdb: true, embedding: true },
-              { name: 'TablesDB',          runner: 'e2e-large', functional: false, processes: 3 },
-              { name: 'Functions',         runner: 'e2e',       functional: false, processes: null },
-              { name: 'FunctionsSchedule', runner: 'e2e',       functional: true,  processes: null },
-              { name: 'GraphQL',           runner: 'e2e',       functional: false, processes: null },
-              { name: 'Health',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Advisor',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Locale',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Projects',          runner: 'e2e',       functional: true,  processes: null, documentsdb: true },
-              { name: 'Realtime',          runner: 'e2e',       functional: false, processes: null, documentsdb: true },
-              { name: 'Sites',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Proxy',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Storage',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Tokens',            runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Teams',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Usage',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Users',             runner: 'e2e',       functional: true,  processes: null },
-              { name: 'ProjectWebhooks',   runner: 'e2e',       functional: false, processes: null },
-              { name: 'Webhooks',          runner: 'e2e',       functional: true,  processes: null },
-              { name: 'VCSGitHub',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'VCSGitea',          runner: 'e2e',       functional: false, processes: null },
-              { name: 'Messaging',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Notifications',     runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Migrations',        runner: 'e2e',       functional: true,  processes: 1, documentsdb: true },
-              { name: 'Project',           runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Organization',      runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Presences',         runner: 'e2e',       functional: true,  processes: null },
-              { name: 'Mqtt',              runner: 'e2e',       functional: false, processes: 1 },
-            ];
-            core.setOutput('services', JSON.stringify(services));
-
-            const pr = context.payload.pull_request;
-
-            // Every library whose queries run on the matrix databases; usage writes to ClickHouse instead.
-            const databaseLibraries = ['abuse', 'audit', 'database', 'migration', 'mongo', 'query'];
-
-            const databasePackagesChanged = async () => {
-              const getContent = (ref) => github.rest.repos.getContent({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                path: 'composer.lock',
-                ref,
-              });
-
-              // A branch constraint locks the branch name as the version on every update,
-              // so only the source commit tells two builds of the same branch apart.
-              const getReferences = (lock) => new Map((lock.packages ?? [])
-                .filter((entry) => databaseLibraries.includes(entry.name.replace('utopia-php/', '')))
-                .map((entry) => [entry.name, entry.source?.reference ?? entry.version]));
-
-              const [{ data: base }, { data: head }] = await Promise.all([
-                getContent(pr.base.sha),
-                getContent(pr.head.sha),
-              ]);
-
-              const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-              const baseReferences = getReferences(decode(base.content));
-              const headReferences = getReferences(decode(head.content));
-
-              if (databaseLibraries.some((name) => baseReferences.get(`utopia-php/${name}`) !== headReferences.get(`utopia-php/${name}`))) {
-                return true;
-              }
-
-              // An absorbed library leaves the lock and moves with its packages/ directory.
-              const files = await github.paginate(github.rest.pulls.listFiles, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                per_page: 100,
-              });
-
-              return files.some(({ filename }) => databaseLibraries.some((name) => filename.startsWith(`packages/${name}/`)));
-            };
-
-            const fullMatrix = context.eventName === 'workflow_dispatch'
-              || (pr && await databasePackagesChanged());
-
-            if (fullMatrix) {
-              core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
-              core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
-              return;
-            }
-
-            core.setOutput('databases', JSON.stringify(['PostgreSQL']));
-            core.setOutput('modes', JSON.stringify(['dedicated']));
-
-  packages:
-    name: Packages / Changed
-    runs-on: >-
-      ${{ (github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-packages-{1}/runner=small', github.run_id, strategy.job-index)
-      || 'ubuntu-24.04' }}
-    outputs:
-      matrix: ${{ steps.changed.outputs.matrix }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.5'
-          tools: composer:v2
-          coverage: none
-
-      - name: Compute changed packages
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            CHANGED=$(ls packages)
-          else
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
-              BASE=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
-            elif git rev-parse -q --verify "${{ github.event.before }}" > /dev/null; then
-              BASE="${{ github.event.before }}"
-            else
-              BASE=$(git rev-parse HEAD~1)
-            fi
-            CHANGED=$(git diff --name-only "$BASE" HEAD -- packages/ | cut -d/ -f2)
-            # tooling changes affect every package
-            toolchain() {
-              git show "$1:composer.lock" | jq --compact-output '[(.packages + ."packages-dev")[]
-                | select(.name | IN("laravel/pint", "phpstan/phpstan", "rector/rector", "phpunit/phpunit"))
-                | {name, version}] | sort_by(.name)'
-            }
-            if git diff --name-only "$BASE" HEAD | grep -qE '^(bin/monorepo|\.github/workflows/ci\.yml|pint\.json)$' \
-              || [ "$(toolchain "$BASE")" != "$(toolchain HEAD)" ]; then
-              CHANGED=$(ls packages)
-            fi
-          fi
-          CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
-
-          # docs-only change: no packages to test
-          if [ -z "$CHANGED" ]; then
-            echo "matrix=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Dependents of changed packages run linked (siblings resolved from
-          # the local checkout); changed packages run registry-resolved —
-          # unless a sibling they depend on also changed, which makes the
-          # registry combination unbuildable until that sibling releases.
-          LINKED=$(bin/monorepo dependents $CHANGED)
-          MATRIX=$(
-            {
-              for package in $LINKED; do
-                printf '{"package":"%s","linked":true}\n' "$package"
-              done
-              for package in $CHANGED; do
-                case " $(echo $LINKED) " in
-                  *" $package "*) ;;
-                  *) printf '{"package":"%s","linked":false}\n' "$package" ;;
-                esac
-              done
-            } | jq --compact-output --slurp 'unique'
-          )
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-
-  package:
-    name: Packages / ${{ matrix.package }}
-    needs: packages
-    if: needs.packages.outputs.matrix != '[]'
-    runs-on: >-
-      ${{ (github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository)
-      && format('gcrunner={0}-package-{1}/runner=small', github.run_id, strategy.job-index)
-      || 'ubuntu-24.04' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.packages.outputs.matrix) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Read package extensions
-        id: meta
-        run: |
-          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-")] | unique | join(", ")' packages/${{ matrix.package }}/composer.json)
-          echo "extensions=$EXTENSIONS" >> "$GITHUB_OUTPUT"
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
-        with:
-          php-version: '8.5'
-          extensions: ${{ steps.meta.outputs.extensions }}
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Check package
-        run: bin/monorepo check ${{ matrix.package }}
-
-      - name: Test package${{ matrix.linked && ' (linked)' || '' }}
-        run: bin/monorepo test ${{ matrix.package }} ${{ matrix.linked && '--linked' || '' }}
-
   build:
     name: Build
     runs-on: gcrunner=${{ github.run_id }}/runner=build
@@ -456,205 +56,47 @@ jobs:
             TESTING=true
             VERSION=dev
 
-  unit:
-    name: Tests / Unit
+  probe:
+    name: Probe / ${{ matrix.database }} (${{ matrix.mode }}) / Migrations / ${{ matrix.repeat }}
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 15
+    timeout-minutes: 40
     needs: build
-    permissions:
-      contents: read
-      packages: read
-    env:
-      COMPOSE_PROFILES: ''
-    steps:
-      - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - parallel:
-          - name: Pull Docker Image
-            run: |
-              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
-              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
-
-          - name: Pull Docker Compose images
-            timeout-minutes: 5
-            run: |
-              # Docker Hub registry timeouts are a common transient CI failure
-              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-              # keep `up` single-shot so genuine container health failures still surface.
-              for attempt in 1 2 3; do
-                if docker compose pull --quiet --ignore-buildable; then
-                  break
-                elif [ "$attempt" -eq 3 ]; then
-                  echo "::error::docker compose pull failed after 3 attempts; aborting"
-                  exit 1
-                fi
-                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-                sleep 15
-              done
-
-      - name: Load and Start Appwrite
-        timeout-minutes: 5
-        run: docker compose up -d --quiet-pull --wait
-
-      - name: Environment Variables
-        run: docker compose exec -T appwrite vars
-
-      - name: Run Unit Tests
-        timeout-minutes: 15
-        run: >-
-          docker compose exec
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/unit
-
-      - name: Run Package Tests
-        timeout-minutes: 15
-        run: docker compose exec appwrite test --testsuite packages
-
-  e2e_general:
-    name: Tests / E2E / General
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 15
-    needs: build
-    permissions:
-      contents: read
-      packages: read
-    env:
-      COMPOSE_PROFILES: ''
-    steps:
-      - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - parallel:
-          - name: Pull Docker Image
-            run: |
-              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
-              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
-
-          - name: Pull Docker Compose images
-            timeout-minutes: 5
-            run: |
-              # Docker Hub registry timeouts are a common transient CI failure
-              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-              # keep `up` single-shot so genuine container health failures still surface.
-              for attempt in 1 2 3; do
-                if docker compose pull --quiet --ignore-buildable; then
-                  break
-                elif [ "$attempt" -eq 3 ]; then
-                  echo "::error::docker compose pull failed after 3 attempts; aborting"
-                  exit 1
-                fi
-                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-                sleep 15
-              done
-
-      - name: Load and Start Appwrite
-        timeout-minutes: 5
-        run: docker compose up -d --quiet-pull --wait
-
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker logs exc1 | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
-      - name: Run General Tests
-        timeout-minutes: 15
-        run: >-
-          docker compose exec -T
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/General
-
-      - name: Check for native crashes
-        if: ${{ !cancelled() }}
-        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
-
-      - name: Failure Logs
-        if: failure()
-        run: |
-          echo "=== Appwrite Logs ==="
-          docker compose logs --timestamps
-
-  e2e_service:
-    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
-    runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
-    timeout-minutes: 35
-    needs: [build, matrix]
     permissions:
       contents: read
       packages: read
     strategy:
       fail-fast: false
       matrix:
-        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: ${{ fromJSON(needs.matrix.outputs.services) }}
+        include:
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 1 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 2 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 3 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 4 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 5 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 6 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 7 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 8 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 9 }
+          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 10 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 1 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 2 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 3 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 4 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 5 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 6 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 7 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 8 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 9 }
+          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 10 }
+    env:
+      COMPOSE_PROFILES: ${{ matrix.profiles }}
+      _APP_OPTIONS_ROUTER_PROTECTION: enabled
+      _APP_DB_ADAPTER: ${{ matrix.adapter }}
+      _APP_DB_HOST: ${{ matrix.adapter }}
+      _APP_DB_PORT: ${{ matrix.port }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set environment
-        run: |
-          echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
-
-          # Exercise empty functions-domain entries through the existing Proxy API tests.
-          if [ "${{ matrix.service.name }}" = "Proxy" ]; then
-            echo "_APP_DOMAIN_FUNCTIONS=functions.localhost," >> $GITHUB_ENV
-          fi
-
-          if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            COMPOSE_PROFILES=mariadb
-            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
-          elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            COMPOSE_PROFILES=mongodb
-            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
-          elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            COMPOSE_PROFILES=postgresql
-            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
-          fi
-
-          # DocumentsDB is MongoDB-only, so Mongo runs alongside another primary just for
-          # the suites that use it, and in shared tables mode where boot connects every pool.
-          if [ "${{ matrix.database }}" != "MongoDB" ] \
-            && { [ "${{ matrix.service.documentsdb }}" = "true" ] || [ "${{ matrix.mode }}" = "shared" ]; }; then
-            COMPOSE_PROFILES="${COMPOSE_PROFILES},mongodb"
-          fi
-
-          # Gitea runs alongside Appwrite only where VCS tests need it.
-          if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
-            COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
-          fi
-
-          # The embedding container is resource-heavy and off by default, so start it and
-          # enable the API only for the suites that exercise the embeddings routes.
-          if [ "${{ matrix.service.embedding }}" = "true" ]; then
-            COMPOSE_PROFILES="${COMPOSE_PROFILES},embedding"
-            echo "_APP_EMBEDDING=enabled" >> $GITHUB_ENV
-          fi
-
-          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
@@ -672,9 +114,6 @@ jobs:
           - name: Pull Docker Compose images
             timeout-minutes: 5
             run: |
-              # Docker Hub registry timeouts are a common transient CI failure
-              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-              # keep `up` single-shot so genuine container health failures still surface.
               for attempt in 1 2 3; do
                 if docker compose pull --quiet --ignore-buildable; then
                   break
@@ -686,17 +125,12 @@ jobs:
                 sleep 15
               done
 
-      - name: Provision Gitea
-        if: matrix.service.name == 'VCSGitea'
-        timeout-minutes: 5
+      - name: Enable worker core dumps
         run: |
-          docker compose up -d --wait gitea
-          docker compose exec -T gitea /setup.sh
-          CREDS=$(docker compose exec -T gitea cat /data/gitea/oauth.json)
-          CLIENT_SECRET=$(echo "$CREDS" | jq -r .client_secret)
-          echo "::add-mask::$CLIENT_SECRET"
-          echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
-          echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+          sudo mkdir -p /tmp/appwrite-cores
+          sudo chmod 1777 /tmp/appwrite-cores
+          echo '/tmp/appwrite-cores/core.%e.%p.%t' | sudo tee /proc/sys/kernel/core_pattern
+          nohup bash -c 'while true; do ls -1tr /tmp/appwrite-cores/core.* 2>/dev/null | tail -n +4 | xargs -r sudo rm -f; sleep 5; done' > /dev/null 2>&1 &
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -709,6 +143,9 @@ jobs:
           _APP_VECTORSDB: enabled
         run: docker compose up -d --quiet-pull --wait
 
+      - name: Worker opcache settings
+        run: docker compose exec -T appwrite-worker php -i | grep -E '^opcache\.(jit|jit_buffer_size|enable_cli)' || true
+
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
@@ -716,417 +153,106 @@ jobs:
             echo "Waiting for Executor to come online"
             sleep 1
           done
-
-      - name: Test first organization creation
-        if: matrix.service.name == 'Teams'
-        timeout-minutes: 2
-        run: |
-          # Health/version can respond before the platform schema is initialized.
-          while [ "$(docker compose exec -T appwrite curl -s -o /dev/null -w '%{http_code}' -H 'X-Appwrite-Project: console' http://appwrite/v1/account)" != "401" ]; do
-            sleep 1
-          done
-          docker compose exec -T -e _APP_E2E_FRESH_INSTANCE=enabled \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
 
       - name: Run tests
         timeout-minutes: 25
         run: |
-          SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
-
-          FUNCTIONAL_FLAG=""
-          if [ "${{ matrix.service.functional }}" = "true" ]; then
-            FUNCTIONAL_FLAG="--functional"
-          fi
-
-          PARATEST_PROCESSES="${{ matrix.service.processes }}"
-          if [ -z "$PARATEST_PROCESSES" ]; then
-            PARATEST_PROCESSES="$(nproc)"
-          fi
-
           docker compose exec -T \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes 1 --functional /usr/src/code/tests/e2e/Services/Migrations --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/Migrations/junit.xml
 
-      - name: Check for native crashes
+      - name: Crash summary
         if: ${{ !cancelled() }}
-        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
-
-      - name: Failure Logs
-        if: failure()
         run: |
-          echo "=== Appwrite Logs ==="
-          docker compose logs --timestamps
+          docker compose logs -t --no-color appwrite-worker 2>&1 | sed -E 's/^[^|]*\| //' > crash-scan.log
+          abnormal=$(grep -c 'exited abnormally' crash-scan.log || true)
+          heap=$(grep -c 'zend_mm_heap' crash-scan.log || true)
+          echo "Crash summary: abnormal=${abnormal} heap=${heap}" | tee -a "$GITHUB_STEP_SUMMARY"
+          grep -E 'zend_mm_heap|exited abnormally|Segmentation fault' crash-scan.log | cut -c1-200 || true
 
-  e2e_grouped:
-    name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 35
-    needs: [build, matrix]
-    permissions:
-      contents: read
-      packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        config:
-          - label: Abuse
-            group: abuseEnabled
-            path: /usr/src/code/tests/e2e
-            options_abuse: enabled
-            storage_antivirus: disabled
-            compose_profiles: ''
-            wait: ''
-          - label: Screenshots
-            group: screenshots
-            path: /usr/src/code/tests/e2e/Services/Sites
-            options_abuse: disabled
-            storage_antivirus: disabled
-            compose_profiles: ''
-            wait: executor
-          - label: Antivirus
-            group: antivirus
-            path: /usr/src/code/tests/e2e/Services/Storage
-            options_abuse: disabled
-            storage_antivirus: enabled
-            compose_profiles: antivirus
-            wait: clamav
-          - label: S3 Storage
-            group: s3
-            path: /usr/src/code/tests/e2e/Services
-            options_abuse: disabled
-            storage_antivirus: disabled
-            compose_profiles: s3
-            wait: executor
-            storage_device: s3
-    env:
-      # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
-      COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 1
-
-      - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - parallel:
-          - name: Pull Docker Image
-            run: |
-              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
-              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
-
-          - name: Pull Docker Compose images
-            timeout-minutes: 5
-            run: |
-              # Docker Hub registry timeouts are a common transient CI failure
-              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-              # keep `up` single-shot so genuine container health failures still surface.
-              for attempt in 1 2 3; do
-                if docker compose pull --quiet --ignore-buildable; then
-                  break
-                elif [ "$attempt" -eq 3 ]; then
-                  echo "::error::docker compose pull failed after 3 attempts; aborting"
-                  exit 1
-                fi
-                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-                sleep 15
-              done
-
-      - name: Load and Start Appwrite
-        timeout-minutes: ${{ matrix.config.wait == 'clamav' && 15 || 5 }}
-        env:
-          _APP_OPTIONS_ABUSE: ${{ matrix.config.options_abuse }}
-          _APP_STORAGE_ANTIVIRUS: ${{ matrix.config.storage_antivirus }}
-          # The s3 config points every storage device and the executor at the MinIO profile service.
-          _APP_STORAGE_DEVICE: ${{ matrix.config.storage_device || 'local' }}
-          _APP_STORAGE_S3_ACCESS_KEY: minio
-          _APP_STORAGE_S3_SECRET: minio12345
-          _APP_STORAGE_S3_BUCKET: appwrite
-          _APP_STORAGE_S3_REGION: us-east-1
-          _APP_STORAGE_S3_ENDPOINT: http://minio:9000
-          _APP_EXECUTOR_CONNECTION_STORAGE: ${{ matrix.config.storage_device == 's3' && 's3://minio:minio12345@localhost?region=us-east-1&url=http%3A%2F%2Fminio%3A9000' || 'local://localhost' }}
-          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-          _APP_DOCUMENTSDB: enabled
-          _APP_VECTORSDB: enabled
-        run: |
-          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
-            docker compose up -d --quiet-pull --wait --wait-timeout 780
-          else
-            docker compose up -d --quiet-pull --wait
-          fi
-
-      - name: Wait for Open Runtimes
-        if: matrix.config.wait == 'executor'
-        timeout-minutes: 3
-        run: |
-          while ! docker logs exc1 | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
-      - name: Wait for ClamAV
-        if: matrix.config.wait == 'clamav'
-        timeout-minutes: 10
-        run: |
-          for attempt in $(seq 1 120); do
-            if docker compose exec -T appwrite php -r '
-              require "/usr/src/code/vendor/autoload.php";
-              $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
-              $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
-              $av = new Appwrite\ClamAV\Network($host, $port);
-              // ping() answers PONG from a daemon that cannot classify anything
-              // yet, so scan something known-clean and require a clean verdict.
-              // fileScanInStream() is true only for an OK reply, so a daemon
-              // that refuses or errors keeps this waiting instead of releasing
-              // the suite against a scanner that rejects every upload.
-              $probe = tempnam(sys_get_temp_dir(), "clamav-ready");
-              file_put_contents($probe, str_repeat("appwrite readiness probe\n", 64));
-              try {
-                  exit($av->fileScanInStream($probe) ? 0 : 1);
-              } catch (Throwable $e) {
-                  // Not up yet, or up and unable to answer. Either way, wait.
-                  exit(1);
-              } finally {
-                  @unlink($probe);
-              }
-            '; then
-              echo "ClamAV is ready"
-              exit 0
-            fi
-            echo "Waiting for ClamAV (attempt ${attempt}/120)"
-            sleep 5
-          done
-          echo "::error::ClamAV did not become ready"
-          docker compose logs --timestamps clamav || true
-          exit 1
-
-      - name: Run tests
-        timeout-minutes: 15
-        run: >-
-          docker compose exec -T
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
-
-      - name: Check for native crashes
+      - name: JIT traces before each crash
         if: ${{ !cancelled() }}
-        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
-
-      - name: Failure Logs
-        if: failure()
         run: |
-          echo "=== Appwrite Logs ==="
-          docker compose logs --timestamps
-          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
-            echo "=== ClamAV Logs ==="
-            docker compose logs --timestamps clamav || true
-          fi
-          if [ "${{ matrix.config.storage_device }}" = "s3" ]; then
-            echo "=== MinIO Logs ==="
-            docker compose logs --timestamps minio || true
-          fi
-
-  benchmark:
-    name: Benchmark
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 20
-    needs: build
-    permissions:
-      actions: read
-      contents: read
-      issues: write
-      pull-requests: write
-      packages: read
-    env:
-      # The before stack is a worktree at an arbitrary older SHA, so its compose file
-      # may not gate databases at all. Start the superset on both sides, otherwise the
-      # two runs measure different amounts of idle container load rather than the diff.
-      COMPOSE_PROFILES: mariadb,mongodb
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 1
-
-      - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - parallel:
-          - name: Pull Appwrite image
-            run: |
-              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
-              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
-              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}:after"
-
-          - name: Setup k6
-            uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
-            with:
-              k6-version: ${{ env.K6_VERSION }}
-
-      - name: Prepare benchmark before
-        id: benchmark_before_prepare
-        continue-on-error: true
-        env:
-          BENCHMARK_BEFORE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
-          git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
-          docker build \
-            --cache-from ${{ env.IMAGE }}:after \
-            --target development \
-            --build-arg DEBUG=false \
-            --build-arg TESTING=true \
-            --build-arg VERSION=dev \
-            --tag ${{ env.IMAGE }}:before \
-            /tmp/appwrite-benchmark-before
-
-      - name: Start before Appwrite
-        id: benchmark_before_start
-        if: steps.benchmark_before_prepare.outcome == 'success'
-        continue-on-error: true
-        working-directory: /tmp/appwrite-benchmark-before
-        env:
-          _APP_DOMAIN: localhost
-          _APP_CONSOLE_DOMAIN: localhost
-          _APP_DOMAIN_FUNCTIONS: functions.localhost
-          _APP_OPTIONS_ABUSE: disabled
-        run: |
-          docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
-          docker compose up -d --wait --no-build
-          for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost:9520/v1/health/version; then
-              break
-            fi
-            if [ "$attempt" -eq 10 ]; then
-              exit 1
-            fi
-            sleep 1
+          docker compose logs -t --no-color appwrite-worker 2>&1 | sed -E 's/^[^|]*\| //' > worker.log
+          grep -n -E 'zend_mm_heap|exited abnormally|Segmentation fault' worker.log | head -5 | while IFS=: read -r line rest; do
+            echo "::group::Crash at worker.log:${line}: ${rest}"
+            echo '--- last 200 TRACE lines before the crash ---'
+            head -n "$line" worker.log | grep -E 'TRACE' | tail -n 200
+            echo '--- last 40 other lines before the crash ---'
+            head -n "$line" worker.log | grep -v -E 'TRACE' | grep -v -E '^\S+\s*$' | tail -n 40
+            echo '::endgroup::'
           done
+          echo "TRACE lines in worker log: $(grep -c 'TRACE' worker.log || true)"
 
-      - name: Prepare benchmark files
-        run: rm -f benchmark-before-summary.json benchmark-after-summary.json benchmark-before-samples.json benchmark-after-samples.json
-
-      - name: Benchmark before
-        if: steps.benchmark_before_start.outcome == 'success'
-        continue-on-error: true
-        uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
-        env:
-          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
-          APPWRITE_BENCHMARK_DURATION: '1m'
-          APPWRITE_BENCHMARK_VUS: '20'
-          APPWRITE_WORKER_TIMEOUT_MS: '120000'
-          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
-        with:
-          path: tests/benchmarks/http.js
-          flags: --quiet --out json=benchmark-before-samples.json
-          cloud-comment-on-pr: false
-          debug: true
-
-      - name: Stop before Appwrite
-        if: always()
+      - name: Compiled trace inventory
+        if: ${{ !cancelled() }}
         run: |
-          if [ -d /tmp/appwrite-benchmark-before ]; then
-            cd /tmp/appwrite-benchmark-before
-            docker compose down -v || true
-          fi
+          mkdir -p traces
+          docker compose logs -t --no-color appwrite-worker 2>&1 | sed -E 's/^[^|]*\| //' > traces/worker-full.log
+          awk '
+            / ---- TRACE [0-9]+ start / { split($0, parts, " ---- TRACE "); split(parts[2], rest, " "); start[rest[1]] = $0; next }
+            / ---- TRACE [0-9]+ compiled/ { split($0, parts, " ---- TRACE "); split(parts[2], rest, " "); if (rest[1] in start) { print start[rest[1]]; delete start[rest[1]] } next }
+            /zend_mm_heap|exited abnormally/ { print "CRASH " $0 }
+          ' traces/worker-full.log > traces/compiled.txt
+          grep -v -E 'TRACE|^\s*$' traces/worker-full.log > traces/worker-no-trace.log || true
+          grep -c ' start ' traces/compiled.txt || true
+          rm traces/worker-full.log
 
-      - name: Wait for benchmark ports
-        if: always()
-        run: |
-          for port in 9520 9521 9522 9503; do
-            for attempt in $(seq 1 30); do
-              if ! ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
-                break
-              fi
-              sleep 1
-            done
-
-            if ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
-              echo "Port ${port} is still in use after stopping the before stack"
-              ss -ltn
-              exit 1
-            fi
-          done
-
-      - name: Start after Appwrite
-        env:
-          _APP_DOMAIN: localhost
-          _APP_CONSOLE_DOMAIN: localhost
-          _APP_DOMAIN_FUNCTIONS: functions.localhost
-          _APP_OPTIONS_ABUSE: disabled
-        run: |
-          docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
-          docker compose up -d --wait --no-build
-          for attempt in $(seq 1 10); do
-            if curl -fsS http://localhost:9520/v1/health/version; then
-              break
-            fi
-            if [ "$attempt" -eq 10 ]; then
-              exit 1
-            fi
-            sleep 1
-          done
-
-      - name: Benchmark after
-        id: benchmark_after
-        continue-on-error: true
-        uses: grafana/run-k6-action@de51a7390bdf0ac85a3bef493691bd71d4c7c158 # v1.4.0
-        env:
-          APPWRITE_ENDPOINT: 'http://localhost:9520/v1'
-          APPWRITE_BENCHMARK_DURATION: '1m'
-          APPWRITE_BENCHMARK_VUS: '20'
-          APPWRITE_WORKER_TIMEOUT_MS: '120000'
-          APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
-          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'
-        with:
-          path: tests/benchmarks/http.js
-          flags: --quiet --out json=benchmark-after-samples.json
-          cloud-comment-on-pr: false
-          debug: true
-
-      - name: Stop after Appwrite
-        if: always()
-        run: docker compose down -v || true
-
-      - name: Comment on PR
-        if: always()
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          BENCHMARK_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.before }}
-          BENCHMARK_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.sha }}
-        with:
-          script: |
-            const comment = require('./.github/workflows/benchmark-comment.js');
-            await comment({ github, context, core });
-
-      - name: Save results
+      - name: Upload trace inventory
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ !cancelled() }}
         with:
-          name: benchmark-results
-          path: |
-            benchmark-comment.txt
-            benchmark-before-summary.json
-            benchmark-after-summary.json
-            benchmark-before-samples.json
-            benchmark-after-samples.json
-          retention-days: 7
+          name: traces-${{ matrix.database }}-${{ matrix.mode }}-${{ matrix.repeat }}
+          path: traces/
+          retention-days: 3
 
-      - name: Fail benchmark
-        if: always() && steps.benchmark_after.outcome != 'success'
-        run: exit 1
+      - name: Core dump backtraces
+        if: ${{ !cancelled() }}
+        run: |
+          ls -la /tmp/appwrite-cores || true
+          if ! ls /tmp/appwrite-cores/core.* > /dev/null 2>&1; then
+            echo 'No core dumps'
+            exit 0
+          fi
+          sudo chmod a+r /tmp/appwrite-cores/core.*
+          docker run --rm --entrypoint sh -v /tmp/appwrite-cores:/tmp/appwrite-cores:ro -v "$PWD/.github/probe:/probe:ro" "${IMAGE}" -c '
+            apk add --no-cache gdb build-base > /dev/null 2>&1 || { echo "gdb could not be installed"; exit 0; }
+            gcc -g3 -O0 -fno-eliminate-unused-debug-types $(php-config --includes) -c /probe/types.c -o /tmp/types.o
+            for core in /tmp/appwrite-cores/core.*; do
+              echo "::group::${core}"
+              gdb -batch -nx \
+                -ex "add-symbol-file /tmp/types.o" \
+                -x /probe/phpbt.gdb \
+                -ex "bt 25" \
+                -ex "info registers rip r14 r15" \
+                -ex "info symbol \$pc" \
+                -ex "x/12i \$pc" \
+                -ex phpbtregs \
+                -ex phpbt \
+                /usr/local/bin/php "$core" 2>&1 | grep -v -E "^\[New LWP|^warning:|^Reading symbols|add symbol table|^\s+\.text|^Downloading" | sed -E "s|/usr/src/code/vendor/utopia-php/||; s|/usr/src/code/||" | head -n 160
+              echo "::endgroup::"
+            done
+          ' || true
+          mkdir -p cores
+          for core in /tmp/appwrite-cores/core.*; do
+            gzip -1 -c "$core" > "cores/$(basename "$core").gz"
+          done
+          ls -la cores
+
+      - name: Upload core dumps
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: core-${{ matrix.database }}-${{ matrix.mode }}-${{ matrix.repeat }}
+          path: cores/
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Check for native crashes
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-native-crashes.sh "${IMAGE}"
+
+      - name: Worker log tail
+        if: failure()
+        run: docker compose logs --timestamps --no-color --tail 3000 appwrite-worker | grep -v -E 'TRACE'

@@ -1,0 +1,7 @@
+services:
+  appwrite-worker:
+    ulimits:
+      core: -1
+    volumes:
+      - ./docker/probe-worker.ini:/usr/local/etc/php/conf.d/zzzz-probe-worker.ini:ro
+      - /tmp/appwrite-cores:/tmp/appwrite-cores

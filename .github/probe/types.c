@@ -1,0 +1,11 @@
+#include "php.h"
+#include "zend_globals.h"
+#include "zend_compile.h"
+zend_executor_globals *probe_executor_globals;
+zend_execute_data *probe_execute_data;
+zend_op_array *probe_op_array;
+zend_function *probe_function;
+zend_class_entry *probe_class_entry;
+zend_string *probe_string;
+zend_op *probe_op;
+zend_mm_heap *probe_heap;
