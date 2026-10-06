@@ -45,6 +45,55 @@ trait JoinProjection
         $this->assertArrayNotHasKey('amount', $carol);
     }
 
+    public function testSelectJoinWildcardReturnsJoinedRowAsDirectRead(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+        $data = $this->setupAnalyticsFixture();
+        $joinedKeys = ['ord.$id', 'ord.$sequence', 'ord.$createdAt', 'ord.$updatedAt', 'ord.$permissions', 'ord.customerId', 'ord.amount', 'ord.status'];
+
+        $direct = $this->queryRecords($data['databaseId'], $data['ordersId'], [Query::limit(100)->toString()]);
+        $this->assertSame(200, $direct['headers']['status-code']);
+        $orders = [];
+        foreach ($direct['body'][$this->getRecordResource()] as $order) {
+            $orders[$order['$id']] = $order;
+        }
+
+        $result = $this->queryRecords($data['databaseId'], $data['customersId'], [
+            Query::leftJoin($data['ordersId'], '$id', 'customerId', '=', 'ord')->toString(),
+            Query::select(['name', 'ord.*'])->toString(),
+        ]);
+
+        $this->assertSame(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertCount(4, $rows);
+
+        $matched = 0;
+        foreach ($rows as $row) {
+            $returnedJoinedKeys = \array_values(\array_filter(\array_keys($row), static fn (string $key): bool => \str_starts_with($key, 'ord.')));
+            $this->assertSame($this->sortedStrings($joinedKeys), $this->sortedStrings($returnedJoinedKeys), 'alias.* returns the joined row as a direct read does, without its tenant');
+            $this->assertArrayNotHasKey('amount', $row);
+
+            if ($row['name'] === 'Carol') {
+                foreach ($joinedKeys as $key) {
+                    $this->assertNull($row[$key], "An unmatched left-joined {$key} must be null");
+                }
+                continue;
+            }
+
+            $matched++;
+            $order = $orders[$row['ord.$id']];
+            $this->assertSame($order['$permissions'], $row['ord.$permissions']);
+            $this->assertSame($order['$createdAt'], $row['ord.$createdAt']);
+            $this->assertSame($order['$updatedAt'], $row['ord.$updatedAt']);
+            $this->assertSame((string) $order['$sequence'], (string) $row['ord.$sequence']);
+            $this->assertSame($order['amount'], $row['ord.amount']);
+            $this->assertSame($order['customerId'], $row['ord.customerId']);
+        }
+        $this->assertSame(3, $matched);
+    }
+
     public function testRightJoinUnmatchedOrderHasNullCustomer(): void
     {
         if (!$this->getSupportForJoins()) {
