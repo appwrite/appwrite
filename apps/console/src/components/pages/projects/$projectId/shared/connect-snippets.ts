@@ -208,8 +208,10 @@ function getEnvExample(
   // Client-side mobile SDKs: each platform has its own config channel, and
   // none of them can read a plain process environment at runtime.
   if (sdkId === 'react-native') {
-    // Metro only inlines EXPO_PUBLIC_-prefixed variables.
-    return `EXPO_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nEXPO_PUBLIC_APPWRITE_PROJECT_ID=${projectId}`
+    // Metro only inlines EXPO_PUBLIC_-prefixed variables. The platform must
+    // match a package name or bundle ID registered on the project, or
+    // Appwrite rejects the app's requests as an unknown origin.
+    return `EXPO_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nEXPO_PUBLIC_APPWRITE_PROJECT_ID=${projectId}\n# Package name or bundle ID of a platform added to this project\nEXPO_PUBLIC_APPWRITE_PLATFORM=com.example.myapp`
   }
   if (sdkId === 'flutter') {
     // Consumed by `flutter run --dart-define-from-file=env.json`.
