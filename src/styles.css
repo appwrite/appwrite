@@ -1772,6 +1772,99 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
   animation-play-state: running !important;
 }
 
+/* Campaign landing pages (/secret/*): brand stamps, and redaction bars that lift on scroll. */
+@keyframes secret-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--stamp-rotate, -6deg)) scale(1.4);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(var(--stamp-rotate, -6deg)) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(var(--stamp-rotate, -6deg)) scale(1);
+  }
+}
+
+.secret-stamp {
+  opacity: 0;
+  transform: rotate(var(--stamp-rotate, -6deg));
+  animation: secret-stamp 0.45s cubic-bezier(0.22, 1, 0.36, 1) var(--stamp-delay, 0ms) forwards;
+}
+
+[data-declassified='false'] .secret-stamp,
+[data-reveal='pending'] .secret-stamp {
+  animation-play-state: paused;
+}
+
+/* Redacted text: hatched marker tape per line that wipes away once the exhibit is declassified. */
+.secret-redacted {
+  background-image: repeating-linear-gradient(-45deg, #2c2c33 0 7px, #212126 7px 14px);
+  border-radius: 0.12em;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 0% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+  transition:
+    background-size 0.8s cubic-bezier(0.65, 0, 0.35, 1) var(--redact-delay, 0ms),
+    color 0.45s ease calc(var(--redact-delay, 0ms) + 0.3s);
+}
+
+[dir='rtl'] .secret-redacted {
+  background-position: left center;
+}
+
+[data-declassified='false'] .secret-redacted {
+  background-size: 100% 100%;
+  color: transparent;
+  transition: none;
+}
+
+/* Hand-drawn red marker under the hero headline, drawn in after the title lands. */
+@keyframes secret-brush {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.secret-brush {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: secret-brush 0.7s cubic-bezier(0.65, 0, 0.35, 1) var(--brush-delay, 700ms) forwards;
+}
+
+/* Hero headline set like a government document: a formal system serif (Times on most machines). */
+.secret-document-title {
+  font-family: 'Times New Roman', Times, 'Liberation Serif', 'Nimbus Roman', 'Hiragino Mincho ProN', 'Yu Mincho',
+    ui-serif, Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secret-stamp {
+    opacity: 1;
+    animation: none;
+  }
+
+  .secret-brush {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+
+  .secret-redacted,
+  [data-declassified='false'] .secret-redacted {
+    background-size: 0% 100%;
+    color: inherit;
+    transition: none;
+  }
+}
+
 /* Home AI feature card mock UI */
 @keyframes ai-mock-fade-in {
   from {

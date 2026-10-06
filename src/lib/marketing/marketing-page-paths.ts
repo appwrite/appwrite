@@ -1,4 +1,5 @@
 import { ALTERNATIVE_IDS, getAlternativePath } from '../alternatives/registry'
+import { SECRET_CAMPAIGN_PATHS } from '../campaigns/secret/registry'
 
 /** Browser-safe marketing URL list (shared with build-time prerender config). */
 const ALTERNATIVE_PAGE_PATHS = ALTERNATIVE_IDS.map((id) =>
@@ -33,6 +34,7 @@ export const MARKETING_PAGE_PATHS = [
   '/products/sites',
   '/products/firewall',
   ...ALTERNATIVE_PAGE_PATHS,
+  ...SECRET_CAMPAIGN_PATHS,
   '/domains',
   '/integrations',
   '/llms/txt',
