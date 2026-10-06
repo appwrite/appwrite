@@ -12,7 +12,7 @@ export type MysqlConnectionEndpointInfo = {
   poolerEnabled: boolean
   poolerMode?: string
   pooledHost: string
-  pooledPort: number
+  pooledPort?: number
 }
 
 export type MysqlConnectSnippetContext = {
