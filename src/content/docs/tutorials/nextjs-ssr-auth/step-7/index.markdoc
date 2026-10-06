@@ -19,9 +19,10 @@ Add a new server action. Navigate to `src/lib/server` and create a new file `oau
 // src/lib/server/oauth.js
 "use server";
 
+import crypto from "node:crypto";
 import { createAdminClient } from "@/lib/server/appwrite";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { OAuthProvider } from "node-appwrite";
 
 export async function signUpWithGithub() {
@@ -29,17 +30,28 @@ export async function signUpWithGithub() {
 
   const origin = headers().get("origin");
 
+  // A random value only this browser will hold, checked in the callback
+  const state = crypto.randomBytes(32).toString("hex");
+  cookies().set("oauth-state", state, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    maxAge: 600,
+  });
+
 	const redirectUrl = await account.createOAuth2Token({
 		provider: OAuthProvider.Github,
 		success: `${origin}/oauth`,
 		failure: `${origin}/signup`,
+		state,
 	});
 
 	return redirect(redirectUrl);
 };
 ```
 
-The `createOAuth2Token` method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the `/OAuth` route with the `userId` and `secret` URL query parameters.
+The `createOAuth2Token` method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the `/OAuth` route with the `userId`, `secret` and `state` URL query parameters. The `state` is the value stored in the `oauth-state` cookie, which lets the callback check that this browser started the sign-in.
 
 ## OAuth form {% #oauth-form %}
 
@@ -81,6 +93,14 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   const userId = request.nextUrl.searchParams.get("userId");
   const secret = request.nextUrl.searchParams.get("secret");
+  const state = request.nextUrl.searchParams.get("state");
+
+  // Only accept a sign-in this browser started
+  const expected = cookies().get("oauth-state")?.value;
+  cookies().delete("oauth-state");
+  if (!expected || state !== expected) {
+    return NextResponse.redirect(`${request.nextUrl.origin}/signup`);
+  }
 
   const { account } = await createAdminClient();
   const session = await account.createSession({
