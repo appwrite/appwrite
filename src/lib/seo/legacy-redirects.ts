@@ -1,4 +1,5 @@
 import { resolveCategorySlug } from '@/lib/blog/category-slugs'
+import { getInboundRedirect } from '@/lib/seo/inbound-redirects'
 
 /**
  * Legacy URL redirects ported from the old website (appwrite/website
@@ -319,33 +320,64 @@ function getLegacyDatabasesDocsRedirect(pathname: string): string | null {
   return `${DATABASES_DOCS_PREFIX}tablesdb/${rest}`
 }
 
+const RETIRED_BLOG_CATEGORIES = new Set(['engineering'])
+
+function blogCategoryTarget(slug: string): string | null {
+  const resolved = resolveCategorySlug(slug)
+  if (RETIRED_BLOG_CATEGORIES.has(resolved)) return '/blog'
+  return `/blog/categories/${resolved}`
+}
+
 /**
  * Returns the redirect target (pathname, optionally with `#hash`) for a legacy
  * URL pathname, or null when the path has no legacy redirect. Matching strips
- * trailing slashes; query strings are the caller's responsibility to preserve.
+ * trailing slashes. `search` is the raw query string (`?a=b`), used when an
+ * auth email link should land on `/reset` or `/verify-email`.
  */
-export function getLegacyRedirectTarget(pathname: string): string | null {
-  const normalized = pathname.replace(/\/+$/, '') || '/'
+export function getLegacyRedirectTarget(
+  pathname: string,
+  search = '',
+): string | null {
+  let normalized = pathname
+  try {
+    normalized = decodeURIComponent(pathname)
+  } catch {
+    normalized = pathname
+  }
+  normalized = normalized.replace(/\/+$/, '') || '/'
+  return resolveLegacyRedirect(normalized, search, 0)
+}
+
+function resolveLegacyRedirect(
+  normalized: string,
+  search: string,
+  depth: number,
+): string | null {
+  if (depth > 5) return null
+
   const exact = LEGACY_REDIRECTS[normalized]
   if (exact) return exact
 
   const databasesDocsTarget = getLegacyDatabasesDocsRedirect(normalized)
-  if (databasesDocsTarget) {
-    return databasesDocsTarget
-  }
+  if (databasesDocsTarget) return databasesDocsTarget
 
   const legacyCategoryMatch = normalized.match(/^\/blog\/category\/(.+)$/)
-  if (legacyCategoryMatch) {
-    return `/blog/categories/${resolveCategorySlug(legacyCategoryMatch[1])}`
+  if (legacyCategoryMatch?.[1]) {
+    return blogCategoryTarget(legacyCategoryMatch[1])
   }
 
   const singularCategorySlugMatch = normalized.match(/^\/blog\/categories\/(.+)$/)
-  if (singularCategorySlugMatch) {
+  if (singularCategorySlugMatch?.[1]) {
     const resolved = resolveCategorySlug(singularCategorySlugMatch[1])
+    if (RETIRED_BLOG_CATEGORIES.has(resolved)) return '/blog'
     if (resolved !== singularCategorySlugMatch[1]) {
       return `/blog/categories/${resolved}`
     }
   }
 
-  return null
+  const inbound = getInboundRedirect(normalized, depth === 0 ? search : '')
+  if (!inbound || inbound === normalized) return null
+
+  const followed = resolveLegacyRedirect(inbound.split('#')[0] || inbound, '', depth + 1)
+  return followed ?? inbound
 }

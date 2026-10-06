@@ -29,8 +29,16 @@ export const legacyRedirectsMiddleware = createMiddleware({
   }
 
   const path = resolvePathname(pathname, request.url)
+  const search = (() => {
+    try {
+      return new URL(request.url).search
+    } catch {
+      return ''
+    }
+  })()
   const target =
-    getLegacyRedirectTarget(path) ?? getRemovedBlogPostRedirectTarget(path)
+    getLegacyRedirectTarget(path, search) ??
+    getRemovedBlogPostRedirectTarget(path)
   if (!target) {
     return next()
   }
