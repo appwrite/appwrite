@@ -21,7 +21,7 @@ import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
 import {
@@ -56,6 +56,7 @@ import { NavigationHistoryProvider } from '@/components/global/providers/Navigat
 import { ErrorComponent } from '@/components/error/Component'
 import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
 import {
+  FULLSCREEN_LOADER_HIDE_MS,
   FullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
@@ -100,6 +101,7 @@ import {
   isConsoleRedirectHopPath,
   isRootHomeMatch,
 } from '@/lib/root-guest-redirect'
+import { cn } from '@/lib/utils'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -442,7 +444,11 @@ function RootAppShell({ children }: { children: React.ReactNode }) {
 
 const STATUS_PAGE_URL = 'https://appwrite.online'
 
-function RootFullscreenLoader() {
+function RootInitialLoadCoordinator({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const { isLoading, skipStaticLoader } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const { isCloud, features } = useConsoleProfile()
@@ -457,11 +463,53 @@ function RootFullscreenLoader() {
     readScreenshotModeOpen(),
   )
 
+  const loaderVisible =
+    showFullscreenLoader || (!skipStaticLoader && isLoading)
+  const shellRef = useRef<HTMLDivElement>(null)
+  const shellRevealedRef = useRef(!loaderVisible)
+  const [shellRevealed, setShellRevealed] = useState(() => !loaderVisible)
+
   useEffect(() => {
     setClientMounted(true)
   }, [])
 
   useEffect(() => subscribeScreenshotMode(setScreenshotModeOpen), [])
+
+  useEffect(() => {
+    if (loaderVisible) {
+      shellRevealedRef.current = false
+      setShellRevealed(false)
+      return
+    }
+
+    if (shellRevealedRef.current) return
+
+    const el = shellRef.current
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    if (reduceMotion || !el) {
+      shellRevealedRef.current = true
+      setShellRevealed(true)
+      return
+    }
+
+    let cancelled = false
+    const animation = el.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: FULLSCREEN_LOADER_HIDE_MS,
+      easing: 'ease-in-out',
+      fill: 'forwards',
+    })
+    animation.onfinish = () => {
+      if (cancelled) return
+      shellRevealedRef.current = true
+      setShellRevealed(true)
+    }
+    return () => {
+      cancelled = true
+      animation.cancel()
+    }
+  }, [loaderVisible])
 
   const isLoaderVisible = isLoading || showFullscreenLoader
   const statusBanner =
@@ -485,12 +533,21 @@ function RootFullscreenLoader() {
       : undefined
 
   return (
-    <FullscreenLoader
-      isVisible={showFullscreenLoader || (!skipStaticLoader && isLoading)}
-      statusBanner={
-        clientMounted && isLoaderVisible ? statusBanner : undefined
-      }
-    />
+    <>
+      <FullscreenLoader
+        isVisible={loaderVisible}
+        statusBanner={
+          clientMounted && isLoaderVisible ? statusBanner : undefined
+        }
+      />
+      <div
+        ref={shellRef}
+        className={cn(!shellRevealed && 'pointer-events-none')}
+        style={{ opacity: shellRevealed ? 1 : 0 }}
+      >
+        {children}
+      </div>
+    </>
   )
 }
 
@@ -584,11 +641,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
         <I18nProvider>
           {/* Isolated so auth / query / loader updates do not re-render the page. */}
-          <RootFullscreenLoader />
-          <RootBrowserApi />
-          <RootAnalyticsTracker />
-          <RootConsoleScopesPrefetch />
-          <ClientThemeProvider>
+          <RootInitialLoadCoordinator>
+            <RootBrowserApi />
+            <RootAnalyticsTracker />
+            <RootConsoleScopesPrefetch />
+            <ClientThemeProvider>
               <PreLaunchRedirect />
               <SelfHostedRouteRedirect />
               <AnalyticsSessionPropsSync />
@@ -601,13 +658,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           <DebugModeProvider>
                             <ScreenshotModeProvider>
                               <ConsoleRightPaneProvider>
-                              <RootAppProviders>{children}</RootAppProviders>
-                              <ClientOnly>
-                                <CommunitySupportPromptProvider />
-                              </ClientOnly>
-                              <ClientOnly>
-                                <PasswordBreachCurtain />
-                              </ClientOnly>
+                                <RootAppProviders>{children}</RootAppProviders>
+                                <ClientOnly>
+                                  <CommunitySupportPromptProvider />
+                                </ClientOnly>
+                                <ClientOnly>
+                                  <PasswordBreachCurtain />
+                                </ClientOnly>
                               </ConsoleRightPaneProvider>
                             </ScreenshotModeProvider>
                           </DebugModeProvider>
@@ -626,7 +683,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   </NavigationHistoryProvider>
                 </CookieConsentProvider>
               </PageDirectionProvider>
-          </ClientThemeProvider>
+            </ClientThemeProvider>
+          </RootInitialLoadCoordinator>
         </I18nProvider>
         <Scripts />
       </body>

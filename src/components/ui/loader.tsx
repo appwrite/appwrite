@@ -1,28 +1,32 @@
 import { ExternalLink, Loader2 } from 'lucide-react'
-import { motion, AnimatePresence } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
+import { LegacyAppwriteLogo } from '@/components/global/shared/LegacyAppwriteBrand'
+import { isLegacyThemeFromStorage } from '@/lib/legacy-theme-assets'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 /** Delay before the bottom spinner appears on long loads. */
 const SPINNER_DELAY_MS = 1500
-/** Exit fade duration (seconds). Keep short + easeOut so reveal feels instant. */
-const EXIT_DURATION_S = 0.22
+/** Fade the full overlay, background included, into the page underneath. */
+export const FULLSCREEN_LOADER_HIDE_MS = 420
 
 function LoaderBrandMark() {
+  const isLegacy = isLegacyThemeFromStorage()
+
   return (
     <div
-      className={cn(
-        'inline-flex items-end gap-1.5 animate-in fade-in duration-500 motion-reduce:animate-none',
-        FORCE_LTR_CLASS,
-      )}
+      className={cn('inline-flex items-end gap-1.5', FORCE_LTR_CLASS)}
       dir="ltr"
     >
-      <AppwriteWordmark className="h-8" />
+      {isLegacy ? (
+        <LegacyAppwriteLogo className="h-8" aria-label="Appwrite" />
+      ) : (
+        <AppwriteWordmark className="h-8" />
+      )}
       <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
         / 2.0
       </span>
@@ -59,6 +63,10 @@ export function FullscreenLoader({
   const t = useT()
   const hasStatusBanner = Boolean(statusBanner)
   const [showSpinner, setShowSpinner] = useState(false)
+  const [present, setPresent] = useState(isVisible)
+  const onCompleteRef = useRef(onComplete)
+  const rootRef = useRef<HTMLDivElement>(null)
+  onCompleteRef.current = onComplete
 
   // Show spinner only after 1.5s of the current visible period. Depend on a
   // boolean for the status banner so object identity cannot reset the timer.
@@ -75,18 +83,55 @@ export function FullscreenLoader({
     return () => clearTimeout(timer)
   }, [isVisible, hasStatusBanner])
 
+  useEffect(() => {
+    if (isVisible) {
+      setPresent(true)
+      return
+    }
+
+    if (!present) return
+
+    let cancelled = false
+    const finish = () => {
+      if (cancelled) return
+      setPresent(false)
+      onCompleteRef.current?.()
+    }
+
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    const el = rootRef.current
+    if (reduceMotion || !el) {
+      finish()
+      return
+    }
+
+    // Animate the element that paints the backdrop. A class toggle was leaving
+    // that layer opaque until unmount, so the background snapped off after the logo.
+    const animation = el.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: FULLSCREEN_LOADER_HIDE_MS,
+      easing: 'ease-in-out',
+      fill: 'forwards',
+    })
+    animation.onfinish = finish
+    return () => {
+      cancelled = true
+      animation.cancel()
+    }
+  }, [isVisible, present])
+
+  if (!present) return null
+
   return (
-    <AnimatePresence onExitComplete={onComplete}>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: EXIT_DURATION_S, ease: 'easeOut' }}
-          className="fixed inset-0 z-[9999] bg-background will-change-[opacity]"
-          aria-label="Loading"
-          data-fullscreen-loader=""
-        >
+    <div
+      ref={rootRef}
+      className="pointer-events-none fixed inset-0 z-[9999]"
+      style={{ backgroundColor: 'var(--background)' }}
+      aria-label="Loading"
+      data-fullscreen-loader=""
+    >
+      <div className="absolute inset-0">
           {statusBanner &&
             (() => {
               const presentation = getStatusPresentation(statusBanner.state)
@@ -157,8 +202,7 @@ export function FullscreenLoader({
               <Loader2 className="h-5 w-5 animate-spin text-foreground/70" />
             </div>
           ) : null}
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   )
 }
