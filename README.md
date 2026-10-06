@@ -80,7 +80,7 @@ VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_... # For billing features
 VITE_COMPANY_NAME=Appwrite
 VITE_CONTACT_SALES_URL=https://appwrite.io/contact
-VITE_LEGAL_EMAIL=legal@appwrite.io
+VITE_PRIVACY_EMAIL=privacy@appwrite.io <!-- pragma: allowlist secret -->
 ```
 
 ### Development
@@ -302,7 +302,7 @@ bun run format:check
 | `VITE_STRIPE_PUBLISHABLE_KEY` | No       | -                              | Stripe publishable key for billing                               |
 | `VITE_COMPANY_NAME`           | No       | `Appwrite`                     | Company name for branding                                        |
 | `VITE_CONTACT_SALES_URL`      | No       | -                              | Contact sales page URL                                           |
-| `VITE_LEGAL_EMAIL`            | No       | `legal@appwrite.io`            | Legal contact email                                              |
+| `VITE_PRIVACY_EMAIL`          | No       | `privacy@appwrite.io` <!-- pragma: allowlist secret --> | Privacy contact email for DPA requests                           |
 
 ## License
 
