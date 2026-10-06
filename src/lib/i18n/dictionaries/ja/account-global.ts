@@ -1360,8 +1360,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Added: '追加日',
   'Passkey name': 'パスキー名',
   'Save name': '名前を保存',
-  Synced: '同期済み',
-  'This device': 'このデバイス',
   'Rename passkey': 'パスキーの名前を変更',
   'Delete passkey': 'パスキーを削除',
   'Your browser will ask you to create a passkey on this device or in your password manager.':

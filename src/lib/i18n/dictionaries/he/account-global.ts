@@ -1362,8 +1362,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Added: 'נוסף',
   'Passkey name': 'שם מפתח הגישה',
   'Save name': 'שמירת השם',
-  Synced: 'מסונכרן',
-  'This device': 'המכשיר הזה',
   'Rename passkey': 'שינוי שם מפתח הגישה',
   'Delete passkey': 'מחיקת מפתח הגישה',
   'Your browser will ask you to create a passkey on this device or in your password manager.':

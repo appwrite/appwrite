@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { Check, Fingerprint, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -179,7 +178,6 @@ export function PasskeysSection({
               <TableHead className={`${HEAD_CLASS} ps-6`}>
                 {t('Name')}
               </TableHead>
-              <TableHead className={HEAD_CLASS}>{t('Type')}</TableHead>
               <TableHead className={HEAD_CLASS}>{t('Added')}</TableHead>
               <TableHead className={HEAD_CLASS}>{t('Last used')}</TableHead>
               <TableHead className={`${HEAD_CLASS} pe-6 w-[96px]`} />
@@ -243,11 +241,6 @@ export function PasskeysSection({
                         </span>
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <Badge variant="info" className="text-[10px] font-medium">
-                      {passkey.backedUp ? t('Synced') : t('This device')}
-                    </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <DateTooltip

@@ -44,22 +44,20 @@ const ACCOUNT = {
 
 const TOKEN_SECRET = 'passkey-token-secret'
 
-const SYNCED: Models.Passkey = {
+const USED: Models.Passkey = {
   $id: 'passkey00000000000000001',
   $createdAt: NOW,
   $updatedAt: NOW,
   name: 'MacBook',
   accessedAt: NOW,
-  backedUp: true,
 }
 
-const DEVICE_BOUND: Models.Passkey = {
+const UNUSED: Models.Passkey = {
   $id: 'passkey00000000000000002',
   $createdAt: NOW,
   $updatedAt: NOW,
   name: 'YubiKey',
   accessedAt: '',
-  backedUp: false,
 }
 
 type ApiError = { message: string; code: number; type: string }
@@ -214,7 +212,6 @@ async function mockAppwriteApi(
         $updatedAt: NOW,
         name: pending?.request.postDataJSON()?.name ?? '',
         accessedAt: '',
-        backedUp: false,
       }
       passkeys = [created, ...passkeys]
       return json(200, created)
@@ -470,17 +467,15 @@ test.describe('console passkeys (mocked API)', () => {
     await useProfile(page, 'cloud')
     const calls = await mockAppwriteApi(page, {
       signedIn: true,
-      passkeys: [SYNCED, DEVICE_BOUND],
+      passkeys: [USED, UNUSED],
     })
     await addVirtualAuthenticator(page)
     await openSecurity(page)
 
     const card = passkeysCard(page)
-    const synced = card.getByRole('row').filter({ hasText: 'MacBook' })
-    const bound = card.getByRole('row').filter({ hasText: 'YubiKey' })
-    await expect(synced).toContainText('Synced')
-    await expect(bound).toContainText('This device')
-    await expect(bound).toContainText('Never')
+    const macbook = card.getByRole('row').filter({ hasText: 'MacBook' })
+    const yubikey = card.getByRole('row').filter({ hasText: 'YubiKey' })
+    await expect(yubikey).toContainText('Never')
 
     // Add
     await card.getByRole('button', { name: 'Add passkey' }).click()
@@ -509,7 +504,7 @@ test.describe('console passkeys (mocked API)', () => {
     )
 
     // Rename
-    await bound.getByRole('button', { name: 'Rename passkey' }).click()
+    await yubikey.getByRole('button', { name: 'Rename passkey' }).click()
     const nameInput = card.getByRole('textbox', { name: 'Passkey name' })
     await nameInput.fill('Security key')
     await nameInput.press('Enter')
@@ -520,22 +515,20 @@ test.describe('console passkeys (mocked API)', () => {
     const rename = calls.requests.find(
       (call) =>
         call.method === 'PATCH' &&
-        call.path === `/account/passkeys/${DEVICE_BOUND.$id}`,
+        call.path === `/account/passkeys/${UNUSED.$id}`,
     )
     expect(rename?.request.postDataJSON()).toEqual({ name: 'Security key' })
 
     // Delete
-    await synced.getByRole('button', { name: 'Delete passkey' }).click()
+    await macbook.getByRole('button', { name: 'Delete passkey' }).click()
     const deleteDialog = page.getByRole('dialog', { name: 'Delete passkey' })
     await expect(deleteDialog).toContainText('MacBook')
     await deleteDialog
       .getByRole('button', { name: 'Delete', exact: true })
       .click()
     await expect(page.getByText('Passkey deleted')).toBeVisible()
-    await expect(synced).toHaveCount(0)
-    expect(countCalls(calls, 'DELETE', `/account/passkeys/${SYNCED.$id}`)).toBe(
-      1,
-    )
+    await expect(macbook).toHaveCount(0)
+    expect(countCalls(calls, 'DELETE', `/account/passkeys/${USED.$id}`)).toBe(1)
   })
 
   test('a stale session is told to sign in again', async ({ page }) => {
@@ -573,7 +566,7 @@ test.describe('console passkeys (mocked API)', () => {
     page,
   }) => {
     await useProfile(page, 'cloud')
-    await mockAppwriteApi(page, { signedIn: true, passkeys: [SYNCED] })
+    await mockAppwriteApi(page, { signedIn: true, passkeys: [USED] })
     await page.addInitScript(() => {
       Reflect.deleteProperty(window, 'PublicKeyCredential')
     })
@@ -604,7 +597,7 @@ test.describe('console passkeys (mocked API)', () => {
     expect(countCalls(calls, 'POST', '/account/tokens/passkey')).toBe(0)
 
     await page.unrouteAll({ behavior: 'ignoreErrors' })
-    await mockAppwriteApi(page, { signedIn: true, passkeys: [SYNCED] })
+    await mockAppwriteApi(page, { signedIn: true, passkeys: [USED] })
     await openSecurity(page)
     await expect(passkeysCard(page)).toHaveCount(0)
   })
@@ -616,7 +609,7 @@ test.describe('console passkeys (mocked API)', () => {
     const calls = await mockAppwriteApi(page, {
       signedIn: true,
       accountPrefs: {},
-      passkeys: [SYNCED],
+      passkeys: [USED],
     })
     await openSecurity(page)
 
