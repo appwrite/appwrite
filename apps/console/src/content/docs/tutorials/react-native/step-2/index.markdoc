@@ -8,12 +8,27 @@ step: 2
 ## Create React Native project {% #create-react-project %}
 
 Create a React Native app with the `create-expo-app` command.
-This tutorial uses React Navigation for routing, so start from the blank template. The default template uses Expo Router instead.
+The default template sets up an Expo Router app with TypeScript.
 
 ```sh
-npx create-expo-app@latest ideas-tracker --template blank
+npx create-expo-app@latest ideas-tracker
 cd ideas-tracker
 ```
+
+The template includes example screens. Remove them with the `reset-project` script.
+When the script asks if you want to move the existing files to `/example`, enter `n` to delete them.
+
+```sh
+npm run reset-project
+```
+
+The script creates a blank `src/app` directory with two files:
+
+- `src/app/_layout.tsx` is the root layout. It wraps every screen in the app.
+- `src/app/index.tsx` is the first screen of the app.
+
+Expo Router treats every file in `src/app` as a route.
+Put the rest of the app code, such as contexts and helpers, in other directories inside `src`.
 
 ## Add dependencies {% #add-dependencies %}
 
@@ -21,16 +36,4 @@ Install the React Native Appwrite SDK.
 
 ```sh
 npx expo install react-native-appwrite react-native-url-polyfill
-```
-
-Then, install React Navigation to help implement simple navigation logic.
-
-```sh
-npm install @react-navigation/native @react-navigation/native-stack
-```
-
-Install peer dependencies needed for React Navigation.
-
-```sh
-npx expo install react-native-screens react-native-safe-area-context
 ```

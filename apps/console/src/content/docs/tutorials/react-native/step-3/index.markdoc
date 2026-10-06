@@ -41,20 +41,21 @@ Find your project's ID in the **Settings** page.
 ![Project settings screen](/images/docs/quick-starts/project-id.avif)
 {% /only_light %}
 
-Create a new file `lib/appwrite.js` to hold our Appwrite related code.
+Create a new file `src/lib/appwrite.ts` to hold our Appwrite related code.
 Only one instance of the `Client()` class should be created per app.
-Add the following code to it, replacing `<PROJECT_ID>` with your project ID.
+Add the following code to it, replacing `<REGION>` with your project's region and `<PROJECT_ID>` with your project ID.
 
-```js
-import { Client, TablesDB, Account } from "react-native-appwrite";
+```client-react-native
+import "react-native-url-polyfill/auto";
+import { Account, Client, TablesDB } from "react-native-appwrite";
 
-const client = new Client();
-client
-  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+const client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Replace with your endpoint
   .setProject("<PROJECT_ID>") // Replace with your project ID
-  .setPlatform('com.example.idea-tracker');
-
+  .setPlatform("com.example.idea-tracker");
 
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
 ```
+
+The value passed to `setPlatform()` must match the package name or bundle ID of the platform you added in the Appwrite Console.

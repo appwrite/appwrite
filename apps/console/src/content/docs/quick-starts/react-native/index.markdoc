@@ -15,10 +15,11 @@ Follow the [React quickstart](/docs/quick-starts/react) and [React tutorial](/do
 {% /info %}
 
 {% section #step-1 step=1 title="Create React Native project" %}
-Create a React Native project using [npx](https://www.npmjs.com/package/npx) and the blank TypeScript template.
+Create a React Native project using [npx](https://www.npmjs.com/package/npx).
+The default template sets up an Expo Router app with TypeScript.
 
 ```sh
-npx create-expo-app@latest my-app --template blank-typescript
+npx create-expo-app@latest my-app
 cd my-app
 ```
 {% /section %}
@@ -87,15 +88,15 @@ Find your project's ID in the **Settings** page.
 ![Project settings screen](/images/docs/quick-starts/project-id.avif)
 {% /only_light %}
 
-Open `App.tsx` and replace its contents with the following code. Replace `<PROJECT_ID>` with your project ID and `<YOUR_PLATFORM>` with your application id or package name.
+Open `src/app/index.tsx` and replace its contents with the following code. Replace `<REGION>` with your project's region, `<PROJECT_ID>` with your project ID, and `<YOUR_PLATFORM>` with the bundle ID or package name of the platform you added.
 
 This imports and initializes Appwrite and defines some basic authentication methods.
 
 ```client-react-native
-import { StatusBar } from 'expo-status-bar';
+import 'react-native-url-polyfill/auto';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
 import { Client, Account, ID, Models } from 'react-native-appwrite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 let client: Client;
 let account: Account;
@@ -103,15 +104,22 @@ let account: Account;
 client = new Client();
 client
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-  .setProject('66e943139f030e2feaf8')   // Your Project ID
-  .setPlatform('com.example.my-app');   // Your package name / bundle identifier
+  .setProject('<PROJECT_ID>')     // Your project ID
+  .setPlatform('<YOUR_PLATFORM>'); // Your package name / bundle identifier
 
 account = new Account(client);
-export default function App() {
+export default function Index() {
   const [loggedInUser, setLoggedInUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+
+  useEffect(() => {
+    // Restore the session if the user is already logged in
+    account.get()
+      .then((user) => setLoggedInUser(user))
+      .catch(() => setLoggedInUser(null));
+  }, []);
 
   async function login(email: string, password: string) {
     await account.createEmailPasswordSession({
@@ -146,7 +154,7 @@ const styles = StyleSheet.create({
 {% section #step-5 step=5 title="Create a login form" %}
 With `Client` and `Account` service initialized, you can now use them to make your first requests to Appwrite.
 
-Return the following components from the `App` component in your `App.tsx` file to create a simple login form.
+Return the following components from the `Index` component in your `src/app/index.tsx` file to create a simple login form.
 
 ```client-react-native
 <View style={styles.root}>
@@ -201,7 +209,7 @@ Return the following components from the `App` component in your `App.tsx` file 
 </View>
 ```
 
-You can also add some simple styling to your app by adding the following styles to your `App.tsx` file.
+You can also add some simple styling to your app by adding the following styles to your `src/app/index.tsx` file.
 
 ```client-react-native
 const styles = StyleSheet.create({
