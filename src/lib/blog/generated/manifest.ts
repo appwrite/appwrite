@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "firewall-network-rules-premium-geo-db",
+    "href": "/blog/post/firewall-network-rules-premium-geo-db",
+    "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
+    "description": "Use Premium Geo DB network attributes in Appwrite Firewall to stop bots that rotate IP addresses on rented servers, with rules for your API, Functions, and Sites.",
+    "date": "2026-10-05",
+    "lastUpdated": "2026-10-05",
+    "timeToRead": 8,
+    "author": "atharva",
+    "category": "security",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/firewall-network-rules-premium-geo-db/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-jaspr-support",
     "href": "/blog/post/announcing-jaspr-support",
     "title": "Announcing Jaspr support in Appwrite Sites: SSR in Dart",
