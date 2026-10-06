@@ -143,6 +143,17 @@ jobs:
           fi
           bun run e2e -- ${{ matrix.args }}
 
+      - name: Upload failure context
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-error-context-${{ matrix.project }}
+          path: test-results/**/error-context.md
+          if-no-files-found: ignore
+          retention-days: 3
+          compression-level: 9
+
   session-cleanup:
     name: session cleanup
     needs: [session, e2e]
