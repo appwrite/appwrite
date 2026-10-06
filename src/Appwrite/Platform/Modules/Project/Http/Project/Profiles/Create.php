@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -10,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
@@ -83,16 +85,20 @@ class Create extends Base
         $codec = self::normalizeCodec($codec);
         $this->assertCodecEnabled($codec);
 
-        $profile = $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
-            '$id' => ID::unique(),
-            'name' => $name,
-            'codec' => $codec,
-            'videoBitRate' => $videoBitRate,
-            'audioBitRate' => $audioBitRate,
-            'width' => $width,
-            'height' => $height,
-            'search' => $name,
-        ])));
+        try {
+            $profile = $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
+                '$id' => ID::unique(),
+                'name' => $name,
+                'codec' => $codec,
+                'videoBitRate' => $videoBitRate,
+                'audioBitRate' => $audioBitRate,
+                'width' => $width,
+                'height' => $height,
+                'search' => $name,
+            ])));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::VIDEO_PROFILE_ALREADY_EXISTS);
+        }
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

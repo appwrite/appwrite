@@ -363,6 +363,7 @@ class Exception extends \Exception
     public const string VIDEO_NOT_FOUND = 'video_not_found';
     public const string VIDEO_NOT_VALID = 'video_not_valid';
     public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
+    public const string VIDEO_PROFILE_ALREADY_EXISTS = 'video_profile_already_exists';
     public const string VIDEO_CODEC_DISABLED = 'video_codec_disabled';
     public const string VIDEO_CODEC_OUTPUT_UNSUPPORTED = 'video_codec_output_unsupported';
     public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';

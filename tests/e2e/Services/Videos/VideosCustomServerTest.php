@@ -226,6 +226,49 @@ final class VideosCustomServerTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $omit['body']['$id'], $this->headers());
     }
 
+    /**
+     * One profile per width, height, bitrates, and codec. A duplicate create or
+     * an update onto that combination is rejected. The name may still match.
+     */
+    public function testProfileUniqueGeometry(): void
+    {
+        $payload = [
+            'videoBitRate' => 701,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ];
+
+        $first = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge($payload, [
+            'name' => 'unique-a-' . \uniqid(),
+        ]));
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge($payload, [
+            'name' => 'unique-b-' . \uniqid(),
+        ]));
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('video_profile_already_exists', $duplicate['body']['type']);
+
+        $other = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
+            'name' => 'unique-c-' . \uniqid(),
+            'videoBitRate' => 702,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ]);
+        $this->assertEquals(201, $other['headers']['status-code']);
+
+        $conflict = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $other['body']['$id'], $this->headers(), \array_merge($payload, [
+            'name' => 'unique-c-updated',
+        ]));
+        $this->assertEquals(409, $conflict['headers']['status-code']);
+        $this->assertEquals('video_profile_already_exists', $conflict['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $first['body']['$id'], $this->headers());
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $other['body']['$id'], $this->headers());
+    }
+
     // ------------------------------------------------------------------ videos
 
     public function testCreateVideoRejectsNonVideoFile(): void

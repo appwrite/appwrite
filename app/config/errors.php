@@ -1601,6 +1601,11 @@ return [
         'description' => 'Video profile with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_PROFILE_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_PROFILE_ALREADY_EXISTS,
+        'description' => 'A video profile with the same width, height, bitrates, and codec already exists.',
+        'code' => 409,
+    ],
     Exception::VIDEO_CODEC_DISABLED => [
         'name' => Exception::VIDEO_CODEC_DISABLED,
         'description' => 'The requested video codec is not enabled on this instance.',

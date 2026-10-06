@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -85,14 +86,18 @@ class Update extends Base
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
-        $profile = $authorization->skip(fn () => $dbForProject->updateDocument('videos_profiles', $profile->getId(), new Document([
-            'name' => $name,
-            'videoBitRate' => $videoBitRate,
-            'audioBitRate' => $audioBitRate,
-            'width' => $width,
-            'height' => $height,
-            'search' => $name,
-        ])));
+        try {
+            $profile = $authorization->skip(fn () => $dbForProject->updateDocument('videos_profiles', $profile->getId(), new Document([
+                'name' => $name,
+                'videoBitRate' => $videoBitRate,
+                'audioBitRate' => $audioBitRate,
+                'width' => $width,
+                'height' => $height,
+                'search' => $name,
+            ])));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::VIDEO_PROFILE_ALREADY_EXISTS);
+        }
 
         $queueForEvents
             ->setParam('projectId', $project->getId())
