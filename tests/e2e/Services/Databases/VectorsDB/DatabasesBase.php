@@ -954,6 +954,77 @@ trait DatabasesBase
         $this->assertEquals(0, $res['body']['total']);
     }
 
+    public function testMetadataPathQueries(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $db = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, ['databaseId' => ID::unique(), 'name' => 'MetadataPaths']);
+        $this->assertSame(201, $db['headers']['status-code']);
+        $databaseId = $db['body']['$id'];
+        $col = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Docs',
+            'documentSecurity' => true,
+            'dimension' => 3,
+            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertSame(201, $col['headers']['status-code']);
+        $documentsUrl = "/vectorsdb/{$databaseId}/collections/{$col['body']['$id']}/documents";
+
+        foreach ([['A', 'Oslo', '0150'], ['B', 'Bergen', '5003']] as [$name, $city, $zip]) {
+            $created = $this->client->call(Client::METHOD_POST, $documentsUrl, $headers, [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'embeddings' => [1.0, 0.0, 0.0],
+                    'metadata' => ['name' => $name, 'address' => ['city' => $city], 'zip-code' => $zip],
+                ],
+                'permissions' => [Permission::read(Role::any())],
+            ]);
+            $this->assertSame(201, $created['headers']['status-code']);
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $matches = [
+            'metadata.name' => 'A',
+            'metadata.address.city' => 'Bergen',
+            'metadata.zip-code' => '0150',
+        ];
+        foreach ($matches as $path => $value) {
+            $listed = $this->client->call(Client::METHOD_GET, $documentsUrl, $headers, [
+                'queries' => [Query::equal($path, [$value])->toString()],
+            ]);
+            $this->assertSame(200, $listed['headers']['status-code'], $path);
+            $this->assertSame(1, $listed['body']['total'], $path);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $refusedPaths = ['metadata.na me', "metadata.o'name", 'metadata.na"me', 'metadata.name;', 'metadata..name', 'metadata.'];
+        foreach ($refusedPaths as $path) {
+            $listed = $this->client->call(Client::METHOD_GET, $documentsUrl, $headers, [
+                'queries' => [Query::equal($path, ['A'])->toString()],
+            ]);
+            $this->assertSame(400, $listed['headers']['status-code'], $path);
+            $this->assertSame('general_query_invalid', $listed['body']['type'], $path);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, $documentsUrl, $headers, [
+                'queries' => [Query::equal($path, ['A'])->toString()],
+            ]);
+            $this->assertSame(400, $deleted['headers']['status-code'], $path);
+            $this->assertSame('general_query_invalid', $deleted['body']['type'], $path);
+        }
+
+        $remaining = $this->client->call(Client::METHOD_GET, $documentsUrl, $headers);
+        $this->assertSame(200, $remaining['headers']['status-code']);
+        $this->assertSame(2, $remaining['body']['total']);
+    }
+
     #[Depends('testCreateCollection')]
     public function testCreateIndexes(array $data): array
     {
