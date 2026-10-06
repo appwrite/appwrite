@@ -10,7 +10,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-10-07",
     "lastUpdated": "2026-10-07",
     "timeToRead": 8,
-    "author": "aditya-oberai",
+    "author": "chirag-aggarwal",
     "category": "products, announcements",
     "featured": false,
     "cover": "/images/blog/android-sdk-r8-support/cover.avif",
