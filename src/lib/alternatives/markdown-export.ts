@@ -4,7 +4,7 @@ import {
   ALTERNATIVE_REGISTRY,
   ALTERNATIVES_VERIFIED_ON,
   getAlternativePath,
-  isAlternativeId,
+  parseAlternativeRouteParam,
 } from '@/lib/alternatives/registry'
 import type {
   AlternativeId,
@@ -14,13 +14,6 @@ import type {
 } from '@/lib/alternatives/types'
 import type { LlmsContentMeta } from '@/lib/seo/llms'
 import { DEFAULT_LLMS_ORIGIN } from '@/lib/seo/llms'
-
-export function parseAlternativeRouteParam(
-  param: string,
-): AlternativeId | null {
-  const id = param.endsWith('.md') ? param.slice(0, -3) : param
-  return isAlternativeId(id) ? id : null
-}
 
 export function getAllAlternativeLlmsMeta(): LlmsContentMeta[] {
   return ALTERNATIVE_IDS.map((id) => {
@@ -33,7 +26,10 @@ export function getAllAlternativeLlmsMeta(): LlmsContentMeta[] {
   }).sort((a, b) => a.title.localeCompare(b.title))
 }
 
-function normalizeCell(cell: ComparisonCell): { value: ComparisonValue; note?: string } {
+function normalizeCell(cell: ComparisonCell): {
+  value: ComparisonValue
+  note?: string
+} {
   if (typeof cell === 'object') return cell
   return { value: cell }
 }
