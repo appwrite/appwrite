@@ -7,28 +7,33 @@ import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSyn
 import { View } from '@/components/pages/changelog/View'
 import { getChangelogEntriesPage } from '@/lib/changelog/content'
 import { CHANGELOG_DEFAULT_DESCRIPTION } from '@/lib/changelog/seo'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import { CHANGELOG_RSS_PATH } from '@/lib/seo/rss'
 
 export const Route = createFileRoute('/_marketing/changelog/')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/changelog',
       pageName: 'Changelog',
       description: CHANGELOG_DEFAULT_DESCRIPTION,
       ogImageEyebrow: 'Changelog',
-    }),
-    links: [
-      {
-        rel: 'alternate',
-        type: 'application/rss+xml',
-        title: 'Appwrite Changelog',
-        href: CHANGELOG_RSS_PATH,
-      },
-    ],
-  }),
+    })
+    return {
+      ...seo,
+      links: [
+        ...seo.links,
+        {
+          rel: 'alternate',
+          type: 'application/rss+xml',
+          title: 'Appwrite Changelog',
+          href: CHANGELOG_RSS_PATH,
+        },
+      ],
+    }
+  },
   loader: async () => {
     const { entries, nextPage } = getChangelogEntriesPage(1)
     return { entries, nextPage }

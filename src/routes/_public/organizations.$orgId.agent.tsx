@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Layout } from '@/components/pages/agent/Layout'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
+import { asRouteHead } from '@/lib/seo/route-head'
 import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import {
   ASSISTANT_MESSAGES_PAGE_SIZE,
@@ -35,11 +36,19 @@ export const Route = createFileRoute('/_public/organizations/$orgId/agent')({
   // Match _public: client-only. Avoid SSR flash of empty chrome before data.
   ssr: false,
   component: Layout,
-  head: ({ params }) => ({
-    meta: getAgentPageMetaTags(params.orgId) as unknown as Array<
-      { title: string } | { name: string; content: string } | { property: string; content: string }
-    >,
-  }),
+  head: ({ params }) => {
+    const origin = getRequestSiteOrigin()
+    const canonical = resolveSiteAssetUrl(
+      `/organizations/${params.orgId}/agent`,
+      origin,
+    )
+    return asRouteHead(
+      getAgentPageMetaTags(params.orgId, origin) as unknown as Array<
+        Record<string, string>
+      >,
+      { canonicalHref: canonical },
+    )
+  },
   loader: async ({ context, params }) => {
     if (typeof window === 'undefined') return
     if (!getActiveProfileFeatures().agent) {

@@ -92,7 +92,6 @@ export function getBlogIndexMetaTags(options?: BlogSeoOptions) {
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
@@ -138,7 +137,6 @@ export function getBlogPostMetaTags(
     { name: 'twitter:title', content: resolvedTitle },
     { name: 'twitter:description', content: post.description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ]
 }
 
@@ -162,7 +160,6 @@ export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSe
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: category.description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
@@ -186,7 +183,6 @@ export function getBlogAuthorMetaTags(author: BlogAuthor, options?: BlogSeoOptio
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: author.bio },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 

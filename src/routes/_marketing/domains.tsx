@@ -5,7 +5,7 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/domains/View'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import { domainsHero } from '@/lib/domains/marketing-content'
 
 const domainsSearchSchema = z.object({
@@ -20,12 +20,14 @@ export const Route = createFileRoute('/_marketing/domains')({
   },
   ssr: true,
   validateSearch: domainsSearchSchema,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/domains',
       pageName: 'Domains',
       description: domainsHero.description,
-    }),
-  }),
+    });
+    return seo;
+  },
   component: DomainsPage,
 })
 

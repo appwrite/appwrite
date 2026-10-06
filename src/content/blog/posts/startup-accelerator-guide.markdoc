@@ -8,6 +8,7 @@ date: 2025-06-23
 author: veeresh-mulge
 callToAction: true
 unlisted: true
+removed: true
 category: startups
 faqs:
   - question: "What is a startup accelerator?"

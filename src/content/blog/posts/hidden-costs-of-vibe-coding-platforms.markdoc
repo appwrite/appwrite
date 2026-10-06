@@ -8,6 +8,7 @@ timeToRead: 9
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "What are the hidden costs of vibe coding platforms?"
     answer: "Token bills that scale with edits, not output; lock-in to the platform's bundled backend; permission gaps in generated code; schema decisions made by an agent that you live with for years; vendor risk on tools that pivot or shut down; and the time spent on a pre-launch review that the demo never showed you. None of these show up on the pricing page."

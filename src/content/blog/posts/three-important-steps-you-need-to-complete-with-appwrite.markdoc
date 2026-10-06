@@ -8,6 +8,7 @@ cover: /images/blog/three-important-steps-you-need-to-complete-with-appwrite/3-i
 timeToRead: 3
 author: dennis-ivy
 category: products
+removed: true
 faqs:
   - question: "What are the three steps to complete before using a new Appwrite project?"
     answer: "Add a platform (or generate an API key with scopes for server SDKs), add a hostname if you are using the Web SDK, and set proper permissions on your database tables and storage buckets. Skipping any of these usually leads to errors when making your first request."

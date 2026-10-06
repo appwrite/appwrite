@@ -10,6 +10,7 @@ author: aditya-oberai
 category: products, tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is the Appwrite Query API?"
     answer: "The Query API is a set of helper methods on the Query class that you pass as an array to listRows or equivalent calls. Each method generates a filter, sort directive, or pagination instruction. Multiple queries are combined with AND logic, while passing several values to a single method behaves like an OR across those values."

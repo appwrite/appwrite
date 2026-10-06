@@ -7,7 +7,7 @@ import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
-import { getDocsMetaTags } from '@/lib/docs/route-meta'
+import { getDocsRouteHead } from '@/lib/docs/route-meta'
 import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
@@ -102,17 +102,21 @@ export const Route = createFileRoute('/docs/$')({
   head: ({ loaderData }) => {
     if (!loaderData?.page) return {}
     const { meta, slug } = { meta: loaderData.page.meta, slug: loaderData.page.meta.slug }
+    const seo = getDocsRouteHead({ ...meta, slug })
     return {
-      meta: getDocsMetaTags({ ...meta, slug }),
-      links: slug
-        ? [
-            {
-              rel: 'alternate',
-              type: 'text/markdown',
-              href: `/docs/${slug}.md`,
-            },
-          ]
-        : [],
+      ...seo,
+      links: [
+        ...seo.links,
+        ...(slug
+          ? [
+              {
+                rel: 'alternate',
+                type: 'text/markdown',
+                href: `/docs/${slug}.md`,
+              },
+            ]
+          : []),
+      ],
       scripts: [
         {
           type: 'application/ld+json',

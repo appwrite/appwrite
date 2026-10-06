@@ -9,6 +9,7 @@ timeToRead: 5
 author: aditya-oberai
 category: open-source
 featured: false
+removed: true
 faqs:
   - question: "What major changes shipped in Appwrite 1.6?"
     answer: "Appwrite 1.6 focused on the Functions ecosystem with local development, a rewritten CLI, support for Go as a runtime, and a long list of community contributed fixes across the console, server, SDKs, and templates."

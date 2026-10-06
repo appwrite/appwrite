@@ -321,7 +321,7 @@ Node.js v25.2.1 represents a meaningful step forward for the runtime, though it 
 
 While v25 isn't an LTS release, it gives us a preview of what's coming and an opportunity to provide feedback before these features stabilize. Whether you're working with high-performance JSON operations, building cross-platform applications that benefit from Web Storage, or experimenting with WebAssembly, there's something here worth exploring.
 
-If you're interested in learning more about modern JavaScript runtimes, you might enjoy reading about [Deno vs Bun](https://appwrite.io/blog/post/deno-vs-bun-javascript-runtime) or exploring [how Deno 2.0 works with Appwrite Functions](https://appwrite.io/blog/post/deno-2-appwrite-functions).
+If you're interested in learning more about modern JavaScript runtimes, you might enjoy reading about [Deno vs Bun](https://appwrite.io/blog/post/deno-vs-bun-javascript-runtime).
 
 You can reach out to us on [Discord](https://appwrite.io/discord) if you have any questions or feedback.
 
@@ -330,4 +330,3 @@ You can reach out to us on [Discord](https://appwrite.io/discord) if you have an
 - [Node.js v25.2.1 release notes](https://nodejs.org/en/blog/release/v25.2.1)
 - [Node.js v25.2.0 release notes](https://nodejs.org/en/blog/release/v25.2.0)
 - [Why you need to try the new Bun function runtime](/blog/post/why-you-need-to-try-the-new-bun-runtime)
-- [Announcing Deno support on Appwrite Cloud](/blog/post/deno-runtime-announcment)
