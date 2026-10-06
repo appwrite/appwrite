@@ -1,24 +1,5 @@
 import type { ApiSpecPlatform, OpenApiSpec, ParsedApiSpec } from './types'
-import {
-  mergeConsoleOnlyDatabaseServices,
-  parseOpenApiSpec,
-} from './parse-spec'
-import { LATEST_EXAMPLES_VERSION } from '@/lib/docs/references/reference-versions'
-
-/**
- * Numbered console OpenAPI used for native DB engines (postgresql / mysql / mongo).
- * The floating `latest` console folder may still ship the legacy `/compute` surface;
- * parse-time normalization rewrites that to the per-engine SDK paths.
- */
-const NUMBERED_CONSOLE_SPEC_LOADERS: Record<
-  string,
-  () => Promise<{ default: OpenApiSpec }>
-> = {
-  '1.9.x': () =>
-    import('@appwrite.io/specs/specs/1.9.x/open-api3-1.9.x-console.json'),
-  '1.8.x': () =>
-    import('@appwrite.io/specs/specs/1.8.x/open-api3-1.8.x-console.json'),
-}
+import { parseOpenApiSpec } from './parse-spec'
 
 const specLoaders: Record<
   ApiSpecPlatform,
@@ -32,7 +13,6 @@ const specLoaders: Record<
 
 const parsedCache = new Map<ApiSpecPlatform, ParsedApiSpec>()
 const rawSpecCache = new Map<ApiSpecPlatform, OpenApiSpec>()
-let numberedConsoleSpecCache: OpenApiSpec | undefined
 
 export async function loadRawApiSpec(
   platform: ApiSpecPlatform = 'server',
@@ -46,63 +26,6 @@ export async function loadRawApiSpec(
   return module.default
 }
 
-async function loadNumberedConsoleSpec(): Promise<OpenApiSpec> {
-  if (numberedConsoleSpecCache) return numberedConsoleSpecCache
-
-  const preferred = NUMBERED_CONSOLE_SPEC_LOADERS[LATEST_EXAMPLES_VERSION]
-  if (preferred) {
-    const module = await preferred()
-    numberedConsoleSpecCache = module.default
-    return numberedConsoleSpecCache
-  }
-
-  // Fall back through known numbered loaders, then floating latest.
-  for (const loader of Object.values(NUMBERED_CONSOLE_SPEC_LOADERS)) {
-    try {
-      const module = await loader()
-      numberedConsoleSpecCache = module.default
-      return numberedConsoleSpecCache
-    } catch {
-      // try next
-    }
-  }
-
-  numberedConsoleSpecCache = await loadRawApiSpec('console')
-  return numberedConsoleSpecCache
-}
-
-function consoleSpecHasNativeDatabaseServices(spec: OpenApiSpec): boolean {
-  for (const pathItem of Object.values(spec.paths ?? {})) {
-    for (const [method, operation] of Object.entries(pathItem ?? {})) {
-      if (
-        method.startsWith('x-') ||
-        !operation ||
-        typeof operation !== 'object'
-      ) {
-        continue
-      }
-      const tags = (operation as { tags?: string[] }).tags ?? []
-      if (
-        tags.includes('postgresql') ||
-        tags.includes('mysql') ||
-        tags.includes('mongo') ||
-        tags.includes('compute')
-      ) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-async function loadConsoleSpecForNativeDatabases(): Promise<OpenApiSpec> {
-  const latestConsole = await loadRawApiSpec('console')
-  if (consoleSpecHasNativeDatabaseServices(latestConsole)) {
-    return latestConsole
-  }
-  return loadNumberedConsoleSpec()
-}
-
 export async function loadParsedApiSpec(
   platform: ApiSpecPlatform = 'server',
 ): Promise<ParsedApiSpec> {
@@ -110,14 +33,7 @@ export async function loadParsedApiSpec(
   if (cached) return cached
 
   const spec = await loadRawApiSpec(platform)
-  let parsed = parseOpenApiSpec(spec, platform)
-
-  // Project explorer uses server/client specs; native engines live on console.
-  if (platform === 'server' || platform === 'client') {
-    const consoleSpec = await loadConsoleSpecForNativeDatabases()
-    const consoleParsed = parseOpenApiSpec(consoleSpec, 'console')
-    parsed = mergeConsoleOnlyDatabaseServices(parsed, consoleParsed)
-  }
+  const parsed = parseOpenApiSpec(spec, platform)
 
   parsedCache.set(platform, parsed)
   return parsed
@@ -146,5 +62,4 @@ export async function downloadOpenApiSpec(
 export function clearParsedApiSpecCache(): void {
   parsedCache.clear()
   rawSpecCache.clear()
-  numberedConsoleSpecCache = undefined
 }
