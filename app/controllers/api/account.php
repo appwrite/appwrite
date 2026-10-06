@@ -1703,10 +1703,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // only that browser holds it, and no other site can read or set it. The cookie is not
         // rewritten here: two callbacks finishing together would race on it, and replaying an
         // authorization code is refused by the provider (RFC 6749 §4.1.2).
-        $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
-        $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
-        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
-            $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
+        // Only the session flow is held to it: this host sets that session itself. The token
+        // flow hands userId and secret to the app, whose server often starts the flow, so the
+        // cookie lands on that server rather than in the browser; binding is the app's to do.
+        if (empty($state['token'])) {
+            $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
+            $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
+            if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
+                $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
+            }
         }
 
         if (!empty($error)) {

@@ -3198,6 +3198,67 @@ final class AccountCustomClientTest extends Scope
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
     }
 
+    public function testCreateOAuth2TokenStartedByServer(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // An app's server starts the flow, as a server SDK does, and keeps only the Location;
+        // the nonce cookie set on that response never reaches the browser.
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The browser follows the provider, callback and redirect hops with no cookie at all.
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $successParams);
+        $this->assertNotEmpty($successParams['userId']);
+        $this->assertNotEmpty($successParams['secret']);
+
+        // The app exchanges the token for a session.
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $successParams['userId'],
+            'secret' => $successParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($successParams['userId'], $response['body']['userId']);
+    }
+
     public function testCreateOidcOAuth2Token(): void
     {
         $provider = 'oidc';
