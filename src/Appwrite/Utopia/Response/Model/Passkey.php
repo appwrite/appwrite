@@ -41,23 +41,14 @@ class Passkey extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('backedUp', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the passkey is synced to a cloud account, such as iCloud Keychain or Google Password Manager, rather than bound to one device.',
-                'default' => false,
-                'example' => true,
-            ])
         ;
     }
 
     public function filter(Document $document): Document
     {
-        $data = $document->getAttribute('data', []);
-
         return $document
             ->setAttribute('name', $document->getAttribute('name') ?? '')
-            ->setAttribute('accessedAt', $document->getAttribute('accessedAt') ?? '')
-            ->setAttribute('backedUp', $data['record']['backupStatus'] ?? false);
+            ->setAttribute('accessedAt', $document->getAttribute('accessedAt') ?? '');
     }
 
     public function getName(): string

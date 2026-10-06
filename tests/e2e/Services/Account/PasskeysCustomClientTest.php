@@ -150,7 +150,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(200, $passkey['headers']['status-code']);
         $this->assertSame($challenge['body']['passkeyId'], $passkey['body']['$id']);
         $this->assertSame('My laptop', $passkey['body']['name']);
-        $this->assertTrue($passkey['body']['backedUp']);
         $this->assertSame('', $passkey['body']['accessedAt']);
         $this->assertArrayNotHasKey('data', $passkey['body']);
 
