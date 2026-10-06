@@ -33,7 +33,7 @@ class Get extends Base
             ->setHttpPath('/v1/videos/:videoId/outputs/cmaf/master.mpd')
             ->desc('Get CMAF DASH manifest')
             ->groups(['api', 'videos'])
-            ->label('scope', 'videos.read')
+            ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(

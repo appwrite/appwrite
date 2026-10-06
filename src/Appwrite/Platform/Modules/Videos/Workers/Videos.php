@@ -130,6 +130,7 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
                 $project,
                 $videoMessage
             ),
@@ -137,6 +138,8 @@ class Videos extends Action
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
+                $queueForRealtime,
+                $project,
                 $videoMessage
             ),
             VideoAction::Encode => $this->encode(
@@ -159,12 +162,14 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
+        Realtime $queueForRealtime,
         Document $project,
         VideoMessage $videoMessage
     ): void {
         $video = $videoMessage->video;
         $projectId = $videoMessage->project->getId();
         $workspace = $this->jobWorkspace($projectId, $video->getId());
+        $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
@@ -173,7 +178,19 @@ class Videos extends Action
                 $deviceForFiles,
                 $deviceForVideos,
                 $video,
-                $workspace
+                $workspace,
+                $queueForRealtime,
+                $project,
+                $permissions
+            );
+
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $video,
+                'videos.[videoId].timeline.update',
+                ['videoId' => $video->getId()],
+                $permissions
             );
 
             $encoder = $this->encoder();
@@ -185,6 +202,14 @@ class Videos extends Action
 
             if ($width <= 0 || $height <= 0) {
                 Console::warning('Videos worker: source has no video track; skipping timeline for ' . $video->getId());
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $video,
+                    'videos.[videoId].timeline.update',
+                    ['videoId' => $video->getId()],
+                    $permissions
+                );
                 return;
             }
 
@@ -249,6 +274,25 @@ class Videos extends Action
                 $deviceForVideos->write($vttPath, new Stream($vtt), 'text/vtt');
                 Console::info('Uploaded timeline vtt for video ' . $video->getId());
             }
+
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $video,
+                'videos.[videoId].timeline.update',
+                ['videoId' => $video->getId()],
+                $permissions
+            );
+        } catch (\Throwable $th) {
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $video,
+                'videos.[videoId].timeline.update',
+                ['videoId' => $video->getId()],
+                $permissions
+            );
+            throw $th;
         } finally {
             $this->cleanup($workspace['basePath']);
         }
@@ -261,6 +305,8 @@ class Videos extends Action
         Database $dbForProject,
         Device $deviceForFiles,
         Device $deviceForVideos,
+        Realtime $queueForRealtime,
+        Document $project,
         VideoMessage $videoMessage
     ): void {
         $caption = $videoMessage->caption;
@@ -277,6 +323,7 @@ class Videos extends Action
             $video = $videoMessage->video;
         }
         $workspace = $this->workspace($videoMessage->project->getId(), $video->getId());
+        $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
 
         try {
             $caption = $dbForProject->updateDocument(
@@ -285,6 +332,17 @@ class Videos extends Action
                 new Document([
                     'status' => Base::STATUS_STARTED,
                 ])
+            );
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $caption,
+                'videos.[videoId].captions.[captionId].update',
+                [
+                    'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                    'captionId' => $caption->getId(),
+                ],
+                $permissions
             );
 
             $file = $this->resolveFile(
@@ -314,14 +372,34 @@ class Videos extends Action
                 }
             }
 
-            $this->persistCaptionVtt($dbForProject, $deviceForVideos, $video, $caption, $captionPath);
+            $this->persistCaptionVtt(
+                $dbForProject,
+                $deviceForVideos,
+                $video,
+                $caption,
+                $captionPath,
+                $queueForRealtime,
+                $project,
+                $permissions
+            );
         } catch (\Throwable $th) {
-            $dbForProject->updateDocument(
+            $caption = $dbForProject->updateDocument(
                 'videos_captions',
                 $caption->getId(),
                 new Document([
                     'status' => Base::STATUS_ERROR,
                 ])
+            );
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $caption,
+                'videos.[videoId].captions.[captionId].update',
+                [
+                    'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                    'captionId' => $caption->getId(),
+                ],
+                $permissions
             );
 
             throw $th;
@@ -399,7 +477,17 @@ class Videos extends Action
 
             $rendition = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             $claimed = true;
-            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $rendition,
+                'videos.[videoId].renditions.[renditionId].update',
+                [
+                    'videoId' => $rendition->getAttribute('videoId', ''),
+                    'renditionId' => $rendition->getId(),
+                ],
+                $permissions
+            );
 
             $workspace = $this->jobWorkspace($projectId, $videoId, $rendition->getId());
             [$video, $inPath] = $this->prepareSource(
@@ -407,7 +495,10 @@ class Videos extends Action
                 $deviceForFiles,
                 $deviceForVideos,
                 $dbForProject->getDocument('videos', $videoId),
-                $workspace
+                $workspace,
+                $queueForRealtime,
+                $project,
+                $permissions
             );
 
             $ffmpeg = new FFmpeg(threads: 4);
@@ -508,7 +599,17 @@ class Videos extends Action
                             'progress' => (string) $percentage,
                         ])
                     );
-                    $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+                    $this->notify(
+                        $queueForRealtime,
+                        $project,
+                        $rendition,
+                        'videos.[videoId].renditions.[renditionId].update',
+                        [
+                            'videoId' => $rendition->getAttribute('videoId', ''),
+                            'renditionId' => $rendition->getId(),
+                        ],
+                        $permissions
+                    );
                 })
                 ->on(Packager::LOG, function (mixed $line) {
                     if (\is_string($line) && \trim($line) !== '') {
@@ -566,7 +667,17 @@ class Videos extends Action
                     'targetDuration' => $targetDuration,
                 ], fn ($value) => $value !== null))
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $rendition,
+                'videos.[videoId].renditions.[renditionId].update',
+                [
+                    'videoId' => $rendition->getAttribute('videoId', ''),
+                    'renditionId' => $rendition->getId(),
+                ],
+                $permissions
+            );
 
             Console::info('Rendition ' . $rendition->getId() . ' conversion done');
 
@@ -596,7 +707,17 @@ class Videos extends Action
                             'path' => $path,
                         ])
                     );
-                    $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+                    $this->notify(
+                        $queueForRealtime,
+                        $project,
+                        $rendition,
+                        'videos.[videoId].renditions.[renditionId].update',
+                        [
+                            'videoId' => $rendition->getAttribute('videoId', ''),
+                            'renditionId' => $rendition->getId(),
+                        ],
+                        $permissions
+                    );
                 }
             );
 
@@ -617,7 +738,17 @@ class Videos extends Action
                     'progress' => '100',
                 ])
             );
-            $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $rendition,
+                'videos.[videoId].renditions.[renditionId].update',
+                [
+                    'videoId' => $rendition->getAttribute('videoId', ''),
+                    'renditionId' => $rendition->getId(),
+                ],
+                $permissions
+            );
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
@@ -642,7 +773,17 @@ class Videos extends Action
                         ],
                     ])
                 );
-                $this->notify($queueForRealtime, $project, $rendition, 'update', $permissions);
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $rendition,
+                    'videos.[videoId].renditions.[renditionId].update',
+                    [
+                        'videoId' => $rendition->getAttribute('videoId', ''),
+                        'renditionId' => $rendition->getId(),
+                    ],
+                    $permissions
+                );
             }
 
             Console::error(
@@ -697,13 +838,18 @@ class Videos extends Action
 
     /**
      * Write a staged WebVTT file as the caption's single segment and mark ready.
+     *
+     * @param array<string> $permissions
      */
     private function persistCaptionVtt(
         Database $dbForProject,
         Device $deviceForVideos,
         Document $video,
         Document $caption,
-        string $vttPath
+        string $vttPath,
+        Realtime $queueForRealtime,
+        Document $project,
+        array $permissions
     ): Document {
         $dbForProject->deleteDocuments('videos_captions_segments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
@@ -730,7 +876,7 @@ class Videos extends Action
             'text/vtt'
         );
 
-        return $dbForProject->updateDocument(
+        $caption = $dbForProject->updateDocument(
             'videos_captions',
             $caption->getId(),
             new Document([
@@ -739,6 +885,19 @@ class Videos extends Action
                 'path' => $fullPath,
             ])
         );
+        $this->notify(
+            $queueForRealtime,
+            $project,
+            $caption,
+            'videos.[videoId].captions.[captionId].update',
+            [
+                'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                'captionId' => $caption->getId(),
+            ],
+            $permissions
+        );
+
+        return $caption;
     }
 
     /**
@@ -747,6 +906,8 @@ class Videos extends Action
      * Image-based streams are skipped. An upload that already claims default
      * keeps the flag; extracted rows for the same language are still created.
      * One failed track does not fail the timeline.
+     *
+     * @param array<string> $permissions
      */
     private function extractEmbeddedCaptions(
         Database $dbForProject,
@@ -754,7 +915,10 @@ class Videos extends Action
         Document $video,
         string $inPath,
         string $outDir,
-        Encoder $encoder
+        Encoder $encoder,
+        Realtime $queueForRealtime,
+        Document $project,
+        array $permissions
     ): void {
         Console::info('Videos worker: extracting embedded captions for video ' . $video->getId());
 
@@ -855,8 +1019,28 @@ class Videos extends Action
                     'default' => $isDefault,
                     'status' => Base::STATUS_STARTED,
                 ]));
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $caption,
+                    'videos.[videoId].captions.[captionId].update',
+                    [
+                        'videoId' => $video->getId(),
+                        'captionId' => $caption->getId(),
+                    ],
+                    $permissions
+                );
 
-                $this->persistCaptionVtt($dbForProject, $deviceForVideos, $video, $caption, $vttPath);
+                $this->persistCaptionVtt(
+                    $dbForProject,
+                    $deviceForVideos,
+                    $video,
+                    $caption,
+                    $vttPath,
+                    $queueForRealtime,
+                    $project,
+                    $permissions
+                );
                 $registered++;
                 Console::info(
                     'Videos worker: registered embedded caption ' . $caption->getId()
@@ -888,10 +1072,21 @@ class Videos extends Action
                     continue;
                 }
 
-                $dbForProject->updateDocument(
+                $caption = $dbForProject->updateDocument(
                     'videos_captions',
                     $caption->getId(),
                     new Document(['default' => true])
+                );
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $caption,
+                    'videos.[videoId].captions.[captionId].update',
+                    [
+                        'videoId' => $video->getId(),
+                        'captionId' => $caption->getId(),
+                    ],
+                    $permissions
                 );
                 Console::info(
                     'Videos worker: set default embedded caption ' . $caption->getId()
@@ -1009,6 +1204,7 @@ class Videos extends Action
      * and extract embedded captions once.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
+     * @param array<string> $permissions
      * @return array{0: Document, 1: string}
      */
     private function prepareSource(
@@ -1016,7 +1212,10 @@ class Videos extends Action
         Device $deviceForFiles,
         Device $deviceForVideos,
         Document $video,
-        array $workspace
+        array $workspace,
+        Realtime $queueForRealtime,
+        Document $project,
+        array $permissions
     ): array {
         if ($video->isEmpty()) {
             throw new \Exception('Video not found');
@@ -1051,7 +1250,10 @@ class Videos extends Action
                         $video,
                         $inPath,
                         $workspace['outDir'],
-                        $this->encoder()
+                        $this->encoder(),
+                        $queueForRealtime,
+                        $project,
+                        $permissions
                     );
                 } catch (\Throwable $th) {
                     Console::warning(
@@ -1494,23 +1696,26 @@ class Videos extends Action
     }
 
     /**
-     * Publishes a rendition change on the project's realtime channels.
+     * Publishes a document change on the project's realtime channels.
      *
-     * Rendition rows carry no ACL of their own, and the Realtime adapter derives
-     * delivery roles from the payload's read permissions — an empty set means the
-     * event is silently dropped. Stamp the roles resolved from the source
-     * bucket/file (see sourceReadPermissions()) so subscribers receive the event.
+     * Video child rows (and timeline payloads) carry no ACL of their own, and
+     * the Realtime adapter derives delivery roles from the payload's read
+     * permissions — an empty set means the event is silently dropped. Stamp the
+     * roles resolved from the source bucket/file (see sourceReadPermissions())
+     * so subscribers receive the event.
      *
+     * @param array<string, string> $params
      * @param array<string> $permissions
      */
     private function notify(
         Realtime $queueForRealtime,
         Document $project,
-        Document $rendition,
-        string $action,
+        Document $document,
+        string $event,
+        array $params,
         array $permissions
     ): void {
-        $payload = $rendition->getArrayCopy();
+        $payload = $document->getArrayCopy();
         if (empty($payload['$permissions'])) {
             $payload['$permissions'] = $permissions;
         }
@@ -1518,9 +1723,13 @@ class Videos extends Action
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
-            ->setEvent('videos.[videoId].renditions.[renditionId].' . $action)
-            ->setParam('videoId', $rendition->getAttribute('videoId', ''))
-            ->setParam('renditionId', $rendition->getId())
+            ->setEvent($event);
+
+        foreach ($params as $key => $value) {
+            $queueForRealtime->setParam($key, $value);
+        }
+
+        $queueForRealtime
             ->setPayload($payload)
             ->trigger();
     }

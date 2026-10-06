@@ -41,13 +41,13 @@ final class VideosCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['total']);
+        $this->assertEquals(5, $response['body']['total']);
 
         $names = \array_column($response['body']['profiles'], 'name');
-        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p', '2160p'], $names);
+        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p'], $names);
 
         $heights = \array_column($response['body']['profiles'], 'height');
-        $this->assertSame([360, 480, 576, 720, 1080, 2160], $heights);
+        $this->assertSame([360, 480, 576, 720, 1080], $heights);
 
         foreach ($response['body']['profiles'] as $profile) {
             $this->assertEquals('h264', $profile['codec']);

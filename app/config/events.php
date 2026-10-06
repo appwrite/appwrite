@@ -724,6 +724,13 @@ return [
                 '$description' => 'This event triggers when a caption is deleted.',
             ],
         ],
+        'timeline' => [
+            '$model' => Response::MODEL_VIDEO,
+            '$description' => 'This event triggers when a video timeline job updates.',
+            'update' => [
+                '$description' => 'This event triggers when a video timeline job updates.',
+            ],
+        ],
         'create' => [
             '$description' => 'This event triggers when a video is created.',
         ],

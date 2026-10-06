@@ -36,7 +36,7 @@ class Get extends Base
             ->setHttpPath('/v1/videos/:videoId/outputs/:output/captions/:captionId/segments/:segmentId')
             ->desc('Get caption segment')
             ->groups(['api', 'videos'])
-            ->label('scope', 'videos.read')
+            ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(

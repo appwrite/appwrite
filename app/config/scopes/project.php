@@ -491,6 +491,10 @@ return [
     ],
 
     // Videos
+    'videos.play' => [
+        'description' => 'Access to play your project\'s video streams and related media',
+        'category' => 'Videos',
+    ],
     'videos.read' => [
         'description' => 'Access to read your project\'s video content',
         'category' => 'Videos',

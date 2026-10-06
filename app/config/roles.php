@@ -37,6 +37,7 @@ $member = [
     'subscribers.read',
     'assistant.read',
     'rules.read',
+    'videos.play',
     'videos.read',
     'videos.write',
 ];
@@ -142,6 +143,7 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'videos.play',
     'videos.read',
     'videos.write',
 ];
@@ -167,6 +169,7 @@ return [
             'embeddings.write',
             'files.read',
             'files.write',
+            'videos.play',
             'locale.read',
             'avatars.read',
             'executions.write',
