@@ -3335,6 +3335,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        // Outside printable ASCII is refused up front, so the callback's state limit always fits.
         $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3342,7 +3343,22 @@ final class AccountCustomClientTest extends Scope
         ], [
             'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
-            'state' => 'app-state-456',
+            'state' => \str_repeat('😀', 256),
+        ], followRedirects: false);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // The longest allowed state, made of characters JSON escaping doubles, still round-trips.
+        $state = \str_repeat('"/\\', 85) . 'x';
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'state' => $state,
         ], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
@@ -3366,7 +3382,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
 
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
-        $this->assertSame('app-state-456', $failureParams['state']);
+        $this->assertSame($state, $failureParams['state']);
         $this->assertSame('user_oauth2_provider_error', \json_decode($failureParams['error'], true)['type']);
     }
 
