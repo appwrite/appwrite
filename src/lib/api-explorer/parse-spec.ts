@@ -1,4 +1,8 @@
-import { getPlatformAuth, getSdkMethodName } from './spec-metadata'
+import {
+  getPlatformAuth,
+  getSdkMethodName,
+  isPlatformSupported,
+} from './spec-metadata'
 import { getOpenApiEnumValues } from './openapi-schema'
 import { normalizeDatabaseOpenApiSpec } from './normalize-database-spec'
 import { compareServices, getServiceLabel } from './services'
@@ -48,15 +52,6 @@ function formatAuthLabel(
     if (keys.size > 0) return Array.from(keys).join(', ')
   }
   return 'Project'
-}
-
-function isPlatformSupported(
-  xAppwrite: AppwriteOpenApiExtension | undefined,
-  platform: ApiSpecPlatform,
-): boolean {
-  const platforms = xAppwrite?.platforms
-  if (!platforms?.length) return true
-  return platforms.includes(platform)
 }
 
 function resolveSchema(
