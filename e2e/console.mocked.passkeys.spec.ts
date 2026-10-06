@@ -130,14 +130,13 @@ const ORGANIZATION = {
 const PROJECT_ID = 'proj0000000000000000001'
 
 const CONFIGURED: PasskeyPolicy = {
-  enabled: false,
   rpId: 'example.com',
   origins: ['https://example.com', 'https://app.example.com'],
 }
 
-const UNCONFIGURED: PasskeyPolicy = { enabled: false, rpId: '', origins: [] }
+const UNCONFIGURED: PasskeyPolicy = { rpId: '', origins: [] }
 
-function project() {
+function project(passkeyEnabled: boolean) {
   return {
     $id: PROJECT_ID,
     $createdAt: NOW,
@@ -147,20 +146,22 @@ function project() {
     region: 'default',
     status: 'active',
     // The SDK types service ids as enums, so the literals need the cast. Like the
-    // server at the pinned response format, authMethods omits passkey.
+    // server at the 2.4.0 response format, authMethods includes passkey.
     services: ALL_SERVICES.map(($id) => ({
       $id,
       enabled: true,
     })) as Models.Project['services'],
-    authMethods: AUTH_METHODS.map(($id) => ({
-      $id,
-      enabled: true,
-    })) as Models.Project['authMethods'],
+    authMethods: [
+      ...AUTH_METHODS.map(($id) => ({ $id, enabled: true })),
+      { $id: PASSKEY_ID, enabled: passkeyEnabled },
+    ] as Models.Project['authMethods'],
   } satisfies Partial<Models.Project>
 }
 
 type MockOptions = {
   policy?: PasskeyPolicy
+  /** Whether the Passkey auth method starts on. */
+  passkeyEnabled?: boolean
   /** The console user's prefs; carries the passkeys flag by default. */
   accountPrefs?: Models.Preferences
   /** When set, the policy PATCH is refused with this JSON body. */
@@ -192,7 +193,7 @@ async function mockAppwriteApi(
   options: MockOptions = {},
 ): Promise<Calls> {
   let policy = options.policy ?? CONFIGURED
-  const projectDocument = project()
+  let passkeyEnabled = options.passkeyEnabled ?? false
   const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const calls: Calls = { policyPatches: [], methodPatches: [] }
@@ -218,13 +219,13 @@ async function mockAppwriteApi(
       calls.policyPatches.push(request)
       if (options.patchError) return json(400, options.patchError)
       policy = { ...policy, ...request.postDataJSON() }
-      return json(200, projectDocument)
+      return json(200, project(passkeyEnabled))
     }
 
     if (apiPath === PASSKEY_METHOD_PATH && request.method() === 'PATCH') {
       calls.methodPatches.push(request)
-      policy = { ...policy, enabled: request.postDataJSON()?.enabled === true }
-      return json(200, projectDocument)
+      passkeyEnabled = request.postDataJSON()?.enabled === true
+      return json(200, project(passkeyEnabled))
     }
 
     if (apiPath === '/account') return json(200, account)
@@ -260,13 +261,13 @@ async function mockAppwriteApi(
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
-      return json(200, { total: 1, projects: [projectDocument] })
+      return json(200, { total: 1, projects: [project(passkeyEnabled)] })
     if (
       apiPath === '/project' ||
       apiPath === `/projects/${PROJECT_ID}` ||
       apiPath === `/projects/${PROJECT_ID}/console-access`
     )
-      return json(200, projectDocument)
+      return json(200, project(passkeyEnabled))
     // `fetchProjectAuthSecurity` swallows failures on both of these, so a
     // mis-pathed mock would read back as the default snapshot, not as an error.
     if (apiPath === '/project/policies')
@@ -445,7 +446,7 @@ test.describe('passkeys (mocked API)', () => {
   test('clearing the policy while the method is on warns first', async ({
     page,
   }) => {
-    await mockAppwriteApi(page, { policy: { ...CONFIGURED, enabled: true } })
+    await mockAppwriteApi(page, { policy: CONFIGURED, passkeyEnabled: true })
     await openPasskeyPolicies(page)
 
     const status = page.getByTestId('passkey-method-status')

@@ -8,14 +8,9 @@ export const MAX_PASSKEY_RP_ID_LENGTH = 253
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
 
-/** `enabled` mirrors the passkey auth method, which the 2.3.0 response format hides. */
-export type PasskeyPolicy = Pick<
-  Models.PolicyPasskey,
-  'enabled' | 'rpId' | 'origins'
->
+export type PasskeyPolicy = Pick<Models.PolicyPasskey, 'rpId' | 'origins'>
 
 export const DEFAULT_PASSKEY_POLICY: PasskeyPolicy = {
-  enabled: false,
   rpId: '',
   origins: [],
 }
@@ -25,7 +20,6 @@ export function parsePasskeyPolicy(
 ): PasskeyPolicy {
   if (!policy) return DEFAULT_PASSKEY_POLICY
   return {
-    enabled: policy.enabled,
     rpId: policy.rpId,
     origins: policy.origins,
   }

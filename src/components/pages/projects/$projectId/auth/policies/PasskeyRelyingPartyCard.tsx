@@ -41,9 +41,12 @@ function sameOrigins(a: string[], b: string[]): boolean {
 export function PasskeyRelyingPartyCard({
   projectId,
   currentPolicy,
+  methodEnabled,
 }: {
   projectId: string
   currentPolicy: PasskeyPolicy
+  /** Whether the Passkey auth method is on, from the project's auth methods. */
+  methodEnabled: boolean
 }) {
   const t = useT()
   const fieldId = useId()
@@ -86,7 +89,7 @@ export function PasskeyRelyingPartyCard({
   const hasErrors = rpIdError !== null || originErrors.some(Boolean)
   // Passkeys fail closed, so clearing the relying party stops sign-in for everyone.
   const breaksSignIn =
-    currentPolicy.enabled && (nextRpId === '' || nextOrigins.length === 0)
+    methodEnabled && (nextRpId === '' || nextOrigins.length === 0)
 
   const updateOrigin = (id: number, value: string) => {
     setOrigins((prev) =>
@@ -144,10 +147,10 @@ export function PasskeyRelyingPartyCard({
           >
             {t('Passkey auth method')}
             <Badge
-              variant={currentPolicy.enabled ? 'success' : 'info'}
+              variant={methodEnabled ? 'success' : 'info'}
               className="text-[10px] shrink-0"
             >
-              {currentPolicy.enabled ? t('Enabled') : t('Disabled')}
+              {methodEnabled ? t('Enabled') : t('Disabled')}
             </Badge>
           </Link>
         </div>

@@ -297,9 +297,7 @@ export function syncConsoleAccountSingletonFromQueryClient(
  * loaders) and auth UI. Pass `revision` from `useConsoleImpersonationRevision` when
  * overriding `queryFn` in components.
  */
-export function consoleAccountQueryOptions(options?: {
-  revision?: number
-}) {
+export function consoleAccountQueryOptions(options?: { revision?: number }) {
   const revision = options?.revision ?? getConsoleAccountQueryRevision()
   return queryOptions({
     queryKey: ['account', 'console', revision],
@@ -467,7 +465,9 @@ export async function performConsoleSignOut(
     try {
       const sessionsResponse = await sdk.forConsole.account.listSessions()
       const sessions = sessionsResponse.sessions || []
-      const currentSession = sessions.find((session) => session.current === true)
+      const currentSession = sessions.find(
+        (session) => session.current === true,
+      )
 
       if (currentSession) {
         await sdk.forConsole.account.deleteSession({
@@ -688,9 +688,11 @@ export function useUpdateAuthDuration(projectId: string | null | undefined) {
         Math.min(duration, MAX_DURATION_SECONDS),
       )
 
-      return await sdk.forProject(projectId).project.updateSessionDurationPolicy({
-        duration: clampedDuration,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updateSessionDurationPolicy({
+          duration: clampedDuration,
+        })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -742,9 +744,11 @@ export function useUpdateAuthPasswordHistory(
       }
       assertAuthPolicyTotal(limit, 'Password history')
 
-      return await sdk.forProject(projectId).project.updatePasswordHistoryPolicy({
-        total: authPolicyTotalForApi(limit) as unknown as number,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordHistoryPolicy({
+          total: authPolicyTotalForApi(limit) as unknown as number,
+        })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1024,13 +1028,15 @@ export function useUpdateMembershipsPrivacy(
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forProject(projectId).project.updateMembershipPrivacyPolicy({
-        userName: privacy.userName,
-        userEmail: privacy.userEmail,
-        userMFA: privacy.mfa,
-        userId: privacy.userId,
-        userPhone: privacy.userPhone,
-      })
+      return await sdk
+        .forProject(projectId)
+        .project.updateMembershipPrivacyPolicy({
+          userName: privacy.userName,
+          userEmail: privacy.userEmail,
+          userMFA: privacy.mfa,
+          userId: privacy.userId,
+          userPhone: privacy.userPhone,
+        })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1073,9 +1079,7 @@ export function useUpdateMfaFactorsPolicy(
 }
 
 type ProjectEmailPolicyService = {
-  updateDenyFreeEmailPolicy: (params: {
-    enabled: boolean
-  }) => Promise<unknown>
+  updateDenyFreeEmailPolicy: (params: { enabled: boolean }) => Promise<unknown>
   updateDenyAliasedEmailPolicy: (params: {
     enabled: boolean
   }) => Promise<unknown>
@@ -1087,7 +1091,9 @@ type ProjectEmailPolicyService = {
   }) => Promise<unknown>
 }
 
-function projectEmailPolicyService(projectId: string): ProjectEmailPolicyService {
+function projectEmailPolicyService(
+  projectId: string,
+): ProjectEmailPolicyService {
   return sdk.forProject(projectId).project as ProjectEmailPolicyService
 }
 
@@ -1104,9 +1110,9 @@ export function useUpdateDenyFreeEmailPolicy(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await projectEmailPolicyService(projectId).updateDenyFreeEmailPolicy(
-        { enabled },
-      )
+      return await projectEmailPolicyService(
+        projectId,
+      ).updateDenyFreeEmailPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1257,10 +1263,6 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['project', projectId],
-      })
-      // The passkey method's state is read from its policy
-      queryClient.invalidateQueries({
-        queryKey: ['project-auth-security', projectId],
       })
     },
   })
@@ -1622,7 +1624,10 @@ export async function flushRecentImpersonationUsersToAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
-  const updatedAccount = await updateAccountPrefs(updatedPrefs, 'flush-recent-impersonation-users')
+  const updatedAccount = await updateAccountPrefs(
+    updatedPrefs,
+    'flush-recent-impersonation-users',
+  )
   if (!updatedAccount || !isConsoleAccountUser(updatedAccount)) return
   clearRecentImpersonationSessionList(operatorId)
   writeRecentImpersonationSavedList(operatorId, merged)
@@ -1851,10 +1856,7 @@ export function useSidebarCollapsed(
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
-        mergeSidebarCollapsedIntoPrefs(
-          { ...(account.prefs ?? {}) },
-          value,
-        ),
+        mergeSidebarCollapsedIntoPrefs({ ...(account.prefs ?? {}) }, value),
         'sidebar-collapsed',
       )
     },
@@ -1972,10 +1974,7 @@ export function useConnectProjectTab(
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
-        mergeConnectProjectTabIntoPrefs(
-          { ...(account.prefs ?? {}) },
-          value,
-        ),
+        mergeConnectProjectTabIntoPrefs({ ...(account.prefs ?? {}) }, value),
         'connect-project-tab',
       )
     },
@@ -2058,11 +2057,13 @@ export function useTableViewSidebarWidth(
       if (!account) {
         throw new Error('Account data not available')
       }
-      return await updateAccountPrefs({
-        ...account.prefs,
-        ...build(value),
-      },
-        'table-view-sidebar-width')
+      return await updateAccountPrefs(
+        {
+          ...account.prefs,
+          ...build(value),
+        },
+        'table-view-sidebar-width',
+      )
     },
     onMutate: async (value) => {
       const patch = build(value)
@@ -2111,11 +2112,13 @@ export function usePostgresSqlEditorHeight(
       if (!account) {
         throw new Error('Account data not available')
       }
-      return await updateAccountPrefs({
-        ...account.prefs,
-        ...buildPostgresSqlEditorHeightPrefs(value),
-      },
-        'postgres-sql-editor-height')
+      return await updateAccountPrefs(
+        {
+          ...account.prefs,
+          ...buildPostgresSqlEditorHeightPrefs(value),
+        },
+        'postgres-sql-editor-height',
+      )
     },
     onMutate: async (value) => {
       const patch = buildPostgresSqlEditorHeightPrefs(value)
@@ -2164,11 +2167,13 @@ export function useMysqlSqlEditorHeight(
       if (!account) {
         throw new Error('Account data not available')
       }
-      return await updateAccountPrefs({
-        ...account.prefs,
-        ...buildMysqlSqlEditorHeightPrefs(value),
-      },
-        'mysql-sql-editor-height')
+      return await updateAccountPrefs(
+        {
+          ...account.prefs,
+          ...buildMysqlSqlEditorHeightPrefs(value),
+        },
+        'mysql-sql-editor-height',
+      )
     },
     onMutate: async (value) => {
       const patch = buildMysqlSqlEditorHeightPrefs(value)
@@ -2439,9 +2444,9 @@ export function useApiExplorerExpandedProductGroup(
   account: ConsoleAccountCache | undefined,
 ) {
   const queryClient = useQueryClient()
-  const [expandedProductGroupId, setExpandedProductGroupId] = useState<string | null>(
-    null,
-  )
+  const [expandedProductGroupId, setExpandedProductGroupId] = useState<
+    string | null
+  >(null)
   const hydratedRef = useRef(false)
   const expandedProductGroupIdRef = useRef<string | null>(null)
 
@@ -2546,10 +2551,7 @@ async function migrateLegacyBrowserPrefsToAccount(
 
   if (!hasRightPaneWidthPref(prefs)) {
     if (hasAIChatPanelWidthPref(next)) {
-      next = mergeRightPaneWidthPxIntoPrefs(
-        next,
-        parseAIChatPanelWidthPx(next),
-      )
+      next = mergeRightPaneWidthPxIntoPrefs(next, parseAIChatPanelWidthPx(next))
       changed = true
     } else {
       const legacyWidth = readLegacyAIChatPanelWidthFromLocalStorage()
@@ -2561,7 +2563,8 @@ async function migrateLegacyBrowserPrefsToAccount(
   }
 
   if (!hasBuildNotificationsOptedOutPref(prefs)) {
-    const legacyOptedOut = readLegacyBuildNotificationsOptedOutFromLocalStorage()
+    const legacyOptedOut =
+      readLegacyBuildNotificationsOptedOutFromLocalStorage()
     if (legacyOptedOut) {
       next = mergeBuildNotificationsOptedOutIntoPrefs(next, true)
       changed = true
@@ -2593,7 +2596,10 @@ async function migrateLegacyBrowserPrefsToAccount(
     return
   }
 
-  const updatedAccount = await updateAccountPrefs(next, 'migrate-legacy-browser-prefs')
+  const updatedAccount = await updateAccountPrefs(
+    next,
+    'migrate-legacy-browser-prefs',
+  )
   clearLegacyAIChatLocalStorage()
   clearLegacyBuildNotificationsOptedOutLocalStorage()
   clearLegacyCliShellHeightLocalStorage()
@@ -2628,9 +2634,7 @@ function useMigrateLegacyBrowserPrefsToAccount(
  * AI assistant panel open state (`console.aiChat.panelOpen`).
  * Migrates legacy localStorage on first account load.
  */
-export function useAIChatPanelOpen(
-  account: ConsoleAccountCache | undefined,
-) {
+export function useAIChatPanelOpen(account: ConsoleAccountCache | undefined) {
   const queryClient = useQueryClient()
   useMigrateLegacyBrowserPrefsToAccount(account)
 
@@ -2700,10 +2704,7 @@ export function useAIChatExpanded(account: ConsoleAccountCache | undefined) {
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
-        mergeAIChatExpandedIntoPrefs(
-          (account.prefs ?? {}) as UserPrefs,
-          value,
-        ),
+        mergeAIChatExpandedIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
         'ai-chat-expanded',
       )
     },
@@ -3075,15 +3076,11 @@ export function useAuthPasswordStrengthComplianceOpen(
  * Shared console right pane width (`console.rightPane.widthPx`).
  * Debounces writes while resizing.
  */
-export function useRightPaneWidth(
-  account: ConsoleAccountCache | undefined,
-) {
+export function useRightPaneWidth(account: ConsoleAccountCache | undefined) {
   const queryClient = useQueryClient()
   useMigrateLegacyBrowserPrefsToAccount(account)
 
-  const widthPx = parseRightPaneWidthPx(
-    account?.prefs as UserPrefs | undefined,
-  )
+  const widthPx = parseRightPaneWidthPx(account?.prefs as UserPrefs | undefined)
 
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -3125,8 +3122,7 @@ export function useRightPaneWidth(
 
   const setWidthPx = useCallback(
     (value: number | ((prev: number) => number)) => {
-      const nextValue =
-        typeof value === 'function' ? value(widthPx) : value
+      const nextValue = typeof value === 'function' ? value(widthPx) : value
       if (!account) return
       if (persistTimerRef.current !== null) {
         clearTimeout(persistTimerRef.current)
@@ -3167,9 +3163,7 @@ export function useRightPaneWidth(
 /**
  * @deprecated Use {@link useRightPaneWidth}. Kept for compatibility.
  */
-export function useAIChatPanelWidth(
-  account: ConsoleAccountCache | undefined,
-) {
+export function useAIChatPanelWidth(account: ConsoleAccountCache | undefined) {
   return useRightPaneWidth(account)
 }
 
@@ -3284,8 +3278,7 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
 
   const setHeightPx = useCallback(
     (value: number | ((prev: number) => number)) => {
-      const nextValue =
-        typeof value === 'function' ? value(heightPx) : value
+      const nextValue = typeof value === 'function' ? value(heightPx) : value
       if (!account) return
       if (persistTimerRef.current !== null) {
         clearTimeout(persistTimerRef.current)
@@ -3597,13 +3590,7 @@ export function useCliShellSessionsPrefs(
         updateMutation.mutate(value)
       }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
     },
-    [
-      account,
-      isSessionsPrefsUnchanged,
-      projectId,
-      queryClient,
-      updateMutation,
-    ],
+    [account, isSessionsPrefsUnchanged, projectId, queryClient, updateMutation],
   )
 
   const flushPersistSessions = useCallback(() => {
@@ -3803,11 +3790,13 @@ export function useSavedFilters(
         ...(sort ? { sort } : {}),
       }
       const next = [newFilter, ...current]
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedFiltersPrefs(scope, next),
-      },
-        'saved-filters')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedFiltersPrefs(scope, next),
+        },
+        'saved-filters',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3857,11 +3846,13 @@ export function useSavedFilters(
       }
       const current = parseSavedFilters(currentAccount.prefs, scope)
       const next = current.filter((f) => f.id !== id)
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedFiltersPrefs(scope, next),
-      },
-        'saved-filters')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedFiltersPrefs(scope, next),
+        },
+        'saved-filters',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3896,11 +3887,13 @@ export function useSavedFilters(
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedFiltersPrefs(scope, orderedFilters),
-      },
-        'saved-filters')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedFiltersPrefs(scope, orderedFilters),
+        },
+        'saved-filters',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3975,11 +3968,13 @@ export function useSavedFilters(
       const next = current.map((f) =>
         f.id === id ? { ...f, name: trimmedName } : f,
       )
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedFiltersPrefs(scope, next),
-      },
-        'saved-filters')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedFiltersPrefs(scope, next),
+        },
+        'saved-filters',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -4119,7 +4114,9 @@ export function useImageTransformSavedPresets(
         throw new Error('Preset data is too large')
       }
       const current = parseSavedImageTransformPresets(currentAccount.prefs)
-      const trimmedName = name.trim().slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      const trimmedName = name
+        .trim()
+        .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
       if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
         throw new Error(`Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`)
@@ -4132,11 +4129,13 @@ export function useImageTransformSavedPresets(
         },
         ...current,
       ]
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedImageTransformPresetsPrefs(next),
-      },
-        'image-transform-saved-presets')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedImageTransformPresetsPrefs(next),
+        },
+        'image-transform-saved-presets',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -4180,11 +4179,13 @@ export function useImageTransformSavedPresets(
       if (!currentAccount) throw new Error('Account not available')
       const current = parseSavedImageTransformPresets(currentAccount.prefs)
       const next = current.filter((p) => p.id !== id)
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedImageTransformPresetsPrefs(next),
-      },
-        'image-transform-saved-presets')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedImageTransformPresetsPrefs(next),
+        },
+        'image-transform-saved-presets',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -4212,11 +4213,13 @@ export function useImageTransformSavedPresets(
     mutationFn: async (ordered: SavedImageTransformPreset[]) => {
       const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount) throw new Error('Account not available')
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedImageTransformPresetsPrefs(ordered),
-      },
-        'image-transform-saved-presets')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedImageTransformPresetsPrefs(ordered),
+        },
+        'image-transform-saved-presets',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -4249,11 +4252,13 @@ export function useImageTransformSavedPresets(
       const next = current.map((p) =>
         p.id === id ? { ...p, name: trimmedName } : p,
       )
-      return await updateAccountPrefs({
-        ...currentAccount.prefs,
-        ...buildSavedImageTransformPresetsPrefs(next),
-      },
-        'image-transform-saved-presets')
+      return await updateAccountPrefs(
+        {
+          ...currentAccount.prefs,
+          ...buildSavedImageTransformPresetsPrefs(next),
+        },
+        'image-transform-saved-presets',
+      )
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -4283,7 +4288,11 @@ export function useImageTransformSavedPresets(
   })
 
   const addPreset = useCallback(
-    async (args: { name: string; json: string; level: ImageTransformSavedPresetLevel }) => {
+    async (args: {
+      name: string
+      json: string
+      level: ImageTransformSavedPresetLevel
+    }) => {
       if (args.level === 'team' && teamId) {
         return addTeamMutation.mutateAsync({
           name: args.name,
@@ -4317,11 +4326,7 @@ export function useImageTransformSavedPresets(
   )
 
   const updatePresetName = useCallback(
-    async (
-      id: string,
-      level: ImageTransformSavedPresetLevel,
-      name: string,
-    ) => {
+    async (id: string, level: ImageTransformSavedPresetLevel, name: string) => {
       if (level === 'team' && teamId) {
         return updateTeamPresetNameMutation.mutateAsync({ id, name })
       }

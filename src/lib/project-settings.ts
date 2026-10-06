@@ -101,7 +101,9 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
 
 function policyById(
   policies: ProjectPolicy[] | undefined,
-  id: ProjectPolicyId | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
+  id:
+    | ProjectPolicyId
+    | (typeof AuthEmailPolicyId)[keyof typeof AuthEmailPolicyId],
 ): ProjectPolicy | undefined {
   return policies?.find((p) => p.$id === id)
 }
@@ -146,15 +148,9 @@ export function parseProjectAuthSecurity(
   mockNumbers: Models.MockNumber[] | undefined,
 ): ProjectAuthSecuritySnapshot {
   const userLimit = policyById(policies, ProjectPolicyId.Userlimit)
-  const sessionDuration = policyById(
-    policies,
-    ProjectPolicyId.Sessionduration,
-  )
+  const sessionDuration = policyById(policies, ProjectPolicyId.Sessionduration)
   const sessionLimit = policyById(policies, ProjectPolicyId.Sessionlimit)
-  const passwordHistory = policyById(
-    policies,
-    ProjectPolicyId.Passwordhistory,
-  )
+  const passwordHistory = policyById(policies, ProjectPolicyId.Passwordhistory)
   const passwordStrength = policyById(
     policies,
     ProjectPolicyId.Passwordstrength,
@@ -281,10 +277,7 @@ export async function fetchProjectAuthSecurity(
     projectSdk.project.listPolicies({ total: true }).catch(() => null),
     projectSdk.project.listMockPhones({ total: true }).catch(() => null),
   ])
-  return parseProjectAuthSecurity(
-    policiesRes?.policies,
-    mockRes?.mockNumbers,
-  )
+  return parseProjectAuthSecurity(policiesRes?.policies, mockRes?.mockNumbers)
 }
 
 /**
@@ -309,7 +302,9 @@ export function projectAuthSecurityQueryOptions(
 }
 
 /** Fetch a project via the project-scoped API (replaces console `projects.get`). */
-export async function fetchProjectById(projectId: string): Promise<Models.Project> {
+export async function fetchProjectById(
+  projectId: string,
+): Promise<Models.Project> {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
@@ -324,7 +319,9 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
     const { fetchOrganizations } = await import(
       '@/lib/react-query/hooks/organizations'
     )
-    const orgs = await fetchOrganizations().catch(() => ({ teams: [] as Array<{ $id: string }> }))
+    const orgs = await fetchOrganizations().catch(() => ({
+      teams: [] as Array<{ $id: string }>,
+    }))
     let stub: Models.Project | undefined
     for (const org of orgs.teams ?? []) {
       try {
@@ -359,7 +356,6 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
 
 export function authMethodsRecordFromProject(
   project: Models.Project | null | undefined,
-  passkeyPolicy: PasskeyPolicy,
 ): Record<ProjectAuthMethodId, boolean> {
   const defaults: Record<ProjectAuthMethodId, boolean> = {
     [ProjectAuthMethodId.Emailpassword]: false,
@@ -369,8 +365,8 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Anonymous]: false,
     [ProjectAuthMethodId.Invites]: false,
     [ProjectAuthMethodId.Jwt]: false,
-    // The 2.3.0 response format hides passkey from authMethods; its policy mirrors it.
-    [ProjectAuthMethodId.Passkey]: passkeyPolicy.enabled,
+    // Response formats before 2.4.0 omit passkey from authMethods
+    [ProjectAuthMethodId.Passkey]: false,
   }
   if (!project?.authMethods?.length) {
     return defaults

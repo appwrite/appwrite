@@ -141,8 +141,8 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
   const baseAuthMethods = useMemo(
-    () => authMethodsRecordFromProject(projectData, security.authPasskey),
-    [projectData, security.authPasskey],
+    () => authMethodsRecordFromProject(projectData),
+    [projectData],
   )
 
   useEffect(() => {
