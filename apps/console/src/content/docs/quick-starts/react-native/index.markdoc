@@ -134,7 +134,7 @@ export default function Index() {
         userId: ID.unique(),
         email,
         password,
-        name
+        name: name.trim() || undefined // Appwrite rejects an empty name
     });
     await login(email, password);
     setLoggedInUser(await account.get());
