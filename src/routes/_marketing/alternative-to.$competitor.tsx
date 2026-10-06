@@ -2,10 +2,10 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { View } from '@/components/pages/alternative-to/$competitor/View'
 import { getAlternativeContent } from '@/lib/alternatives/content'
 import {
-  getAlternativeMarkdownExport,
+  ALTERNATIVE_REGISTRY,
+  isAlternativeId,
   parseAlternativeRouteParam,
-} from '@/lib/alternatives/markdown-export'
-import { ALTERNATIVE_REGISTRY, isAlternativeId } from '@/lib/alternatives/registry'
+} from '@/lib/alternatives/registry'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
@@ -28,6 +28,10 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
           return next()
         }
 
+        // Loaded here so the markdown builder stays out of the client bundle.
+        const { getAlternativeMarkdownExport } = await import(
+          '@/lib/alternatives/markdown-export'
+        )
         const markdown = getAlternativeMarkdownExport(params.competitor)
         if (!markdown) {
           return new Response('Not found', { status: 404 })
@@ -62,7 +66,8 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
     return { competitor: id }
   },
   head: ({ params, loaderData }) => {
-    const id = loaderData?.competitor ?? parseAlternativeRouteParam(params.competitor)
+    const id =
+      loaderData?.competitor ?? parseAlternativeRouteParam(params.competitor)
     if (!id || !isAlternativeId(id)) {
       return { meta: [{ title: pageTitle('Compare') }] }
     }
@@ -116,7 +121,8 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
 function AlternativePage() {
   const { competitor: routeParam } = Route.useParams()
   const loaderData = Route.useLoaderData()
-  const competitor = loaderData?.competitor ?? parseAlternativeRouteParam(routeParam)
+  const competitor =
+    loaderData?.competitor ?? parseAlternativeRouteParam(routeParam)
 
   if (!competitor || !isAlternativeId(competitor)) {
     throw notFound()

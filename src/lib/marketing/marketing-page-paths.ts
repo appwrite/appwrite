@@ -1,7 +1,9 @@
-import { ALTERNATIVE_IDS, getAlternativePath } from '@/lib/alternatives/registry'
+import { ALTERNATIVE_IDS, getAlternativePath } from '../alternatives/registry'
 
 /** Browser-safe marketing URL list (shared with build-time prerender config). */
-const ALTERNATIVE_PAGE_PATHS = ALTERNATIVE_IDS.map((id) => getAlternativePath(id))
+const ALTERNATIVE_PAGE_PATHS = ALTERNATIVE_IDS.map((id) =>
+  getAlternativePath(id),
+)
 
 export const MARKETING_PAGE_PATHS = [
   '/home',
