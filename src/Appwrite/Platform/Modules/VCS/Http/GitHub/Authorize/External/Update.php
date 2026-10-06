@@ -137,7 +137,7 @@ class Update extends Action
         try {
             $prFiles = $vcs->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
         } catch (\Throwable $e) {
-            // Without affected files, path triggers are skipped and the deployment still runs.
+            // Without affected files, path triggers can't filter, so resources are listed on the pull request whatever paths they watch.
             Console::warning("Failed to fetch files of pull request '{$providerPullRequestId}': " . $e->getMessage());
             $prFiles = [];
         }
