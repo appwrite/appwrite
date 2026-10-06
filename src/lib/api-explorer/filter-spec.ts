@@ -11,7 +11,7 @@ function collectSchemaRefs(value: unknown, refs: Set<string>): void {
   if (!value || typeof value !== 'object') return
   for (const [key, child] of Object.entries(value)) {
     if (
-      key === '$ref' &&
+      (key === '$ref' || key === 'model') &&
       typeof child === 'string' &&
       child.startsWith(SCHEMA_REF_PREFIX)
     ) {
@@ -22,21 +22,19 @@ function collectSchemaRefs(value: unknown, refs: Set<string>): void {
   }
 }
 
+type SecurityRequirements = OpenApiSpec['security']
+
 function filterOperation(
   operation: OpenApiOperation,
   platform: ApiSpecPlatform,
-  allowedSchemes: (name: string) => boolean,
+  filterSecurity: (security: SecurityRequirements) => SecurityRequirements,
 ): OpenApiOperation | undefined {
   const xAppwrite = operation['x-appwrite']
   if (!isPlatformSupported(xAppwrite, platform)) return undefined
 
   const filtered: OpenApiOperation = {
     ...operation,
-    security: operation.security?.map((requirement) =>
-      Object.fromEntries(
-        Object.entries(requirement).filter(([name]) => allowedSchemes(name)),
-      ),
-    ),
+    security: filterSecurity(operation.security),
   }
   if (!xAppwrite) return filtered
 
@@ -72,7 +70,12 @@ export function filterSpecByPlatform(
       ([, scheme]) => isPlatformSupported(scheme['x-appwrite'], platform),
     ),
   )
-  const allowedSchemes = (name: string) => name in securitySchemes
+  const filterSecurity = (security: SecurityRequirements) =>
+    security?.map((requirement) =>
+      Object.fromEntries(
+        Object.entries(requirement).filter(([name]) => name in securitySchemes),
+      ),
+    )
 
   const paths: NonNullable<OpenApiSpec['paths']> = {}
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
@@ -80,7 +83,7 @@ export function filterSpecByPlatform(
     for (const [key, value] of Object.entries(pathItem ?? {})) {
       const operation =
         value?.operationId || value?.['x-appwrite']
-          ? filterOperation(value, platform, allowedSchemes)
+          ? filterOperation(value, platform, filterSecurity)
           : value
       if (operation) kept[key] = operation
     }
@@ -117,6 +120,7 @@ export function filterSpecByPlatform(
   return {
     ...spec,
     tags: spec.tags?.filter((tag) => tag.name && usedTags.has(tag.name)),
+    security: filterSecurity(spec.security),
     paths,
     components: {
       ...spec.components,
