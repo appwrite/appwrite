@@ -276,9 +276,9 @@ Each tick is a function execution with two model calls, and TablesDB counts ever
 
 # Turn whispers into memories
 
-![The Executions settings of the whisper function with the event databases.town.tables.whispers.rows.*.create](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/console-whisper-events.avif)
+![The Executions settings of the whisper function with the event tablesdb.town.tables.whispers.rows.*.create](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/console-whisper-events.avif)
 
-Open **Functions** > **Whisper** > **Settings** > **Executions**. While the town runs, the **Events** card lists `databases.town.tables.whispers.rows.*.create`, so the function runs once for every new whisper row. To add an event to a function of your own, select **Add event** in this card.
+Open **Functions** > **Whisper** > **Settings** > **Executions**. While the town runs, the **Events** card lists `tablesdb.town.tables.whispers.rows.*.create`, so the function runs once for every new whisper row. To add an event to a function of your own, select **Add event** in this card.
 
 The function writes memories, rumors, and events, and it updates the whisper row. It never creates a row in `whispers`, so it cannot trigger itself.
 
