@@ -710,18 +710,25 @@ return [
                 '$description' => 'This event triggers when a rendition is deleted.',
             ],
         ],
-        'subtitles' => [
-            '$model' => Response::MODEL_VIDEO_SUBTITLE,
+        'captions' => [
+            '$model' => Response::MODEL_VIDEO_CAPTION,
             '$resource' => true,
-            '$description' => 'This event triggers on any subtitles event.',
+            '$description' => 'This event triggers on any captions event.',
             'create' => [
-                '$description' => 'This event triggers when a subtitle is created.',
+                '$description' => 'This event triggers when a caption is created.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a subtitle is updated.',
+                '$description' => 'This event triggers when a caption is updated.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a subtitle is deleted.',
+                '$description' => 'This event triggers when a caption is deleted.',
+            ],
+        ],
+        'timeline' => [
+            '$model' => Response::MODEL_VIDEO,
+            '$description' => 'This event triggers when a video timeline job updates.',
+            'update' => [
+                '$description' => 'This event triggers when a video timeline job updates.',
             ],
         ],
         'create' => [
@@ -734,18 +741,23 @@ return [
             '$description' => 'This event triggers when a video is deleted.',
         ],
     ],
-    'videoProfiles' => [
-        '$model' => Response::MODEL_VIDEO_PROFILE,
+    'projects' => [
+        '$model' => Response::MODEL_PROJECT,
         '$resource' => true,
-        '$description' => 'This event triggers on any video profile event.',
-        'create' => [
-            '$description' => 'This event triggers when a video profile is created.',
-        ],
-        'update' => [
-            '$description' => 'This event triggers when a video profile is updated.',
-        ],
-        'delete' => [
-            '$description' => 'This event triggers when a video profile is deleted.',
+        '$description' => 'This event triggers on any project event.',
+        'profiles' => [
+            '$model' => Response::MODEL_VIDEO_PROFILE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any project video profile event.',
+            'create' => [
+                '$description' => 'This event triggers when a video profile is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a video profile is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a video profile is deleted.',
+            ],
         ],
     ],
 ];

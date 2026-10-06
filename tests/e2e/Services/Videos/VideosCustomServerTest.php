@@ -38,16 +38,16 @@ final class VideosCustomServerTest extends Scope
      */
     public function testListSeededProfiles(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, $response['body']['total']);
+        $this->assertEquals(5, $response['body']['total']);
 
         $names = \array_column($response['body']['profiles'], 'name');
-        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p', '2160p'], $names);
+        $this->assertEquals(['360p', '480p', '576p', '720p', '1080p'], $names);
 
         $heights = \array_column($response['body']['profiles'], 'height');
-        $this->assertSame([360, 480, 576, 720, 1080, 2160], $heights);
+        $this->assertSame([360, 480, 576, 720, 1080], $heights);
 
         foreach ($response['body']['profiles'] as $profile) {
             $this->assertEquals('h264', $profile['codec']);
@@ -58,7 +58,7 @@ final class VideosCustomServerTest extends Scope
             $this->assertNotEmpty($profile['$createdAt']);
         }
 
-        $explicit = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $explicit = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'h264',
         ]);
         $this->assertEquals(200, $explicit['headers']['status-code']);
@@ -70,7 +70,7 @@ final class VideosCustomServerTest extends Scope
 
     public function testCreateProfile(): string
     {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
             'name' => 'e2e-480p',
             // Distinct from the seeded 480p rung so the unique geometry+codec index passes.
             'videoBitRate' => 2101,
@@ -92,7 +92,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testCreateProfile')]
     public function testGetProfile(string $profileId): string
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles/' . $profileId, $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($profileId, $response['body']['$id']);
@@ -105,7 +105,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testGetProfile')]
     public function testUpdateProfile(string $profileId): string
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/profiles/' . $profileId, $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $profileId, $this->headers(), [
             'name' => 'e2e-480p-updated',
             'videoBitRate' => 2200,
             'audioBitRate' => 96,
@@ -136,7 +136,7 @@ final class VideosCustomServerTest extends Scope
         ];
 
         foreach ($invalid as $params) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
+            $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
             $this->assertEquals(400, $response['headers']['status-code']);
         }
     }
@@ -144,10 +144,10 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testUpdateProfile')]
     public function testDeleteProfile(string $profileId): void
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/project/profiles/' . $profileId, $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_profile_not_found', $response['body']['type']);
     }
@@ -173,8 +173,8 @@ final class VideosCustomServerTest extends Scope
 
     public function testListProfilesByCodec(): void
     {
-        $default = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
-        $h264 = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $default = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
+        $h264 = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'h264',
         ]);
         $this->assertEquals(200, $default['headers']['status-code']);
@@ -185,14 +185,14 @@ final class VideosCustomServerTest extends Scope
         );
 
         foreach (['hevc', 'vp9'] as $disabled) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+            $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
                 'codec' => $disabled,
             ]);
             $this->assertEquals(400, $response['headers']['status-code'], $disabled);
             $this->assertEquals('video_codec_disabled', $response['body']['type'], $disabled);
         }
 
-        $unknown = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers(), [
+        $unknown = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
             'codec' => 'av1',
         ]);
         $this->assertEquals(400, $unknown['headers']['status-code']);
@@ -200,7 +200,7 @@ final class VideosCustomServerTest extends Scope
 
     public function testCreateProfileCodecs(): void
     {
-        $omit = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+        $omit = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
             'name' => 'codec-omit-' . \uniqid(),
             'videoBitRate' => 900,
             'audioBitRate' => 64,
@@ -211,7 +211,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('h264', $omit['body']['codec']);
 
         foreach (['hevc', 'vp9', 'av1'] as $codec) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->headers(), [
+            $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
                 'name' => 'codec-' . $codec . '-' . \uniqid(),
                 'videoBitRate' => 890,
                 'audioBitRate' => 64,
@@ -223,7 +223,50 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals('general_argument_invalid', $response['body']['type'], $codec);
         }
 
-        $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $omit['body']['$id'], $this->headers());
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $omit['body']['$id'], $this->headers());
+    }
+
+    /**
+     * One profile per width, height, bitrates, and codec. A duplicate create or
+     * an update onto that combination is rejected. The name may still match.
+     */
+    public function testProfileUniqueGeometry(): void
+    {
+        $payload = [
+            'videoBitRate' => 701,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ];
+
+        $first = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge($payload, [
+            'name' => 'unique-a-' . \uniqid(),
+        ]));
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        $duplicate = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), \array_merge($payload, [
+            'name' => 'unique-b-' . \uniqid(),
+        ]));
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('video_profile_already_exists', $duplicate['body']['type']);
+
+        $other = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
+            'name' => 'unique-c-' . \uniqid(),
+            'videoBitRate' => 702,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ]);
+        $this->assertEquals(201, $other['headers']['status-code']);
+
+        $conflict = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $other['body']['$id'], $this->headers(), \array_merge($payload, [
+            'name' => 'unique-c-updated',
+        ]));
+        $this->assertEquals(409, $conflict['headers']['status-code']);
+        $this->assertEquals('video_profile_already_exists', $conflict['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $first['body']['$id'], $this->headers());
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $other['body']['$id'], $this->headers());
     }
 
     // ------------------------------------------------------------------ videos
@@ -232,7 +275,7 @@ final class VideosCustomServerTest extends Scope
     {
         $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -264,13 +307,6 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testCreateVideo')]
     public function testVideoIsProbedByJob(string $videoId): string
     {
-        $before = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-        $this->assertEquals(200, $before['headers']['status-code']);
-        $this->assertSame(0, (int) ($before['body']['duration'] ?? 0));
-
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
-
         $body = $this->waitForVideoProbed($videoId);
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
@@ -292,9 +328,6 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
-
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
 
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -380,14 +413,11 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * The sprite timeline is produced after createTimeline is called.
+     * The sprite timeline is produced when the video is created.
      */
     #[Depends('testVideoIsProbedByJob')]
     public function testTimelineAvailable(string $videoId): void
     {
-        $queued = $this->createTimeline($videoId);
-        $this->assertEquals(202, $queued['headers']['status-code']);
-
         $response = $this->waitForTimeline($videoId);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -398,14 +428,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(320, (int) $xywh[2], 'timeline thumbnails should be 320px wide');
     }
 
-    // --------------------------------------------------------------- subtitles
+    // --------------------------------------------------------------- captions
 
     #[Depends('testCreateVideo')]
-    public function testCreateSubtitle(string $videoId): array
+    public function testCreateCaption(string $videoId): array
     {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'English',
             'code' => 'eng',
             'default' => true,
@@ -418,7 +448,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertTrue($response['body']['default']);
         $this->assertEquals('pending', $response['body']['status']);
 
-        return ['videoId' => $videoId, 'subtitleId' => $response['body']['$id']];
+        return ['videoId' => $videoId, 'captionId' => $response['body']['$id']];
     }
 
     /**
@@ -426,70 +456,70 @@ final class VideosCustomServerTest extends Scope
      * `app/config/locale/languages.php`.
      */
     #[Depends('testCreateVideo')]
-    public function testSubtitleValidation(string $videoId): void
+    public function testCaptionValidation(string $videoId): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'Bad code',
             'code' => 'zzz',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Two-letter ISO 639-1 codes are not accepted; the schema stores 639-2.
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'Two letter',
             'code' => 'en',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // A video file is not a subtitle.
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+        // A video file is not a caption.
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'Not a subtitle',
+            'name' => 'Not a caption',
             'code' => 'fra',
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('video_subtitle_not_valid', $response['body']['type']);
+        $this->assertEquals('video_caption_not_valid', $response['body']['type']);
 
         // The name is rendered into quote- and line-delimited manifests, so
         // structural characters are rejected by the param allowlist.
         foreach (["evil\",URI=\"http://x/pwn.m3u8", "line1\nline2", 'a<b>'] as $name) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
                 'bucketId' => $this->getVideoBucket()['$id'],
-                'fileId' => $this->getSubtitleFile()['$id'],
+                'fileId' => $this->getCaptionFile()['$id'],
                 'name' => $name,
                 'code' => 'eng',
             ]);
-            $this->assertEquals(400, $response['headers']['status-code'], 'Subtitle name accepted a structural character');
+            $this->assertEquals(400, $response['headers']['status-code'], 'Caption name accepted a structural character');
             $this->assertEquals('general_argument_invalid', $response['body']['type']);
         }
     }
 
-    #[Depends('testCreateSubtitle')]
-    public function testListSubtitles(array $subtitle): array
+    #[Depends('testCreateCaption')]
+    public function testListCaptions(array $caption): array
     {
-        $body = $this->waitForSubtitleTerminalState($subtitle['videoId'], $subtitle['subtitleId']);
-        $this->assertEquals('ready', $body['status'], 'Subtitle did not become ready');
+        $body = $this->waitForCaptionTerminalState($caption['videoId'], $caption['captionId']);
+        $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $subtitle['videoId'] . '/subtitles', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $caption['videoId'] . '/captions', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
-        $this->assertContains($subtitle['subtitleId'], \array_column($response['body']['subtitles'], '$id'));
+        $this->assertContains($caption['captionId'], \array_column($response['body']['captions'], '$id'));
 
-        return $subtitle;
+        return $caption;
     }
 
-    #[Depends('testListSubtitles')]
-    public function testUpdateSubtitle(array $subtitle): array
+    #[Depends('testListCaptions')]
+    public function testUpdateCaption(array $caption): array
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $subtitle['videoId'] . '/subtitles/' . $subtitle['subtitleId'], $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $caption['videoId'] . '/captions/' . $caption['captionId'], $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'French',
             'code' => 'fra',
             'default' => false,
@@ -500,7 +530,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('fra', $response['body']['code']);
         $this->assertFalse($response['body']['default']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $subtitle['videoId'] . '/subtitles/' . $subtitle['subtitleId'], $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $caption['videoId'] . '/captions/' . $caption['captionId'], $this->headers(), [
             'name' => 'Hebrew',
             'code' => 'heb',
         ]);
@@ -509,32 +539,32 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('Hebrew', $response['body']['name']);
         $this->assertEquals('heb', $response['body']['code']);
 
-        return $subtitle;
+        return $caption;
     }
 
-    #[Depends('testUpdateSubtitle')]
-    public function testDeleteSubtitle(array $subtitle): void
+    #[Depends('testUpdateCaption')]
+    public function testDeleteCaption(array $caption): void
     {
-        $videoId = $subtitle['videoId'];
-        $subtitleId = $subtitle['subtitleId'];
-        $vttPath = $this->subtitleStoragePath($videoId, $subtitleId);
+        $videoId = $caption['videoId'];
+        $captionId = $caption['captionId'];
+        $vttPath = $this->captionStoragePath($videoId, $captionId);
         $this->waitUntilPathExists($vttPath);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/subtitles/' . $subtitleId, $this->headers());
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $subtitleId, $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getSubtitleFile()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'Gone',
             'code' => 'eng',
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('video_subtitle_not_found', $response['body']['type']);
+        $this->assertEquals('video_caption_not_found', $response['body']['type']);
 
         $this->waitUntilPathGone($vttPath);
 
-        $source = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files/' . $this->getSubtitleFile()['$id'], $this->headers());
+        $source = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files/' . $this->getCaptionFile()['$id'], $this->headers());
         $this->assertEquals(200, $source['headers']['status-code']);
     }
 
@@ -547,7 +577,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testVideoIsProbedByJob')]
     public function testCreateRendition(string $videoId): array
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -642,7 +672,7 @@ final class VideosCustomServerTest extends Scope
     #[Depends('testVideoIsProbedByJob')]
     public function testCreateRenditionValidation(string $videoId): void
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profileId = $profiles['body']['profiles'][0]['$id'];
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
@@ -863,13 +893,13 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_rendition_not_found', $response['body']['type']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/subtitles/nope/manifest', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/captions/nope/manifest', $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('video_subtitle_not_found', $response['body']['type']);
+        $this->assertEquals('video_caption_not_found', $response['body']['type']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/subtitles/nope/segments/nope', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/captions/nope/segments/nope', $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('video_subtitle_not_found', $response['body']['type']);
+        $this->assertEquals('video_caption_not_found', $response['body']['type']);
     }
 
     /**
@@ -936,7 +966,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(\substr($segment['body'], 100, 100), $ranged['body']);
 
         // DASH ladder for the same video.
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -1068,7 +1098,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<SegmentURL', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $cmafMpd['body']);
 
-        $this->createTimeline($videoId);
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
@@ -1084,40 +1113,39 @@ final class VideosCustomServerTest extends Scope
         }
     }
 
-    // ---------------------------------------------------- embedded subtitles
+    // ---------------------------------------------------- embedded captions
 
     /**
      * Timeline extract registers soft text tracks from the source as ready
-     * `videos_subtitles` rows (empty fileId) and advertises them on the HLS master.
+     * `videos_captions` rows (empty fileId) and advertises them on the HLS master.
      */
-    public function testExtractEmbeddedSubtitles(): array
+    public function testExtractEmbeddedCaptions(): array
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getVideoFileWithSubtitles()['$id'],
+            'fileId' => $this->getVideoFileWithCaptions()['$id'],
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        $this->createTimeline($videoId);
         $this->waitForTimeline($videoId);
-        $embedded = $this->waitForEmbeddedSubtitle($videoId);
-        $this->assertNotNull($embedded, 'Expected an auto-extracted subtitle after timeline');
+        $embedded = $this->waitForEmbeddedCaption($videoId);
+        $this->assertNotNull($embedded, 'Expected an auto-extracted caption after timeline');
         $this->assertEquals('ready', $embedded['status']);
         $this->assertEquals('eng', $embedded['code']);
         $this->assertTrue(($embedded['fileId'] ?? '') === '' || ($embedded['fileId'] ?? null) === null);
 
         // GET list: confirm the extracted track is registered on the video.
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
-        $ids = \array_column($list['body']['subtitles'], '$id');
+        $ids = \array_column($list['body']['captions'], '$id');
         $this->assertContains($embedded['$id'], $ids);
 
         $registered = null;
-        foreach ($list['body']['subtitles'] as $subtitle) {
-            if ($subtitle['$id'] === $embedded['$id']) {
-                $registered = $subtitle;
+        foreach ($list['body']['captions'] as $caption) {
+            if ($caption['$id'] === $embedded['$id']) {
+                $registered = $caption;
                 break;
             }
         }
@@ -1128,14 +1156,14 @@ final class VideosCustomServerTest extends Scope
 
         $vtt = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $embedded['$id'] . '/manifest',
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $embedded['$id'] . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $vtt['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $vtt['body']);
         $this->assertStringContainsString('EMBEDDED CUE', (string) $vtt['body']);
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
             if (($candidate['name'] ?? '') === '360p') {
@@ -1156,11 +1184,11 @@ final class VideosCustomServerTest extends Scope
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
         $this->assertStringContainsString('#EXT-X-MEDIA:TYPE=SUBTITLES', (string) $master['body']);
-        $this->assertStringContainsString('/subtitles/' . $embedded['$id'] . '/manifest', (string) $master['body']);
+        $this->assertStringContainsString('/captions/' . $embedded['$id'] . '/manifest', (string) $master['body']);
 
         return [
             'videoId' => $videoId,
-            'subtitleId' => $embedded['$id'],
+            'captionId' => $embedded['$id'],
             'renditionId' => $rendition['body']['$id'],
         ];
     }
@@ -1169,42 +1197,41 @@ final class VideosCustomServerTest extends Scope
      * An extracted track tagged `und` can be retagged (name + ISO 639-2 code)
      * without replacing the file.
      */
-    public function testExtractUndeterminedSubtitleThenUpdateLanguage(): void
+    public function testExtractUndeterminedCaptionThenUpdateLanguage(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getVideoFileWithUndeterminedSubtitles()['$id'],
+            'fileId' => $this->getVideoFileWithUndeterminedCaptions()['$id'],
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-                $this->createTimeline($videoId);
         $this->waitForVideoProbed($videoId, 180);
 
-        $embedded = null;$embedded = null;
+        $embedded = null;
         $lastList = [];
         $deadline = \time() + 60;
         while (\time() < $deadline) {
-            $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+            $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
             $lastList = $list['body'] ?? [];
-            foreach ($lastList['subtitles'] ?? [] as $subtitle) {
-                $fileId = $subtitle['fileId'] ?? '';
+            foreach ($lastList['captions'] ?? [] as $caption) {
+                $fileId = $caption['fileId'] ?? '';
                 if ($fileId === null || $fileId === '') {
-                    $embedded = $subtitle;
-                    if (($subtitle['status'] ?? '') === 'ready') {
+                    $embedded = $caption;
+                    if (($caption['status'] ?? '') === 'ready') {
                         break 2;
                     }
                 }
             }
             \usleep(500000);
         }
-        $this->assertNotNull($embedded, 'Expected an auto-extracted subtitle, last list: ' . \json_encode($lastList));
+        $this->assertNotNull($embedded, 'Expected an auto-extracted caption, last list: ' . \json_encode($lastList));
         $this->assertEquals('ready', $embedded['status']);
         $this->assertEquals('und', $embedded['code']);
         $this->assertTrue($embedded['embedded'] ?? false);
         $this->assertTrue(($embedded['fileId'] ?? '') === '' || ($embedded['fileId'] ?? null) === null);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $embedded['$id'], $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $embedded['$id'], $this->headers(), [
             'name' => 'Hebrew',
             'code' => 'heb',
         ]);
@@ -1214,9 +1241,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals($embedded['$id'], $response['body']['$id']);
         $this->assertEquals('ready', $response['body']['status']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
-        $byId = \array_column($list['body']['subtitles'], null, '$id');
+        $byId = \array_column($list['body']['captions'], null, '$id');
         $this->assertArrayHasKey($embedded['$id'], $byId);
         $this->assertEquals('heb', $byId[$embedded['$id']]['code']);
         $this->assertEquals('Hebrew', $byId[$embedded['$id']]['name']);
@@ -1224,7 +1251,7 @@ final class VideosCustomServerTest extends Scope
 
         $vtt = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $embedded['$id'] . '/manifest',
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $embedded['$id'] . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $vtt['headers']['status-code']);
@@ -1235,25 +1262,24 @@ final class VideosCustomServerTest extends Scope
     /**
      * A source with two soft text tracks registers both languages after timeline.
      */
-    public function testExtractTwoEmbeddedSubtitles(): void
+    public function testExtractTwoEmbeddedCaptions(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getVideoFileWithTwoSubtitles()['$id'],
+            'fileId' => $this->getVideoFileWithTwoCaptions()['$id'],
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        $this->createTimeline($videoId);
         $this->waitForTimeline($videoId);
-        $embedded = $this->waitForEmbeddedSubtitles($videoId, 2);
-        $this->assertCount(2, $embedded, 'Expected eng and fra auto-extracted subtitles');
+        $embedded = $this->waitForEmbeddedCaptions($videoId, 2);
+        $this->assertCount(2, $embedded, 'Expected eng and fra auto-extracted captions');
 
         $byCode = [];
-        foreach ($embedded as $subtitle) {
-            $byCode[$subtitle['code']] = $subtitle;
-            $this->assertEquals('ready', $subtitle['status']);
-            $this->assertTrue(($subtitle['fileId'] ?? '') === '' || ($subtitle['fileId'] ?? null) === null);
+        foreach ($embedded as $caption) {
+            $byCode[$caption['code']] = $caption;
+            $this->assertEquals('ready', $caption['status']);
+            $this->assertTrue(($caption['fileId'] ?? '') === '' || ($caption['fileId'] ?? null) === null);
         }
 
         $this->assertArrayHasKey('eng', $byCode);
@@ -1261,17 +1287,17 @@ final class VideosCustomServerTest extends Scope
         $this->assertTrue($byCode['eng']['default'] || $byCode['fra']['default']);
         $this->assertFalse($byCode['eng']['default'] && $byCode['fra']['default'], 'Only one default track');
 
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $list['body']['total']);
         $this->assertEqualsCanonicalizing(
             ['eng', 'fra'],
-            \array_values(\array_unique(\array_column($list['body']['subtitles'], 'code')))
+            \array_values(\array_unique(\array_column($list['body']['captions'], 'code')))
         );
 
         $engVtt = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $byCode['eng']['$id'] . '/manifest',
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $byCode['eng']['$id'] . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $engVtt['headers']['status-code']);
@@ -1279,7 +1305,7 @@ final class VideosCustomServerTest extends Scope
 
         $fraVtt = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $byCode['fra']['$id'] . '/manifest',
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $byCode['fra']['$id'] . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $fraVtt['headers']['status-code']);
@@ -1287,19 +1313,80 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * An eng upload created before the timeline finishes does not block
+     * extraction: both tracks stay listed and the upload keeps default.
+     */
+    public function testExtractAlongsidePriorUpload(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFileWithCaptions()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        // Race the timeline job: an eng upload with default before waitForTimeline
+        // so extraction often sees the upload already registered.
+        $upload = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getOverrideCaptionFile()['$id'],
+            'name' => 'English upload',
+            'code' => 'eng',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $upload['headers']['status-code']);
+        $uploadId = $upload['body']['$id'];
+        $this->assertTrue($upload['body']['default']);
+
+        $this->waitForTimeline($videoId);
+        $readyUpload = $this->waitForCaptionTerminalState($videoId, $uploadId);
+        $this->assertEquals('ready', $readyUpload['status']);
+
+        $embedded = $this->waitForEmbeddedCaption($videoId);
+        $this->assertNotNull($embedded, 'Expected an auto-extracted eng track beside the upload');
+        $this->assertEquals('eng', $embedded['code']);
+        $this->assertEquals('ready', $embedded['status']);
+        $this->assertNotEquals($uploadId, $embedded['$id']);
+
+        // Re-assert default after extraction: an in-flight extract can still
+        // race the create, so pin the authored track as the sole default here.
+        $retag = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $uploadId, $this->headers(), [
+            'default' => true,
+        ]);
+        $this->assertEquals(200, $retag['headers']['status-code']);
+        $this->assertTrue($retag['body']['default']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $byId = \array_column($list['body']['captions'], null, '$id');
+        $this->assertArrayHasKey($uploadId, $byId);
+        $this->assertArrayHasKey($embedded['$id'], $byId);
+        $this->assertTrue($byId[$uploadId]['default']);
+        $this->assertFalse($byId[$embedded['$id']]['default']);
+
+        $vtt = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $embedded['$id'] . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $vtt['headers']['status-code']);
+        $this->assertStringContainsString('EMBEDDED CUE', (string) $vtt['body']);
+    }
+
+    /**
      * An uploaded track for the same language outranks the auto-extracted row:
      * both stay listed, the upload takes the default flag, and the extracted
      * track only disappears when the user deletes it explicitly.
      */
-    #[Depends('testExtractEmbeddedSubtitles')]
-    public function testUploadOutranksExtractedSubtitle(array $extracted): void
+    #[Depends('testExtractEmbeddedCaptions')]
+    public function testUploadOutranksExtractedCaption(array $extracted): void
     {
         $videoId = $extracted['videoId'];
-        $embeddedId = $extracted['subtitleId'];
+        $embeddedId = $extracted['captionId'];
 
         // Make the embedded eng track the current default so the transfer below
         // is deterministic regardless of which track extraction promoted.
-        $retag = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $embeddedId, $this->headers(), [
+        $retag = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $embeddedId, $this->headers(), [
             'default' => true,
         ]);
         $this->assertEquals(200, $retag['headers']['status-code']);
@@ -1308,9 +1395,9 @@ final class VideosCustomServerTest extends Scope
 
         // Upload the same language WITHOUT asking for default: the upload
         // outranks the embedded default and takes the flag.
-        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', $this->headers(), [
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getOverrideSubtitleFile()['$id'],
+            'fileId' => $this->getOverrideCaptionFile()['$id'],
             'name' => 'English upload',
             'code' => 'eng',
         ]);
@@ -1319,14 +1406,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertTrue($create['body']['default'], 'Upload should take the default from the embedded eng track');
         $this->assertFalse($create['body']['embedded']);
 
-        $ready = $this->waitForSubtitleTerminalState($videoId, $uploadId);
+        $ready = $this->waitForCaptionTerminalState($videoId, $uploadId);
         $this->assertEquals('ready', $ready['status']);
-        $this->assertEquals($this->getOverrideSubtitleFile()['$id'], $ready['fileId']);
+        $this->assertEquals($this->getOverrideCaptionFile()['$id'], $ready['fileId']);
 
         // Both tracks stay listed — nothing is deleted implicitly.
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
-        $byId = \array_column($list['body']['subtitles'], null, '$id');
+        $byId = \array_column($list['body']['captions'], null, '$id');
         $this->assertArrayHasKey($uploadId, $byId);
         $this->assertArrayHasKey($embeddedId, $byId);
         $this->assertTrue($byId[$uploadId]['default']);
@@ -1337,18 +1424,18 @@ final class VideosCustomServerTest extends Scope
 
         $vtt = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/dash/subtitles/' . $uploadId . '/manifest',
+            '/videos/' . $videoId . '/outputs/dash/captions/' . $uploadId . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $vtt['headers']['status-code']);
         $this->assertStringContainsString('OVERRIDE CUE', (string) $vtt['body']);
         $this->assertStringNotContainsString('EMBEDDED CUE', (string) $vtt['body']);
 
-        // The HLS subtitle playlist must be valid VOD HLS: one MEDIA-SEQUENCE tag,
+        // The HLS captions playlist must be valid VOD HLS: one MEDIA-SEQUENCE tag,
         // a comma-terminated EXTINF, and a closing ENDLIST.
         $playlist = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/hls/subtitles/' . $uploadId . '/manifest',
+            '/videos/' . $videoId . '/outputs/hls/captions/' . $uploadId . '/manifest',
             $this->headers()
         );
         $this->assertEquals(200, $playlist['headers']['status-code']);
@@ -1360,27 +1447,27 @@ final class VideosCustomServerTest extends Scope
         // The master advertises both tracks until the user curates.
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
-        $this->assertStringContainsString('/subtitles/' . $uploadId . '/manifest', (string) $master['body']);
-        $this->assertStringContainsString('/subtitles/' . $embeddedId . '/manifest', (string) $master['body']);
+        $this->assertStringContainsString('/captions/' . $uploadId . '/manifest', (string) $master['body']);
+        $this->assertStringContainsString('/captions/' . $embeddedId . '/manifest', (string) $master['body']);
 
         // Deletion is explicit: removing the extracted row takes it out of the
         // listing and the master; extraction never runs again to re-create it.
         $delete = $this->client->call(
             Client::METHOD_DELETE,
-            '/videos/' . $videoId . '/subtitles/' . $embeddedId,
+            '/videos/' . $videoId . '/captions/' . $embeddedId,
             $this->headers()
         );
         $this->assertEquals(204, $delete['headers']['status-code']);
 
-        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertNotContains($embeddedId, \array_column($list['body']['subtitles'], '$id'));
-        $this->assertContains($uploadId, \array_column($list['body']['subtitles'], '$id'));
+        $this->assertNotContains($embeddedId, \array_column($list['body']['captions'], '$id'));
+        $this->assertContains($uploadId, \array_column($list['body']['captions'], '$id'));
 
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
-        $this->assertStringContainsString('/subtitles/' . $uploadId . '/manifest', (string) $master['body']);
-        $this->assertStringNotContainsString('/subtitles/' . $embeddedId . '/manifest', (string) $master['body']);
+        $this->assertStringContainsString('/captions/' . $uploadId . '/manifest', (string) $master['body']);
+        $this->assertStringNotContainsString('/captions/' . $embeddedId . '/manifest', (string) $master['body']);
     }
 
     /**
@@ -1388,16 +1475,15 @@ final class VideosCustomServerTest extends Scope
      */
     public function testUpdateNameLeavesDerivedArtifacts(): void
     {
-        $ready = $this->createReadyVideo($this->getVideoFileWithSubtitles(), 'Original name');
+        $ready = $this->createReadyVideo($this->getVideoFileWithCaptions(), 'Original name');
         $videoId = $ready['$id'];
 
-        $this->createTimeline($videoId);
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
-        $embedded = $this->waitForEmbeddedSubtitle($videoId);
+        $embedded = $this->waitForEmbeddedCaption($videoId);
         $this->assertNotNull($embedded);
-        $subtitleId = $embedded['$id'];
+        $captionId = $embedded['$id'];
 
         $profile = $this->seededProfile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
@@ -1414,23 +1500,23 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Still the same source', $update['body']['name']);
-        $this->assertEquals($this->getVideoFileWithSubtitles()['$id'], $update['body']['fileId']);
+        $this->assertEquals($this->getVideoFileWithCaptions()['$id'], $update['body']['fileId']);
 
         $renditions = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
         $this->assertEquals(200, $renditions['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $renditions['body']['total']);
         $this->assertContains($renditionId, \array_column($renditions['body']['renditions'], '$id'));
 
-        $subtitles = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', $this->headers());
-        $this->assertEquals(200, $subtitles['headers']['status-code']);
-        $this->assertContains($subtitleId, \array_column($subtitles['body']['subtitles'], '$id'));
+        $captions = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+        $this->assertEquals(200, $captions['headers']['status-code']);
+        $this->assertContains($captionId, \array_column($captions['body']['captions'], '$id'));
     }
 
     /**
-     * Audio-only sources are accepted for timeline; the job probes duration
-     * with zero dimensions and produces no WebVTT.
+     * Audio-only sources are accepted; the create job probes duration with
+     * zero dimensions and produces no WebVTT.
      */
-    public function testCreateTimelineAudioOnlyProducesNoVtt(): void
+    public function testAudioOnlyVideoProducesNoVtt(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
@@ -1438,9 +1524,6 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
-
-        $timeline = $this->createTimeline($videoId);
-        $this->assertEquals(202, $timeline['headers']['status-code']);
 
         $probed = $this->waitForVideoProbed($videoId);
         $this->assertGreaterThan(0, (int) $probed['duration']);
@@ -1458,16 +1541,18 @@ final class VideosCustomServerTest extends Scope
     public function testVideoCreateAndLookupErrors(): void
     {
         $unknown = 'doesnotexist';
-        foreach (['/timeline', '/renditions'] as $suffix) {
-            $response = $this->client->call(
-                Client::METHOD_POST,
-                '/videos/' . $unknown . $suffix,
-                $this->headers(),
-                $suffix === '/renditions' ? ['profileId' => 'x', 'output' => 'hls'] : []
-            );
-            $this->assertEquals(404, $response['headers']['status-code'], $suffix);
-            $this->assertEquals('video_not_found', $response['body']['type'], $suffix);
-        }
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $unknown . '/renditions',
+            $this->headers(),
+            ['profileId' => 'x', 'output' => 'hls']
+        );
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('video_not_found', $response['body']['type']);
+
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $unknown . '/timeline', $this->headers());
+        $this->assertEquals(404, $timeline['headers']['status-code']);
+        $this->assertEquals('video_not_found', $timeline['body']['type']);
 
         $missingBucket = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => 'doesnotexist',
@@ -1487,7 +1572,7 @@ final class VideosCustomServerTest extends Scope
     // ------------------------------------------------------------------ delete
 
     /**
-     * Declared last: the cascade removes the renditions and subtitles the tests
+     * Declared last: the cascade removes the renditions and captions the tests
      * above rely on. Depends on testCreateVideo rather than on the rendition
      * chain, so it still runs when encoding-dependent tests are skipped.
      */
@@ -1501,7 +1586,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_not_found', $response['body']['type']);
 
-        // The deletes worker cascades renditions, subtitles and their segments.
+        // The deletes worker cascades renditions, captions and their segments.
         $deadline = \time() + 30;
         $renditions = null;
 
@@ -1532,7 +1617,7 @@ final class VideosCustomServerTest extends Scope
      */
     private function seededProfile(string $name): array
     {
-        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers());
         foreach ($profiles['body']['profiles'] ?? [] as $candidate) {
             if (($candidate['name'] ?? '') === $name) {
                 return $candidate;

@@ -129,7 +129,7 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Lifecycle of a rendition or subtitle, shared with the videos worker.
+     * Lifecycle of a rendition or caption, shared with the videos worker.
      *
      * Endpoints create rows as `pending`; the worker advances them and settles on
      * `ready` or `error`.
@@ -160,25 +160,13 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Profiles are project configuration (like storage buckets), not user content.
-     * SDK methods advertise ADMIN/KEY only — enforce the same at the HTTP layer
-     * so a session with `videos.write` cannot mutate the encode ladder.
-     */
-    protected function assertPrivilegedCaller(User $user, Authorization $authorization): void
-    {
-        if (!$user->isPrivileged($authorization->getRoles()) && !$user->isKey($authorization->getRoles())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-    }
-
-    /**
      * Bounds for video profile parameters, in kilobits per second and pixels.
      *
      * One set shared by create and update: the pre-merge controller validated
      * create against 32-5000/6-3000 and update against 64-4000/100-2000, so a
      * profile could be created with values its own update endpoint rejected.
-     * The range spans the seeded presets (360p at 890/64 up to 2160p at
-     * 16000/356) with headroom for 8K.
+     * The range spans the seeded presets (360p at 890/64 up to 1080p at
+     * 4800/128) with headroom for 8K.
      */
     public const MIN_VIDEO_BITRATE = 32;
     public const MAX_VIDEO_BITRATE = 20000;
@@ -191,8 +179,8 @@ abstract class Base extends UtopiaAction
     public const SOURCE_MIME_PREFIXES = ['video/', 'audio/'];
     public const SOURCE_MIME_TYPES = ['application/ogg'];
 
-    /** Mime types accepted as a subtitle source. */
-    public const SUBTITLE_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
+    /** Mime types accepted as a caption source. */
+    public const CAPTION_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
 
     /**
      * Renders one of the `app/views/videos/*.phtml` manifest templates.
@@ -333,25 +321,25 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Deletes a subtitle row and enqueues lazy cleanup of its segments and files.
+     * Deletes a caption row and enqueues lazy cleanup of its segments and files.
      */
-    protected function deleteSubtitle(
+    protected function deleteCaption(
         Database $dbForProject,
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         Document $project,
-        Document $subtitle
+        Document $caption
     ): void {
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_captions', $caption->getId()));
 
         if (!$deleted) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video subtitle from DB');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video caption from DB');
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,
-            document: $subtitle,
+            document: $caption,
         ));
     }
 

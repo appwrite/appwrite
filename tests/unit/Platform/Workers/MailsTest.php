@@ -166,6 +166,19 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
+    public function testProjectSmtpFailureIsNotRetried(): void
+    {
+        $adapter = new SpyMailAdapter();
+
+        $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
+            'host' => '127.0.0.1',
+            'port' => 1,
+            'senderEmail' => 'sender@example.test',
+        ]);
+
+        $this->assertSame(0, $adapter->sendCount);
+    }
+
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $this->expectException(\Exception::class);
@@ -174,7 +187,10 @@ final class MailsTest extends TestCase
         $this->runMailWorker($adapter, recipient: 'legacy@example.test');
     }
 
-    private function runMailWorker(SpyMailAdapter $adapter, string $recipient): void
+    /**
+     * @param array<string, mixed> $smtp
+     */
+    private function runMailWorker(SpyMailAdapter $adapter, string $recipient, array $smtp = []): void
     {
         $registry = new Registry();
         $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
@@ -190,7 +206,7 @@ final class MailsTest extends TestCase
                     'queue' => 'v1-mails',
                     'timestamp' => \time(),
                     'payload' => [
-                        'smtp' => [],
+                        'smtp' => $smtp,
                         'recipient' => $recipient,
                         'name' => 'Legacy User',
                         'subject' => 'Hello',

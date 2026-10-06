@@ -934,6 +934,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             [Client::METHOD_GET, $base . '/providerRepositories/1/contents', []],
             [Client::METHOD_POST, $base . '/providerRepositories', ['name' => 'cross-' . \uniqid(), 'private' => true]],
             [Client::METHOD_POST, $base . '/detections', ['providerRepositoryId' => '1', 'type' => 'runtime']],
+            [Client::METHOD_PATCH, $base . '/repositories/1', ['providerPullRequestId' => '1']],
         ];
 
         foreach ($probes as [$method, $path, $params]) {

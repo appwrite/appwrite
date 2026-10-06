@@ -1191,8 +1191,8 @@ return function (Container $context): void {
 
     $context->set(
         'transactionState',
-        fn (Database $dbForProject, Authorization $authorization, callable $getDatabasesDB) => new TransactionState($dbForProject, $authorization, $getDatabasesDB),
-        ['dbForProject', 'authorization', 'getDatabasesDB']
+        fn (Database $dbForProject, Authorization $authorization, callable $getDatabasesDB, User $user) => new TransactionState($dbForProject, $authorization, $getDatabasesDB, $user),
+        ['dbForProject', 'authorization', 'getDatabasesDB', 'user']
     );
 
     $context->set(

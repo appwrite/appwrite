@@ -5,6 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -29,6 +30,16 @@ use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Span\Span;
 use Utopia\System\System;
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 $files = new Files();
 $files->load(__DIR__ . '/../public');

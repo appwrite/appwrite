@@ -17,6 +17,7 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -69,10 +70,11 @@ class Create extends Base
             ->inject('hooks')
             ->inject('plan')
             ->inject('pwnedPasswords')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords): void
+    public function action(string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword): void
     {
         $pwnedPolicy = $project->getAttribute('auths', [])['passwordPwned'] ?? [];
         $passwordPwned = empty($password) || !($pwnedPolicy['enabled'] ?? true)
@@ -84,7 +86,7 @@ class Create extends Base
 
         $plaintext = new Plaintext();
 
-        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan, $passwordPwned);
+        $user = $this->createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan, $proofForPassword, $passwordPwned);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

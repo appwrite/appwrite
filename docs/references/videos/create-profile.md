@@ -1,1 +1,0 @@
-Create a video profile describing an encoding target: output dimensions, video/audio bitrates, and encode codec. Only codecs enabled on this instance are accepted; the default is `h264`. A disabled codec is rejected. Renditions are encoded against a profile.

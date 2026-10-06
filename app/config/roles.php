@@ -37,6 +37,7 @@ $member = [
     'subscribers.read',
     'assistant.read',
     'rules.read',
+    'videos.play',
     'videos.read',
     'videos.write',
 ];
@@ -88,6 +89,8 @@ $admins = [
     'mocks.write',
     'project.policies.read',
     'project.policies.write',
+    'project.profiles.read',
+    'project.profiles.write',
     'project.oauth2.read',
     'project.oauth2.write',
     'templates.read',
@@ -140,6 +143,7 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'videos.play',
     'videos.read',
     'videos.write',
 ];
@@ -165,6 +169,7 @@ return [
             'embeddings.write',
             'files.read',
             'files.write',
+            'videos.play',
             'locale.read',
             'avatars.read',
             'executions.write',

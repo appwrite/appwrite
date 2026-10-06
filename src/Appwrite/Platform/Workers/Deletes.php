@@ -16,7 +16,7 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
-use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -284,8 +284,8 @@ class Deletes extends Action
                     case DELETE_TYPE_VIDEOS_RENDITIONS:
                         $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $document, $project);
                         break;
-                    case DELETE_TYPE_VIDEOS_SUBTITLES:
-                        $this->deleteVideoSubtitle($getProjectDB, $deviceForVideos, $document, $project);
+                    case DELETE_TYPE_VIDEOS_CAPTIONS:
+                        $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -1830,8 +1830,8 @@ class Deletes extends Action
     }
 
     /**
-     * Cascades a video deletion across its previews, renditions and subtitles —
-     * including the per-rendition and per-subtitle segment rows — then removes the
+     * Cascades a video deletion across its previews, renditions and captions —
+     * including the per-rendition and per-caption segment rows — then removes the
      * whole transcoded output tree from the videos device.
      *
      * @param callable $getProjectDB
@@ -1863,13 +1863,13 @@ class Deletes extends Action
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
-        $this->listByGroup('videos_subtitles', [
+        $this->listByGroup('videos_captions', [
             Query::equal('videoInternalId', [$videoInternalId]),
-        ], $dbForProject, function (Document $subtitle) use ($getProjectDB, $deviceForVideos, $project) {
-            $this->deleteVideoSubtitle($getProjectDB, $deviceForVideos, $subtitle, $project);
+        ], $dbForProject, function (Document $caption) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $caption, $project);
         });
 
-        $this->deleteByGroup('videos_subtitles', [
+        $this->deleteByGroup('videos_captions', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
@@ -1925,7 +1925,7 @@ class Deletes extends Action
     }
 
     /**
-     * Removes a subtitle's segment rows and packaged VTT file.
+     * Removes a caption's segment rows and packaged VTT file.
      *
      * @param callable $getProjectDB
      * @param Device $deviceForVideos
@@ -1933,12 +1933,12 @@ class Deletes extends Action
      * @param Document $project
      * @return void
      */
-    private function deleteVideoSubtitle(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    private function deleteVideoCaption(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
-        $this->deleteByGroup('videos_subtitles_segments', [
-            Query::equal('subtitleInternalId', [$document->getSequence()]),
+        $this->deleteByGroup('videos_captions_segments', [
+            Query::equal('captionInternalId', [$document->getSequence()]),
         ], $dbForProject);
 
         $path = $document->getAttribute('path', '');
@@ -1950,7 +1950,7 @@ class Deletes extends Action
         try {
             $deviceForVideos->delete($path);
         } catch (Throwable $th) {
-            Console::error('Failed to delete subtitle storage file: ' . $th->getMessage());
+            Console::error('Failed to delete caption storage file: ' . $th->getMessage());
         }
     }
 

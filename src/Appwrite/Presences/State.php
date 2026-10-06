@@ -139,9 +139,9 @@ class State
             } else {
                 $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
                     $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                    $presenceCreated = $existingPresence->isEmpty();
 
-                    if ($existingPresence->isEmpty()) {
-                        $presenceCreated = true;
+                    if ($presenceCreated) {
                         return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                     }
 

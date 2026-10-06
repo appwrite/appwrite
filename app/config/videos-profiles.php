@@ -43,12 +43,4 @@ return [
         'width' => 1920,
         'height' => 1080,
     ],
-    [
-        'name' => '2160p',
-        'codec' => 'h264',
-        'videoBitRate' => 16000,
-        'audioBitRate' => 356,
-        'width' => 4096,
-        'height' => 2160,
-    ],
 ];

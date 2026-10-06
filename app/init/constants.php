@@ -128,7 +128,7 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
-const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, subtitles, sprite timelines
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, sprite timelines
 const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
@@ -290,7 +290,7 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 // deletes worker dispatches on $document->getCollection().
 const DELETE_TYPE_VIDEOS = 'videos';
 const DELETE_TYPE_VIDEOS_RENDITIONS = 'videos_renditions';
-const DELETE_TYPE_VIDEOS_SUBTITLES = 'videos_subtitles';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videos_captions';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
@@ -485,7 +485,6 @@ const METRIC_SITES_REQUESTS = 'sites.requests';
 const METRIC_SITES_INBOUND = 'sites.inbound';
 const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
-const METRIC_AVATARS_STORAGE = 'avatars.storage';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
@@ -507,6 +506,10 @@ const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
+// MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
+const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
+const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

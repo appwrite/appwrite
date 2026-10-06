@@ -13,23 +13,17 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest\Get as Ge
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest\Get as GetHlsManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Segments\Get as GetSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Manifest\Get as GetStreamManifest;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Manifest\Get as GetSubtitleManifest;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Subtitles\Segments\Get as GetSubtitleSegment;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Manifest\Get as GetCaptionManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Segments\Get as GetCaptionSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Previews\Get as GetPreview;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Create as CreateProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Delete as DeleteProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Get as GetProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\Update as UpdateProfile;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Profiles\XList as ListProfiles;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Create as CreateSubtitle;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Delete as DeleteSubtitle;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\Update as UpdateSubtitle;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Subtitles\XList as ListSubtitles;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Create as CreateTimeline;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Create as CreateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\XList as ListCaptions;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Get as GetTimeline;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
@@ -49,15 +43,14 @@ class Http extends Service
         $this->addAction(DeleteVideo::getName(), new DeleteVideo());
 
         // Timeline and previews
-        $this->addAction(CreateTimeline::getName(), new CreateTimeline());
         $this->addAction(GetTimeline::getName(), new GetTimeline());
         $this->addAction(GetPreview::getName(), new GetPreview());
 
-        // Subtitles
-        $this->addAction(CreateSubtitle::getName(), new CreateSubtitle());
-        $this->addAction(ListSubtitles::getName(), new ListSubtitles());
-        $this->addAction(UpdateSubtitle::getName(), new UpdateSubtitle());
-        $this->addAction(DeleteSubtitle::getName(), new DeleteSubtitle());
+        // Captions
+        $this->addAction(CreateCaption::getName(), new CreateCaption());
+        $this->addAction(ListCaptions::getName(), new ListCaptions());
+        $this->addAction(UpdateCaption::getName(), new UpdateCaption());
+        $this->addAction(DeleteCaption::getName(), new DeleteCaption());
 
         // Renditions
         $this->addAction(CreateRendition::getName(), new CreateRendition());
@@ -75,15 +68,10 @@ class Http extends Service
         $this->addAction(GetStreamManifest::getName(), new GetStreamManifest());
         $this->addAction(GetCmafStreamManifest::getName(), new GetCmafStreamManifest());
         $this->addAction(GetSegment::getName(), new GetSegment());
-        $this->addAction(GetSubtitleManifest::getName(), new GetSubtitleManifest());
-        $this->addAction(GetSubtitleSegment::getName(), new GetSubtitleSegment());
+        $this->addAction(GetCaptionManifest::getName(), new GetCaptionManifest());
+        $this->addAction(GetCaptionSegment::getName(), new GetCaptionSegment());
 
-        // Profiles
+        // Codecs
         $this->addAction(ListCodecs::getName(), new ListCodecs());
-        $this->addAction(CreateProfile::getName(), new CreateProfile());
-        $this->addAction(GetProfile::getName(), new GetProfile());
-        $this->addAction(ListProfiles::getName(), new ListProfiles());
-        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
-        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
     }
 }

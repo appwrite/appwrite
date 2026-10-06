@@ -34,7 +34,7 @@ class Get extends Base
             ->setHttpPath('/v1/videos/:videoId/outputs/hls/renditions/:renditionId/streams/:streamId/playlist.m3u8')
             ->desc('Get stream manifest')
             ->groups(['api', 'videos'])
-            ->label('scope', 'videos.read')
+            ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('sdk', new Method(

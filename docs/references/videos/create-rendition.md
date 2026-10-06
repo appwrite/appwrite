@@ -1,4 +1,4 @@
-Request a new rendition of a video, encoded against a video profile and packaged for HLS, DASH, or CMAF. The rendition is created immediately with a `pending` status and transcoded in the background; poll it or subscribe to realtime events to follow its progress. The worker downloads the source file for this job, probes metadata and extracts embedded subtitles when needed, then deletes the working copy when the job ends.
+Request a new rendition of a video, encoded against a video profile and packaged for HLS, DASH, or CMAF. The rendition is created immediately with a `pending` status and transcoded in the background; poll it or subscribe to realtime events to follow its progress. The worker downloads the source file for this job, probes metadata and extracts embedded captions when needed, then deletes the working copy when the job ends.
 
 The profile codec must be enabled on this instance. A disabled codec fails with `video_codec_disabled`.
 

@@ -3,8 +3,8 @@
 namespace Utopia\Abuse\Tests\E2E;
 
 use PDO;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\Database as AdapterDatabase;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\Database as AdapterDatabase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
@@ -13,47 +13,45 @@ use Utopia\Database\Database;
 
 class DatabaseTest extends Base
 {
-    protected static Database $db;
+    protected static Database $database;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
-        if (isset(self::$db)) {
+        if (isset(self::$database)) {
             return;
         }
 
-        self::$db = self::initialiseDatabase();
+        self::$database = self::initialiseDatabase();
     }
 
     private static function initialiseDatabase(): Database
     {
-        $dbHost = Services::HOST;
-        $dbUser = 'root';
-        $dbPort = Services::MYSQL_PORT;
-        $dbPass = 'password';
+        $pdo = new PDO('mysql:host=' . Services::HOST . ';port=' . Services::MYSQL_PORT . ';charset=utf8mb4', 'root', 'password', MariaDB::getPdoAttributes());
+        $database = new Database(new MySQL($pdo), new Cache(new NoCache()));
+        $database->setDatabase('utopiaTests');
+        $database->setNamespace('namespace');
 
-        $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};charset=utf8mb4", $dbUser, $dbPass, MariaDB::getPdoAttributes());
-        $db = new Database(new MySQL($pdo), new Cache(new NoCache()));
-        $db->setDatabase('utopiaTests');
-        $db->setNamespace('namespace');
-
-        $adapter = new AdapterDatabase('', 1, 1, $db);
-        if (!$db->exists('utopiaTests')) {
-            $db->create();
+        $adapter = new AdapterDatabase('', 1, 1, $database);
+        if (!$database->exists('utopiaTests')) {
+            $database->create();
             $adapter->setup();
         }
 
-        return $db;
+        return $database;
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
-        return new AdapterDatabase($key, $limit, $seconds, self::$db);
+        return new AdapterDatabase($key, $limit, $seconds, self::$database);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
-        if (isset(self::$db)) {
-            self::$db->delete();
+        if (isset(self::$database)) {
+            self::$database->delete();
         }
     }
 }

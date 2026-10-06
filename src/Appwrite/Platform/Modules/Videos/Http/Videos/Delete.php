@@ -83,7 +83,7 @@ class Delete extends Base
         }
 
         // The pre-merge controller built this event but never triggered it, so the
-        // cascade never ran and renditions/subtitles/segments were orphaned.
+        // cascade never ran and renditions/captions/segments were orphaned.
         // DELETE_TYPE_DOCUMENT is correct: the deletes worker dispatches on the
         // document's collection, which is `videos`.
         $publisherForDeletes->enqueue(new DeleteMessage(

@@ -239,7 +239,7 @@ use Appwrite\Utopia\Response\Model\Video;
 use Appwrite\Utopia\Response\Model\VideoCodec;
 use Appwrite\Utopia\Response\Model\VideoProfile;
 use Appwrite\Utopia\Response\Model\VideoRendition;
-use Appwrite\Utopia\Response\Model\VideoSubtitle;
+use Appwrite\Utopia\Response\Model\VideoCaption;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -269,7 +269,7 @@ Response::setModel(new BaseList('Videos List', Response::MODEL_VIDEO_LIST, 'vide
 Response::setModel(new BaseList('Video Codecs List', Response::MODEL_VIDEO_CODEC_LIST, 'codecs', Response::MODEL_VIDEO_CODEC));
 Response::setModel(new BaseList('Video Profiles List', Response::MODEL_VIDEO_PROFILE_LIST, 'profiles', Response::MODEL_VIDEO_PROFILE));
 Response::setModel(new BaseList('Video Renditions List', Response::MODEL_VIDEO_RENDITION_LIST, 'renditions', Response::MODEL_VIDEO_RENDITION));
-Response::setModel(new BaseList('Video Subtitles List', Response::MODEL_VIDEO_SUBTITLE_LIST, 'subtitles', Response::MODEL_VIDEO_SUBTITLE));
+Response::setModel(new BaseList('Video Captions List', Response::MODEL_VIDEO_CAPTION_LIST, 'captions', Response::MODEL_VIDEO_CAPTION));
 Response::setModel(new BaseList('Teams List', Response::MODEL_TEAM_LIST, 'teams', Response::MODEL_TEAM));
 Response::setModel(new BaseList('Memberships List', Response::MODEL_MEMBERSHIP_LIST, 'memberships', Response::MODEL_MEMBERSHIP));
 Response::setModel(new BaseList('Sites List', Response::MODEL_SITE_LIST, 'sites', Response::MODEL_SITE));
@@ -558,7 +558,7 @@ Response::setModel(new Video());
 Response::setModel(new VideoCodec());
 Response::setModel(new VideoProfile());
 Response::setModel(new VideoRendition());
-Response::setModel(new VideoSubtitle());
+Response::setModel(new VideoCaption());
 
 // Tests (keep last)
 Response::setModel(new Mock());

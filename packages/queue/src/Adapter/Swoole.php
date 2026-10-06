@@ -411,15 +411,21 @@ class Swoole extends Adapter
             }
         }
         $exited = [];
-        while (($ret = Process::wait(false)) !== false) {
-            $pid = $ret['pid'];
-            if (isset($this->workerIds[$pid])) {
-                $exited[] = $this->workerIds[$pid];
-                unset($this->workers[$pid], $this->workerIds[$pid]);
+        while (\is_array($status = Process::wait(false))) {
+            ['pid' => $pid, 'signal' => $signal, 'code' => $code] = $status;
+            if (!\is_int($pid) || !isset($this->workerIds[$pid])) {
+                continue;
+            }
+            $workerId = $this->workerIds[$pid];
+            $exited[] = $workerId;
+            unset($this->workers[$pid], $this->workerIds[$pid]);
+
+            if (!$this->stopped && \is_int($signal) && \is_int($code) && ($signal !== 0 || $code !== 0)) {
+                error_log(\sprintf('Worker %d exited abnormally: signal=%d code=%d', $workerId, $signal, $code));
             }
         }
 
-        if (! $this->stopped) {
+        if (!$this->stopped) {
             foreach ($exited as $workerId) {
                 $this->spawnWorker($workerId);
             }

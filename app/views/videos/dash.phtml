@@ -27,11 +27,11 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
         </Representation>
     </AdaptationSet>
     <?php endforeach; ?>
-     <?php foreach ($this->getParam('subtitles', []) as $subtitle):?>
-         <AdaptationSet id="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>"  lang="<?php if (isset($subtitle['name'])): echo $this->print($subtitle['name'], self::FILTER_ESCAPE);  endif;?>" mimeType="text/vtt">
+     <?php foreach ($this->getParam('captions', []) as $caption):?>
+         <AdaptationSet id="<?php if (isset($caption['id'])): echo $caption['id'];  endif;?>"  lang="<?php if (isset($caption['name'])): echo $this->print($caption['name'], self::FILTER_ESCAPE);  endif;?>" mimeType="text/vtt">
              <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
              <Representation>
-                <BaseURL><?php if (isset($subtitle['baseUrl'])): echo $this->print($subtitle['baseUrl'], self::FILTER_ESCAPE); endif;?></BaseURL>
+                <BaseURL><?php if (isset($caption['baseUrl'])): echo $this->print($caption['baseUrl'], self::FILTER_ESCAPE); endif;?></BaseURL>
             </Representation>
         </AdaptationSet>
         <?php endforeach; ?>

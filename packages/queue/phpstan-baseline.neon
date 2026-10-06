@@ -25,12 +25,6 @@ parameters:
 			path: src/Adapter/Swoole.php
 
 		-
-			message: '#^Cannot access offset ''pid'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Adapter/Swoole.php
-
-		-
 			message: '#^Method Utopia\\Queue\\Adapter\\Swoole\:\:context\(\) should return Utopia\\DI\\Container but returns mixed\.$#'
 			identifier: return.type
 			count: 1
@@ -39,7 +33,7 @@ parameters:
 		-
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: offsetAccess.invalidOffset
-			count: 6
+			count: 2
 			path: src/Adapter/Swoole.php
 
 		-

@@ -7,8 +7,12 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -51,39 +55,26 @@ class Create extends Action
 
     public function action(string $prompt, Response $response)
     {
-        $ch = curl_init('http://appwrite-assistant:3003/v1/models/assistant/prompt');
-        $responseHeaders = [];
-        $query = json_encode(['prompt' => $prompt]);
-        $headers = ['accept: text/event-stream'];
-        $handleEvent = function ($ch, $data) use ($response) {
-            $response->chunk($data);
+        // No content type was ever declared, so curl sent its POST default
+        $request = (new RequestFactory())->body(
+            'POST',
+            'http://appwrite-assistant:3003/v1/models/assistant/prompt',
+            json_encode(['prompt' => $prompt]),
+            'application/x-www-form-urlencoded',
+            ['accept' => 'text/event-stream'],
+        );
 
-            return \strlen($data);
-        };
+        // No Accept-Encoding: a compressing upstream would buffer the event stream
+        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
+            ->withFollowRedirects()
+            ->withConnectTimeout(0)
+            ->withTimeout(9000);
 
-        curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
-
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 9000);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-            $len = strlen($header);
-            $header = explode(':', $header, 2);
-
-            if (count($header) < 2) { // ignore invalid headers
-                return $len;
-            }
-
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-
-            return $len;
-        });
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
-
-        curl_exec($ch);
+        try {
+            $client->stream($request, fn (string $data) => $response->chunk($data));
+        } catch (ClientExceptionInterface) {
+            // The stream simply ends; the client sees whatever arrived
+        }
 
         $response->chunk('', true);
     }

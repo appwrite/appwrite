@@ -73,13 +73,13 @@ The easiest way to get started with Appwrite is by [signing up for Appwrite Clou
 
 Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Running your server is as easy as running one command from your terminal.
 
-Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine. The setup wizard listens on port **20080**; if you are installing on a remote host, open that port until installation is complete.
+Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine. The setup wizard listens on port **20080** and is published on localhost only. It also prints a one-time installer secret to STDOUT — open the printed URL (or send `x-appwrite-installer-secret`) to complete setup. For a remote host, SSH-tunnel to `127.0.0.1:20080` rather than publishing the port on all interfaces.
 
 ### Unix
 
 ```bash
 docker run -it --rm \
-    --publish 20080:20080 \
+    --publish 127.0.0.1:20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
@@ -92,7 +92,7 @@ docker run -it --rm \
 
 ```cmd
 docker run -it --rm ^
-    --publish 20080:20080 ^
+    --publish 127.0.0.1:20080:20080 ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
@@ -103,14 +103,14 @@ docker run -it --rm ^
 
 ```powershell
 docker run -it --rm `
-    --publish 20080:20080 `
+    --publish 127.0.0.1:20080:20080 `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
     appwrite/appwrite:2.3.0
 ```
 
-Once the installer is running, open http://localhost:20080 to complete the setup wizard. After installation, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
+Once the installer is running, open the URL printed in the terminal (it includes a one-time secret) to complete the setup wizard. After installation, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
 
 ### Docker API version mismatch
 
@@ -119,7 +119,7 @@ If install or upgrade fails with an error like `client version 1.52 is too new. 
 ```bash
 docker run -it --rm \
     --env DOCKER_API_VERSION=1.42 \
-    --publish 20080:20080 \
+    --publish 127.0.0.1:20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
