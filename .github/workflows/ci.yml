@@ -125,7 +125,7 @@ jobs:
         run: docker compose up -d --quiet-pull --wait
 
       - name: Worker opcache settings
-        run: docker compose exec -T appwrite-worker php -i | grep -E '^opcache\.(jit|jit_buffer_size|enable_cli)' || true
+        run: docker compose exec -T appwrite-worker php -i | grep -E '^opcache\.(jit|enable_cli)' || true
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
