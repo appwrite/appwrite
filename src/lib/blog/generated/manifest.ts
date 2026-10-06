@@ -3,20 +3,6 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
-    "slug": "announcing-jaspr-support",
-    "href": "/blog/post/announcing-jaspr-support",
-    "title": "Announcing Jaspr support in Appwrite Sites: SSR in Dart",
-    "description": "Appwrite Sites now supports Jaspr with server-side rendering. Build websites in Dart, deploy them from Git, and render every request on Appwrite Cloud.",
-    "date": "2026-10-02",
-    "lastUpdated": "2026-10-02",
-    "timeToRead": 7,
-    "author": "matej-baco",
-    "category": "announcements",
-    "featured": false,
-    "cover": "/images/blog/announcing-jaspr-support/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "announcing-premium-geo-db",
     "href": "/blog/post/announcing-premium-geo-db",
     "title": "Announcing Premium Geo DB: city, ISP, and connection data",
