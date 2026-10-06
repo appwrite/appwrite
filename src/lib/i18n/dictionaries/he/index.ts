@@ -12,12 +12,14 @@ import { hePricingDictionary } from './pricing'
 import { heVideosDictionary } from './videos'
 import { heAlternativesDictionary } from './alternatives'
 import { heEnterpriseDictionary } from './enterprise'
+import { heCampaignsDictionary } from './campaigns'
 
 /**
  * Merged Hebrew dictionary keyed by English source strings.
  * Later entries override earlier ones on key collisions.
  */
 export const heDictionary: Record<string, string> = {
+  ...heCampaignsDictionary,
   ...heEnterpriseDictionary,
   ...heAlternativesDictionary,
   ...heMarketingDictionary,
