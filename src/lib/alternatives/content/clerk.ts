@@ -125,12 +125,6 @@ export const clerkAlternativeContent: AlternativeContent = {
       href: '/blog/post/why-developers-choose-appwrite-auth',
     },
     {
-      kind: 'blog',
-      title: 'Everything you need to know about RBAC and how to use it in Appwrite',
-      description: 'Teams, roles, and permissions in one model.',
-      href: '/blog/post/role-based-access-control-with-appwrite',
-    },
-    {
       kind: 'product',
       title: 'Appwrite Auth',
       description: 'Email, OAuth, SMS, MFA, teams, and sessions.',

@@ -115,12 +115,6 @@ export const amplifyAlternativeContent: AlternativeContent = {
     },
     {
       kind: 'blog',
-      title: 'How to evaluate backend tools without locking yourself in',
-      description: 'A practical framework for keeping your options open.',
-      href: '/blog/post/evaluate-backend-tools-no-lock-in',
-    },
-    {
-      kind: 'blog',
       title: 'Native databases vs Appwrite databases: which one should you pick?',
       description: 'Tables, documents, vectors, and native SQL compared.',
       href: '/blog/post/native-databases-vs-appwrite-databases',
