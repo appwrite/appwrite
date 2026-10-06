@@ -1615,7 +1615,7 @@ final class NatsBrokerTest extends TestCase
             $check->provision($queue);
             $this->fail('a Require broker must refuse a queue nobody has provisioned');
         } catch (\RuntimeException $e) {
-            $this->assertMatchesRegularExpression('/is not provisioned/', $e->getMessage());
+            $this->assertStringContainsString('is not provisioned', $e->getMessage());
         }
         $check->close();
 
