@@ -3259,6 +3259,108 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($successParams['userId'], $response['body']['userId']);
     }
 
+    public function testCreateOAuth2TokenFromAnotherBrowserDoesNotLinkSignedInUser(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // The victim's browser holds an email and password session for an account with no identities.
+        $email = \uniqid() . 'user@localhost.test';
+        $password = 'password';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $victimId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $victimSessionId = $response['body']['$id'];
+        $victimCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
+
+        // The attacker starts a token flow elsewhere and stops at the provider's redirect back to
+        // Appwrite; the token flag is in the state, which the attacker controls anyway.
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $callbackUrl = $response['headers']['location'];
+
+        // The signed-in victim opens that link, sending their session cookie but no nonce cookie.
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $victimCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $victimCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+        // The token belongs to the provider identity's own account, not the victim's.
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $successParams);
+        $this->assertNotEmpty($successParams['userId']);
+        $this->assertNotEquals($victimId, $successParams['userId']);
+
+        // The victim keeps their session and gained no identity.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $victimCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($victimSessionId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $victimCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+    }
+
     public function testCreateOidcOAuth2Token(): void
     {
         $provider = 'oidc';
