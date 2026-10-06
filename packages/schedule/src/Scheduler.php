@@ -286,6 +286,11 @@ final class Scheduler
                 continue;
             }
 
+            if ($entry === null) {
+                unset($this->entries[$id]);
+                continue;
+            }
+
             $this->entries[$id] = [
                 'trigger' => $entry->trigger,
                 'payload' => $entry->payload,

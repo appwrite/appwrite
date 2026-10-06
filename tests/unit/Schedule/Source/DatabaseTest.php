@@ -8,6 +8,7 @@ use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -20,9 +21,11 @@ final class DatabaseTest extends TestCase
             $database->documents['schedules']['schedule']->getArrayCopy(),
             ['$id' => 'live', '$sequence' => '2', 'projectId' => 'live'],
         ));
+        $clock = new TestClock(new \DateTimeImmutable('2026-10-06T11:20:30Z'));
         $errors = [];
         $scheduler = new Scheduler(
             source: $this->source($database),
+            clock: $clock,
             onError: function (\Throwable $error) use (&$errors): void {
                 $errors[] = $error;
             },
@@ -33,8 +36,11 @@ final class DatabaseTest extends TestCase
 
         $this->assertTrue($database->getDocument('schedules', 'schedule')->isEmpty());
         $this->assertFalse($database->getDocument('schedules', 'live')->isEmpty());
-        $this->assertCount(1, $errors);
-        $this->assertInstanceOf(\InvalidArgumentException::class, $errors[0]);
+        $this->assertSame([], $errors);
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(60);
+        $this->assertSame(['2'], array_values(array_unique(array_column($scheduler->tick(), 'id'))));
     }
 
     public function testRetriesFailedProjectRead(): void
@@ -74,12 +80,8 @@ final class DatabaseTest extends TestCase
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
 
         $database->deleteError = null;
-        try {
-            $source->make($row);
-            $this->fail('The missing project must still be reported.');
-        } catch (\InvalidArgumentException) {
-            $this->assertTrue($database->getDocument('schedules', 'schedule')->isEmpty());
-        }
+        $this->assertNull($source->make($row));
+        $this->assertTrue($database->getDocument('schedules', 'schedule')->isEmpty());
     }
 
     public function testDoesNotCacheMissingProject(): void
@@ -88,11 +90,8 @@ final class DatabaseTest extends TestCase
         $source = $this->source($database);
         $row = iterator_to_array($source->snapshot())[0];
 
-        try {
-            $source->make($row);
-            $this->fail('The missing project must be reported.');
-        } catch (\InvalidArgumentException) {
-        }
+        $this->assertNull($source->make($row));
+        $this->assertTrue($database->getDocument('schedules', 'schedule')->isEmpty());
 
         $database->documents['projects']['project'] = new Document(['$id' => 'project']);
         $database->documents['schedules']['schedule'] = $row->data;

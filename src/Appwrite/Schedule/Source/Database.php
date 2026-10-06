@@ -2,6 +2,7 @@
 
 namespace Appwrite\Schedule\Source;
 
+use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -51,7 +52,7 @@ abstract class Database implements Source, Changes
     }
 
     #[\Override]
-    public function make(Row $row): Entry
+    public function make(Row $row): ?Entry
     {
         $document = $row->data;
         if (!$document instanceof Document) {
@@ -72,10 +73,12 @@ abstract class Database implements Source, Changes
 
         $project = $this->project((string) $schedule['projectId']);
         if ($project->isEmpty()) {
-            // Finish cleanup before reporting; a failed delete remains available for retry.
+            // Finish cleanup before dropping the entry; a failed delete remains available for retry.
             $this->dbForPlatform->deleteDocument('schedules', $document->getId());
 
-            throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
+            Console::warning("Dropped schedule {$document->getId()}: project {$schedule['projectId']} not found");
+
+            return null;
         }
 
         if (($this->isResourceBlocked)($project, $this->collection(), $schedule['resourceId'])) {

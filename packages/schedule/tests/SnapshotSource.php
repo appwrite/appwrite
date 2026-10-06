@@ -20,7 +20,7 @@ class SnapshotSource implements Source
 {
     /**
      * @param \Closure(): iterable<Row> $snapshot
-     * @param \Closure(Row): Entry $make
+     * @param \Closure(Row): ?Entry $make
      */
     public function __construct(
         private readonly \Closure $snapshot,
@@ -35,7 +35,7 @@ class SnapshotSource implements Source
     }
 
     #[\Override]
-    public function make(Row $row): Entry
+    public function make(Row $row): ?Entry
     {
         return ($this->make)($row);
     }
