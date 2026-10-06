@@ -45,8 +45,8 @@ final class PasskeysCustomClientTest extends Scope
 
         // Enabled but unconfigured still fails closed
         $this->enablePasskeys($project, true);
-        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
-        $this->assertTrue($policy['body']['enabled']);
+        $response = $this->client->call(Client::METHOD_GET, '/project', $this->getServerHeaders($project));
+        $this->assertTrue(\array_column($response['body']['authMethods'], 'enabled', '$id')['passkey']);
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/passkey', $this->getGuestHeaders($project));
         $this->assertSame(501, $response['headers']['status-code']);
     }

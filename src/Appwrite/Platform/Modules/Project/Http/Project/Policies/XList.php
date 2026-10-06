@@ -178,7 +178,6 @@ class XList extends Action
             ]),
             new Document([
                 '$id' => 'passkey',
-                'enabled' => $auths['passkey'] ?? false,
                 'rpId' => $auths['passkeyRpId'] ?? '',
                 'origins' => $auths['passkeyOrigins'] ?? [],
             ]),

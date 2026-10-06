@@ -235,7 +235,6 @@ class Get extends Action
             'passkey' => [
                 new Document([
                     '$id' => 'passkey',
-                    'enabled' => $auths['passkey'] ?? false,
                     'rpId' => $auths['passkeyRpId'] ?? '',
                     'origins' => $auths['passkeyOrigins'] ?? [],
                 ]),
