@@ -42,5 +42,12 @@ export const legacyRedirectsMiddleware = createMiddleware({
     }
   })
 
-  throw Response.redirect(targetUrl, 301)
+  // Relative Location: behind the TLS-terminating proxy `request.url` is
+  // http://, so an absolute target would add an http hop to every redirect.
+  throw new Response(null, {
+    status: 301,
+    headers: {
+      Location: `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`,
+    },
+  })
 })
