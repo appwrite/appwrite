@@ -1,4 +1,8 @@
+import { ALTERNATIVE_IDS, getAlternativePath } from '@/lib/alternatives/registry'
+
 /** Browser-safe marketing URL list (shared with build-time prerender config). */
+const ALTERNATIVE_PAGE_PATHS = ALTERNATIVE_IDS.map((id) => getAlternativePath(id))
+
 export const MARKETING_PAGE_PATHS = [
   '/home',
   '/pricing',
@@ -26,17 +30,7 @@ export const MARKETING_PAGE_PATHS = [
   '/products/realtime',
   '/products/sites',
   '/products/firewall',
-  '/alternative-to/supabase',
-  '/alternative-to/firebase',
-  '/alternative-to/vercel',
-  '/alternative-to/netlify',
-  '/alternative-to/neon',
-  '/alternative-to/auth0',
-  '/alternative-to/convex',
-  '/alternative-to/cloudinary',
-  '/alternative-to/clerk',
-  '/alternative-to/amplify',
-  '/alternative-to/planetscale',
+  ...ALTERNATIVE_PAGE_PATHS,
   '/domains',
   '/integrations',
   '/llms/txt',

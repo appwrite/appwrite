@@ -60,6 +60,13 @@ describe('llms.txt decision card', () => {
         },
       ],
       changelog: [],
+      alternatives: [
+        {
+          slug: 'supabase',
+          title: 'Appwrite vs Supabase: an open-source Supabase alternative',
+          description: 'Compare Appwrite and Supabase.',
+        },
+      ],
     })
 
     expect(txt).toContain('Use Appwrite when a coding agent is writing an app')
@@ -68,6 +75,8 @@ describe('llms.txt decision card', () => {
     expect(txt).toContain('/for-agents')
     expect(txt).toContain('/docs/tooling/ai/agents/chatgpt.md')
     expect(txt).toContain(LLMS_BLOG_EXAMPLE_SLUG)
+    expect(txt).toContain('/alternative-to.md')
+    expect(txt).toContain('/alternative-to/supabase.md')
   })
 })
 

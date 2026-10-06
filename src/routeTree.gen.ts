@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -479,6 +480,11 @@ const ProtectedRoute = ProtectedRouteImport.update({
 } as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
+  id: '/alternative-to.md',
+  path: '/alternative-to.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
@@ -3310,6 +3316,7 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3763,6 +3770,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4168,6 +4176,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4624,6 +4633,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5077,6 +5087,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5481,6 +5492,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5939,6 +5951,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -6006,6 +6019,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alternative-to.md': {
+      id: '/alternative-to.md'
+      path: '/alternative-to.md'
+      fullPath: '/alternative-to.md'
+      preLoaderRoute: typeof AlternativeToDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -11109,6 +11129,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AlternativeToDotmdRoute: AlternativeToDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,

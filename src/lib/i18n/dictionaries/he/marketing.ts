@@ -114,7 +114,6 @@ export const heMarketingDictionary: Record<string, string> = {
     'Appwrite השלימה סבב Series A של 27 מיליון דולר בהובלת Tiger Global, בהשתתפות משקיעים קיימים, כדי להאיץ את פיתוח המוצר והצמיחה הגלובלית.', // pragma: allowlist secret
   'Appwrite Firewall with WAF capabilities to filter malicious traffic and protect applications at the edge.': // pragma: allowlist secret
     'Appwrite Firewall עם יכולות WAF לסינון תעבורה זדונית ולהגנה על אפליקציות בקצה הרשת.', // pragma: allowlist secret
-  'Appwrite for Enterprise': 'Appwrite לארגונים', // pragma: allowlist secret
   'Appwrite includes a migration tool to help you move from other platforms. Our team can also assist if you need additional help during your transition.': // pragma: allowlist secret
     'Appwrite כוללת כלי מיגרציה שיעזור לכם לעבור מפלטפורמות אחרות. הצוות שלנו ישמח לסייע אם תזדקקו לעזרה נוספת במהלך המעבר.', // pragma: allowlist secret
   "Appwrite introduced native PostgreSQL and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite's managed data layer.": // pragma: allowlist secret
