@@ -322,7 +322,7 @@ abstract class Action extends DatabasesAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -336,14 +336,16 @@ abstract class Action extends DatabasesAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
-        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForProject->getAdapter())) {
-            throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
-        }
-
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
+        }
+
+        $dbForDatabases = $getDatabasesDB($db);
+
+        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForDatabases->getAdapter())) {
+            throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
@@ -398,18 +400,18 @@ abstract class Action extends DatabasesAction
             ]);
 
             if (
-                !$dbForProject->getAdapter()->supports(Capability::SpatialIndexNull) &&
+                !$dbForDatabases->getAdapter()->supports(Capability::SpatialIndexNull) &&
                 \in_array($attribute->getAttribute('type'), [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = $authorization->skip(fn () => $dbForProject
+                $hasData = $authorization->skip(fn () => $dbForDatabases
                     ->count('database_' . $db->getSequence() . '_collection_' . $collection->getSequence())) > 0;
 
                 if ($hasData) {
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
-            $dbForProject->checkAttribute($collection, Attribute::fromArray([
+            $dbForDatabases->checkAttribute($collection, Attribute::fromArray([
                 'key' => $key,
                 'type' => $type,
                 'size' => $size,
@@ -431,12 +433,12 @@ abstract class Action extends DatabasesAction
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
             throw $e;
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
-        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
+        $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         if ($type === ColumnType::Relationship->value && $options['twoWay']) {
             $twoWayKey = $options['twoWayKey'];
@@ -465,7 +467,7 @@ abstract class Action extends DatabasesAction
                     'options' => $options,
                 ]);
 
-                $dbForProject->checkAttribute($relatedCollection, Attribute::fromArray([
+                $dbForDatabases->checkAttribute($relatedCollection, Attribute::fromArray([
                     'key' => $twoWayKey,
                     'type' => $type,
                     'size' => $size,
@@ -490,12 +492,12 @@ abstract class Action extends DatabasesAction
                 throw $e;
             } finally {
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
-                $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
             }
 
             // If operation succeeded, purge the cache for the related collection too
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
         $queueForEvents
@@ -524,7 +526,7 @@ abstract class Action extends DatabasesAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -575,6 +577,7 @@ abstract class Action extends DatabasesAction
         }
 
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
+        $dbForDatabases = $getDatabasesDB($db);
 
         $attribute
             ->setAttribute('default', $default)
@@ -645,7 +648,7 @@ abstract class Action extends DatabasesAction
             $primaryDocumentOptions = $update->options($attribute->getAttribute('options', []));
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
-                $dbForProject->updateRelationship(
+                $dbForDatabases->updateRelationship(
                     collection: $collectionId,
                     id: $key,
                     newKey: $newKey,
@@ -673,7 +676,7 @@ abstract class Action extends DatabasesAction
             }
         } else {
             try {
-                $definition = $dbForProject->updateAttribute(
+                $definition = $dbForDatabases->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -686,7 +689,7 @@ abstract class Action extends DatabasesAction
                 // updateAttribute() keeps the stored default when given null,
                 // but the API uses null to clear it.
                 if ($default === null && $definition->getAttribute('default') !== null) {
-                    $dbForProject->updateAttributeDefault(
+                    $dbForDatabases->updateAttributeDefault(
                         collection: $collectionId,
                         id: $definition->getId(),
                         default: null

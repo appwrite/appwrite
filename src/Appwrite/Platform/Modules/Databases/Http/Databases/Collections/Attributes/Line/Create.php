@@ -71,13 +71,14 @@ class Create extends Action
             ->param('default', null, new Nullable(new Spatial(ColumnType::Linestring->value)), 'Default value for attribute when not provided, two-dimensional array of coordinate pairs, [[longitude, latitude], [longitude, latitude], …], listing the vertices of the line in order. Cannot be set when attribute is required.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!$this->supportsSpatial($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
@@ -88,7 +89,7 @@ class Create extends Action
             'type' => ColumnType::Linestring->value,
             'required' => $required,
             'default' => $default
-        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

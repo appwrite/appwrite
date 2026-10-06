@@ -253,15 +253,15 @@ class Create extends Action
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw $e;
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
-        $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         // Reload the collection so its subquery filters include the schema created above.
         $collection = $authorization->skip(fn () => $dbForProject->getDocument($databaseKey, $collection->getId()));
@@ -434,17 +434,15 @@ class Create extends Action
         ];
     }
 
-    /**
-     * Cleanup on failure: delete the collection document and the underlying DB collection
-     */
     protected function cleanup(
         Database $dbForProject,
+        Database $dbForDatabases,
         string $databaseId,
         string $collectionId,
         string $collectionDocumentId
     ): void {
         try {
-            $dbForProject->deleteCollection($collectionId);
+            $dbForDatabases->deleteCollection($collectionId);
         } catch (\Throwable) {
             // Ignore cleanup errors for collection deletion
         }

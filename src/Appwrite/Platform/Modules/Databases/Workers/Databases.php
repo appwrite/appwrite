@@ -253,11 +253,11 @@ class Databases extends Action
         } finally {
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
 
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
@@ -418,11 +418,11 @@ class Databases extends Action
             }
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
 
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
@@ -495,7 +495,7 @@ class Databases extends Action
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
@@ -551,7 +551,7 @@ class Databases extends Action
 
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
@@ -609,9 +609,9 @@ class Databases extends Action
                 Query::containsAny('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],
             $dbForProject,
-            function ($attribute) use ($dbForProject, $databaseInternalId) {
+            function ($attribute) use ($dbForProject, $dbForDatabases, $databaseInternalId) {
                 $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+                $dbForDatabases->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
         );
 
