@@ -143,16 +143,16 @@ jobs:
           fi
           bun run e2e -- ${{ matrix.args }}
 
-      - name: Upload failure context
+      # Artifact storage is over quota (#401), so print the page snapshot of
+      # each failure into the log instead.
+      - name: Print failure context
         if: failure()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-error-context-${{ matrix.project }}
-          path: test-results/**/error-context.md
-          if-no-files-found: ignore
-          retention-days: 3
-          compression-level: 9
+        run: |
+          find test-results -name error-context.md 2>/dev/null | while read -r file; do
+            echo "::group::$file"
+            cat "$file"
+            echo '::endgroup::'
+          done
 
   session-cleanup:
     name: session cleanup
