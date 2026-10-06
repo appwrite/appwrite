@@ -1,4 +1,12 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, type ReactNode } from 'react'
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from 'react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -67,10 +75,7 @@ import {
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import {
-  useAccountPasskeysAllowed,
-  useProjectPasskeysAllowed,
-} from '@/hooks/use-passkeys-allowed'
+import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import {
   DEFAULT_GROUP_LABELS,
   getCommandsForContext,
@@ -147,7 +152,10 @@ interface ResourceSearchSpec {
   description: string
   icon: LucideIcon
   availableScopes: CommandCenterContext[]
-  available?: (access: ConsoleAccess, features: ConsoleProfileFeatures) => boolean
+  available?: (
+    access: ConsoleAccess,
+    features: ConsoleProfileFeatures,
+  ) => boolean
 }
 
 const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
@@ -345,7 +353,9 @@ export function CommandCenter({
   const { setTheme } = useTheme()
   const isOrgContext = context === 'org'
   const isProjectContext = context === 'project'
-  const isConsoleDocsPreviewContext = isConsoleDocsPreviewPath(location.pathname)
+  const isConsoleDocsPreviewContext = isConsoleDocsPreviewPath(
+    location.pathname,
+  )
 
   // RBAC: resolve org/team for scopes
   const { project } = useProject(
@@ -354,8 +364,7 @@ export function CommandCenter({
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
-  const projectPasskeys = useProjectPasskeysAllowed()
-  const accountPasskeys = useAccountPasskeysAllowed()
+  const passkeys = usePasskeysAllowed()
   const postgresSqlEditorActions = usePostgresSqlEditorActions()
 
   const openSqlTabPickerPage = useCallback(() => {
@@ -444,8 +453,7 @@ export function CommandCenter({
       pathname: location.pathname,
       features,
       access,
-      projectPasskeys,
-      accountPasskeys,
+      passkeys,
       isMobile,
       navigate: (href) => navigateToHref(navigate, href),
       navigateExternal: (href) => {
@@ -474,8 +482,7 @@ export function CommandCenter({
       location.pathname,
       features,
       access,
-      projectPasskeys,
-      accountPasskeys,
+      passkeys,
       isMobile,
       navigate,
       closeCommandCenter,
@@ -826,10 +833,7 @@ export function CommandCenter({
       kinds.add('topic')
       kinds.add('provider')
     }
-    if (
-      features.videos &&
-      canSeeProjectNavItem(access, features, 'videos')
-    ) {
+    if (features.videos && canSeeProjectNavItem(access, features, 'videos')) {
       kinds.add('video')
     }
     kinds.add('user')
@@ -1813,7 +1817,10 @@ export function CommandCenter({
                       tabIndex >= 0 && tabIndex === allTabs.length - 1
                         ? formatDisplayKeys('mod+9', isMac).join('')
                         : tabIndex >= 0 && tabIndex < 8
-                          ? formatDisplayKeys(`mod+${tabIndex + 1}`, isMac).join('')
+                          ? formatDisplayKeys(
+                              `mod+${tabIndex + 1}`,
+                              isMac,
+                            ).join('')
                           : null
 
                     return (
@@ -1830,7 +1837,9 @@ export function CommandCenter({
                           <PanelTop className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="truncate text-[13px] font-medium">{tab.title}</p>
+                          <p className="truncate text-[13px] font-medium">
+                            {tab.title}
+                          </p>
                           <p className="text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
                             {tabIndex >= 0
                               ? `${t('Tab')} ${tabIndex + 1}`
@@ -1978,7 +1987,9 @@ export function CommandCenter({
                                 'bg-muted text-muted-foreground',
                               )}
                             >
-                              {t(PROJECT_RESOURCE_KIND_LABELS[cmd.resourceKind])}
+                              {t(
+                                PROJECT_RESOURCE_KIND_LABELS[cmd.resourceKind],
+                              )}
                             </span>
                           )}
                         </CommandItem>

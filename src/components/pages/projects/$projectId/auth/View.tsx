@@ -55,7 +55,7 @@ import {
   canCreateTeam,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useProjectPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
+import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   deleteProjectUser,
@@ -64,7 +64,10 @@ import {
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
-import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
+import {
+  ResourceCard,
+  RESOURCE_CARD_GRID_CLASSNAME,
+} from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { TeamsEmptyState } from './_components/TeamsEmptyState'
@@ -102,10 +105,7 @@ import { AuthSettings } from './Settings'
 import { SocialProviders } from './SocialProviders'
 import { Templates } from './Templates'
 import { OAuth2ServerLayout } from './oauth2-server/Layout'
-import {
-  PoliciesLayout,
-  type PoliciesSubTab,
-} from './policies/Layout'
+import { PoliciesLayout, type PoliciesSubTab } from './policies/Layout'
 import { UsersPolicies } from './policies/Users'
 import { SessionsPolicies } from './policies/Sessions'
 import { MembershipsPolicies } from './policies/Memberships'
@@ -278,7 +278,7 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
   const showOAuth2Server = canShowProjectOAuth2Server(access, features)
-  const passkeysAllowed = useProjectPasskeysAllowed()
+  const passkeysAllowed = usePasskeysAllowed()
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
@@ -1199,7 +1199,13 @@ export function View({
         replace: true,
       })
     }
-  }, [showAuthSecuritySettings, showOAuth2Server, activeTab, projectId, navigate])
+  }, [
+    showAuthSecuritySettings,
+    showOAuth2Server,
+    activeTab,
+    projectId,
+    navigate,
+  ])
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1300,16 +1306,15 @@ export function View({
     />
   )
 
-  const teamsEmptyState =
-    hasTeamsQuery ? (
-      <EmptyState icon={Users} isEmpty={false} hasFilters variant="card" />
-    ) : (
-      <TeamsEmptyState
-        onCreate={() => setCreateTeamDialogOpen(true)}
-        createDisabled={!canCreateTeam(access, features)}
-        createDisabledTooltip={t("You don't have permission to create teams.")}
-      />
-    )
+  const teamsEmptyState = hasTeamsQuery ? (
+    <EmptyState icon={Users} isEmpty={false} hasFilters variant="card" />
+  ) : (
+    <TeamsEmptyState
+      onCreate={() => setCreateTeamDialogOpen(true)}
+      createDisabled={!canCreateTeam(access, features)}
+      createDisabledTooltip={t("You don't have permission to create teams.")}
+    />
+  )
 
   // SMTP alert for templates tab
   const smtpAlert =

@@ -9,7 +9,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
 import { isPasskeyPolicyConfigured } from '@/lib/passkey-policy'
-import { useProjectPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
+import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -122,7 +122,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const security = useAuthSecuritySnapshot(projectId)
   const mockNumbers = security.authMockNumbers ?? []
   const passkeyConfigured = isPasskeyPolicyConfigured(security.authPasskey)
-  const passkeysAllowed = useProjectPasskeysAllowed()
+  const passkeysAllowed = usePasskeysAllowed()
   const visibleAuthMethods = useMemo(
     () =>
       AUTH_METHODS.filter(

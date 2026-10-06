@@ -671,7 +671,7 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_PASSKEYS_FLAG,
     description:
-      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: shows project and account passkeys to this user.",
+      "Cloud passkeys rollout flag, set by Cloud's task-manage-flags: shows project passkey settings to this user.",
     category: 'Cloud flags',
   },
 ] as const

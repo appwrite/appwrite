@@ -32,10 +32,8 @@ export interface CommandContext {
   pathname: string
   features: ConsoleProfileFeatures
   access: ConsoleAccess
-  /** The project's organization may use passkeys (Cloud rollout flag). */
-  projectPasskeys: boolean
-  /** The signed-in user may use console passkeys (Cloud rollout flag). */
-  accountPasskeys: boolean
+  /** The signed-in user sees project passkey settings (Cloud rollout flag). */
+  passkeys: boolean
   isMobile: boolean
   /** Imperative navigation (history-pushing). */
   navigate: (to: string) => void

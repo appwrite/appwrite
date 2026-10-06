@@ -3,7 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { canUseProjectPasskeys } from '@/lib/passkeys'
+import { canUsePasskeys } from '@/lib/passkeys'
 import {
   ensureConsoleAccountQueryData,
   projectQueryOptions,
@@ -39,7 +39,7 @@ export const Route = createFileRoute(
     const account = features.passkeysFlag
       ? await ensureConsoleAccountQueryData(queryClient).catch(() => null)
       : null
-    if (!canUseProjectPasskeys(features, account?.prefs)) {
+    if (!canUsePasskeys(features, account?.prefs)) {
       throw redirect({
         to: '/projects/$projectId/auth/policies/sessions',
         params: { projectId },

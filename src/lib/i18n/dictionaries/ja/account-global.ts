@@ -1141,8 +1141,10 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Display name': '表示名',
   'Model created': 'モデルを作成しました',
   'Model updated': 'モデルを更新しました',
+  'Model deleted': 'モデルを削除しました',
   'Failed to create model': 'モデルの作成に失敗しました',
   'Failed to update model': 'モデルの更新に失敗しました',
+  'Failed to delete model': 'モデルの削除に失敗しました',
   'My OpenAI key': '自分の OpenAI キー',
   'Model ID': 'モデル ID',
   'Enter API key': 'API キーを入力',
@@ -1317,55 +1319,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   breached: '漏洩',
   'This password was found in a known data breach. Change it as soon as possible.':
     'このパスワードは既知のデータ漏洩で見つかりました。できるだけ早く変更してください。',
-
-  // Console passkeys: sign-in and account management
-  'Failed to sign in with a passkey': 'パスキーでのサインインに失敗しました',
-  'Passkeys are not set up for this domain.':
-    'このドメインではパスキーが設定されていません。',
-  'That passkey is not recognized. It may have been removed from your account.':
-    'このパスキーは認識されません。アカウントから削除された可能性があります。',
-  'The passkey sign-in expired. Please try again.':
-    'パスキーでのサインインの有効期限が切れました。もう一度お試しください。',
-  'Passkey sign-in is not available right now.':
-    '現在、パスキーでのサインインは利用できません。',
-  'This account has been blocked.': 'このアカウントはブロックされています。',
-  'Your browser could not use a passkey. Please try again.':
-    'ブラウザーでパスキーを使用できませんでした。もう一度お試しください。',
-  'For your security, sign in again before changing your passkeys.':
-    'セキュリティのため、パスキーを変更する前にもう一度サインインしてください。',
-  'You can add up to 10 passkeys. Remove one to add another.':
-    'パスキーは最大 10 個まで追加できます。追加するには 1 つ削除してください。',
-  'This passkey is already added to your account.':
-    'このパスキーはすでにアカウントに追加されています。',
-  'The passkey could not be verified. Please try again.':
-    'パスキーを検証できませんでした。もう一度お試しください。',
-  'The request expired. Please try again.':
-    'リクエストの有効期限が切れました。もう一度お試しください。',
-  'Passkeys are not available right now.': '現在、パスキーは利用できません。',
-  'Sign in again': 'もう一度サインイン',
-  'Passkey added': 'パスキーを追加しました',
-  'Failed to add passkey': 'パスキーの追加に失敗しました',
-  'Passkey renamed': 'パスキーの名前を変更しました',
-  'Failed to rename passkey': 'パスキーの名前変更に失敗しました',
-  'Passkey deleted': 'パスキーを削除しました',
-  'Failed to delete passkey': 'パスキーの削除に失敗しました',
-  'Sign in with your fingerprint, face or device PIN instead of a password.':
-    'パスワードの代わりに、指紋、顔認証、またはデバイスの PIN でサインインします。',
-  'Add passkey': 'パスキーを追加',
-  'Passkeys are not supported in this browser.':
-    'このブラウザーはパスキーに対応していません。',
-  'No passkeys yet': 'パスキーはまだありません',
-  'Add a passkey to sign in without your password.':
-    'パスキーを追加すると、パスワードなしでサインインできます。',
-  Added: '追加日',
-  'Passkey name': 'パスキー名',
-  'Save name': '名前を保存',
-  'Rename passkey': 'パスキーの名前を変更',
-  'Delete passkey': 'パスキーを削除',
-  'Your browser will ask you to create a passkey on this device or in your password manager.':
-    'ブラウザーから、このデバイスまたはパスワードマネージャーにパスキーを作成するよう求められます。',
-  'You will no longer be able to sign in with this passkey. This action cannot be undone.':
-    'このパスキーではサインインできなくなります。この操作は元に戻せません。',
 
   // Full-screen curtain for console accounts with a breached password
   'Your password was found in a data breach':

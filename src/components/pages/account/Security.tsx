@@ -1,8 +1,6 @@
 import { useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useAccountPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { fetchAccountIdentities } from '@/lib/react-query/hooks'
-import type { Models } from '@appwrite.io/console'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -12,11 +10,9 @@ import {
   MFASection,
   UpdatePasswordSection,
 } from './Overview'
-import { PasskeysSection } from './Passkeys'
 
 export type AccountSecurityInitialData = {
   identities?: Awaited<ReturnType<typeof fetchAccountIdentities>>
-  passkeys?: Models.PasskeyList
 }
 
 export function AccountSecurity({
@@ -25,7 +21,6 @@ export function AccountSecurity({
   initialData?: AccountSecurityInitialData
 } = {}) {
   const { features } = useConsoleProfile()
-  const passkeysAllowed = useAccountPasskeysAllowed()
 
   const cards = useMemo<SettingsCardItem[]>(() => {
     const items: SettingsCardItem[] = [
@@ -61,31 +56,8 @@ export function AccountSecurity({
       })
     }
 
-    if (passkeysAllowed) {
-      items.push({
-        id: 'passkeys',
-        search: {
-          title: 'Passkeys',
-          keywords: [
-            'passkey',
-            'webauthn',
-            'fingerprint',
-            'face id',
-            'biometric',
-          ],
-        },
-        node: <PasskeysSection initialData={initialData?.passkeys} />,
-      })
-    }
-
     return items
-  }, [
-    features.accountIdentities,
-    features.accountMfa,
-    passkeysAllowed,
-    initialData?.identities,
-    initialData?.passkeys,
-  ])
+  }, [features.accountIdentities, features.accountMfa, initialData?.identities])
 
   return <SettingsCardsList cards={cards} />
 }

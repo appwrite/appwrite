@@ -9,7 +9,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
-import { useProjectPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
+import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { useT } from '@/lib/i18n/translate'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
 import {
@@ -117,7 +117,7 @@ function PoliciesLayoutContent({
   const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
     usePoliciesSettingsSearch()
 
-  const passkeysAllowed = useProjectPasskeysAllowed()
+  const passkeysAllowed = usePasskeysAllowed()
 
   const navItems = useMemo(
     () =>

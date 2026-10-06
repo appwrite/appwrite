@@ -629,9 +629,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Security · Multi-factor authentication': 'セキュリティ · 多要素認証',
   'Enable MFA with TOTP, email or SMS':
     'TOTP、メール、または SMS で MFA を有効化',
-  'Security · Passkeys': 'セキュリティ · パスキー',
-  'Sign in with a fingerprint, face or device PIN':
-    '指紋、顔認証、またはデバイスの PIN でサインイン',
   // Command center: theme and help entries
   'Switch the console to light mode': 'コンソールをライトモードに切り替え',
   'Switch the console to dark mode': 'コンソールをダークモードに切り替え',
@@ -657,7 +654,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'プッシュ通知、メール、SMS メッセージ',
   'Deployed websites and hosting': 'デプロイ済みのウェブサイトとホスティング',
-  'Adaptive video streaming, renditions and subtitles': 'アダプティブ動画ストリーミング、レンディション、字幕',
+  'Adaptive video streaming, renditions and subtitles':
+    'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
   'Realtime channels and live messages':
     'Realtime チャンネルとライブメッセージ',
@@ -692,7 +690,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Messaging · Topics': 'メッセージング · トピック',
   'Messaging · Providers': 'メッセージング · プロバイダー',
   'Videos · Encoding profiles': '動画 · エンコードプロファイル',
-  'Resolution and bitrate targets for renditions': 'レンディションの解像度とビットレートの目標値',
+  'Resolution and bitrate targets for renditions':
+    'レンディションの解像度とビットレートの目標値',
   'Email, SMS and push providers': 'メール、SMS、プッシュプロバイダー',
   'Settings · Overview': '設定 · 概要',
   'Settings · Custom domains': '設定 · カスタムドメイン',

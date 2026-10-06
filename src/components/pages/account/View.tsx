@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useAccountPasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
@@ -50,7 +49,6 @@ export function View() {
   const navigate = useNavigate()
   const { account, signOut } = useAuth()
   const { features, isSelfHosted } = useConsoleProfile()
-  const passkeysAllowed = useAccountPasskeysAllowed()
   const { data: organizations, isSuccess } = useQuery({
     ...organizationsQueryOptions(),
     enabled: isSelfHosted && !!account,
@@ -216,9 +214,6 @@ export function View() {
       if (entry.title === 'Multi-factor authentication') {
         return features.accountMfa
       }
-      if (entry.title === 'Passkeys') {
-        return passkeysAllowed
-      }
       return true
     })
   }, [
@@ -227,7 +222,6 @@ export function View() {
     features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
-    passkeysAllowed,
     features.accountApplications,
   ])
 

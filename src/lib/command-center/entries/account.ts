@@ -5,7 +5,6 @@
 import {
   Bell,
   CreditCard,
-  Fingerprint,
   KeyRound,
   LogOut,
   MapPin,
@@ -112,18 +111,6 @@ const ACCOUNT: CommandEntry[] = [
     keywords: ['mfa', '2fa', 'totp', 'authenticator', 'security'],
     available: (ctx) => Boolean(ctx.features.accountMfa),
     to: () => '/account/security#card-mfa',
-  },
-  {
-    id: 'account.card.security.passkeys',
-    scopes: ['account'],
-    kind: 'card',
-    group: 'Security',
-    label: 'Security · Passkeys',
-    description: 'Sign in with a fingerprint, face or device PIN',
-    icon: Fingerprint,
-    keywords: ['passkey', 'webauthn', 'fingerprint', 'biometric', 'security'],
-    available: (ctx) => ctx.accountPasskeys,
-    to: () => '/account/security#card-passkeys',
   },
   {
     id: 'account.card.notifications.browser-alerts',

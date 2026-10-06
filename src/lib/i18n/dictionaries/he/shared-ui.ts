@@ -967,9 +967,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Update your account password': 'עדכון סיסמת החשבון שלכם',
   'Security · Multi-factor authentication': 'אבטחה · אימות רב-שלבי',
   'Enable MFA with TOTP, email or SMS': 'הפעלת MFA עם TOTP, אימייל או SMS',
-  'Security · Passkeys': 'אבטחה · מפתחות גישה',
-  'Sign in with a fingerprint, face or device PIN':
-    'התחברות עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר',
 
   // Command center: theme and help entries
   'Switch the console to light mode': 'החלפת הקונסולה למצב בהיר',
@@ -1013,7 +1010,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Push notifications, email and SMS messages':
     'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
   'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
-  'Adaptive video streaming, renditions and subtitles': 'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
+  'Adaptive video streaming, renditions and subtitles':
+    'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
@@ -1070,7 +1068,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'נושאי מנויים לשליחת הודעות בתפוצה רחבה',
   'Messaging · Providers': 'הודעות · ספקים',
   'Videos · Encoding profiles': 'סרטונים · פרופילי קידוד',
-  'Resolution and bitrate targets for renditions': 'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
+  'Resolution and bitrate targets for renditions':
+    'יעדי רזולוציה ו-Bitrate לגרסאות קידוד',
   'Email, SMS and push providers': 'ספקי אימייל, SMS ופוש',
   'Settings · Overview': 'הגדרות · סקירה',
   'Project ID, name, region, API endpoint':
