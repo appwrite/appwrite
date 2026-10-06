@@ -562,8 +562,9 @@ final class PasskeysCustomClientTest extends Scope
         $this->configurePasskeys($project);
         [$user, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
+        $authenticators = [];
         for ($i = 0; $i < 3; $i++) {
-            $this->registerPasskey($project, $session);
+            $authenticators[] = $this->registerPasskey($project, $session);
         }
         $this->registerPasskey($project, $otherSession);
         $headers = $this->getSessionHeaders($project, $session);
@@ -595,6 +596,24 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame([$ids[2]], \array_column($filtered['body']['passkeys'], '$id'));
         $this->assertSame(1, $filtered['body']['total']);
 
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/account/passkeys/' . $ids[0], $headers, [
+            'name' => 'MacBook',
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $byName = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::equal('name', ['MacBook'])->toString()],
+        ]);
+        $this->assertSame(200, $byName['headers']['status-code']);
+        $this->assertSame([$ids[0]], \array_column($byName['body']['passkeys'], '$id'));
+
+        // Passkeys are listed in creation order, so the second authenticator signs in with the second passkey
+        $this->assertSame(201, $this->signIn($project, $authenticators[1])['headers']['status-code']);
+        $used = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
+            'queries' => [Query::isNotNull('accessedAt')->toString(), Query::orderDesc('accessedAt')->toString()],
+        ]);
+        $this->assertSame(200, $used['headers']['status-code']);
+        $this->assertSame([$ids[1]], \array_column($used['body']['passkeys'], '$id'));
+
         $withoutTotal = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
             'total' => false,
         ]);
@@ -612,7 +631,7 @@ final class PasskeysCustomClientTest extends Scope
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/account/passkeys', $headers, [
-            'queries' => [Query::equal('name', ['MacBook'])->toString()],
+            'queries' => [Query::equal('identifier', ['0000'])->toString()],
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
 

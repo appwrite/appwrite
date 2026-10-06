@@ -78,7 +78,7 @@ class Update extends Action
         }
 
         $passkey = $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
-            'data' => \array_merge($passkey->getAttribute('data', []), ['name' => $name]),
+            'name' => $name,
         ]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

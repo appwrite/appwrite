@@ -127,10 +127,8 @@ class Update extends Action
                 $verified = $ceremony->verifyAuthentication($state, $credential, $data['record']);
 
                 $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $current->getId(), new Document([
-                    'data' => \array_merge($data, [
-                        'record' => $verified->record,
-                        'accessedAt' => DateTime::formatTz(DateTime::now()),
-                    ]),
+                    'data' => \array_merge($data, ['record' => $verified->record]),
+                    'accessedAt' => DateTime::now(),
                 ])));
             });
         } catch (PasskeyException $th) {

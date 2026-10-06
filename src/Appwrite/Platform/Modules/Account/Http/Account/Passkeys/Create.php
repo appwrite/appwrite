@@ -134,8 +134,8 @@ class Create extends Action
                 'userInternalId' => $user->getSequence(),
                 'type' => Ceremony::TYPE,
                 'verified' => false,
+                'name' => $name,
                 'data' => [
-                    'name' => $name,
                     'registration' => $registration,
                 ],
             ]));

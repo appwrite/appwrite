@@ -55,8 +55,8 @@ class Passkey extends Model
         $data = $document->getAttribute('data', []);
 
         return $document
-            ->setAttribute('name', $data['name'] ?? '')
-            ->setAttribute('accessedAt', $data['accessedAt'] ?? '')
+            ->setAttribute('name', $document->getAttribute('name') ?? '')
+            ->setAttribute('accessedAt', $document->getAttribute('accessedAt') ?? '')
             ->setAttribute('backedUp', $data['record']['backupStatus'] ?? false);
     }
 
