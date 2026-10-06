@@ -17,7 +17,7 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'tooling/ai/assistant': 'products/agent',
   'tooling/skills': 'tooling/ai/skills',
   'products/databases/spatial':
-    'products/databases/geo-queries#spatial-columns',
+    'products/databases/tablesdb/geo-queries#spatial-columns',
   'tutorials/android': 'tutorials/android/step-1',
   'tutorials/apple': 'tutorials/apple/step-1',
   'tutorials/astro-ssr-auth': 'tutorials/astro-ssr-auth/step-1',

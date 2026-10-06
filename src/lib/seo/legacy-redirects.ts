@@ -77,6 +77,8 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/docs/events': '/docs/apis/events',
   '/docs/queries': '/docs/products/databases/tablesdb/queries',
   '/docs/pagination': '/docs/products/databases/tablesdb/pagination',
+  '/docs/products/databases/spatial':
+    '/docs/products/databases/tablesdb/geo-queries#spatial-columns',
   '/docs/webhooks': '/docs/apis/webhooks',
   '/docs/custom-domains': '/docs/products/network/custom-domains',
   '/docs/email-and-sms-templates': '/docs/products/auth/message-templates',
