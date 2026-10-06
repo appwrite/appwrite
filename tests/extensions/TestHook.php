@@ -17,5 +17,7 @@ class TestHook implements Extension
         $facade->registerSubscriber(new TestFinishedSubscriber(self::MAX_SECONDS_ALLOWED));
         $facade->registerSubscriber(new RetrySubscriber());
         $facade->registerSubscriber(new SwooleCleanupSubscriber());
+        $facade->registerSubscriber(new ProbeTestStartedSubscriber());
+        $facade->registerSubscriber(new ProbeTestFinishedSubscriber());
     }
 }

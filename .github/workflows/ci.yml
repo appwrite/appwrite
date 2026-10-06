@@ -57,9 +57,9 @@ jobs:
             VERSION=dev
 
   probe:
-    name: Probe / ${{ matrix.database }} (${{ matrix.mode }}) / Migrations / ${{ matrix.repeat }}
+    name: Probe / MongoDB (shared) / Migrations / ${{ matrix.repeat }}
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 40
+    timeout-minutes: 60
     needs: build
     permissions:
       contents: read
@@ -67,33 +67,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 1 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 2 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 3 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 4 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 5 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 6 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 7 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 8 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 9 }
-          - { database: PostgreSQL, adapter: postgresql, port: '5432', mode: dedicated, profiles: 'postgresql,mongodb', repeat: 10 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 1 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 2 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 3 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 4 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 5 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 6 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 7 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 8 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 9 }
-          - { database: MongoDB, adapter: mongodb, port: '27017', mode: shared, profiles: mongodb, repeat: 10 }
+        repeat: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     env:
-      COMPOSE_PROFILES: ${{ matrix.profiles }}
+      COMPOSE_PROFILES: mongodb
       _APP_OPTIONS_ROUTER_PROTECTION: enabled
-      _APP_DB_ADAPTER: ${{ matrix.adapter }}
-      _APP_DB_HOST: ${{ matrix.adapter }}
-      _APP_DB_PORT: ${{ matrix.port }}
+      _APP_DB_ADAPTER: mongodb
+      _APP_DB_HOST: mongodb
+      _APP_DB_PORT: '27017'
+      EXPORT_PASSES: '8'
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -136,9 +117,9 @@ jobs:
         timeout-minutes: 5
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
-          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: documentsdb_db_main
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: vectorsdb_db_main
           _APP_DOCUMENTSDB: enabled
           _APP_VECTORSDB: enabled
         run: docker compose up -d --quiet-pull --wait
@@ -155,12 +136,31 @@ jobs:
           done
 
       - name: Run tests
-        timeout-minutes: 25
+        timeout-minutes: 40
         run: |
-          docker compose exec -T \
-            -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
-            -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes 1 --functional /usr/src/code/tests/e2e/Services/Migrations --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/Migrations/junit.xml
+          mark() {
+            echo "$(date -u +%Y-%m-%dT%H:%M:%S.%NZ) PASS $1 $2" >> passes.log
+          }
+          run_pass() {
+            local name="$1"
+            shift
+            mark start "${name}"
+            set +e
+            docker compose exec -T \
+              -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
+              -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
+              appwrite vendor/bin/paratest --processes 1 --functional /usr/src/code/tests/e2e/Services/Migrations --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus "$@" > "pass-${name}.out" 2>&1
+            local code=$?
+            set -e
+            mark end "${name}"
+            tail -n 40 "pass-${name}.out"
+            echo "Pass ${name}: exit=${code}" | tee -a pass-exits.log "$GITHUB_STEP_SUMMARY"
+          }
+          docker compose exec -T appwrite rm -f /tmp/probe-test-events.log
+          run_pass full --log-junit tests/e2e/Services/Migrations/junit.xml
+          for pass in $(seq 1 "${EXPORT_PASSES}"); do
+            run_pass "export${pass}" --filter 'Export'
+          done
 
       - name: Crash summary
         if: ${{ !cancelled() }}
@@ -185,25 +185,36 @@ jobs:
           done
           echo "TRACE lines in worker log: $(grep -c 'TRACE' worker.log || true)"
 
-      - name: Compiled trace inventory
+      - name: Compiled trace timeline
         if: ${{ !cancelled() }}
         run: |
           mkdir -p traces
           docker compose logs -t --no-color appwrite-worker 2>&1 | sed -E 's/^[^|]*\| //' > traces/worker-full.log
+          docker compose exec -T appwrite cat /tmp/probe-test-events.log > traces/test-events.log || true
+          cp passes.log pass-exits.log traces/ || true
+          cp pass-*.out traces/ || true
           awk '
-            / ---- TRACE [0-9]+ start / { split($0, parts, " ---- TRACE "); split(parts[2], rest, " "); start[rest[1]] = $0; next }
-            / ---- TRACE [0-9]+ compiled/ { split($0, parts, " ---- TRACE "); split(parts[2], rest, " "); if (rest[1] in start) { print start[rest[1]]; delete start[rest[1]] } next }
-            /zend_mm_heap|exited abnormally/ { print "CRASH " $0 }
+            { ts = $1 }
+            $2 == "----" && $3 == "TRACE" && $5 == "start" { rest = $0; sub(/^.* start /, "", rest); start[$4] = rest; next }
+            $2 == "----" && $3 == "TRACE" && $5 == "compiled" { if ($4 in start) { print ts " COMPILED " $4 " " start[$4]; delete start[$4] } next }
+            /zend_mm_heap|exited abnormally|Segmentation fault/ { print ts " CRASH " substr($0, length(ts) + 2) }
           ' traces/worker-full.log > traces/compiled.txt
+          sort -s -k1,1 traces/compiled.txt traces/test-events.log traces/passes.log > traces/timeline.txt
+          echo "Compiled traces: $(grep -c ' COMPILED ' traces/compiled.txt || true); cap hit at: $(grep -m1 'too many traces' traces/worker-full.log | cut -c1-30)"
+          awk '
+            / PASS start / { pass = $0 }
+            / TEST start / { test = $0; window = ""; inwindow = 0 }
+            / COMPILED / { total++; window = window "\n    " $0; inwindow++ }
+            / CRASH / { print "::group::" $0; print "  pass: " pass; print "  test: " test; print "  compiled since worker start: " total; print "  compiled since the test started (" inwindow "):" window; print "::endgroup::" }
+          ' traces/timeline.txt
           grep -v -E 'TRACE|^\s*$' traces/worker-full.log > traces/worker-no-trace.log || true
-          grep -c ' start ' traces/compiled.txt || true
-          rm traces/worker-full.log
+          gzip -1 traces/worker-full.log
 
       - name: Upload trace inventory
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: traces-${{ matrix.database }}-${{ matrix.mode }}-${{ matrix.repeat }}
+          name: traces-${{ matrix.repeat }}
           path: traces/
           retention-days: 3
 
@@ -217,7 +228,7 @@ jobs:
           fi
           sudo chmod a+r /tmp/appwrite-cores/core.*
           docker run --rm --entrypoint sh -v /tmp/appwrite-cores:/tmp/appwrite-cores:ro -v "$PWD/.github/probe:/probe:ro" "${IMAGE}" -c '
-            apk add --no-cache gdb build-base > /dev/null 2>&1 || { echo "gdb could not be installed"; exit 0; }
+            apk add --no-cache gdb python3 build-base > /dev/null 2>&1 || { echo "gdb could not be installed"; exit 0; }
             gcc -g3 -O0 -fno-eliminate-unused-debug-types $(php-config --includes) -c /probe/types.c -o /tmp/types.o
             for core in /tmp/appwrite-cores/core.*; do
               echo "::group::${core}"
@@ -230,7 +241,9 @@ jobs:
                 -ex "x/12i \$pc" \
                 -ex phpbtregs \
                 -ex phpbt \
-                /usr/local/bin/php "$core" 2>&1 | grep -v -E "^\[New LWP|^warning:|^Reading symbols|add symbol table|^\s+\.text|^Downloading" | sed -E "s|/usr/src/code/vendor/utopia-php/||; s|/usr/src/code/||" | head -n 160
+                -ex "source /probe/vmstack.py" \
+                -ex probestack \
+                /usr/local/bin/php "$core" 2>&1 | grep -v -E "^\[New LWP|^warning:|^Reading symbols|add symbol table|^\s+\.text|^Downloading" | sed -E "s|/usr/src/code/vendor/utopia-php/||; s|/usr/src/code/||" | head -n 600
               echo "::endgroup::"
             done
           ' || true
@@ -244,7 +257,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: core-${{ matrix.database }}-${{ matrix.mode }}-${{ matrix.repeat }}
+          name: core-${{ matrix.repeat }}
           path: cores/
           if-no-files-found: ignore
           retention-days: 3
