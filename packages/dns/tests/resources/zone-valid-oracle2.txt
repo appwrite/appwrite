@@ -1,0 +1,27 @@
+$ORIGIN example.com.
+example.com.	     3600     IN     SOA ns41.domaincontrol.com. dns.net. (
+                    2018122702
+                    28800
+                    7200
+                    604800
+                    3600
+		     )
+					
+; A Records
+@   600  IN     A   192.0.2.249
+blog    10800    IN     A   192.0.2.255
+dev 1800     IN     A   192.0.2.254
+dev01   1800     IN     A   192.0.2.253
+dev02   1800     IN     A   192.0.2.252
+dev03   1800     IN     A   192.0.2.251
+dev04   1800     IN     A   192.0.2.250
+abc123b432dc7785b7ef31f04f25c3e71    1800     IN     CNAME   verify.bing.com.
+; CNAME Records
+akamai  600  IN     CNAME   www.example.edgekey.net.
+email   3600     IN     CNAME   email.secureserver.net.
+; MX Records
+@   604800   IN     MX  10  amlxe.l.google.com.
+@   604800   IN     MX  10  aplxe.l.google.com.
+; TXT Records
+@   3600     IN     TXT "google-site-verification=3J82-80dbMyCo5Q5C1GM8os1VYVEOnZPGCSYlHcPcXg"
+@   3600     IN     TXT "google-site-verification=eS_QPYLE_W4nduSrlN-cddxG7ZqOnB7k7uIG7qrsyu8"

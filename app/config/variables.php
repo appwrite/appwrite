@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Network\TrustedProxies;
 use Utopia\Config\Config;
 
 return [
@@ -108,9 +109,9 @@ return [
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
-                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
+                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The installer generates a unique value. Production refuses to start when this is empty, and warns when it is the public `your-secret-key` placeholder. Changing it makes existing encrypted data unreadable. **Keep it a secret and have a backup for it**.',
                 'introduction' => '',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
                 'filter' => 'token'
@@ -215,6 +216,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DNS_EXTERNAL',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'introduction' => '2.3.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'introduction' => '2.3.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
@@ -242,10 +261,10 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CONSOLE_URL_SCHEME',
-                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
-                'introduction' => '2.0.0',
-                'default' => 'legacy',
+                'name' => '_APP_CONSOLE_URL',
+                'description' => 'Origin of the Appwrite console web app, such as https://console.example.com, used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments and commit statuses). Set it when the console is served on a different host than the API. When empty, links use _APP_CONSOLE_DOMAIN (or _APP_DOMAIN) over https, or over http when _APP_OPTIONS_FORCE_HTTPS is disabled.',
+                'introduction' => '2.3.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -459,7 +478,7 @@ return [
             ],
             [
                 'name' => '_APP_TRUSTED_HEADERS',
-                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively. These headers are only read when the connection address is listed in `_APP_TRUSTED_PROXIES`.',
                 'introduction' => '1.8.0',
                 'default' => 'x-forwarded-for',
                 'required' => false,
@@ -467,9 +486,18 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_TRUSTED_PROXIES',
+                'description' => 'Comma-separated CIDRs (or exact IPs) of reverse proxies that may set `_APP_TRUSTED_HEADERS` such as X-Forwarded-For. The default covers loopback, RFC1918 and RFC 6598 (100.64.0.0/10) ranges used by Docker, Traefik and Kubernetes. When the connection comes from a trusted proxy, the client IP is the rightmost header entry that is not itself a trusted proxy. Direct clients whose connection address is not in this list are not trusted — their X-Forwarded-For is ignored. Set it to an empty value to always use the connection IP. If your load balancer has a public address, add that CIDR.',
+                'introduction' => '2.3.0',
+                'default' => TrustedProxies::DEFAULT,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_GEO_ENDPOINT',
                 'description' => 'Internal endpoint of the geo service used to resolve IP geolocation for locale and session enrichment. Leave empty to disable geolocation lookups. Defaults to the bundled `appwrite-geo` container.',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => 'http://appwrite-geo/v1',
                 'required' => false,
                 'question' => '',
@@ -478,11 +506,20 @@ return [
             [
                 'name' => '_APP_GEO_SECRET',
                 'description' => 'Bearer token used to authenticate requests from the Appwrite server to the geo service. Must match the `GEO_SECRET` configured on the `appwrite-geo` container. Change it from the default value before running in production.',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
                 'filter' => 'token'
+            ],
+            [
+                'name' => '_APP_PWNED_PASSWORDS_DSN',
+                'description' => "DSN of the service the password pwned project policy asks whether a password has been breached. The scheme picks the adapter. Nothing is asked until you set it: the default, `none://localhost`, reports every password as safe, so the policy protects nothing until this points at a service.\n\nOptions:\n- None: `none://localhost` — the default. Reports every password as safe without asking anyone, for a server that must not or cannot reach a breach service\n- Have I Been Pwned: `hibp://localhost` — the public range API, which only ever receives the first five characters of the password SHA-1 hash. No other detail is read from the DSN\n- [Appwrite Pwned](https://github.com/appwrite-labs/pwned): `appwrite://SECRET@appwrite-pwned/v1/detection` — a service you run yourself, which answers from its own copy of the Have I Been Pwned corpus, so nothing about the password leaves your network. It receives only the SHA-1 hash of the password, never the password itself, authenticated with `SECRET` as a Bearer token, which must match the service's `APPWRITE_PWNED_SECRET`. That hash is unsalted, so only point it at a service on your own network or behind TLS. The path defaults to `v1/detection` and the connection is plain HTTP unless you add `?tls=true`\n- Testing: `mock://localhost` — reports a fixed list of passwords as breached without leaving the process. Refused on a production server, since it would report every real password as safe",
+                'introduction' => '2.3.0',
+                'default' => 'none://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -753,6 +790,48 @@ return [
                 'description' => 'Redis server password. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'MQTT',
+        'description' => 'Appwrite runs an MQTT broker that delivers push notifications to devices. Traefik terminates TLS for MQTT (mqtts) and MQTT over WebSocket (wss) and forwards both to the appwrite-mqtt container.',
+        'variables' => [
+            [
+                'name' => '_APP_MQTT_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over TLS (mqtts). Change it when the port is already taken on the host. Default value is: \'8883\'.',
+                'introduction' => '2.3.0',
+                'default' => '8883',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_WSS_PORT',
+                'description' => 'Host port Traefik publishes for MQTT over secure WebSocket (wss), used by browser clients. Change it when the port is already taken on the host. Default value is: \'8084\'.',
+                'introduction' => '2.3.0',
+                'default' => '8084',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_REPLAY_DEPTH',
+                'description' => 'Maximum number of missed QoS 1 messages the broker replays per topic when a device resubscribes after being offline. Minimum 1. Default value is: \'5\'.',
+                'introduction' => '2.3.0',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MQTT_MAX_PACKET_SIZE',
+                'description' => 'Maximum size in bytes of a single MQTT packet the broker accepts. Default value is: \'64000\'.',
+                'introduction' => '2.3.0',
+                'default' => '64000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1244,7 +1323,7 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => "This option allows you to enable or disable runtime environments for cloud functions. Disable unused runtimes to save disk space.\n\nTo enable cloud function runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
-                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0',
+                'default' => 'node-16.0,node-22,php-8.0,python-3.9,ruby-3.0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1279,7 +1358,7 @@ return [
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Jobs-service build workers attach only the current project\'s subdirectory (`app-<projectId>`) so they write output directly onto it without seeing other projects. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -1771,7 +1850,7 @@ return [
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
-                'introduction' => 'TBD',
+                'introduction' => '2.0.0',
                 'default' => '86400',
                 'required' => false,
                 'question' => '',
@@ -1815,15 +1894,6 @@ return [
                 'description' => 'Maximum number of pooled ClickHouse HTTP clients per process.',
                 'introduction' => '',
                 'default' => '2',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_EXECUTIONS_DUAL_WRITE',
-                'description' => 'Mirror function and site execution writes to ClickHouse while retaining the project database copy.',
-                'introduction' => '',
-                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1875,7 +1945,7 @@ return [
             ],
             [
                 'name' => '_APP_STATS_RESOURCES_INTERVAL',
-                'description' => 'Interval in seconds between full resource-count snapshots.',
+                'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
                 'required' => false,
@@ -1951,21 +2021,6 @@ return [
             [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
                 'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
-                'introduction' => '1.4.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ]
-        ]
-    ],
-    [
-        'category' => 'Assistant',
-        'description' => '',
-        'variables' => [
-            [
-                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
-                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,

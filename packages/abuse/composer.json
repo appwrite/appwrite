@@ -1,0 +1,51 @@
+{
+    "name": "utopia-php/abuse",
+    "description": "A simple abuse library to manage application usage limits",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "abuse"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Abuse\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Abuse\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e",
+        "bench": "vendor/bin/phpbench run --report=aggregate"
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-pdo": "*",
+        "ext-curl": "*",
+        "ext-redis": "*",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^2.0",
+        "utopia-php/client": "^0.5",
+        "utopia-php/database": "^7.0.0",
+        "utopia-php/pools": "^2.0",
+        "utopia-php/psr7": "^0.2.1",
+        "appwrite/appwrite": "^27.1"
+    },
+    "require-dev": {
+        "phpbench/phpbench": "1.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}

@@ -69,6 +69,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('deviceForSites')
             ->inject('vcsFactory')
             ->inject('authorization')
@@ -87,6 +88,7 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Deployments $deployments,
+        int $buildTimeout,
         Device $deviceForSites,
         VcsFactory $vcsFactory,
         Authorization $authorization,
@@ -111,15 +113,15 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        // Remote-source deployments (templates / VCS) on the jobs-service
-        // backend never store a source tarball — the build sidecar fetches
-        // it — so a duplicate re-fetches the same source from the
-        // coordinates persisted on the deployment.
+        // Remote-source deployments (templates / VCS) re-fetch from the
+        // coordinates persisted on the deployment, so a VCS redeploy picks up
+        // the resource's current root directory. The source kept from their
+        // build only serves downloads.
         $path = $deployment->getAttribute('sourcePath');
-        $hasSource = !empty($path) && $deviceForSites->exists($path);
         $installationId = $deployment->getAttribute('installationId', '');
         $owner = $deployment->getAttribute('providerRepositoryOwner', '');
         $repository = $deployment->getAttribute('providerRepositoryName', '');
+        $hasSource = ($owner === '' || $repository === '') && !empty($path) && $deviceForSites->exists($path);
 
         if (!$hasSource && ($owner === '' || $repository === '')) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
@@ -172,7 +174,7 @@ class Create extends Action
         ]);
 
         if ($hasSource) {
-            $deployment = $deployments->createFromUpload($site, $deployment);
+            $deployment = $deployments->createFromUpload($site, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             if ($installation->isEmpty()) {
@@ -185,11 +187,12 @@ class Create extends Action
             $deployment = $deployments->createFromVcs(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $vcs,
                 $owner,
                 $repository,
                 $ref,
-                $deployment->getAttribute('providerRootDirectory', ''),
+                $site->getAttribute('providerRootDirectory', ''),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
@@ -197,6 +200,7 @@ class Create extends Action
             $deployment = $deployments->createFromRef(
                 $site,
                 $deployment,
+                $buildTimeout,
                 $owner,
                 $repository,
                 GitHub::CLONE_TYPE_COMMIT,

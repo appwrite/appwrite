@@ -94,6 +94,31 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testListTransactionsTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/vectorsdb/transactions', $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/transactions', $headers, [
+            'total' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/transactions', $headers, [
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+    }
+
     /**
      * Test adding operations to a transaction
      */

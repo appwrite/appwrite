@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -66,6 +67,11 @@ class Update extends Base
         return 'Kiq0000000000000000000000000000000000000-00000000000H2L5-3SJ-vRV';
     }
 
+    public static function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent'];
+    }
+
     public static function getParameters(): array
     {
         return \array_merge(parent::getParameters(), [
@@ -115,12 +121,14 @@ class Update extends Base
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('domain', null, new Nullable(new ValidatorDomain(allowEmpty: true)), 'Okta company domain. Required when enabling the provider. For example: trial-6400025.okta.com. Example of wrong value: trial-6400025-admin.okta.com, or https://trial-6400025.okta.com/', optional: true)
             ->param('authorizationServerId', null, new Nullable(new Text(256, 0)), 'Custom Authorization Servers. Optional, can be left empty or unconfigured. For example: aus000000000000000h7z', optional: true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($this->handle(...));
     }
 
@@ -137,12 +145,14 @@ class Update extends Base
             static::getClientSecretParamName() => '',
             'domain' => $decoded['oktaDomain'] ?? '',
             'authorizationServerId' => $decoded['authorizationServerId'] ?? '',
+            'prompt' => $decoded['prompt'] ?? [],
         ]);
     }
 
     /**
      * Custom callback used instead of the parent's `action()` because Okta
-     * takes additional optional `domain` and `authorizationServerId` parameters.
+     * takes additional optional `domain`, `authorizationServerId` and `prompt`
+     * parameters.
      * The method is named differently to avoid an LSP-incompatible override of
      * Base::action().
      */
@@ -151,15 +161,19 @@ class Update extends Base
         ?string $clientSecret,
         ?string $domain,
         ?string $authorizationServerId,
+        ?array $prompt,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
+
+        $this->validatePrompt($prompt);
 
         // The secret is stored as JSON `{"clientSecret": "...", "oktaDomain": "...", "authorizationServerId": "..."}`
         // to match the shape Okta's OAuth2 adapter expects.
@@ -172,11 +186,12 @@ class Update extends Base
         }
 
         $encodedSecret = null;
-        if (!\is_null($clientSecret) || !\is_null($domain) || !\is_null($authorizationServerId)) {
+        if (!\is_null($clientSecret) || !\is_null($domain) || !\is_null($authorizationServerId) || !\is_null($prompt)) {
             $encodedSecret = \json_encode([
                 'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
                 'oktaDomain' => $domain ?? ($existing['oktaDomain'] ?? ''),
                 'authorizationServerId' => $authorizationServerId ?? ($existing['authorizationServerId'] ?? ''),
+                'prompt' => $prompt ?? ($existing['prompt'] ?? []),
             ]);
         }
 
@@ -189,7 +204,7 @@ class Update extends Base
             }
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee the clientSecret is write-only on every response path.

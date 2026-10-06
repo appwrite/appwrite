@@ -102,10 +102,11 @@ class Update extends Action
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs for the associated certificate.
+            // Reset logs and attempts for the associated certificate.
             if (!empty($certificateId)) {
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
                     'logs' => '',
+                    'attempts' => 0,
                 ])));
             }
         } catch (Exception $err) {
@@ -116,13 +117,15 @@ class Update extends Action
             throw $err;
         }
 
-        // Issue a TLS certificate when DNS verification is successful
+        // Issue a TLS certificate when DNS verification is successful. The worker
+        // does not verify DNS again: verifyRule() above just did.
         $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
             project: $project,
             domain: new Document([
                 'domain' => $rule->getAttribute('domain'),
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
             ]),
+            skipDomainValidation: true,
         ));
 
         if (!empty($certificate)) {

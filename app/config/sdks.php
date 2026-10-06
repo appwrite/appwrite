@@ -128,7 +128,7 @@ $platforms = [
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_SDK_PLATFORM_CLIENT,
@@ -248,7 +248,6 @@ $platforms = [
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/cli/CHANGELOG.md'),
                 'exclude' => [
                     'services' => [
-                        ['name' => 'assistant'],
                         ['name' => 'avatars'],
                     ],
                 ],

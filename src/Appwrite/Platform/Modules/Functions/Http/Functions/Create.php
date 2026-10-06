@@ -27,7 +27,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -130,6 +130,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -151,7 +152,7 @@ class Create extends Base
         string $runtime,
         array $execute,
         array $events,
-        string $schedule,
+        ?string $schedule,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -179,6 +180,7 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Deployments $deployments,
+        int $buildTimeout,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -192,30 +194,32 @@ class Create extends Base
         Bus $bus,
         array $platform
     ) {
+        $schedule ??= '';
 
         // Temporary abuse check
-        $abuseCheck = function () use ($project, $timelimit, $response) {
-            $abuseKey = "projectId:{projectId},url:{url}";
+        $abuseCheck = function () use ($project, $timelimit, $response): void {
+            $abuseKey = 'projectId:{projectId},url:{url}';
             $abuseLimit = System::getEnv('_APP_FUNCTIONS_CREATION_ABUSE_LIMIT', 50);
             $abuseTime = 86400; // 1 day
 
-            $timeLimit = $timelimit($abuseKey, $abuseLimit, $abuseTime);
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{url}', '/v1/functions');
+            $isRateLimited = $timelimit($abuseKey, $abuseLimit, $abuseTime, function (TimeLimit $timeLimit) use ($project, $response): bool {
+                $timeLimit = $timeLimit->withParams([
+                    '{projectId}' => (string) $project->getId(),
+                    '{url}' => '/v1/functions',
+                ]);
 
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-            $limit = $timeLimit->limit();
-            $time = $timeLimit->time() + $abuseTime;
+                $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+                $result = $enabled ? $timeLimit->check() : $timeLimit->peek();
 
-            $response
-                ->addHeader('X-RateLimit-Limit', $limit)
-                ->addHeader('X-RateLimit-Remaining', $remaining)
-                ->addHeader('X-RateLimit-Reset', $time);
+                $response
+                    ->addHeader('X-RateLimit-Limit', (string) $result->limit)
+                    ->addHeader('X-RateLimit-Remaining', (string) $result->remaining)
+                    ->addHeader('X-RateLimit-Reset', (string) $result->reset);
 
-            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-            if ($enabled && $abuse->check()) {
+                return $enabled && $result->limited;
+            });
+
+            if ($isRateLimited) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         };
@@ -377,7 +381,8 @@ class Create extends Base
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
-                    referenceType: 'branch'
+                    referenceType: 'branch',
+                    buildTimeout: $buildTimeout
                 );
 
             } elseif (!$template->isEmpty()) {
@@ -402,6 +407,7 @@ class Create extends Base
                         'type' => 'vcs',
                         'activate' => true,
                     ]),
+                    $buildTimeout,
                     $templateOwner,
                     $templateRepository,
                     Git::CLONE_TYPE_TAG,

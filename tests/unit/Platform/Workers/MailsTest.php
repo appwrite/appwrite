@@ -8,7 +8,10 @@ use Appwrite\Platform\Workers\Mails;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Pools\Adapter\Stack;
+use Utopia\Pools\Pool;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Telemetry\Adapter\None;
@@ -19,6 +22,7 @@ final class SpyMailAdapter extends EmailAdapter
     public int $deliveredTo = 1;
     public ?string $error = null;
     public bool $emptyResults = false;
+    public bool $rejectAsInvalid = false;
     public int $sendCount = 0;
 
     public function getName(): string
@@ -35,6 +39,10 @@ final class SpyMailAdapter extends EmailAdapter
     {
         $this->sendCount++;
         $this->captured = $message;
+
+        if ($this->rejectAsInvalid) {
+            throw new InvalidArgumentException(InvalidArgumentException::PROVIDER_REJECTED, 'Invalid `to` field.', $message->getTo()[0]['email']);
+        }
 
         $response = [
             'deliveredTo' => $this->deliveredTo,
@@ -71,7 +79,7 @@ final class MailsTest extends TestCase
     {
         $adapter = new SpyMailAdapter();
         $registry = new Registry();
-        $registry->set('smtp', static fn () => $adapter);
+        $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
@@ -139,18 +147,58 @@ final class MailsTest extends TestCase
         $this->assertMailWorkerThrows($adapter, 'Error sending mail: Provider rejected request');
     }
 
+    public function testUndeliverableRecipientIsSkippedWithoutASend(): void
+    {
+        $adapter = new SpyMailAdapter();
+
+        $this->runMailWorker($adapter, recipient: 'john@c.c');
+
+        $this->assertSame(0, $adapter->sendCount);
+    }
+
+    public function testProviderRejectionIsSkippedWithoutRetry(): void
+    {
+        $adapter = new SpyMailAdapter();
+        $adapter->rejectAsInvalid = true;
+
+        $this->runMailWorker($adapter, recipient: 'john@example.test');
+
+        $this->assertSame(1, $adapter->sendCount);
+    }
+
+    public function testProjectSmtpFailureIsNotRetried(): void
+    {
+        $adapter = new SpyMailAdapter();
+
+        $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
+            'host' => '127.0.0.1',
+            'port' => 1,
+            'senderEmail' => 'sender@example.test',
+        ]);
+
+        $this->assertSame(0, $adapter->sendCount);
+    }
+
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        $this->runMailWorker($adapter, recipient: 'legacy@example.test');
+    }
+
+    /**
+     * @param array<string, mixed> $smtp
+     */
+    private function runMailWorker(SpyMailAdapter $adapter, string $recipient, array $smtp = []): void
+    {
         $registry = new Registry();
-        $registry->set('smtp', static fn () => $adapter);
+        $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
 
         try {
-            $this->expectException(\Exception::class);
-            $this->expectExceptionMessage($expectedMessage);
-
             $worker = new Mails();
             $worker->action(
                 new Message([
@@ -158,8 +206,8 @@ final class MailsTest extends TestCase
                     'queue' => 'v1-mails',
                     'timestamp' => \time(),
                     'payload' => [
-                        'smtp' => [],
-                        'recipient' => 'legacy@example.test',
+                        'smtp' => $smtp,
+                        'recipient' => $recipient,
                         'name' => 'Legacy User',
                         'subject' => 'Hello',
                         'body' => 'Body',

@@ -144,22 +144,32 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $user2Session,
         ];
 
-        // Make a request as user2 to ensure accessedAt is updated
+        // Make a request as each user to ensure accessedAt is updated
         $this->client->call(Client::METHOD_GET, '/account', $client2Headers);
+        $this->client->call(Client::METHOD_GET, '/account', $clientHeaders);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $clientHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(2, $response['body']['total']);
         $this->assertCount(2, $response['body']['memberships']);
 
-        foreach ($response['body']['memberships'] as $membership) {
-            $this->assertSame('', $membership['userName']);
-            $this->assertSame('', $membership['userEmail']);
-            $this->assertSame('', $membership['userPhone']);
-            $this->assertSame('', $membership['userId']);
-            $this->assertFalse($membership['mfa']);
-            $this->assertSame('', $membership['userAccessedAt']);
-        }
+        // The policy hides user2 from user1
+        $other = $this->findMembership($response['body']['memberships'], $membership2['body']['$id']);
+        $this->assertSame('', $other['userName']);
+        $this->assertSame('', $other['userEmail']);
+        $this->assertSame('', $other['userPhone']);
+        $this->assertSame('', $other['userId']);
+        $this->assertFalse($other['mfa']);
+        $this->assertSame('', $other['userAccessedAt']);
+
+        // The policy never hides user1 from themselves
+        $own = $this->findMembership($response['body']['memberships'], $membership1['body']['$id']);
+        $this->assertSame($user1Name, $own['userName']);
+        $this->assertSame($user1Email, $own['userEmail']);
+        $this->assertSame($user1Phone, $own['userPhone']);
+        $this->assertSame($user1Id, $own['userId']);
+        $this->assertFalse($own['mfa']);
+        $this->assertNotEmpty($own['userAccessedAt']);
 
         // Step 5: Update privacy to true
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $serverHeaders, [
@@ -226,15 +236,22 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['memberships']);
-        $this->assertSame('', $response['body']['memberships'][0]['userAccessedAt']);
+        $this->assertCount(2, $response['body']['memberships']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $this->assertSame('', $this->findMembership($response['body']['memberships'], $member['otherMembershipId'])['userAccessedAt']);
+        // A member always sees their own last access time
+        $this->assertNotEmpty($this->findMembership($response['body']['memberships'], $member['membershipId'])['userAccessedAt']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['otherMembershipId'], $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('', $response['body']['userAccessedAt']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userAccessedAt']);
+
         // The policy only applies to client requests, an API key still sees it
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $serverHeaders);
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['otherMembershipId'], $serverHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['userAccessedAt']);
     }
@@ -293,7 +310,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $policy = $readPolicy();
         $this->assertFalse($policy['userAccessedAt']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['otherMembershipId'], $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('', $response['body']['userAccessedAt']);
 
@@ -307,15 +324,15 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertTrue($policy['userName']);
         $this->assertTrue($policy['userMFA']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['membershipId'], $member['clientHeaders']);
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships/' . $member['otherMembershipId'], $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['userAccessedAt']);
         $this->assertNotFalse(\strtotime($response['body']['userAccessedAt']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['memberships']);
-        $this->assertNotEmpty($response['body']['memberships'][0]['userAccessedAt']);
+        $this->assertCount(2, $response['body']['memberships']);
+        $this->assertNotEmpty($this->findMembership($response['body']['memberships'], $member['otherMembershipId'])['userAccessedAt']);
 
         $setAccessedAt(false);
 
@@ -323,19 +340,57 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $member['teamId'] . '/memberships', $member['clientHeaders']);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('', $response['body']['memberships'][0]['userAccessedAt']);
+        $this->assertSame('', $this->findMembership($response['body']['memberships'], $member['otherMembershipId'])['userAccessedAt']);
     }
 
     /**
-     * Create a team with a single member, signed in, whose accessedAt is populated.
+     * @param  array<int, array<string, mixed>>  $memberships
+     * @return array<string, mixed>
+     */
+    private function findMembership(array $memberships, string $membershipId): array
+    {
+        $membershipsById = array_column($memberships, null, '$id');
+        $this->assertArrayHasKey($membershipId, $membershipsById);
+
+        return $membershipsById[$membershipId];
+    }
+
+    /**
+     * Create a team with a signed-in viewer and one other member, both with accessedAt populated.
      *
      * @param  array<string, string>  $serverHeaders
-     * @return array{teamId: string, membershipId: string, clientHeaders: array<string, string>}
+     * @return array{teamId: string, membershipId: string, otherMembershipId: string, clientHeaders: array<string, string>}
      */
     private function createTeamWithMember(string $projectId, array $serverHeaders): array
     {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Access Team',
+            'roles' => ['member'],
+        ]);
+        $this->assertSame(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $viewer = $this->addTeamMember($projectId, $serverHeaders, $teamId, 'Casey Carter');
+        $other = $this->addTeamMember($projectId, $serverHeaders, $teamId, 'Dana Dean');
+
+        return [
+            'teamId' => $teamId,
+            'membershipId' => $viewer['membershipId'],
+            'otherMembershipId' => $other['membershipId'],
+            'clientHeaders' => $viewer['clientHeaders'],
+        ];
+    }
+
+    /**
+     * Create a user, add them to the team and sign them in so their accessedAt is populated.
+     *
+     * @param  array<string, string>  $serverHeaders
+     * @return array{membershipId: string, clientHeaders: array<string, string>}
+     */
+    private function addTeamMember(string $projectId, array $serverHeaders, string $teamId, string $name): array
+    {
         $email = 'member_' . uniqid() . '@localhost.test';
-        $name = 'Casey Carter';
         $password = 'password1234';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
@@ -346,14 +401,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
-            'teamId' => ID::unique(),
-            'name' => 'Access Team',
-            'roles' => ['member'],
-        ]);
-        $this->assertSame(201, $team['headers']['status-code']);
-
-        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', $serverHeaders, [
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $serverHeaders, [
             'userId' => $user['body']['$id'],
             'roles' => ['member'],
         ]);
@@ -381,7 +429,6 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
 
         return [
-            'teamId' => $team['body']['$id'],
             'membershipId' => $membership['body']['$id'],
             'clientHeaders' => $clientHeaders,
         ];

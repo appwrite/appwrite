@@ -415,12 +415,12 @@ return [
         'description' => 'Access to use Avatars service',
         'category' => 'Other',
     ],
-    'health.read' => [
-        'description' => 'Access to use Health service',
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
         'category' => 'Other',
     ],
-    'assistant.read' => [
-        'description' => 'Access to use Assistant service',
+    'health.read' => [
+        'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
     'migrations.read' => [

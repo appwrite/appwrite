@@ -14,6 +14,7 @@ services:
       - ./.env:/usr/src/code/.env
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
+      - ./packages:/usr/src/code/packages
       - ./app:/usr/src/code/app
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
@@ -50,6 +51,18 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
+  appwrite-mqtt:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   appwrite-worker:
     build:
       context: .
@@ -344,6 +357,20 @@ services:
     environment:
       - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
       - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
+  appwrite-browser:
+    networks:
+      - appwrite
+      - fixtures
+  webpage:
+    image: nginx:1.30-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    container_name: appwrite-webpage
+    networks:
+      fixtures:
+        ipv4_address: 203.0.0.1
+        aliases:
+          - screenshot.webapp.com
+    volumes:
+      - ./tests/resources/avatars/webpage:/usr/share/nginx/html:ro
   request-catcher-webhook:
     image: appwrite/requestcatcher:1.1.0
     container_name: appwrite-requestcatcher-webhook
@@ -459,7 +486,7 @@ services:
       - traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer
       - traefik.http.routers.appwrite_adminer_https.tls=true
   redis-insight:
-    image: redis/redisinsight:latest
+    image: redis/redisinsight:3.8.0
     restart: unless-stopped
     networks:
       - appwrite
@@ -503,6 +530,12 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      # This dev override replaces the base command wholesale, so the MQTT entrypoints
+      # must be repeated here or Traefik won't listen on :8883 (mqtts) and :8084 (wss)
+      # and the appwrite-mqtt broker is unreachable (the port publishes survive via
+      # ports concatenation, but have no entrypoint behind them without this).
+      - --entrypoints.appwrite_mqtt.address=:8883
+      - --entrypoints.appwrite_mqtt_ws.address=:8084
       - --log.level=DEBUG
       - --api.insecure=true
       - --accesslog=true
@@ -558,12 +591,14 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-  # S3-compatible storage for the s3 e2e group. Creates the bucket the
-  # _APP_STORAGE_S3_* variables point at once the server is up.
+  # S3-compatible storage for the s3 e2e group, served by Silo (pgsty/silo, mirrored to GHCR),
+  # the maintained fork of the MinIO server; the MINIO_* variables and mc
+  # carry over. Creates the bucket the _APP_STORAGE_S3_* variables point at
+  # once the server is up.
   minio:
     profiles:
       - s3
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: ghcr.io/appwrite/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
     container_name: appwrite-minio
     restart: unless-stopped
     networks:
@@ -576,7 +611,7 @@ services:
       - sh
       - -c
       - |
-        minio server /data &
+        silo server /data &
         until mc alias set local http://localhost:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do sleep 1; done
         mc mb -p "local/$$MINIO_BUCKET"
         wait
@@ -634,5 +669,12 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+  # Public range so appwrite-browser treats the fixture like a real site
+  fixtures:
+    ipam:
+      config:
+        - subnet: 203.0.0.0/24
+          ip_range: 203.0.0.128/25
+          gateway: 203.0.0.254
 volumes:
   appwrite-gitea: null
