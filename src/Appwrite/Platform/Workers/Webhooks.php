@@ -69,7 +69,7 @@ class Webhooks extends Action
         }
 
         $events = $payload['events'];
-        $webhookPayload = json_encode($payload['payload']);
+        $webhookPayload = !empty($payload['body']) ? $payload['body'] : json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
         Span::add('project.id', $project->getId());
