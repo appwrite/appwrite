@@ -27,17 +27,10 @@ use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use CzProject\GitPhp\Git;
-use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Agents\DiffCheck\DiffCheck;
-use Utopia\Agents\DiffCheck\Options as DiffCheckOptions;
-use Utopia\Agents\DiffCheck\Repository as DiffCheckRepository;
-use Utopia\Agents\Schema;
-use Utopia\Agents\Schema\SchemaObject;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;
-use Utopia\System\System;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -55,11 +48,6 @@ class SDKs extends Action
             ...Specs::getPlatforms(),
             APP_SDK_PLATFORM_STATIC,
         ];
-    }
-
-    protected function getSdkConfigPath(): string
-    {
-        return __DIR__ . '/../../../../app/config/sdks.php';
     }
 
     protected function getSupportedSDKs(): array
@@ -83,11 +71,10 @@ class SDKs extends Action
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
             ->param('sdks', null, new Nullable(new Text(256)), 'Selected SDKs', optional: true)
             ->param('mode', 'full', new WhiteList(['full', 'examples']), 'Generation mode: full (default) or examples (only generate and copy examples)', optional: true)
-            ->param('ai', 'yes', new Nullable(new WhiteList(['yes', 'no'])), 'Use AI to generate changelog (yes/no, default: yes if _APP_ASSISTANT_OPENAI_API_KEY is set)', optional: true)
             ->callback($this->action(...));
     }
 
-    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks, string $mode, ?string $ai): void
+    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks, string $mode): void
     {
         $examplesOnly = ($mode === 'examples');
         $selectedPlatform = $platform;
@@ -499,49 +486,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::error($exception->getMessage());
                 }
 
-                // Use AI to determine version bump and changelog if _APP_ASSISTANT_OPENAI_API_KEY is set and --ai is not no
-                // This uses the already generated SDK to compare with the remote repo
-                $useAi = ($ai !== 'no');
-                $apiKey = $useAi ? System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '') : '';
-                $aiChangelog = ''; // Track AI-generated changelog for PR description
-
-                if (! empty($apiKey) && ! $examplesOnly) {
-                    Console::log('  Analyzing changes with AI...');
-                    $aiResult = $this->generateVersionAndChangelog($language, $result);
-
-                    if (!empty($aiResult['skip'])) {
-                        Console::warning('  Skipping (no relevant changes)');
-                        continue;
-                    } elseif ($aiResult !== null) {
-                        $newVersion = $aiResult['version'];
-                        $newChangelog = $aiResult['changelog'];
-                        $aiChangelog = $newChangelog; // Store for PR description
-
-                        // Update the version in the config
-                        $this->updateSdkVersion($key, $language['key'], $newVersion);
-
-                        // Update the source changelog file
-                        $this->updateChangelogFile($language['changelog'], $newVersion, $newChangelog);
-
-                        // Re-read updated changelog so regeneration includes the new entry
-                        $updatedChangelog = \file_get_contents($language['changelog']);
-                        $sdk->setChangelog($updatedChangelog);
-
-                        // Reload the language config with updated values
-                        $language['version'] = $newVersion;
-
-                        // Regenerate SDK with new version and updated changelog
-                        $sdk->setVersion($newVersion);
-                        try {
-                            $sdk->generate($result);
-                        } catch (\Throwable $exception) {
-                            Console::error($exception->getMessage());
-                        }
-                    } else {
-                        Console::warning('  AI analysis failed, using existing version');
-                    }
-                }
-
                 $gitUrl = $language['gitUrl'];
                 $gitBranch = $language['gitBranch'];
 
@@ -549,19 +493,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 if ($git && !empty($gitUrl)) {
                     $prUrls = [];
 
-                    // Generate commit message: use provided message, AI changelog, or fallback
-                    if (! empty($message)) {
-                        $commitMessage = $message;
-                    } elseif (! empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
-                        $commitMessage = "feat: update {$language['name']} SDK to {$language['version']}\n\n{$aiChangelog}";
-                    } else {
-                        $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
-                    }
+                    $commitMessage = $message ?: "chore: update {$language['name']} SDK to {$language['version']}";
 
                     $pushSuccess = $this->pushToGit($language, $target, $result, $gitUrl, $gitBranch, $repoBranch, $commitMessage);
 
                     if ($pushSuccess) {
-                        $this->createPullRequest($language, $platform['name'], $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
+                        $this->createPullRequest($language, $platform['name'], $target, $gitBranch, $repoBranch, $prUrls);
                     }
 
                     \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
@@ -679,13 +616,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         return true;
     }
 
-    private function createPullRequest(array $language, string $platformName, string $target, string $gitBranch, string $repoBranch, string $aiChangelog, array &$prUrls): void
+    private function createPullRequest(array $language, string $platformName, string $target, string $gitBranch, string $repoBranch, array &$prUrls): void
     {
         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
-        if (!empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
-            $prBody .= "\n\n## Changes\n\n{$aiChangelog}";
-        }
         $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
 
         Console::log('  Creating pull request...');
@@ -794,314 +728,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         return trim($notes);
-    }
-
-    /**
-     * Compare generated SDK with remote repo and use AI to determine version bump and changelog
-     *
-     * @param  array  $language  SDK language configuration
-     * @param  string  $generatedSdkPath  Path to the already generated SDK
-     * @return array|null ['version' => string, 'changelog' => string] or null on failure
-     */
-    private function generateVersionAndChangelog(array $language, string $generatedSdkPath): ?array
-    {
-        $gitUrl = $language['gitUrl'] ?? '';
-        $repoBranch = $language['repoBranch'] ?? 'main';
-
-        if (empty($gitUrl)) {
-            Console::warning('  No git URL, skipping AI analysis');
-            return null;
-        }
-
-        $apiKey = System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '');
-        if (empty($apiKey)) {
-            Console::warning('  _APP_ASSISTANT_OPENAI_API_KEY not set, skipping AI analysis');
-            return null;
-        }
-
-        try {
-            $adapter = new OpenAI($apiKey, OpenAI::MODEL_GPT_5_NANO, maxTokens: 8192);
-
-            $object = new SchemaObject();
-            $object->addProperty('version', [
-                'type' => SchemaObject::TYPE_STRING,
-                'description' => 'The new version number following semantic versioning (e.g., 1.2.3)',
-            ]);
-            $object->addProperty('versionBump', [
-                'type' => SchemaObject::TYPE_STRING,
-                'description' => 'The type of version bump: major, minor, or patch',
-                'enum' => ['major', 'minor', 'patch'],
-            ]);
-            $object->addProperty('changelog', [
-                'type' => SchemaObject::TYPE_STRING,
-                'description' => 'Changelog entries as bullet points, one per line, starting with *',
-            ]);
-
-            $schema = new Schema(
-                name: 'sdk_release_analysis',
-                description: 'Analyze SDK changes and determine version bump and changelog',
-                object: $object,
-                required: $object->getNames()
-            );
-
-            $isBeta = !empty($language['beta']);
-            $betaNote = $isBeta
-                ? "\n            Note: This SDK is in beta (version < 1.0.0). Do NOT bump to 1.0.0. Use `minor` for both breaking changes and new features, `patch` for bug fixes only."
-                : '';
-
-            $prompt = <<<PROMPT
-            You are a technical writer generating a changelog for the {$language['name']} SDK release.
-
-            Analyze the git diff below and return a JSON response with the version bump type, new version number, and changelog.
-
-            ## Versioning
-
-            Current version: {$language['version']}
-
-            Determine the semantic version bump:
-            - `major`: Breaking changes (removed/renamed public APIs, changed method signatures, dropped support)
-            - `minor`: New features that are backward-compatible (new methods, new optional parameters, new classes)
-            - `patch`: Bug fixes, documentation updates, refactors with no API surface change
-            {$betaNote}
-            When multiple change types are present, use the highest severity bump.
-            
-            ## Changelog guidelines
-            
-            Write from the SDK consumer's perspective. Each entry should be a single line, max 15 words, in past tense.
-            
-            Prefixes by category:
-            - **Breaking:** renamed/removed/changed APIs → "Breaking: Renamed `oldMethod()` to `newMethod()`"
-            - **Added:** new features/options/endpoints → "Added `streamResponse` option to client configuration"
-            - **Fixed:** bug fixes/corrections → "Fixed incorrect timeout handling in retry logic"
-            - **Updated:** dependency bumps, doc improvements → "Updated authentication examples for OAuth 2.0 flow"
-            
-            Rules:
-            - Only include changes visible to SDK users (public API, behavior, docs, examples, CLI)
-            - Ignore: CI/CD pipelines (.github/), internal tooling, code formatting, test infrastructure
-            - Consolidate related changes into one entry (e.g., "Added `timeout`, `retries`, and `baseUrl` options" not three separate lines)
-            - Wrap all method names, parameter names, class names, and code identifiers in backticks (e.g., `listDocuments`, `ttl`)
-            - If the diff contains zero user-facing changes, return a single entry: "No user-facing SDK changes"
-            - Do not speculate — only document what the diff explicitly shows
-            
-            ## Diff context
-            
-            - Stats: {{diff_stats}}
-            - Base repository: {{base}}
-            - Generated SDK path: {{target}}
-            ```diff
-            {{diff}}
-            ```
-            PROMPT;
-
-            $options = (new DiffCheckOptions())
-                ->setSchema($schema)
-                ->setDescription('You are an expert software engineer analyzing SDK code changes to determine semantic versioning and generate changelogs.')
-                ->setInstructions([
-                    'tone' => 'professional and technical',
-                ])
-                ->setExcludePaths([
-                    '.github/workflows/**',
-                    '.github/ISSUE_TEMPLATE/**',
-                    '.git/**',
-                ])
-                ->setMaxDiffLines(500)
-                ->setUserId('sdk-analyst');
-
-            Console::log('  Running DiffCheck...');
-
-            $result = (new DiffCheck())->run(
-                runner: $adapter,
-                base: DiffCheckRepository::remote($gitUrl, $repoBranch),
-                target: DiffCheckRepository::local($generatedSdkPath),
-                prompt: $prompt,
-                options: $options
-            );
-
-            if (!$result['hasChanges']) {
-                Console::success('  No changes detected, SDK is up to date');
-                return null;
-            }
-
-            $responseContent = $result['response'];
-
-            if (empty(trim($responseContent))) {
-                Console::warning('  AI returned empty response');
-                return null;
-            }
-
-            $parsed = json_decode($responseContent, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Console::warning('  Failed to parse AI response: ' . json_last_error_msg());
-                Console::log('  Raw response: ' . $responseContent);
-                return null;
-            }
-
-            if (empty($parsed['version']) || empty($parsed['changelog']) || empty($parsed['versionBump'])) {
-                Console::warning('  AI response missing required fields');
-                return null;
-            }
-
-            // Guard: beta SDKs must not be bumped to >= 1.0.0
-            if ($isBeta && ($parsed['versionBump'] === 'major' || \version_compare($parsed['version'], '1.0.0', '>='))) {
-                Console::warning("  Beta SDK cannot bump to {$parsed['version']}, skipping");
-                return ['skip' => true];
-            }
-
-            Console::success("  AI analysis complete");
-            Console::log("    Version: {$language['version']} → {$parsed['version']} ({$parsed['versionBump']})");
-            Console::log("    Changelog:");
-            foreach (explode("\n", $parsed['changelog']) as $line) {
-                if (trim($line)) {
-                    Console::log("      {$line}");
-                }
-            }
-
-            return [
-                'version' => $parsed['version'],
-                'changelog' => $parsed['changelog'],
-                'versionBump' => $parsed['versionBump'],
-            ];
-        } catch (\Throwable $e) {
-            Console::error('  AI error: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Update SDK version in the config file
-     *
-     * @param  string  $platform  Platform key
-     * @param  string  $sdkKey  SDK key
-     * @param  string  $newVersion  New version number
-     * @return bool Success status
-     */
-    private function updateSdkVersion(string $platform, string $sdkKey, string $newVersion): bool
-    {
-        $configPath = $this->getSdkConfigPath();
-
-        if (! file_exists($configPath)) {
-            Console::error("  Config file not found: {$configPath}");
-            return false;
-        }
-
-        $content = file_get_contents($configPath);
-
-        // First, try to find inline version in SDK array (pattern 1)
-        // Pattern matches: ['key' => 'nodejs', ... 'version' => '22.1.2']
-        $inlinePattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
-
-        if (preg_match($inlinePattern, $content, $matches)) {
-            $oldVersion = $matches[2];
-            $newContent = preg_replace($inlinePattern, '${1}' . $newVersion . '${3}', $content);
-
-            if (file_put_contents($configPath, $newContent) !== false) {
-                Console::success("  Config updated: {$sdkKey} {$oldVersion} → {$newVersion}");
-                return true;
-            } else {
-                Console::error('  Failed to write config file');
-                return false;
-            }
-        }
-
-        // Second, try to find version in array format (pattern 2)
-        // Pattern matches: 'nodejs' => '22.1.2', or "nodejs" => "22.1.2",
-        // Also handles extra whitespace: 'nodejs'  =>  '22.1.2',
-        // Scoped to the correct $<platform>Versions array block to avoid
-        // updating duplicate keys that appear under a different platform.
-        $blockPattern = '/(\$' . preg_quote($platform, '/') . 'Versions\s*=\s*\[)([\s\S]*?)(\];)/m';
-        $entryPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],?)/m';
-
-        if (! preg_match($blockPattern, $content)) {
-            Console::warning("  Could not find \${$platform}Versions block in config file");
-            return false;
-        }
-
-        $updated = false;
-        $oldVersion = '';
-        $newContent = preg_replace_callback($blockPattern, function ($blockMatch) use ($entryPattern, $newVersion, &$updated, &$oldVersion) {
-            $blockContent = $blockMatch[2];
-            if (preg_match($entryPattern, $blockContent, $entryMatch)) {
-                $oldVersion = $entryMatch[2];
-                $blockContent = preg_replace($entryPattern, '${1}' . $newVersion . '${3}', $blockContent);
-                $updated = true;
-            }
-            return $blockMatch[1] . $blockContent . $blockMatch[3];
-        }, $content);
-
-        if ($newContent === null) {
-            Console::error('  preg_replace_callback failed while updating config');
-            return false;
-        }
-
-        if (! $updated) {
-            Console::warning("  Could not find version entry for {$sdkKey} in \${$platform}Versions block");
-            return false;
-        }
-
-        if (file_put_contents($configPath, $newContent) === false) {
-            Console::error('  Failed to write config file');
-            return false;
-        }
-
-        Console::success("  Config updated: {$sdkKey} {$oldVersion} → {$newVersion}");
-        return true;
-    }
-
-    /**
-     * Update changelog file with new version entry
-     *
-     * @param  string  $changelogPath  Path to changelog file
-     * @param  string  $version  New version number
-     * @param  string  $notes  Changelog notes
-     * @return bool Success status
-     */
-    private function updateChangelogFile(string $changelogPath, string $version, string $notes): bool
-    {
-        if (empty($changelogPath) || ! file_exists($changelogPath)) {
-            Console::warning("  Changelog file not found: {$changelogPath}");
-
-            return false;
-        }
-
-        $content = file_get_contents($changelogPath);
-
-        // Check if version already exists
-        if (strpos($content, "## {$version}") !== false) {
-            Console::warning("  Version {$version} already in changelog, skipping");
-
-            return false;
-        }
-
-        // Prepare new entry - trim notes to avoid extra newlines
-        $notes = rtrim($notes);
-        $newEntry = "## {$version}\n\n{$notes}";
-
-        // Insert after the header (first line)
-        $lines = explode("\n", $content);
-        $newLines = [];
-        $headerAdded = false;
-
-        foreach ($lines as $line) {
-            $newLines[] = $line;
-
-            // Add the new entry after the "# Change Log" header
-            if (! $headerAdded && strpos($line, '# Change Log') !== false) {
-                $newLines[] = '';
-                $newLines[] = $newEntry;
-                $headerAdded = true;
-            }
-        }
-
-        $newContent = implode("\n", $newLines);
-
-        if (file_put_contents($changelogPath, $newContent) !== false) {
-            Console::success("  Changelog updated with version {$version}");
-            return true;
-        } else {
-            Console::error('  Failed to write changelog file');
-            return false;
-        }
     }
 
     private function updateExistingPr(string $repoName, string $gitBranch, string $prTitle, string $prBody, string $platformName, string $sdkName, array &$prUrls, string $existingPrUrl = ''): void
