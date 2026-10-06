@@ -20,13 +20,13 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/javascript.svg" alt="Javascript logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/javascript.svg" alt="Javascript logo" size="m" /%}{% /only_light %}
-* Web SDK `23.0.0`
+* Web SDK `28.1.0`
 * [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_light %}
-* Flutter SDK `22.0.0`
+* Flutter SDK `27.0.0`
 * [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)
 * 
 ---
@@ -38,19 +38,19 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React Native SDK `0.25.0`
+* React Native SDK `1.1.0`
 * [appwrite/sdk-for-react-native](https://github.com/appwrite/sdk-for-react-native)
-* `beta`
+* 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `15.0.0`
+* Apple SDK `20.0.0`
 * [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `13.0.0`
+* Android SDK `29.0.0`
 * [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)
 * 
 {% /table %}
@@ -67,61 +67,61 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/node.svg" alt="Node.js logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/node.svg" alt="Node.js logo" size="m" /%}{% /only_light %}
-* Node.js SDK `22.1.3`
+* Node.js SDK `29.0.0`
 * [appwrite/sdk-for-node](https://github.com/appwrite/sdk-for-node)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `16.0.0`
+* Python SDK `24.0.0`
 * [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dart.svg" alt="Dart logo" size="m" /%}{% /only_light %}
-* Dart SDK `21.3.0`
+* Dart SDK `29.0.0`
 * [appwrite/sdk-for-dart](https://github.com/appwrite/sdk-for-dart)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/php.svg" alt="PHP logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/php.svg" alt="PHP logo" size="m" /%}{% /only_light %}
-* PHP SDK `20.2.1`
+* PHP SDK `26.1.1`
 * [appwrite/sdk-for-php](https://github.com/appwrite/sdk-for-php)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_light %}
-* Ruby SDK `21.1.0`
+* Ruby SDK `28.0.0`
 * [appwrite/sdk-for-ruby](https://github.com/appwrite/sdk-for-ruby)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_light %}
-* .NET SDK `1.0.0`
+* .NET SDK `8.0.0`
 * [appwrite/sdk-for-dotnet](https://github.com/appwrite/sdk-for-dotnet)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `1.0.0`
+* Go SDK `7.6.0`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/swift.svg" alt="Swift logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/swift.svg" alt="Swift logo" size="m" /%}{% /only_light %}
-* Swift SDK `15.2.0`
+* Swift SDK `22.0.0`
 * [appwrite/sdk-for-swift](https://github.com/appwrite/sdk-for-swift)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_light %}
-* Kotlin SDK `14.1.0`
+* Kotlin SDK `22.0.0`
 * [appwrite/sdk-for-kotlin](https://github.com/appwrite/sdk-for-kotlin)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/rust.svg" alt="Rust logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/rust.svg" alt="Rust logo" size="m" /%}{% /only_light %}
-* Rust SDK `0.2.0`
+* Rust SDK `0.14.0`
 * [appwrite/sdk-for-rust](https://github.com/appwrite/sdk-for-rust)
 *
 {% /table %}
@@ -326,31 +326,31 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/javascript.svg" alt="Javascript logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/javascript.svg" alt="Javascript logo" size="m" /%}{% /only_light %}
-* Web SDK `23.0.0`
+* Web SDK `28.1.0`
 * [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web/tree/dev/src/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/flutter.svg" alt="Flutter logo" size="m" /%}{% /only_light %}
-* Flutter SDK `22.0.0`
+* Flutter SDK `27.0.0`
 * [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter/tree/dev/lib/src/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React Native SDK `0.25.0`
+* React Native SDK `1.1.0`
 * [appwrite/sdk-for-react-native](https://github.com/appwrite/sdk-for-react-native)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `15.0.0`
+* Apple SDK `20.0.0`
 * [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple/tree/dev/Sources/AppwriteEnums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `13.0.0`
+* Android SDK `29.0.0`
 * [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android/tree/dev/library/src/main/java/io/appwrite/enums)
 *
 {% /table %}
@@ -367,61 +367,61 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/node.svg" alt="Node.js logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/node.svg" alt="Node.js logo" size="m" /%}{% /only_light %}
-* Node.js SDK `22.1.3`
+* Node.js SDK `29.0.0`
 * [appwrite/sdk-for-node](https://github.com/appwrite/sdk-for-node/tree/dev/lib/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `16.0.0`
+* Python SDK `24.0.0`
 * [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/dev/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dart.svg" alt="Dart logo" size="m" /%}{% /only_light %}
-* Dart SDK `21.3.0`
+* Dart SDK `29.0.0`
 * [appwrite/sdk-for-dart](https://github.com/appwrite/sdk-for-dart/blob/dev/lib/enums.dart)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/php.svg" alt="PHP logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/php.svg" alt="PHP logo" size="m" /%}{% /only_light %}
-* PHP SDK `20.2.1`
+* PHP SDK `26.1.1`
 * [appwrite/sdk-for-php](https://github.com/appwrite/sdk-for-php/tree/dev/src/Appwrite/Enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/ruby.svg" alt="Ruby logo" size="m" /%}{% /only_light %}
-* Ruby SDK `21.1.0`
+* Ruby SDK `28.0.0`
 * [appwrite/sdk-for-ruby](https://github.com/appwrite/sdk-for-ruby/tree/dev/lib/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_light %}
-* .NET SDK `1.0.0`
+* .NET SDK `8.0.0`
 * [appwrite/sdk-for-dotnet](https://github.com/appwrite/sdk-for-dotnet/tree/dev/src/Appwrite/Enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `1.0.0`
+* Go SDK `7.6.0`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/swift.svg" alt="Swift logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/swift.svg" alt="Swift logo" size="m" /%}{% /only_light %}
-* Swift SDK `15.2.0`
+* Swift SDK `22.0.0`
 * [appwrite/sdk-for-swift](https://github.com/appwrite/sdk-for-swift/tree/dev/Sources/AppwriteEnums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/kotlin.svg" alt="Kotlin logo" size="m" /%}{% /only_light %}
-* Kotlin SDK `14.1.0`
+* Kotlin SDK `22.0.0`
 * [appwrite/sdk-for-kotlin](https://github.com/appwrite/sdk-for-kotlin/tree/dev/src/main/kotlin/io/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/rust.svg" alt="Rust logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/rust.svg" alt="Rust logo" size="m" /%}{% /only_light %}
-* Rust SDK `0.2.0`
+* Rust SDK `0.14.0`
 * [appwrite/sdk-for-rust](https://github.com/appwrite/sdk-for-rust/tree/dev/src/enums)
 *
 {% /table %}

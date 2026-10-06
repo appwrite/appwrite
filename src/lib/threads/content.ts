@@ -265,7 +265,7 @@ export async function* iterateAllThreads(total?: number) {
   let count = 0
 
   while (true) {
-    const queries = [Query.limit(limit)]
+    const queries = [Query.limit(limit), Query.orderAsc('$id')]
     if (cursor) {
       queries.push(Query.cursorAfter(cursor))
     }
@@ -284,14 +284,24 @@ export async function* iterateAllThreads(total?: number) {
       if (total !== undefined && count >= total) return
     }
 
+    if (data.documents.length < limit) break
+
     cursor = data.documents[data.documents.length - 1]?.$id
   }
+}
+
+/** Public thread URL segment (matches in-app links and canonical URLs). */
+export function getThreadPublicId(
+  thread: Pick<DiscordThread, '$id' | 'discord_id'>,
+): string {
+  const discordId = thread.discord_id?.trim()
+  return discordId || thread.$id
 }
 
 export async function getAllThreadIds(): Promise<string[]> {
   const ids: string[] = []
   for await (const thread of iterateAllThreads()) {
-    ids.push(thread.$id)
+    ids.push(getThreadPublicId(thread))
   }
   return ids
 }
@@ -308,7 +318,7 @@ export function isThreadResolved(thread: DiscordThread): boolean {
 }
 
 export function getThreadHref(thread: DiscordThread): string {
-  return `/threads/${thread.discord_id}`
+  return `/threads/${getThreadPublicId(thread)}`
 }
 
 export function getAuthorHref(authorId: string): string {

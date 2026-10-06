@@ -7,6 +7,7 @@ cover: /images/blog/defying-the-laws-of-web-animations/cover.avif
 timeToRead: 10
 author: thomas-g-lopes
 category: tutorials
+removed: true
 callToAction: true
 faqs:
   - question: "How do you trigger animations based on scroll position?"

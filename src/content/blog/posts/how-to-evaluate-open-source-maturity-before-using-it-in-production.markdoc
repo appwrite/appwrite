@@ -9,6 +9,7 @@ author: aditya-oberai
 category: open-source
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What does open-source maturity actually mean?"
     answer: "Open-source maturity is the combination of signals that suggest a project will keep being maintained, secured, and improved over a multi-year horizon. It includes maintenance cadence, contributor diversity, license clarity, security posture, and evidence of real production adoption. A project can be popular without being mature, and the gap is usually what hurts teams in production."

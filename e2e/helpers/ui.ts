@@ -83,8 +83,17 @@ function readRecordLifecycleStatus(
   if (record.status && typeof record.status === 'object') {
     const status = record.status as { ready?: boolean; health?: string }
     if (status.ready === true) return 'ready'
-    if (status.health === 'unhealthy') return 'failed'
-    if (status.health === 'degraded') return 'provisioning'
+    // New compute reads unhealthy until its pods start. Only `error` or a
+    // failed container is terminal, matching the console's own reading.
+    if (
+      (typeof record.error === 'string' && record.error.trim()) ||
+      record.containerStatus === 'failed'
+    ) {
+      return 'failed'
+    }
+    if (status.health === 'unhealthy' || status.health === 'degraded') {
+      return 'provisioning'
+    }
   }
   return null
 }

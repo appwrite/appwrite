@@ -9,6 +9,7 @@ lastUpdated: 2026-06-29
 author: haimantika-mitra
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "What does the URL Shortener function template do?"
     answer: "It deploys an [Appwrite Function](/docs/products/functions) that maps a long URL to a short alias, stores the mapping, and redirects on access. You configure `APPWRITE_API_KEY` and `SHORT_BASE_URL`, connect a Git repo, and you have a working URL shortener you can extend."

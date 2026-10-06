@@ -108,7 +108,6 @@ Check out the docs [here](https://appwrite.io/blog/post/announcing-more-and-upda
 Making Appwrite language agnostic is a high priority. So this year, we worked diligently to improve our SDKs and add new ones. Check all our announcements:
 
 - [React Native](https://appwrite.io/blog/post/introducing-appwrite-react-native-sdk)
-- [Deno 2.0](https://appwrite.io/blog/post/deno-2-appwrite-functions)
 - [Go](https://appwrite.io/blog/post/announcing-go-support)
 - [Enum SDK support](https://appwrite.io/blog/post/introducing-enum-sdk-support)
 - [New SDK versions released for Web, Flutter, and Android](https://appwrite.io/changelog/entry/2024-04-25-2)
@@ -151,8 +150,6 @@ If you'd like to participate in next month's Community Recognitions, [join our D
 - [10 startup ideas for developers](https://appwrite.io/blog/post/startups-ideas-for-developers-2024)
 
 **Build**
-- [3 things you can build with GO runtime](https://appwrite.io/blog/post/3-things-you-can-build-with-go-runtime)
-- [Building the giveaway app](https://appwrite.io/blog/post/building-init-giveaway-app)
 
 **Watch**
 - [Build a full stack project with React and Appwrite](https://www.youtube.com/watch?v=zWF7O7aHQW4)

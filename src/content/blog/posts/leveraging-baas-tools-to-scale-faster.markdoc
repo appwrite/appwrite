@@ -8,6 +8,7 @@ timeToRead: 6
 author: dennis-ivy
 category: products
 featured: false
+removed: true
 faqs:
   - question: "What is a Backend as a Service (BaaS)?"
     answer: "A Backend as a Service is a third party platform that handles backend infrastructure like databases, authentication, file storage, and APIs. Developers connect to these services through SDKs or REST APIs instead of building and operating servers themselves. This shortens time to market and removes much of the backend boilerplate from each new project."

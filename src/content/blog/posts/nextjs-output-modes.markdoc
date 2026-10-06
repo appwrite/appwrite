@@ -106,5 +106,4 @@ Standalone mode seems to be the clear winner based on the results. That would ma
 
 Next.js standalone output is very powerful and could help you a lot when deploying your app. Standalone mode is fully supported on Appwrite Sites, so you can reap the benefits of it now!
 
-- [Next.js standalone builds now supported on Appwrite Sites](/blog/post/nextjs-standalone-support-in-appwrite-sites)
 - [Everything new in Next.js 16](/blog/post/everything-new-in-nextjs16)

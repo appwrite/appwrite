@@ -71,7 +71,6 @@ export function getDocsMetaTags(
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: meta.description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 

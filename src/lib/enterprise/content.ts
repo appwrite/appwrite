@@ -21,9 +21,54 @@ export const ENTERPRISE_FORM_ID = 'enterprise-contact-form'
 
 export const enterpriseHero = {
   eyebrow: 'Enterprise',
-  title: 'Appwrite for Enterprise',
+  title: 'One backend platform',
+  accent: 'for your entire enterprise.',
   description:
     'Replace a patchwork of backend vendors with one platform. Enterprise teams reduce integration overhead, accelerate delivery, and scale with custom resources, dedicated support, and flexible deployment.',
+} as const
+
+/** Illustrative organization activity shown in the hero. Mirrors Enterprise governance features. */
+export const enterpriseHeroActivity = [
+  { action: 'SSO sign-in', detail: 'SAML, enforced for the organization' },
+  { action: 'Role updated', detail: 'Analyst to Developer' },
+  { action: 'Backup policy changed', detail: 'Hourly, 30-day retention' },
+  { action: 'Log drain connected', detail: 'Streaming to your observability stack' },
+  { action: 'API key rotated', detail: 'Production project' },
+] as const
+
+/** Vendor categories that Appwrite replaces, for the consolidation visual. */
+export const enterpriseVendorSprawl = [
+  'Identity provider',
+  'Database service',
+  'File storage',
+  'Function hosting',
+  'Messaging provider',
+  'Web hosting',
+  'Firewall and DDoS',
+] as const
+
+export const enterpriseConsolidationOutcomes = ['One contract', 'One Console', 'One invoice', 'One support team'] as const
+
+/** Enterprise plan capabilities grouped for scanning. Titles match `enterprisePlanCapabilities`. */
+export const enterpriseCapabilityGroups = [
+  { title: 'Reliability', items: ['Uptime SLAs', 'Premium DDoS protection', 'Firewall'] },
+  { title: 'Governance', items: ['Single Sign-On (SSO)', 'Custom organization roles', 'Activity logs'] },
+  {
+    title: 'Operations',
+    items: ['Log drains', '90-day log retention', 'Advanced observability', 'Custom backup policies'],
+  },
+  { title: 'Compliance and pricing', items: ['SOC-2 and HIPAA', 'Volume discounts'] },
+] as const
+
+/** Short highlights per deployment model, drawn from `enterpriseDeploymentOptions`. */
+export const enterpriseDeploymentHighlights = {
+  cloud: ['Fully managed infrastructure', 'Increased limits', 'Predictable fixed pricing', 'Uptime SLAs and global CDN'],
+  selfHosted: [
+    'Cloud-equal premium edition',
+    'Advanced management tools',
+    'Runs in your environment',
+    'Proven at 500K projects scale',
+  ],
 } as const
 
 export const enterprisePlatformSection = {

@@ -10,6 +10,7 @@ category: products
 featured: false
 callToAction: true
 unlisted: true
+removed: true
 faqs:
   - question: "Why are credits not enough for founders?"
     answer: "Because credits expire and do not simplify deploying applications or managing infrastructure."

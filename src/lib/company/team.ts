@@ -104,7 +104,6 @@ export const companyTeamValues: readonly CompanyTeamValue[] = [
 
 export const companyTeamLinks = {
   evolutionBlog: '/blog/post/the-evolution-of-team-appwrite',
-  cultureBlog: '/blog/post/building-culture-remote-camp',
 } as const
 
 export const companyTeamCta = {

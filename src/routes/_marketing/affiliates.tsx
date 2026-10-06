@@ -4,19 +4,21 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/affiliates/View'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/_marketing/affiliates')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/affiliates',
       pageName: 'Affiliates',
       description:
         'Earn Appwrite Cloud credits by referring developers. Join the Affiliates program, share invite links, and get rewarded when referrals upgrade to Pro.',
-    }),
-  }),
+    });
+    return seo;
+  },
   loader: async ({ context }) => {},
   component: AffiliatesPage,
 })

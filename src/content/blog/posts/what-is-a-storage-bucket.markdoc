@@ -55,7 +55,7 @@ Buckets are used to store and organize any file your application needs to keep. 
 
 * **User uploads.** Profile pictures, avatars, and documents, often locked down so only the owner can read or delete them.
 * **Media assets.** Images, video, and audio served to web and mobile clients, usually with public read access.
-* **Static site assets.** CSS, JavaScript, and downloads for a website, frequently paired with a [CDN](/blog/post/what-is-cdn) to serve them fast.
+* **Static site assets.** CSS, JavaScript, and downloads for a website, frequently paired with a CDN to serve them fast.
 * **Backups and exports.** Generated files like reports, invoices, or data dumps that need durable, off-app storage.
 * **Private documents.** Contracts, medical records, or anything sensitive, kept in an encrypted bucket with strict permissions.
 
@@ -67,7 +67,7 @@ Buckets scale because the object storage underneath them is designed to. There's
 
 Durability comes from replication. A good object storage service writes multiple copies of each file across different machines, and often different regions, so a single disk or server failure doesn't lose data. That happens transparently at the bucket level, which means you get redundancy without managing it.
 
-This is the practical reason most application files live in buckets rather than on a server's local disk. A disk fills up and fails. A bucket grows with your app and keeps your files safe while it does. For a fuller picture of the model buckets sit on, see [what is cloud storage](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers).
+This is the practical reason most application files live in buckets rather than on a server's local disk. A disk fills up and fails. A bucket grows with your app and keeps your files safe while it does.
 
 # How to keep a storage bucket secure
 
@@ -87,7 +87,7 @@ The principle underneath all of these is least privilege: every file should be r
 * **Deny by default and grant narrowly.** Start with no access and add only the roles that need it.
 * **Validate uploads** for size and type at the bucket level, not just in your client code.
 * **Encrypt sensitive buckets** and reserve public read access for assets that are genuinely meant to be public.
-* **Store file metadata in a database**, keeping large binary files in the bucket and their searchable details in a [database](/blog/post/what-is-cloud-storage-an-expert-guide-for-developers) record that points to the file ID.
+* **Store file metadata in a database**, keeping large binary files in the bucket and their searchable details in a database record that points to the file ID.
 * **Monitor usage** so storage growth and data transfer don't surprise you at scale.
 
 # How to create a storage bucket in Appwrite

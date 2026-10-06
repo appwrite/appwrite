@@ -45,7 +45,7 @@ Both modes produce a wide range of output. The averages are not far apart for ro
 
 The honest difference is at the edges. Traditional code is written by someone who held the constraints in their head while they typed. They remembered that the input is user-supplied and added validation. They remembered that the table is per-user and narrowed the query. They remembered that the API key is sensitive and put it on the server.
 
-Agents forget those things unless you tell them, every time, in the prompt. The fix is not better models. It is a review habit. A vibe-coded function reviewed against a clear checklist is competitive with hand-written code. A vibe-coded function shipped without review is not. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is the version of that checklist most teams converge on.
+Agents forget those things unless you tell them, every time, in the prompt. The fix is not better models. It is a review habit. A vibe-coded function reviewed against a clear checklist is competitive with hand-written code. A vibe-coded function shipped without review is not.
 
 # Debugging
 
@@ -102,6 +102,5 @@ The honest answer is both. Use traditional development where the work demands it
 [Appwrite Cloud](https://cloud.appwrite.io) gives you the primitives, the MCP surface, and the production story you need to make vibe coding work past the prototype. Start the next project there, install the [Claude Code](/docs/tooling/ai/agents/claude-code) or [Cursor](/docs/tooling/ai/ai-dev-tools/cursor) plugin, and run the pre-launch checklist before the first user signs up.
 
 - [Appwrite AI tooling](/docs/tooling/ai)
-- [Backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps)
 - [Best vibe coding tools in 2026](/blog/post/comparing-vibe-coding-tools)
 - [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

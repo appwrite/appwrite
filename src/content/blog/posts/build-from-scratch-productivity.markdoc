@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why is building everything from scratch a productivity problem?"
     answer: "Custom solutions for solved problems carry ongoing maintenance, frequent subtle security mistakes (especially in authentication and validation), and high opportunity cost. Time spent on infrastructure is time not spent on the unique product logic that differentiates your application. Custom code also tends to become a knowledge silo when its author leaves."

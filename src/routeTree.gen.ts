@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -94,6 +95,7 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as MarketingAlternativeToCompetitorRouteImport } from './routes/_marketing/alternative-to.$competitor'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
@@ -481,6 +483,11 @@ const ProtectedRoute = ProtectedRouteImport.update({
 } as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
+  id: '/alternative-to.md',
+  path: '/alternative-to.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
@@ -891,6 +898,12 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   path: '/oauth2/device',
   getParentRoute: () => AuthRoute,
 } as any)
+const MarketingAlternativeToCompetitorRoute =
+  MarketingAlternativeToCompetitorRouteImport.update({
+    id: '/alternative-to/$competitor',
+    path: '/alternative-to/$competitor',
+    getParentRoute: () => MarketingRoute,
+  } as any)
 const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -3323,6 +3336,7 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3403,6 +3417,7 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -3778,6 +3793,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3854,6 +3870,7 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -4185,6 +4202,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/alternative-to.md': typeof AlternativeToDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4266,6 +4284,7 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_marketing/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -4643,6 +4662,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -4723,6 +4743,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -5098,6 +5119,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5174,6 +5196,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -5504,6 +5527,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/alternative-to.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5585,6 +5609,7 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_marketing/alternative-to/$competitor'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
@@ -5964,6 +5989,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -6032,6 +6058,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alternative-to.md': {
+      id: '/alternative-to.md'
+      path: '/alternative-to.md'
+      fullPath: '/alternative-to.md'
+      preLoaderRoute: typeof AlternativeToDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -6600,6 +6633,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth2/device'
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_marketing/alternative-to/$competitor': {
+      id: '/_marketing/alternative-to/$competitor'
+      path: '/alternative-to/$competitor'
+      fullPath: '/alternative-to/$competitor'
+      preLoaderRoute: typeof MarketingAlternativeToCompetitorRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/_marketing/blog/': {
       id: '/_marketing/blog/'
@@ -9264,6 +9304,7 @@ interface MarketingRouteChildren {
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
+  MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
@@ -9298,6 +9339,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
   MarketingIndexRoute: MarketingIndexRoute,
+  MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
@@ -11153,6 +11195,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AlternativeToDotmdRoute: AlternativeToDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,

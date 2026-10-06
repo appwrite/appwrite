@@ -10,6 +10,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why does SDK design matter so much for backend platform adoption?"
     answer: "SDK quality is directly correlated with time to first success, which is one of the strongest leading indicators of whether a developer adopts a tool. A well-designed SDK feels native to the language, surfaces clear errors, and gets developers to a working integration in minutes. A poorly designed SDK creates friction at every call, and developers usually move on rather than fight through it."

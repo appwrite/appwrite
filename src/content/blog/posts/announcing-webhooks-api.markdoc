@@ -655,4 +655,3 @@ The Webhooks API is available on **Appwrite Cloud** today. Full documentation, i
 - [Webhooks documentation](/docs/advanced/platform/webhooks)
 - [API keys and scopes](/docs/advanced/platform/api-keys)
 - [Webhook events reference](/docs/advanced/platform/events)
-- [Appwrite Webhooks: triggering events the right way](/blog/post/appwrite-webhooks)

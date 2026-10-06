@@ -21,6 +21,7 @@ faqs:
   - question: "How do team-based permissions help with client dashboards?"
     answer: "Appwrite's teams and memberships system lets you assign different client staff members appropriate access levels to their project data. You can give read-only analysts and full admins different roles without sharing passwords or writing custom role logic, and resource permissions can reference specific team roles directly."
 unlisted: true
+removed: true
 ---
 
 Every developer who has worked with clients has shipped at least one admin panel, operations dashboard, or internal management tool. These projects share a common characteristic: they're rarely glamorous, but they're almost always urgent. A client needs to manage their user base. An ops team needs to review uploaded documents. A support team needs to search orders.

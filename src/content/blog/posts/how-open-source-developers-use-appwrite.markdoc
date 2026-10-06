@@ -9,6 +9,7 @@ author: aishwari
 category: open-source
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Is Appwrite open source?"
     answer: "Yes. Appwrite is BSD-3-Clause licensed and the entire codebase lives on GitHub. You can read the source, fork it, run it on your own infrastructure, and contribute changes back. Over 55,000 developers have starred the repository."

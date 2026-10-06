@@ -8,6 +8,7 @@ cover: /images/blog/ai-vibe-coding-insights/cover.avif
 timeToRead: 10
 author: laura-du-ry
 category: tutorials
+removed: true
 faqs:
   - question: "What is vibe coding?"
     answer: "Vibe coding is a term coined by Andrej Karpathy for building apps by describing intent to AI tools and letting them write most of the code, rather than writing it line by line yourself. It is fast for prototyping but pairs best with a backend like Appwrite that handles the bits you would not want an LLM to reinvent (auth, data, storage)."

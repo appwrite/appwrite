@@ -9,6 +9,7 @@ timeToRead: 5
 author: aditya-oberai
 category: hackathons
 featured: false
+removed: true
 faqs:
   - question: "Why use Appwrite during a hackathon?"
     answer: "Most hackathons give teams 24 to 72 hours to ship a working prototype. Appwrite removes the time you would otherwise spend on [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), and [Functions](/docs/products/functions) so you can focus on the actual idea instead of plumbing."

@@ -3,7 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveCategorySlug } from './category-slugs'
 import { BLOG_POSTS_PER_PAGE } from './constants'
-import { parseBlogFrontmatter } from './frontmatter'
+import {
+  getFrontmatterAuthor,
+  isRemovedBlogPost,
+  parseBlogFrontmatter,
+} from './frontmatter'
 
 const packageRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -43,10 +47,28 @@ function readPublicPostSlugsFromDirectory(directory: string): string[] {
       const { frontmatter } = parseBlogFrontmatter(raw)
       const draft = parseBoolean(frontmatter.draft)
       const unlisted = parseBoolean(frontmatter.unlisted)
-      return draft || unlisted ? null : slug
+      return draft || unlisted || isRemovedBlogPost(frontmatter) ? null : slug
     })
     .filter((slug): slug is string => slug != null)
     .sort()
+}
+
+/** Authors with a post on their profile page (any non-draft, non-removed post). */
+function readAuthorSlugsWithPosts(directory: string): Set<string> {
+  const authorSlugs = new Set<string>()
+  if (!fs.existsSync(directory)) return authorSlugs
+
+  for (const filename of fs.readdirSync(directory)) {
+    if (!filename.endsWith('.markdoc')) continue
+    const raw = fs.readFileSync(path.join(directory, filename), 'utf8')
+    const { frontmatter } = parseBlogFrontmatter(raw)
+    if (parseBoolean(frontmatter.draft) || isRemovedBlogPost(frontmatter)) continue
+    for (const author of [getFrontmatterAuthor(frontmatter)].flat()) {
+      authorSlugs.add(author)
+    }
+  }
+
+  return authorSlugs
 }
 
 function readBlogPathsFromClientDirectory(clientDirectory: string, segment: string): string[] {
@@ -92,7 +114,10 @@ export function getBlogPrerenderPaths(options?: {
   const postSlugs = readPublicPostSlugsFromDirectory(postsDirectory)
   const uniquePostSlugs = [...new Set(postSlugs)].sort()
   const categorySlugs = readSlugsFromDirectory(categoriesDirectory)
-  const authorSlugs = readSlugsFromDirectory(authorsDirectory)
+  const authorsWithPosts = readAuthorSlugsWithPosts(postsDirectory)
+  const authorSlugs = readSlugsFromDirectory(authorsDirectory).filter((slug) =>
+    authorsWithPosts.has(slug),
+  )
 
   return [
     ...getBlogIndexPaths(uniquePostSlugs.length),

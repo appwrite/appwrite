@@ -78,12 +78,12 @@ export type DedicatedDatabaseConnectionList = {
 export type DedicatedDatabaseCredentials = {
   connectionString: string
   host: string
-  port: number
+  port?: number
   username: string
   password: string
   database: string
   tcpHost: string
-  tcpPort: number
+  tcpPort?: number
   tcpDatabase: string
   ssl: boolean
 }

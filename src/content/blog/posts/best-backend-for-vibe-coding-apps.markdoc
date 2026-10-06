@@ -42,7 +42,7 @@ A backend that hits all eight is built for this workflow. A backend that hits th
 
 # How the major backends compare
 
-The category of agent-native backends has been forming since MCP shipped. Here is how the most relevant options stack up against the checklist above. The detailed deep dive lives in [the rise of agent-native backend platforms](/blog/post/agent-native-backend-platforms); this section is for picking a default.
+The category of agent-native backends has been forming since MCP shipped. Here is how the most relevant options stack up against the checklist above. This section is for picking a default.
 
 ## Appwrite
 
@@ -109,7 +109,7 @@ If you would rather start from a template, the [quick start prompts](/docs/tooli
 
 # Before shipping a vibe-coded app to production
 
-Backend choice is not the whole story. Every vibe-coded app needs a pre-launch review for the failure modes that AI tools repeatedly miss. Open table permissions, secrets in client bundles, missing indexes on hot queries, no logs to debug the first incident, and a preview URL that never got swapped for a real domain. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) walks through the order to run that review in.
+Backend choice is not the whole story. Every vibe-coded app needs a pre-launch review for the failure modes that AI tools repeatedly miss. Open table permissions, secrets in client bundles, missing indexes on hot queries, no logs to debug the first incident, and a preview URL that never got swapped for a real domain.
 
 # Picking a backend you can grow on
 

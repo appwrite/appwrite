@@ -8,6 +8,7 @@ timeToRead: 5
 author: atharva
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "What causes a race condition in a database update?"
     answer: "It happens when two or more requests read a value, modify it in application code, and write it back at almost the same time. Each request based its write on a stale read, so updates overwrite each other and changes are lost."

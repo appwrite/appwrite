@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials, security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What permission types does Appwrite support?"
     answer: "Appwrite defines five permission types: read, create, update, delete, and write. Write is a convenience alias that combines create, update, and delete. Importantly, write does not include read, so a role with only write permissions can mutate resources but cannot list or fetch them."

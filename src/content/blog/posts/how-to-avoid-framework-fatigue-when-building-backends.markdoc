@@ -10,6 +10,7 @@ author: aditya-oberai
 category: best-practices
 featured: false
 unlisted: true
+removed: true
 faqs:
     - question: 'What is framework fatigue in backend development?'
       answer: "Framework fatigue is the pattern of repeatedly evaluating, switching, or second-guessing backend frameworks instead of shipping product. It's driven by a fast-moving ecosystem where new frameworks launch constantly, each promising better performance or cleaner syntax. The result is developers spend more time researching stacks than building features."

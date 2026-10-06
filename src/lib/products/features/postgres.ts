@@ -17,9 +17,9 @@ export const postgresProductFeatures: ProductFeatureContent[] = [
   },
   {
     id: 'pooling',
-    title: 'Connection pooling for short-lived clients',
+    title: 'Built-in connection pooling',
     description:
-      'PostgreSQL spends a backend process per connection, so serverless functions exhaust a specification fast. Point runtime traffic at the pooler, same hostname and credentials, and short-lived clients share a small pool.',
+      'PostgreSQL spends a backend process per connection, so serverless functions and horizontally scaled app servers exhaust a specification fast. Point runtime traffic at the pooler, same hostname and credentials, and many clients share a small pool of server connections.',
     docsHref: '/docs/products/databases/postgresql/connection-pooling',
     docsLabel: 'Connection pooling docs',
     brandLight: 'teal',

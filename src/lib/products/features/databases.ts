@@ -50,7 +50,7 @@ export const databasesProductFeatures: ProductFeatureContent[] = [
     title: 'Queries, relationships, and transactions',
     description:
       'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.',
-    docsHref: '/docs/products/databases/queries',
+    docsHref: '/docs/products/databases/tablesdb/queries',
     docsLabel: 'Queries docs',
   },
   {

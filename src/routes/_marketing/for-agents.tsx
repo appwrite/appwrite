@@ -4,7 +4,7 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/for-agents/View'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 import { forAgentsFaqItems } from '@/lib/for-agents/content'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { translate } from '@/lib/i18n/translate'
@@ -16,40 +16,44 @@ export const Route = createFileRoute('/_marketing/for-agents')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/for-agents',
       pageName: 'For coding agents',
       description: PAGE_DESCRIPTION,
-      canonical: 'https://appwrite.io/for-agents',
       ogImageEyebrow: 'Agents',
       ogImageTitle: 'For coding agents',
       ogImageSubtitle: PAGE_DESCRIPTION,
-    }),
-    links: [
-      {
-        rel: 'alternate',
-        type: 'text/markdown',
-        href: '/for-agents.md',
-      },
-    ],
-    scripts: [
-      {
-        type: 'application/ld+json',
-        children: stringifyJsonLd({
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: forAgentsFaqItems.map((faq) => ({
-            '@type': 'Question',
-            name: translate(faq.question),
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: translate(faq.answer),
-            },
-          })),
-        }),
-      },
-    ],
-  }),
+    })
+    return {
+      ...seo,
+      links: [
+        ...seo.links,
+        {
+          rel: 'alternate',
+          type: 'text/markdown',
+          href: '/for-agents.md',
+        },
+      ],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: stringifyJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: forAgentsFaqItems.map((faq) => ({
+              '@type': 'Question',
+              name: translate(faq.question),
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: translate(faq.answer),
+              },
+            })),
+          }),
+        },
+      ],
+    }
+  },
   component: ForAgentsPage,
 })
 

@@ -7,6 +7,7 @@ cover: /images/blog/designing-the-new-appwrite-website/cover.avif
 timeToRead: 5
 author: caio-arias
 category: design
+removed: true
 faqs:
   - question: "Why did Appwrite redesign its website?"
     answer: "The site is the main entry point for developers learning about Appwrite, so the rebrand was a chance to rethink both structure and visuals. The team also wanted to fill content gaps and present products in a way that matched Appwrite's evolving identity."

@@ -4,19 +4,21 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/company/View'
-import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
+import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
 
 export const Route = createFileRoute('/_marketing/company')({
   ...marketingRouteLifetime,
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
-  head: () => ({
-    meta: getMarketingPageMetaTags({
+  head: () => {
+    const seo = getMarketingRouteHead({
+      canonicalPath: '/company',
       pageName: 'Company',
       description:
         'At Appwrite, we remove technical barriers so developers and agents can build products the world loves. Learn about our mission, team, and investors.',
-    }),
-  }),
+    });
+    return seo;
+  },
   loader: async ({ context }) => {
   },
   component: CompanyPage,

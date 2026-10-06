@@ -8,6 +8,7 @@ cover: /images/blog/bun-function-resume/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: tutorials
+removed: true
 faqs:
   - question: "Can Appwrite Functions return HTML instead of JSON?"
     answer: "Yes. Appwrite Functions can return any text-based content type including HTML, plain text, CSV, and XML. You set the `Content-Type` header on the response and Appwrite serves it as-is, which is what lets a function host a full HTML page like a resume."

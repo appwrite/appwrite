@@ -18,6 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
+        docs: 'Docs',
         assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
@@ -176,6 +177,10 @@ export const enCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          vsConvex: 'Appwrite vs. Convex', // pragma: allowlist secret
+          vsClerk: 'Appwrite vs. Clerk', // pragma: allowlist secret
+          vsAmplify: 'Appwrite vs. AWS Amplify', // pragma: allowlist secret
+          vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',

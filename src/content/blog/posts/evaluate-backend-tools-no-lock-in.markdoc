@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What does vendor lock-in actually mean for a backend platform?"
     answer: "Lock-in is not binary, it has degrees. Deep lock-in means your data model and business logic are tightly coupled to proprietary APIs, so migration requires rewriting significant parts of the application. Moderate lock-in uses platform SDKs but keeps data portable and logic decoupled. Shallow lock-in covers commodity infrastructure where switching means updating configuration and credentials."

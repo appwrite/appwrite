@@ -32,7 +32,7 @@ Let's examine the integrations, Function templates, and what's still to come.
 
 ## AI use cases and documentation
 
-To make your life easier, we have added technical guides to our documentation covering [computer vision](https://appwrite.io/blog/post/state-of-computer-vision), [natural language processing](https://appwrite.io/blog/post/state-of-natural-language-processing), and [audio processing](https://appwrite.io/blog/post/state-of-audio-processing). These advanced tutorials explain how to use [AI and Appwrite](https://appwrite.io/docs/products/ai) in your projects.
+To make your life easier, we have added technical guides to our documentation covering computer vision, natural language processing, and [audio processing](https://appwrite.io/blog/post/state-of-audio-processing). These advanced tutorials explain how to use [AI and Appwrite](https://appwrite.io/docs/products/ai) in your projects.
 
 ![AI docs](/images/blog/ai-docs.avif)
 
@@ -55,7 +55,7 @@ We've also added support for many AI tools so you can integrate them into your p
 
 Function templates are pre-built Appwrite [Function](https://appwrite.io/docs/products/functions) that can be integrated into your Appwrite project with just a few clicks. With templates, you can easily incorporate new features and integrations into your app without writing additional code or managing infrastructure.
 
-We have templates for your favorite AI tools, like OpenAI, LangChain, HuggingFace, and many more, covering many use cases, such as building an [intelligent chatbot](https://appwrite.io/blog/post/function-template-prompt-chatgpt) using OpenAI.
+We have templates for your favorite AI tools, like OpenAI, LangChain, HuggingFace, and many more, covering many use cases, such as building an intelligent chatbot using OpenAI.
 
 Find the full overview on your console under the `Templates` tab in `Fuctions`. Filter function templates by the `AI` use case and select the AI function template that you need.
 

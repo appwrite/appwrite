@@ -7,6 +7,7 @@ cover: /images/blog/deploy-nextjs-app-to-appwrite-sites/cover.avif
 timeToRead: 5
 author: atharva
 category: tutorials
+removed: true
 faqs:
   - question: "Does Appwrite Sites support Next.js SSR and React Server Components?"
     answer: "Yes, [Appwrite Sites](/docs/products/sites) supports the full Next.js feature set, including SSR and React Server Components, not just static export. You can deploy Next.js apps the same way you would on any modern host, with build settings detected automatically."

@@ -8,6 +8,7 @@ timeToRead: 7
 author: jake-barnby
 category: security
 featured: false
+removed: true
 faqs:
   - question: "What was the XZ Utils backdoor?"
     answer: "In early 2024, a malicious backdoor was found in XZ Utils versions 5.6.0 and 5.6.1, a compression tool shipped with many Linux distributions. The backdoor could be used to compromise encrypted SSH sessions on systems running affected beta and test versions of distros like Red Hat and Debian, putting any server using SSH at risk."

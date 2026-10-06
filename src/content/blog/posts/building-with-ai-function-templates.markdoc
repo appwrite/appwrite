@@ -7,6 +7,7 @@ cover: /images/blog/building-with-ai-function-templates/function-templates.avif
 timeToRead: 7
 author: aditya-oberai
 category: tutorials
+removed: true
 faqs:
   - question: "What are Appwrite AI Function templates?"
     answer: "They are pre-built Appwrite Functions that cover common AI tasks like image classification, object detection, text generation, summarization, and translation. You can clone a template from the Appwrite Console, plug in your API keys for providers like OpenAI or Hugging Face, and have a working endpoint in minutes. See [Appwrite Functions](/docs/products/functions) for how templates are deployed."

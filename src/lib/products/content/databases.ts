@@ -69,7 +69,7 @@ export const databasesProductContent: ProductPageContent = {
       answer:
         'Yes. Appwrite DBs support filters, ordering, pagination, relationships, transactions, bulk operations, and geo queries through the SDKs and Console. Native PostgreSQL and MySQL databases support full SQL from the in-console editor and your existing SQL clients.',
       links: [
-        { label: 'Queries', href: '/docs/products/databases/queries' },
+        { label: 'Queries', href: '/docs/products/databases/tablesdb/queries' },
         { label: 'Relationships', href: '/docs/products/databases/relationships' },
         { label: 'Transactions', href: '/docs/products/databases/transactions' },
         { label: 'Bulk operations', href: '/docs/products/databases/bulk-operations' },

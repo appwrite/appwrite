@@ -8,6 +8,7 @@ cover: /images/blog/migrate-firebase-projects-to-appwrite/migrate-firebase-proje
 timeToRead: 10
 author: vincent-ge
 category: migrations
+removed: true
 faqs:
   - question: "How do I migrate from Firebase to Appwrite?"
     answer: "Use Appwrite Migrations from the Console. Create a new project, open the Migrations tab in Project Settings, select Firebase as the source, paste your Firebase Admin SDK service account JSON, choose which resources to import, and start the migration. The process runs in the background and handles users and files automatically."

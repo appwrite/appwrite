@@ -7,6 +7,7 @@ timeToRead: 4
 date: 2024-02-08
 author: laura-du-ry
 category: culture
+removed: true
 faqs:
   - question: "Who is Bradley Schofield at Appwrite?"
     answer: "Bradley is one of the longest-standing members of the Appwrite team. He joined after contributing integrations and quick-start projects to Appwrite and has since worked across [Functions](/docs/products/functions) and migrations, with a focus on backend development and data."

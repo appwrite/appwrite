@@ -148,7 +148,7 @@ export const forAgentsFaqItems: ForAgentsFaqItem[] = [
   {
     question: 'Where should agents start reading?',
     answer:
-      'https://appwrite.io/llms.txt is the curated hub. Every docs, blog, changelog, and integrations page also has a Markdown twin: append .md to the URL.',
+      'https://appwrite.io/llms.txt is the curated hub. Every docs, blog, changelog, integrations, and comparison page also has a Markdown twin: append .md to the URL.',
     links: [{ label: 'llms.txt', href: '/llms.txt' }],
   },
 ]

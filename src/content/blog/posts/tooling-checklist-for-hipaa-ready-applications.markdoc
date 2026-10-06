@@ -9,6 +9,7 @@ author: aishwari
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What does it mean for an application to be HIPAA-ready?"
     answer: "HIPAA-ready means the application implements the administrative, physical, and technical safeguards required to protect PHI and ePHI. From a developer perspective, this includes strong authentication, role-based access, encryption in transit and at rest, audit logging, monitoring, and tested backups. It is the result of how the system is designed and operated over time, not a single feature or certification."

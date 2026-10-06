@@ -10,6 +10,7 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "How much development time can a managed backend actually save?"
     answer: "Building authentication, a database and API layer, file storage, email notifications, and serverless infrastructure from scratch takes roughly 4 to 7 weeks for an experienced backend developer. The same components configured on a managed platform like Appwrite typically take 1 to 2 days. The saved weeks redirect into product features, user feedback loops, and earlier launch."

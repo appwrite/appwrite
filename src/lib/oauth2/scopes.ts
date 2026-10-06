@@ -361,10 +361,6 @@ const PROJECT_RESOURCE_COPY: Record<string, ResourceCopy> = {
     name: 'Health',
     desc: "The health and operational status of this project's services.",
   },
-  assistant: {
-    name: 'AI Assistant',
-    desc: 'Legacy AI Assistant scope. Prefer agent scopes for the console Agent.',
-  },
   agent: {
     name: 'Agent',
     desc: 'The console Agent that suggests answers and configuration.',

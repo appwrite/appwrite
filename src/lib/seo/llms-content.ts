@@ -13,8 +13,10 @@ import {
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './agent-discovery'
+import { getAllAlternativeLlmsMeta } from '@/lib/alternatives/markdown-export'
 import {
   buildAppwriteLlmsTxt,
+  buildAlternativesMarkdownIndex,
   buildBlogMarkdownIndex,
   buildChangelogMarkdownIndex,
   buildDocsLlmsTxt,
@@ -46,6 +48,7 @@ function collectLlmsContentData(): AppwriteLlmsTxtData {
       title: entry.title,
       description: entry.description,
     })),
+    alternatives: getAllAlternativeLlmsMeta(),
   }
 }
 
@@ -83,6 +86,15 @@ export function generateIntegrationsMarkdownIndex(
 ): string {
   return buildIntegrationsMarkdownIndex(
     collectLlmsContentData().integrations,
+    origin,
+  )
+}
+
+export function generateAlternativesMarkdownIndex(
+  origin: string = DEFAULT_LLMS_ORIGIN,
+): string {
+  return buildAlternativesMarkdownIndex(
+    collectLlmsContentData().alternatives,
     origin,
   )
 }

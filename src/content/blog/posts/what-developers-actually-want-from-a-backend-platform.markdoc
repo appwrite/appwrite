@@ -10,6 +10,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What should I actually evaluate when picking a backend platform?"
     answer: "Look past feature lists at predictable pricing, vendor lock-in, SDK and developer experience, full-stack coverage (auth, databases, storage, functions, messaging), built-in security, and a clear path from prototype to scale. These are the dimensions that determine whether a platform stays usable when you are deep in a deadline or watching costs climb, not whether it ticks a feature box on a landing page."

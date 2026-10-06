@@ -93,8 +93,6 @@ Grok Build Mode is strong at getting from idea to shareable artifact fast. That 
 
 As with many AI app builders, Build Mode is best suited to rapidly generating and sharing prototypes. Teams building production software may eventually need additional backend infrastructure depending on their application's requirements. That is fine for a prototype and a problem for a product. Once you need multiple users, persistent data, authentication, file uploads, or server-side logic you control, a generated `grok.me` app is not a backend you own.
 
-This is the same trade-off we flagged across vibe coding platforms in [The hidden costs of vibe coding platforms](/blog/post/hidden-costs-of-vibe-coding-platforms). 
-
 # Adding a real backend to a Grok Build Mode app
 
 When a Build Mode prototype earns its keep and needs to become a real product, the missing piece is almost always the backend. That is where [Appwrite](/docs/products/auth) fits, without asking you to rebuild the frontend Grok already produced.
@@ -106,7 +104,7 @@ If you're integrating Appwrite with a Grok Build Mode project, follow our guide 
 * [Appwrite Storage](/docs/products/storage) covers file uploads, image transformations, and secure downloads.
 * [Appwrite Functions](/docs/products/functions) runs server-side logic in the language of your choice for anything the client should not handle.
 
-For hosting, [Appwrite Sites](/docs/products/sites) deploys the frontend directly from a Git repository, so you own the domain, the deployment pipeline, and the code rather than depending on a generated link. If you want a full walkthrough of taking a generated app to production, see [how to deploy vibe coding projects to production](/blog/post/deploy-vibe-coding-projects-to-production).
+For hosting, [Appwrite Sites](/docs/products/sites) deploys the frontend directly from a Git repository, so you own the domain, the deployment pipeline, and the code rather than depending on a generated link.
 
 None of this dismisses Build Mode. Using Grok to sketch the interface and Appwrite to run the backend is a reasonable split: let the AI handle the first draft, then move the parts that need to be reliable onto infrastructure you control.
 

@@ -8,6 +8,7 @@ cover: /images/blog/building-init-giveaway-app/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: open-source
+removed: true
 faqs:
   - question: "What does the Init giveaway app actually do?"
     answer: "It lets users log in with Discord, registers them for a daily giveaway, and then randomly picks a winner using a roulette-style spinning wheel. Registrations are stored in Appwrite Databases and the wheel updates in realtime as new entries come in. It was built to make Init week giveaways feel like a live event, not a spreadsheet drawing."

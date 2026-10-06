@@ -7,6 +7,7 @@ cover: /images/blog/build-a-currency-converter-with-deno2/cover.avif
 timeToRead: 12
 author: ebenezer-don
 category: tutorials
+removed: true
 faqs:
   - question: "What is Deno 2 and why use it for APIs?"
     answer: "Deno 2 is a TypeScript-first JavaScript runtime built by the original Node.js creator. It has built-in TypeScript support, a permissions model, native standard library, and now ships with broad Node.js compatibility. For APIs, it eliminates a lot of tooling overhead you'd otherwise have in Node."

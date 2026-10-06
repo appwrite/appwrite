@@ -9,6 +9,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "How does Appwrite scale services independently?"
     answer: "Appwrite is built on microservices principles, so each product (Auth, Databases, Storage, Functions, Messaging, and Sites) operates as its own independent service. Heavy storage demand will not degrade auth performance, and a spike in function executions will not slow database queries. You scale only the components that need scaling, when they need it, without touching the rest of the system."

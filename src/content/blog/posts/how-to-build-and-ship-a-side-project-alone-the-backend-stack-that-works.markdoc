@@ -9,6 +9,7 @@ author: aditya-oberai
 category: startups
 featured: false
 unlisted: true
+removed: true
 faqs:
     - question: "What's the fastest backend stack for a solo developer's side project?"
       answer: 'The fastest stack is one that minimizes setup decisions. A unified backend platform that bundles authentication, database, file storage, and serverless functions into a single SDK is faster to ship with than stitching together separate services. The fewer dashboards, accounts, and integrations you manage, the more time you spend on actual product features.'

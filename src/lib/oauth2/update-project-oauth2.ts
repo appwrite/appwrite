@@ -66,6 +66,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.TradeshiftBox]: (p, b) =>
     p.updateOAuth2TradeshiftSandbox(b),
   [ProjectOAuthProviderId.Twitch]: (p, b) => p.updateOAuth2Twitch(b),
+  [ProjectOAuthProviderId.Webflow]: (p, b) => p.updateOAuth2Webflow(b),
   [ProjectOAuthProviderId.Wordpress]: (p, b) => p.updateOAuth2WordPress(b),
   [ProjectOAuthProviderId.X]: (p, b) => p.updateOAuth2X(b),
   [ProjectOAuthProviderId.Yahoo]: (p, b) => p.updateOAuth2Yahoo(b),

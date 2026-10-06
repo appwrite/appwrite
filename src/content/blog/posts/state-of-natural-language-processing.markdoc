@@ -8,6 +8,7 @@ timeToRead: 15
 author: luke-silver
 category: products
 featured: false
+removed: true
 faqs:
   - question: "What is natural language processing?"
     answer: "Natural language processing (NLP) is a field combining computer science, AI, and linguistics to help computers understand, interpret, and generate human language. It powers chatbots, translation, search, sentiment analysis, and modern large language models like GPT and BERT."

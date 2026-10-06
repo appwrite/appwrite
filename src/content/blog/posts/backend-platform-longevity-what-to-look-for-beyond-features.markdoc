@@ -9,6 +9,7 @@ author: atharva
 category: open-source
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What should I evaluate beyond features when choosing a backend platform?"
     answer: "Look at release cadence and active maintenance, governance and organizational backing, real community adoption signals, security posture and vulnerability response, the open-source license and self-hosting options, and data portability. These determine whether the platform will still be a good decision in three years, even if today's feature list looks fine."

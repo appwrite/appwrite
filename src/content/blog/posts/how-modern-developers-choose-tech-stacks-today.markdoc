@@ -10,6 +10,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What do modern developers prioritize when choosing a tech stack?"
     answer: "The biggest signals are speed to production, developer experience, flexibility, scalability, ease of AI integration, and avoiding lock-in. Developers want stacks that compress the distance from idea to shipped feature, have strong documentation and SDKs, and let them change direction without an expensive migration."

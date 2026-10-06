@@ -8,6 +8,7 @@ cover: /images/blog/ai-crystal-ball/cover.avif
 timeToRead: 9
 author: aditya-oberai
 category: tutorials
+removed: true
 faqs:
   - question: "How does the AI Crystal Ball app work?"
     answer: "It signs the user in with GitHub OAuth via [Appwrite Auth](/docs/products/auth), fetches their public GitHub data (followers, repos, top languages), sends that context to GPT-4 with a prompt asking for a developer destiny, and stores the result in Appwrite Databases so it can be shared via a public link."

@@ -1,3 +1,4 @@
+import { asRouteHead } from '@/lib/seo/route-head'
 import type { DiscordAuthor, DiscordThread } from './types'
 import {
   getThreadsAuthorMetaTags as buildThreadsAuthorMetaTags,
@@ -31,4 +32,26 @@ export function getThreadsAuthorRouteMetaTags(
   return asRouteMetaTags(
     buildThreadsAuthorMetaTags(author, canonicalUrl) as unknown as MetaTag[],
   )
+}
+
+export function getThreadsIndexRouteHead() {
+  return asRouteHead(getThreadsIndexRouteMetaTags())
+}
+
+export function getThreadsThreadRouteHead(
+  thread: DiscordThread,
+  canonicalUrl: string,
+) {
+  return asRouteHead(getThreadsThreadRouteMetaTags(thread, canonicalUrl), {
+    canonicalHref: canonicalUrl,
+  })
+}
+
+export function getThreadsAuthorRouteHead(
+  author: DiscordAuthor,
+  canonicalUrl: string,
+) {
+  return asRouteHead(getThreadsAuthorRouteMetaTags(author, canonicalUrl), {
+    canonicalHref: canonicalUrl,
+  })
 }

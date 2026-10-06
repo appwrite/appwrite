@@ -7,6 +7,7 @@ cover: /images/blog/camp-5-barcelona/cover.avif
 timeToRead: 5
 author: snezhanna
 category: culture
+removed: true
 faqs:
   - question: "What is a company Camp at Appwrite?"
     answer: "A Camp is a week-long, in-person meet-up where the fully remote Appwrite team travels to a single location to work, plan, and bond. Camps mix focused work sessions with social activities like food tours, workshops, and a Bug'athon. They happen at a roughly cadence that the operations team plans well in advance."

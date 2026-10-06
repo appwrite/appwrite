@@ -5,7 +5,9 @@
 export const hePricingDictionary: Record<string, string> = {
   '-': 'לא כלול',
   '+20% of base': '+20% מהבסיס',
-  '+50% of base per replica': '+50% מהבסיס לכל replica',
+  'Full tier price per replica': 'מחיר מלא של שכבת המחשוב לכל replica',
+  'Full tier price per replica, +20% for point-in-time recovery':
+    'מחיר מלא של שכבת המחשוב לכל replica, +20% ל-point-in-time recovery',
   '$0': '$0',
   '$0 fixed fee': '$0 דמי קבועים',
   '$0.004 per screenshot': '$0.004 לכל צילום מסך',
@@ -85,8 +87,6 @@ export const hePricingDictionary: Record<string, string> = {
     'למפתחים שצריכים משאבי פרודקשן כלולים במחיר נגיש.',
   'For production applications that scale with included resources and pay as you go.':
     'לאפליקציות פרודקשן שגדלות עם משאבים כלולים ו-Pay as you go.',
-  'Pay as you go when you exceed included limits':
-    'Pay as you go כשחורגים מהמכסות הכלולות',
   '150GB': '150GB',
   '150GB storage': '150GB אחסון',
   '16 GB': '16 GB',
@@ -153,7 +153,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Compute tiers from $10/mo': 'רמות מחשוב החל מ-$10/חודש',
   'Embedding tokens': 'טוקנים ל-embedding',
   'Custom rules': 'כללים מותאמים',
-  'Daily backups stored for 7 days': 'גיבויים יומיים נשמרים ל-7 ימים',
+  'Daily backups': 'גיבויים יומיים',
   'Dedicated priority queues for build jobs': 'תורים בעדיפות ייעודיים לעבודות build',
   'Dedicated resources per project:': 'משאבים ייעודיים לפרויקט:',
   'Domain pricing': 'תמחור דומיינים',
@@ -227,6 +227,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Multiple tools with overlapping responsibilities':
     'כלים מרובים עם אחריות חופפת',
   'No fixed monthly fee': 'ללא דמי קבועים חודשיים',
+  'No project pausing': 'ללא השהיית פרויקטים',
   'Not needed': 'לא נדרש',
   'Number of execution logs retained per function/site':
     'מספר לוגי ההרצה שנשמרים לכל פונקציה/אתר',
@@ -266,6 +267,9 @@ export const hePricingDictionary: Record<string, string> = {
   'Tier allowance + overage': 'מכסת רמה + חריגה',
   'Unlimited Databases, Buckets, and Functions':
     'מסדי נתונים, באקטים ופונקציות ללא הגבלה',
+  '1 member': 'חבר 1',
+  '3 members': '3 חברים',
+  'Unlimited members': 'חברים ללא הגבלה',
   'Up to 4 CPUs - 4GB RAM': 'עד 4 CPUs - 4GB RAM',
   'Usage-based overage': 'חריגה לפי שימוש',
   'Variable traffic and early-stage apps.': 'תעבורה משתנה ואפליקציות בשלב מוקדם.',

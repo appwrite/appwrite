@@ -1,4 +1,9 @@
-import { expect, type Locator, type Page } from '@playwright/test'
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Response,
+} from '@playwright/test'
 import { enableDatabaseFeatureFlags } from './feature-flags'
 import { acceptCookieBannerIfPresent } from './cookie-banner'
 import { waitForFullscreenLoaderHidden } from './fullscreen-loader'
@@ -306,8 +311,7 @@ export async function expectNativeTabRenders(
   }
 
   throw (
-    lastError ??
-    new Error(`${path} kept showing the console error boundary`)
+    lastError ?? new Error(`${path} kept showing the console error boundary`)
   )
 }
 
@@ -388,7 +392,21 @@ export async function selectNativeSchema(
   return selected
 }
 
+/** Last statement typed into the SQL editor, so the run can match its request. */
+const typedNativeSql = new WeakMap<Page, string>()
+
+/**
+ * Whitespace-free first line of a statement without its trailing semicolon.
+ * Monaco can re-indent typed lines and the console wraps read queries for
+ * display, so the request body only reliably contains this fragment.
+ */
+function nativeSqlProbe(sql: string): string {
+  const firstLine = sql.trim().split('\n')[0] ?? ''
+  return firstLine.replace(/\s+/g, '').replace(/;$/, '')
+}
+
 export async function typeNativeSql(page: Page, sql: string): Promise<void> {
+  typedNativeSql.set(page, sql)
   await waitForNativeSqlEditor(page)
   const editor = nativeSqlEditorMount(page)
   await editor.click({ force: true })
@@ -616,21 +634,26 @@ export async function runNativeSql(
     reload: false,
   })
 
-  const isExecutionResponse = (response: {
-    url: () => string
-    request: () => { method: () => string }
-  }) => {
+  // The sidebar, autocomplete and the post-run cache refresh all list schemas
+  // and tables through this same executions endpoint, so match the request
+  // that carries the typed statement instead of whichever execution lands first.
+  const typedSql = typedNativeSql.get(page)
+  const probe = typedSql ? nativeSqlProbe(typedSql) : ''
+  const isExecutionResponse = (response: Response) => {
     try {
       const url = new URL(response.url())
       if (
         response.request().method() !== 'POST' ||
-        !url.pathname.includes('/executions')
+        !url.pathname.includes('/executions') ||
+        !ENGINE[engine].executionPathIncludes.some((part) =>
+          url.pathname.includes(part),
+        )
       ) {
         return false
       }
-      return ENGINE[engine].executionPathIncludes.some((part) =>
-        url.pathname.includes(part),
-      )
+      if (!probe) return true
+      const sql = response.request().postDataJSON()?.sql
+      return typeof sql === 'string' && sql.replace(/\s+/g, '').includes(probe)
     } catch {
       return false
     }
@@ -649,6 +672,13 @@ export async function runNativeSql(
     const response = await executionPromise
     lastStatus = response.status()
     lastBody = await response.text()
+
+    // The run mutation only settles after it refetches every active schema,
+    // table and autocomplete query, and Run stays disabled until then. Wait for
+    // that before returning so the next statement starts from an idle editor.
+    await expect(runButton).toBeEnabled({
+      timeout: NATIVE_READY_NAV_TIMEOUT_MS,
+    })
 
     if (response.ok()) {
       try {

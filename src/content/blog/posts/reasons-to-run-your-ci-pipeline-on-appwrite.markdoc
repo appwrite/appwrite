@@ -8,6 +8,7 @@ timeToRead: 6
 author: eldad-fux
 category: products
 featured: false
+removed: true
 callToAction: true
 faqs:
   - question: "Can I really run my CI pipeline on [Appwrite Functions](/docs/products/functions)?"

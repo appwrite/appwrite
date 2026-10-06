@@ -8,6 +8,7 @@ timeToRead: 7
 author: aditya-oberai
 category: engineering
 featured: false
+removed: true
 faqs:
   - question: "What is an enum in programming?"
     answer: "An enum, short for enumeration, is a data type that lets a variable hold one of a predefined set of named constants. Instead of using raw strings or numbers like `\"active\"` or `1`, you reference a named value like `Status.ACTIVE`. The grouping makes intent clear and the constraint catches bad values at compile time."

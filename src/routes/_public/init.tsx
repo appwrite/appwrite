@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FullscreenLoader } from '@/components/ui/loader'
-import { getInitPageMetaTags } from '@/lib/init/init-seo'
+import { getInitPageRouteHead } from '@/lib/init/init-seo'
 import { prefetchOptionalAuthHeaderData } from '@/lib/marketing/route-loader'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { importNamedDefault } from '@/lib/stale-chunk-error'
@@ -13,7 +13,7 @@ const InitView = lazy(() =>
 export const Route = createFileRoute('/_public/init')({
   ssr: false,
   component: InitPage,
-  head: () => ({ meta: getInitPageMetaTags() }),
+  head: () => getInitPageRouteHead(),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
     if (!isInitSurfaceEnabled()) {

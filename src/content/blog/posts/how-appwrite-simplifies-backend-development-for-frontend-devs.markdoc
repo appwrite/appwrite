@@ -10,6 +10,7 @@ author: atharva
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Can a frontend developer use Appwrite without backend experience?"
     answer: "Yes. Appwrite exposes authentication, databases, storage, and server-side logic through SDKs and REST or GraphQL APIs, so developers comfortable calling APIs can add full backend functionality without writing custom server code. There are SDKs for web, mobile, and server environments, and quick start guides for popular frontend frameworks."

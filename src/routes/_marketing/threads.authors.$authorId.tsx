@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { AuthorView } from '@/components/pages/threads/AuthorView'
 import { getAuthor, getAuthorThreads } from '@/lib/threads/content'
-import { getThreadsAuthorRouteMetaTags } from '@/lib/threads/route-meta'
+import { getThreadsAuthorRouteHead } from '@/lib/threads/route-meta'
 import {
   getThreadsAuthorPageSchema,
   getThreadsBreadcrumbSchema,
@@ -52,7 +52,7 @@ export const Route = createFileRoute('/_marketing/threads/authors/$authorId')({
     const { author, canonicalUrl } = loaderData
 
     return {
-      meta: getThreadsAuthorRouteMetaTags(author, canonicalUrl),
+      ...getThreadsAuthorRouteHead(author, canonicalUrl),
       scripts: [
         {
           type: 'application/ld+json',

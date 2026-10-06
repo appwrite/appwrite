@@ -8,6 +8,7 @@ timeToRead: 10
 author: aditya-oberai
 category: security
 unlisted: true
+removed: true
 lastUpdated: 2026-05-20
 faqs:
   - question: "What is the most ignored vibe coding security mistake?"

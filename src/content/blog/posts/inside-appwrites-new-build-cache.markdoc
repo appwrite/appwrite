@@ -78,7 +78,7 @@ The cache removes the download share entirely. The reason the remaining work is 
 
 # Part of a broader performance effort
 
-The build cache is the latest in a series of changes aimed at making deployments on Appwrite faster. We previously [cut cold start times on Appwrite Sites](/blog/post/appwrite-sites-squashfs-migration), so your pages respond quickly even after sitting idle, and shipped [native Turbopack support](/blog/post/turbopack-support-appwrite-sites), so Next.js applications build on their faster bundler with no change to your build command. Caching dependencies carries that same focus into the install step, which for most projects is the slowest part of a build.
+The build cache is the latest in a series of changes aimed at making deployments on Appwrite faster. We previously [cut cold start times on Appwrite Sites](/blog/post/appwrite-sites-squashfs-migration), so your pages respond quickly even after sitting idle, and shipped native Turbopack support, so Next.js applications build on their faster bundler with no change to your build command. Caching dependencies carries that same focus into the install step, which for most projects is the slowest part of a build.
 
 The build cache is live across the Appwrite network. Deploy a site or function, and from your second build onward, your installs are already faster.
 

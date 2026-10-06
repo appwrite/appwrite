@@ -9,6 +9,7 @@ author: aishwari
 category: ai
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: What is the best vibe coding tool for beginners?
     answer: The best vibe coding tool for beginners depends on how you want to build. Bolt.new and Lovable are great for absolute beginners who want to create a working app quickly in the browser. Replit Agent is strong for students and self-taught developers, while Cursor and Windsurf are better if you want to grow into a real developer workflow.

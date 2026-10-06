@@ -8,6 +8,7 @@ timeToRead: 9
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "How does vibe coding change agency economics?"
     answer: "Agencies bill by the hour, the project, or the sprint. Vibe coding compresses the hours that go into the predictable parts of a build: auth, CRUD, file handling, integrations, and frontend scaffolding. Margins on fixed-fee projects improve, time-to-pitch shortens, and the same team can run more projects in parallel. The catch is that the review and hardening work does not compress, so the win only lands for agencies that keep both halves of the workflow in shape."

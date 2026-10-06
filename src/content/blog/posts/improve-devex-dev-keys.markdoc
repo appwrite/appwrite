@@ -9,6 +9,7 @@ timeToRead: 7
 author: aditya-oberai
 category: tutorials
 featured: false
+removed: true
 callToAction: true
 faqs:
   - question: "What are Appwrite dev keys?"

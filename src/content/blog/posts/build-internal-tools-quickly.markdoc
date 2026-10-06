@@ -10,6 +10,7 @@ author: aditya-oberai
 category: tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What do most internal tools actually need?"
     answer: "Most admin panels and operations dashboards need authentication with role differentiation, CRUD operations on application data, file access, action triggers for backend operations, an audit trail of who did what, and simple reliable deployment. Single shared logins or hand-rolled access control are common shortcuts that create real security and accountability problems."

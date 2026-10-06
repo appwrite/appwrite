@@ -12,6 +12,7 @@ import {
 } from '@/lib/init/init-ticket-storage-config'
 import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
+import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export function buildInitTicketShareOgImagePath(ticketId: string): string {
@@ -81,6 +82,17 @@ export function getInitTicketShareRouteMetaTags(params: {
     }
     return tag
   })]
+}
+
+export function getInitTicketShareRouteHead(params: {
+  ticketId: string
+  siteOrigin?: string
+}) {
+  const siteOrigin = params.siteOrigin ?? getRequestSiteOrigin()
+  const canonicalUrl = buildInitTicketShareUrl(params.ticketId, siteOrigin)
+  return asRouteHead(getInitTicketShareRouteMetaTags(params), {
+    canonicalHref: canonicalUrl,
+  })
 }
 
 export function getInitTicketShareImageSrc(ticketId: string): string {

@@ -46,15 +46,6 @@ const TOPOLOGY_OPTIONS: Option<ComposeTopology>[] = [
   },
 ]
 
-const ASSISTANT_OPTIONS: Option<'enabled' | 'disabled'>[] = [
-  {
-    value: 'enabled',
-    label: 'Enabled',
-    description: 'AI assistant powered by OpenAI',
-  },
-  { value: 'disabled', label: 'Disabled', description: 'No AI assistant' },
-]
-
 const AUTOGRAVITY_OPTIONS: Option<'enabled' | 'disabled'>[] = [
   {
     value: 'enabled',
@@ -143,13 +134,12 @@ function downloadFile(filename: string, content: string) {
 export function ComposeGenerator() {
   const [database, setDatabase] = useState<ComposeDatabase>('postgresql')
   const [topology, setTopology] = useState<ComposeTopology>('combined')
-  const [assistant, setAssistant] = useState(true)
   const [autogravity, setAutogravity] = useState(true)
   const [activeFileId, setActiveFileId] = useState('docker-compose.yml')
 
   const files = useMemo(
-    () => generateFiles({ database, topology, assistant, autogravity }),
-    [database, topology, assistant, autogravity],
+    () => generateFiles({ database, topology, autogravity }),
+    [database, topology, autogravity],
   )
   const activeFile =
     files.find((file) => file.filename === activeFileId) ?? files[0]
@@ -169,13 +159,6 @@ export function ComposeGenerator() {
         options={TOPOLOGY_OPTIONS}
         value={topology}
         onChange={setTopology}
-      />
-      <OptionGroup
-        groupId="compose-assistant"
-        label="Appwrite Assistant"
-        options={ASSISTANT_OPTIONS}
-        value={assistant ? 'enabled' : 'disabled'}
-        onChange={(value) => setAssistant(value === 'enabled')}
       />
       <OptionGroup
         groupId="compose-autogravity"

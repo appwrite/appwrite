@@ -7,6 +7,7 @@ cover: /images/blog/dont-blame-the-readers-write-the-docs-they-need/cover.avif
 timeToRead: 10
 author: vincent-ge
 category: design, brand
+removed: true
 faqs:
   - question: "Why did Appwrite redesign its documentation?"
     answer: "The old docs were minimal and worked well for early open-source adopters, but newer learners needed more guidance and Appwrite's surface area kept growing. The team rebuilt the docs around the full developer journey: discover, evaluate, learn, build, scale, while keeping the original quick-start brevity for experienced developers."

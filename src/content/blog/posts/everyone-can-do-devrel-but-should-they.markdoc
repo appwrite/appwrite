@@ -7,6 +7,7 @@ cover: /images/blog/everyone-can-do-devrel-but-should-they/cover.avif
 timeToRead: 5
 author: aditya-oberai
 category: devrel
+removed: true
 faqs:
   - question: "What does Developer Relations (DevRel) actually do?"
     answer: "DevRel is the bridge between a product and the developers who build on it. The job spans technical work like writing code and demos, content like blogs and videos, and community work like running events, supporting users, and feeding insights back to product and engineering teams."

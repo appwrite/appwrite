@@ -9,6 +9,7 @@ author: aishwari
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is self-serve compliance?"
     answer: "Self-serve compliance is the ability for a development team to configure, document, and demonstrate compliance with regulatory requirements without relying on a vendor's support team, legal department, or manual processes. It covers data residency, access control, audit logs, data deletion and export, and on-demand vendor security documentation, all available from inside the platform."

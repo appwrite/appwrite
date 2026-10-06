@@ -32,6 +32,10 @@ export function matchesMarketingPagePath(pathname: string): boolean {
     return true
   }
 
+  if (normalized.startsWith('/alternative-to/')) {
+    return true
+  }
+
   return (MARKETING_PAGE_PATHS as readonly string[]).includes(normalized)
 }
 

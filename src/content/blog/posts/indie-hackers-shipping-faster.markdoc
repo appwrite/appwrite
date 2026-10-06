@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why are indie hackers shipping apps faster than they used to?"
     answer: "The infrastructure layer (authentication, storage, database, APIs) is now largely solved by managed platforms, modern frontend frameworks handle routing and rendering with minimal config, AI coding tools accelerate pattern implementation, and managed deployment removes server work. Combined, these decisions let solo developers ship in weeks what used to take a small team months."

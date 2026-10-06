@@ -4,9 +4,10 @@ import {
   getRelatedThreads,
   getThread,
   getThreadMessages,
+  getThreadPublicId,
   resolveThreadMentionLookup,
 } from '@/lib/threads/content'
-import { getThreadsThreadRouteMetaTags } from '@/lib/threads/route-meta'
+import { getThreadsThreadRouteHead } from '@/lib/threads/route-meta'
 import {
   getDiscussionForumPageSchema,
   getThreadsBreadcrumbSchema,
@@ -41,7 +42,9 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
       messages,
     )
 
-    const canonicalUrl = getThreadsCanonicalUrl(`/threads/${params.threadId}`)
+    const canonicalUrl = getThreadsCanonicalUrl(
+      `/threads/${getThreadPublicId(thread)}`,
+    )
 
     return {
       thread,
@@ -57,7 +60,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
     const { thread, messages, canonicalUrl } = loaderData
 
     return {
-      meta: getThreadsThreadRouteMetaTags(thread, canonicalUrl),
+      ...getThreadsThreadRouteHead(thread, canonicalUrl),
       scripts: [
         {
           type: 'application/ld+json',
@@ -74,7 +77,10 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
           children: stringifyJsonLd(
             getThreadsBreadcrumbSchema([
               { name: 'Threads', path: '/threads' },
-              { name: thread.title, path: `/threads/${thread.discord_id}` },
+              {
+                name: thread.title,
+                path: `/threads/${getThreadPublicId(thread)}`,
+              },
             ]),
           ),
         },

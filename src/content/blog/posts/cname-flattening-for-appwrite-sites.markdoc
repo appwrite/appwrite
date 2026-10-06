@@ -9,6 +9,7 @@ author: aishwari
 category: tutorials
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "What is CNAME flattening and why does it matter for apex domains?"
     answer: "CNAME flattening lets a DNS provider resolve a CNAME-like alias at the apex of a domain and return only the final A or AAAA record. This works around the rule that a real CNAME record cannot coexist with the MX, SPF, DKIM, and TXT records that a root domain needs. The result is that yourdomain.com can point to Appwrite without breaking email or domain verification."

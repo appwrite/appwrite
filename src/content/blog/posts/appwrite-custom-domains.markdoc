@@ -9,6 +9,7 @@ author: aditya-oberai
 category: products, tutorials, security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why should I use a custom domain with Appwrite?"
     answer: "Without a custom domain, your app on my-app.com calls Appwrite on cloud.appwrite.io and the browser treats Appwrite cookies as third-party. Modern browsers block third-party cookies, so Appwrite falls back to localStorage, which any JavaScript on the page can read. Pointing a subdomain like appwrite.my-app.com at Appwrite restores HttpOnly cookies and removes that XSS exposure."

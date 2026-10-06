@@ -1,6 +1,5 @@
 import {
   APPWRITE_VERSION,
-  ASSISTANT_SERVICE,
   AUTOGRAVITY_SERVICE,
   COMPOSE_NETWORKS,
   COMPOSE_PREFIX,
@@ -20,7 +19,6 @@ export type ComposeTopology = 'combined' | 'separate'
 export type ComposeOptions = {
   database: ComposeDatabase
   topology: ComposeTopology
-  assistant: boolean
   autogravity: boolean
 }
 
@@ -36,7 +34,7 @@ export { APPWRITE_VERSION }
 
 /**
  * Assembles a flat docker-compose.yml for the selected database, worker
- * topology, assistant, and AutoGravity choices, mirroring the filtering the
+ * topology, and AutoGravity choices, mirroring the filtering the
  * Appwrite installer performs (src/Appwrite/Docker/Compose/Generator.php).
  * AutoGravity is not an installer option; the installer always ships the
  * container and leaves _APP_AUTOGRAVITY_HOST empty, so the feature is off.
@@ -46,14 +44,12 @@ export { APPWRITE_VERSION }
 export function generateCompose({
   database,
   topology,
-  assistant,
   autogravity,
 }: ComposeOptions): string {
   const excluded = new Set<string>([
     ...DATABASE_SERVICES.filter((service) => service !== database),
     ...TOPOLOGY_SERVICES[topology === 'combined' ? 'separate' : 'combined'],
   ])
-  if (!assistant) excluded.add(ASSISTANT_SERVICE)
   if (!autogravity) excluded.add(AUTOGRAVITY_SERVICE)
 
   const excludedVolumes = new Set(
@@ -82,17 +78,12 @@ export function generateCompose({
 
 export function generateEnv({
   database,
-  assistant,
   autogravity,
 }: Omit<ComposeOptions, 'topology'> & { topology?: ComposeTopology }): string {
   return (
     ENV_TEMPLATE.replace(/^_APP_DB_ADAPTER=.*$/m, `_APP_DB_ADAPTER=${database}`)
       .replace(/^_APP_DB_HOST=.*$/m, `_APP_DB_HOST=${database}`)
       .replace(/^_APP_DB_PORT=.*$/m, `_APP_DB_PORT=${DATABASE_PORTS[database]}`)
-      .replace(
-        /^_APP_ASSISTANT_OPENAI_API_KEY=.*$/m,
-        `_APP_ASSISTANT_OPENAI_API_KEY=${assistant ? 'your-openai-api-key' : ''}`,
-      )
       .replace(
         /^_APP_AUTOGRAVITY_HOST=.*$/m,
         `_APP_AUTOGRAVITY_HOST=${autogravity ? AUTOGRAVITY_HOST : ''}`,

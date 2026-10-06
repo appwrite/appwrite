@@ -146,6 +146,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'appsignal.svg',
     'raygun.svg',
     'wordpress.svg',
+    'webflow.svg',
   ],
   design: ['figma.svg', 'box.svg', 'dropbox.svg', 'autodesk.svg', 'unity.svg'],
   browsers: ['firefox.svg', 'opera.svg', 'safari.svg', 'microsoft_edge.svg'],

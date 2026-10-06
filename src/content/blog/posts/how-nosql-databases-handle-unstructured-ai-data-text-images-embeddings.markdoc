@@ -8,6 +8,7 @@ timeToRead: 5
 author: atharva
 category: products
 featured: false
+removed: true
 faqs:
   - question: "Why are NoSQL databases better for AI applications than relational ones?"
     answer: "AI workloads produce nested, variable-shape data: prompts, responses, embeddings, token counts, tool calls, and metadata that all evolve as the model and product change. Document-based NoSQL stores this as-is without schema changes, while relational databases require migrations every time the shape shifts."

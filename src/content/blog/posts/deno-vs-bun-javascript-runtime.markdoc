@@ -329,12 +329,11 @@ Deno 2 and Bun are both impressive JavaScript runtimes, but they serve different
 
 JavaScript is evolving, and both Deno 2 and Bun reflect the direction it's heading. While they take different paths, they both push the boundaries of what developers can expect from modern runtimes.
 
-If you enjoyed this article, you might also enjoy [Building apps with Bun and Appwrite](https://appwrite.io/blog/post/building-apps-with-bun-and-appwrite) or reading about [what Deno 2 means for Appwrite Functions](https://appwrite.io/blog/post/deno-2-appwrite-functions).
+If you enjoyed this article, you might also enjoy [Building apps with Bun and Appwrite](https://appwrite.io/blog/post/building-apps-with-bun-and-appwrite).
 
 You can reach out to us on [Discord](https://appwrite.io/discord) if you have any questions or send me a message on [LinkedIn](https://www.linkedin.com/in/ebenezerdon/) if you have any feedback.
 
 # More resources {% #more-resources %}
 
 - [Join Appwrite's Discord server](https://appwrite.io/discord)
-- [Build a currency converter with Deno 2 and Appwrite](https://www.appwrite.io/blog/post/build-a-currency-converter-with-deno2)
 - [Why you need to try the new Bun function runtime](https://appwrite.io/blog/post/why-you-need-to-try-the-new-bun-runtime)

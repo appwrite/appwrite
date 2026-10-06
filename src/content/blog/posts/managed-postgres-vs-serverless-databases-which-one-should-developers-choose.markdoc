@@ -37,7 +37,7 @@ The model is predictable. You know exactly how much compute you have, connection
 
 **A serverless database separates storage from compute and scales that compute automatically based on demand, often down to zero when idle, and bills you for actual usage rather than reserved capacity.** You do not choose an instance size. The platform adds and removes resources for you as queries arrive.
 
-[Amazon Aurora Serverless](https://aws.amazon.com/rds/aurora/serverless/) and [Neon](https://neon.tech/) are well-known Postgres-compatible examples. If you are new to the broader model, our guide on [what serverless means](/blog/post/what-is-serverless-an-expert-guide-for-developers) covers the fundamentals of event-driven, pay-per-use infrastructure.
+[Amazon Aurora Serverless](https://aws.amazon.com/rds/aurora/serverless/) and [Neon](https://neon.tech/) are well-known Postgres-compatible examples.
 
 The appeal is that you stop thinking about capacity. Traffic doubles overnight and the database scales without a manual resize. Traffic drops to nothing and your bill follows. The trade-off is less direct control and, in some implementations, a cold start when the compute layer has scaled to zero and needs to spin back up.
 
@@ -123,7 +123,6 @@ You can provision a native PostgreSQL database directly from the Appwrite Consol
 # Resources
 
 * [Appwrite Databases documentation](/docs/products/databases)
-* [What is serverless? An expert guide for developers](/blog/post/what-is-serverless-an-expert-guide-for-developers)
 * [SQL vs NoSQL: Choosing the right database for your project](/blog/post/sql-vs-nosql)
 * [Integrate SQL, NoSQL, Vector, Graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
 * [Join the Appwrite Discord](https://appwrite.io/discord)

@@ -68,5 +68,4 @@ If you would like to learn more about Twilio and Appwrite Messaging, we have som
 - [Sign up for Twilio](https://www.twilio.com/try-twilio)
 - [Set up the Twilio provider in Appwrite Messaging](https://appwrite.io/docs/products/messaging/twilio)
 - [Send SMS messages through Appwrite Messaging](https://appwrite.io/docs/products/messaging/send-sms-messages)
-- [How tools like Twilio can simplify messaging for developers](https://appwrite.io/blog/post/simplify-messaging-twilio)
 - [Appwrite Messaging API reference](https://appwrite.io/docs/references/cloud/server-nodejs/messaging)

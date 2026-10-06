@@ -27,7 +27,7 @@ This article explores the essential categories of developer tools, what startups
 
 ### Backend as a service
 
-Backends are often the hardest and slowest part of product development. [Backend as a service (BaaS)](/blog/post/leveraging-baas-tools-to-scale-faster) platforms remove this barrier by providing authentication, databases, storage, and functions that are ready to use out of the box.
+Backends are often the hardest and slowest part of product development. Backend as a service (BaaS) platforms remove this barrier by providing authentication, databases, storage, and functions that are ready to use out of the box.
 
 ### Deployment and web deployment tools
 

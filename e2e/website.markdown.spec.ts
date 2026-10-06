@@ -173,8 +173,25 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toMatch(/^Expires: /m)
   })
 
-  test('robots.txt serves plain text with a tracked route', async ({ request }) => {
+  test('robots.txt blocks indexing on non-production hosts', async ({
+    request,
+  }) => {
     const response = await request.get('/robots.txt')
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/text\/plain/)
+    const body = await response.text()
+    expect(body).toContain('User-agent:')
+    expect(body).toContain('Disallow: /')
+    expect(body).not.toContain('Sitemap:')
+  })
+
+  test('robots.txt serves production policy on the canonical host', async ({
+    request,
+  }) => {
+    const response = await request.get('/robots.txt', {
+      headers: { Host: 'appwrite.io' },
+    })
 
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(/text\/plain/)

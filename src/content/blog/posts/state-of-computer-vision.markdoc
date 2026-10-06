@@ -8,6 +8,7 @@ timeToRead: 15
 author: bradley-schofield
 category: products
 featured: false
+removed: true
 faqs:
   - question: "What is computer vision?"
     answer: "Computer vision is a field of artificial intelligence focused on giving machines the ability to understand and process visual data from images, videos, point clouds, X-rays, and other sources. The goal is to extract meaningful information from visual inputs so it can be used for downstream tasks like classification, detection, or segmentation."

@@ -88,7 +88,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Apply now': '今すぐ申請',
   'Apply to the program': 'プログラムに申請',
   'apply.': 'が適用されます。',
-  'Appwrite for Enterprise': 'Appwrite for Enterprise',
   'Appwrite is proudly backed by some of the top investors in the industry.': 'Appwriteは、業界を代表するトップ投資家からの支援を受けています。',
   'Appwrite Network docs': 'Appwrite Network ドキュメント',
   'Appwrite on GitHub': 'GitHubのAppwrite',

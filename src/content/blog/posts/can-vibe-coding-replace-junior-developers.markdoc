@@ -75,7 +75,7 @@ The choice of backend matters more for a vibe coding team than it used to. A bac
 
 [Appwrite Cloud](https://cloud.appwrite.io) gives you that shape. [Auth](/docs/products/auth) covers OAuth, sessions, MFA, and Teams. [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, and queries. [Storage](/docs/products/storage) covers files with permissions, antivirus, and encryption. [Functions](/docs/products/functions) cover server-side logic. [Sites](/docs/products/sites) covers hosting with custom domains and rollbacks. The [API MCP server](/docs/tooling/ai/mcp-servers) and [Docs MCP server](/docs/tooling/ai/mcp-servers) keep the agent on current APIs, and [Agent Skills](/docs/tooling/ai/skills) give it SDK context. A junior reviewing this code does not have to debug whether the agent invented an SDK method that does not exist.
 
-For teams that pair junior developers with vibe coding tools, the same checklist that applies to any production launch applies twice as hard. The [backend checklist for vibe-coded apps before launch](/blog/post/backend-checklist-vibe-coded-apps) is a good place to anchor your team's pre-launch review.
+For teams that pair junior developers with vibe coding tools, the same checklist that applies to any production launch applies twice as hard.
 
 # Hiring and training juniors in the vibe coding era
 

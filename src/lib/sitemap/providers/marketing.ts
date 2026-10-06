@@ -14,6 +14,7 @@ function marketingPriority(path: string): number {
   if (path === '/') return 1
   if (path === '/pricing' || path.startsWith('/products/')) return 0.9
   if (path === '/docs' || path === '/blog' || path === '/changelog' || path === '/threads') return 0.8
+  if (path.startsWith('/alternative-to/')) return 0.8
   if (LEGAL_PATHS.has(path)) return 0.3
   return 0.7
 }

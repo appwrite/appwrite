@@ -7,6 +7,7 @@ cover: /images/blog/open-source-backend-for-ai-apps/cover.avif
 timeToRead: 9
 author: aditya-oberai
 unlisted: true
+removed: true
 category: open-source
 faqs:
   - question: "What counts as an open-source backend for AI apps?"

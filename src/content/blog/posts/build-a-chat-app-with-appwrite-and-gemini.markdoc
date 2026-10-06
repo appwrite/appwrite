@@ -562,4 +562,3 @@ You can view the complete codebase for our Gemini + Appwrite chat app on [GitHub
 
 - [Appwrite Functions Documentation](https://appwrite.io/docs/products/functions)
 - [Local serverless function development with the new Appwrite CLI](https://appwrite.io/blog/post/functions-local-development-guide)
-- [Build an intelligent chatbot with ChatGPT and Appwrite Functions](https://appwrite.io/blog/post/function-template-prompt-chatgpt)

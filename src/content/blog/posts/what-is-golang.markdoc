@@ -284,6 +284,5 @@ If you're building a high-traffic, performance-intensive app that needs to be re
 
 Here are some more resources to get you started with Go and Appwrite Go SDK:
 
-- [3 things you can build with Go runtime](https://appwrite.io/blog/post/3-things-you-can-build-with-go-runtime)
 - [Go docs](https://go.dev/doc/)
 - [Appwrite Discord](https://appwrite.io/discord)

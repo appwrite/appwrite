@@ -9,6 +9,7 @@ author: aishwari
 category: devops
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: Is Docker free to use?
     answer: The core Docker engine and the command line tools are open-source and free. Docker Desktop is free for individuals and small teams, while larger organizations need a paid plan, and registries such as Docker Hub offer both free and paid tiers.

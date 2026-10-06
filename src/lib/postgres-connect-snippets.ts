@@ -12,7 +12,7 @@ export type PostgresConnectionEndpointInfo = {
   poolerEnabled: boolean
   poolerMode?: string
   pooledHost: string
-  pooledPort: number
+  pooledPort?: number
 }
 
 export type PostgresConnectSnippetContext = {

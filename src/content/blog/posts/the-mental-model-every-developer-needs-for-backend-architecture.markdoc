@@ -9,6 +9,7 @@ author: atharva
 category: architectures
 featured: false
 unlisted: true
+removed: true
 faqs:
     - question: 'What is a backend architecture mental model?'
       answer: 'A backend architecture mental model is a simplified way of thinking about how the parts of a backend fit together. It helps developers decide where logic should live, which storage layer to use, and how requests flow through the system. A good mental model reduces decision fatigue and makes design choices feel obvious instead of arbitrary.'

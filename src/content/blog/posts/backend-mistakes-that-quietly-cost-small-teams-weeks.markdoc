@@ -10,6 +10,7 @@ author: aishwari
 category: products
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Which backend mistakes cost small teams the most time?"
     answer: "The most expensive mistakes are rebuilding backend infrastructure from scratch every project, over-engineering for hypothetical scale, fragmenting the stack across too many vendors, treating permissions as a feature to add later, keeping manual operations past the point they are manageable, and letting backend conventions drift between features. Each one creates compounding friction over many sprints."

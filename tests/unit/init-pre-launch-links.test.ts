@@ -22,7 +22,7 @@ describe('init ticket share paths', () => {
 })
 
 describe('resolvePreLaunchPublicHref', () => {
-  test('keeps Init landing, ticket share, hash, and auth links', () => {
+  test('keeps Init landing, ticket share, hash, Discord, and auth links', () => {
     expect(resolvePreLaunchPublicHref('/init')).toEqual({
       href: '/init',
       external: false,
@@ -39,6 +39,10 @@ describe('resolvePreLaunchPublicHref', () => {
       href: '/sign-up',
       external: false,
     })
+    expect(resolvePreLaunchPublicHref('/discord')).toEqual({
+      href: '/discord',
+      external: false,
+    })
   })
 
   test('rewrites public site links to appwrite.io', () => {
@@ -46,7 +50,9 @@ describe('resolvePreLaunchPublicHref', () => {
       href: 'https://appwrite.io/docs/products/databases',
       external: true,
     })
-    expect(resolvePreLaunchPublicHref('/blog/post/announcing-console-terminal')).toEqual({
+    expect(
+      resolvePreLaunchPublicHref('/blog/post/announcing-console-terminal'),
+    ).toEqual({
       href: 'https://appwrite.io/blog/post/announcing-console-terminal',
       external: true,
     })
@@ -58,10 +64,6 @@ describe('resolvePreLaunchPublicHref', () => {
       href: 'https://appwrite.io/',
       external: true,
     })
-    expect(resolvePreLaunchPublicHref('/discord')).toEqual({
-      href: 'https://appwrite.io/discord',
-      external: true,
-    })
   })
 
   test('hides unfinished Init routes and console-only paths', () => {
@@ -71,10 +73,12 @@ describe('resolvePreLaunchPublicHref', () => {
   })
 
   test('leaves already-external URLs unchanged', () => {
-    expect(resolvePreLaunchPublicHref('https://reddit.com/r/appwrite')).toEqual({
-      href: 'https://reddit.com/r/appwrite',
-      external: true,
-    })
+    expect(resolvePreLaunchPublicHref('https://reddit.com/r/appwrite')).toEqual(
+      {
+        href: 'https://reddit.com/r/appwrite',
+        external: true,
+      },
+    )
   })
 })
 

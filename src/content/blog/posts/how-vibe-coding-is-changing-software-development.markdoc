@@ -8,6 +8,7 @@ timeToRead: 8
 author: aditya-oberai
 category: ai
 unlisted: true
+removed: true
 faqs:
   - question: "What is vibe coding?"
     answer: "Vibe coding is the practice of describing what you want to an AI coding tool like Cursor, Claude Code, Windsurf, Bolt, Lovable, or v0 and letting it generate, edit, and refactor the code for you. The developer's job shifts from typing every line to writing clear intent, reviewing diffs, and steering the agent across multiple files. The term was coined by Andrej Karpathy in early 2025."

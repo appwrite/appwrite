@@ -4,7 +4,7 @@ import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import {
   buildInitTicketShareUrl,
   getInitTicketShareImageSrc,
-  getInitTicketShareRouteMetaTags,
+  getInitTicketShareRouteHead,
   initTicketStorageFileExists,
 } from '@/lib/init/init-ticket-share'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
@@ -50,9 +50,11 @@ export const Route = createFileRoute('/_marketing/init/$ticketId')({
     const imageSrc =
       loaderData?.imageSrc ?? getInitTicketShareImageSrc(ticketId)
 
+    const seo = getInitTicketShareRouteHead({ ticketId })
     return {
-      meta: getInitTicketShareRouteMetaTags({ ticketId }),
+      ...seo,
       links: [
+        ...seo.links,
         {
           rel: 'preload',
           as: 'image',

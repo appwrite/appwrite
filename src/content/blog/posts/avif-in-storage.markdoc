@@ -8,6 +8,7 @@ timeToRead: 6
 author: ebenezer-don
 category: tutorials
 featured: false
+removed: true
 faqs:
   - question: "What is AVIF and why use it?"
     answer: "AVIF is an image format built on the AV1 video codec. It typically achieves 50% or smaller file sizes than JPEG at equivalent visual quality, supports transparency and animations, and works in HDR. Smaller images mean faster page loads and lower bandwidth bills."

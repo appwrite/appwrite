@@ -8,6 +8,7 @@ timeToRead: 5
 author: aditya-oberai
 category: tutorials
 featured: false
+removed: true
 callToAction: true
 faqs:
   - question: "Can I host Flutter Web on Appwrite Sites?"

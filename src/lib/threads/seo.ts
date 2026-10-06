@@ -3,8 +3,75 @@ import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import { sanitizeJsonLdText } from '@/lib/seo/json-ld'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
-import { getAuthorDescription } from './content'
+import {
+  getAuthorDescription,
+  sanitizeThreadContent,
+} from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
+
+const THREAD_META_DESCRIPTION_MAX_LENGTH = 160
+
+export function isSeoKeywordListDescription(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed || !trimmed.includes(',')) return false
+  if (/[.!?]/.test(trimmed)) return false
+
+  const segments = trimmed
+    .split(',')
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+  if (segments.length < 3) return false
+
+  const keywordLike = segments.filter(
+    (segment) => segment.length <= 48 && segment.split(/\s+/).length <= 6,
+  )
+  return keywordLike.length >= Math.ceil(segments.length * 0.75)
+}
+
+function truncateThreadMetaDescription(text: string): string {
+  const cleaned = text.replace(/\s+/g, ' ').trim()
+  if (cleaned.length <= THREAD_META_DESCRIPTION_MAX_LENGTH) return cleaned
+
+  const sliced = cleaned.slice(0, THREAD_META_DESCRIPTION_MAX_LENGTH - 3)
+  const lastSpace = sliced.lastIndexOf(' ')
+  if (lastSpace > THREAD_META_DESCRIPTION_MAX_LENGTH * 0.55) {
+    return `${sliced.slice(0, lastSpace)}...`
+  }
+  return `${sliced}...`
+}
+
+export function getThreadMetaDescription(
+  thread: Pick<
+    DiscordThread,
+    'title' | 'seo_description' | 'tldr' | 'content'
+  >,
+): string {
+  const title = thread.title.trim()
+  const seoDescription = thread.seo_description?.trim()
+  if (
+    seoDescription &&
+    seoDescription !== title &&
+    !isSeoKeywordListDescription(seoDescription)
+  ) {
+    return truncateThreadMetaDescription(seoDescription)
+  }
+
+  const tldr = thread.tldr?.trim()
+  if (tldr) {
+    return truncateThreadMetaDescription(
+      sanitizeThreadContent(tldr, THREAD_META_DESCRIPTION_MAX_LENGTH),
+    )
+  }
+
+  const content = thread.content?.trim()
+  if (content) {
+    return truncateThreadMetaDescription(
+      sanitizeThreadContent(content, THREAD_META_DESCRIPTION_MAX_LENGTH),
+    )
+  }
+
+  return THREADS_DEFAULT_DESCRIPTION
+}
 
 function getThreadsDefaultOgImage(siteOrigin?: string): string {
   return buildOgImageUrl(
@@ -26,16 +93,14 @@ export function getThreadsPageTitle(title: string): string {
 }
 
 export function getThreadOgImageUrl(
-  thread: Pick<DiscordThread, 'title' | 'seo_description' | 'content'>,
+  thread: Pick<
+    DiscordThread,
+    'title' | 'seo_description' | 'tldr' | 'content'
+  >,
   siteOrigin?: string,
 ): string {
   const title = thread.title.trim()
-  const seoDescription = thread.seo_description?.trim()
-  const content = thread.content?.trim()
-  const subtitle =
-    (seoDescription && seoDescription !== title && seoDescription) ||
-    (content && content !== title && content) ||
-    THREADS_DEFAULT_DESCRIPTION
+  const subtitle = getThreadMetaDescription(thread)
 
   return buildOgImageUrl(
     {
@@ -69,7 +134,6 @@ export function getThreadsIndexMetaTags(siteOrigin?: string) {
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonical },
   ] as const
 }
 
@@ -79,7 +143,7 @@ export function getThreadsThreadMetaTags(
   siteOrigin?: string,
 ) {
   const pageTitle = getThreadsPageTitle(`${thread.title} - Threads`)
-  const description = thread.seo_description ?? THREADS_DEFAULT_DESCRIPTION
+  const description = getThreadMetaDescription(thread)
   const resolvedOrigin = getSeoSiteOrigin(siteOrigin)
   const ogImage = getThreadOgImageUrl(thread, resolvedOrigin)
 
@@ -97,7 +161,6 @@ export function getThreadsThreadMetaTags(
     { name: 'twitter:title', content: pageTitle },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonicalUrl },
   ] as const
 }
 
@@ -124,7 +187,6 @@ export function getThreadsAuthorMetaTags(
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
-    { tag: 'link', rel: 'canonical', href: canonicalUrl },
   ] as const
 }
 

@@ -9,6 +9,7 @@ author: aditya-oberai
 category: security
 featured: false
 unlisted: true
+removed: true
 faqs:
   - question: "Why should developers think about compliance before legal does?"
     answer: "Legal teams interpret compliance requirements, but developers implement them. By the time a developer sees a requirement turned into a checklist, architectural choices that affect data flow, storage, and access have often already been made. Building a working technical understanding of the relevant frameworks earlier prevents costly rework."

@@ -8,6 +8,7 @@ timeToRead: 5
 author: jesse-winton
 category: design
 featured: false
+removed: true
 faqs:
   - question: "What is Appwrite Init?"
     answer: "[Init](/init) is Appwrite's online launch event where the team announces new products, features, and updates across the platform. It runs across multiple days, with talks, demos, and a customizable event ticket that attendees can share on social media."
