@@ -215,6 +215,10 @@ class Action extends AppwriteAction
      * Increment/decrement accept an optional request clamp, but utopia-php/database
      * only enforces that caller-supplied value. Column `min`/`max` must still apply
      * when the request omits a clamp, and when both are set the stricter bound wins.
+     *
+     * Bounds may live at the top level (HTTP attribute responses after the platform
+     * `range` filter) or under `formatOptions` (raw `getCollection()` schemas used
+     * on transaction commit).
      */
     protected function resolveNumericBound(
         Document $collection,
