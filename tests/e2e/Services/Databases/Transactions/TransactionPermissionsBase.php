@@ -8,6 +8,7 @@ use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 trait TransactionPermissionsBase
 {
@@ -392,6 +393,100 @@ trait TransactionPermissionsBase
         $this->assertEquals('attribute_type_invalid', $response['body']['type']);
         $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transaction['body']['$id']), $admin);
         $this->assertEquals(0, $status['body']['operations']);
+    }
+
+    public function testStagedNumericUpdatesKeepRelationshipSelections(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->getPermissionsDatabase();
+        $admin = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $admin, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Numeric relationship parent',
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $parent['headers']['status-code']);
+        $parentId = $parent['body']['$id'];
+
+        $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $admin, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Numeric relationship child',
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $child['headers']['status-code']);
+        $childId = $child['body']['$id'];
+
+        foreach (['title', 'note'] as $key) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $childId, 'string'), $admin, [
+                'key' => $key,
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+        }
+        $this->waitForAllAttributes($databaseId, $childId);
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'integer'), $admin, [
+            'key' => 'count',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $admin, [
+            $this->getRelatedIdParam() => $childId,
+            'type' => 'oneToOne',
+            'key' => 'child',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $parentId);
+
+        $childRecord = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $childId), $admin, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'Title', 'note' => 'Note'],
+        ]);
+        $this->assertEquals(201, $childRecord['headers']['status-code']);
+        $parentRecord = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $admin, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['count' => 1, 'child' => $childRecord['body']['$id']],
+        ]);
+        $this->assertEquals(201, $parentRecord['headers']['status-code']);
+        $recordId = $parentRecord['body']['$id'];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $admin);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        foreach ([1, 2] as $value) {
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $parentId, $recordId) . '/count/increment', $admin, [
+                'value' => $value,
+                'transactionId' => $transactionId,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // Test for SUCCESS: a staged increment does not replace the selected relationship with the full related row.
+        $staged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $parentId, $recordId), $admin, [
+            'transactionId' => $transactionId,
+            'queries' => [Query::select(['count', 'child.title'])->toString()],
+        ]);
+        $this->assertEquals(200, $staged['headers']['status-code']);
+        $this->assertEquals(4, $staged['body']['count']);
+
+        $staged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $parentId, $recordId), $admin, [
+            'transactionId' => $transactionId,
+            'queries' => [Query::select(['child.title'])->toString()],
+        ]);
+        $this->assertEquals(200, $staged['headers']['status-code']);
+        $this->assertEquals('Title', $staged['body']['child']['title']);
+        $this->assertArrayNotHasKey('note', $staged['body']['child']);
     }
 
     /**

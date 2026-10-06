@@ -63,7 +63,7 @@ class TransactionState
             return $this->readDocument($dbForDatabases, $collectionId, $documentId, $queries, $resolveRelationships);
         }
 
-        $state = $this->getTransactionState($transactionId, $database, $collectionId, $resolveRelationships);
+        $state = $this->getTransactionState($transactionId, $database, $collectionId);
 
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
@@ -351,7 +351,7 @@ class TransactionState
      * @throws Exception\Query
      * @throws Timeout
      */
-    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId, bool $resolveRelationships = true): array
+    private function getTransactionState(string $transactionId, Document $database, string $targetCollectionId): array
     {
         $roles = $this->authorization->getRoles();
 
@@ -369,7 +369,9 @@ class TransactionState
             Query::limit(PHP_INT_MAX)
         ]));
 
+        $dbForDatabases = ($this->getDatabasesDB)($database);
         $state = [];
+        $committed = [];
 
         foreach ($operations as $operation) {
             $databaseInternalId = $operation['databaseInternalId'];
@@ -456,36 +458,33 @@ class TransactionState
                         break;
                     }
 
-                    if (!($currentState['hydrated'] ?? false) && ($currentState['action'] ?? null) !== 'create') {
-                        $dbForDatabases = ($this->getDatabasesDB)($database);
-                        $document = $this->readDocument($dbForDatabases, $collectionId, $documentId, [], $resolveRelationships);
-                        if ($document->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
+                    $stagedDocument = $currentState['document'] ?? null;
+                    if ($stagedDocument !== null && $stagedDocument->offsetExists($attribute)) {
+                        $currentValue = $stagedDocument->getAttribute($attribute);
+                    } elseif (($currentState['action'] ?? null) === 'create') {
+                        $currentValue = null;
+                    } else {
+                        $committed[$documentId] ??= $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionId, $documentId));
+                        if ($committed[$documentId]->isEmpty() && ($currentState['action'] ?? null) !== 'upsert') {
                             break;
                         }
-                        if ($currentState !== null) {
-                            $document->setAttributes($currentState['document']->getArrayCopy());
-                        }
-                        $currentState = $state[$collectionId][$documentId] = [
-                            'action' => $currentState['action'] ?? 'update',
-                            'document' => $document,
-                            'exists' => true,
-                            'hydrated' => true,
-                        ];
+                        $currentValue = $committed[$documentId]->getAttribute($attribute);
                     }
 
-                    if ($currentState === null) {
-                        break;
-                    }
-
-                    $existingDocument = $currentState['document'];
-                    $currentValue = $existingDocument->getAttribute($attribute) ?? 0;
+                    $currentValue ??= 0;
                     if (!\is_int($currentValue) && !\is_float($currentValue)) {
                         break;
                     }
-                    $existingDocument->setAttribute($attribute, $action === 'increment' ? $currentValue + $value : $currentValue - $value);
+                    $currentValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
 
-                    if ($currentState['action'] !== 'create' && $currentState['action'] !== 'upsert') {
-                        $state[$collectionId][$documentId]['action'] = 'update';
+                    if ($currentState === null) {
+                        $state[$collectionId][$documentId] = [
+                            'action' => 'update',
+                            'document' => new Document(['$id' => $documentId, $attribute => $currentValue]),
+                            'exists' => true,
+                        ];
+                    } else {
+                        $stagedDocument->setAttribute($attribute, $currentValue);
                     }
                     break;
 
