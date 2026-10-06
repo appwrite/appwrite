@@ -72,6 +72,9 @@ e2e/screenshots/
 *.temp
 .cache
 
+# Internal social/competitive reports (not for public OSS)
+socials/
+
 # Static asset publishing tools and extracted container files
 image-assets/
 
