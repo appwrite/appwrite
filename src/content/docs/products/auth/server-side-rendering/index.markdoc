@@ -563,7 +563,7 @@ app.get('/oauth', async (req, res) => {
         provider: OAuthProvider.Github,                // Provider
         success: 'https://example.com/oauth/success', // Success URL
         failure: 'https://example.com/oauth/failure', // Failure URL
-        state,                                         // Returned on both URLs
+        state: state,                                  // Returned on both URLs
     });
 
     res.redirect(redirectUrl);

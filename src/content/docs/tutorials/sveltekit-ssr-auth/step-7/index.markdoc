@@ -48,7 +48,7 @@ export const actions = {
       provider: OAuthProvider.Github,
       success: `${event.url.origin}/oauth`,
       failure: `${event.url.origin}/signup`,
-      state,
+      state: state,
     });
 
     throw redirect(302, redirectUrl);

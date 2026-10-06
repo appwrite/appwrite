@@ -44,7 +44,7 @@ export async function signUpWithGithub() {
 		provider: OAuthProvider.Github,
 		success: `${origin}/oauth`,
 		failure: `${origin}/signup`,
-		state,
+		state: state,
 	});
 
 	return redirect(redirectUrl);

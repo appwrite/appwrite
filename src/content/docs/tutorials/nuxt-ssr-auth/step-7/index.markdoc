@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     provider: OAuthProvider.Github,
     success: `${endpoint}/api/oauth`,
     failure: `${endpoint}/signup`,
-    state,
+    state: state,
   });
 
   // Redirect the user to the OAuth provider authorization page

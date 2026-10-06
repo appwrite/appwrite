@@ -47,7 +47,7 @@ export const POST = async ({ redirect, url, cookies }) => {
     provider: OAuthProvider.Github,
     success: `${url.origin}/oauth`,
     failure: `${url.origin}/signup`,
-    state,
+    state: state,
   });
 
   // Redirect the end-user to the OAuth2 provider authentication
