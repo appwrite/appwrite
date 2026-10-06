@@ -20,7 +20,7 @@ $origin = (new Origin('example.com'))->normalize('https://app.example.com:443');
 $ceremony = new Ceremony(new RelyingParty('example.com', 'Example', [$origin]));
 ```
 
-`Origin` accepts HTTPS origins on the RP ID or one of its subdomains, without a path, query, fragment or credentials. HTTP is only accepted when the RP ID is `localhost`. `normalize()` returns `null` for anything else. Validating the RP ID itself (for example rejecting public suffixes) is left to the caller.
+`Origin` accepts HTTPS origins on the RP ID or one of its subdomains, without a path, query, fragment or credentials. HTTP is only accepted when the RP ID is `localhost`. `normalize()` returns `null` for anything else. Validating the RP ID itself is left to the caller: `Utopia\Domains\Validator\RegistrableDomain` rejects public suffixes and IP addresses, and `localhost` can be allowed alongside it.
 
 ## Registration
 

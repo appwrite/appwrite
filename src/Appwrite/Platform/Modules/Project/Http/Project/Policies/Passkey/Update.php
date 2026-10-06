@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies\Passkey;
 
 use Appwrite\Auth\Passkey\Ceremony;
-use Appwrite\Auth\Passkey\Validator\Host;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -17,9 +16,12 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Validator\RegistrableDomain;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Update extends Action
 {
@@ -86,8 +88,10 @@ class Update extends Action
         $rpId ??= $current;
         $origins ??= $auths['passkeyOrigins'] ?? [];
 
-        if ($rpId !== '' && !(new Host())->isValid($rpId)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `rpId` param: ' . (new Host())->getDescription());
+        // WebAuthn also allows `localhost` as the relying party for local development
+        $host = new AnyOf([new WhiteList([Origin::LOCALHOST], true), new RegistrableDomain()]);
+        if ($rpId !== '' && !$host->isValid($rpId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `rpId` param: ' . $host->getDescription() . ' Use "localhost" for local development.');
         }
 
         if ($rpId === '' && !empty($origins)) {
