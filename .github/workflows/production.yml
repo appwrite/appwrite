@@ -89,7 +89,7 @@ jobs:
                       "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
                       "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
                       "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
-                      "VITE_LEGAL_EMAIL=${{ vars.VITE_LEGAL_EMAIL }}"
+                      "VITE_PRIVACY_EMAIL=${{ vars.VITE_PRIVACY_EMAIL }}"
                   secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest:
@@ -183,7 +183,7 @@ jobs:
                       "VITE_APPWRITE_PROJECT_ID=${{ vars.VITE_APPWRITE_PROJECT_ID }}"
                       "VITE_COMPANY_NAME=${{ vars.VITE_COMPANY_NAME }}"
                       "VITE_CONTACT_SALES_URL=${{ vars.VITE_CONTACT_SALES_URL }}"
-                      "VITE_LEGAL_EMAIL=${{ vars.VITE_LEGAL_EMAIL }}"
+                      "VITE_PRIVACY_EMAIL=${{ vars.VITE_PRIVACY_EMAIL }}"
                   secrets: ${{ secrets.SENTRY_AUTH_TOKEN != '' && format('sentry_auth_token={0}', secrets.SENTRY_AUTH_TOKEN) || '' }}
 
     manifest-self-hosted:

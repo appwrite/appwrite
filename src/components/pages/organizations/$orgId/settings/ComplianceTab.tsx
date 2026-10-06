@@ -11,7 +11,8 @@ import { useParams } from '@tanstack/react-router'
 import { BaaSettingsCard } from './_components/BaaSettingsCard'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
-const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
+const PRIVACY_EMAIL =
+  import.meta.env.VITE_PRIVACY_EMAIL || 'privacy@appwrite.io' // pragma: allowlist secret
 
 export function ComplianceTab() {
   const t = useT()
@@ -23,7 +24,7 @@ export function ComplianceTab() {
       id: 'dpa',
       search: {
         title: 'Data processing agreement (DPA)',
-        keywords: ['dpa', 'gdpr', 'legal', 'data processing'],
+        keywords: ['dpa', 'gdpr', 'legal', 'privacy', 'data processing'],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -49,7 +50,7 @@ export function ComplianceTab() {
                 {t(
                   'Download the DPA, review it with your legal team, sign it, and send a copy to',
                 )}{' '}
-                <span className="font-medium text-foreground">{LEGAL_EMAIL}</span>
+                <span className="font-medium text-foreground">{PRIVACY_EMAIL}</span>
                 .{' '}
                 {t(
                   "We'll countersign and return a fully executed copy within 5 business days.",

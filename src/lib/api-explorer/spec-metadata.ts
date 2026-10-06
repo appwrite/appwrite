@@ -1,9 +1,24 @@
 import type {
   ApiSpecPlatform,
+  AppwriteAdditionalMethod,
   AppwriteAuth,
   AppwriteOpenApiExtension,
   OpenApiOperation,
 } from './types'
+
+/** Missing or empty `platforms` means every platform. */
+export function isPlatformSupported(
+  xAppwrite:
+    | { platforms?: string[] }
+    | AppwriteAdditionalMethod
+    | AppwriteOpenApiExtension
+    | undefined,
+  platform: ApiSpecPlatform,
+): boolean {
+  const platforms: readonly string[] | undefined = xAppwrite?.platforms
+  if (!platforms?.length) return true
+  return platforms.includes(platform)
+}
 
 /** Canonical operation IDs prefix the SDK method with the service tag. */
 export function getSdkMethodName(operation: OpenApiOperation): string {

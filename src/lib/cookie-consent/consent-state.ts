@@ -1,5 +1,6 @@
 /**
- * Synchronous consent gate for cookie-based diagnostics (Sentry) outside React.
+ * Synchronous consent gate for cookie-based diagnostics (Sentry) and
+ * advertising (OpenAI Ads pixel) outside React.
  * Updated by CookieConsentProvider when locale and stored prefs are resolved.
  * Plausible is cookieless and is not gated here.
  */
@@ -39,7 +40,7 @@ export function setCookieConsentState(args: {
   notifyConsentListeners()
 }
 
-/** True when cookie-gated diagnostics (Sentry) may run. Not used for Plausible. */
+/** True when cookie-gated diagnostics and ads may run. Not used for Plausible. */
 export function canTrackAnalytics(): boolean {
   if (!consentResolved) return false
   if (!bannerRequired) return true

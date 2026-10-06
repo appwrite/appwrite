@@ -173,9 +173,9 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Company name override',
   },
   {
-    key: 'VITE_LEGAL_EMAIL',
+    key: 'VITE_PRIVACY_EMAIL',
     group: 'Other',
-    description: 'Legal contact email override',
+    description: 'Privacy contact email override',
   },
   {
     key: 'VITE_APPWRITE_MCP_URL',
@@ -224,7 +224,7 @@ function readBuildTimePresence(): Record<string, boolean> {
     ),
     VITE_CONTACT_SALES_URL: isNonEmpty(import.meta.env.VITE_CONTACT_SALES_URL),
     VITE_COMPANY_NAME: isNonEmpty(import.meta.env.VITE_COMPANY_NAME),
-    VITE_LEGAL_EMAIL: isNonEmpty(import.meta.env.VITE_LEGAL_EMAIL),
+    VITE_PRIVACY_EMAIL: isNonEmpty(import.meta.env.VITE_PRIVACY_EMAIL),
     VITE_APPWRITE_MCP_URL: isNonEmpty(import.meta.env.VITE_APPWRITE_MCP_URL),
     VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID: isNonEmpty(
       import.meta.env.VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID,

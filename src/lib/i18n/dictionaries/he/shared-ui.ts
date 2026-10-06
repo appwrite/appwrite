@@ -5,9 +5,9 @@
 export const heSharedUiDictionary: Record<string, string> = {
   // Error formatting (toast titles and static messages) // pragma: allowlist secret
   Error: 'שגיאה',
-  'Error reporting': 'דיווח שגיאות',
-  'Crash and performance diagnostics to help us fix issues in Appwrite.':
-    'שולחים נתוני קריסות וביצועים כדי שנוכל לתקן תקלות ב-Appwrite.',
+  'Diagnostics and advertising': 'אבחון ופרסום',
+  'Crash diagnostics and advertising measurement to help us improve Appwrite and measure campaigns.':
+    'שולחים נתוני קריסות ומדידת פרסום כדי לשפר את Appwrite ולמדוד קמפיינים.',
   'Not Found': 'לא נמצא',
   'Access Denied': 'הגישה נדחתה',
   Forbidden: 'אין הרשאה',

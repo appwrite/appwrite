@@ -118,12 +118,12 @@ export function isW3cNewsPublicationDate(value: string): boolean {
   return W3C_PUBLICATION_DATE.test(value)
 }
 
-export function selectNewsSitemapEntries(
+function collectNewsSitemapEntries(
   posts: BlogPostMeta[],
-  options: { origin: string; now?: Date },
+  options: { origin: string; now: Date; enforceWindow: boolean },
 ): NewsSitemapEntry[] {
-  const now = options.now ?? new Date()
   const origin = options.origin.replace(/\/+$/, '')
+  const today = utcDayStartMs(options.now)
   const selected: NewsSitemapEntry[] = []
 
   for (const post of posts) {
@@ -132,7 +132,13 @@ export function selectNewsSitemapEntries(
     if (!post.href.startsWith('/blog/post/')) continue
 
     const published = parseBlogPublishDate(post.date)
-    if (!published || !isWithinNewsSitemapWindow(published, now)) continue
+    if (!published || utcDayStartMs(published) > today) continue
+    if (
+      options.enforceWindow &&
+      !isWithinNewsSitemapWindow(published, options.now)
+    ) {
+      continue
+    }
 
     const publicationDate = toNewsPublicationDate(post.date)
     if (!publicationDate || !isW3cNewsPublicationDate(publicationDate)) continue
@@ -152,7 +158,37 @@ export function selectNewsSitemapEntries(
     return a.loc.localeCompare(b.loc)
   })
 
-  return selected.slice(0, NEWS_SITEMAP_MAX_URLS)
+  return selected
+}
+
+export function selectNewsSitemapEntries(
+  posts: BlogPostMeta[],
+  options: { origin: string; now?: Date },
+): NewsSitemapEntry[] {
+  return collectNewsSitemapEntries(posts, {
+    origin: options.origin,
+    now: options.now ?? new Date(),
+    enforceWindow: true,
+  }).slice(0, NEWS_SITEMAP_MAX_URLS)
+}
+
+/**
+ * Newest qualifying article outside the two-day window.
+ *
+ * The sitemap schema requires at least one `<url>`. An empty `<urlset>`
+ * fails Search Console as "Missing XML tag" (parent `urlset`, tag `url`).
+ * Between posts, keep a single older article so the file stays valid.
+ */
+function selectNewsSitemapFallbackEntry(
+  posts: BlogPostMeta[],
+  options: { origin: string; now?: Date },
+): NewsSitemapEntry | null {
+  const [latest] = collectNewsSitemapEntries(posts, {
+    origin: options.origin,
+    now: options.now ?? new Date(),
+    enforceWindow: false,
+  })
+  return latest ?? null
 }
 
 export function renderNewsSitemapXml(entries: NewsSitemapEntry[]): string {
@@ -182,9 +218,12 @@ ${body}
 
 export function buildNewsSitemapXml(options: NewsSitemapBuildOptions): string {
   const origin = options.origin ?? getSitemapSiteOrigin()
-  const entries = selectNewsSitemapEntries(options.posts, {
-    origin,
-    now: options.now,
-  })
-  return renderNewsSitemapXml(entries)
+  const selectOptions = { origin, now: options.now }
+  const fresh = selectNewsSitemapEntries(options.posts, selectOptions)
+  if (fresh.length > 0) {
+    return renderNewsSitemapXml(fresh)
+  }
+
+  const fallback = selectNewsSitemapFallbackEntry(options.posts, selectOptions)
+  return renderNewsSitemapXml(fallback ? [fallback] : [])
 }

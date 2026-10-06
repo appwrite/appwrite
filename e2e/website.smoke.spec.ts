@@ -39,6 +39,9 @@ const WEBSITE_PAGES: Array<{ name: string; path: string; url?: RegExp }> = [
   { name: 'alternative to clerk', path: '/alternative-to/clerk' },
   { name: 'alternative to amplify', path: '/alternative-to/amplify' },
   { name: 'alternative to planetscale', path: '/alternative-to/planetscale' },
+  { name: 'secret campaign supabase and firebase', path: '/secret/supabase-and-firebase' },
+  { name: 'secret campaign supabase', path: '/secret/supabase' },
+  { name: 'secret campaign firebase', path: '/secret/firebase' },
 ]
 
 test.describe('website smoke (read-only)', () => {

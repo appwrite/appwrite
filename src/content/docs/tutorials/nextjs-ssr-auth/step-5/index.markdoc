@@ -80,7 +80,7 @@ async function signUpWithEmail(formData) {
     password
   });
 
-  cookies().set("my-custom-session", session.secret, {
+  (await cookies()).set("my-custom-session", session.secret, {
     path: "/",
     httpOnly: true,
     sameSite: "strict",

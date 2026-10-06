@@ -10,7 +10,7 @@ Cookies are computer files containing small amounts of information which are dow
 
 There are two broad categories of cookies:
 - **First party cookies**, served directly by us to your computer or mobile device.
-- **Third party cookies**, which are served by a third party on our behalf. We use third-party cookies for functionality and performance/analytics purposes. The third-party cookies are outside of our control. The third parties may, at any time, change their terms of service, purpose, and use of cookies, etc. See below additional information on how to manage such cookies.
+- **Third party cookies**, which are served by a third party on our behalf. We use third-party cookies for functionality, performance/analytics, and advertising measurement. The third-party cookies are outside of our control. The third parties may, at any time, change their terms of service, purpose, and use of cookies, etc. See below additional information on how to manage such cookies.
 
 Cookies can remain on your computer or mobile device for different periods of time. Some cookies are 'session cookies', meaning that they exist only while your browser is open. These are deleted automatically once you close your browser. Other cookies are 'permanent cookies', meaning that they survive after your browser is closed. They can be used by websites to recognize your computer when you open your browser and browse the Internet again.
 
@@ -26,12 +26,13 @@ We use cookies to:
 - Keep you signed in and remember interface preferences;
 - Track traffic flow and patterns of travel in connection with our Site;
 - Understand the total number of visitors to our Sites on an ongoing basis and the types of internet browsers (e.g. Chrome, Firefox, Safari, or Internet Explorer) and operating systems (e.g. Windows or Mac) used by our visitors;
-- Monitor the performance of our Site and to continually improve it; and
+- Monitor the performance of our Site and to continually improve it;
+- Measure advertising campaigns and conversions; and
 - Customize and enhance your online experience.
 
 What types of cookies do we use?
 
-The types of cookies used by us in connection with the Site can be considered 'essential website cookies', 'functionality cookies', and 'analytics and performance cookies'. We've set out some further information below, and the purposes of the cookies we set in the following table.
+The types of cookies used by us in connection with the Site can be considered 'essential website cookies', 'functionality cookies', 'analytics and performance cookies', and 'advertising cookies'. We've set out some further information below, and the purposes of the cookies we set in the following table.
 
 ## Cookies necessary for essential website purposes
 
@@ -54,6 +55,14 @@ We use cookieless usage analytics (Plausible) and, where you allow optional cook
 | Cookie / technology | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
 | Sentry | Sentry | Session | Error monitoring and performance diagnostics (optional; requires consent where the banner is shown) |
+
+## Advertising cookies
+
+Where you allow optional cookies, we load the OpenAI Ads pixel so we can measure advertising campaigns and conversions. It is loaded only after you accept optional cookies where consent is required.
+
+| Cookie / technology | Source | Expiry (In days) | Purpose |
+| --- | --- | --- | --- |
+| OpenAI Ads pixel | OpenAI | Session | Advertising measurement and conversion tracking (optional; requires consent where the banner is shown) |
 
 We also store your cookie consent choice in your browser's local storage under the key `console.cookieConsent` when you interact with our cookie banner.
 

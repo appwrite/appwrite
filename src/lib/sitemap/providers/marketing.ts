@@ -1,7 +1,11 @@
+import { SECRET_CAMPAIGN_PATHS } from '@/lib/campaigns/secret/registry'
 import { MARKETING_PAGE_PATHS } from '@/lib/marketing/marketing-page-paths'
 import type { SitemapChangeFreq, SitemapEntry } from '../types'
 
 const NON_HTML_MARKETING_PATHS = new Set(['/llms/txt', '/llms-full/txt'])
+
+/** Paid campaign landing pages are noindex, so they stay out of the sitemap. */
+const NOINDEX_MARKETING_PATHS = new Set<string>(SECRET_CAMPAIGN_PATHS)
 
 const LEGAL_PATHS = new Set(['/privacy', '/terms', '/cookies', '/baa'])
 
@@ -26,7 +30,9 @@ function marketingChangeFreq(path: string): SitemapChangeFreq {
 }
 
 export function getMarketingSitemapEntries(): SitemapEntry[] {
-  return MARKETING_PAGE_PATHS.filter((path) => !NON_HTML_MARKETING_PATHS.has(path))
+  return MARKETING_PAGE_PATHS.filter(
+    (path) => !NON_HTML_MARKETING_PATHS.has(path) && !NOINDEX_MARKETING_PATHS.has(path),
+  )
     .map(toSitemapPath)
     .map((path) => ({
       path,

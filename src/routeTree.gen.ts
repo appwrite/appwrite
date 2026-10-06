@@ -103,6 +103,7 @@ import { Route as MarketingInitTicketIdRouteImport } from './routes/_marketing/i
 import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
 import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
 import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
+import { Route as MarketingSecretVariantRouteImport } from './routes/_marketing/secret.$variant'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
 import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
@@ -942,6 +943,11 @@ const MarketingProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => MarketingRoute,
   } as any)
+const MarketingSecretVariantRoute = MarketingSecretVariantRouteImport.update({
+  id: '/secret/$variant',
+  path: '/secret/$variant',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
   id: '/threads/',
   path: '/threads/',
@@ -3422,6 +3428,7 @@ export interface FileRoutesByFullPath {
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -3875,6 +3882,7 @@ export interface FileRoutesByTo {
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/secret/$variant': typeof MarketingSecretVariantRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
@@ -4289,6 +4297,7 @@ export interface FileRoutesById {
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
+  '/_marketing/secret/$variant': typeof MarketingSecretVariantRoute
   '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
@@ -4748,6 +4757,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -5201,6 +5211,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId'
     | '/integrations/$slug'
     | '/products/$productId'
+    | '/secret/$variant'
     | '/threads/$threadId'
     | '/account/affiliates'
     | '/account/applications'
@@ -5614,6 +5625,7 @@ export interface FileRouteTypes {
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
     | '/_marketing/products/$productId'
+    | '/_marketing/secret/$variant'
     | '/_marketing/threads/$threadId'
     | '/_public/account/affiliates'
     | '/_public/account/applications'
@@ -6688,6 +6700,13 @@ declare module '@tanstack/react-router' {
       path: '/products/$productId'
       fullPath: '/products/$productId'
       preLoaderRoute: typeof MarketingProductsProductIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/secret/$variant': {
+      id: '/_marketing/secret/$variant'
+      path: '/secret/$variant'
+      fullPath: '/secret/$variant'
+      preLoaderRoute: typeof MarketingSecretVariantRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/threads/': {
@@ -9309,6 +9328,7 @@ interface MarketingRouteChildren {
   MarketingInitTicketIdRoute: typeof MarketingInitTicketIdRoute
   MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
   MarketingProductsProductIdRoute: typeof MarketingProductsProductIdRoute
+  MarketingSecretVariantRoute: typeof MarketingSecretVariantRoute
   MarketingThreadsThreadIdRoute: typeof MarketingThreadsThreadIdRoute
   MarketingBlogIndexRoute: typeof MarketingBlogIndexRoute
   MarketingChangelogIndexRoute: typeof MarketingChangelogIndexRoute
@@ -9344,6 +9364,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingInitTicketIdRoute: MarketingInitTicketIdRoute,
   MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
   MarketingProductsProductIdRoute: MarketingProductsProductIdRoute,
+  MarketingSecretVariantRoute: MarketingSecretVariantRoute,
   MarketingThreadsThreadIdRoute: MarketingThreadsThreadIdRoute,
   MarketingBlogIndexRoute: MarketingBlogIndexRoute,
   MarketingChangelogIndexRoute: MarketingChangelogIndexRoute,

@@ -1,10 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { parseOpenApiSpec } from '@/lib/api-explorer/parse-spec'
-import {
-  getServiceLabel,
-  isConsoleOnlyDatabaseApiService,
-} from '@/lib/api-explorer/services'
+import { getServiceLabel } from '@/lib/api-explorer/services'
 import type {
   ApiExplorerMethod,
   ApiSpecPlatform,
@@ -195,10 +192,7 @@ export async function loadApiReferenceService(
     loadReferenceConsoleSpec(version),
   ])
   const mode = getSpecMode(platform) as ApiSpecPlatform
-  const useConsoleService = isConsoleOnlyDatabaseApiService(serviceId)
-  const serviceSpec = useConsoleService ? consoleSpec : spec
-  const serviceMode: ApiSpecPlatform = useConsoleService ? 'console' : mode
-  const parsed = parseOpenApiSpec(serviceSpec, serviceMode)
+  const parsed = parseOpenApiSpec(spec, mode)
   const service = parsed.services.find((item) => item.id === serviceId)
 
   if (!service) {
@@ -207,7 +201,7 @@ export async function loadApiReferenceService(
       label:
         SERVICE_LABELS[serviceId as ReferenceService] ??
         getServiceLabel(serviceId),
-      description: getServiceDescriptionFromSpec(serviceSpec, serviceId),
+      description: getServiceDescriptionFromSpec(spec, serviceId),
       methods: [],
     }
   }
@@ -215,13 +209,13 @@ export async function loadApiReferenceService(
   const demos = await loadMethodDemos(version, platform, service.methods)
 
   const methods: ApiReferenceMethod[] = service.methods.map((method) => {
-    const rawOperation = getRawOperationForMethod(serviceSpec, method)
+    const rawOperation = getRawOperationForMethod(spec, method)
     return {
       ...method,
       demo: demos.get(method.id),
       responses: collectMethodResponses(
         { ...rawOperation, responses: method.rawResponses },
-        serviceSpec,
+        spec,
         consoleSpec,
         version,
       ),

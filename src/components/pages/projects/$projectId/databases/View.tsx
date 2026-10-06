@@ -28,7 +28,7 @@ import {
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   createProjectDatabase,
   createProjectTable,
 } from '@/lib/react-query/hooks'
@@ -278,9 +278,10 @@ export function View() {
     })
   }
 
-  // Get total count (no search/filters) for plan limit check - uses same query as route loader prefetch to avoid layout shift when showing PlanLimitWarning
+  // Unfiltered unified list total (console.listDatabases). Must include native
+  // Postgres/MySQL or a project with only those DBs hides the toolbar.
   const { data: totalDatabasesData } = useQuery(
-    databasesQueryOptions(
+    consoleDatabasesQueryOptions(
       projectId,
       0,
       ROWS_DEFAULT_PAGE_SIZE,

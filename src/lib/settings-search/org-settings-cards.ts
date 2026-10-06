@@ -134,7 +134,7 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   {
     sectionId: 'compliance',
     title: 'Data processing agreement (DPA)',
-    keywords: ['dpa', 'gdpr', 'legal', 'data processing'],
+    keywords: ['dpa', 'gdpr', 'legal', 'privacy', 'data processing'],
   },
   {
     sectionId: 'compliance',

@@ -44,7 +44,8 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     id: 'vercel',
     name: 'Vercel',
     category: 'Frontend cloud',
-    metaTitle: 'Appwrite vs Vercel: a Vercel alternative with the backend built in',
+    metaTitle:
+      'Appwrite vs Vercel: a Vercel alternative with the backend built in',
     metaDescription:
       'Compare Appwrite Sites and Vercel. Host Next.js, Nuxt, SvelteKit, and more next to first-party auth, databases, storage, and functions. No per-seat pricing.',
     summary: 'Frontend hosting with the backend in the same project.',
@@ -56,7 +57,8 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     id: 'netlify',
     name: 'Netlify',
     category: 'Web hosting platform',
-    metaTitle: 'Appwrite vs Netlify: hosting with a complete backend in the same project',
+    metaTitle:
+      'Appwrite vs Netlify: hosting with a complete backend in the same project',
     metaDescription:
       'Compare Appwrite Sites and Netlify. Deploy from Git next to first-party auth, databases, storage, functions, realtime, and messaging, with 2TB of bandwidth and no deploy credits.',
     summary: 'Your site and its backend, in one project.',
@@ -138,7 +140,8 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     id: 'planetscale',
     name: 'PlanetScale',
     category: 'Managed MySQL and Postgres',
-    metaTitle: 'Appwrite vs PlanetScale: managed PostgreSQL and MySQL plus a complete backend',
+    metaTitle:
+      'Appwrite vs PlanetScale: managed PostgreSQL and MySQL plus a complete backend',
     metaDescription:
       'Compare Appwrite and PlanetScale. Managed PostgreSQL and MySQL with replicas and PITR, three more database models, a free plan, and auth, storage, functions, and hosting in one open-source project.',
     summary: 'Postgres and MySQL, plus the backend around them.',
@@ -152,6 +155,16 @@ export function isAlternativeId(value: string): value is AlternativeId {
   return (ALTERNATIVE_IDS as readonly string[]).includes(value)
 }
 
-export function getAlternativePath(id: AlternativeId): `/alternative-to/${AlternativeId}` {
+/** Resolves `/alternative-to/<id>` and its `.md` twin to a known competitor. */
+export function parseAlternativeRouteParam(
+  param: string,
+): AlternativeId | null {
+  const id = param.endsWith('.md') ? param.slice(0, -3) : param
+  return isAlternativeId(id) ? id : null
+}
+
+export function getAlternativePath(
+  id: AlternativeId,
+): `/alternative-to/${AlternativeId}` {
   return `/alternative-to/${id}`
 }

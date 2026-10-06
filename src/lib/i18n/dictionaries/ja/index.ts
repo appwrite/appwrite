@@ -12,12 +12,14 @@ import { jaPricingDictionary } from './pricing'
 import { jaVideosDictionary } from './videos'
 import { jaAlternativesDictionary } from './alternatives'
 import { jaEnterpriseDictionary } from './enterprise'
+import { jaCampaignsDictionary } from './campaigns'
 
 /**
  * Merged Japanese dictionary keyed by English source strings.
  * Later entries override earlier ones on key collisions.
  */
 export const jaDictionary: Record<string, string> = {
+  ...jaCampaignsDictionary,
   ...jaEnterpriseDictionary,
   ...jaAlternativesDictionary,
   ...jaMarketingDictionary,

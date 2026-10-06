@@ -25,6 +25,12 @@ describe('GitHub Education entry points', () => {
     )
   })
 
+  test('sends legacy console onboarding to the home page', () => {
+    expect(rewriteLegacyConsolePath('/console/onboarding/create-project')).toBe(
+      '/',
+    )
+  })
+
   test('leaves the marketing education page at the root path', () => {
     expect(rewriteLegacyConsolePath('/education')).toBe('/education')
     expect(MARKETING_PAGE_PATHS).toContain('/education')

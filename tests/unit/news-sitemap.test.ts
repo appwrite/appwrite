@@ -69,11 +69,17 @@ describe('Google News sitemap', () => {
     ])
   })
 
-  test('emits a valid empty urlset when nothing qualifies', () => {
+  test('keeps the latest article when the two-day window is empty', () => {
     const xml = buildNewsSitemapXml({
       origin: ORIGIN,
       now: NOW,
       posts: [
+        post({
+          slug: 'older-announcement',
+          title: 'Older news',
+          date: '2026-08-01',
+          category: 'announcements',
+        }),
         post({
           slug: 'old-announcement',
           title: 'Old news',
@@ -86,13 +92,45 @@ describe('Google News sitemap', () => {
           date: '2026-09-08',
           category: 'tutorials',
         }),
+        post({
+          slug: 'scheduled',
+          title: 'Not yet',
+          date: '2026-09-09',
+          category: 'announcements',
+        }),
       ],
     })
 
     const parsed = parseNewsSitemapXml(xml)
-    expect(parsed.entries).toEqual([])
+    expect(parsed.entries).toEqual([
+      {
+        loc: `${ORIGIN}/blog/post/old-announcement`,
+        title: 'Old news',
+        publicationDate: '2026-09-01',
+        publicationName: NEWS_PUBLICATION_NAME,
+        language: NEWS_PUBLICATION_LANGUAGE,
+      },
+    ])
+    expect(xml).toContain('<url>')
     expect(xml).toContain(`xmlns="${SITEMAP_XMLNS}"`)
     expect(xml).toContain(`xmlns:news="${NEWS_SITEMAP_XMLNS}"`)
+  })
+
+  test('emits an empty urlset only when no news article exists', () => {
+    const xml = buildNewsSitemapXml({
+      origin: ORIGIN,
+      now: NOW,
+      posts: [
+        post({
+          slug: 'fresh-tutorial',
+          title: 'How to',
+          date: '2026-09-08',
+          category: 'tutorials',
+        }),
+      ],
+    })
+
+    expect(parseNewsSitemapXml(xml).entries).toEqual([])
   })
 
   test('includes matching categories in the two-day window only', () => {
