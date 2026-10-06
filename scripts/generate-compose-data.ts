@@ -46,8 +46,10 @@ const KEPT_PROFILES = ['embedding']
 // topology or database option it belongs to.
 const KNOWN_PROFILES = [SEPARATE_TOPOLOGY_PROFILE, ...KEPT_PROFILES]
 const DATABASE_SERVICES = ['postgresql', 'mariadb', 'mongodb']
-const ASSISTANT_SERVICE = 'appwrite-assistant'
 const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
+// The legacy Assistant is retired in favour of Appwrite Agent, so the docs
+// never offer its container even while the upstream compose still lists it.
+const OMITTED_SERVICES = ['appwrite-assistant']
 
 // The appwrite repo's .env is a development file. These keys are dropped from the
 // .env the docs hand to a self-hoster:
@@ -58,8 +60,10 @@ const AUTOGRAVITY_SERVICE = 'appwrite-autogravity'
 //     does not deploy. Both products ship disabled, so the keys have no effect.
 //   - VITE_GROWTH_ENDPOINT pointed the console at the retired growth server.
 //     The console now sends support and feedback to Appwrite Cloud directly.
+//   - _APP_ASSISTANT_OPENAI_API_KEY fed the retired Assistant container.
 const OMITTED_ENV_KEYS = [
   'COMPOSE_PROFILES',
+  '_APP_ASSISTANT_OPENAI_API_KEY',
   'VITE_GROWTH_ENDPOINT',
   '_APP_DOCUMENTSDB',
   '_APP_VECTORSDB',
@@ -329,7 +333,8 @@ async function main() {
     )
   }
 
-  const services = rawServices.map((s) => {
+  const offered = rawServices.filter((s) => !OMITTED_SERVICES.includes(s.name))
+  const services = offered.map((s) => {
     const def = definitionOf(s.name)
     const base = extendsOf(def)
     let block = s.block
@@ -360,7 +365,6 @@ async function main() {
   const expected = [
     ...DATABASE_SERVICES,
     ...TOPOLOGY_SERVICES.combined,
-    ASSISTANT_SERVICE,
     AUTOGRAVITY_SERVICE,
   ]
   for (const name of expected) {
@@ -379,8 +383,6 @@ export const APPWRITE_VERSION = ${JSON.stringify(version)}
 export const DATABASE_SERVICES = ${JSON.stringify(DATABASE_SERVICES)} as const
 
 export const TOPOLOGY_SERVICES = ${JSON.stringify(TOPOLOGY_SERVICES, null, 2)}
-
-export const ASSISTANT_SERVICE = ${JSON.stringify(ASSISTANT_SERVICE)}
 
 export const AUTOGRAVITY_SERVICE = ${JSON.stringify(AUTOGRAVITY_SERVICE)}
 

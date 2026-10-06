@@ -1373,7 +1373,6 @@ When adding a new API key, you choose which scopes to grant. Scopes are grouped 
 | `rules.write`         | Access to create, update, and delete your project's proxy rules                 |
 | `vcs.read`            | Access to read your project's VCS repositories                                  |
 | `vcs.write`           | Access to create, update, and delete your project's VCS repositories            |
-| `assistant.read`      | Access to read the Assistant service                                            |
 
 {% /accordion_item %}
 {% /accordion %}

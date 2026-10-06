@@ -10,7 +10,6 @@ import {
   Activities,
   Affiliates,
   Apps,
-  Assistant,
   Avatars,
   Backups,
   Client,
@@ -237,8 +236,6 @@ function createConsoleSdkRaw(client: Client) {
     migrations: new Migrations(client),
     console: new Console(client),
     agent: new Agent(client),
-    /** Legacy `/console/assistant` chat stream. Prefer `agent` for conversations. */
-    assistant: new Assistant(client),
     sites: new Sites(client),
     domains: new Domains(client),
     storage: new Storage(client),
