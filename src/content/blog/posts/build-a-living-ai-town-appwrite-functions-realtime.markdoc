@@ -440,7 +440,7 @@ Each conversation appears line by line above the speakers and in full in the Tow
 
 ## A resident's memories and feelings
 
-![The resident card of Bea Crumb with her mood, her current activity, her recent memories including two rumors she heard from Mae, and her feelings about Mae](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/app-resident-card.avif)
+![The resident card of Bea Crumb with her mood, her current activity, a whispered rumor in her memories, and her feelings about Mae and Rafa](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/app-resident-card.avif)
 
 Select a resident to open the resident card. It shows the resident's mood, what they are doing, their latest memories, and how they feel about the others.
 
@@ -458,7 +458,7 @@ The **Rumors** tab lists every rumor and how many residents know it. Select a ru
 
 ## Night in Murmur
 
-![Murmur at night with lit windows, warm lamp light in the square, and two residents still talking by the fountain](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/app-night.avif)
+![Murmur at night with lit windows, warm lamp light over the empty square, and every resident asleep at home](/images/blog/build-a-living-ai-town-appwrite-functions-realtime/app-night.avif)
 
 At night the lamps and the windows light up, and most residents go home to rest.
 
