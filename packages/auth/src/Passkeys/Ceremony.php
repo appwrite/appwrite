@@ -228,7 +228,6 @@ class Ceremony
         return new Credential(
             $this->getIdentifier($record->publicKeyCredentialId),
             $this->toArray($this->serializer->serialize($record, 'json')),
-            $record->backupStatus === true,
         );
     }
 

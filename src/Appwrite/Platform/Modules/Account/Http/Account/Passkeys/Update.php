@@ -31,7 +31,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/account/passkeys/:passkeyId')
             ->desc('Update passkey')
-            ->groups(['api', 'account', 'passkeys'])
+            ->groups(['api', 'account'])
             ->label('scope', 'account')
             ->label('audits.event', 'passkey.update')
             ->label('audits.resource', 'user/{user.$id}')
@@ -78,7 +78,7 @@ class Update extends Action
         }
 
         $passkey = $dbForProject->updateDocument('authenticators', $passkeyId, new Document([
-            'data' => \array_merge($passkey->getAttribute('data', []), ['name' => $name]),
+            'name' => $name,
         ]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

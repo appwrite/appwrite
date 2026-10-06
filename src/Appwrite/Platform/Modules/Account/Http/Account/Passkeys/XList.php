@@ -35,7 +35,7 @@ class XList extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/account/passkeys')
             ->desc('List passkeys')
-            ->groups(['api', 'account', 'passkeys'])
+            ->groups(['api', 'account'])
             ->label('scope', 'account')
             ->label('sdk', new Method(
                 namespace: 'account',

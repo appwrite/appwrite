@@ -41,7 +41,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/account/tokens/passkey')
             ->desc('Update passkey token')
-            ->groups(['api', 'account', 'passkeys'])
+            ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('audits.event', 'passkey.token.create')
             ->label('audits.resource', 'user/{response.userId}')
@@ -127,10 +127,8 @@ class Update extends Action
                 $verified = $ceremony->verifyAuthentication($state, $credential, $data['record']);
 
                 $authorization->skip(fn () => $dbForProject->updateDocument('authenticators', $current->getId(), new Document([
-                    'data' => \array_merge($data, [
-                        'record' => $verified->record,
-                        'accessedAt' => DateTime::formatTz(DateTime::now()),
-                    ]),
+                    'data' => \array_merge($data, ['record' => $verified->record]),
+                    'accessedAt' => DateTime::now(),
                 ])));
             });
         } catch (PasskeyException $th) {

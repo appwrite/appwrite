@@ -29,7 +29,7 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/users/:userId/passkeys/:passkeyId')
             ->desc('Get user passkey')
-            ->groups(['api', 'users', 'passkeys'])
+            ->groups(['api', 'users'])
             ->label('scope', 'users.read')
             ->label('usage.metric', 'users.{scope}.requests.read')
             ->label('sdk', new Method(

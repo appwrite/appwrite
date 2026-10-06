@@ -39,7 +39,7 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/account/passkeys')
             ->desc('Create passkey')
-            ->groups(['api', 'account', 'auth', 'recentSession', 'passkeys'])
+            ->groups(['api', 'account', 'auth', 'recentSession'])
             ->label('auth.type', 'passkey')
             ->label('scope', 'account')
             ->label('sdk', new Method(
@@ -134,8 +134,8 @@ class Create extends Action
                 'userInternalId' => $user->getSequence(),
                 'type' => Ceremony::TYPE,
                 'verified' => false,
+                'name' => $name,
                 'data' => [
-                    'name' => $name,
                     'registration' => $registration,
                 ],
             ]));

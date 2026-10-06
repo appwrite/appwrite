@@ -49,8 +49,6 @@ final class CeremonyTest extends TestCase
         $authenticator = new Authenticator();
         $registered = $this->register($authenticator);
 
-        $this->assertTrue($registered->backedUp);
-
         $signedIn = $this->signIn($authenticator, $registered);
         $this->assertSame($registered->identifier, $signedIn->identifier);
     }
@@ -87,7 +85,6 @@ final class CeremonyTest extends TestCase
     {
         $authenticator = new Authenticator(backupEligible: false);
         $credential = $this->signIn($authenticator, $this->register($authenticator));
-        $this->assertFalse($credential->backedUp);
 
         $authenticator->counter = 0;
         $this->expectException(Exception::class);
@@ -103,7 +100,7 @@ final class CeremonyTest extends TestCase
         for ($i = 0; $i < 2; $i++) {
             $authenticator->counter = -1;
             $credential = $this->signIn($authenticator, $credential);
-            $this->assertFalse($credential->backedUp);
+            $this->assertNotEmpty($credential->identifier);
         }
     }
 

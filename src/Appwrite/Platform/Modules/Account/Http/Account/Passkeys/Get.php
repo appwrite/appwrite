@@ -30,7 +30,7 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/account/passkeys/:passkeyId')
             ->desc('Get passkey')
-            ->groups(['api', 'account', 'passkeys'])
+            ->groups(['api', 'account'])
             ->label('scope', 'account')
             ->label('sdk', new Method(
                 namespace: 'account',

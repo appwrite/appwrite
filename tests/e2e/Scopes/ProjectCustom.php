@@ -241,7 +241,6 @@ trait ProjectCustom
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'region' => $project['body']['region'],
-            'teamId' => $teamId,
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['secret'],

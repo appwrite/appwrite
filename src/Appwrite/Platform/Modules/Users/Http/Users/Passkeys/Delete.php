@@ -29,7 +29,7 @@ class Delete extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/users/:userId/passkeys/:passkeyId')
             ->desc('Delete user passkey')
-            ->groups(['api', 'users', 'passkeys'])
+            ->groups(['api', 'users'])
             ->label('scope', 'users.write')
             ->label('audits.event', 'passkey.delete')
             ->label('audits.resource', 'user/{request.userId}')
