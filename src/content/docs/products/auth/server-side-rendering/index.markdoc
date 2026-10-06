@@ -764,7 +764,7 @@ def oauth_success():
 
     # Only accept a sign-in this browser started
     expected = request.cookies.get('oauth_state', '')
-    if not expected or not secrets.compare_digest(expected, state):
+    if not expected or not secrets.compare_digest(expected.encode('utf-8'), state.encode('utf-8')):
         res = make_response(jsonify({'success': False, 'error': 'OAuth2 state mismatch'}), 400)
         res.delete_cookie('oauth_state', path='/')
         return res
