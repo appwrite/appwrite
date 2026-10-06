@@ -87,12 +87,6 @@ export const vercelAlternativeContent: AlternativeContent = {
       href: '/blog/post/open-source-vercel-alternative',
     },
     {
-      kind: 'blog',
-      title: 'Next.js standalone builds now supported on Appwrite Sites',
-      description: 'Smaller builds and faster cold starts for Next.js 16.',
-      href: '/blog/post/nextjs-standalone-support-in-appwrite-sites',
-    },
-    {
       kind: 'docs',
       title: 'Migrate from Vercel',
       description: 'Build settings, environment variables, and domains, step by step.',

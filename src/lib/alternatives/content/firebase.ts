@@ -124,12 +124,6 @@ export const firebaseAlternativeContent: AlternativeContent = {
     },
     {
       kind: 'blog',
-      title: 'Migrate Firebase projects to Appwrite',
-      description: 'A step-by-step walkthrough of the Migrations tool.',
-      href: '/blog/post/migrate-firebase-projects-to-appwrite',
-    },
-    {
-      kind: 'blog',
       title: 'Budget caps: How to stop unexpected cloud bills before they happen',
       description: 'Why a hard cap beats an alert when traffic spikes.',
       href: '/blog/post/budget-caps-stop-unexpected-cloud-bills',
