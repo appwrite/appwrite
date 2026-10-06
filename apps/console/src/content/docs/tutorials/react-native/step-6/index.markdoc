@@ -105,6 +105,7 @@ export function IdeasProvider({ children }: { children: ReactNode }) {
       rowId: id,
     });
     toast("Idea removed");
+    setIdeas((ideas) => ideas.filter((idea) => idea.$id !== id));
     await init(); // Refetch ideas to ensure we have 10 items
   }
 
