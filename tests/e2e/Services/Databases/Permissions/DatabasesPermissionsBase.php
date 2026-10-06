@@ -58,7 +58,6 @@ trait DatabasesPermissionsBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
         ], [
             'userId' => $id,
             'email' => $email,

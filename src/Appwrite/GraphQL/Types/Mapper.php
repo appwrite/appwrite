@@ -197,7 +197,7 @@ class Mapper
                         ARRAY_FILTER_USE_KEY
                     );
 
-                    return \json_encode($data, JSON_FORCE_OBJECT);
+                    return \json_encode((object)$data);
                 }
             ];
         }
@@ -349,9 +349,14 @@ class Mapper
                 $type = Types::assoc();
                 break;
             case \Utopia\Validator\JSON::class:
+            case \Utopia\Validator\JSON\FCM::class:
+            case \Utopia\Validator\JSON\ObjectValidator::class:
                 $type = Types::json();
                 break;
-            case \Utopia\Storage\Validator\File::class:
+            case \Utopia\Validator\JSON\ArrayValidator::class:
+                $type = Type::listOf(Types::json());
+                break;
+            case \Appwrite\Utopia\Request\Validator\File::class:
                 $type = Types::inputFile();
                 break;
         }

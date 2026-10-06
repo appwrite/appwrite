@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Tests\E2E\Services\Realtime\RealtimeBase;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,11 +19,15 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\Supabase;
+use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 trait MigrationsBase
 {
     use ProjectCustom;
     use FunctionsBase;
+    use RealtimeBase;
 
     /**
      * @var array
@@ -29,16 +35,63 @@ trait MigrationsBase
     protected static array $destinationProject = [];
 
     /**
-     * Cached database data for independent test execution
-     * @var array
+     * @var list<string>
      */
-    protected static array $cachedDatabaseData = [];
+    protected array $trackedDatabaseIds = [];
+
+    protected function tearDown(): void
+    {
+        $databaseIds = $this->trackedDatabaseIds;
+        $this->trackedDatabaseIds = [];
+
+        try {
+            if ($databaseIds === []) {
+                return;
+            }
+
+            $failures = [];
+            foreach ($databaseIds as $databaseId) {
+                array_push($failures, ...$this->deleteMigrationDatabases($databaseId));
+            }
+
+            $this->assertSame([], $failures, 'Failed to delete tracked migration databases');
+        } finally {
+            parent::tearDown();
+        }
+    }
+
+    protected function trackDatabase(string $databaseId): void
+    {
+        $this->trackedDatabaseIds[] = $databaseId;
+    }
 
     /**
-     * Cached table data for independent test execution
-     * @var array
+     * @return list<string>
      */
-    protected static array $cachedTableData = [];
+    private function deleteMigrationDatabases(string $databaseId): array
+    {
+        $failures = [];
+
+        foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
+            try {
+                $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $project['$id'],
+                    'x-appwrite-key' => $project['apiKey'],
+                ]);
+            } catch (\Throwable $error) {
+                $failures[] = 'Database ' . $databaseId . ' in project ' . $project['$id'] . ': ' . $error->getMessage();
+                continue;
+            }
+
+            $status = $response['headers']['status-code'];
+            if ($status !== 204 && $status !== 404) {
+                $failures[] = 'Database ' . $databaseId . ' in project ' . $project['$id'] . ': status ' . $status;
+            }
+        }
+
+        return $failures;
+    }
 
     /**
      * @param bool $fresh
@@ -58,16 +111,23 @@ trait MigrationsBase
         return self::$destinationProject;
     }
 
+    public function getDestinationUser(bool $fresh = false): array
+    {
+        $project = self::$project;
+        self::$project = $this->getDestinationProject();
+
+        try {
+            return $this->getUser($fresh);
+        } finally {
+            self::$project = $project;
+        }
+    }
+
     /**
-     * Set up a database for migration tests with static caching
-     * @return array
+     * @return array{databaseId: string}
      */
     protected function setupMigrationDatabase(): array
     {
-        if (!empty(self::$cachedDatabaseData)) {
-            return self::$cachedDatabaseData;
-        }
-
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -77,30 +137,21 @@ trait MigrationsBase
             'name' => 'Test Database'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        self::$cachedDatabaseData = [
-            'databaseId' => $response['body']['$id'],
-        ];
+        $databaseId = $response['body']['$id'];
+        $this->trackDatabase($databaseId);
 
-        return self::$cachedDatabaseData;
+        return ['databaseId' => $databaseId];
     }
 
     /**
-     * Set up a table with column for migration tests with static caching
-     * @return array
+     * @return array{databaseId: string, tableId: string}
      */
     protected function setupMigrationTable(): array
     {
-        if (!empty(self::$cachedTableData)) {
-            return self::$cachedTableData;
-        }
-
-        // Ensure database exists first
-        $dbData = $this->setupMigrationDatabase();
-        $databaseId = $dbData['databaseId'];
+        $databaseId = $this->setupMigrationDatabase()['databaseId'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
             'content-type' => 'application/json',
@@ -115,7 +166,6 @@ trait MigrationsBase
 
         $tableId = $table['body']['$id'];
 
-        // Create Column
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -129,7 +179,6 @@ trait MigrationsBase
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for column to be ready
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
                 'content-type' => 'application/json',
@@ -141,12 +190,10 @@ trait MigrationsBase
             $this->assertEquals('available', $response['body']['status']);
         }, 5000, 500);
 
-        self::$cachedTableData = [
+        return [
             'databaseId' => $databaseId,
             'tableId' => $tableId,
         ];
-
-        return self::$cachedTableData;
     }
 
     public function performMigrationSync(array $body): array
@@ -189,6 +236,29 @@ trait MigrationsBase
         return $migrationResult;
     }
 
+    public function performMigrationExpectingFailure(array $body): array
+    {
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], $body);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+
+        $migrationResult = [];
+
+        $this->assertEventually(function () use ($migration, &$migrationResult) {
+            $migrationResult = $this->getMigrationStatus($migration['body']['$id']);
+
+            $this->assertSame('finished', $migrationResult['stage']);
+        }, 60_000, 1_000);
+
+        $this->assertSame('failed', $migrationResult['status'], 'Migration unexpectedly succeeded: ' . json_encode($migrationResult, JSON_PRETTY_PRINT));
+
+        return $migrationResult;
+    }
+
     /**
      * Get migration status by ID (without creating a new migration)
      *
@@ -207,6 +277,59 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']);
 
         return $response['body'];
+    }
+
+    /**
+     * A migration source is fetched by the migration worker, outside any curl guard, so
+     * its hosts are checked when the migration is created: a private or reserved
+     * address is refused, including Supabase's separate database host.
+     */
+    public function testMigrationSourceAtPrivateAddressIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $countMigrations = fn (): int => $this->client->call(Client::METHOD_GET, '/migrations', $headers)['body']['total'];
+        $before = $countMigrations();
+
+        // The cloud metadata address: link-local, and outside the dev allowlist
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', $headers, [
+            'resources' => Appwrite::getSupportedResources(),
+            'endpoint' => 'http://169.254.169.254/v1',
+            'projectId' => 'any',
+            'apiKey' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/supabase', $headers, [
+            'resources' => Supabase::getSupportedResources(),
+            'endpoint' => 'https://example.com',
+            'apiKey' => 'any',
+            'databaseHost' => '169.254.169.254',
+            'username' => 'postgres',
+            'password' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        // The refusal names the database host, not the (public) endpoint
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations/supabase/report', $headers, [
+            'resources' => Supabase::getSupportedResources(),
+            'endpoint' => 'https://example.com',
+            'apiKey' => 'any',
+            'databaseHost' => '169.254.169.254',
+            'username' => 'postgres',
+            'password' => 'any',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $this->assertSame($before, $countMigrations());
     }
 
     /**
@@ -528,6 +651,7 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']['$id']);
 
         $databaseId = $response['body']['$id'];
+        $this->trackDatabase($databaseId);
 
         $result = $this->performMigrationSync([
             'resources' => [
@@ -559,25 +683,75 @@ trait MigrationsBase
 
         $this->assertEquals($databaseId, $response['body']['$id']);
         $this->assertEquals('Test Database', $response['body']['name']);
+    }
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+    public function testAppwriteMigrationRejectsForeignSourceApiKey(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+        $this->trackDatabase($databaseId);
+
+        $result = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_DATABASE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertStringContainsString(
+            'The source API key cannot read the requested resources of the source project.',
+            implode("\n", $result['errors']),
+        );
+        $this->assertDestinationDatabaseMissing($databaseId);
+    }
+
+    public function testAppwriteMigrationRejectsSourceApiKeyWithoutTableScope(): void
+    {
+        $databaseId = $this->createSourceDatabase();
+        $this->trackDatabase($databaseId);
+
+        $result = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_DATABASE, Resource::TYPE_TABLE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getNewKey(['databases.read']),
+        ]);
+
+        $this->assertStringContainsString(
+            'The source API key cannot read the requested resources of the source project.',
+            implode("\n", $result['errors']),
+        );
+        $this->assertDestinationDatabaseMissing($databaseId);
+    }
+
+    private function createSourceDatabase(): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Foreign Key Regression',
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    private function assertDestinationDatabaseMissing(string $databaseId): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        $this->assertSame(404, $response['headers']['status-code'], 'The source database was copied without a source API key that can read it.');
     }
 
     public function testAppwriteMigrationDatabasesTable(): void
     {
-        // Set up database using helper method (with static caching)
         $data = $this->setupMigrationDatabase();
         $databaseId = $data['databaseId'];
 
@@ -594,7 +768,6 @@ trait MigrationsBase
 
         $tableId = $table['body']['$id'];
 
-        // Create Column
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -608,7 +781,6 @@ trait MigrationsBase
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for column to be ready
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
                 'content-type' => 'application/json',
@@ -667,28 +839,10 @@ trait MigrationsBase
         $this->assertEquals('name', $response['body']['key']);
         $this->assertEquals(100, $response['body']['size']);
         $this->assertEquals(true, $response['body']['required']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        // Clear the cache since we cleaned up
-        self::$cachedDatabaseData = [];
     }
 
     public function testAppwriteMigrationDatabasesRow(): void
     {
-        // Set up table using helper method (with static caching)
         $data = $this->setupMigrationTable();
         $tableId = $data['tableId'];
         $databaseId = $data['databaseId'];
@@ -746,24 +900,6 @@ trait MigrationsBase
 
         $this->assertEquals($rowId, $response['body']['$id']);
         $this->assertEquals('Test Row', $response['body']['name']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        // Clear the caches since we cleaned up
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Rows under all three modes; schema tolerance lets every run hit 'completed'. */
@@ -843,12 +979,6 @@ trait MigrationsBase
         $rowAfterOverwrite = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfterOverwrite['headers']['status-code']);
         $this->assertEquals('Original', $rowAfterOverwrite['body']['name'], 'onDuplicate=overwrite must restore source value');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Unchanged source under Skip/Overwrite is a no-op — every resource Tolerated. */
@@ -894,7 +1024,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals('completed', $first['status']);
 
-        // Re-run under Skip: nothing on source has changed. Destination
+        // Re-run under Skip: nothing on source has changed. Destinations
         // schema + rows are already correct — expect clean completion.
         $reRunSkip = $this->performMigrationSync([
             'resources' => $resources,
@@ -921,12 +1051,6 @@ trait MigrationsBase
             $this->assertEquals(200, $check['headers']['status-code']);
             $this->assertEquals('Seeded ' . $rowId, $check['body']['name']);
         }
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Overwrite reconciles container drift via UpdateInPlace; children (rows) preserved. */
@@ -1011,12 +1135,6 @@ trait MigrationsBase
         $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $row['headers']['status-code']);
         $this->assertEquals('SeedRow', $row['body']['name'], 'Overwrite must not touch child rows when updating container metadata');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves dest container drift even when source has diverged. */
@@ -1086,12 +1204,6 @@ trait MigrationsBase
         $this->assertEquals(200, $destTable['headers']['status-code']);
         $this->assertEquals('Dest-Managed Table', $destTable['body']['name'], 'Skip must not propagate source name over dest drift');
         $this->assertTrue($destTable['body']['enabled'], 'Skip must preserve dest enabled flag');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Overwrite drops dest columns source no longer declares; cleanup runs before rows land. */
@@ -1173,12 +1285,6 @@ trait MigrationsBase
         // Source's column preserved.
         $nameCheck = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', $destHeaders);
         $this->assertEquals(200, $nameCheck['headers']['status-code'], 'Overwrite must preserve columns source declared');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves orphan columns; cleanup is Overwrite-only. */
@@ -1249,12 +1355,6 @@ trait MigrationsBase
 
         $orphanCheck = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/dest_only_col', $destHeaders);
         $this->assertEquals(200, $orphanCheck['headers']['status-code'], 'Skip must preserve destination columns, including orphans');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** SDK-reachable attribute change propagates via updateAttributeInPlace; row data preserved. */
@@ -1347,12 +1447,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals('SeedRow', $rowAfter['body']['name'], 'updateAttributeInPlace must not touch row data');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Skip preserves dest attribute drift; leaf-level analog of the container drift test. */
@@ -1433,12 +1527,6 @@ trait MigrationsBase
         $this->assertEquals(200, $destAttr['headers']['status-code']);
         $this->assertFalse($destAttr['body']['required'], 'Skip must not propagate source required over dest drift');
         $this->assertEquals('dest-default', $destAttr['body']['default'], 'Skip must preserve dest default');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Two-way onDelete change updates in place on both sides; partner meta refreshed by hand. */
@@ -1456,6 +1544,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'Rel In-Place DB',
@@ -1517,7 +1606,7 @@ trait MigrationsBase
 
         sleep(1);
 
-        // SDK-reachable: PATCH /columns/:key/relationship accepts onDelete.
+        // Legacy alias of PATCH /columns/relationship/:key, kept for shipped SDKs.
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
             'onDelete' => Database::RELATION_MUTATE_RESTRICT,
         ]);
@@ -1555,12 +1644,6 @@ trait MigrationsBase
             $this->assertEquals('available', $child['body']['status']);
             $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
         }, 10000, 500);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Two-way recreate with same spec: spec-match guard tolerates parent; pair-key dedup tolerates partner. Both sides + child rows preserved. */
@@ -1578,6 +1661,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'Two-Way Recreate DB',
@@ -1716,12 +1800,6 @@ trait MigrationsBase
         $destChild = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/rows/child-1', $destHeaders);
         $this->assertEquals(200, $destChild['headers']['status-code'], 'partner-table row must survive two-way recreate re-migration');
         $this->assertEquals('parent-1', $destChild['body']['parent']['$id'] ?? $destChild['body']['parent'], 'partner-table row relationship must point to the migrated parent');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** One-way + onDelete change falls through to DropAndRecreate (in-place gated off for one-way). */
@@ -1739,6 +1817,7 @@ trait MigrationsBase
         ];
 
         $databaseId = ID::unique();
+        $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
             'name' => 'One-Way DropAndRecreate DB',
@@ -1819,12 +1898,6 @@ trait MigrationsBase
             $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
         }, 10000, 500);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Recreate with non-SDK spec change (array toggle): updateAttributeInPlace bails → drop+recreate; row pass refills. */
@@ -1923,12 +1996,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals(['after-recreate'], $rowAfter['body']['name'], 'row pass must repopulate the recreated column with source value');
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /** Source drops+recreates with SAME spec: spec-match guard forces Tolerate; dest meta untouched. */
@@ -2027,12 +2094,6 @@ trait MigrationsBase
         $rowAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, $destHeaders);
         $this->assertEquals(200, $rowAfter['headers']['status-code']);
         $this->assertEquals('after-recreate', $rowAfter['body']['name']);
-
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $destHeaders);
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $sourceHeaders);
-
-        self::$cachedDatabaseData = [];
-        self::$cachedTableData = [];
     }
 
     /**
@@ -2223,6 +2284,7 @@ trait MigrationsBase
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
+            'execute' => [Role::users()->toString()],
             'entrypoint' => 'index.js'
         ]);
 
@@ -2273,6 +2335,7 @@ trait MigrationsBase
         $this->assertEquals('Test', $response['body']['name']);
         $this->assertEquals('node-22', $response['body']['runtime']);
         $this->assertEquals('index.js', $response['body']['entrypoint']);
+        $this->assertSame([Role::users()->toString()], $response['body']['execute']);
 
 
         $this->assertEventually(function () use ($functionId) {
@@ -2287,19 +2350,103 @@ trait MigrationsBase
             $this->assertEquals(1, $deployments['body']['total']);
 
             $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
+
+            // The jobs worker marks the deployment ready before activate() points the
+            // function at it, and the execution below reads that pointer -- ready
+            // alone still 404s until the activation write lands.
+            $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]));
+
+            $this->assertEquals(200, $function['headers']['status-code']);
+            $this->assertSame(
+                $deployments['body']['deployments'][0]['$id'],
+                $function['body']['deploymentId'] ?? '',
+                'Function is not yet activated on the ready deployment',
+            );
         }, 100000, 500);
 
-        // Attempt execution
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ], [
-            'body' => 'test'
-        ]);
+        $destinationProject = $this->getDestinationProject();
+        $destinationUser = $this->getDestinationUser(true);
+        $realtime = $this->getWebsocket(
+            channels: ['executions'],
+            headers: [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $destinationProject['$id'] . '=' . $destinationUser['session'],
+            ],
+            projectId: $destinationProject['$id'],
+            timeout: 2,
+        );
+        $completedExecution = null;
+        $lastMessage = null;
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('body-is-test', $execution['body']['logs']);
+        try {
+            $connected = json_decode($realtime->receive(), true);
+
+            $this->assertSame('connected', $connected['type'] ?? null, 'Realtime did not connect: ' . json_encode($connected, JSON_PRETTY_PRINT));
+            $this->assertContains('executions', $connected['data']['channels'] ?? [], 'Realtime did not subscribe to executions: ' . json_encode($connected, JSON_PRETTY_PRINT));
+
+            $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $destinationProject['$id'],
+                'cookie' => 'a_session_' . $destinationProject['$id'] . '=' . $destinationUser['session'],
+            ], [
+                'async' => true,
+                'body' => 'test'
+            ]);
+
+            $this->assertSame(202, $execution['headers']['status-code'], 'Execution was not accepted: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+            $this->assertSame('waiting', $execution['body']['status'], 'Execution was not queued: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+            $this->assertNotEmpty($execution['body']['$id'], 'Accepted execution has no ID: ' . json_encode($execution['body'], JSON_PRETTY_PRINT));
+
+            $executionId = $execution['body']['$id'];
+            $deadline = microtime(true) + (int) $response['body']['timeout'] + 15;
+
+            while (microtime(true) < $deadline) {
+                try {
+                    $message = json_decode($realtime->receive(), true);
+                } catch (TimeoutException) {
+                    continue;
+                } catch (ConnectionException $exception) {
+                    $this->fail('Realtime closed before the execution completed: ' . $exception->getMessage());
+                }
+
+                if (!is_array($message)) {
+                    continue;
+                }
+
+                $lastMessage = $message;
+                if (
+                    ($message['type'] ?? null) === 'event'
+                    && in_array("functions.{$functionId}.executions.{$executionId}.update", $message['data']['events'] ?? [], true)
+                ) {
+                    $payload = $message['data']['payload'] ?? null;
+                    $this->assertIsArray($payload, 'Execution update has no payload: ' . json_encode($message, JSON_PRETTY_PRINT));
+                    $this->assertSame($executionId, $payload['$id'] ?? null, 'Realtime returned a different execution: ' . json_encode($payload, JSON_PRETTY_PRINT));
+                    $this->assertSame($functionId, $payload['resourceId'] ?? null, 'Execution ran a different function: ' . json_encode($payload, JSON_PRETTY_PRINT));
+                    $this->assertSame('functions', $payload['resourceType'] ?? null, 'Execution ran with a different resource type: ' . json_encode($payload, JSON_PRETTY_PRINT));
+
+                    if (($payload['status'] ?? null) === 'failed') {
+                        $this->fail('Execution failed: ' . json_encode($payload['errors'] ?? $payload, JSON_PRETTY_PRINT));
+                    }
+
+                    if (($payload['status'] ?? null) === 'completed') {
+                        $completedExecution = $payload;
+                        break;
+                    }
+                }
+            }
+        } finally {
+            $realtime->close();
+        }
+
+        $this->assertIsArray($completedExecution, 'Timed out waiting for the terminal execution event. Last message: ' . json_encode($lastMessage, JSON_PRETTY_PRINT));
+        $this->assertSame('completed', $completedExecution['status'], 'Execution did not complete: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -2463,7 +2610,14 @@ trait MigrationsBase
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $stdout, $stderr);
 
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
@@ -2559,8 +2713,11 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Create API key on source project
-        $response = $this->client->call(Client::METHOD_POST, '/project/keys', $sourceHeaders, [
+        // Create API key on source project (key creation is denied for key-authorized requests)
+        $response = $this->client->call(Client::METHOD_POST, '/project/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'keyId' => ID::unique(),
             'name' => 'Test API Key',
             'scopes' => ['databases.read', 'databases.write'],
@@ -2695,7 +2852,8 @@ trait MigrationsBase
         $this->assertTrue($foundWebhook['enabled']);
         $this->assertTrue($foundWebhook['tls']);
         $this->assertEquals('hook-user', $foundWebhook['authUsername']);
-        $this->assertEquals('hook-pass', $foundWebhook['authPassword']);
+        // authPassword is write-only, so the source API cannot hand it to the migration and the
+        // destination cannot show it; the username is the only credential that carries over.
         // secret is regenerated on the destination because the SDK strips it from list
         // responses on read — same caveat as api keys.
         if (!empty($sourceWebhook['secret'])) {
@@ -3496,8 +3654,10 @@ trait MigrationsBase
 
     /**
      * Import documents from a CSV file.
+     *
+     * @return array{databaseId: string, tableId: string, migrationId: string}
      */
-    public function testCreateCSVImport(): void
+    public function testCreateCSVImport(): array
     {
         // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -3564,6 +3724,19 @@ trait MigrationsBase
         $this->assertEquals($response['body']['max'], 65);
         $this->assertEquals($response['body']['required'], true);
 
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            foreach (['name', 'age'] as $column) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $column, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('available', $response['body']['status']);
+            }
+        }, 5_000, 500);
+
         // make a bucket, upload a file to it!
         $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -3628,7 +3801,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-column'],
                 'bucketId' => $bucketIds['missing-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3660,7 +3834,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-row'],
                 'bucketId' => $bucketIds['missing-row'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3692,7 +3867,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['irrelevant-column'],
                 'bucketId' => $bucketIds['irrelevant-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3719,7 +3895,8 @@ trait MigrationsBase
                 'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3761,7 +3938,8 @@ trait MigrationsBase
                 'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3781,6 +3959,78 @@ trait MigrationsBase
             $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
             $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
         }, 10_000, 500);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $tableId,
+            'migrationId' => $migration['body']['$id'],
+        ];
+    }
+
+    /**
+     * @param array{databaseId: string, tableId: string, migrationId: string} $data
+     */
+    #[Depends('testCreateCSVImport')]
+    public function testListMigrationsByDatabaseResource(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $query = Query::or([
+            Query::and([
+                Query::equal('resourceId', [$databaseId]),
+                Query::equal('resourceType', [Resource::TYPE_DATABASE]),
+            ]),
+            Query::and([
+                Query::equal('parentResourceId', [$databaseId]),
+                Query::equal('parentResourceType', [Resource::TYPE_DATABASE]),
+            ]),
+            Query::and([
+                Query::equal('destinationResourceId', [$databaseId]),
+                Query::equal('destinationResourceType', [Resource::TYPE_DATABASE]),
+            ]),
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                $query->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($data['migrationId'], array_column($response['body']['migrations'], '$id'));
+
+        $migration = null;
+        foreach ($response['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $data['migrationId']) {
+                $migration = $candidate;
+                break;
+            }
+        }
+
+        $this->assertNotNull($migration);
+        $this->assertSame($data['tableId'], $migration['resourceId']);
+        $this->assertSame($databaseId, $migration['parentResourceId']);
+        $this->assertNotSame('', $migration['parentResourceInternalId']);
+        $this->assertSame(Resource::TYPE_DATABASE, $migration['parentResourceType']);
+        $this->assertSame($databaseId, $migration['destinationResourceId']);
+        $this->assertSame($migration['parentResourceInternalId'], $migration['destinationResourceInternalId']);
+        $this->assertSame(Resource::TYPE_DATABASE, $migration['destinationResourceType']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('destinationResourceInternalId', [$migration['destinationResourceInternalId']])->toString(),
+                Query::equal('destinationResourceType', [Resource::TYPE_DATABASE])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($data['migrationId'], array_column($response['body']['migrations'], '$id'));
     }
 
     /**
@@ -3875,7 +4125,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -3901,7 +4152,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'skip',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -3942,7 +4194,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -3968,7 +4221,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'overwrite',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4010,7 +4264,8 @@ trait MigrationsBase
         $first = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4024,7 +4279,8 @@ trait MigrationsBase
         $second = $this->performCsvMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($second) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $second['body']['$id'], array_merge([
@@ -4135,7 +4391,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4160,7 +4417,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'skip',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4198,7 +4456,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4222,7 +4481,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
             'onDuplicate' => 'overwrite',
         ]);
         $this->assertEventually(function () use ($second) {
@@ -4260,7 +4520,8 @@ trait MigrationsBase
         $first = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($first) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], array_merge([
@@ -4273,7 +4534,8 @@ trait MigrationsBase
         $second = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $tableId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
         ]);
         $this->assertEventually(function () use ($second) {
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $second['body']['$id'], array_merge([
@@ -4452,7 +4714,8 @@ trait MigrationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'test-export',
             'columns' => [],
             'delimiter' => ',',
@@ -4805,7 +5068,7 @@ trait MigrationsBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
         $targetId = $user['body']['targets'][0]['$id'];
 
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
@@ -4929,7 +5192,7 @@ trait MigrationsBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
-        $this->assertEquals(1, \count($user['body']['targets']));
+        $this->assertSame(1, \count($user['body']['targets']));
         $targetId = $user['body']['targets'][0]['$id'];
 
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
@@ -5312,7 +5575,7 @@ trait MigrationsBase
         $this->assertEquals($messageId, $response['body']['$id']);
         $this->assertEquals('scheduled', $response['body']['status']);
         $this->assertEquals('Migration Scheduled Email', $response['body']['data']['subject']);
-        $this->assertEquals(
+        $this->assertSame(
             (new \DateTime($futureDate))->getTimestamp(),
             (new \DateTime($response['body']['scheduledAt']))->getTimestamp(),
         );
@@ -5432,7 +5695,8 @@ trait MigrationsBase
             $migration = $this->performCsvMigration([
                 'fileId' => $fileId,
                 'bucketId' => $bucketId,
-                'resourceId' => $databaseId . ':' . $collectionId,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
             ]);
 
             $this->assertEquals(202, $migration['headers']['status-code']);
@@ -5560,7 +5824,8 @@ trait MigrationsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'resourceId' => $databaseId . ':' . $collectionId,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
                 'filename' => $filename,
                 'columns' => [],
                 'queries' => [],
@@ -6442,7 +6707,7 @@ trait MigrationsBase
         // Ensure only expected counters exist (10 total)
         $this->assertCount(10, $result['statusCounters']);
 
-        // ====== Validate on destination: SQL Database resources ======
+        // ====== Validate on destinations: SQL Database resources ======
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $sqlDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6499,7 +6764,7 @@ trait MigrationsBase
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
 
-        // ====== Validate on destination: DocumentsDB resources ======
+        // ====== Validate on destinations: DocumentsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6545,7 +6810,7 @@ trait MigrationsBase
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
 
-        // ====== Validate on destination: VectorsDB resources ======
+        // ====== Validate on destinations: VectorsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -6705,6 +6970,19 @@ trait MigrationsBase
         $this->assertEquals($response['body']['max'], 65);
         $this->assertEquals($response['body']['required'], true);
 
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            foreach (['name', 'age'] as $column) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $column, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('available', $response['body']['status']);
+            }
+        }, 5_000, 500);
+
         // make a bucket, upload a file to it!
         $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -6761,7 +7039,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-column'],
                 'bucketId' => $bucketIds['missing-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -6798,7 +7077,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['irrelevant-column'],
                 'bucketId' => $bucketIds['irrelevant-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -6825,7 +7105,8 @@ trait MigrationsBase
                 'endpoint' => $this->endpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -6867,7 +7148,8 @@ trait MigrationsBase
                 'endpoint' => $this->endpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -6990,7 +7272,8 @@ trait MigrationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'test-json-export',
             'columns' => [],
             'queries' => [],
@@ -7101,7 +7384,8 @@ trait MigrationsBase
 
         // Trigger JSON export
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'vectorsdb-export-test',
             'columns' => [],
             'queries' => [],
@@ -7174,7 +7458,8 @@ trait MigrationsBase
         $migration = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
         ]);
         $this->assertEquals(202, $migration['headers']['status-code']);
 
@@ -7245,7 +7530,8 @@ trait MigrationsBase
 
         // Trigger JSON export
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'documentsdb-export-test',
             'columns' => [],
             'queries' => [],
@@ -7317,7 +7603,8 @@ trait MigrationsBase
         $migration = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
         ]);
         $this->assertEquals(202, $migration['headers']['status-code']);
 

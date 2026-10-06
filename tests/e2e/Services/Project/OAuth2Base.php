@@ -3,25 +3,32 @@
 namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
 trait OAuth2Base
 {
     /**
-     * Reset only providers this compact smoke suite mutates. Most provider
-     * matrix and response-shape coverage now lives in unit tests.
+     * Reset only providers this suite mutates.
      */
     #[Before(priority: -1)]
     protected function resetProjectOAuth2(): void
     {
         $providers = [
             'amazon' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
-            'github' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
-            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'enabled' => false],
+            'cloudflare' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
+            'apple' => ['serviceId' => '', 'keyId' => '', 'teamId' => '', 'p8File' => '', 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
             'oidc' => ['clientId' => '', 'clientSecret' => '', 'wellKnownURL' => '', 'authorizationURL' => '', 'tokenURL' => '', 'userInfoURL' => '', 'prompt' => [], 'enabled' => false],
-            'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
-            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'enabled' => false],
+            'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'prompt' => [], 'enabled' => false],
+            'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'nativeClientIds' => [], 'enabled' => false, 'nativeEnabled' => false],
+            'auth0' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'prompt' => [], 'enabled' => false],
+            'discord' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'github' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'kakao' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
+            'microsoft' => ['applicationId' => '', 'applicationSecret' => '', 'tenant' => '', 'prompt' => [], 'enabled' => false],
+            'salesforce' => ['customerKey' => '', 'customerSecret' => '', 'prompt' => [], 'enabled' => false],
+            'zoho' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
         ];
 
@@ -248,6 +255,172 @@ trait OAuth2Base
         $this->assertSame('', $get['body']['p8File']);
     }
 
+    public function testUpdateOAuth2NativeClientIdsRoundTrip(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'nativeClientIds' => ['com.example.app', 'com.example.app.dev'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $update['body']['nativeClientIds']);
+
+        $get = $this->getOAuth2Provider('apple');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $get['body']['nativeClientIds']);
+
+        // A partial update leaves the list untouched
+        $update = $this->updateOAuth2('apple', [
+            'keyId' => 'P4000000N9',
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['com.example.app', 'com.example.app.dev'], $update['body']['nativeClientIds']);
+
+        // An empty array clears the list
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => [],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame([], $update['body']['nativeClientIds']);
+
+        $update = $this->updateOAuth2('google', [
+            'clientId' => 'google-client',
+            'clientSecret' => 'google-secret',
+            'nativeClientIds' => ['120000000095-android.apps.googleusercontent.com'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame(['120000000095-android.apps.googleusercontent.com'], $update['body']['nativeClientIds']);
+    }
+
+    /**
+     * The two sign-in methods are switched on independently. With complete
+     * browser credentials stored and the browser flow off, switching on only
+     * native sign-in must leave the browser flow off.
+     */
+    public function testUpdateOAuth2NativeEnabledLeavesBrowserSignInAlone(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => ['com.example.app'],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $get = $this->getOAuth2Provider('apple');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertTrue($get['body']['nativeEnabled']);
+        $this->assertFalse($get['body']['enabled']);
+
+        // A request that says nothing about either method still switches the
+        // browser flow on once the credentials are complete, as before.
+        $update = $this->updateOAuth2('apple', [
+            'keyId' => 'P4000000N9',
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+    }
+
+    /**
+     * `nativeEnabled` is the only switch for native sign-in. Toggling the
+     * browser flow's `enabled` in either direction leaves it untouched, and
+     * switching native sign-in off leaves the browser flow untouched.
+     */
+    public function testUpdateOAuth2EnabledLeavesNativeSignInAlone(): void
+    {
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => 'ip.appwrite.app.web',
+            'keyId' => 'P4000000N8',
+            'teamId' => 'D4000000R6',
+            'p8File' => '-----BEGIN PRIVATE KEY-----TEST-----END PRIVATE KEY-----',
+            'nativeClientIds' => ['com.example.app'],
+            'nativeEnabled' => true,
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => true]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => false]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['enabled']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertSame(['com.example.app'], $update['body']['nativeClientIds']);
+
+        $update = $this->updateOAuth2('apple', ['enabled' => true]);
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $update = $this->updateOAuth2('apple', ['nativeEnabled' => false]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertFalse($update['body']['nativeEnabled']);
+        $this->assertTrue($update['body']['enabled']);
+    }
+
+    /**
+     * Native sign-in needs an audience to match tokens against, so switching it
+     * on without one is refused at configuration time rather than at sign-in.
+     */
+    public function testUpdateOAuth2NativeEnabledRequiresAudience(): void
+    {
+        // Clear both audience sources in the same call, so the refusal cannot
+        // depend on what another test left behind.
+        $update = $this->updateOAuth2('apple', [
+            'serviceId' => '',
+            'nativeClientIds' => [],
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+        $this->assertStringContainsString('native client ID', (string) $update['body']['message']);
+
+        $update = $this->updateOAuth2('apple', [
+            'nativeClientIds' => ['com.example.app'],
+            'nativeEnabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['nativeEnabled']);
+        $this->assertFalse($update['body']['enabled']);
+        $this->assertSame(['com.example.app'], $update['body']['nativeClientIds']);
+    }
+
     public function testUpdateOAuth2OidcRoundTrip(): void
     {
         $update = $this->updateOAuth2('oidc', [
@@ -315,6 +488,107 @@ trait OAuth2Base
         $this->assertTrue($update['body']['enabled']);
     }
 
+    /**
+     * @return \Iterator<string, array{string, array<string, string>, array<int, string>, string, bool}>
+     */
+    public static function promptProviders(): \Iterator
+    {
+        // Providers that verify credentials against the real API when enabled are only checked through the project API.
+        yield 'auth0' => ['auth0', ['clientId' => 'auth0-client', 'clientSecret' => 'auth0-secret', 'endpoint' => 'example.us.auth0.com'], ['login', 'consent'], 'login consent', true];
+        yield 'discord' => ['discord', ['clientId' => '950722000000343754', 'clientSecret' => 'discord-secret'], ['none'], 'none', true];
+        yield 'github' => ['github', ['clientId' => 'github-client', 'clientSecret' => 'github-secret'], ['select_account'], 'select_account', false];
+        yield 'kakao' => ['kakao', ['clientId' => 'kakao-client', 'clientSecret' => 'kakao-secret'], ['login', 'select_account'], 'login,select_account', false];
+        yield 'microsoft' => ['microsoft', ['applicationId' => 'microsoft-client', 'applicationSecret' => 'microsoft-secret', 'tenant' => 'common'], ['select_account'], 'select_account', false];
+        yield 'okta' => ['okta', ['clientId' => 'okta-client', 'clientSecret' => 'okta-secret', 'domain' => 'trial-6400025.okta.com'], ['none'], 'none', true];
+        yield 'salesforce' => ['salesforce', ['customerKey' => 'salesforce-client', 'customerSecret' => 'salesforce-secret'], ['login', 'consent'], 'login consent', true];
+        yield 'zoho' => ['zoho', ['clientId' => 'zoho-client', 'clientSecret' => 'zoho-secret'], ['consent'], 'consent', true];
+    }
+
+    /**
+     * @param array<string, string> $credentials
+     * @param array<int, string> $prompt
+     */
+    #[DataProvider('promptProviders')]
+    public function testUpdateOAuth2Prompt(string $provider, array $credentials, array $prompt, string $query, bool $login): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $update = $this->updateOAuth2($provider, \array_merge($credentials, [
+            'prompt' => $prompt,
+            'enabled' => $login,
+        ]));
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame($prompt, $update['body']['prompt']);
+
+        $get = $this->getOAuth2Provider($provider);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($prompt, $get['body']['prompt']);
+
+        if ($login) {
+            $this->assertSame($query, $this->getLoginQuery($provider)['prompt'] ?? null);
+        }
+
+        $update = $this->updateOAuth2($provider, [
+            'prompt' => [],
+            'enabled' => $login,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame([], $update['body']['prompt']);
+
+        if ($login) {
+            $this->assertArrayNotHasKey('prompt', $this->getLoginQuery($provider));
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $update = $this->updateOAuth2($provider, [
+            'prompt' => ['unknown'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+    }
+
+    public function testUpdateOAuth2PromptEnableRequiresClientSecret(): void
+    {
+        $response = $this->updateOAuth2('zoho', [
+            'clientId' => 'zoho-client',
+            'prompt' => ['consent'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->updateOAuth2('salesforce', [
+            'customerKey' => 'salesforce-client',
+            'prompt' => ['login'],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['login'], $response['body']['prompt']);
+        $this->assertFalse($response['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2PromptNoneMustBeAlone(): void
+    {
+        $update = $this->updateOAuth2('okta', [
+            'prompt' => ['none', 'login'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $update['body']['type']);
+
+        $update = $this->updateOAuth2('discord', [
+            'prompt' => ['none', 'consent'],
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+    }
+
     public function testUpdateOAuth2DropboxCustomFieldRoundTrip(): void
     {
         $update = $this->updateOAuth2('dropbox', [
@@ -334,6 +608,22 @@ trait OAuth2Base
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('dropbox-app-key', $get['body']['appKey']);
         $this->assertSame('', $get['body']['appSecret']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getLoginQuery(string $provider): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], followRedirects: false);
+
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $query);
+
+        return $query;
     }
 
     /**

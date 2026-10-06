@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Queries\Create as CreateDocumentsQuery;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
@@ -22,7 +23,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as Upd
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Delete as DeleteVectorDatabase;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Embeddings\Text\Create as CreateTextEmbeddings;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Get as GetVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Delete as DeleteTransaction;
@@ -42,7 +42,6 @@ class VectorsDB extends Base
         $this->registerCollectionActions($service);
         $this->registerIndexActions($service);
         $this->registerDocumentActions($service);
-        $this->registerEmbeddingActions($service);
         $this->registerTransactionActions($service);
     }
 
@@ -79,6 +78,7 @@ class VectorsDB extends Base
         $service->addAction(UpsertDocument::getName(), new UpsertDocument());
         $service->addAction(GetDocument::getName(), new GetDocument());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
+        $service->addAction(CreateDocumentsQuery::getName(), new CreateDocumentsQuery());
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
@@ -93,10 +93,5 @@ class VectorsDB extends Base
         $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
         $service->addAction(ListTransactions::getName(), new ListTransactions());
         $service->addAction(CreateOperations::getName(), new CreateOperations());
-    }
-
-    private function registerEmbeddingActions(Service $service): void
-    {
-        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings());
     }
 }

@@ -34,12 +34,18 @@ class PolicyList extends Model
             Response::MODEL_POLICY_PASSWORD_HISTORY,
             Response::MODEL_POLICY_PASSWORD_STRENGTH,
             Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            Response::MODEL_POLICY_PASSWORD_PWNED,
             Response::MODEL_POLICY_SESSION_ALERT,
             Response::MODEL_POLICY_SESSION_DURATION,
             Response::MODEL_POLICY_SESSION_INVALIDATION,
             Response::MODEL_POLICY_SESSION_LIMIT,
             Response::MODEL_POLICY_USER_LIMIT,
             Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+            Response::MODEL_POLICY_MFA_FACTORS,
+            Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            Response::MODEL_POLICY_DENY_FREE_EMAIL,
+            Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
         ];
     }
 

@@ -3,7 +3,6 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -34,44 +33,25 @@ trait ProjectCustom
     }
 
     /**
-     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     * Create a new project with team, API key, webhook, and SMTP config.
      */
     protected function createNewProject(): array
     {
-        // Small delay to ensure session is fully propagated under parallel load
-        usleep(100000); // 100ms
-
         $maxRetries = 5;
-        $team = null;
-        $teamId = ID::unique();
+        $team = $this->createTeamFixture([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Demo Project Team',
+        ]);
 
-        for ($i = 0; $i < $maxRetries; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-                'x-appwrite-project' => 'console',
-            ], [
-                'teamId' => $teamId,
-                'name' => 'Demo Project Team',
-            ]);
-
-            if ($team['headers']['status-code'] === 201 || $team['headers']['status-code'] === 409) {
-                break;
-            }
-
-            if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                \usleep(500000); // 500ms delay before retry
-                continue;
-            }
-        }
-
-        $this->assertContains($team['headers']['status-code'], [201, 409], 'Team creation failed with status: ' . $team['headers']['status-code']);
-        if ($team['headers']['status-code'] === 201) {
-            $this->assertEquals('Demo Project Team', $team['body']['name']);
-            $this->assertNotEmpty($team['body']['$id']);
-            $teamId = $team['body']['$id'];
-        }
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertEquals('Demo Project Team', $team['body']['name']);
+        $this->assertNotEmpty($team['body']['$id']);
+        $teamId = $team['body']['$id'];
 
         $project = null;
         for ($i = 0; $i < $maxRetries; $i++) {
@@ -121,12 +101,29 @@ trait ProjectCustom
                     'databases.write',
                     'collections.read',
                     'collections.write',
+                    'documentsdb.read',
+                    'documentsdb.write',
+                    'documentsdb.collections.read',
+                    'documentsdb.collections.write',
+                    'documentsdb.documents.read',
+                    'documentsdb.documents.write',
+                    'documentsdb.indexes.read',
+                    'documentsdb.indexes.write',
+                    'vectorsdb.read',
+                    'vectorsdb.write',
+                    'vectorsdb.collections.read',
+                    'vectorsdb.collections.write',
+                    'vectorsdb.documents.read',
+                    'vectorsdb.documents.write',
+                    'vectorsdb.indexes.read',
+                    'vectorsdb.indexes.write',
                     'tables.read',
                     'tables.write',
                     'documents.read',
                     'documents.write',
                     'rows.read',
                     'rows.write',
+                    'embeddings.write',
                     'files.read',
                     'files.write',
                     'buckets.read',
@@ -198,19 +195,6 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/dev-keys', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
-        $this->assertEquals(201, $devKey['headers']['status-code']);
-        $this->assertNotEmpty($devKey['body']);
-        $this->assertNotEmpty($devKey['body']['secret']);
-
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -222,6 +206,8 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
+                'documentsdb.*',
+                'vectorsdb.*',
                 'functions.*',
                 'buckets.*',
                 'teams.*',
@@ -252,8 +238,8 @@ trait ProjectCustom
         return [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
+            'region' => $project['body']['region'],
             'apiKey' => $key['body']['secret'],
-            'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['secret'],
         ];

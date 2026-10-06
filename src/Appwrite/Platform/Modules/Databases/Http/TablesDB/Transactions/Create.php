@@ -18,11 +18,6 @@ class Create extends TransactionsCreate
         return 'createTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_TRANSACTION;
-    }
-
     public function __construct()
     {
         $this

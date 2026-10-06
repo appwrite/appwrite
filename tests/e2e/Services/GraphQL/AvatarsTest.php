@@ -15,6 +15,8 @@ final class AvatarsTest extends Scope
     use SideServer;
     use Base;
 
+    private const string SCREENSHOT_URL = 'http://screenshot.webapp.com';
+
     public function testGetCreditCardIcon()
     {
         $projectId = $this->getProject()['$id'];
@@ -91,18 +93,25 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+                // Same URL as REST AvatarsBase::testGetImage (Google logo fetches flake in CI)
+                'url' => 'https://cloud.appwrite.io/images/github.png',
             ],
         ];
 
-        $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+        /**
+         * Wrapped in assertEventually to handle transient external URL failures
+         */
+        $image = null;
+        $this->assertEventually(function () use ($projectId, $graphQLPayload, &$image) {
+            $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(200, $image['headers']['status-code']);
-        $this->assertNotEmpty($image['body']);
-        $this->assertStringContainsString('image/', (string) $image['headers']['content-type']);
+            $this->assertEquals(200, $image['headers']['status-code']);
+            $this->assertNotEmpty($image['body']);
+            $this->assertStringContainsString('image/', (string) $image['headers']['content-type']);
+        }, 30_000, 2_000);
 
         return $image['body'];
     }
@@ -183,7 +192,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
             ],
@@ -215,7 +224,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 0,
                 'height' => 0,
             ],
@@ -246,7 +255,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'viewportWidth' => 1920,
@@ -298,7 +307,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'viewportWidth' => 1920,
@@ -325,7 +334,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'permissions' => [
@@ -364,7 +373,7 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://appwrite.io',
+                'url' => self::SCREENSHOT_URL,
                 'width' => 800,
                 'height' => 600,
                 'permissions' => [

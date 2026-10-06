@@ -21,6 +21,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Span\Span;
 
 class State
 {
@@ -74,6 +75,44 @@ class State
         return $document;
     }
 
+    /**
+     * Convert a request metadata object to the associative shape Document
+     * expects while retaining empty objects at any nested depth. `null` is
+     * returned untouched so callers can distinguish "not provided" from an
+     * explicit empty object.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function normalizeMetadata(array|\stdClass|null $metadata): ?array
+    {
+        if ($metadata === null) {
+            return null;
+        }
+
+        if ($metadata instanceof \stdClass) {
+            $metadata = (array) $metadata;
+        }
+
+        return \array_map($this->normalizeMetadataValue(...), $metadata);
+    }
+
+    private function normalizeMetadataValue(mixed $value): mixed
+    {
+        if ($value instanceof \stdClass) {
+            $properties = (array) $value;
+
+            return $properties === []
+                ? $value
+                : \array_map($this->normalizeMetadataValue(...), $properties);
+        }
+
+        if (\is_array($value)) {
+            return \array_map($this->normalizeMetadataValue(...), $value);
+        }
+
+        return $value;
+    }
+
     public function upsertForUser(
         Database $dbForProject,
         Document $presenceDocument,
@@ -100,9 +139,9 @@ class State
             } else {
                 $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
                     $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                    $presenceCreated = $existingPresence->isEmpty();
 
-                    if ($existingPresence->isEmpty()) {
-                        $presenceCreated = true;
+                    if ($presenceCreated) {
                         return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                     }
 
@@ -229,9 +268,7 @@ class State
                 metrics: $usage->getMetrics(),
             ));
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
-            }
+            Span::current()?->setError($th)->set('project.id', $project->getId());
         }
     }
 
@@ -263,12 +300,9 @@ class State
                 ->from($queueForEvents)
                 ->trigger();
         } catch (Throwable $th) {
-            if (\function_exists('logError')) {
-                \logError($th, 'realtimePresenceEvent', tags: [
-                    'projectId' => $project->getId(),
-                    'event' => $eventName,
-                ]);
-            }
+            Span::current()?->setError($th)
+                ->set('project.id', $project->getId())
+                ->set('presence.event', $eventName);
         }
     }
 }

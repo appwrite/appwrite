@@ -37,6 +37,7 @@ class Update extends Action
             ->desc('Update MFA challenge (confirmation)')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].sessions.[sessionId].create')
             ->label('audits.event', 'challenges.update')
             ->label('audits.resource', 'user/{response.userId}')
@@ -105,7 +106,25 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        if ($challenge->getAttribute('expire') < DateTime::formatTz(DateTime::now())) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
         $type = $challenge->getAttribute('type');
+
+        // Consult the current policy so disabling a factor also invalidates outstanding challenges
+        $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
+        $factorEnabled = match ($type) {
+            Type::TOTP => $mfaFactors['totp'] ?? true,
+            Type::EMAIL => $mfaFactors['email'] ?? true,
+            Type::PHONE => $mfaFactors['phone'] ?? true,
+            Type::CUSTOM => $mfaFactors['custom'] ?? false,
+            default => true, // Recovery codes always remain available as a fallback
+        };
+
+        if (!$factorEnabled) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
+        }
 
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
@@ -133,6 +152,7 @@ class Update extends Action
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::CUSTOM => Challenge\Custom::challenge($challenge, $user, $otp),
             default => false
         });
 

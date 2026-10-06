@@ -6,16 +6,20 @@ use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Webhooks extends Action
@@ -39,8 +43,9 @@ class Webhooks extends Action
             ->inject('dbForPlatform')
             ->inject('publisherForNotifications')
             ->inject('publisherForUsage')
-            ->inject('log')
+            ->inject('platform')
             ->inject('plan')
+            ->inject('clientForWebhooks')
             ->callback($this->action(...));
     }
 
@@ -50,12 +55,12 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
-     * @param Log $log
+     * @param array $platform
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks): void
     {
         $payload = $message->getPayload();
 
@@ -67,12 +72,12 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
+        Span::add('project.id', $project->getId());
 
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $clientForWebhooks);
                 if ($error !== null) {
                     $errors[] = $error;
                 }
@@ -93,85 +98,84 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
+     * @param array $platform
      * @param array $plan
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
         }
 
-        $url = \rawurldecode($webhook->getAttribute('url'));
-
-        if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($url, PHP_URL_HOST) ?? '';
-            $hostnameValidator = new PublicHostname();
-            if (!$hostnameValidator->isValid($host)) {
-                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            }
-        }
+        $rawUrl = $webhook->getAttribute('url');
 
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
-        $ch = \curl_init($webhook->getAttribute('url'));
 
-        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        \curl_setopt($ch, CURLOPT_HEADER, 0);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        \curl_setopt($ch, CURLOPT_MAXFILESIZE, self::MAX_FILE_SIZE);
-        \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
-            APP_USERAGENT,
-            System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-        ));
-        \curl_setopt(
-            $ch,
-            CURLOPT_HTTPHEADER,
-            [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
-            ]
-        );
-        \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-
-        if (!$webhook->getAttribute('security', true)) {
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        }
+        $client = $clientForWebhooks
+            ->withTimeout(15)
+            ->withConnectTimeout(15)
+            ->withSslVerification($webhook->getAttribute('security', true));
 
         if (!empty($httpUser) && !empty($httpPass)) {
-            \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
-            \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            $client = $client->withBasicAuth($httpUser, $httpPass);
         }
 
-        $responseBody = \curl_exec($ch);
-        $curlError = \curl_error($ch);
-        $statusCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $responseBody = '';
+        $clientError = '';
+        $statusCode = 0;
+
+        try {
+            $request = (new RequestFactory())->body(
+                method: Method::POST,
+                uri: $rawUrl,
+                body: $payload,
+                contentType: ContentType::JSON,
+                headers: [
+                    Header::CONTENT_LENGTH => (string) \strlen($payload),
+                    Header::USER_AGENT => \sprintf(
+                        APP_USERAGENT,
+                        System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                        System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+                    ),
+                    'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
+                    'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
+                    'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
+                    'X-' . APP_NAME . '-Webhook-Project-Id' => $project->getId(),
+                    'X-' . APP_NAME . '-Webhook-Signature' => $signature,
+                ],
+            );
+            $response = $client->stream(
+                request: $request,
+                sink: function (string $chunk) use (&$responseBody): void {
+                    if (\strlen($responseBody) + \strlen($chunk) > self::MAX_FILE_SIZE) {
+                        throw new Exception('Maximum response size exceeded');
+                    }
+
+                    $responseBody .= $chunk;
+                },
+            );
+            $statusCode = $response->getStatusCode();
+        } catch (Exception $exception) {
+            $clientError = $exception->getMessage();
+        }
 
         $error = null;
 
-        if (!empty($curlError) || $statusCode >= 400) {
+        if (!empty($clientError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
-            $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
-            $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
+            $logs .= 'URL: ' . $rawUrl . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
 
-            if (!empty($curlError)) {
-                $logs .= 'CURL Error: ' . $curlError . "\n";
+            if (!empty($clientError)) {
+                $logs .= 'Client Error: ' . $clientError . "\n";
                 $logs .= 'Events: ' . implode(', ', $events) . "\n";
             } else {
                 $logs .= 'Status code: ' . $statusCode . "\n";
@@ -180,29 +184,51 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            $updatePayload = ['logs' => $logs];
+            $threshold = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
+            // Claim the pause under a row lock, so concurrent deliveries of the same webhook pause it once
+            $pausedAttempts = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhook, $logs, $threshold): ?int {
+                $current = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
+
+                if ($current->isEmpty()) {
+                    return null;
+                }
+
+                $attempts = $current->getAttribute('attempts');
+                $pause = $current->getAttribute('enabled') === true && $attempts >= $threshold;
+
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document(
+                    $pause ? ['logs' => $logs, 'enabled' => false] : ['logs' => $logs]
+                ));
+
+                return $pause ? $attempts : null;
+            });
+
+            if ($pausedAttempts !== null) {
                 $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+                $this->sendAlert($pausedAttempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $platform, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_FAILED, 1);
         } else {
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
-                'attempts' => 0,
-            ]));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            if ($webhook->getAttribute('attempts', 0) > 0) {
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
+                    'attempts' => 0,
+                ]));
+
+                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            }
+
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_SENT, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_SENT, 1);
         }
 
         $publisherForUsage->enqueue(new UsageMessage(
@@ -220,10 +246,11 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param NotificationPublisher $publisherForNotifications
+     * @param array $platform
      * @param array $plan
      * @return void
      */
-    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan): void
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -259,11 +286,6 @@ class Webhooks extends Action
 
         $projectId = $project->getId();
         $projectInternalId = $project->getSequence();
-        $region = $project->getAttribute('region', 'default');
-        $webhookId = $webhook->getId();
-
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
-        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
 
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
@@ -303,10 +325,8 @@ class Webhooks extends Action
             $template->setParam('{{project}}', $project->getAttribute('name'));
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
-            $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
-                ? "/console/project-{$region}-{$projectId}/settings/webhooks/{$webhookId}"
-                : "/projects/{$projectId}/settings/webhooks");
+            $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
+            $template->setParam('{{path}}', "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(

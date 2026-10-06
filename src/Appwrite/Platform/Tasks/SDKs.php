@@ -26,8 +26,6 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
-use Appwrite\Spec\OpenAPI3;
-use Appwrite\Spec\StaticSpec;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
@@ -37,6 +35,7 @@ use Utopia\Agents\Schema;
 use Utopia\Agents\Schema\SchemaObject;
 use Utopia\Config\Config;
 use Utopia\Console;
+use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -125,32 +124,6 @@ class SDKs extends Action
 
         if (! $createRelease) {
             $version ??= Console::confirm('Choose an Appwrite version');
-
-            if (! \in_array($version, [
-                '0.6.x',
-                '0.7.x',
-                '0.8.x',
-                '0.9.x',
-                '0.10.x',
-                '0.11.x',
-                '0.12.x',
-                '0.13.x',
-                '0.14.x',
-                '0.15.x',
-                '1.0.x',
-                '1.1.x',
-                '1.2.x',
-                '1.3.x',
-                '1.4.x',
-                '1.5.x',
-                '1.6.x',
-                '1.7.x',
-                '1.8.x',
-                '1.9.x',
-                'latest',
-            ])) {
-                throw new \Exception('Unknown version given');
-            }
         }
 
         $selectedPlatforms = ($selectedPlatform === '*' || $selectedPlatform === null) ? null : \array_map('trim', \explode(',', $selectedPlatform));
@@ -198,6 +171,7 @@ class SDKs extends Action
 
                     $releaseTitle = $releaseVersion;
                     $releaseTarget = $language['repoBranch'] ?? 'main';
+                    $isPrerelease = (bool) \preg_match('/^v?\d+\.\d+\.\d+-/', $releaseVersion);
 
                     if ($repoName === '/') {
                         Console::warning('  Not a releasable SDK, skipping');
@@ -255,6 +229,7 @@ class SDKs extends Action
                         Console::log("    Version:          {$releaseVersion}");
                         Console::log("    Title:            {$releaseTitle}");
                         Console::log("    Target Branch:    {$releaseTarget}");
+                        Console::log('    Prerelease:       ' . ($isPrerelease ? 'yes' : 'no'));
                         Console::log('    Previous Version: ' . ($previousVersion ?: 'N/A'));
                         Console::log('    Release Notes:');
                         Console::log('    ' . str_replace("\n", "\n    ", $formattedNotes));
@@ -264,12 +239,13 @@ class SDKs extends Action
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
-                            --repo ' . \escapeshellarg($repoName) . ' \
-                            --title ' . \escapeshellarg($releaseTitle) . ' \
-                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
-                            --target ' . \escapeshellarg($releaseTarget) . ' \
-                            2>&1';
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion)
+                            . ' --repo ' . \escapeshellarg($repoName)
+                            . ' --title ' . \escapeshellarg($releaseTitle)
+                            . ' --notes-file ' . \escapeshellarg($tempNotesFile)
+                            . ' --target ' . \escapeshellarg($releaseTarget)
+                            . ($isPrerelease ? ' --prerelease' : '')
+                            . ' 2>&1';
 
                         $releaseOutput = [];
                         $releaseReturnCode = 0;
@@ -329,7 +305,7 @@ class SDKs extends Action
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
+                $warning = '**This SDK targets Appwrite server version ' . $version . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -349,17 +325,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
-                            $config->setBowerPackage('@appwrite.io/console');
                         } else {
                             $config->setNPMPackage('appwrite');
-                            $config->setBowerPackage('appwrite');
                         }
                         break;
                     case 'cli':
                         $config = new CLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
-                        $config->setLogo(json_encode("
+                        $config->setLogo("
     _                            _ _           ___   __   _____
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
@@ -367,7 +341,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
        |_|   |_|
 
-"));
+");
                         $config->setLogoUnescaped("
      _                            _ _           ___   __   _____
     /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
@@ -384,13 +358,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'nodejs':
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
-                        $config->setBowerPackage('appwrite');
                         $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
                             If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'python':
                         $config = new Python();
-                        $config->setPipPackage('appwrite');
+                        $config->setPipPackage($language['pipPackage'] ?? 'appwrite');
                         $license = 'BSD License'; // license edited due to classifiers in pypi
                         break;
                     case 'ruby':
@@ -468,14 +441,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK(
                     $config,
                     $specFormat === 'static'
-                        ? new StaticSpec(
-                            title: 'Appwrite',
-                            description: 'Appwrite backend as a service',
-                            version: $version,
-                            licenseName: 'BSD-3-Clause',
-                            licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                        )
-                        : new OpenAPI3($spec)
+                        ? Parser::parse([
+                            'openapi' => '3.0.0',
+                            'info' => [
+                                'title' => 'Appwrite',
+                                'description' => 'Appwrite backend as a service',
+                                'version' => $version,
+                                'license' => [
+                                    'name' => 'BSD-3-Clause',
+                                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                                ],
+                            ],
+                            'paths' => [],
+                        ])
+                        : Parser::parse($spec)
                 );
 
                 $sdk
@@ -486,17 +465,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])
-                    ->setPlatform($key)
+                    ->setPlatform($language['family'])
                     ->setGitURL($language['url'])
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
                     ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
-                    ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
-                    ->setShareURL('http://appwrite.io')
-                    ->setShareTags('JS,javascript,reactjs,angular,ios,android,serverless')
-                    ->setShareVia('appwrite')
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setGettingStarted($gettingStarted)
@@ -641,7 +616,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
 
             if ($hasBranch) {
-                $repo->execute('checkout', '-f', $gitBranch);
+                // Squash merges leave the target branch diverged, so start from the base and keep the target as a parent for a fast-forward push
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('checkout', '-f', '-B', $gitBranch, 'FETCH_HEAD');
+                $repo->execute('merge', '--quiet', '-s', 'ours', '--allow-unrelated-histories', '--no-edit', 'origin/' . $gitBranch);
             } else {
                 // Fetch base branch to create the target branch from it
                 try {
@@ -682,12 +660,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // Stage, commit, push
             $repo->addAllChanges();
 
-            try {
+            if ($repo->hasChanges()) {
                 $repo->commit($commitMessage);
-            } catch (\Throwable $e) {
-                // Exit code 1 (256 in PHP) = nothing to commit
+            } else {
                 Console::log('  No changes to commit, SDK is up to date');
-                return true;
+                if (!$hasBranch) {
+                    return true;
+                }
             }
 
             $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');

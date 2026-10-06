@@ -12,6 +12,11 @@ final class Certificate extends Base
         public readonly bool $skipRenewCheck = false,
         public readonly ?string $validationDomain = null,
         public readonly string $action = \Appwrite\Event\Certificate::ACTION_GENERATION,
+        /**
+         * DNS already passed for this rule, so the worker does not verify it
+         * again. Unlike `skipRenewCheck` this leaves the renew check in place.
+         */
+        public readonly bool $skipDomainValidation = false,
     ) {
     }
 
@@ -27,6 +32,7 @@ final class Certificate extends Base
             'skipRenewCheck' => $this->skipRenewCheck,
             'validationDomain' => $this->validationDomain,
             'action' => $this->action,
+            'skipDomainValidation' => $this->skipDomainValidation,
         ];
     }
 
@@ -38,6 +44,7 @@ final class Certificate extends Base
             skipRenewCheck: $data['skipRenewCheck'] ?? false,
             validationDomain: $data['validationDomain'] ?? null,
             action: $data['action'] ?? \Appwrite\Event\Certificate::ACTION_GENERATION,
+            skipDomainValidation: $data['skipDomainValidation'] ?? false,
         );
     }
 }

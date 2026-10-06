@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -14,11 +15,13 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
@@ -83,7 +86,7 @@ class Update extends Base
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-            ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
+            ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
@@ -95,14 +98,15 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
-            )), 'Build specification for the site deployments.', true, ['plan'])
+            )), 'Build specification for the site deployments.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the SSR executions.', true, ['plan'])
+            ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -113,6 +117,10 @@ class Update extends Base
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('executor')
+            ->inject('authorization')
+            ->inject('deployments')
+            ->inject('buildTimeout')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -141,6 +149,7 @@ class Update extends Base
         ?string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
+        ?array $scopes,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -151,6 +160,10 @@ class Update extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
+        Authorization $authorization,
+        Deployments $deployments,
+        int $buildTimeout,
+        Bus $bus,
         array $platform
     ) {
         if (!empty($adapter)) {
@@ -189,6 +202,10 @@ class Update extends Base
             $framework = $site->getAttribute('framework');
         }
 
+        if (empty($buildRuntime)) {
+            $buildRuntime = $site->getAttribute('buildRuntime');
+        }
+
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
@@ -200,7 +217,7 @@ class Update extends Base
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
+        // Explicit null providerRepositoryId on a connected site — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
             $installationId = $site->getAttribute('installationId', '');
@@ -327,11 +344,12 @@ class Update extends Base
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
+            'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $buildTimeout, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

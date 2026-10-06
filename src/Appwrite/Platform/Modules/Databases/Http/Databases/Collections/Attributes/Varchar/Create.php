@@ -71,11 +71,12 @@ class Create extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('size', null, new Range(1, 16381, Validator::TYPE_INTEGER), 'Attribute size for varchar attributes, in number of characters. Maximum size is 16381.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true, example: 'Hello World')
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
@@ -94,6 +95,7 @@ class Create extends Action
         bool           $encrypt,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         DatabasePublisher  $publisherForDatabase,
         Event          $queueForEvents,
         array $plan,
@@ -135,6 +137,7 @@ class Create extends Action
             ]),
             $response,
             $dbForProject,
+            $getDatabasesDB,
             $publisherForDatabase,
             $queueForEvents,
             $authorization

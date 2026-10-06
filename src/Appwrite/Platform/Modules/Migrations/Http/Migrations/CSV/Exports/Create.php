@@ -9,7 +9,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,6 +17,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents;
+use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\CSV;
@@ -60,7 +60,8 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
+            ->param('databaseId', '', new UID(), 'Database ID containing the source collection.')
+            ->param('collectionId', '', new UID(), 'Collection ID to export documents from.')
             ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .csv extension.')
             ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
             ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -82,7 +83,8 @@ class Create extends Action
     }
 
     public function action(
-        string $resourceId,
+        string $databaseId,
+        string $collectionId,
         string $filename,
         array $columns,
         array $queries,
@@ -110,14 +112,6 @@ class Create extends Action
         $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        [$databaseId, $collectionId] = \explode(':', $resourceId, 2);
-        if (empty($databaseId)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-        if (empty($collectionId)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -150,7 +144,7 @@ class Create extends Action
         }
 
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
-        $resourceType = self::resourceTypeForDatabaseType($databaseType);
+        $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
@@ -159,8 +153,12 @@ class Create extends Action
             'source' => AppwriteSource::getName(),
             'destination' => CSV::getName(),
             'resources' => $resources,
-            'resourceId' => $resourceId,
-            'resourceType' => $resourceType,
+            'resourceId' => $collection->getId(),
+            'resourceInternalId' => $collection->getSequence(),
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => $database->getId(),
+            'parentResourceInternalId' => $database->getSequence(),
+            'parentResourceType' => $parentResourceType,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],

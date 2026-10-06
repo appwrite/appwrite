@@ -27,7 +27,7 @@ class XList extends DatabaseXList
             ->setHttpPath('/v1/documentsdb')
             ->desc('List databases')
             ->groups(['api', 'database'])
-            ->label('scope', 'databases.read')
+            ->label('scope', 'documentsdb.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

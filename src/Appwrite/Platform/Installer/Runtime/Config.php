@@ -14,6 +14,7 @@ final class Config
         'isLocal',
         'hostPath',
         'lockedDatabase',
+        'topology',
         'enabledDatabases',
         'vars',
     ];
@@ -27,6 +28,7 @@ final class Config
     private bool $isLocal = false;
     private ?string $hostPath = null;
     private ?string $lockedDatabase = null;
+    private ?string $topology = null;
     private array $enabledDatabases = ['postgresql', 'mariadb', 'mongodb'];
     private array $vars = [];
 
@@ -69,6 +71,9 @@ final class Config
         if ($this->hasValidStringValue($values, 'lockedDatabase')) {
             $this->setLockedDatabase((string) $values['lockedDatabase']);
         }
+        if ($this->hasValidStringValue($values, 'topology')) {
+            $this->setTopology((string) $values['topology']);
+        }
         if (array_key_exists('enabledDatabases', $values) && is_array($values['enabledDatabases'])) {
             $this->setEnabledDatabases($values['enabledDatabases']);
         }
@@ -105,6 +110,7 @@ final class Config
             'isLocal' => $this->isLocal,
             'hostPath' => $this->hostPath,
             'lockedDatabase' => $this->lockedDatabase,
+            'topology' => $this->getTopology(),
             'enabledDatabases' => $this->enabledDatabases,
         ];
     }
@@ -207,6 +213,23 @@ final class Config
     public function setLockedDatabase(?string $value): void
     {
         $this->lockedDatabase = $value;
+    }
+
+    public function hasTopology(): bool
+    {
+        return $this->topology !== null;
+    }
+
+    public function getTopology(): string
+    {
+        return $this->topology ?? 'combined';
+    }
+
+    public function setTopology(string $value): void
+    {
+        $this->topology = \in_array($value, ['combined', 'separate'], true)
+            ? $value
+            : 'combined';
     }
 
     /**

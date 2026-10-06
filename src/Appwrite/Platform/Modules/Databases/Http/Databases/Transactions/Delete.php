@@ -23,11 +23,6 @@ class Delete extends Action
         return 'deleteDatabasesTransaction';
     }
 
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_NONE;
-    }
-
     public function __construct()
     {
         $this

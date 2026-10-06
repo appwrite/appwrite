@@ -23,6 +23,26 @@ final class ViewTest extends TestCase
         $this->assertLessThan($mongo, $maria);
     }
 
+    public function testHttpsDefaultsToDisabled(): void
+    {
+        $html = $this->render();
+
+        $this->assertStringContainsString('data-default-force-https="false"', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="force-https"[^>]*checked/', $html);
+    }
+
+    public function testHttpsUsesExistingInstallerSetting(): void
+    {
+        $html = $this->render([
+            'vars' => [
+                '_APP_OPTIONS_FORCE_HTTPS' => ['default' => 'enabled'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('data-default-force-https="true"', $html);
+        $this->assertMatchesRegularExpression('/id="force-https"[^>]*checked/', $html);
+    }
+
     public function testUpgradeWithoutDetectedDatabaseRemainsSelectable(): void
     {
         $html = $this->render([
@@ -49,11 +69,24 @@ final class ViewTest extends TestCase
         $this->assertMatchesRegularExpression('/name="database" value="postgresql"[^>]*disabled/', $html);
     }
 
+    public function testUpgradeWithDetectedSeparateTopologyPreselectsSeparate(): void
+    {
+        $html = $this->render([
+            'isUpgrade' => true,
+            'topology' => 'separate',
+        ]);
+
+        $this->assertStringContainsString('data-topology="separate"', $html);
+        $this->assertMatchesRegularExpression('/name="topology" value="separate"[^>]*checked/', $html);
+        $this->assertDoesNotMatchRegularExpression('/name="topology" value="combined"[^>]*checked/', $html);
+    }
+
     private function render(array $values = []): string
     {
         $step = 1;
         $isUpgrade = false;
         $lockedDatabase = null;
+        $topology = 'combined';
         $vars = [];
         $enabledDatabases = ['postgresql', 'mariadb', 'mongodb'];
         $csrfToken = 'test-token';

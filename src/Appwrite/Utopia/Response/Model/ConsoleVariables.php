@@ -71,6 +71,20 @@ class ConsoleVariables extends Model
                 'example' => ['github'],
                 'array' => true,
             ])
+            ->addRule('_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of configured VCS providers that support repository creation.',
+                'default' => [],
+                'example' => ['github'],
+                'array' => true,
+            ])
+            ->addRule('_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of configured VCS providers that can host public repositories.',
+                'default' => [],
+                'example' => ['github'],
+                'array' => true,
+            ])
             ->addRule('_APP_DOMAIN_ENABLED', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Defines if main domain is configured. If so, custom domains can be created.',

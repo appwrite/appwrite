@@ -14,7 +14,6 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -39,7 +38,6 @@ class Databases extends Action
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForRealtime')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -49,11 +47,10 @@ class Databases extends Action
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime): void
     {
         $payload = $message->getPayload();
 
@@ -81,19 +78,19 @@ class Databases extends Action
          * @var Database $dbForDatabases
          */
         $dbForDatabases = $getDatabasesDB($database);
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('project.id', $project->getId());
+        Span::add('type', $type);
 
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
 
-        $log->addTag('databaseId', $database->getId());
+        Span::add('database.id', $database->getId());
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
@@ -108,6 +105,7 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param Realtime $queueForRealtime
      * @return void
      * @throws Authorization
@@ -122,6 +120,7 @@ class Databases extends Action
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
+        Database $dbForDatabases,
         Realtime $queueForRealtime
     ): void {
         if ($collection->isEmpty()) {
@@ -183,7 +182,7 @@ class Databases extends Action
                     }
 
                     if (
-                        !$dbForProject->createRelationship(
+                        !$dbForDatabases->createRelationship(
                             collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                             relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             type: $options['relationType'],
@@ -202,7 +201,7 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                    if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                         throw new Exception('Failed to create attribute/column');
                     }
             }
@@ -232,15 +231,15 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
-
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
 
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -259,7 +258,7 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForDatabases, Database $dbForProject, Realtime $queueForRealtime): void
+    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection/table');
@@ -295,11 +294,11 @@ class Databases extends Action
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
+                    if (!$dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
                         $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
                         throw new DatabaseException('Failed to delete Relationship');
                     }
-                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
+                } elseif (!$dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key)) {
                     throw new DatabaseException('Failed to delete attribute/column');
                 }
 
@@ -345,8 +344,6 @@ class Databases extends Action
                 }
 
                 throw $e;
-            } finally {
-                $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
             }
 
             // The underlying database removes/rebuilds indexes when attribute is removed
@@ -363,9 +360,6 @@ class Databases extends Action
                 $found = \array_search($key, $attributes);
 
                 if ($found !== false) {
-                    // If found, remove entry from attributes, lengths, and orders
-                    // array_values wraps array_diff to reindex array keys
-                    // when found attribute is removed from array
                     $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
                     $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
                     $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
@@ -378,11 +372,10 @@ class Databases extends Action
                             ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
                             ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
 
-                        // Check if an index exists with the same attributes and orders
                         $exists = false;
                         foreach ($indexes as $existing) {
                             if (
-                                $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                                $existing->getAttribute('key') !== $index->getAttribute('key')
                                 && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
                                 && $existing->getAttribute('orders') === $index->getAttribute('orders')
                             ) {
@@ -391,7 +384,7 @@ class Databases extends Action
                             }
                         }
 
-                        if ($exists) { // Delete the duplicate if created, else update in db
+                        if ($exists) {
                             $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime);
                         } else {
                             $dbForProject->updateDocument('indexes', $index->getId(), new Document([
@@ -405,12 +398,14 @@ class Databases extends Action
             }
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
             if (! $relatedCollection->isEmpty()) {
                 $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $relatedCollection->getId());
-                $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
+                $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence());
             }
+
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
     }
 
@@ -466,9 +461,9 @@ class Databases extends Action
 
             throw $e;
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 
@@ -522,9 +517,9 @@ class Databases extends Action
             throw $e;
 
         } finally {
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
-            $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
     }
 
@@ -581,9 +576,9 @@ class Databases extends Action
                 Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],
             $dbForProject,
-            function ($attribute) use ($dbForProject, $databaseInternalId) {
+            function ($attribute) use ($dbForProject, $dbForDatabases, $databaseInternalId) {
                 $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $attribute->getAttribute('collectionId'));
-                $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
+                $dbForDatabases->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $attribute->getAttribute('collectionInternalId'));
             }
         );
 
