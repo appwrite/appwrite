@@ -7,7 +7,6 @@ use Utopia\Auth\Passkeys\Challenge;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
 /**
@@ -27,10 +26,10 @@ class Challenges
     /**
      * @param array<string, string> $binding context the completing request must match, such as a session ID
      */
-    public function issue(string $type, Ceremony $ceremony, Challenge $challenge, ?Document $user = null, array $binding = []): Document
+    public function issue(string $id, string $type, Ceremony $ceremony, Challenge $challenge, ?Document $user = null, array $binding = []): Document
     {
         return $this->authorization->skip(fn () => $this->dbForProject->createDocument('challenges', new Document([
-            '$id' => ID::unique(),
+            '$id' => $id,
             'userId' => $user?->getId(),
             'userInternalId' => $user?->getSequence(),
             'type' => $type,

@@ -119,8 +119,8 @@ class Create extends Action
         }
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
-        // Binds the challenge to this registration, so a replaced one's challenge cannot verify its successor
-        $registration = ID::unique();
+        // Verification consumes the challenge the pending passkey points to, so a replaced registration's challenge is never used
+        $challengeId = ID::unique();
 
         try {
             $passkey = $dbForProject->createDocument('authenticators', new Document([
@@ -136,7 +136,7 @@ class Create extends Action
                 'verified' => false,
                 'name' => $name,
                 'data' => [
-                    'registration' => $registration,
+                    'challengeId' => $challengeId,
                 ],
             ]));
         } catch (Duplicate) {
@@ -149,10 +149,9 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSKEY_LIMIT_EXCEEDED);
         }
 
-        $stored = (new Challenges($dbForProject, $authorization))->issue(Ceremony::TYPE_REGISTRATION, $ceremony, $challenge, $user, [
+        $stored = (new Challenges($dbForProject, $authorization))->issue($challengeId, Ceremony::TYPE_REGISTRATION, $ceremony, $challenge, $user, [
             'passkeyId' => $passkey->getId(),
             'sessionId' => $session->getId(),
-            'registration' => $registration,
         ]);
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

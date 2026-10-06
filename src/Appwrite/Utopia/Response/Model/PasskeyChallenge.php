@@ -12,7 +12,7 @@ class PasskeyChallenge extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Challenge ID. Pass it back with the credential to complete the ceremony.',
+                'description' => 'Challenge ID. When signing in, pass it back with the credential to receive a token.',
                 'default' => '',
                 'example' => 'bb8ea5c16897e',
             ])

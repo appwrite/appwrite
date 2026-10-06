@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 
@@ -73,7 +74,7 @@ class Create extends Action
         $challenge = $ceremony->authenticate();
 
         // Sign-in challenges belong to no user until the assertion names one
-        $stored = (new Challenges($dbForProject, $authorization))->issue(Ceremony::TYPE_AUTHENTICATION, $ceremony, $challenge);
+        $stored = (new Challenges($dbForProject, $authorization))->issue(ID::unique(), Ceremony::TYPE_AUTHENTICATION, $ceremony, $challenge);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

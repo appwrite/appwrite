@@ -144,7 +144,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(0, $list['body']['total']);
 
         $passkey = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $this->getSessionHeaders($project, $session), [
-            'challengeId' => $challenge['body']['$id'],
             'credential' => $authenticator->register($options, self::ORIGIN),
         ]);
         $this->assertSame(200, $passkey['headers']['status-code']);
@@ -233,14 +232,14 @@ final class PasskeysCustomClientTest extends Scope
     {
         $project = $this->getProject(true);
         $this->configurePasskeys($project);
-        [, $session] = $this->createUserWithSession($project);
+        [$user, $session] = $this->createUserWithSession($project);
         [, $otherSession] = $this->createUserWithSession($project);
 
         $verify = fn (array $challenge, array $credential, string $cookie, ?string $passkeyId = null) => $this->client->call(
             Client::METHOD_PUT,
             '/account/passkeys/' . ($passkeyId ?? $challenge['body']['passkeyId']) . '/verification',
             $this->getSessionHeaders($project, $cookie),
-            ['challengeId' => $challenge['body']['$id'], 'credential' => $credential],
+            ['credential' => $credential],
         );
 
         $start = fn (string $cookie) => $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $cookie));
@@ -283,13 +282,23 @@ final class PasskeysCustomClientTest extends Scope
         $response = $verify($challenge, (new Authenticator())->register($options, self::ORIGIN), $session);
         $this->assertSame(401, $response['headers']['status-code']);
 
-        // Another user's challenge
+        // Another user's pending passkey
         $challenge = $start($session);
         $response = $verify($challenge, (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN), $otherSession);
+        $this->assertSame(404, $response['headers']['status-code']);
+        $this->assertSame('user_passkey_not_found', $response['body']['type']);
+
+        // The registration is bound to the session that started it
+        $otherDevice = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->getGuestHeaders($project), [
+            'email' => $user['email'],
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $otherDevice['headers']['status-code']);
+        $response = $verify($challenge, (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN), $otherDevice['cookies']['a_session_' . $project['$id']]);
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('user_invalid_token', $response['body']['type']);
 
-        // A challenge bound to one passkey cannot verify another
+        // A credential made for one registration cannot verify another
         $first = $start($session);
         $second = $start($session);
         $response = $verify($first, (new Authenticator())->register($first['body']['publicKey'], self::ORIGIN), $session, $second['body']['passkeyId']);
@@ -316,7 +325,7 @@ final class PasskeysCustomClientTest extends Scope
             'method' => 'PUT',
             'path' => '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification',
             'headers' => $this->getSessionHeaders($project, $session),
-            'body' => ['challengeId' => $challenge['body']['$id'], 'credential' => $credential],
+            'body' => ['credential' => $credential],
         ]));
 
         $this->assertCount(1, \array_filter($statuses, fn (int $status) => $status === 200), \json_encode($statuses));
@@ -716,7 +725,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame($passkeyId, $challenge['body']['passkeyId']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
-            'challengeId' => $challenge['body']['$id'],
             'credential' => (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN),
         ]);
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
@@ -743,7 +751,7 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testRestartedRegistrationRejectsOldChallenge(): void
+    public function testRestartedRegistrationRejectsOldCredential(): void
     {
         $project = $this->getProject(true);
         $this->configurePasskeys($project);
@@ -758,19 +766,21 @@ final class PasskeysCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        // A credential from the replaced ceremony answers the wrong challenge
         $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
-            'challengeId' => $first['body']['$id'],
             'credential' => (new Authenticator())->register($first['body']['publicKey'], self::ORIGIN),
         ]);
         $this->assertSame(401, $response['headers']['status-code']);
-        $this->assertSame('user_invalid_token', $response['body']['type']);
+        $this->assertSame('user_passkey_invalid', $response['body']['type']);
 
         /**
          * Test for SUCCESS
          */
+        // The failed attempt used up the ceremony, so the registration starts again
+        $third = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers, ['passkeyId' => $passkeyId]);
+        $this->assertSame(201, $third['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $passkeyId . '/verification', $headers, [
-            'challengeId' => $second['body']['$id'],
-            'credential' => (new Authenticator())->register($second['body']['publicKey'], self::ORIGIN),
+            'credential' => (new Authenticator())->register($third['body']['publicKey'], self::ORIGIN),
         ]);
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
     }
@@ -792,7 +802,7 @@ final class PasskeysCustomClientTest extends Scope
                     'method' => 'PUT',
                     'path' => '/account/passkeys/' . $passkeyId . '/verification',
                     'headers' => $headers,
-                    'body' => ['challengeId' => $challenge['body']['$id'], 'credential' => (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN)],
+                    'body' => ['credential' => (new Authenticator())->register($challenge['body']['publicKey'], self::ORIGIN)],
                 ],
                 [
                     'method' => 'POST',
@@ -1068,7 +1078,6 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(201, $challenge['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $this->getSessionHeaders($project, $session), [
-            'challengeId' => $challenge['body']['$id'],
             'credential' => $authenticator->register($challenge['body']['publicKey'], self::ORIGIN),
         ]);
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
