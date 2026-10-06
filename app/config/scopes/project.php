@@ -423,10 +423,6 @@ return [
         'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
-    'assistant.read' => [
-        'description' => 'Access to use Assistant service',
-        'category' => 'Other',
-    ],
     'migrations.read' => [
         'description' => 'Access to read migrations',
         'category' => 'Other',
