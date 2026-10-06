@@ -938,6 +938,58 @@ final class PasskeysCustomClientTest extends Scope
         $this->assertSame(401, $this->signIn($project, $authenticator)['headers']['status-code']);
     }
 
+    public function testAdminUpdatePasskey(): void
+    {
+        $project = $this->getProject(true);
+        $this->configurePasskeys($project);
+        [$user, $session] = $this->createUserWithSession($project);
+        [$other] = $this->createUserWithSession($project);
+        $this->registerPasskey($project, $session);
+        $pending = $this->client->call(Client::METHOD_POST, '/account/passkeys', $this->getSessionHeaders($project, $session));
+        $this->assertSame(201, $pending['headers']['status-code']);
+
+        $passkeys = $this->client->call(Client::METHOD_GET, '/users/' . $user['$id'] . '/passkeys', $this->getServerHeaders($project));
+        $passkeyId = $passkeys['body']['passkeys'][0]['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['$id'] . '/passkeys/' . $passkeyId, $this->getServerHeaders($project), [
+            'name' => 'Lost phone',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('Lost phone', $response['body']['name']);
+
+        // The owner sees the new name
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $this->getSessionHeaders($project, $session));
+        $this->assertSame('Lost phone', $response['body']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([[$other['$id'], $passkeyId], [$user['$id'], $pending['body']['passkeyId']], [$user['$id'], 'unknown']] as [$userId, $id]) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/passkeys/' . $id, $this->getServerHeaders($project), [
+                'name' => 'Stolen',
+            ]);
+            $this->assertSame(404, $response['headers']['status-code']);
+            $this->assertSame('user_passkey_not_found', $response['body']['type']);
+        }
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/unknown/passkeys/' . $passkeyId, $this->getServerHeaders($project), [
+            'name' => 'Stolen',
+        ]);
+        $this->assertSame(404, $response['headers']['status-code']);
+        $this->assertSame('user_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['$id'] . '/passkeys/' . $passkeyId, $this->getGuestHeaders($project), [
+            'name' => 'Stolen',
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/passkeys/' . $passkeyId, $this->getSessionHeaders($project, $session));
+        $this->assertSame('Lost phone', $response['body']['name']);
+    }
+
     public function testPasskeyOnlyAccount(): void
     {
         $project = $this->getProject(true);
