@@ -82,4 +82,17 @@ return [
     'sites.createTemplateDeployment' => true,
     'sites.createVcsDeployment' => true,
     'sites.updateSiteDeployment' => true,
+
+    // Videos
+    'videos.create' => true,
+    'project.createProfile' => true,
+    'videos.createRendition' => true,
+    'videos.createCaption' => true,
+    'videos.getTimeline' => true,
+    // Master-manifest SDK methods; OR them in the UI for a single
+    // "played a video" milestone.
+    'videos.getHlsManifest' => true,
+    'videos.getDashManifest' => true,
+    'videos.getCmafHlsManifest' => true,
+    'videos.getCmafDashManifest' => true,
 ];

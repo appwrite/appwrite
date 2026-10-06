@@ -239,7 +239,9 @@ class Videos extends Action
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
-                (new Tile())->vtt(false)
+                // 480px stays sharp on HiDPI screens and enlarged previews; a 4x4
+                // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
+                (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
             );
 
             $timelineDir = $deviceForVideos->getPath($video->getId()) . '/timeline/';
@@ -1230,6 +1232,14 @@ class Videos extends Action
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
             $video = $this->probe($dbForProject, $video, $file, $inPath);
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $video,
+                'videos.[videoId].update',
+                ['videoId' => $video->getId()],
+                $permissions
+            );
         }
 
         if (!$video->getAttribute('captionsExtracted', false)) {
