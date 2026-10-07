@@ -2,7 +2,13 @@
     "name": "utopia-php/mongo",
     "description": "A simple library to manage Mongo database",
     "type": "library",
-    "keywords": ["php","mongo", "upf", "utopia", "database"],
+    "keywords": [
+        "php",
+        "mongo",
+        "upf",
+        "utopia",
+        "database"
+    ],
     "license": "MIT",
     "minimum-stability": "stable",
     "authors": [
@@ -16,16 +22,17 @@
         }
     ],
     "autoload": {
-        "psr-4": {"Utopia\\Mongo\\": "src"}
+        "psr-4": {
+            "Utopia\\Mongo\\": "src"
+        }
     },
     "autoload-dev": {
-        "psr-4": {"Utopia\\Tests\\": "tests"}
+        "psr-4": {
+            "Utopia\\Tests\\": "tests"
+        }
     },
-    "scripts":{
-        "test": "phpunit",
-        "check": "vendor/bin/phpstan analyse --memory-limit=1G src",
-        "format": "vendor/bin/pint",
-        "lint": "vendor/bin/pint --test"
+    "scripts": {
+        "test": "phpunit"
     },
     "require": {
         "php": ">=8.0",
@@ -34,9 +41,6 @@
     },
     "require-dev": {
         "fakerphp/faker": "1.*",
-        "phpunit/phpunit": "9.*",
-        "swoole/ide-helper": "5.1.*",
-        "laravel/pint": "*",
-        "phpstan/phpstan": "*"
+        "swoole/ide-helper": "5.1.*"
     }
 }

@@ -13,3 +13,4 @@ loader.php
 Makefile
 .envrc
 .vscode
+composer.lock
