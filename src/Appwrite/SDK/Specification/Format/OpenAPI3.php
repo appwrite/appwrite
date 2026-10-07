@@ -276,6 +276,7 @@ class OpenAPI3 extends Format
         }
 
         $usedModels = [];
+        $declaresChunkedUpload = false;
 
         foreach ($this->routes as $route) {
             $url = \str_replace('/v1', '', $route->getPath());
@@ -1140,6 +1141,13 @@ class OpenAPI3 extends Format
                     $methodTemp['requestBody'] = $body;
                 }
 
+                // Operations that accept a chunked upload reference the headers they read.
+                if ($sdk->isChunked()) {
+                    $declaresChunkedUpload = true;
+                    $methodTemp['parameters'][] = ['$ref' => '#/components/parameters/ContentRange'];
+                    $methodTemp['parameters'][] = ['$ref' => '#/components/parameters/UploadId'];
+                }
+
                 $output['paths'][$url][\strtolower($method)] = $methodTemp;
             }
         }
@@ -1350,6 +1358,42 @@ class OpenAPI3 extends Format
 
         \ksort($output['paths']);
 
+        if ($declaresChunkedUpload) {
+            $output['components']['parameters'] = $this->chunkedUploadParameters();
+        }
+
         return $output;
+    }
+
+    /**
+     * Header parameters referenced by operations that accept a chunked upload.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function chunkedUploadParameters(): array
+    {
+        return [
+            'ContentRange' => [
+                'name' => 'Content-Range',
+                'in' => 'header',
+                'required' => false,
+                'description' => 'Byte range of this chunk, as `bytes {start}-{end}/{total}`. Sent on every request when a file is uploaded in chunks.',
+                'schema' => [
+                    'type' => 'string',
+                    'pattern' => '^bytes \\d+-\\d+/\\d+$',
+                    'example' => 'bytes 0-5242879/12582912',
+                ],
+            ],
+            'UploadId' => [
+                'name' => 'X-Appwrite-ID',
+                'in' => 'header',
+                'required' => false,
+                'description' => 'ID returned by the first chunk. Sent on every later chunk of the same upload.',
+                'schema' => [
+                    'type' => 'string',
+                    'example' => '<UPLOAD_ID>',
+                ],
+            ],
+        ];
     }
 }

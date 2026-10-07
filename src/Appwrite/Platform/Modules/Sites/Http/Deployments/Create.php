@@ -71,6 +71,7 @@ class Create extends Action
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
                 packaging: true,
+                chunked: true,
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
