@@ -31,6 +31,26 @@ permissions:
   packages: write
 
 jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    outputs:
+      server: ${{ steps.changes.outputs.server }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Compute changes
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: bash .github/scripts/changes.sh
+
   dependencies:
     name: Checks / Dependencies
     if: github.event_name == 'pull_request'
@@ -44,7 +64,8 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -103,6 +124,8 @@ jobs:
 
   checks:
     name: Checks
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -178,6 +201,8 @@ jobs:
 
   locale:
     name: Checks / Locale
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -197,6 +222,8 @@ jobs:
 
   static-rules:
     name: Checks / Rules
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -258,6 +285,8 @@ jobs:
 
   matrix:
     name: Tests / Matrix
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
@@ -454,6 +483,8 @@ jobs:
 
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: gcrunner=${{ github.run_id }}/runner=build
     timeout-minutes: 30
     steps:
