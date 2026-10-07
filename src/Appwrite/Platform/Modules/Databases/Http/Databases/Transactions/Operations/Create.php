@@ -158,6 +158,18 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is required for ' . $operation['action'] . ' operations');
                 }
 
+                if (
+                    $operation['action'] === 'upsert'
+                    && \is_array($operation['data'] ?? null)
+                    && isset($operation['data']['$id'])
+                    && $operation['data']['$id'] !== $documentId
+                ) {
+                    throw new Exception(
+                        Exception::GENERAL_BAD_REQUEST,
+                        '`' . $this->getResourceId() . '` does not match `$id` in data'
+                    );
+                }
+
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
                 $isDependant = isset($dependants[$collectionKey][$documentId]);
 

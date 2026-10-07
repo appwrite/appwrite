@@ -6546,4 +6546,168 @@ trait TransactionsBase
         $this->assertEquals(['x', 'y', 'z', 'w'], $row['body']['list2'], 'arrayAppend should add element at the end');
         $this->assertEquals(['1', '2', '4', '5'], $row['body']['list3'], 'arrayRemove should remove the element');
     }
+
+    /**
+     * Staged upsert uses the operation record id, not a generated id.
+     */
+    public function testUpsertOperationRecordId(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'UpsertRecordIdTestDB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'UpsertRecordIdTest',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), $headers, [
+                'key' => 'status',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer'), $headers, [
+                'key' => 'n',
+                'required' => false,
+                'min' => 0,
+                'max' => 10000,
+            ]);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $existingId = ID::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => [
+                'status' => 'open',
+                'n' => 0,
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $newId = ID::unique();
+
+        // Test for SUCCESS
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge($headers, $this->getHeaders()));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'upsert',
+                    $this->getRecordIdParam() => $existingId,
+                    'data' => [
+                        'status' => 'done',
+                        'n' => 1,
+                    ],
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'upsert',
+                    $this->getRecordIdParam() => $existingId,
+                    'data' => [
+                        '$id' => $existingId,
+                        'status' => 'closed',
+                        'n' => 2,
+                    ],
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'upsert',
+                    $this->getRecordIdParam() => $newId,
+                    'data' => [
+                        'status' => 'created',
+                        'n' => 3,
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('committed', $response['body']['status']);
+
+        $existing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $existingId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $existing['headers']['status-code']);
+        $this->assertEquals($existingId, $existing['body']['$id']);
+        $this->assertEquals('closed', $existing['body']['status']);
+        $this->assertEquals(2, $existing['body']['n']);
+
+        $createdRow = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $newId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $createdRow['headers']['status-code']);
+        $this->assertEquals($newId, $createdRow['body']['$id']);
+        $this->assertEquals('created', $createdRow['body']['status']);
+        $this->assertEquals(3, $createdRow['body']['n']);
+
+        $list = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(2, $list['body']['total']);
+
+        // Test for FAILURE
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge($headers, $this->getHeaders()));
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'upsert',
+                    $this->getRecordIdParam() => $existingId,
+                    'data' => [
+                        '$id' => $newId,
+                        'status' => 'done',
+                        'n' => 4,
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_BAD_REQUEST, $response['body']['type']);
+        $this->assertStringContainsString($this->getRecordIdParam(), $response['body']['message']);
+
+        $existing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $existingId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $existing['headers']['status-code']);
+        $this->assertEquals('closed', $existing['body']['status']);
+        $this->assertEquals(2, $existing['body']['n']);
+    }
 }

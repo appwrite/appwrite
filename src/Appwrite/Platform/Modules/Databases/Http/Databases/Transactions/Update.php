@@ -734,6 +734,11 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        // upsertDocument identifies the row by `$id`. The staged record id is that identity.
+        if (\is_string($documentId) && $documentId !== '') {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
