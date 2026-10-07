@@ -1,0 +1,29 @@
+rules:
+  - id: php.appwrite.outbound-follow-redirects
+    message: >
+      Outbound HTTP client follows redirects (CURLOPT_FOLLOWLOCATION true,
+      or a Client with maxRedirects > 0). A validated public target can
+      redirect to a host that was never validated. Disable redirects, or
+      re-validate each Location with PublicURL before following it.
+    languages: [php]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: curl_setopt($CH, CURLOPT_FOLLOWLOCATION, true)
+      - pattern: \curl_setopt($CH, CURLOPT_FOLLOWLOCATION, true)
+      - pattern: curl_setopt($CH, CURLOPT_FOLLOWLOCATION, 1)
+      - pattern: \curl_setopt($CH, CURLOPT_FOLLOWLOCATION, 1)
+      - pattern: "[..., CURLOPT_FOLLOWLOCATION => true, ...]"
+      - pattern: "[..., CURLOPT_FOLLOWLOCATION => 1, ...]"
+      - patterns:
+          - pattern: $CLIENT->setMaxRedirects($N)
+          - metavariable-comparison:
+              metavariable: $N
+              comparison: $N > 0

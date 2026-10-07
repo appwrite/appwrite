@@ -126,7 +126,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileSearchExpr(string $attribute, array $values, bool $not): string
+    protected function compileSearchExpression(string $attribute, array $values, bool $not): string
     {
         /** @var string $term */
         $term = $values[0] ?? '';
@@ -654,7 +654,7 @@ class PostgreSQL extends SQL implements
     }
 
     #[\Override]
-    protected function compileVectorOrderExpr(): ?Condition
+    protected function compileVectorOrderExpression(): ?Condition
     {
         if ($this->vectorOrder === null) {
             return null;
@@ -879,7 +879,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonContainsExpr(string $attribute, array $values, bool $not): string
+    protected function compileJsonContainsExpression(string $attribute, array $values, bool $not): string
     {
         $this->addBinding(\json_encode($values[0]));
         $expr = $attribute . ' @> ?::jsonb';
@@ -891,7 +891,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonOverlapsExpr(string $attribute, array $values): string
+    protected function compileJsonOverlapsExpression(string $attribute, array $values): string
     {
         /** @var array<mixed> $arr */
         $arr = $values[0];
@@ -909,7 +909,7 @@ class PostgreSQL extends SQL implements
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileJsonPathExpr(string $attribute, array $values): string
+    protected function compileJsonPathExpression(string $attribute, array $values): string
     {
         /** @var string $path */
         $path = $values[0];
