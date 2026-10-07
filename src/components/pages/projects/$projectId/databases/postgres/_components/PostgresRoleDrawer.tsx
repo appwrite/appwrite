@@ -15,12 +15,11 @@ import {
   buildPostgresUpdateRoleSql,
   createDefaultPostgresRoleFormState,
   mapPostgresRoleRowToFormState,
-  parsePostgresRoleMembership,
   validatePostgresRoleFormState,
   type PostgresRoleFormState,
   type PostgresRoleRow,
 } from '@/lib/postgres-roles'
-import { runPostgresDdlStatements } from '@/lib/postgres-sql'
+import { runPostgresDdlStatementsUntilFailure } from '@/lib/postgres-sql'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -134,13 +133,25 @@ export function PostgresRoleDrawer({
 
     try {
       if (isEdit && role) {
-        await runPostgresDdlStatements(
-          executeSql.mutateAsync,
-          buildPostgresUpdateRoleSql(
-            formState,
-            parsePostgresRoleMembership(role.member_of),
-          ),
+        const statements = buildPostgresUpdateRoleSql(
+          mapPostgresRoleRowToFormState(role),
+          formState,
         )
+        if (statements.length === 0) {
+          onOpenChange(false)
+          return
+        }
+        const failure = await runPostgresDdlStatementsUntilFailure(
+          executeSql.mutateAsync,
+          statements,
+        )
+        if (failure) {
+          if (failure.applied > 0) {
+            onOpenChange(false)
+            onSuccess()
+          }
+          throw failure.error
+        }
         toast.success(t('Role updated'))
       } else {
         await executeSql.mutateAsync(buildPostgresCreateRoleSql(formState))
@@ -212,7 +223,13 @@ export function PostgresRoleDrawer({
                 title={t('Can login')}
                 description={t('Allow this role to sign in to the database.')}
                 checked={formState.canLogin}
-                onCheckedChange={(checked) => updateForm({ canLogin: checked })}
+                onCheckedChange={(checked) =>
+                  updateForm(
+                    checked
+                      ? { canLogin: true }
+                      : { canLogin: false, password: '' },
+                  )
+                }
               />
 
               {formState.canLogin ? (
