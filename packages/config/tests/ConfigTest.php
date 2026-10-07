@@ -165,14 +165,14 @@ final class ConfigTest extends TestCase
         Config::load(new Variable('key=value'), new Dotenv(), TestConfigWithoutType::class);
     }
 
-    public function testPrivatePropertyThrowsLoad(): void
+    public function testNonPublicKeyPropertyThrowsLoad(): void
     {
         $this->expectException(Load::class);
         $this->expectExceptionMessage('Property key must be public.');
-        Config::load(new Variable(['key' => 'value']), new None(), TestPrivateConfig::class);
+        Config::load(new Variable(['key' => 'value']), new None(), TestNonPublicKeyConfig::class);
     }
 
-    public function testProtectedPropertyThrowsLoad(): void
+    public function testNonPublicPropertyWithoutAttributeThrowsLoad(): void
     {
         $this->expectException(Load::class);
         $this->expectExceptionMessage('Property cache must be public.');
@@ -388,10 +388,10 @@ class TestConstructorConfig
     }
 }
 
-class TestPrivateConfig
+class TestNonPublicKeyConfig
 {
     #[Key('key', new Text(1024, 0))]
-    private string $key;
+    protected string $key;
 }
 
 class TestProtectedConfig
