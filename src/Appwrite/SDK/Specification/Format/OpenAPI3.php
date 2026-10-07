@@ -1141,7 +1141,6 @@ class OpenAPI3 extends Format
                     $methodTemp['requestBody'] = $body;
                 }
 
-                // Operations that accept a chunked upload reference the headers they read.
                 if ($sdk->isChunked()) {
                     $declaresChunkedUpload = true;
                     $methodTemp['parameters'][] = ['$ref' => '#/components/parameters/ContentRange'];

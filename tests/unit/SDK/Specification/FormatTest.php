@@ -678,7 +678,8 @@ final class FormatTest extends TestCase
                 type: MethodType::UPLOAD,
                 chunked: true,
             ))
-            ->param('bucketId', '', new Text(36), 'Bucket ID.');
+            ->param('bucketId', '', new Text(36), 'Bucket ID.')
+            ->param('file', '', new Text(36), 'Binary file.');
 
         $single = (new Route('PUT', '/v1/avatars/photo'))
             ->desc('Update photo')
@@ -690,17 +691,29 @@ final class FormatTest extends TestCase
                 auth: [AuthType::ADMIN],
                 responses: [],
                 type: MethodType::UPLOAD,
-            ));
+            ))
+            ->param('file', '', new Text(36), 'Binary image.');
 
         $openApi = (new OpenAPI3(new Container(), [], [$chunked, $single], [], [], ['console' => 0], 'console'))->parse();
 
-        $parameters = $openApi['paths']['/storage/buckets/{bucketId}/files']['post']['parameters'];
+        $create = $openApi['paths']['/storage/buckets/{bucketId}/files']['post'];
+        $parameters = $create['parameters'];
         $this->assertSame('bucketId', $parameters[0]['name']);
         $this->assertSame('path', $parameters[0]['in']);
         $this->assertSame('#/components/parameters/ContentRange', $parameters[1]['$ref']);
         $this->assertSame('#/components/parameters/UploadId', $parameters[2]['$ref']);
         $this->assertCount(3, $parameters);
-        $this->assertArrayNotHasKey('parameters', $openApi['paths']['/avatars/photo']['put']);
+        $this->assertSame(
+            ['file'],
+            array_keys($create['requestBody']['content']['application/json']['schema']['properties'])
+        );
+
+        $photo = $openApi['paths']['/avatars/photo']['put'];
+        $this->assertArrayNotHasKey('parameters', $photo);
+        $this->assertSame(
+            ['file'],
+            array_keys($photo['requestBody']['content']['application/json']['schema']['properties'])
+        );
 
         $this->assertSame([
             'ContentRange' => [
@@ -725,9 +738,6 @@ final class FormatTest extends TestCase
                 ],
             ],
         ], $openApi['components']['parameters']);
-
-        Method::$processed = [];
-        Method::$errors = [];
 
         $plain = (new OpenAPI3(new Container(), [], [$single], [], [], ['console' => 0], 'console'))->parse();
         $this->assertArrayNotHasKey('parameters', $plain['components']);
