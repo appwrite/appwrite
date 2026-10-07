@@ -50,7 +50,7 @@ class Operators
      * @param array<int|string, mixed> $data
      * @throws StructureException
      */
-    public static function prepare(Document $collection, Document $current, array &$data): void
+    public static function prepare(Document $collection, Document $current, array $data): void
     {
         foreach ($data as $key => $value) {
             if (!\is_string($key) || \str_starts_with($key, '$') || !$value instanceof Operator) {

@@ -832,7 +832,7 @@ class Update extends Action
         Document $collection,
         string $collectionId,
         ?string $documentId,
-        array &$data,
+        array $data,
         array $state,
         bool $creating,
     ): void {
