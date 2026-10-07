@@ -7,6 +7,7 @@ namespace Tests\Unit\Database\Adapter;
 use Appwrite\Database\Adapter\Postgres;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 use Utopia\Database\Query;
 
 final class PostgresTest extends TestCase
@@ -28,7 +29,10 @@ final class PostgresTest extends TestCase
 
     public function testDistanceLessThanInMetersUsesSpatialIndex(): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [10.0, 51.0], 1000, true));
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', [10.0, 51.0], 1000, true),
+            Database::VAR_POINT,
+        );
 
         $this->assertSame(
             'ST_DWithin(main."loc", ST_GeomFromText(:q_0, 4326), :q_2)'
@@ -44,7 +48,10 @@ final class PostgresTest extends TestCase
 
     public function testMeterRadiusNearThePoleCoversNearbyLongitude(): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [0.0, 89.999], 1, true));
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', [0.0, 89.999], 1, true),
+            Database::VAR_POINT,
+        );
 
         $this->assertStringStartsWith('ST_DWithin(', $sql);
         $this->assertGreaterThan(0.1, $binds[':q_2']);
@@ -52,7 +59,10 @@ final class PostgresTest extends TestCase
 
     public function testMeterCircleThatReachesThePoleStaysExact(): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [0.0, 89.999], 500, true));
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', [0.0, 89.999], 500, true),
+            Database::VAR_POINT,
+        );
 
         $this->assertSame($this->exactMeterDistance(), $sql);
         $this->assertArrayNotHasKey(':q_2', $binds);
@@ -60,7 +70,10 @@ final class PostgresTest extends TestCase
 
     public function testDistanceLessThanInMetersNearAntimeridianStaysExact(): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [179.99, 51.0], 1000, true));
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', [179.99, 51.0], 1000, true),
+            Database::VAR_POINT,
+        );
 
         $this->assertSame($this->exactMeterDistance(), $sql);
         $this->assertArrayNotHasKey(':q_2', $binds);
@@ -70,9 +83,12 @@ final class PostgresTest extends TestCase
      * @param array<mixed> $geometry
      */
     #[DataProvider('nonPointGeometries')]
-    public function testMeterDistanceOnNonPointsStaysExact(array $geometry): void
+    public function testMeterDistanceOnNonPointQueriesStaysExact(array $geometry): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', $geometry, 20000, true));
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', $geometry, 20000, true),
+            Database::VAR_POINT,
+        );
 
         $this->assertSame($this->exactMeterDistance(), $sql);
         $this->assertArrayNotHasKey(':q_2', $binds);
@@ -86,6 +102,30 @@ final class PostgresTest extends TestCase
         return [
             'line' => [[[-60.0, 60.0], [60.0, 60.0]]],
             'polygon' => [[[[-60.0, 60.0], [60.0, 60.0], [0.0, 70.0], [-60.0, 60.0]]]],
+        ];
+    }
+
+    #[DataProvider('nonPointColumns')]
+    public function testMeterDistanceOnNonPointColumnsStaysExact(string $type): void
+    {
+        [$sql, $binds] = $this->compile(
+            Query::distanceLessThan('loc', [0.0, 74.0], 20000, true),
+            $type,
+        );
+
+        $this->assertSame($this->exactMeterDistance(), $sql);
+        $this->assertArrayNotHasKey(':q_2', $binds);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function nonPointColumns(): array
+    {
+        return [
+            'linestring' => [Database::VAR_LINESTRING],
+            'polygon' => [Database::VAR_POLYGON],
+            'unknown' => [''],
         ];
     }
 
@@ -107,7 +147,7 @@ final class PostgresTest extends TestCase
         ];
 
         foreach ($cases as [$query, $expected]) {
-            [$sql] = $this->compile($query);
+            [$sql] = $this->compile($query, Database::VAR_POINT);
             $this->assertSame($expected, $sql);
         }
     }
@@ -115,8 +155,12 @@ final class PostgresTest extends TestCase
     /**
      * @return array{0: string, 1: array<string, mixed>}
      */
-    private function compile(Query $query): array
+    private function compile(Query $query, string $attributeType = ''): array
     {
+        if ($attributeType !== '') {
+            $query->setAttributeType($attributeType);
+        }
+
         $probe = new class () extends Postgres {
             public function __construct()
             {

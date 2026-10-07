@@ -3,6 +3,7 @@
 namespace Appwrite\Database\Adapter;
 
 use Utopia\Database\Adapter\Postgres as UtopiaPostgres;
+use Utopia\Database\Database;
 use Utopia\Database\Query;
 
 /**
@@ -48,15 +49,19 @@ class Postgres extends UtopiaPostgres
             return "ST_DWithin({$column}, {$geometry}, :{$placeholder}_1) AND {$sql}";
         }
 
-        if (!is_array($values[0]) || !is_numeric($values[1] ?? null)) {
+        // A planar radius contains the meter circle only when both sides are
+        // points. A line or polygon edge is geodesic and can lie outside it.
+        $shape = $values[0] ?? null;
+        if (
+            $query->getAttributeType() !== Database::VAR_POINT
+            || !is_array($shape)
+            || !$this->isPoint($shape)
+            || !is_numeric($values[1] ?? null)
+        ) {
             return $sql;
         }
 
-        // Geography edges are geodesic. A planar radius around a point contains
-        // the meter circle; a line or polygon does not, so those stay exact.
-        $degrees = $this->isPoint($values[0])
-            ? $this->degreesCoveringPoint($values[0], (float) $values[1])
-            : null;
+        $degrees = $this->degreesCoveringPoint($shape, (float) $values[1]);
         if ($degrees === null) {
             return $sql;
         }
@@ -100,10 +105,12 @@ class Postgres extends UtopiaPostgres
         return $degrees;
     }
 
-    private function isPoint(mixed $value): bool
+    /**
+     * @param array<mixed> $value
+     */
+    private function isPoint(array $value): bool
     {
-        return is_array($value)
-            && count($value) === 2
+        return count($value) === 2
             && isset($value[0], $value[1])
             && is_numeric($value[0])
             && is_numeric($value[1]);
