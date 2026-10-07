@@ -549,11 +549,8 @@ class OpenAPI3 extends Format
                     unset($temp['responses'][(string)$response->getCode()]['content']);
                 }
 
-                // sdk-generator classifies webAuth from a 3xx binary body
-                // (Language::getMethodType). Keep that body until a generator
-                // release reads the Location header instead.
                 if (in_array($response->getCode(), [301, 302, 308], true)) {
-                    $redirect = [
+                    $temp['responses'][(string)$response->getCode()] = [
                         'description' => 'Redirect',
                         'headers' => [
                             'Location' => [
@@ -565,11 +562,6 @@ class OpenAPI3 extends Format
                             ],
                         ],
                     ];
-                    $content = $temp['responses'][(string)$response->getCode()]['content'] ?? null;
-                    if ($content !== null) {
-                        $redirect['content'] = $content;
-                    }
-                    $temp['responses'][(string)$response->getCode()] = $redirect;
                 }
             }
 
