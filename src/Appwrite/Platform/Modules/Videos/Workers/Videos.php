@@ -914,9 +914,12 @@ class Videos extends Action
      *
      * Image-based streams are skipped. An upload that already claims default
      * keeps the flag; extracted rows for the same language are still created.
-     * One failed track does not fail the timeline.
+     * One failed track does not fail the timeline. A probe or ffmpeg failure
+     * returns false so the caller can release `captionsExtracted` and a later
+     * job can retry. Tracks already stored are reused instead of inserted again.
      *
      * @param array<string> $permissions
+     * @return bool True when every text track was stored or permanently skipped
      */
     private function extractEmbeddedCaptions(
         Database $dbForProject,
@@ -928,14 +931,14 @@ class Videos extends Action
         Realtime $queueForRealtime,
         Document $project,
         array $permissions
-    ): void {
+    ): bool {
         Console::info('Videos worker: extracting embedded captions for video ' . $video->getId());
 
         try {
             $info = $encoder->probe($inPath);
         } catch (\Throwable $th) {
             Console::warning('Videos worker: caption probe failed for ' . $video->getId() . ': ' . $th->getMessage());
-            return;
+            return false;
         }
 
         $tracks = $info->tracks(Track::SUBTITLE);
@@ -952,6 +955,8 @@ class Videos extends Action
         $assignedDefault = false;
         $registered = 0;
         $skipped = 0;
+        $retry = false;
+        $used = [];
 
         foreach ($tracks as $track) {
             $codec = \strtolower((string) ($track->codec ?? ''));
@@ -978,6 +983,22 @@ class Videos extends Action
 
             $code = $this->captionLanguageCode($track->language);
 
+            $name = $this->sanitizeMeta(
+                $track->title
+                ?? ($track->language !== null && $track->language !== '' ? $track->language : null)
+                ?? ('Track ' . $track->index)
+            );
+
+            $existing = $this->embeddedCaption($dbForProject, $video, $code, $name ?? '', $used);
+            if (
+                $existing !== null
+                && $existing->getAttribute('status') === Base::STATUS_READY
+                && ($existing->getAttribute('path') ?? '') !== ''
+            ) {
+                $registered++;
+                continue;
+            }
+
             $vttPath = \rtrim($outDir, '/') . '/sub_' . $track->index . '.vtt';
 
             try {
@@ -992,6 +1013,7 @@ class Videos extends Action
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
                 $skipped++;
+                $retry = true;
                 continue;
             }
 
@@ -1004,41 +1026,39 @@ class Videos extends Action
                 continue;
             }
 
-            $name = $this->sanitizeMeta(
-                $track->title
-                ?? ($track->language !== null && $track->language !== '' ? $track->language : null)
-                ?? ('Track ' . $track->index)
-            );
-
-            // Re-check immediately before write: an upload can claim default while
-            // ffmpeg is extracting, and a stale snapshot would create two defaults.
-            $isDefault = false;
-            if (!$assignedDefault && $track->default && !$this->hasDefaultCaption($dbForProject, $video)) {
-                $isDefault = true;
-                $assignedDefault = true;
-            }
-
             try {
-                $caption = $dbForProject->createDocument('videos_captions', new Document([
-                    '$id' => ID::unique(),
-                    'videoId' => $video->getId(),
-                    'videoInternalId' => $video->getSequence(),
-                    'name' => $name,
-                    'code' => $code,
-                    'default' => $isDefault,
-                    'status' => Base::STATUS_STARTED,
-                ]));
-                $this->notify(
-                    $queueForRealtime,
-                    $project,
-                    $caption,
-                    'videos.[videoId].captions.[captionId].update',
-                    [
+                if ($existing !== null) {
+                    $caption = $existing;
+                } else {
+                    // Re-check immediately before write: an upload can claim default while
+                    // ffmpeg is extracting, and a stale snapshot would create two defaults.
+                    $isDefault = false;
+                    if (!$assignedDefault && $track->default && !$this->hasDefaultCaption($dbForProject, $video)) {
+                        $isDefault = true;
+                        $assignedDefault = true;
+                    }
+
+                    $caption = $dbForProject->createDocument('videos_captions', new Document([
+                        '$id' => ID::unique(),
                         'videoId' => $video->getId(),
-                        'captionId' => $caption->getId(),
-                    ],
-                    $permissions
-                );
+                        'videoInternalId' => $video->getSequence(),
+                        'name' => $name,
+                        'code' => $code,
+                        'default' => $isDefault,
+                        'status' => Base::STATUS_STARTED,
+                    ]));
+                    $this->notify(
+                        $queueForRealtime,
+                        $project,
+                        $caption,
+                        'videos.[videoId].captions.[captionId].update',
+                        [
+                            'videoId' => $video->getId(),
+                            'captionId' => $caption->getId(),
+                        ],
+                        $permissions
+                    );
+                }
 
                 $this->persistCaptionVtt(
                     $dbForProject,
@@ -1055,7 +1075,7 @@ class Videos extends Action
                     'Videos worker: registered embedded caption ' . $caption->getId()
                     . ' code=' . $code
                     . ' name=' . $name
-                    . ' default=' . ($isDefault ? 'yes' : 'no')
+                    . ' default=' . ($caption->getAttribute('default', false) ? 'yes' : 'no')
                     . ' bytes=' . \filesize($vttPath)
                     . ' for video ' . $video->getId()
                 );
@@ -1065,6 +1085,7 @@ class Videos extends Action
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
                 $skipped++;
+                $retry = true;
             }
         }
 
@@ -1110,7 +1131,10 @@ class Videos extends Action
             . ' registered=' . $registered
             . ' skipped=' . $skipped
             . ' streams=' . \count($tracks)
+            . ' retry=' . ($retry ? 'yes' : 'no')
         );
+
+        return !$retry;
     }
 
     /**
@@ -1125,6 +1149,46 @@ class Videos extends Action
         ]);
 
         return $existing !== [];
+    }
+
+    /**
+     * Embedded caption already stored for this language and name.
+     *
+     * Uploads carry a fileId and are ignored. `$used` keeps a second stream
+     * with the same language and name from attaching to the first row.
+     *
+     * @param array<string, true> $used
+     */
+    private function embeddedCaption(
+        Database $dbForProject,
+        Document $video,
+        string $code,
+        string $name,
+        array &$used
+    ): ?Document {
+        $existing = $dbForProject->find('videos_captions', [
+            Query::equal('videoInternalId', [$video->getSequence()]),
+            Query::equal('code', [$code]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        foreach ($existing as $caption) {
+            if (!empty($caption->getAttribute('fileId', ''))) {
+                continue;
+            }
+            if ((string) ($caption->getAttribute('name') ?? '') !== $name) {
+                continue;
+            }
+            if (isset($used[$caption->getId()])) {
+                continue;
+            }
+
+            $used[$caption->getId()] = true;
+
+            return $caption;
+        }
+
+        return null;
     }
 
     /**
@@ -1210,7 +1274,8 @@ class Videos extends Action
 
     /**
      * Download the storage file into the job directory, probe metadata once,
-     * and extract embedded captions once.
+     * and extract embedded captions. A failed extract clears captionsExtracted
+     * so a later job can retry.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
      * @param array<string> $permissions
@@ -1250,6 +1315,8 @@ class Videos extends Action
         }
 
         if (!$video->getAttribute('captionsExtracted', false)) {
+            // Claim before extract so two jobs cannot register the same tracks.
+            // Release the claim unless extraction finishes, so a later job retries.
             $claimed = $dbForProject->updateDocuments(
                 'videos',
                 new Document(['captionsExtracted' => true]),
@@ -1260,8 +1327,9 @@ class Videos extends Action
             );
 
             if ($claimed > 0) {
+                $extracted = false;
                 try {
-                    $this->extractEmbeddedCaptions(
+                    $extracted = $this->extractEmbeddedCaptions(
                         $dbForProject,
                         $deviceForVideos,
                         $video,
@@ -1278,6 +1346,18 @@ class Videos extends Action
                         . $video->getId() . ': ' . $th->getMessage()
                     );
                 }
+
+                if (!$extracted) {
+                    $dbForProject->updateDocuments(
+                        'videos',
+                        new Document(['captionsExtracted' => false]),
+                        [
+                            Query::equal('$id', [$video->getId()]),
+                            Query::equal('captionsExtracted', [true]),
+                        ]
+                    );
+                }
+
                 $video = $dbForProject->getDocument('videos', $video->getId());
             }
         }
