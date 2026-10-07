@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
+use Appwrite\Avatars\Favicon;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -12,8 +13,6 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use DOMDocument;
-use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -89,71 +88,15 @@ class Get extends Action
 
         $client = $clientForAvatars->withTimeout(15);
 
+        $pageUrl = $url;
+
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $body = (string) $pageResponse->getBody();
-
-        $doc = new DOMDocument();
-        $doc->strictErrorChecking = false;
-        if (!empty($body)) {
-            @$doc->loadHTML($body);
-        }
-
-        $links = $doc->getElementsByTagName('link');
-        $outputHref = '';
-        $outputExt = '';
-        $space = 0;
-
-        foreach ($links as $link) { /* @var $link DOMElement */
-            $href = $link->getAttribute('href');
-            $rel = $link->getAttribute('rel');
-            $sizes = $link->getAttribute('sizes');
-            $absolute = URLParse::resolveLocation($url, $href);
-
-            switch (\strtolower($rel)) {
-                case 'icon':
-                case 'shortcut icon':
-                    $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
-
-                    switch ($ext) {
-                        case 'svg':
-                            // SVG icons are prioritized by assigning the maximum possible value.
-                            $space = PHP_INT_MAX;
-                            $outputHref = $absolute;
-                            $outputExt = $ext;
-                            break;
-                        case 'ico':
-                        case 'png':
-                        case 'jpg':
-                        case 'jpeg':
-                            $size = \explode('x', \strtolower($sizes));
-
-                            $sizeWidth = (int) $size[0];
-                            $sizeHeight = (int) ($size[1] ?? 0);
-
-                            if (($sizeWidth * $sizeHeight) >= $space) {
-                                $space = $sizeWidth * $sizeHeight;
-                                $outputHref = $absolute;
-                                $outputExt = $ext;
-                            }
-
-                            break;
-                    }
-
-                    break;
-            }
-        }
-
-        if (empty($outputHref) || empty($outputExt)) {
-            $default = \parse_url($url);
-
-            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
-            $outputExt = 'ico';
-        }
+        [$outputHref, $outputExt] = Favicon::locate((string) $pageResponse->getBody(), $pageUrl);
 
         try {
             $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $client);
@@ -210,11 +153,12 @@ class Get extends Action
     /**
      * Follows redirects one hop at a time so every target passes the validator (scheme,
      * known public domain, allowed addresses) before it is requested; the client then
-     * checks the address it actually connects to.
+     * checks the address it actually connects to. The last requested URL is written to
+     * $finalUrl.
      *
      * @throws Exception
      */
-    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client): ResponseInterface
+    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client, ?string &$finalUrl = null): ResponseInterface
     {
         $requestFactory = new RequestFactory();
 
@@ -222,6 +166,8 @@ class Get extends Action
             if (!$validator->isValid($url)) {
                 throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
             }
+
+            $finalUrl = $url;
 
             $response = $client->sendRequest(
                 $requestFactory
