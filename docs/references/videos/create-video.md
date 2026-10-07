@@ -1,0 +1,3 @@
+Create a video resource from an existing file in a storage bucket. The source file must be a video or audio file. Creating a video stores the document and queues timeline generation. The worker downloads the source, probes metadata, extracts embedded captions once, and deletes its working copy when finished. Sources with a video track also get a sprite timeline. Call create-rendition to package a streaming output.
+
+An optional `name` defaults to the source file name. Uploaded caption files stay listed alongside auto-extracted tracks for the same language; when the current default is an auto-extracted track with that code, the upload takes the default flag.

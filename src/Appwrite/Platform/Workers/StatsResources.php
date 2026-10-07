@@ -116,6 +116,7 @@ class StatsResources extends Action
             METRIC_SITES => $this->safeCount($dbForProject, 'sites'),
             METRIC_TEAMS => $this->safeCount($dbForProject, 'teams'),
             METRIC_MESSAGES => $this->safeCount($dbForProject, 'messages'),
+            METRIC_VIDEOS => $this->safeCount($dbForProject, 'videos'),
             METRIC_PROVIDERS => $this->safeCount($dbForProject, 'providers'),
             METRIC_TOPICS => $this->safeCount($dbForProject, 'topics'),
             METRIC_TARGETS => $this->safeCount($dbForProject, 'targets'),

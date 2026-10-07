@@ -1,0 +1,77 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Videos\Services;
+
+use Appwrite\Platform\Modules\Videos\Http\Videos\Codecs\XList as ListCodecs;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Create as CreateVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Delete as DeleteVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Get as GetVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\DASH\Manifest\Get as GetCmafDashManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\HLS\Manifest\Get as GetCmafHlsManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\CMAF\Renditions\Streams\Manifest\Get as GetCmafStreamManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest\Get as GetDashManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest\Get as GetHlsManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Segments\Get as GetSegment;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Manifest\Get as GetStreamManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Manifest\Get as GetCaptionManifest;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Captions\Segments\Get as GetCaptionSegment;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Previews\Get as GetPreview;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRendition;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Create as CreateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\XList as ListCaptions;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Get as GetTimeline;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
+use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
+use Utopia\Platform\Service;
+
+class Http extends Service
+{
+    public function __construct()
+    {
+        $this->type = Service::TYPE_HTTP;
+
+        // Videos
+        $this->addAction(CreateVideo::getName(), new CreateVideo());
+        $this->addAction(GetVideo::getName(), new GetVideo());
+        $this->addAction(ListVideos::getName(), new ListVideos());
+        $this->addAction(UpdateVideo::getName(), new UpdateVideo());
+        $this->addAction(DeleteVideo::getName(), new DeleteVideo());
+
+        // Timeline and previews
+        $this->addAction(GetTimeline::getName(), new GetTimeline());
+        $this->addAction(GetPreview::getName(), new GetPreview());
+
+        // Captions
+        $this->addAction(CreateCaption::getName(), new CreateCaption());
+        $this->addAction(ListCaptions::getName(), new ListCaptions());
+        $this->addAction(UpdateCaption::getName(), new UpdateCaption());
+        $this->addAction(DeleteCaption::getName(), new DeleteCaption());
+
+        // Renditions
+        $this->addAction(CreateRendition::getName(), new CreateRendition());
+        $this->addAction(GetRendition::getName(), new GetRendition());
+        $this->addAction(ListRenditions::getName(), new ListRenditions());
+        $this->addAction(DeleteRendition::getName(), new DeleteRendition());
+
+        // Playback. HLS, DASH, and CMAF master manifests get separate routes so the
+        // URL keeps its .m3u8/.mpd extension for players that infer the container
+        // from it (ExoPlayer, AVURLAsset).
+        $this->addAction(GetHlsManifest::getName(), new GetHlsManifest());
+        $this->addAction(GetDashManifest::getName(), new GetDashManifest());
+        $this->addAction(GetCmafHlsManifest::getName(), new GetCmafHlsManifest());
+        $this->addAction(GetCmafDashManifest::getName(), new GetCmafDashManifest());
+        $this->addAction(GetStreamManifest::getName(), new GetStreamManifest());
+        $this->addAction(GetCmafStreamManifest::getName(), new GetCmafStreamManifest());
+        $this->addAction(GetSegment::getName(), new GetSegment());
+        $this->addAction(GetCaptionManifest::getName(), new GetCaptionManifest());
+        $this->addAction(GetCaptionSegment::getName(), new GetCaptionSegment());
+
+        // Codecs
+        $this->addAction(ListCodecs::getName(), new ListCodecs());
+    }
+}

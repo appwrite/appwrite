@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * * Video
      * - GraphQL
      * - Migrations
      */
@@ -357,6 +358,24 @@ class Exception extends \Exception
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
     public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
     public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
+
+    /** Video */
+    public const string VIDEO_NOT_FOUND = 'video_not_found';
+    public const string VIDEO_NOT_VALID = 'video_not_valid';
+    public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
+    public const string VIDEO_PROFILE_ALREADY_EXISTS = 'video_profile_already_exists';
+    public const string VIDEO_CODEC_DISABLED = 'video_codec_disabled';
+    public const string VIDEO_CODEC_OUTPUT_UNSUPPORTED = 'video_codec_output_unsupported';
+    public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';
+    public const string VIDEO_RENDITION_ALREADY_EXISTS = 'video_rendition_already_exists';
+    public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';
+    public const string VIDEO_CAPTION_NOT_FOUND = 'video_caption_not_found';
+    public const string VIDEO_CAPTION_NOT_VALID = 'video_caption_not_valid';
+    public const string VIDEO_CAPTION_SEGMENT_NOT_FOUND = 'video_caption_segment_not_found';
+    public const string VIDEO_LANGUAGE_CODE_NOT_VALID = 'video_language_code_not_valid';
+    public const string VIDEO_PREVIEW_NOT_FOUND = 'video_preview_not_found';
+    public const string VIDEO_TIMELINE_NOT_FOUND = 'video_timeline_not_found';
+    public const string VIDEO_SECOND_OUT_OF_RANGE = 'video_second_out_of_range';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
