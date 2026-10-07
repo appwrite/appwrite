@@ -215,6 +215,19 @@ final class TeamsCustomClientTest extends Scope
         $this->assertEmpty($other['userName']);
         $this->assertEmpty($other['userEmail']);
         $this->assertArrayHasKey('mfa', $other);
+
+        // Restore the defaults so later tests in this project see member details
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testTeamsInviteHTMLInjection(): void
