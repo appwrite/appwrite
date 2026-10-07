@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Utopia\Database\Validator\ProjectId;
@@ -11,7 +12,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

@@ -160,7 +160,7 @@ Direct loading means Appwrite runs the head of every library, so a package where
 
 | Package | Appwrite | Latest | Gap | Action |
 |---|---|---|---|---|
-| `config` | 1.0.0 | 2.0.8 | 1.x is a static key/value registry (`load`, `getParam`, `setParam`); 2.x loads typed config classes from a `Source` plus `Parser`. ~300 call sites, 44 loads in `app/init/configs.php`. | Do not rewrite. Move the 1.x registry (about 100 lines) into `src/Appwrite/Config/`; it only serves Appwrite's product config under `app/config/`. Drop the dependency. 2.x needs a home only if something adopts it. |
+| `config` | 1.0.0 | 2.0.8 | 1.x is a static key/value registry (`load`, `getParam`, `setParam`); 2.x loads typed config classes from a `Source` plus `Parser`. ~300 call sites, 44 loads in `app/init/configs.php`. | Done: the 1.x registry is `Appwrite\Config\Config` in `src/Appwrite/Config/` (with the `PHP` and `Dotenv` adapters Appwrite uses), and the dependency is dropped. Cloud rewrites its imports when it next updates `server-ce`. 2.x is absorbed into `packages/config` as a library Appwrite does not load. |
 | `console` | 0.1.1 → 0.2.9 | 0.2.9 | Additive (`Utopia\Command`). | Merged in #13616 (2026-09-14), which supersedes #11937 and requires `database ^7.3.8`, the first release accepting console 0.2 (utopia-php/database#965). Cloud followed in appwrite-labs/cloud#5817 (merged 2026-09-14). |
 | `system` | 0.10.6 | 0.11.0 | Additive (`getMemory()`). `main` already allows `^0.10 \|\| ^0.11`. | `composer update utopia-php/system` in its absorb PR. |
 | `vcs` | 5.2.5 | 5.3.0 | Additive. | Absorb PR. |
@@ -316,5 +316,5 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 ## Open questions
 
 1. `reputation`: `appwrite/cloud` or `packages/`?
-2. `config` 2.x: give it a `packages/` home now (unused by Appwrite, still mirrored) or leave it on its standalone repository until something adopts it?
+2. ~~`config` 2.x: give it a `packages/` home now (unused by Appwrite, still mirrored) or leave it on its standalone repository until something adopts it?~~ Resolved: `packages/config`, so `utopia-php/monorepo` can be archived. Edge and open-runtimes/executor stay on the 0.2 registry from Packagist.
 3. Standard source path: this RFC picks flat `src/` (the directory already repeats the package name). The monorepo's own `docs/creating.md` prescribes `src/<Ns>/`. One has to win before phase 1.

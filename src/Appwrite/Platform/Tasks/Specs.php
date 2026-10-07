@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Config\Config;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Network\Validator\Redirect;
@@ -18,7 +19,6 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Client\Destinations\Anywhere;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;

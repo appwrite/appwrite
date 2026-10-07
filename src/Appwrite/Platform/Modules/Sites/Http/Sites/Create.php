@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -13,7 +14,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;

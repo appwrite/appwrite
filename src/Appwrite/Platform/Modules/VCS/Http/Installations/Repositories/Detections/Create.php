@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detections;
 
+use Appwrite\Config\Adapter\Dotenv as ConfigDotenv;
+use Appwrite\Config\Config;
+use Appwrite\Config\Exception\Parse;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,9 +14,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
-use Utopia\Config\Config;
-use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Detector\Detection\Framework\Analog;

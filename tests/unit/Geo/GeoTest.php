@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Geo;
 
+use Appwrite\Config\Config;
 use Appwrite\Geo\Client;
 use Appwrite\Geo\Geo;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
-use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 
 final class GeoTest extends TestCase

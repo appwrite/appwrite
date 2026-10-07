@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Deployment;
 
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Psr7\Response;

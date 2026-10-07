@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
@@ -7,7 +8,6 @@ use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Codec\Igbinary;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;

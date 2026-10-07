@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Config\Config;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
@@ -10,7 +11,6 @@ use Appwrite\Role;
 use Appwrite\Screenshots\Client;
 use Exception;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

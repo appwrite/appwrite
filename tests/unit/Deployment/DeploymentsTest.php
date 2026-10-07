@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Deployment;
 
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 final class DeploymentsTest extends TestCase

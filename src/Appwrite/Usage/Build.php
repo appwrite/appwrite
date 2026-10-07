@@ -2,9 +2,9 @@
 
 namespace Appwrite\Usage;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 /**

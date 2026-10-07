@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +13,6 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\Gitea;

@@ -3,13 +3,13 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Stages;
 
 use Appwrite\Auth\Key;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

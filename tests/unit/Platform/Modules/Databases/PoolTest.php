@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Databases;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Pool;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 final class PoolTest extends TestCase
 {

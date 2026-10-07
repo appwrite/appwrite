@@ -6,6 +6,7 @@ require_once __DIR__ . '/init/span.php';
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Config\Config;
 use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -14,7 +15,6 @@ use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;

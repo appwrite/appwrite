@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\S3\Http\S3;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Audit as AuditMessage;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -18,7 +19,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;

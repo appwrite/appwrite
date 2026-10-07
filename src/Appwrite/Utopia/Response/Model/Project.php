@@ -2,9 +2,9 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Config\Config;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 class Project extends Model

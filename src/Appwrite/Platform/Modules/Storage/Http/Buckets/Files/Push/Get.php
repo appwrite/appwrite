@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Push;
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Documents\User;
@@ -11,7 +12,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
 use Appwrite\Autogravity\Detector as AutogravityDetector;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
@@ -18,7 +19,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

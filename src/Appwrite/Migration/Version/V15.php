@@ -2,9 +2,9 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Config\Config;
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

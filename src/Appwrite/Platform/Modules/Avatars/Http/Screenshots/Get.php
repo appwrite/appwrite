@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Screenshots;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -14,7 +15,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;

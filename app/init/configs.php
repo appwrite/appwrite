@@ -1,7 +1,7 @@
 <?php
 
-use Utopia\Config\Adapters\PHP;
-use Utopia\Config\Config;
+use Appwrite\Config\Adapter\PHP;
+use Appwrite\Config\Config;
 
 require_once __DIR__ . '/../config/storage/resource_limits.php';
 

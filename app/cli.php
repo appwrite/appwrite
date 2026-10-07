@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Config\Config;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
@@ -14,7 +15,6 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\CLI\CLI;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;

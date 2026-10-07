@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Flags;
 
+use Appwrite\Config\Config;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,7 +10,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;

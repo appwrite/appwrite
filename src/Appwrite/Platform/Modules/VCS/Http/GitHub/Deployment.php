@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

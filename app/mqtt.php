@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Config\Config;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -15,7 +16,6 @@ use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;

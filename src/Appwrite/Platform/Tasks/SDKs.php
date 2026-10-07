@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Config\Config;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
@@ -27,7 +28,6 @@ use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use CzProject\GitPhp\Git;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Action;

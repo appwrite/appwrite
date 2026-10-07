@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
+use Appwrite\Config\Config;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Validator\Authorization;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Migration;
 
+use Appwrite\Config\Config;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
@@ -12,7 +13,6 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

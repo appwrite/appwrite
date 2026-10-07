@@ -3,10 +3,10 @@
 namespace Appwrite\Vcs;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;

@@ -5,10 +5,10 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Certificates\LetsEncrypt;
+use Appwrite\Config\Config;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

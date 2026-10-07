@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Config\Config;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -10,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

@@ -4,9 +4,9 @@ namespace Appwrite\Auth;
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\System\System;

@@ -3,13 +3,13 @@
 global $utopia, $request, $response;
 
 use Appwrite\Auth\OIDC\Mock\SigningKey;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Locking\Lock;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

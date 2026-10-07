@@ -2,7 +2,7 @@
 
 namespace Appwrite\Extend;
 
-use Utopia\Config\Config;
+use Appwrite\Config\Config;
 
 class Exception extends \Exception
 {

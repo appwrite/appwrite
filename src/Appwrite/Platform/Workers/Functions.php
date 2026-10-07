@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -15,7 +16,6 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

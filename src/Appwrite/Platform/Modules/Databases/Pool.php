@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
-use Utopia\Config\Config;
 use Utopia\DSN\DSN;
 use Utopia\System\System;
 

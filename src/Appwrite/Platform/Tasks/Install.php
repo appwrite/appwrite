@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Config\Config;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
@@ -17,7 +18,6 @@ use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;

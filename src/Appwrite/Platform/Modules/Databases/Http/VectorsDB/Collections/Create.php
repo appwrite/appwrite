@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Action as CollectionAction;
@@ -11,7 +12,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;

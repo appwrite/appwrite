@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Migration\Version;
 
+use Appwrite\Config\Config;
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

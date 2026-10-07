@@ -2,8 +2,8 @@
 
 namespace Appwrite\Event\Message;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Event;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 final class Func extends Base

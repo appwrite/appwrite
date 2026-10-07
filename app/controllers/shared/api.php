@@ -3,6 +3,7 @@
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Config\Config;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Audit as AuditMessage;
@@ -29,7 +30,6 @@ use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

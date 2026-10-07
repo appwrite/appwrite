@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
@@ -29,7 +30,6 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleDeleted;
+use Appwrite\Config\Config;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
 use Appwrite\Deployment\Deployments;
@@ -21,7 +22,6 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

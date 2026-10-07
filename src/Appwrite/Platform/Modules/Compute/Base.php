@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -14,7 +15,6 @@ use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationVa
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

@@ -6,9 +6,9 @@ namespace Appwrite\Platform\Tasks;
 // Example of env vars flag: --variables="{\"VITE_FORMSPREE_FORM_ID\":\"xvgkbzll\", \"VITE_FORMSPREE_FORM_SECRET\":\"some_secret\"}"
 // Expected output: public/images/sites/templates/playground-for-tanstack-start-light.png (and dark.png)
 
+use Appwrite\Config\Config;
 use Appwrite\ID;
 use Tests\E2E\Client;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;

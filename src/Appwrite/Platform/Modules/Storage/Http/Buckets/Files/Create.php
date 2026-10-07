@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
+use Appwrite\Config\Config;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -20,7 +21,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;

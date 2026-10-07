@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
@@ -13,7 +14,6 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Command;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

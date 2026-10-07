@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Config\Config;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -10,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;

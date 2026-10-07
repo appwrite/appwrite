@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\OAuth2;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -10,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Client;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

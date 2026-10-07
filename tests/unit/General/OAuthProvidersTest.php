@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\General;
 
+use Appwrite\Config\Config;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 final class OAuthProvidersTest extends TestCase
 {

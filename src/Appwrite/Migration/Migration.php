@@ -2,8 +2,8 @@
 
 namespace Appwrite\Migration;
 
+use Appwrite\Config\Config;
 use Exception;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

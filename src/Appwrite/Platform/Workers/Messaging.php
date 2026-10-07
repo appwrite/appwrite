@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Config\Config;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -14,7 +15,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

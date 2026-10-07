@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\DB;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

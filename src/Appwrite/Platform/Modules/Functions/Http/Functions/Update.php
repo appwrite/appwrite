@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -17,7 +18,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

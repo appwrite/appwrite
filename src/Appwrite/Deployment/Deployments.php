@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
@@ -19,7 +20,6 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Command;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

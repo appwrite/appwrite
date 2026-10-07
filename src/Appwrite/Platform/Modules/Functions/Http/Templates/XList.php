@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Templates;
 
+use Appwrite\Config\Config;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use FunctionUseCases;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;

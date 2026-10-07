@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Events;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -9,7 +10,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

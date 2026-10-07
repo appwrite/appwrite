@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event\Validator;
 
-use Utopia\Config\Config;
+use Appwrite\Config\Config;
 use Utopia\Validator;
 
 class Event extends Validator

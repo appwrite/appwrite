@@ -2,9 +2,9 @@
 
 namespace Appwrite\Geo;
 
+use Appwrite\Config\Config;
 use Appwrite\Locale\GeoRecord;
 use Swoole\Table;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Locale\Locale;
 

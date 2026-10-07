@@ -2,10 +2,10 @@
 
 namespace Appwrite\Utopia\Response\Filters;
 
+use Appwrite\Config\Config;
 use Appwrite\Network\Platform;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 // Convert 1.9.5 Data format to 1.9.4 format

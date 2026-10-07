@@ -1,10 +1,10 @@
 <?php
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

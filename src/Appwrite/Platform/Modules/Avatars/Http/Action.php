@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Image\Image;
 
 class Action extends PlatformAction

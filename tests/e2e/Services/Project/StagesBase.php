@@ -2,9 +2,9 @@
 
 namespace Tests\E2E\Services\Project;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
-use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 

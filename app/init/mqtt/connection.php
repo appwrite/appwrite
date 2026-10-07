@@ -2,11 +2,11 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Config\Config;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;

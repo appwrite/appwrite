@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Config\Config;
 use Appwrite\Platform\Modules\Databases\Services\Workers as DatabasesWorkers;
 use Appwrite\Platform\Modules\Functions\Services\Workers as FunctionsWorkers;
 use Appwrite\Platform\Modules\Usage\Services\Workers as UsageWorkers;
@@ -12,7 +13,6 @@ use Appwrite\Platform\Workers\Executions;
 use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 final class RegistrationTest extends TestCase
 {

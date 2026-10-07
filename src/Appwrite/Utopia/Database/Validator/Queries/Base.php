@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Utopia\Config\Config;
+use Appwrite\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Queries;

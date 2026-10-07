@@ -2,9 +2,9 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Config\Config;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;

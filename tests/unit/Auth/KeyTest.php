@@ -6,9 +6,9 @@ namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Config\Config;
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
 

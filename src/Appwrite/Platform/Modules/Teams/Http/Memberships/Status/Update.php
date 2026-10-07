@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Config\Config;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -14,7 +15,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

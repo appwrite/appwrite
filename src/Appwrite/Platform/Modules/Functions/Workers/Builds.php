@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -11,7 +12,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
 use Utopia\Command;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

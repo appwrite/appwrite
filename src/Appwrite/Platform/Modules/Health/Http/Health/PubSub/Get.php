@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\PubSub;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;

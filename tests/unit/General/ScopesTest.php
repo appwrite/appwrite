@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\General;
 
+use Appwrite\Config\Config;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 /**
  * Scopes are a public contract: they are stored on API keys, functions and

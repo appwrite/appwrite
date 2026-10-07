@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event\Message;
 
-use Utopia\Config\Config;
+use Appwrite\Config\Config;
 use Utopia\Database\Document;
 
 final class Mail extends Base

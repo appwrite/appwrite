@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Workers;
 
+use Appwrite\Config\Config;
 use Appwrite\Workers\Jobs;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 /**
  * Proves job resolution for combined and dedicated worker modes keeps the

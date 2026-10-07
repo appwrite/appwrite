@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Locking;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\Locking\Lock;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Lock\Lock as UtopiaLock;

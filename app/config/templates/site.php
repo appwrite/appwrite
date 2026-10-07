@@ -1,6 +1,6 @@
 <?php
 
-use Utopia\Config\Config;
+use Appwrite\Config\Config;
 use Utopia\System\System;
 
 /**

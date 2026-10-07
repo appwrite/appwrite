@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Config\Config;
 use Appwrite\Database\Factory;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
@@ -12,7 +13,6 @@ use Tests\E2E\Client;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

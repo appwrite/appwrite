@@ -3,6 +3,7 @@
 use Appwrite\Autogravity\Client as AutogravityClient;
 use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
+use Appwrite\Config\Config;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
@@ -43,7 +44,6 @@ use Utopia\Client\Client;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

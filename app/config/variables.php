@@ -1,7 +1,7 @@
 <?php
 
+use Appwrite\Config\Config;
 use Appwrite\Network\TrustedProxies;
-use Utopia\Config\Config;
 
 return [
     [

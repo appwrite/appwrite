@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Stages;
 
+use Appwrite\Config\Config;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;

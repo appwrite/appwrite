@@ -1,12 +1,12 @@
 <?php
 
+use Appwrite\Config\Config;
 use Appwrite\Geo\Geo;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;

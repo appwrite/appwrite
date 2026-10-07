@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Config\Config;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -16,7 +17,6 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Bus\Bus;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

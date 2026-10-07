@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Compute\Validator;
 
+use Appwrite\Config\Config;
 use Appwrite\Platform\Modules\Compute\Specification as SpecificationConstants;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 final class SpecificationTest extends TestCase
 {
