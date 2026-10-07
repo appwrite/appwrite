@@ -174,10 +174,11 @@ $worker
         $span->finish(error: $error);
     });
 
-// Usage jobs are acknowledged before their ClickHouse insert. Flush the
-// process buffer after in-flight jobs finish so a restart keeps the open interval.
-$worker->workerStop()->action(static function (): void {
-    StatsUsage::flushPending();
-});
+// A stats-usage job can be acknowledged while its rows are still buffered.
+if (\in_array('stats-usage', $workers, true)) {
+    $worker->workerStop()->action(static function (): void {
+        StatsUsage::flushPending();
+    });
+}
 
 $worker->start();

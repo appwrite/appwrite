@@ -15,17 +15,10 @@ use Utopia\UserAgent\UserAgent;
 
 class StatsUsage extends Action
 {
-    /**
-     * Distinct buffered rows that trigger an insert. Measured on 2.3.0: one
-     * insert per job capped a process at about 1,000 jobs/s; folding into
-     * batches of this size removed that ceiling.
-     */
     private const int FLUSH_THRESHOLD = 500;
 
-    /** Flush once buffered rows are this many seconds old, so a quiet queue still drains. */
     private const float FLUSH_INTERVAL = 1.0;
 
-    /** One buffer per worker process. Jobs only read and fold; inserts happen from flushBuffer(). */
     private static ?Accumulator $accumulator = null;
 
     private static ?int $timerId = null;
@@ -43,10 +36,6 @@ class StatsUsage extends Action
         return 'stats-usage';
     }
 
-    /**
-     * Write usage still held in memory. The queue server calls this from its
-     * worker-stop hook, after in-flight jobs have finished collecting.
-     */
     public static function flushPending(): void
     {
         self::flushBuffer(force: true);
@@ -149,8 +138,8 @@ class StatsUsage extends Action
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
             // not retried because the adapter has no durable deduplication key.
-            // Rows already folded into the process buffer stay there for the
-            // next flush; this job is still acknowledged so it is not applied twice.
+            // Rows already folded in stay for a later flush. The job is still
+            // acknowledged, so a retry would record them again.
             Console::error('Failed to write usage events: ' . $th->getMessage());
         }
     }
@@ -162,33 +151,24 @@ class StatsUsage extends Action
         return self::$accumulator ??= new Accumulator($usageConnection->getUsage());
     }
 
-    /**
-     * A quiet queue has no later job to notice the interval, so the process
-     * timer drains the buffer on its own. Armed on the first collect, which
-     * runs in the forked worker rather than the supervisor that constructed it.
-     */
     private static function ensureFlushTimer(): void
     {
         if (self::$timerStarted) {
             return;
         }
 
-        self::$timerStarted = true;
         try {
             $timerId = Timer::tick((int) (self::FLUSH_INTERVAL * 1000), static function (): void {
                 self::flushBuffer();
             });
         } catch (\Throwable) {
-            self::$timerStarted = false;
-
             return;
         }
         if (!\is_int($timerId)) {
-            self::$timerStarted = false;
-
             return;
         }
 
+        self::$timerStarted = true;
         self::$timerId = $timerId;
     }
 
@@ -211,12 +191,9 @@ class StatsUsage extends Action
             return;
         }
 
-        // Detach before the insert. flush() yields on HTTP, and this worker
-        // runs several coroutines plus the timer. Collects that arrive during
-        // the insert fold into a new buffer instead of the rows already being
-        // written. The detached buffer is not put back: a failed insert is
-        // dropped rather than retried, because a retry could double-count a
-        // write that committed and then lost its response.
+        // Detach before flush() yields on HTTP. Collects from the other
+        // coroutines, or the timer, must land in a new buffer. The detached
+        // one is not put back: ClickHouse inserts are not idempotent.
         self::$accumulator = null;
 
         try {
