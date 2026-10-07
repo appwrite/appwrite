@@ -107,7 +107,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-stats-resources && \
     chmod +x /usr/local/bin/worker-stats-usage && \
-    chmod +x /usr/local/bin/worker-webhooks
+    chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-audits
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 

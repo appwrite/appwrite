@@ -88,4 +88,9 @@ return [
         'queueEnv' => '_APP_MIGRATIONS_QUEUE_NAME',
         'coroutines' => 1,
     ],
+    'audits' => [
+        'queue' => Event::AUDITS_QUEUE_NAME,
+        'queueEnv' => '_APP_AUDITS_QUEUE_NAME',
+        'coroutines' => 1,
+    ],
 ];

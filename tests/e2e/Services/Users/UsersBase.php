@@ -1818,6 +1818,176 @@ trait UsersBase
         ]);
     }
 
+    public function testGetLogs(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = 'logs.' . uniqid() . '@appwrite.io';
+        $firstName = 'Logs First ' . uniqid();
+        $secondName = 'Logs Second ' . uniqid();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Logs User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $accountHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/account/name', $accountHeaders, [
+            'name' => $firstName,
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/account/name', $accountHeaders, [
+            'name' => $secondName,
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $this->assertEventually(function () use ($userId, $headers, $email, $firstName, $secondName) {
+            $logs = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', $headers, [
+                'queries' => [
+                    Query::limit(25)->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $logs['headers']['status-code']);
+            $this->assertSame(2, $logs['body']['total']);
+
+            $names = array_column($logs['body']['logs'], 'userName');
+            sort($names);
+            $expected = [$firstName, $secondName];
+            sort($expected);
+            $this->assertSame($expected, $names);
+
+            foreach ($logs['body']['logs'] as $log) {
+                $this->assertSame('user.update', $log['event']);
+                $this->assertSame($userId, $log['userId']);
+                $this->assertSame($email, $log['userEmail']);
+            }
+        }, 20000);
+
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertCount(1, $logs['body']['logs']);
+        $this->assertSame(2, $logs['body']['total']);
+        $firstPageName = $logs['body']['logs'][0]['userName'];
+
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertCount(1, $logs['body']['logs']);
+        $this->assertSame(2, $logs['body']['total']);
+        $this->assertNotSame($firstPageName, $logs['body']['logs'][0]['userName']);
+
+        $names = [$firstPageName, $logs['body']['logs'][0]['userName']];
+        sort($names);
+        $expected = [$firstName, $secondName];
+        sort($expected);
+        $this->assertSame($expected, $names);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(-1)->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::offset(-1)->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('$id')->toString()
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{ "method": "cursorAsc", "attribute": "$id" }'
+            ]
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/non_existent/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals('user_not_found', $response['body']['type']);
+    }
+
     public function testUpdateEmailVerification(): void
     {
         $data = $this->setupUser();
