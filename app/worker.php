@@ -6,6 +6,7 @@ $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
@@ -172,5 +173,11 @@ $worker
         $span = Span::current() ?? Span::init("worker.{$workerName}");
         $span->finish(error: $error);
     });
+
+// Usage jobs are acknowledged before their ClickHouse insert. Flush the
+// process buffer after in-flight jobs finish so a restart keeps the open interval.
+$worker->workerStop()->action(static function (): void {
+    StatsUsage::flushPending();
+});
 
 $worker->start();

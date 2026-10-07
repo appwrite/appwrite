@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
+use Swoole\Timer;
 use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -14,6 +15,23 @@ use Utopia\UserAgent\UserAgent;
 
 class StatsUsage extends Action
 {
+    /**
+     * Distinct buffered rows that trigger an insert. Measured on 2.3.0: one
+     * insert per job capped a process at about 1,000 jobs/s; folding into
+     * batches of this size removed that ceiling.
+     */
+    private const int FLUSH_THRESHOLD = 500;
+
+    /** Flush once buffered rows are this many seconds old, so a quiet queue still drains. */
+    private const float FLUSH_INTERVAL = 1.0;
+
+    /** One buffer per worker process. Jobs only read and fold; inserts happen from flushBuffer(). */
+    private static ?Accumulator $accumulator = null;
+
+    private static ?int $timerId = null;
+
+    private static bool $timerStarted = false;
+
     protected const SITE_NETWORK_METRICS = [
         METRIC_SITES_INBOUND => METRIC_NETWORK_INBOUND,
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
@@ -23,6 +41,15 @@ class StatsUsage extends Action
     public static function getName(): string
     {
         return 'stats-usage';
+    }
+
+    /**
+     * Write usage still held in memory. The queue server calls this from its
+     * worker-stop hook, after in-flight jobs have finished collecting.
+     */
+    public static function flushPending(): void
+    {
+        self::flushBuffer(force: true);
     }
 
     public function __construct()
@@ -56,7 +83,6 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
 
@@ -108,7 +134,7 @@ class StatsUsage extends Action
                 $tags = array_merge($this->resolveUserAgentTags((string) ($metric['userAgent'] ?? '')), $tags);
                 $tags = array_filter($tags, static fn (mixed $value): bool => $value !== '' && $value !== null);
 
-                $accumulator->collect(
+                self::accumulator($usageConnection)->collect(
                     $tenant,
                     $storedKey,
                     $value,
@@ -119,12 +145,85 @@ class StatsUsage extends Action
                 );
             }
 
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
-            }
+            self::flushBuffer();
         } catch (\Throwable $th) {
             // Usage analytics deliberately remains best-effort and inserts are
             // not retried because the adapter has no durable deduplication key.
+            // Rows already folded into the process buffer stay there for the
+            // next flush; this job is still acknowledged so it is not applied twice.
+            Console::error('Failed to write usage events: ' . $th->getMessage());
+        }
+    }
+
+    private static function accumulator(Connection $usageConnection): Accumulator
+    {
+        self::ensureFlushTimer();
+
+        return self::$accumulator ??= new Accumulator($usageConnection->getUsage());
+    }
+
+    /**
+     * A quiet queue has no later job to notice the interval, so the process
+     * timer drains the buffer on its own. Armed on the first collect, which
+     * runs in the forked worker rather than the supervisor that constructed it.
+     */
+    private static function ensureFlushTimer(): void
+    {
+        if (self::$timerStarted) {
+            return;
+        }
+
+        self::$timerStarted = true;
+        try {
+            $timerId = Timer::tick((int) (self::FLUSH_INTERVAL * 1000), static function (): void {
+                self::flushBuffer();
+            });
+        } catch (\Throwable) {
+            self::$timerStarted = false;
+
+            return;
+        }
+        if (!\is_int($timerId)) {
+            self::$timerStarted = false;
+
+            return;
+        }
+
+        self::$timerId = $timerId;
+    }
+
+    private static function flushBuffer(bool $force = false): void
+    {
+        if ($force && self::$timerId !== null) {
+            Timer::clear(self::$timerId);
+            self::$timerId = null;
+        }
+
+        $accumulator = self::$accumulator;
+        if ($accumulator === null || $accumulator->count() === 0) {
+            return;
+        }
+        if (
+            !$force
+            && $accumulator->count() < self::FLUSH_THRESHOLD
+            && $accumulator->elapsedSeconds() < self::FLUSH_INTERVAL
+        ) {
+            return;
+        }
+
+        // Detach before the insert. flush() yields on HTTP, and this worker
+        // runs several coroutines plus the timer. Collects that arrive during
+        // the insert fold into a new buffer instead of the rows already being
+        // written. The detached buffer is not put back: a failed insert is
+        // dropped rather than retried, because a retry could double-count a
+        // write that committed and then lost its response.
+        self::$accumulator = null;
+
+        try {
+            if (!$accumulator->flush()) {
+                Console::error('Usage event flush returned false');
+            }
+        } catch (\Throwable $th) {
             Console::error('Failed to write usage events: ' . $th->getMessage());
         }
     }
