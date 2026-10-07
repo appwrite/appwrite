@@ -254,9 +254,11 @@ class Update extends Action
                         $documentId = $operation['documentId'];
                         $currentDocumentId = $documentId;
 
-                        if (\is_string($documentId) && $documentId !== '') {
+                        // Deletes drop the row from $state, so record it here
+                        if ($documentId !== null) {
                             $written[$collectionId][$documentId] = true;
                         }
+
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
@@ -337,8 +339,8 @@ class Update extends Action
 
                 });
 
-                // Each write purges its cache when its own withTransaction() returns.
-                // That call is a savepoint here, so the purge runs before COMMIT.
+                // Each write purged its cached row inside a savepoint of this transaction, so
+                // a read before COMMIT could cache the old row again. Purge now that it is committed.
                 $this->purgeCommittedDocuments($dbForDatabases, $written, $state);
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
@@ -603,35 +605,21 @@ class Update extends Action
     }
 
     /**
-     * Drop cached copies of rows this commit wrote.
-     *
-     * @param array<string, array<string, true>> $written
-     * @param array<string, array<string, Document>> $state
+     * Purge every row the commit wrote. A cache error must not fail a commit that already landed.
      */
-    private function purgeCommittedDocuments(Database $db, array $written, array $state): void
+    private function purgeCommittedDocuments(Database $dbForDatabases, array $written, array $state): void
     {
+        // Bulk writes and $id changes name their rows only here
         foreach ($state as $collectionId => $documents) {
-            foreach ($documents as $id => $document) {
-                if ($id !== '') {
-                    $written[(string) $collectionId][(string) $id] = true;
-                }
-
-                $renamed = $document->getId();
-                if ($renamed !== '') {
-                    $written[(string) $collectionId][$renamed] = true;
-                }
+            foreach ($documents as $document) {
+                $written[$collectionId][$document->getId()] = true;
             }
         }
 
         foreach ($written as $collectionId => $ids) {
             foreach (\array_keys($ids) as $id) {
-                if ($id === '') {
-                    continue;
-                }
-
-                // The commit already landed, so a cache purge failure must not fail it
                 try {
-                    $db->purgeCachedDocument((string) $collectionId, (string) $id);
+                    $dbForDatabases->purgeCachedDocument($collectionId, $id);
                 } catch (\Throwable $e) {
                     Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
                 }
@@ -1129,7 +1117,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
-     * @param array<string, array<string, true>> $written
+     * @param array &$written
      * @return int Number of documents deleted
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
@@ -1150,10 +1138,7 @@ class Update extends Action
             $collectionId,
             $queries,
             onNext: function (Document $deleted, Document $old) use (&$state, &$written, $collectionId, $createdAt) {
-                $deletedId = $deleted->getId();
-                if ($deletedId !== '') {
-                    $written[$collectionId][$deletedId] = true;
-                }
+                $written[$collectionId][$deleted->getId()] = true;
 
                 $dependent = isset($state[$collectionId][$deleted->getId()]);
 
@@ -1169,6 +1154,11 @@ class Update extends Action
                 }
             }
         );
+
+        // applyBulkDeleteToState() matches in memory and can drop rows the delete kept
+        foreach ($state[$collectionId] ?? [] as $document) {
+            $written[$collectionId][$document->getId()] = true;
+        }
 
         $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
 
