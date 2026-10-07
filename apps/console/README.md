@@ -54,8 +54,8 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd vibes
+git clone https://github.com/appwrite/appwrite.git
+cd appwrite/apps/console
 ```
 
 2. Install dependencies:

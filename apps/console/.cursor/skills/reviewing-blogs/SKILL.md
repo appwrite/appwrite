@@ -2,9 +2,9 @@
 name: reviewing-blogs
 description: Reviews and critiques blog posts in src/content/blog/posts/ against Appwrite's established standards for voice, tone, structure, SEO, formatting, and accuracy. Use when the user asks to review, audit, critique, or improve an existing blog post.
 ---
-## Repository layout (vibes)
+## Repository layout (apps/console)
 
-This skill targets the `appwrite/vibes` repo. Path mapping from the upstream `appwrite/website` skills:
+This skill targets the Console app at `apps/console` in `appwrite/appwrite`; paths are relative to it. Path mapping from the upstream `appwrite/website` skills:
 
 | Artifact | Path |
 | --- | --- |

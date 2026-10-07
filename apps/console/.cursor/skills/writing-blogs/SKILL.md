@@ -2,9 +2,9 @@
 name: writing-blogs
 description: Writes, structures, and formats SEO-optimized blog posts for the Appwrite blog following established conventions for voice, tone, frontmatter, and post structure. Use when the user asks to write, draft, create, or outline a blog post, or when working with files in src/content/blog/posts/.
 ---
-## Repository layout (vibes)
+## Repository layout (apps/console)
 
-This skill targets the `appwrite/vibes` repo. Path mapping from the upstream `appwrite/website` skills:
+This skill targets the Console app at `apps/console` in `appwrite/appwrite`; paths are relative to it. Path mapping from the upstream `appwrite/website` skills:
 
 | Artifact | Path |
 | --- | --- |

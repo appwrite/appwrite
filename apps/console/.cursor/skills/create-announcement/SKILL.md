@@ -2,9 +2,9 @@
 name: create-announcement
 description: Coordinates the three artifacts that ship a new Appwrite feature announcement: docs updates under src/content/docs/, an announcement blog post under blog/announcing-<slug>/, and a changelog entry under src/content/changelog/entries/. Use when the user asks to announce, launch, or ship a feature, product, SDK, runtime, integration, or plugin.
 ---
-## Repository layout (vibes)
+## Repository layout (apps/console)
 
-This skill targets the `appwrite/vibes` repo. Path mapping from the upstream `appwrite/website` skills:
+This skill targets the Console app at `apps/console` in `appwrite/appwrite`; paths are relative to it. Path mapping from the upstream `appwrite/website` skills:
 
 | Artifact | Path |
 | --- | --- |
