@@ -1685,6 +1685,102 @@ trait DatabasesBase
         $this->assertNull($document['body']['boolean']);
     }
 
+    public function testUpdateRequiredAttributeAllowsPartialUpdate(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Required later',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        foreach (['title' => true, 'note' => false] as $key => $required) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => $key,
+                'required' => $required,
+                'size' => 128,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $key);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'original'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $second = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'original'],
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondId = $second['body']['$id'];
+
+        $note = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, 'string', 'note'), $headers, [
+            'required' => true,
+            'default' => null,
+            'size' => 128,
+        ]);
+        $this->assertEquals(200, $note['headers']['status-code']);
+        $this->assertTrue($note['body']['required']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['title' => 'renamed'],
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('renamed', $updated['body']['title']);
+        $this->assertNull($updated['body']['note']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame('renamed', $fetched['body']['title']);
+        $this->assertNull($fetched['body']['note']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $secondId), $headers, [
+            'data' => ['title' => 'upserted'],
+        ]);
+        $this->assertEquals(200, $upserted['headers']['status-code']);
+        $this->assertSame('upserted', $upserted['body']['title']);
+        $this->assertNull($upserted['body']['note']);
+
+        $filled = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['note' => 'present'],
+        ]);
+        $this->assertEquals(200, $filled['headers']['status-code']);
+        $this->assertSame('present', $filled['body']['note']);
+
+        /**
+         * Test for FAILURE
+         */
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'missing note'],
+        ]);
+        $this->assertEquals(400, $created['headers']['status-code']);
+        $this->assertStringContainsString('Missing required attribute "note"', $created['body']['message']);
+
+        $cleared = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['note' => null],
+        ]);
+        $this->assertEquals(400, $cleared['headers']['status-code']);
+        $this->assertStringContainsString('Missing required attribute "note"', $cleared['body']['message']);
+    }
+
     public function testUpdateAttributeEnum(): void
     {
         if (!$this->getSupportForAttributes()) {
