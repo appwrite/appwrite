@@ -121,7 +121,12 @@ export async function renderSimpleTitleTemplateSvg(
 ): Promise<string> {
   const brand = getCoverBrandThemeForSvgExport(theme)
   const bottomPadding = getSimpleTitleBottomPadding(data.width, data.height)
-  const skipBrandTitle = isCoverBrandWordmarkTitle(data.title)
+  const logotype = await prepareCoverLogotypeDataUri(
+    theme,
+    COVER_SIMPLE_TITLE_LOGOTYPE_HEIGHT,
+  )
+  const logotypeSvg = logotype ? renderCoverLogotypeSvg(logotype) : ''
+  const skipBrandTitle = Boolean(logotype) && isCoverBrandWordmarkTitle(data.title)
   const titleLines = skipBrandTitle
     ? []
     : wrapTextLines(
@@ -174,12 +179,6 @@ export async function renderSimpleTitleTemplateSvg(
         startY - COVER_EYEBROW_TITLE_GAP - COVER_EYEBROW_FONT_SIZE,
       )
     : 0
-
-  const logotype = await prepareCoverLogotypeDataUri(
-    theme,
-    COVER_SIMPLE_TITLE_LOGOTYPE_HEIGHT,
-  )
-  const logotypeSvg = logotype ? renderCoverLogotypeSvg(logotype) : ''
 
   const firstBaseline = coverSvgTextBaseline(startY, titleFontSize)
   const titleSvg = titleLines.length

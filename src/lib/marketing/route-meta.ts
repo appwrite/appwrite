@@ -1,10 +1,14 @@
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
+import { buildOgImageUrl } from '@/lib/seo/og-image'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const MARKETING_HOMEPAGE_TITLE =
   'Appwrite · The open-source cloud for developers and agents'
+
+export const MARKETING_HOMEPAGE_OG_DESCRIPTION =
+  'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. The open-source cloud for agents and developers.'
 
 type MetaTag = Record<string, string>
 
@@ -27,11 +31,14 @@ function asRouteMetaTags(tags: readonly MetaTag[]): MetaTag[] {
   return [...tags]
 }
 
-/** Static Open Graph art for `/` and `/home` (1200×630). */
-export const MARKETING_HOME_OG_IMAGE_PATH = '/images/marketing/home-og.png'
-
 export function getMarketingHomeOgImage(siteOrigin?: string): string {
-  return `${getSeoSiteOrigin(siteOrigin)}${MARKETING_HOME_OG_IMAGE_PATH}`
+  return buildOgImageUrl(
+    {
+      title: 'Appwrite',
+      subtitle: MARKETING_HOMEPAGE_OG_DESCRIPTION,
+    },
+    siteOrigin,
+  )
 }
 
 export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag[] {

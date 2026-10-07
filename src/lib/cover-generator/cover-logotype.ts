@@ -3,8 +3,9 @@ import { loadCoverImageBuffer } from '@/lib/cover-generator/brand-background'
 import { stripCoverTitleSuffix } from '@/lib/cover-generator/text-utils'
 import { getCoverTheme, type CoverThemeId } from '@/lib/cover-generator/themes'
 
-export const COVER_DARK_LOGOTYPE_SRC = '/assets/logotype/dark@2x.png'
-export const COVER_LIGHT_LOGOTYPE_SRC = '/assets/logotype/black.svg'
+/** Light wordmark for dark covers. `white.svg` is dark ink for light covers. */
+export const COVER_DARK_LOGOTYPE_SRC = '/assets/logotype/dark@2x.avif'
+export const COVER_LIGHT_LOGOTYPE_SRC = '/assets/logotype/white.svg'
 
 export const COVER_CONTENT_X = 40
 export const COVER_SIMPLE_TITLE_LOGOTYPE_HEIGHT = 36
