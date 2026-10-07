@@ -2,14 +2,10 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import * as maplibregl from 'maplibre-gl'
+import * as maplibregl from '@/lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
-
-// maplibre-gl 6 cannot find its worker inside a bundle, so Vite emits it and passes the URL.
-maplibregl.setWorkerUrl(workerUrl)
 
 // Map context
 const MapContext = React.createContext<{
