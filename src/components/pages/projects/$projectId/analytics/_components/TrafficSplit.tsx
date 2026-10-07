@@ -4,7 +4,18 @@ import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
-import { Bot, User } from 'lucide-react'
+import { Bot, Copy, Filter, FilterX, User, X } from 'lucide-react'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { copyToClipboard } from '@/lib/utils/context-menu'
+import type { AnalyticsTrafficKind } from '@/lib/analytics/analytics-filters'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -320,10 +331,21 @@ export function TrafficSplit({
       <div className="flex flex-1 flex-col px-4 pb-4 pt-6">
       {/* End labels */}
       <div className="mb-4 flex items-end justify-between gap-4">
+        <TrafficKindMenu
+          kind="human"
+          count={totals.human}
+          sharePercent={humanShare}
+          hasData={hasData}
+          filterEnabled={trafficFilterEnabled}
+          activeKind={trafficKind}
+          onToggle={toggleTrafficKind}
+        >
         <button
           type="button"
-          disabled={!trafficFilterEnabled}
-          onClick={() => toggleTrafficKind('human')}
+          // aria-disabled, not disabled: a disabled button gets no
+          // right-click, and the menu still has copy actions.
+          aria-disabled={!trafficFilterEnabled}
+          onClick={() => trafficFilterEnabled && toggleTrafficKind('human')}
           aria-pressed={trafficFilterEnabled ? trafficKind === 'human' : undefined}
           title={
             !trafficFilterEnabled
@@ -379,10 +401,20 @@ export function TrafficSplit({
             </p>
           </div>
         </button>
+        </TrafficKindMenu>
+        <TrafficKindMenu
+          kind="bot"
+          count={totals.bot}
+          sharePercent={botShare}
+          hasData={hasData}
+          filterEnabled={trafficFilterEnabled}
+          activeKind={trafficKind}
+          onToggle={toggleTrafficKind}
+        >
         <button
           type="button"
-          disabled={!trafficFilterEnabled}
-          onClick={() => toggleTrafficKind('bot')}
+          aria-disabled={!trafficFilterEnabled}
+          onClick={() => trafficFilterEnabled && toggleTrafficKind('bot')}
           aria-pressed={trafficFilterEnabled ? trafficKind === 'bot' : undefined}
           title={
             !trafficFilterEnabled
@@ -419,6 +451,7 @@ export function TrafficSplit({
             <Bot className="h-5 w-5 text-muted-foreground" />
           </span>
         </button>
+        </TrafficKindMenu>
       </div>
 
       {/* The bar */}
@@ -497,9 +530,8 @@ export function TrafficSplit({
             {botSegments.slice(0, BOT_LIST_ROWS).map((segment) => {
               const category = segment.category
               const active = category ? isFilterActive('botCategory', category) : false
-              return (
+              const row = (
                 <BreakdownRow
-                  key={segment.key}
                   label={segment.label}
                   value={segment.value}
                   share={share(segment.value, total)}
@@ -522,6 +554,20 @@ export function TrafficSplit({
                       }
                     : {})}
                 />
+              )
+              // Named categories get the value menu; "Other bots" has no
+              // single value behind it.
+              return category ? (
+                <AnalyticsValueMenu
+                  key={segment.key}
+                  dimension={AnalyticsDimension.BotCategory}
+                  value={category}
+                  label={segment.label}
+                >
+                  <div>{row}</div>
+                </AnalyticsValueMenu>
+              ) : (
+                <div key={segment.key}>{row}</div>
               )
             })}
           </BotColumn>
@@ -565,6 +611,77 @@ export function TrafficSplit({
 
       </div>
     </section>
+  )
+}
+
+/**
+ * Right-click menu for the Humans / Bots figures. Filtering follows the
+ * `analyticsTrafficFilter` flag; copying is always available.
+ */
+function TrafficKindMenu({
+  kind,
+  count,
+  sharePercent,
+  hasData,
+  filterEnabled,
+  activeKind,
+  onToggle,
+  children,
+}: {
+  kind: AnalyticsTrafficKind
+  count: number
+  sharePercent: number
+  hasData: boolean
+  filterEnabled: boolean
+  activeKind: AnalyticsTrafficKind | null
+  onToggle: (kind: AnalyticsTrafficKind) => void
+  children: ReactNode
+}) {
+  const t = useT()
+  const label = kind === 'human' ? t('Humans') : t('Bots')
+  const other: AnalyticsTrafficKind = kind === 'human' ? 'bot' : 'human'
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuLabel className="text-[11px] font-normal text-muted-foreground">
+          {label}
+        </ContextMenuLabel>
+        {filterEnabled ? (
+          <>
+            <ContextMenuItem onSelect={() => onToggle(kind)}>
+              <ContextMenuIcon icon={activeKind === kind ? X : Filter} />
+              {activeKind === kind
+                ? t('Remove filter')
+                : kind === 'human'
+                  ? t('Show humans only')
+                  : t('Show bots only')}
+            </ContextMenuItem>
+            {activeKind !== other ? (
+              <ContextMenuItem onSelect={() => onToggle(other)}>
+                <ContextMenuIcon icon={FilterX} />
+                {kind === 'human' ? t('Exclude humans') : t('Exclude bots')}
+              </ContextMenuItem>
+            ) : null}
+            <ContextMenuSeparator />
+          </>
+        ) : null}
+        <ContextMenuItem
+          disabled={!hasData}
+          onSelect={() => copyToClipboard('Count', String(count))}
+        >
+          <ContextMenuIcon icon={Copy} />
+          {t('Copy count')}
+        </ContextMenuItem>
+        <ContextMenuItem
+          disabled={!hasData}
+          onSelect={() => copyToClipboard('Share', formatShare(sharePercent))}
+        >
+          <ContextMenuIcon icon={Copy} />
+          {t('Copy share')}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 

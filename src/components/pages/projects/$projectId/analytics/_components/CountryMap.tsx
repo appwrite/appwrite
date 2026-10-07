@@ -5,7 +5,8 @@ import {
   useState,
   type MouseEvent,
 } from 'react'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsDimension, type Models } from '@appwrite.io/console'
+import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { CountryFlag } from './BreakdownRow'
@@ -230,7 +231,7 @@ export function CountryMap({
             const value = byCode.get(shape.code) ?? 0
             const clickable = !!onSelect && value > 0 && !!shape.code
             const active = !!shape.code && !!isActive?.(shape.code)
-            return (
+            const path = (
               <path
                 key={`${shape.code}-${index}`}
                 d={shape.d}
@@ -248,6 +249,19 @@ export function CountryMap({
                 onMouseLeave={() => setHover(null)}
                 onClick={clickable ? () => onSelect(shape.code) : undefined}
               />
+            )
+            // Countries with traffic get the same right-click menu as rows.
+            return value > 0 && shape.code ? (
+              <AnalyticsValueMenu
+                key={`${shape.code}-${index}`}
+                dimension={AnalyticsDimension.Country}
+                value={shape.code}
+                label={formatLabel(shape.code)}
+              >
+                {path}
+              </AnalyticsValueMenu>
+            ) : (
+              path
             )
           })}
         </svg>

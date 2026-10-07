@@ -15,6 +15,7 @@ import {
 } from './BreakdownPanel'
 import { BreakdownDialog } from './BreakdownDialog'
 import { BreakdownRow } from './BreakdownRow'
+import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import { Sparkles } from 'lucide-react'
@@ -130,9 +131,9 @@ export function EventsPanel({
           )
         ) : (
           <div className="space-y-0.5">
-            {visible.map((event, index) => (
+            {visible.map((event, index) => {
+              const row = (
               <BreakdownRow
-                key={`${event.value}-${index}`}
                 label={event.value || t('Unknown')}
                 value={event.events}
                 share={total > 0 ? (event.events / total) * 100 : 0}
@@ -148,7 +149,20 @@ export function EventsPanel({
                     }
                   : {})}
               />
-            ))}
+              )
+              // Same right-click menu as the other cards' values.
+              return event.value ? (
+                <AnalyticsValueMenu
+                  key={`${event.value}-${index}`}
+                  dimension={AnalyticsDimension.EventName}
+                  value={event.value}
+                >
+                  <div>{row}</div>
+                </AnalyticsValueMenu>
+              ) : (
+                <div key={`unknown-${index}`}>{row}</div>
+              )
+            })}
           </div>
         )}
       </BreakdownBody>
