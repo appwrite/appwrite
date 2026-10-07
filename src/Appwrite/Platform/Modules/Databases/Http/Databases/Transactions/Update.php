@@ -18,7 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Console\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -254,8 +254,6 @@ class Update extends Action
                         $documentId = $operation['documentId'];
                         $currentDocumentId = $documentId;
 
-                        // Bulk deletes learn their ids from the rows they match; every other
-                        // staged write names the row here or leaves it in $state.
                         if (\is_string($documentId) && $documentId !== '') {
                             $written[$collectionId][$documentId] = true;
                         }
@@ -339,10 +337,8 @@ class Update extends Action
 
                 });
 
-                // Each write purges its document cache when its own withTransaction()
-                // returns. That call is a savepoint of this one, so the purge runs
-                // before COMMIT. A getRow in between caches the pre-commit row and
-                // keeps it until the next write. Purge again now that the commit is durable.
+                // Each write purges its cache when its own withTransaction() returns.
+                // That call is a savepoint here, so the purge runs before COMMIT.
                 $this->purgeCommittedDocuments($dbForDatabases, $written, $state);
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
@@ -607,11 +603,7 @@ class Update extends Action
     }
 
     /**
-     * Drop the document cache for every row this commit wrote.
-     *
-     * Creates stay in $state. Deletes and updates are recorded as they are
-     * applied, including bulk deletes, which have no single row id on the
-     * operation. A cache error must not fail a commit that already landed.
+     * Drop cached copies of rows this commit wrote.
      *
      * @param array<string, array<string, true>> $written
      * @param array<string, array<string, Document>> $state
@@ -624,7 +616,6 @@ class Update extends Action
                     $written[(string) $collectionId][(string) $id] = true;
                 }
 
-                // An update can change $id; the state key stays the id the operation named.
                 $renamed = $document->getId();
                 if ($renamed !== '') {
                     $written[(string) $collectionId][$renamed] = true;
@@ -638,6 +629,7 @@ class Update extends Action
                     continue;
                 }
 
+                // The commit already landed, so a cache purge failure must not fail it
                 try {
                     $db->purgeCachedDocument((string) $collectionId, (string) $id);
                 } catch (\Throwable $e) {

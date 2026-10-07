@@ -2105,8 +2105,8 @@ trait TransactionsBase
     }
 
     /**
-     * A get after the commit returns must see the committed row. The get before
-     * the commit fills the document cache with the pre-commit value.
+     * get after commit returns the committed row. The get before commit fills
+     * the document cache with the pre-commit value.
      */
     public function testGetAfterCommit(): void
     {
@@ -2153,6 +2153,14 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(200, $staged['headers']['status-code']);
+
+        $stagedRead = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $stagedRead['headers']['status-code']);
+        $this->assertEquals('open', $stagedRead['body']['name']);
 
         $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
             'commit' => true,
