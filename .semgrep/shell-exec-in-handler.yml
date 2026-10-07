@@ -1,0 +1,33 @@
+rules:
+  - id: php.appwrite.shell-exec-in-handler
+    message: >
+      Process execution (exec, shell_exec, system, passthru, popen,
+      proc_open, pcntl_exec, backticks) in HTTP modules, controllers or
+      bootstrap. Request-serving code should call the executor or a worker,
+      not a local shell. CLI tasks and the installer are out of scope.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: exec(...)
+      - pattern: \exec(...)
+      - pattern: shell_exec(...)
+      - pattern: \shell_exec(...)
+      - pattern: system(...)
+      - pattern: \system(...)
+      - pattern: passthru(...)
+      - pattern: \passthru(...)
+      - pattern: popen(...)
+      - pattern: \popen(...)
+      - pattern: proc_open(...)
+      - pattern: \proc_open(...)
+      - pattern: pcntl_exec(...)
+      - pattern: \pcntl_exec(...)
+      - pattern: "`...`"

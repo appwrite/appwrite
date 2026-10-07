@@ -24,6 +24,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -101,7 +102,14 @@ class Notifications extends Action
             } catch (Throwable $error) {
                 Span::add('channel', $channel);
                 Span::add('channel.error', $error->getMessage());
-                $failure ??= $error;
+
+                // A retryable failure outranks a permanent one: ending the whole
+                // message would abandon a recipient the next attempt can still
+                // reach, while the dedup above keeps the retry from repeating the
+                // recipients already delivered.
+                if ($failure === null || ($failure instanceof PermanentFailure && !$error instanceof PermanentFailure)) {
+                    $failure = $error;
+                }
             }
         }
 
@@ -345,11 +353,7 @@ class Notifications extends Action
 
             $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
 
-            if ($adapter instanceof EmailAdapter) {
-                $send($adapter);
-            } else {
-                $register->get('smtp')->use($send);
-            }
+            $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
         } catch (InvalidArgumentException $error) {
             // The address or name can never be delivered, so a retry cannot help.
             Span::add('email.skipped', $error->getType());
@@ -358,6 +362,23 @@ class Notifications extends Action
             return null;
         } catch (Throwable $error) {
             throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
+        }
+
+        // The adapter records a refusal in its result rather than throwing, so a
+        // send nobody accepted has to be failed here, or it is persisted as sent
+        // and never retried. As in the Mails worker: a project's own server that
+        // refused for good answers every attempt the same way, so retrying only
+        // repeats it from the shared egress IP; anything else is worth repeating.
+        if (($result['deliveredTo'] ?? 0) === 0) {
+            $failure = $result['results'][0] ?? [];
+            $error = 'Error sending notification: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error'));
+            Span::add('email.error', $error);
+
+            if ($type === 'smtp' && ($failure['permanent'] ?? false) === true) {
+                throw new PermanentFailure($error, 401);
+            }
+
+            throw new Exception($error, $type === 'smtp' ? 401 : 500);
         }
 
         if ($messageId !== '') {

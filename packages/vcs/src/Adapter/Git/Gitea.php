@@ -795,6 +795,10 @@ class Gitea extends Git
             }
 
             $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$responseHeadersStatusCode} returned a non-JSON body");
+            }
+
             $allFiles = array_merge($allFiles, $files);
 
             if (\count($files) < $limit) {
