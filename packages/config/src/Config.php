@@ -69,6 +69,12 @@ class Config
         $instance = new $className();
 
         foreach ($reflection->getProperties() as $property) {
+            // The loader assigns from outside the schema, so a non-public
+            // property would fail with a raw Error instead of Load.
+            if (! $property->isPublic()) {
+                throw new Load("Property {$property->name} must be public.");
+            }
+
             $attributeFound = false;
 
             foreach ($property->getAttributes(Key::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
@@ -83,6 +89,7 @@ class Config
                     if ($key->required) {
                         throw new Load("Missing required key: {$key->name}");
                     }
+                    self::leaveUnset($instance, $property, $key->name);
                     continue;
                 }
 
@@ -118,6 +125,7 @@ class Config
                     if ($key->required) {
                         throw new Load("Missing required key: {$keyName}");
                     }
+                    self::leaveUnset($instance, $property, $keyName);
                     continue;
                 }
 
@@ -142,6 +150,27 @@ class Config
         }
 
         return $instance;
+    }
+
+    /**
+     * An optional key that is absent keeps the property's default. Without a
+     * default, a nullable property becomes null; any other property would be
+     * left uninitialised and fail on first read, so that is reported as Load.
+     *
+     * @throws Load
+     */
+    protected static function leaveUnset(object $instance, \ReflectionProperty $property, string $key): void
+    {
+        if ($property->hasDefaultValue()) {
+            return;
+        }
+
+        if ($property->getType()?->allowsNull()) {
+            $property->setValue($instance, null);
+            return;
+        }
+
+        throw new Load("Missing optional key: {$key}. Property {$property->name} needs a default or a nullable type.");
     }
 
     /**

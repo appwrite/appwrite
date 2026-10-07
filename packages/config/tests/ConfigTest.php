@@ -148,7 +148,8 @@ final class ConfigTest extends TestCase
     public function testExceptionValidator(): void
     {
         $this->expectException(Load::class);
-        Config::load(new Variable('KEY=too_long_value_that_will_not_get_accepted'), new Dotenv(), TestConfigRequired::class);
+        $this->expectExceptionMessage('Invalid value for key');
+        Config::load(new Variable('key=too_long_value_that_will_not_get_accepted'), new Dotenv(), TestConfigRequired::class);
     }
 
     public function testExceptionRequired(): void
@@ -160,7 +161,39 @@ final class ConfigTest extends TestCase
     public function testExceptionWithoutType(): void
     {
         $this->expectException(Load::class);
-        Config::load(new Variable('KEY=value'), new Dotenv(), TestConfigWithoutType::class);
+        $this->expectExceptionMessage('Property key is missing a type.');
+        Config::load(new Variable('key=value'), new Dotenv(), TestConfigWithoutType::class);
+    }
+
+    public function testPrivatePropertyThrowsLoad(): void
+    {
+        $this->expectException(Load::class);
+        $this->expectExceptionMessage('Property key must be public.');
+        Config::load(new Variable(['key' => 'value']), new None(), TestPrivateConfig::class);
+    }
+
+    public function testProtectedPropertyThrowsLoad(): void
+    {
+        $this->expectException(Load::class);
+        $this->expectExceptionMessage('Property cache must be public.');
+        Config::load(new Variable(['key' => 'value']), new None(), TestProtectedConfig::class);
+    }
+
+    public function testAbsentOptionalKeyLeavesAUsableObject(): void
+    {
+        $config = Config::load(new Variable(['host' => 'db']), new None(), TestOptionalConfig::class);
+
+        $this->assertSame('db', $config->host);
+        $this->assertSame('auto', $config->mode);
+        $this->assertNull($config->port);
+        $this->assertNull($config->tls);
+    }
+
+    public function testAbsentOptionalKeyWithoutDefaultThrowsLoad(): void
+    {
+        $this->expectException(Load::class);
+        $this->expectExceptionMessage('Missing optional key: name.');
+        Config::load(new Variable([]), new None(), TestOptionalWithoutDefaultConfig::class);
     }
 
     public function testNestedValues(): void
@@ -247,19 +280,19 @@ final class ConfigTest extends TestCase
 class TestConfig
 {
     #[Key('phpKey', new Text(1024, 0), required: false)]
-    public string $phpKey;
+    public ?string $phpKey = null;
 
     #[Key('jsonKey', new Text(1024, 0), required: false)]
-    public string $jsonKey;
+    public ?string $jsonKey = null;
 
     #[Key('yaml-key', new Text(1024, 0), required: false)]
-    public string $yamlKey;
+    public ?string $yamlKey = null;
 
     #[Key('yml_key', new Text(1024, 0), required: false)]
-    public string $ymlKey;
+    public ?string $ymlKey = null;
 
     #[Key('ENV_KEY', new Text(1024, 0), required: false)]
-    public string $envKey;
+    public ?string $envKey = null;
 }
 
 class TestGroupConfig
@@ -353,4 +386,39 @@ class TestConstructorConfig
     public function __construct(public string $required)
     {
     }
+}
+
+class TestPrivateConfig
+{
+    #[Key('key', new Text(1024, 0))]
+    private string $key;
+}
+
+class TestProtectedConfig
+{
+    #[Key('key', new Text(1024, 0))]
+    public string $key;
+
+    protected string $cache;
+}
+
+class TestOptionalConfig
+{
+    #[Key('host', new Text(1024, 0), required: true)]
+    public string $host;
+
+    #[Key('mode', new Text(1024, 0), required: false)]
+    public string $mode = 'auto';
+
+    #[Key('port', new Nullable(new Text(1024, 0)), required: false)]
+    public ?string $port;
+
+    #[ConfigKey(required: false)]
+    public ?TestConfig $tls;
+}
+
+class TestOptionalWithoutDefaultConfig
+{
+    #[Key('name', new Text(1024, 0), required: false)]
+    public string $name;
 }
