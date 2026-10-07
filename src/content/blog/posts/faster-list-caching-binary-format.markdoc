@@ -2,7 +2,7 @@
 layout: post
 title: "Cached list queries now use up to 69% less memory and serve up to 29% more requests"
 description: Appwrite now serializes key-value cache entries in a binary format instead of JSON. Cached list responses consume up to 69% less memory, and cached list throughput increases by up to 29%.
-date: 2026-09-25
+date: 2026-10-07
 cover: /images/blog/faster-list-caching-binary-format/cover.avif
 timeToRead: 5
 author: luke-silver
@@ -90,9 +90,9 @@ Appwrite also uses the key-value cache for data it reads on almost every request
 - The runs alternated between JSON and binary 8 times, with the cache cleared before each run. The tables show the median of 4 runs for each format.
 - Each page size got up to 3,000 measured requests after a warm-up, and every request succeeded.
 
-# Availability on Cloud and self-hosted
+# Availability
 
-The binary cache format is live on Appwrite Cloud and ships in self-hosted Appwrite 2.3. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
+The binary cache format ships in self-hosted Appwrite 2.3, so the memory and throughput improvements in this post apply to self-hosted instances after the upgrade. Self-hosted instances need no migration and no cache flush. After the upgrade, Appwrite reads an old JSON entry as a cache miss, loads the data from the database, and writes the entry again in the binary format. Cache misses rise for a short time after the upgrade.
 
 # Resources
 
