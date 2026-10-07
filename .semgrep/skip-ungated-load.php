@@ -84,3 +84,27 @@ function playWithClassAssert($authorization, $dbForProject, $videoId, $user, $bu
     $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
     VideosBase::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 }
+
+// assertFileAccess does not exempt a different collection in the same function.
+function playWithUnrelatedLoad($authorization, $dbForProject, $videoId, $transactionId, $user, $bucketId, $fileId)
+{
+    // ruleid: php.appwrite.skip-ungated-load
+    $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
+
+    // ruleid: php.appwrite.skip-ungated-load
+    $file = $authorization->skip(fn () => $dbForProject->findOne('files', []));
+
+    // ok: php.appwrite.skip-ungated-load
+    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+    self::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+}
+
+// Same exemption inside the closure form used by the cache hook.
+$play = function ($authorization, $dbForProject, $videoId, $transactionId, $user, $bucketId, $fileId) {
+    // ruleid: php.appwrite.skip-ungated-load
+    $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
+
+    // ok: php.appwrite.skip-ungated-load
+    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+    VideosBase::assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
+};
