@@ -65,7 +65,7 @@ abstract class Database implements Source, Changes
             'resourceId' => $document->getAttribute('resourceId'),
             'resourceType' => $document->getAttribute('resourceType'),
             'schedule' => $document->getAttribute('schedule'),
-            'interval' => $document->getAttribute('interval', 0),
+            'interval' => $document->getAttribute('interval', ''),
             'active' => $document->getAttribute('active'),
             'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
             'data' => $document->getAttribute('data', []),
@@ -93,6 +93,15 @@ abstract class Database implements Source, Changes
         }
 
         return new Entry($this->trigger($schedule), $schedule);
+    }
+
+    /**
+     * Whether the row describes a schedule this source can run. Rows that fail
+     * are reported inactive, so the scheduler drops any entry loaded before.
+     */
+    protected function runnable(Document $schedule): bool
+    {
+        return true;
     }
 
     /**
@@ -141,7 +150,7 @@ abstract class Database implements Source, Changes
                     id: (string) $schedule->getSequence(),
                     version: $updatedAt,
                     data: $schedule,
-                    active: (bool) $schedule->getAttribute('active', false),
+                    active: (bool) $schedule->getAttribute('active', false) && $this->runnable($schedule),
                     activeFrom: $this->moment($updatedAt),
                 );
             }

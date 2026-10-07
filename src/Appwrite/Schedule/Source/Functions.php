@@ -2,11 +2,11 @@
 
 namespace Appwrite\Schedule\Source;
 
-use Appwrite\Task\Validator\Interval as IntervalValidator;
+use Appwrite\Schedule\Interval;
 use Utopia\Database\Document;
 use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\Cron;
-use Utopia\Schedule\Trigger\Interval;
+use Utopia\Schedule\Trigger\Interval as IntervalTrigger;
 use Utopia\Schedule\Trigger\Shifted;
 
 final class Functions extends Database
@@ -49,18 +49,24 @@ final class Functions extends Database
     }
 
     #[\Override]
+    protected function runnable(Document $schedule): bool
+    {
+        $interval = (string) $schedule->getAttribute('interval', '');
+
+        return $interval === '' || Interval::tryFrom($interval) !== null;
+    }
+
+    #[\Override]
     protected function trigger(array $schedule): Trigger
     {
         $resourceId = (string) $schedule['resourceId'];
-        $interval = (int) ($schedule['interval'] ?? 0);
+        $interval = Interval::tryFrom((string) ($schedule['interval'] ?? ''));
 
-        if ($interval !== 0) {
-            if (!\in_array($interval, IntervalValidator::VALUES, true)) {
-                throw new \InvalidArgumentException("Unsupported interval: {$interval}");
-            }
+        if ($interval !== null) {
+            $seconds = $interval->seconds();
 
             // Phase each function inside its interval so equal intervals do not fire together.
-            return new Shifted(new Interval($interval), \abs(\crc32($resourceId)) % $interval);
+            return new Shifted(new IntervalTrigger($seconds), \abs(\crc32($resourceId)) % $seconds);
         }
 
         $window = ($this->spread)($schedule);

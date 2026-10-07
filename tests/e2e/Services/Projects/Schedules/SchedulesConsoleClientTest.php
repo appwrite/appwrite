@@ -217,13 +217,12 @@ final class SchedulesConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
             'resourceType' => 'function',
             'resourceId' => $data['functionId'],
-            'schedule' => '',
-            'interval' => 3600,
+            'interval' => '1h',
             'active' => true,
         ]);
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(3600, $response['body']['interval']);
+        $this->assertSame('1h', $response['body']['interval']);
         $this->assertSame('', $response['body']['schedule']);
 
         /**
@@ -233,7 +232,7 @@ final class SchedulesConsoleClientTest extends Scope
             'resourceType' => 'function',
             'resourceId' => $data['functionId'],
             'schedule' => '0 0 * * *',
-            'interval' => 3600,
+            'interval' => '1h',
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $response['body']['type']);
@@ -241,8 +240,7 @@ final class SchedulesConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
             'resourceType' => 'execution',
             'resourceId' => ID::unique(),
-            'schedule' => '',
-            'interval' => 3600,
+            'interval' => '1h',
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $response['body']['type']);
@@ -250,8 +248,7 @@ final class SchedulesConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
             'resourceType' => 'function',
             'resourceId' => $data['functionId'],
-            'schedule' => '',
-            'interval' => 5,
+            'interval' => '5s',
         ]);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $response['body']['type']);

@@ -9,11 +9,11 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
+use Appwrite\Schedule\Interval;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
-use Appwrite\Task\Validator\Interval;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -82,7 +82,7 @@ class Update extends Base
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
-            ->param('interval', 0, new Interval(), 'Seconds between scheduled executions. Appwrite picks when within each interval the function runs. Allowed values: ' . \implode(', ', Interval::VALUES) . '. Use 0 to disable. Cannot be combined with schedule.', true, example: '3600')
+            ->param('interval', null, new Nullable(new WhiteList(Interval::values(), true)), 'How often the function runs on a schedule. Appwrite picks when within each interval it runs. Cannot be combined with schedule.', true, enum: new Enum(name: 'Interval', map: Interval::names()))
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
@@ -134,7 +134,7 @@ class Update extends Base
         array $execute,
         array $events,
         string $schedule,
-        int $interval,
+        ?string $interval,
         int $timeout,
         bool $enabled,
         bool $logging,
@@ -183,7 +183,9 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        if ($schedule !== '' && $interval !== 0) {
+        $interval ??= '';
+
+        if ($schedule !== '' && $interval !== '') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
         }
 

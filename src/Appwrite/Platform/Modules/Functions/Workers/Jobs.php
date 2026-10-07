@@ -983,7 +983,7 @@ class Jobs extends Action
         $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
-            'interval' => $resource->getAttribute('interval', 0),
+            'interval' => $resource->getAttribute('interval', ''),
             'active' => (! empty($resource->getAttribute('schedule')) || ! empty($resource->getAttribute('interval'))) && ! empty($resource->getAttribute('deploymentId')),
         ]));
     }

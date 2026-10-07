@@ -330,7 +330,6 @@ class Mapper
                     $injections
                 ));
                 break;
-            case \Appwrite\Task\Validator\Interval::class:
             case \Utopia\Validator\Integer::class:
             case \Utopia\Validator\Numeric::class:
                 $type = Type::int();

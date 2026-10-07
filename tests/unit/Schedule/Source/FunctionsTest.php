@@ -13,7 +13,7 @@ final class FunctionsTest extends TestCase
 {
     public function testIntervalRunsOncePerPeriodAtStablePhase(): void
     {
-        $entry = $this->entry(['schedule' => '', 'interval' => 3600]);
+        $entry = $this->entry(['schedule' => '', 'interval' => '1h']);
         $start = new \DateTimeImmutable('2026-10-07 00:00:00 UTC');
 
         $occurrences = $entry->trigger->occurrencesBetween($start, $start->modify('+3 hours'));
@@ -29,8 +29,8 @@ final class FunctionsTest extends TestCase
     public function testIntervalPhaseDiffersPerFunction(): void
     {
         $start = new \DateTimeImmutable('2026-10-07 00:00:00 UTC');
-        $first = $this->entry(['schedule' => '', 'interval' => 3600], 'function');
-        $second = $this->entry(['schedule' => '', 'interval' => 3600], 'report');
+        $first = $this->entry(['schedule' => '', 'interval' => '1h'], 'function');
+        $second = $this->entry(['schedule' => '', 'interval' => '1h'], 'report');
 
         $firstDue = $first->trigger->occurrencesBetween($start, $start->modify('+1 hour'))[0];
         $secondDue = $second->trigger->occurrencesBetween($start, $start->modify('+1 hour'))[0];
@@ -40,7 +40,7 @@ final class FunctionsTest extends TestCase
 
     public function testCronIsUsedWithoutInterval(): void
     {
-        $entry = $this->entry(['schedule' => '0 * * * *', 'interval' => 0]);
+        $entry = $this->entry(['schedule' => '0 * * * *', 'interval' => '']);
         $start = new \DateTimeImmutable('2026-10-07 00:30:00 UTC');
 
         $occurrences = $entry->trigger->occurrencesBetween($start, $start->modify('+2 hours'));
@@ -51,17 +51,32 @@ final class FunctionsTest extends TestCase
         );
     }
 
-    public function testRejectsUnsupportedInterval(): void
+    public function testSkipsUnsupportedInterval(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $database = $this->database(['schedule' => '', 'interval' => '1s']);
+        $source = new Functions($database, fn () => $database, fn () => false, fn () => 0);
 
-        $this->entry(['schedule' => '', 'interval' => 1]);
+        $row = \iterator_to_array($source->snapshot())[0];
+
+        $this->assertFalse($row->active);
     }
 
     /**
      * @param array<string, mixed> $attributes
      */
     private function entry(array $attributes, string $functionId = 'function'): Entry
+    {
+        $database = $this->database($attributes, $functionId);
+        $source = new Functions($database, fn () => $database, fn () => false, fn () => 0);
+        $row = \iterator_to_array($source->snapshot())[0];
+
+        return $source->make($row);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function database(array $attributes, string $functionId = 'function'): ScheduleDatabase
     {
         $database = new ScheduleDatabase();
         $database->documents['projects']['project'] = new Document(['$id' => 'project']);
@@ -72,9 +87,6 @@ final class FunctionsTest extends TestCase
             $attributes,
         ));
 
-        $source = new Functions($database, fn () => $database, fn () => false, fn () => 0);
-        $row = \iterator_to_array($source->snapshot())[0];
-
-        return $source->make($row);
+        return $database;
     }
 }
