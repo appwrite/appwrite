@@ -6,19 +6,13 @@ use Utopia\Database\Adapter\Postgres as UtopiaPostgres;
 use Utopia\Database\Query;
 
 /**
- * Postgres adapter that keeps distanceLessThan on the spatial index.
- *
- * utopia-php/database compares ST_Distance to the radius. PostGIS cannot
- * serve that from a GIST index, so a radius query walks the primary key.
- * ST_DWithin on the geometry column can. Meter queries still apply the
- * geography distance, so the radius stays meters and the boundary stays
- * exclusive.
+ * Prefixes distanceLessThan with ST_DWithin so a GIST index can serve it.
  */
 class Postgres extends UtopiaPostgres
 {
     /**
-     * Minimum meters in one degree of latitude on WGS84 (equator).
-     * Real degrees are slightly longer, so a radius based on this is a superset.
+     * Minimum meters in one degree of latitude on WGS84.
+     * Real degrees are longer, so a radius based on this is a superset.
      */
     private const float LATITUDE_METERS_PER_DEGREE = 110574.0;
 
@@ -27,10 +21,6 @@ class Postgres extends UtopiaPostgres
      */
     private const float LONGITUDE_METERS_PER_DEGREE = 111195.0;
 
-    /**
-     * Extra room for the spheroid and for the search window sitting
-     * closer to a pole than the vertex used above.
-     */
     private const float DEGREE_MARGIN = 1.1;
 
     /**
@@ -62,7 +52,11 @@ class Postgres extends UtopiaPostgres
             return $sql;
         }
 
-        $degrees = $this->degreesCoveringMeters($values[0], (float) $values[1]);
+        // Geography edges are geodesic. A planar radius around a point contains
+        // the meter circle; a line or polygon does not, so those stay exact.
+        $degrees = $this->isPoint($values[0])
+            ? $this->degreesCoveringPoint($values[0], (float) $values[1])
+            : null;
         if ($degrees === null) {
             return $sql;
         }
@@ -73,102 +67,37 @@ class Postgres extends UtopiaPostgres
     }
 
     /**
-     * Degree radius that contains every point within $meters of $geometry.
+     * Degree radius that contains every location within $meters of a point.
+     * Null when that circle reaches a pole or the antimeridian.
      *
-     * Null when a planar degree box would cross the antimeridian and drop matches that geography distance would keep.
-     *
-     * @param array<mixed> $geometry
+     * @param array<mixed> $point
      */
-    private function degreesCoveringMeters(array $geometry, float $meters): ?float
+    private function degreesCoveringPoint(array $point, float $meters): ?float
     {
-        $rings = $this->rings($geometry);
-        if ($rings === null) {
-            return null;
-        }
-
         if ($meters <= 0.0) {
             return 0.0;
         }
 
-        $maxAbsLatitude = 0.0;
-        $minLongitude = 180.0;
-        $maxLongitude = -180.0;
-
-        foreach ($rings as $ring) {
-            $previousLongitude = null;
-            foreach ($ring as [$longitude, $latitude]) {
-                $maxAbsLatitude = max($maxAbsLatitude, abs($latitude));
-                $minLongitude = min($minLongitude, $longitude);
-                $maxLongitude = max($maxLongitude, $longitude);
-
-                if ($previousLongitude !== null && abs($longitude - $previousLongitude) > 180.0) {
-                    return null;
-                }
-
-                $previousLongitude = $longitude;
-            }
+        $longitude = (float) $point[0];
+        $absLatitude = abs((float) $point[1]);
+        $latitudeDelta = $meters / self::LATITUDE_METERS_PER_DEGREE;
+        $poleward = $absLatitude + $latitudeDelta;
+        if ($poleward >= 90.0) {
+            return null;
         }
 
-        $latitudeDelta = $meters / self::LATITUDE_METERS_PER_DEGREE;
-        $latitude = min(89.9, $maxAbsLatitude + $latitudeDelta);
-        $cosine = cos(deg2rad($latitude));
-        if ($cosine < 0.0001) {
-            $cosine = 0.0001;
+        $cosine = cos(deg2rad($poleward));
+        if ($cosine <= 0.0) {
+            return null;
         }
 
         $longitudeDelta = $meters / (self::LONGITUDE_METERS_PER_DEGREE * $cosine);
         $degrees = hypot($latitudeDelta, $longitudeDelta) * self::DEGREE_MARGIN;
-
-        if ($minLongitude - $degrees < -180.0 || $maxLongitude + $degrees > 180.0) {
+        if ($longitude - $degrees < -180.0 || $longitude + $degrees > 180.0) {
             return null;
         }
 
         return $degrees;
-    }
-
-    /**
-     * @param array<mixed> $geometry
-     * @return list<list<array{0: float, 1: float}>>|null
-     */
-    private function rings(array $geometry): ?array
-    {
-        if ($this->isPoint($geometry)) {
-            return [[[(float) $geometry[0], (float) $geometry[1]]]];
-        }
-
-        if (!isset($geometry[0]) || !is_array($geometry[0])) {
-            return null;
-        }
-
-        if ($this->isPoint($geometry[0])) {
-            $ring = [];
-            foreach ($geometry as $point) {
-                if (!$this->isPoint($point)) {
-                    return null;
-                }
-                $ring[] = [(float) $point[0], (float) $point[1]];
-            }
-
-            return [$ring];
-        }
-
-        $rings = [];
-        foreach ($geometry as $ring) {
-            if (!is_array($ring) || $ring === []) {
-                return null;
-            }
-
-            $points = [];
-            foreach ($ring as $point) {
-                if (!$this->isPoint($point)) {
-                    return null;
-                }
-                $points[] = [(float) $point[0], (float) $point[1]];
-            }
-            $rings[] = $points;
-        }
-
-        return $rings === [] ? null : $rings;
     }
 
     private function isPoint(mixed $value): bool

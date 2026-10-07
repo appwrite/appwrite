@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Database\Adapter;
 
 use Appwrite\Database\Adapter\Postgres;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Query;
 
@@ -41,40 +42,51 @@ final class PostgresTest extends TestCase
         $this->assertLessThan(0.05, $binds[':q_2']);
     }
 
-    public function testDistanceLessThanInMetersUsesTheVertexClosestToAPole(): void
+    public function testMeterRadiusNearThePoleCoversNearbyLongitude(): void
     {
-        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [[10.0, 51.0], [10.2, 80.0]], 1000, true));
+        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [0.0, 89.999], 1, true));
 
         $this->assertStringStartsWith('ST_DWithin(', $sql);
-        $this->assertSame('LINESTRING(10 51, 10.2 80)', $binds[':q_0']);
-        $this->assertGreaterThan($this->minimumDegreeRadius(80.0, 1000.0), $binds[':q_2']);
+        $this->assertGreaterThan(0.1, $binds[':q_2']);
     }
 
-    public function testMeterRadiusGrowsTowardThePole(): void
+    public function testMeterCircleThatReachesThePoleStaysExact(): void
     {
-        [, $equator] = $this->compile(Query::distanceLessThan('loc', [10.0, 0.0], 1000, true));
-        [, $north] = $this->compile(Query::distanceLessThan('loc', [10.0, 80.0], 1000, true));
+        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [0.0, 89.999], 500, true));
 
-        $this->assertGreaterThan($equator[':q_2'], $north[':q_2']);
+        $this->assertSame($this->exactMeterDistance(), $sql);
+        $this->assertArrayNotHasKey(':q_2', $binds);
     }
 
     public function testDistanceLessThanInMetersNearAntimeridianStaysExact(): void
     {
         [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', [179.99, 51.0], 1000, true));
 
-        $this->assertSame(
-            'ST_Distance((main."loc"::geography), ST_SetSRID(ST_GeomFromText(:q_0, 4326), 4326)::geography) < :q_1',
-            $sql,
-        );
+        $this->assertSame($this->exactMeterDistance(), $sql);
         $this->assertArrayNotHasKey(':q_2', $binds);
     }
 
-    public function testDistanceLessThanInMetersAcrossAntimeridianEdgeStaysExact(): void
+    /**
+     * @param array<mixed> $geometry
+     */
+    #[DataProvider('nonPointGeometries')]
+    public function testMeterDistanceOnNonPointsStaysExact(array $geometry): void
     {
-        [$sql] = $this->compile(Query::distanceLessThan('loc', [[-170.0, 0.0], [170.0, 0.0]], 1000, true));
+        [$sql, $binds] = $this->compile(Query::distanceLessThan('loc', $geometry, 20000, true));
 
-        $this->assertStringStartsWith('ST_Distance(', $sql);
-        $this->assertStringNotContainsString('ST_DWithin', $sql);
+        $this->assertSame($this->exactMeterDistance(), $sql);
+        $this->assertArrayNotHasKey(':q_2', $binds);
+    }
+
+    /**
+     * @return array<string, array{0: array<mixed>}>
+     */
+    public static function nonPointGeometries(): array
+    {
+        return [
+            'line' => [[[-60.0, 60.0], [60.0, 60.0]]],
+            'polygon' => [[[[-60.0, 60.0], [60.0, 60.0], [0.0, 70.0], [-60.0, 60.0]]]],
+        ];
     }
 
     public function testOtherDistanceOperatorsDoNotUseSpatialIndex(): void
@@ -124,6 +136,11 @@ final class PostgresTest extends TestCase
         };
 
         return $probe->compile($query);
+    }
+
+    private function exactMeterDistance(): string
+    {
+        return 'ST_Distance((main."loc"::geography), ST_SetSRID(ST_GeomFromText(:q_0, 4326), 4326)::geography) < :q_1';
     }
 
     /**
