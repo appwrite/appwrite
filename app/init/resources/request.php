@@ -994,14 +994,25 @@ return function (Container $context): void {
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath, string $mode) {
         $teamId = '';
         $teamInternalId = '';
-        // Read the header here. Decoding an organization key depends on this team.
-        $presentedKey = $request->getHeaderLine('x-appwrite-key');
-        $organizationKey = \str_starts_with($presentedKey, API_KEY_ORGANIZATION . '_');
+        $apiKey = $request->getHeaderLine('x-appwrite-key');
+        $organizationKey = \str_starts_with($apiKey, API_KEY_ORGANIZATION . '_');
 
         if ($project->getId() !== 'console') {
-            // Organization API keys and console admins are the only readers.
-            // A cached anonymous read does not touch the team or its keys.
-            if ($mode !== APP_MODE_ADMIN && ! $organizationKey) {
+            $route = $utopia->match($request)?->route;
+            // This resource is resolved once per request. GraphQL dispatches every
+            // field through it, so those requests keep the project team.
+            $graphql = $request->getHeaderLine('x-appwrite-source') === 'graphql';
+            $listsProjects = $route !== null
+                && $route->getPath() === '/v1/projects'
+                && \in_array(Http::REQUEST_METHOD_GET, $route->getMethods(), true);
+            if (
+                ! $graphql
+                && $route !== null
+                && $mode !== APP_MODE_ADMIN
+                && ! $organizationKey
+                && ! \in_array('organization', $route->getGroups(), true)
+                && ! $listsProjects
+            ) {
                 return new Document([]);
             }
 
@@ -1022,7 +1033,9 @@ return function (Container $context): void {
                     return new Document([]);
                 }
 
-                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+                $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+                return $team;
             } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
                 // Routes in the organization group act on the organization named in the header;
                 // every other console route names its own team.
@@ -1034,17 +1047,15 @@ return function (Container $context): void {
             return new Document([]);
         }
 
-        // getDocument is cached, and writing the team purges that entry. An organization
-        // key reads its rows below, so revocation does not wait on that purge.
         $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
-        // A team re-created under the same ID has a new sequence and does not own this project.
+        // A team re-created under the same ID has a new sequence.
         if ($team->isEmpty() || (string) $team->getSequence() !== (string) $teamInternalId) {
             return new Document([]);
         }
 
         if ($organizationKey) {
-            // Authorization reads the current key rows. The copy stored with the cached team can be stale.
+            // Same lookup as subQueryOrganizationKeys. The cached team can hold older keys.
             $team->setAttribute('keys', $authorization->skip(fn () => $dbForPlatform->find('keys', [
                 Query::equal('resourceType', ['teams']),
                 Query::equal('resourceInternalId', [$team->getSequence()]),
