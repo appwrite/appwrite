@@ -2116,7 +2116,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['userId']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
@@ -2158,7 +2158,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['userId']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
