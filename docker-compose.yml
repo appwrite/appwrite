@@ -83,6 +83,8 @@ services:
       - appwrite-geo
       - appwrite-autogravity
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -249,7 +251,6 @@ services:
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
-      - _APP_ASSISTANT_OPENAI_API_KEY
       - _APP_CONSOLE_COUNTRIES_DENYLIST
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DATABASE_SHARED_NAMESPACE
@@ -459,6 +460,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
@@ -692,6 +695,8 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
@@ -1342,6 +1347,8 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1405,6 +1412,8 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -1652,18 +1661,13 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-  appwrite-assistant:
-    container_name: appwrite-assistant
-    image: appwrite/assistant:0.8.4
-    networks:
-      - appwrite
-    environment:
-      - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.4
+    image: appwrite/browser:0.3.6
     networks:
       - browser
+    environment:
+      - ALLOWED_HOSTS=appwrite
     # Public resolvers only, so the browser cannot resolve internal service
     # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
     dns:
@@ -1712,7 +1716,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.1
+    image: appwrite/geo:0.3.2
     restart: unless-stopped
     networks:
       - appwrite

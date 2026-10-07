@@ -216,6 +216,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DNS_EXTERNAL',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'introduction' => '2.3.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'introduction' => '2.3.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
@@ -1340,7 +1358,7 @@ return [
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Jobs-service build workers attach only the current project\'s subdirectory (`app-<projectId>`) so they write output directly onto it without seeing other projects. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -2003,21 +2021,6 @@ return [
             [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
                 'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
-                'introduction' => '1.4.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ]
-        ]
-    ],
-    [
-        'category' => 'Assistant',
-        'description' => '',
-        'variables' => [
-            [
-                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
-                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,

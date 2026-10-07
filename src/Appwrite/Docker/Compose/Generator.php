@@ -25,10 +25,6 @@ class Generator
         ],
     ];
 
-    private const array OPTIONAL_SERVICES = [
-        'enableAssistant' => 'appwrite-assistant',
-    ];
-
     private const array TOPOLOGY_SERVICE_GROUPS = [
         'topology' => [
             'default' => 'combined',
@@ -60,7 +56,6 @@ class Generator
         'version' => 'latest',
         'database' => 'postgresql',
         'hostPath' => '',
-        'enableAssistant' => false,
         'topology' => 'combined',
     ];
 
@@ -184,12 +179,6 @@ class Generator
                 if ($service !== $this->params[$param]) {
                     unset($services[$service]);
                 }
-            }
-        }
-
-        foreach (self::OPTIONAL_SERVICES as $param => $service) {
-            if (empty($this->params[$param])) {
-                unset($services[$service]);
             }
         }
 

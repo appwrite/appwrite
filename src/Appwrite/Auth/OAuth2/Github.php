@@ -3,8 +3,6 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
-use Utopia\Client\Client;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -228,7 +226,13 @@ class Github extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+            $user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+
+            if (!\is_array($user)) {
+                throw new Exception('GitHub did not return valid user information.', 400);
+            }
+
+            $this->user = $user;
 
             $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
 
@@ -272,7 +276,7 @@ class Github extends OAuth2
 
     public function verifyCredentials(): void
     {
-        $response = (new Client(new CurlAdapter()))
+        $response = $this->client
             ->withTimeout(15)
             ->withFollowRedirects(maxHops: 5)
             ->sendRequest((new RequestFactory())->query(

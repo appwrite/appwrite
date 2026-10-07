@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\OwnerNotFound;
 
 final class GitHubTest extends Base
 {
@@ -276,5 +277,70 @@ final class GitHubTest extends Base
         yield 'base64' => [base64_encode(...)];
         yield 'wrapped base64' => [fn (string $pem): string => chunk_split(base64_encode($pem), 76, "\n")];
         yield 'escaped newlines' => [fn (string $pem): string => str_replace("\n", '\n', $pem)];
+    }
+
+    public function testGetOwnerNameForMissingInstallationThrowsOwnerNotFound(): void
+    {
+        $adapter = $this->installationResponse(404, ['message' => 'Not Found']);
+
+        $this->expectException(OwnerNotFound::class);
+
+        $adapter->getOwnerName('1234');
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    #[DataProvider('transientInstallationResponses')]
+    public function testGetOwnerNameKeepsTransientFailuresRetryable(int $status, array $body): void
+    {
+        $adapter = $this->installationResponse($status, $body);
+
+        try {
+            $adapter->getOwnerName('1234');
+            $this->fail('A failed installation lookup must throw');
+        } catch (\Exception $error) {
+            $this->assertNotInstanceOf(OwnerNotFound::class, $error);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{int, array<string, mixed>}>
+     */
+    public static function transientInstallationResponses(): iterable
+    {
+        yield 'rate limited' => [403, ['message' => 'API rate limit exceeded']];
+        yield 'too many requests' => [429, ['message' => 'You have exceeded a secondary rate limit']];
+        yield 'server error' => [502, ['message' => 'Server Error']];
+    }
+
+    public function testGetOwnerNameReturnsInstallationLogin(): void
+    {
+        $adapter = $this->installationResponse(200, ['account' => ['login' => 'appwrite']]);
+
+        $this->assertSame('appwrite', $adapter->getOwnerName('1234'));
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    private function installationResponse(int $status, array $body): GitHub
+    {
+        return new class ($status, $body) extends GitHub {
+            protected string $jwtToken = 'app-token';
+
+            /**
+             * @param array<string, mixed> $body
+             */
+            public function __construct(private readonly int $status, private readonly array $body)
+            {
+                parent::__construct(new Cache(new None()));
+            }
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return ['body' => $this->body, 'headers' => ['status-code' => $this->status]];
+            }
+        };
     }
 }

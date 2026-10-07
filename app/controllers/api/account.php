@@ -48,6 +48,7 @@ use Utopia\Auth\Proofs\Phrase;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -318,7 +319,8 @@ Http::post('/v1/account')
     ->inject('hooks')
     ->inject('plan')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords) {
+    ->inject('proofForPassword')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword) {
         $name ??= '';
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -375,8 +377,7 @@ Http::post('/v1/account')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $proof = new ProofsPassword();
-        $hash = $proof->hash($password);
+        $hash = $proofForPassword->hash($password);
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -430,8 +431,8 @@ Http::post('/v1/account')
                 'password' => $hash,
                 'passwordHistory' => $passwordHistory > 0 ? [$hash] : [],
                 'passwordUpdate' => DateTime::now(),
-                'hash' => $proof->getHash()->getName(),
-                'hashOptions' => $proof->getHash()->getOptions(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
@@ -900,7 +901,8 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('session')
-    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current) {
+    ->inject('clientForOAuth2')
+    ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, ?Document $current, Client $clientForOAuth2) {
 
         $sessionId = ($sessionId === 'current')
             ? $current?->getId()
@@ -940,7 +942,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
-            $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
 
             $session
@@ -1107,13 +1109,15 @@ Http::post('/v1/account/sessions/email')
             }
         }
 
-        // Re-hash if not using recommended algo
-        if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
-            $proofForPasswordUpdated = new ProofsPassword();
+        // Re-hash if not using recommended algo or its configured costs (read from the hash, not hashOptions)
+        if (
+            $user->getAttribute('hash') !== $proofForPassword->getHash()->getName()
+            || \password_needs_rehash($user->getAttribute('password'), PASSWORD_ARGON2ID, $proofForPassword->getHash()->getOptions())
+        ) {
             $user
-                ->setAttribute('password', $proofForPasswordUpdated->hash($password))
-                ->setAttribute('hash', $proofForPasswordUpdated->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPasswordUpdated->getHash()->getOptions());
+                ->setAttribute('password', $proofForPassword->hash($password))
+                ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
             $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'password' => $user->getAttribute('password'),
                 'hash' => $user->getAttribute('hash'),
@@ -1407,11 +1411,13 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('state', '', new Text(256, 0, \array_map(\chr(...), \range(0x20, 0x7E))), 'An opaque value your app generates and keeps, for example in a cookie. It is returned unchanged as the `state` query parameter on the success and failure URLs, so your app can check that the sign-in it receives is one it started. Printable ASCII only (RFC 6749 Appendix A.5). Max length: 256 chars.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1470,11 +1476,12 @@ Http::get('/v1/account/sessions/oauth2/:provider')
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
         $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => false,
             'nonce' => $nonce,
+            'state' => $state,
         ], $scopes);
 
         $response
@@ -1493,7 +1500,8 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-    ->param('state', '', new Text(2048), 'Login state params.', true)
+    // 512 more for the app's state: 256 printable ASCII chars, at most doubled by JSON escaping
+    ->param('state', '', new Text(2048 + 512), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
@@ -1529,7 +1537,8 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-    ->param('state', '', new Text(2048), 'Login state params.', true)
+    // 512 more for the app's state: 256 printable ASCII chars, at most doubled by JSON escaping
+    ->param('state', '', new Text(2048 + 512), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
@@ -1570,7 +1579,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('docs', false)
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-    ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
+    // 512 more for the app's state: 256 printable ASCII chars, at most doubled by JSON escaping
+    ->param('state', '', new Text(2048 + 512), 'OAuth2 state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
@@ -1590,7 +1600,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('cookieDomain')
     ->inject('authorization')
     ->inject('platform')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1616,7 +1627,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
-        $oauth2 = new $className($appId, $appSecret, $callback);
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);
 
         if (!empty($state)) {
             try {
@@ -1668,10 +1679,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback) {
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure, $consoleHostname, $nativeCallback, $state) {
             $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
+                if (\is_string($state['state'] ?? null) && $state['state'] !== '') {
+                    $query['state'] = $state['state'];
+                }
                 $query['error'] = json_encode([
                     'message' => $exception->getMessage(),
                     'type' => $exception->getType(),
@@ -1697,10 +1711,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // only that browser holds it, and no other site can read or set it. The cookie is not
         // rewritten here: two callbacks finishing together would race on it, and replaying an
         // authorization code is refused by the provider (RFC 6749 §4.1.2).
+        // A token flow started by the app's server leaves that cookie on the server, so an unbound
+        // token flow still proceeds, but as a guest: the browser's signed-in user is not proof that
+        // it started this flow, and linking the provider identity to it would let anyone attach
+        // their identity to that account by sending the callback link. The app binds the token it
+        // receives to its own user through the `state` it passed in.
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
         if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
-            $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
+            if (empty($state['token'])) {
+                $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
+            }
+
+            $user = new User();
         }
 
         if (!empty($error)) {
@@ -1723,12 +1746,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessToken = '';
         $refreshToken = '';
         $accessTokenExpiry = 0;
+        $oauth2ID = '';
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
-
+            $oauth2ID = $oauth2->getUserID($accessToken);
         } catch (OAuth2Exception $ex) {
             $providerError = $ex->getError() ?: $ex->getMessage();
 
@@ -1739,7 +1763,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             );
         }
 
-        $oauth2ID = $oauth2->getUserID($accessToken);
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
         }
@@ -2304,6 +2327,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        if (\is_string($state['state'] ?? null) && $state['state'] !== '') {
+            $query['state'] = $state['state'];
+        }
+
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
 
@@ -2340,11 +2367,13 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('state', '', new Text(256, 0, \array_map(\chr(...), \range(0x20, 0x7E))), 'An opaque value your app generates and keeps, for example in a cookie. It is returned unchanged as the `state` query parameter on the success and failure URLs, so your app can check that the sign-in it receives is one it started. Printable ASCII only (RFC 6749 Appendix A.5). Max length: 256 chars.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('clientForOAuth2')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2400,11 +2429,12 @@ Http::get('/v1/account/tokens/oauth2/:provider')
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())), fn (string $held) => \strlen($held) === 32 && \ctype_xdigit($held));
         $nonces = \array_slice([$nonce, ...$nonces], 0, 5);
 
-        $oauth2 = new $className($appId, $appSecret, $callback, [
+        $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
+            'state' => $state,
         ], $scopes);
 
         $loginURL = $oauth2->getLoginURL();

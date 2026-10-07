@@ -17,7 +17,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -69,10 +68,11 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('hooks')
             ->inject('pwnedPasswords')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords): void
+    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -111,10 +111,8 @@ class Update extends Action
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
-        // Create Argon2 hasher with default settings
-        $hasher = new Argon2();
-
-        $newPassword = $hasher->hash($password);
+        $newPassword = $proofForPassword->hash($password);
+        $hasher = $proofForPassword->getHash();
 
         $hash = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;

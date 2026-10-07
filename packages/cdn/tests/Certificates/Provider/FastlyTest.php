@@ -6,6 +6,7 @@ namespace Utopia\Cdn\Tests\Certificates\Provider;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Cdn\Certificates\Provider\Fastly;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Cdn\Tests\TestClient;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
@@ -29,6 +30,46 @@ final class FastlyTest extends TestCase
         $this->assertSame(['fqdn' => 'example.com', 'service_id' => 'service_1'], $client->calls[1]['body']);
         $this->assertSame('POST', $client->calls[3]['method']);
         $this->assertSame('example.com', $client->calls[3]['body']['data']['relationships']['tls_domains']['data'][0]['id']);
+    }
+
+    public function testTlsConfigurationActivatesIssuedCertificate(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"},"relationships":{"tls_certificates":{"data":[{"id":"cert_1","type":"tls_certificate"}]},"tls_domains":{"data":[{"id":"example.com","type":"tls_domain"}]}}}]}'),
+            $this->json('{"data":[]}'),
+            $this->json('{}', 201),
+        ]);
+
+        $status = new Fastly('token', 'service_1', client: $client, tlsConfigurationId: 'tls_config_1')
+            ->getCertificateStatus('example.com', null);
+
+        $this->assertSame(Status::ISSUED, $status);
+        $this->assertCount(3, $client->calls);
+        $this->assertStringContainsString('filter%5Btls_configuration.id%5D=tls_config_1', $client->calls[1]['url']);
+        $this->assertSame('POST', $client->calls[2]['method']);
+        $this->assertSame('https://api.fastly.com/tls/activations', $client->calls[2]['url']);
+        $this->assertSame([
+            'data' => [
+                'type' => 'tls_activation',
+                'relationships' => [
+                    'tls_certificate' => ['data' => ['type' => 'tls_certificate', 'id' => 'cert_1']],
+                    'tls_configuration' => ['data' => ['type' => 'tls_configuration', 'id' => 'tls_config_1']],
+                    'tls_domain' => ['data' => ['type' => 'tls_domain', 'id' => 'example.com']],
+                ],
+            ],
+        ], $client->calls[2]['body']);
+    }
+
+    public function testIssuedCertificateWithoutATlsConfigurationIsNotActivated(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"},"relationships":{"tls_certificates":{"data":[{"id":"cert_1","type":"tls_certificate"}]}}}]}'),
+        ]);
+
+        $status = new Fastly('token', 'service_1', client: $client)->getCertificateStatus('example.com', null);
+
+        $this->assertSame(Status::ISSUED, $status);
+        $this->assertCount(1, $client->calls);
     }
 
     public function testBlockedTlsLeavesVersionlessDomainOnItsCurrentService(): void
