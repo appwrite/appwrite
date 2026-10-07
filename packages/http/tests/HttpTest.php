@@ -15,6 +15,7 @@ use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -1024,6 +1025,46 @@ final class HttpTest extends TestCase
             });
 
         $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
+    }
+
+    public function testLooseBooleanParamsAreCastToBool(): void
+    {
+        Http::setAllowOverride(true);
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/flags';
+
+        Http::get('/flags')
+            ->param('total', true, new Boolean(true), 'total flag', true)
+            ->action(function (bool $total) {
+                echo json_encode([
+                    'total' => $total,
+                    'type' => \gettype($total),
+                ]);
+            });
+
+        $run = function (array $params): string {
+            $request = new FPMRequest();
+            $request::_setParams($params);
+
+            ob_start();
+            $this->http->execute($request, new Response());
+            $result = ob_get_contents();
+            ob_end_clean();
+
+            $request::_setParams(null);
+
+            return (string) $result;
+        };
+
+        // SDK / browser query strings send the literal text "false" / "true"
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => 'false']));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => 'true']));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => '0']));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => '1']));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => 0]));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => 1]));
+        $this->assertSame('{"total":false,"type":"boolean"}', $run(['total' => false]));
+        $this->assertSame('{"total":true,"type":"boolean"}', $run(['total' => true]));
     }
 
     public function testCanInjectResourceAndParamWithSameName(): void

@@ -73,4 +73,28 @@ class Boolean extends Validator
         }
         return \is_bool($value);
     }
+
+    /**
+     * Convert loose query-string forms to a real boolean.
+     *
+     * String `"false"` is non-empty, so PHP's `(bool)` / typed `bool`
+     * coercion turns it into `true`. Call this after {@see isValid()} so
+     * action callbacks receive an actual `bool`.
+     */
+    public function cast(mixed $value): mixed
+    {
+        if (\is_bool($value)) {
+            return $value;
+        }
+
+        if (\in_array($value, ['true', '1', 1], true)) {
+            return true;
+        }
+
+        if (\in_array($value, ['false', '0', 0], true)) {
+            return false;
+        }
+
+        return $value;
+    }
 }
