@@ -1,4 +1,5 @@
 import {
+  BarChart2,
   BotMessageSquare,
   Database,
   Folder,
@@ -28,6 +29,7 @@ export const PRODUCT_IDS = [
   'messaging',
   'realtime',
   'sites',
+  'analytics',
   'firewall',
 ] as const satisfies readonly ProductId[]
 
@@ -104,6 +106,16 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     tagline: 'Static, SSR, and CSR deploys from Git.',
     docsPath: '/docs/products/sites',
   },
+  analytics: {
+    id: 'analytics',
+    name: 'Analytics',
+    // Next to Sites: web traffic for what you deploy.
+    group: 'deploy',
+    path: '/products/analytics',
+    icon: BarChart2,
+    tagline: 'Cookieless web and app analytics, bots and AI included.',
+    docsPath: '/docs/products/analytics',
+  },
   firewall: {
     id: 'firewall',
     name: 'Firewall',
@@ -134,6 +146,7 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'agent',
   'sites',
   'domains',
+  'analytics',
   'firewall',
   'advisor',
 ] as const satisfies readonly ProductNavItemId[]
@@ -219,6 +232,15 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     icon: Search,
     tagline: 'Search, buy, transfer, and manage domains.',
   },
+  analytics: {
+    id: 'analytics',
+    name: PRODUCT_REGISTRY.analytics.name,
+    // Observe & protect, next to Firewall: see your traffic, then act on it.
+    group: 'protect',
+    href: PRODUCT_REGISTRY.analytics.path,
+    icon: PRODUCT_REGISTRY.analytics.icon,
+    tagline: PRODUCT_REGISTRY.analytics.tagline,
+  },
   firewall: {
     id: 'firewall',
     name: PRODUCT_REGISTRY.firewall.name,
@@ -285,18 +307,33 @@ export const MARKETING_PRODUCT_NAV_CATEGORIES = PRODUCT_NAV_CATEGORIES.map(
   }),
 )
 
+export type MarketingProductMenuOptions = {
+  agent: boolean
+  /** The `analytics` feature flag; Analytics stays out of menus until launch. */
+  analytics?: boolean
+}
+
 export function isMarketingProductMenuNavItem(
   id: ProductNavItemId,
-  options: { agent: boolean },
+  options: MarketingProductMenuOptions,
 ): boolean {
   if (isProductNavItemComingSoon(id)) return false
   if (id === 'agent') return options.agent
+  if (id === 'analytics') return options.analytics === true
   return true
 }
 
-export function getMarketingProductMenuCategories(options: {
-  agent: boolean
-}): ProductNavCategory[] {
+/**
+ * The protect category becomes "Observe & protect" once Analytics sits in it,
+ * and stays "Protect" while it only holds Firewall.
+ */
+export function isObserveAndProtectCategory(category: ProductNavCategory): boolean {
+  return category.id === 'protect' && category.productIds.includes('analytics')
+}
+
+export function getMarketingProductMenuCategories(
+  options: MarketingProductMenuOptions,
+): ProductNavCategory[] {
   return MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
     ...category,
     productIds: category.productIds.filter((id) =>
@@ -316,6 +353,7 @@ export const PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS = [
   'realtime',
   'sites',
   'domains',
+  'analytics',
   'firewall',
 ] as const satisfies readonly ProductNavItemId[]
 

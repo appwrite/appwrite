@@ -18,8 +18,10 @@ function toToolkitItems(ids: readonly ProductNavItemId[]) {
 }
 
 function getMarketingProductToolkit() {
+  const features = getActiveProfileFeatures()
   const categories = getMarketingProductMenuCategories({
-    agent: getActiveProfileFeatures().agent,
+    agent: features.agent,
+    analytics: features.analytics,
   })
   const byId = Object.fromEntries(categories.map((c) => [c.id, c.productIds])) as Record<
     'build' | 'deploy' | 'protect',

@@ -14,6 +14,7 @@ import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSe
 import { ProductToneBackdrop } from '@/components/pages/products/_components/ProductTone'
 import { useRevealOnScroll } from '@/components/pages/products/_components/useRevealOnScroll'
 import { Button } from '@/components/ui/button'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getAlternativeContent } from '@/lib/alternatives/content'
 import {
   ALTERNATIVE_IDS,
@@ -629,7 +630,13 @@ export function ComparisonFaq({ id }: { id: AlternativeId }) {
 
 export function OtherComparisons({ current }: { current: AlternativeId }) {
   const t = useT()
-  const others = ALTERNATIVE_IDS.filter((id) => id !== current)
+  const { features } = useConsoleProfile()
+  // Analytics comparisons are reachable directly but stay unlisted until the flag is on.
+  const others = ALTERNATIVE_IDS.filter(
+    (id) =>
+      id !== current &&
+      (features.analytics || ALTERNATIVE_REGISTRY[id].focusProduct !== 'analytics'),
+  )
   return (
     <ComparisonSection bordered={false}>
       <ComparisonHeading

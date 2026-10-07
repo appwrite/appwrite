@@ -458,6 +458,36 @@ export const comparisonTables: ComparisonTable[] = [
             ]
         },
         {
+            title: 'Analytics',
+            rows: [
+                {
+                    title: 'Events',
+                    free: '50K / month',
+                    pro: '100K / month',
+                    enterprise: 'Custom',
+                    info: 'Pageviews and custom events across all properties in the organization.'
+                },
+                {
+                    title: 'Additional events',
+                    free: '-',
+                    pro: '$3 per 100K events',
+                    enterprise: 'Custom'
+                },
+                {
+                    title: 'Properties',
+                    free: '1 per project',
+                    pro: '5 per project',
+                    enterprise: 'Unlimited'
+                },
+                {
+                    title: 'Data retention',
+                    free: '30 days',
+                    pro: '90 days',
+                    enterprise: 'Custom'
+                }
+            ]
+        },
+        {
             title: 'Others',
             rows: [
                 {

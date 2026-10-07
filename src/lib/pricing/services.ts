@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  BarChart2,
   Database,
   Folder,
   Globe,
@@ -31,6 +32,7 @@ const ALL_PRICING_SERVICES: readonly PricingService[] = [
   { name: 'Network', icon: Globe2 },
   { name: 'Firewall', icon: Shield },
   { name: 'Advisor', icon: ScanSearch },
+  { name: 'Analytics', icon: BarChart2 },
 ]
 
 function isPricingServiceComingSoon(name: string) {

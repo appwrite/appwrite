@@ -9,6 +9,8 @@ import { FirebaseComparison } from './_components/FirebaseComparison'
 import { NeonComparison } from './_components/NeonComparison'
 import { NetlifyComparison } from './_components/NetlifyComparison'
 import { PlanetScaleComparison } from './_components/PlanetScaleComparison'
+import { PlausibleComparison } from './_components/PlausibleComparison'
+import { PostHogComparison } from './_components/PostHogComparison'
 import { SupabaseComparison } from './_components/SupabaseComparison'
 import { VercelComparison } from './_components/VercelComparison'
 import type { AlternativeId } from '@/lib/alternatives/types'
@@ -26,6 +28,8 @@ const COMPARISON_PAGES: Record<AlternativeId, ComponentType> = {
   clerk: ClerkComparison,
   amplify: AmplifyComparison,
   planetscale: PlanetScaleComparison,
+  posthog: PostHogComparison,
+  plausible: PlausibleComparison,
 }
 
 export function View({ competitor }: { competitor: AlternativeId }) {

@@ -135,9 +135,9 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean },
+  options: { agent: boolean; isCloud: boolean; analytics: boolean },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud } = options
+  const { agent, isCloud, analytics } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -211,6 +211,17 @@ function getExpandedFooterGroups(
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
       ...(marketing || isCloud
         ? [
+            // Links only: the page itself stays reachable while the flag is off.
+            ...(analytics
+              ? [
+                  productFooterLink(
+                    footerCopy.expanded.products.analytics,
+                    '/products/analytics',
+                    marketing,
+                    'analytics',
+                  ),
+                ]
+              : []),
             productFooterLink(
               footerCopy.expanded.products.firewall,
               '/products/firewall',
@@ -322,6 +333,12 @@ function getExpandedFooterGroups(
       comparisonFooterLink(footerCopy.expanded.compare.vsClerk, 'clerk', marketing),
       comparisonFooterLink(footerCopy.expanded.compare.vsAmplify, 'amplify', marketing),
       comparisonFooterLink(footerCopy.expanded.compare.vsPlanetScale, 'planetscale', marketing),
+      ...(analytics
+        ? [
+            comparisonFooterLink(footerCopy.expanded.compare.vsPostHog, 'posthog', marketing),
+            comparisonFooterLink(footerCopy.expanded.compare.vsPlausible, 'plausible', marketing),
+          ]
+        : []),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
@@ -391,7 +408,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud },
+    { agent: features.agent, isCloud, analytics: features.analytics },
   )
 
   const resourceLinks = [

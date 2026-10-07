@@ -99,7 +99,17 @@ export function MarketingProductPills({
   const productGroups = [
     { label: 'Build', products: build },
     ...(deploy?.length ? [{ label: 'Deploy' as const, products: deploy }] : []),
-    ...(protect?.length ? [{ label: 'Protect' as const, products: protect }] : []),
+    ...(protect?.length
+      ? [
+          {
+            // Analytics joins Firewall here once its feature flag is on.
+            label: protect.some((product) => product.href === '/products/analytics')
+              ? 'Observe & protect'
+              : 'Protect',
+            products: protect,
+          },
+        ]
+      : []),
   ]
 
   return (

@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState, type Ref } from 'react'
 import { Clapperboard } from 'lucide-react'
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import type { PlatformProductId } from '@/lib/alternatives/platform'
@@ -18,17 +19,102 @@ function itemIcon(id: IntegrationHubItem['id']): ProductIcon {
   return id === 'videos' ? Clapperboard : PRODUCT_NAV_REGISTRY[id].icon
 }
 
-/** Where each item's connector meets its column, as a percentage of the hub height. */
-const ROW_Y = [16.7, 50, 83.3] as const
+/** Space left between a connector's ends and the orbit ring or the icon tile, in px. */
+const ORBIT_GAP = 6
+const ICON_GAP = 8
+
+type HubLine = { x1: number; y1: number; x2: number; y2: number }
+type HubGeometry = { width: number; height: number; lines: HubLine[] }
+
+/**
+ * Position of `element` inside `container`, from layout offsets rather than
+ * bounding boxes so the rise animation's transforms don't skew the result.
+ */
+function offsetWithin(element: HTMLElement, container: HTMLElement) {
+  let x = 0
+  let y = 0
+  let node: HTMLElement | null = element
+  while (node && node !== container) {
+    x += node.offsetLeft
+    y += node.offsetTop
+    node = node.offsetParent as HTMLElement | null
+  }
+  return { x, y, width: element.offsetWidth, height: element.offsetHeight }
+}
+
+/**
+ * One straight connector per icon, from the edge of the focus ring to the edge
+ * of the icon tile, measured from the rendered layout so text wrapping never
+ * pulls a line off its icon.
+ */
+function useHubGeometry(count: number) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const focusRef = useRef<HTMLDivElement>(null)
+  const iconRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const [geometry, setGeometry] = useState<HubGeometry | null>(null)
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const focus = focusRef.current
+    if (!container || !focus) return
+
+    const measure = () => {
+      const ring = offsetWithin(focus, container)
+      const fx = ring.x + ring.width / 2
+      const fy = ring.y + ring.height / 2
+      const radius = ring.width / 2
+
+      const lines: HubLine[] = []
+      for (const icon of iconRefs.current.slice(0, count)) {
+        if (!icon) continue
+        const tile = offsetWithin(icon, container)
+        const cx = tile.x + tile.width / 2
+        const cy = tile.y + tile.height / 2
+        const dx = cx - fx
+        const dy = cy - fy
+        const length = Math.hypot(dx, dy)
+        if (length === 0) continue
+        const ux = dx / length
+        const uy = dy / length
+        // Distance from the tile's center to its border along the connector.
+        const exit = Math.min(
+          ux === 0 ? Number.POSITIVE_INFINITY : tile.width / 2 / Math.abs(ux),
+          uy === 0 ? Number.POSITIVE_INFINITY : tile.height / 2 / Math.abs(uy),
+        )
+        const start = radius + ORBIT_GAP
+        const end = length - exit - ICON_GAP
+        if (end <= start) continue
+        lines.push({ x1: fx + ux * start, y1: fy + uy * start, x2: fx + ux * end, y2: fy + uy * end })
+      }
+
+      setGeometry({ width: container.offsetWidth, height: container.offsetHeight, lines })
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    for (const icon of iconRefs.current) if (icon) observer.observe(icon)
+    void document.fonts?.ready.then(measure)
+    return () => observer.disconnect()
+  }, [count])
+
+  const setIconRef = (index: number) => (element: HTMLSpanElement | null) => {
+    iconRefs.current[index] = element
+  }
+
+  return { containerRef, focusRef, setIconRef, geometry }
+}
 
 function HubNode({
   item,
   align,
   delayMs,
+  iconRef,
 }: {
   item: IntegrationHubItem
   align: 'start' | 'end'
   delayMs: number
+  iconRef: Ref<HTMLSpanElement>
 }) {
   const t = useT()
   const Icon = itemIcon(item.id)
@@ -38,6 +124,7 @@ function HubNode({
       style={riseStyle(delayMs)}
     >
       <span
+        ref={iconRef}
         className={cn(
           'flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background shadow-sm dark:bg-card',
           item.soon ? 'border-dashed border-foreground/25 text-muted-foreground' : 'border-border text-[var(--tone-ink)]',
@@ -77,7 +164,7 @@ export function IntegrationHubSection({
   description,
   items,
 }: {
-  focus: PlatformProductId
+  focus: keyof typeof PRODUCT_NAV_REGISTRY
   focusLabel: string
   eyebrow?: string
   title: string
@@ -95,6 +182,7 @@ export function IntegrationHubSection({
   const FocusIcon = PRODUCT_NAV_REGISTRY[focus].icon
   const left = items.slice(0, 3)
   const right = items.slice(3)
+  const { containerRef, focusRef, setIconRef, geometry } = useHubGeometry(items.length)
 
   return (
     <ComparisonSection
@@ -107,40 +195,48 @@ export function IntegrationHubSection({
     >
       <ComparisonHeading align="center" eyebrow={eyebrow} title={title} description={description} />
 
-      <div className="relative mx-auto mt-10 min-w-0 max-w-6xl sm:mt-14">
-        <svg
-          className="pointer-events-none absolute inset-0 hidden size-full lg:block"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          {ROW_Y.flatMap((y) => [
-            { x: 33, y },
-            { x: 67, y },
-          ]).map((end) => (
-            <line
-              key={`${end.x}-${end.y}`}
-              x1="50"
-              y1="50"
-              x2={end.x}
-              y2={end.y}
-              className="alternative-flow stroke-[rgb(var(--tone-rgb)/0.5)]"
-              strokeWidth="1.25"
-              strokeDasharray="3 5"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </svg>
+      <div ref={containerRef} className="relative mx-auto mt-10 min-w-0 max-w-6xl sm:mt-14">
+        {geometry ? (
+          <svg
+            className="pointer-events-none absolute inset-0 hidden size-full lg:block"
+            viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+            aria-hidden
+          >
+            {geometry.lines.map((line, index) => (
+              <line
+                key={index}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                className="alternative-flow stroke-[rgb(var(--tone-rgb)/0.5)]"
+                strokeWidth="1.25"
+                strokeDasharray="3 5"
+                strokeLinecap="round"
+              />
+            ))}
+          </svg>
+        ) : null}
 
         <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_14rem_minmax(0,1fr)] lg:items-center lg:gap-0">
           <ul className="order-2 grid min-w-0 gap-6 sm:grid-cols-2 sm:gap-8 lg:order-1 lg:grid-cols-1 lg:gap-14 lg:pe-16">
             {left.map((item, index) => (
-              <HubNode key={item.title} item={item} align="end" delayMs={200 + index * 120} />
+              <HubNode
+                key={item.title}
+                item={item}
+                align="end"
+                delayMs={200 + index * 120}
+                iconRef={setIconRef(index)}
+              />
             ))}
           </ul>
 
           <div className="order-1 flex justify-center lg:order-2">
-            <div className="product-hero-rise relative flex size-44 items-center justify-center" style={riseStyle(80)}>
+            <div
+              ref={focusRef}
+              className="product-hero-rise relative flex size-44 items-center justify-center"
+              style={riseStyle(80)}
+            >
               <span
                 className="product-hero-orbit absolute inset-0 rounded-full border border-dashed border-[rgb(var(--tone-rgb)/0.45)]"
                 aria-hidden
@@ -160,7 +256,13 @@ export function IntegrationHubSection({
 
           <ul className="order-3 grid min-w-0 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-1 lg:gap-14 lg:ps-16">
             {right.map((item, index) => (
-              <HubNode key={item.title} item={item} align="start" delayMs={260 + index * 120} />
+              <HubNode
+                key={item.title}
+                item={item}
+                align="start"
+                delayMs={260 + index * 120}
+                iconRef={setIconRef(left.length + index)}
+              />
             ))}
           </ul>
         </div>

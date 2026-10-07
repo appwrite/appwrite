@@ -166,6 +166,32 @@ export const PLATFORM_COVERAGE: Record<AlternativeId, Record<PlatformProductId, 
     domains: 'no',
     firewall: 'no',
   },
+  // Analytics tools: no backend products. PostHog's data warehouse and hog
+  // functions are analytics pipelines, not app databases or compute.
+  posthog: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
+  plausible: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
 }
 
 /** How each competitor ships its source, shown next to Appwrite being open source. */
@@ -213,5 +239,13 @@ export const COMPETITOR_SOURCE: Record<AlternativeId, { status: string; detail: 
   planetscale: {
     status: 'Platform not self-hostable',
     detail: 'Vitess is open source, but the PlanetScale platform, branching, and Postgres service run only on PlanetScale.',
+  },
+  posthog: {
+    status: 'Open source',
+    detail: 'The core is MIT licensed and can be self-hosted for smaller deployments.',
+  },
+  plausible: {
+    status: 'Open source',
+    detail: 'Community Edition is AGPL licensed and self-hostable, with fewer features than the cloud service.',
   },
 }

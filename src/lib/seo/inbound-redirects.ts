@@ -127,6 +127,7 @@ const BARE_PRODUCT_PATHS: Record<string, string> = {
   messaging: '/products/messaging',
   realtime: '/products/realtime',
   firewall: '/products/firewall',
+  analytics: '/products/analytics',
   databases: '/products/databases',
   presences: '/products/realtime',
   users: '/products/auth',
@@ -152,6 +153,11 @@ const API_DOCS_ROOTS: Record<string, string> = {
   presences: 'apis/realtime/presences',
 }
 
+/**
+ * Every `/products/:id` page. Must match PRODUCT_IDS in lib/products/registry.ts
+ * (not imported here to keep this server middleware light): a missing id 301s
+ * the page to `/`. Covered by tests/unit/inbound-redirects.test.ts.
+ */
 const LIVE_PRODUCTS = new Set([
   'auth',
   'databases',
@@ -161,6 +167,7 @@ const LIVE_PRODUCTS = new Set([
   'messaging',
   'realtime',
   'sites',
+  'analytics',
   'firewall',
 ])
 

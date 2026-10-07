@@ -226,6 +226,12 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
         description: 'Deploy and host static and server-side rendered websites.',
       },
       {
+        title: 'Analytics',
+        url: `${origin}/products/analytics`,
+        description:
+          'Cookieless web and app analytics with custom events, server-side tracking, and bot and AI traffic breakdowns.',
+      },
+      {
         title: 'For coding agents',
         url: `${origin}${FOR_AGENTS_PATH}`,
         description:

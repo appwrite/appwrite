@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { ANALYTICS_FEATURE_VISUALS } from '@/components/pages/products/features/analytics'
 import { AUTH_FEATURE_VISUALS } from '@/components/pages/products/features/auth'
 import { DATABASES_FEATURE_VISUALS } from '@/components/pages/products/features/databases'
 import { FIREWALL_FEATURE_VISUALS } from '@/components/pages/products/features/firewall'
@@ -13,6 +14,7 @@ import type { ProductId } from '@/lib/products/types'
 const PRODUCT_FEATURE_VISUALS: Partial<
   Record<ProductId, Record<string, ComponentType>>
 > = {
+  analytics: ANALYTICS_FEATURE_VISUALS,
   auth: AUTH_FEATURE_VISUALS,
   databases: DATABASES_FEATURE_VISUALS,
   firewall: FIREWALL_FEATURE_VISUALS,

@@ -14,6 +14,7 @@ export type ProductId =
   | 'messaging'
   | 'realtime'
   | 'sites'
+  | 'analytics'
   | 'firewall'
 
 export type ProductGroup = 'build' | 'deploy' | 'protect'
