@@ -12,7 +12,14 @@ use Utopia\Database\Query;
 
 class Targets
 {
-    public static function delete(Database $database, Query $query): void
+    /**
+     * @param callable(Throwable): void|null $onError Receives a failure instead of it
+     *        being thrown. Only a maintenance sweep passes one: it may run against a
+     *        database created before `targets` existed and should skip it rather than
+     *        fail the run. Deleting a user's or a session's targets passes none, so a
+     *        failure there fails the job instead of reporting it done.
+     */
+    public static function delete(Database $database, Query $query, ?callable $onError = null): void
     {
         $database->deleteDocuments(
             'targets',
@@ -22,14 +29,7 @@ class Targets
             ],
             Database::DELETE_BATCH_SIZE,
             fn (Document $target) => self::deleteSubscribers($database, $target),
-            // A project database created before `targets` existed never got it, and
-            // nothing backfills one. Without a sink here the sweep does not skip that
-            // database -- it fails the whole maintenance run on it, every run, and the
-            // sweeps queued behind this one never happen. Matches the sinks the other
-            // maintenance sweeps in Workers\Deletes already pass.
-            onError: function (Throwable $th) use ($database): void {
-                Console::warning("Skipped the targets sweep on {$database->getDatabase()}: {$th->getMessage()}");
-            }
+            $onError
         );
     }
 
