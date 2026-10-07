@@ -610,6 +610,78 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'products/videos',
+    parent: {
+      href: '/docs',
+      label: 'Videos',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/videos',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/videos/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Videos',
+            href: '/docs/products/videos/videos',
+          },
+          {
+            label: 'Encoding profiles',
+            href: '/docs/products/videos/profiles',
+          },
+          {
+            label: 'Renditions',
+            href: '/docs/products/videos/renditions',
+          },
+          {
+            label: 'Outputs',
+            href: '/docs/products/videos/outputs',
+          },
+          {
+            label: 'Captions',
+            href: '/docs/products/videos/captions',
+          },
+          {
+            label: 'Timeline',
+            href: '/docs/products/videos/timeline',
+          },
+          {
+            label: 'Permissions',
+            href: '/docs/products/videos/permissions',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Play a video in your app',
+            href: '/docs/products/videos/play',
+          },
+          {
+            label: 'Embed the player',
+            href: '/docs/products/videos/embed',
+          },
+          {
+            label: 'Inspect playback',
+            href: '/docs/products/videos/inspector',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/agent',
     parent: {
       href: '/docs',

@@ -653,6 +653,7 @@ export function buildDocsMarkdownIndex(
     { slug: 'products/storage', title: 'Storage' },
     { slug: 'products/functions', title: 'Functions' },
     { slug: 'products/messaging', title: 'Messaging' },
+    { slug: 'products/videos', title: 'Videos' },
     { slug: 'products/sites', title: 'Sites' },
     { slug: 'products/domains', title: 'Domains' },
     { slug: 'apis', title: 'APIs' },

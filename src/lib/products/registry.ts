@@ -95,6 +95,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     path: '/products/videos',
     icon: VIDEOS_PRODUCT_ICON,
     tagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
+    docsPath: '/docs/products/videos',
   },
   realtime: {
     id: 'realtime',

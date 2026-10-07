@@ -1,0 +1,87 @@
+---
+layout: article
+title: Encoding profiles
+description: Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.
+---
+
+An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every [rendition](/docs/products/videos/renditions) encoded from it. Profiles belong to a project and are shared by all its videos.
+
+Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes.
+
+# Resolution and bitrate {% #resolution-and-bitrate %}
+
+Two numbers decide how a rendition looks and how much data it needs:
+
+- **Resolution** is the picture size, such as 1280 × 720. Larger pictures show more detail on large screens, but a phone in a pocket-sized player gains little from 4K.
+- **Bitrate** is how much data each second of video uses. More bits mean fewer compression artifacts, but the viewer's connection must keep up. A 5,000 kbps rendition needs a steady connection of about 5 Mbps or more.
+
+A good profile pairs the two: enough bitrate for its resolution to look clean, and no more. Fast motion, like sports or games, needs more bitrate than a talking head at the same resolution.
+
+# Default ladder {% #default-ladder %}
+
+Every new project starts with a default ladder of profiles, so you can encode a video without creating any. Open **Videos** > **Encoding profiles** to see them.
+
+# What a profile contains {% #what-a-profile-contains %}
+
+| Field | Description |
+|-------|-------------|
+| `name` | Label shown in the Console, for example `720p` |
+| `width`, `height` | Target picture size in pixels |
+| `videoBitRate` | Target video bitrate in **kilobits per second** |
+| `audioBitRate` | Target audio bitrate in **kilobits per second** |
+| `codec` | Video codec. Defaults to `h264` (H.264) |
+
+# Presets {% #presets %}
+
+When you create a profile in the Console, you can start from a preset or enter your own values under **Custom profile**:
+
+| Preset | Resolution | Video bitrate | Audio bitrate |
+|--------|------------|---------------|---------------|
+| 360p | 640 × 360 | 800 kbps | 96 kbps |
+| 480p | 854 × 480 | 1,400 kbps | 128 kbps |
+| 720p | 1280 × 720 | 2,800 kbps | 128 kbps |
+| 1080p | 1920 × 1080 | 5,000 kbps | 192 kbps |
+| 1440p | 2560 × 1440 | 8,000 kbps | 192 kbps |
+| 2160p | 3840 × 2160 | 16,000 kbps | 192 kbps |
+
+# Create a profile {% #create-a-profile %}
+
+1. Open **Videos** in your project and select **Encoding profiles**.
+2. Click **Create profile**.
+3. Choose a preset, or switch to **Custom profile** and enter a **Name**, **Width**, **Height**, **Video bitrate**, and **Audio bitrate**.
+4. Click **Create**.
+
+The new profile shows up in the **Profiles** list when you create a video or add renditions. Profile names are labels only, so name them by purpose if that helps your team, for example `720p-mobile`.
+
+# Design a ladder {% #design-a-ladder %}
+
+You do not need many profiles. Three to five usually cover every viewer, from a weak mobile connection to a fast desktop one. Each extra rendition adds encoding time and storage.
+
+| Use case | Suggested profiles |
+|----------|--------------------|
+| Short social clips, mostly on phones | 360p, 480p, 720p |
+| General web and app video | 360p, 480p, 720p, 1080p |
+| High-detail content on large screens | 480p, 720p, 1080p, 1440p, 2160p |
+| Audio-only, such as podcasts | One profile. Only its audio bitrate matters |
+
+When you build your own ladder:
+
+- **Start low enough.** The lowest rendition is what viewers on a poor connection get. Without one around 360p, they buffer instead of playing.
+- **Space the rungs out.** Each step should roughly double the bitrate of the one below. Rungs that are too close waste encoding time, since players gain little by switching between them.
+- **Stop at the source.** A rung above the source resolution only upscales. See [Upscaling](#upscaling).
+- **Keep audio steady.** Viewers notice audio quality changing more than picture quality. Use the same audio bitrate across most rungs, as the presets do.
+
+# Upscaling {% #upscaling %}
+
+A profile that is larger than the source picture **upscales** it. Upscaling adds size and encoding time without adding detail. The Console marks these profiles as **Upscale** and leaves them out of the default selection when you create renditions.
+
+The check compares short edge with short edge and long edge with long edge, so it works the same for landscape and portrait video. A 1080 × 1920 portrait clip does not upscale with the `1080p` profile (1920 × 1080), because both edges match. Until the source is probed, its size is unknown and no profile is marked.
+
+You can still encode an upscaling profile, for example to keep every video on the same ladder. It just costs more without looking better.
+
+# Changes and deletion {% #changes-and-deletion %}
+
+Profiles are configuration, not media:
+
+- **Updating** a profile does not re-encode renditions that already exist. To apply the change, delete those renditions and create them again.
+- **Deleting** a profile keeps the renditions that were already encoded with it.

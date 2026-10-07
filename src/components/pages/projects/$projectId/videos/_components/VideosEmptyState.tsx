@@ -13,6 +13,7 @@ import {
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import {
   ProductEmptyStateCreateButton,
+  ProductEmptyStateDocsButton,
   ProductEmptyStateSteps,
   ProductEmptyStateVisual,
   type ProductEmptyStateStep,
@@ -184,6 +185,7 @@ export function VideosEmptyState({
                 {t('Encoding profiles')}
               </Link>
             </Button>
+            <ProductEmptyStateDocsButton path="/docs/products/videos" />
           </div>
         </div>
         <div className="order-first w-full max-w-md @3xl:order-none @3xl:max-w-none">
