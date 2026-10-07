@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "faster-list-caching-binary-format",
+    "href": "/blog/post/faster-list-caching-binary-format",
+    "title": "Cached list queries now use up to 69% less memory and serve up to 29% more requests",
+    "description": "Appwrite now serializes key-value cache entries in a binary format instead of JSON. Cached list responses consume up to 69% less memory, and cached list throughput increases by up to 29%.",
+    "date": "2026-10-07",
+    "lastUpdated": "2026-10-07",
+    "timeToRead": 5,
+    "author": "luke-silver",
+    "category": "announcements, performance",
+    "featured": false,
+    "cover": "/images/blog/faster-list-caching-binary-format/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "build-a-living-ai-town-appwrite-functions-realtime",
     "href": "/blog/post/build-a-living-ai-town-appwrite-functions-realtime",
     "title": "Build a living AI town with Appwrite Functions, TablesDB, and Realtime",
