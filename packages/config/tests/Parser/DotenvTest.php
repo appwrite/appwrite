@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Parser;
+namespace Utopia\Config\Tests\Parser;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Attribute\Key;
@@ -21,7 +21,9 @@ final class DotenvTest extends TestCase
         $this->parser = new Dotenv();
     }
 
-    protected function tearDown(): void {}
+    protected function tearDown(): void
+    {
+    }
 
     public function testDotenvBasicTypes(): void
     {

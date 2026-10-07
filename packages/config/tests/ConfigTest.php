@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests;
+namespace Utopia\Config\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -25,20 +25,31 @@ use Utopia\Validator\Text;
 
 final class ConfigTest extends TestCase
 {
-    protected function setUp(): void {}
+    /**
+     * Set here rather than in phpunit.xml, which the root `packages` suite does not read.
+     */
+    protected function setUp(): void
+    {
+        \putenv('_UTOPIA_KEY1=hello');
+        \putenv('_UTOPIA_KEY2=world');
+    }
 
-    protected function tearDown(): void {}
+    protected function tearDown(): void
+    {
+        \putenv('_UTOPIA_KEY1');
+        \putenv('_UTOPIA_KEY2');
+    }
 
     public function testFileSource(): void
     {
-        $config = Config::load(new File(__DIR__ . '/../resources/config.json'), new JSON(), TestConfig::class);
+        $config = Config::load(new File(__DIR__ . '/resources/config.json'), new JSON(), TestConfig::class);
         $this->assertSame('customValue', $config->jsonKey);
     }
 
     public function testFileSourceException(): void
     {
         $this->expectException(Load::class);
-        Config::load(new File(__DIR__ . '/../resources/non-existing.json'), new JSON(), TestConfig::class);
+        Config::load(new File(__DIR__ . '/resources/non-existing.json'), new JSON(), TestConfig::class);
     }
 
     public function testVariableSource(): void
@@ -101,7 +112,7 @@ final class ConfigTest extends TestCase
             throw new \Exception('Test scenario includes invalid adapter.');
         }
 
-        $config = Config::load(new File(__DIR__ . '/../resources/config.' . $extension), $adapter, TestConfig::class);
+        $config = Config::load(new File(__DIR__ . '/resources/config.' . $extension), $adapter, TestConfig::class);
 
         $this->assertSame('customValue', $config->$key);
     }
@@ -339,5 +350,7 @@ class TestTypeMismatchConfig
 
 class TestConstructorConfig
 {
-    public function __construct(public string $required) {}
+    public function __construct(public string $required)
+    {
+    }
 }

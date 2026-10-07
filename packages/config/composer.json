@@ -12,7 +12,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Utopia\\Config\\": "src/Config"
+            "Utopia\\Config\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Config\\Tests\\": "tests/"
         }
     },
     "scripts": {

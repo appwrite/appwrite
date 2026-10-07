@@ -224,6 +224,21 @@ $config = Config::load(new Environment(), new None(), CredentialsConfig::class);
 // $config->$cachePass
 ```
 
+
+## Registry
+
+`Config` also holds a process-wide key/value registry, for configuration an application assembles at boot and reads everywhere:
+
+```php
+use Utopia\Config\Config;
+
+Config::setParam('platform', include __DIR__ . '/config/platform.php');
+
+Config::getParam('platform.hostname', 'localhost'); // dotted keys walk nested arrays
+```
+
+A key that is absent or `null` returns the default.
+
 ## System requirements
 
 Utopia Framework requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.

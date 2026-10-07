@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\Tests\Parser;
+namespace Utopia\Config\Tests\Parser;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Exception\Parse;

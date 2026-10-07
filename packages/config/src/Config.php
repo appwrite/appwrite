@@ -10,6 +10,39 @@ use Utopia\Config\Exception\Load;
 class Config
 {
     /**
+     * Process-wide registry read with getParam() and written with setParam().
+     *
+     * @var array<string, mixed>
+     */
+    public static array $params = [];
+
+    public static function setParam(string $key, mixed $value): void
+    {
+        self::$params[$key] = $value;
+    }
+
+    /**
+     * Resolves dotted keys through nested arrays: `getParam('platform.hostname')`.
+     * A key that is absent or null returns the default.
+     */
+    public static function getParam(string $key, mixed $default = null): mixed
+    {
+        if (! \str_contains($key, '.')) {
+            return self::$params[$key] ?? $default;
+        }
+
+        $node = self::$params;
+        foreach (\explode('.', $key) as $segment) {
+            if (! \is_array($node) || ! isset($node[$segment])) {
+                return $default;
+            }
+            $node = $node[$segment];
+        }
+
+        return $node;
+    }
+
+    /**
      * @template T of object
      *
      * @param  class-string<T>  $className
