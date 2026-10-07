@@ -4367,7 +4367,7 @@ Http::put('/v1/account/recovery')
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken);
@@ -4749,7 +4749,7 @@ Http::put('/v1/account/recovery/otp')
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $secret, $proofForCode);
@@ -5137,7 +5137,7 @@ Http::put('/v1/account/verifications/email')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
@@ -5339,7 +5339,7 @@ Http::put('/v1/account/verifications/phone')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_PHONE, $secret, $proofForCode);
@@ -6007,7 +6007,7 @@ Http::put('/v1/account/verifications/email/otp')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $secret, $proofForCode);
