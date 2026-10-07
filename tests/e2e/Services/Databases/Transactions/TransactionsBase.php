@@ -1950,9 +1950,6 @@ trait TransactionsBase
 
         $this->assertEquals(200, $committed['headers']['status-code']);
 
-        // The commit handler builds this payload by hand rather than going through
-        // processDocument(), so it has to add the same keys: the synthetic $databaseId,
-        // and only the container id belonging to the surface that was called.
         $delivery = $this->getLastRequestForProject(
             $this->getProject()['$id'],
             probe: function (array $request) use ($recordId) {
@@ -1960,9 +1957,85 @@ trait TransactionsBase
             }
         );
 
-        $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
-        $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
-        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+        $this->assertCreateEventPayload($delivery['data'], $databaseId, $collectionId);
+    }
+
+    public function testCreateEventPayloadCarriesSurfaceIds(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $recordId = ID::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['name' => 'Direct event payload'],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals($databaseId, $created['body']['$databaseId']);
+        $this->assertEquals($collectionId, $created['body'][$this->getContainerIdResponseKey()]);
+
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            probe: function (array $request) use ($recordId) {
+                $this->assertStringContainsString($recordId, $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+            }
+        );
+
+        $this->assertCreateEventPayload($delivery['data'], $databaseId, $collectionId);
+    }
+
+    public function testBulkCreateEventPayloadCarriesSurfaceIds(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $firstId = ID::unique();
+        $secondId = ID::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordResource() => [
+                [
+                    '$id' => $firstId,
+                    'name' => 'Bulk event payload',
+                ],
+                [
+                    '$id' => $secondId,
+                    'name' => 'Bulk event payload',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals(2, $created['body']['total']);
+
+        foreach ([$firstId, $secondId] as $recordId) {
+            $delivery = $this->getLastRequestForProject(
+                $this->getProject()['$id'],
+                probe: function (array $request) use ($recordId) {
+                    $this->assertStringContainsString($recordId, $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+                }
+            );
+
+            $this->assertEquals($recordId, $delivery['data']['$id']);
+            $this->assertCreateEventPayload($delivery['data'], $databaseId, $collectionId);
+        }
+    }
+
+    private function assertCreateEventPayload(array $data, string $databaseId, string $containerId): void
+    {
+        $this->assertEquals($databaseId, $data['$databaseId']);
+        $this->assertEquals($containerId, $data[$this->getContainerIdResponseKey()]);
+        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $data);
+        $this->assertArrayNotHasKey('$collection', $data);
+        $this->assertArrayNotHasKey('$tenant', $data);
     }
 
     /**

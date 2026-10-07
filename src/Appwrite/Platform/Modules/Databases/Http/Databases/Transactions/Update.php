@@ -512,18 +512,26 @@ class Update extends Action
                 $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
+                $model = $response->getModel(
+                    $this->isCollectionsAPI()
+                        ? UtopiaResponse::MODEL_DOCUMENT
+                        : UtopiaResponse::MODEL_ROW
+                );
+                $oppositeId = $this->isCollectionsAPI() ? '$tableId' : '$collectionId';
+
                 foreach ($documentsToTrigger as $doc) {
-                    // Match the key set processDocument() gives every other row and document
-                    // event: the synthetic $databaseId, plus whichever of $tableId or
-                    // $collectionId belongs to the surface that was called.
-                    $payload = $doc->getArrayCopy();
-                    $payload['$databaseId'] = $database->getId();
-                    $payload['$' . $groupId] = $collection->getId();
+                    // Same public shape as processDocument() and the row or document
+                    // model: $databaseId, the surface container id, no internal
+                    // $collection or the other API's container id.
+                    $payloadDocument = clone $doc;
+                    $payloadDocument->setAttribute('$databaseId', $database->getId());
+                    $payloadDocument->setAttribute('$' . $groupId, $collection->getId());
+                    $payloadDocument->removeAttribute($oppositeId);
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
                         ->setParam('rowId', $doc->getId())
-                        ->setPayload($payload);
+                        ->setPayload($model->filter($payloadDocument)->getArrayCopy());
 
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
