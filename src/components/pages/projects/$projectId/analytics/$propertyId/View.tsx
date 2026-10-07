@@ -1,80 +1,78 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
-import { cn } from '@/lib/utils'
-import { ArrowLeft, BarChart3, ChevronDown } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { differenceInHours } from 'date-fns'
+import { BarChart3 } from 'lucide-react'
 import {
   ServiceHeader,
   type Tab,
 } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
+import { UsageChartIntervalToggle } from '../../overview/UsageChartIntervalToggle'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  createCompactCountAxisTickFormatter,
-  getChartSeriesMax,
-} from '@/lib/usage/format-metric'
-import { USAGE_CHART_Y_AXIS_WIDTH } from '../../overview/chart-panel'
-import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
-import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import {
-  ANALYTICS_PAGEVIEW_EVENT,
+  ANALYTICS_CHART_INTERVALS,
   analyticsRangeKey,
-  getDefaultAnalyticsDateRange,
+  DEFAULT_ANALYTICS_CHART_INTERVAL,
+  DEFAULT_ANALYTICS_COMPARE_MODE,
+  getComparisonAnalyticsRange,
   getDefaultAnalyticsRange,
+  getPreviousAnalyticsRange,
   toAnalyticsRange,
-  EMPTY_ANALYTICS_METRIC,
-  useAnalyticsEventMetrics,
   useAnalyticsEvents,
   useAnalyticsProperty,
-  useAnalyticsStats,
   useOrganizationScopes,
   useRefreshAnalyticsProperty,
   useProject,
+  type AnalyticsChartInterval,
+  type AnalyticsCompareMode,
 } from '@/lib/react-query/hooks'
+import { isUsageChartIntervalValidForRange } from '@/lib/usage/chart-interval'
+import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
+import {
+  findMatchingUsageDateRangePreset,
+  getUsageDateRangePresetByValue,
+} from '@/lib/usage/usage-date-range-presets'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
-import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { PropertySettings } from '../_components/PropertySettings'
+import { AnalyticsOverview } from '../_components/AnalyticsOverview'
+import { LiveVisitors } from '../_components/LiveVisitors'
+import { ExportMenu } from '../_components/ExportMenu'
+import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
   LocationsPanel,
   PagesPanel,
   TechnologyPanel,
-  TrafficCompositionPanel,
   TrafficSourcesPanel,
 } from '../_components/DimensionPanels'
+import { EventsPanel } from '../_components/EventsPanel'
+import { TrafficSplit } from '../_components/TrafficSplit'
 import {
-  formatDuration,
-  formatNumber,
-  formatPercent,
-  formatRatio,
-} from '../_components/format'
-
-/**
- * The event series is a daily time series for a **single event name**, with
- * these three measures. There is no all-events time series, so the chart is
- * always scoped to one event and its tabs select a measure of that event.
- *
- * Property-wide aggregates cover every event and therefore cannot be plotted;
- * they live in the summary card instead.
- */
-type ChartSeriesKey = 'visitors' | 'sessions' | 'events'
-
-type ChartMetric = {
-  id: ChartSeriesKey
-  label: string
-  value: number
-}
+  CompareControl,
+  compareModeLabel,
+} from '../_components/CompareControl'
+import {
+  AnalyticsFiltersProvider,
+  type AnalyticsFiltersContextValue,
+} from '../_components/analytics-filters-context'
+import {
+  ANALYTICS_FILTER_COLUMNS,
+  analyticsFiltersFromMap,
+  equalFilterEntry,
+  sanitizeAnalyticsFilterMap,
+} from '@/lib/analytics/analytics-filters'
+import {
+  mapToQueryParam,
+  queryParamToMap,
+  type FilterMap,
+} from '@/lib/table-filters'
 
 export type PropertyDetailInitialData = {
   property: Models.AnalyticsProperty
@@ -88,100 +86,22 @@ interface ViewProps {
   propertyId: string
   onBack?: () => void
   initialData?: PropertyDetailInitialData
+  /** Encoded `FilterMap` from the URL `?query=` param. */
+  filterQuery?: string
+  onFilterQueryChange?: (query: string | undefined) => void
 }
 
-/**
- * Series points carry the bucket start as an ISO 8601 instant. Label from its
- * date part, parsed as a plain calendar date, so the label never shifts a day
- * across timezones.
- */
-function formatChartDate(value: string | null | undefined): string {
-  if (!value) return ''
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-  if (!match) return value
-  const [, year, month, day] = match
-  const parsed = new Date(Number(year), Number(month) - 1, Number(day))
-  if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-  })
-}
+/** Ranges this short read better hourly; longer ones default to daily. */
+const HOURLY_DEFAULT_MAX_HOURS = 72
 
-// Chart tooltip
-interface ChartTooltipProps {
-  active?: boolean
-  payload?: Array<{
-    value: number
-    payload: { label: string; value: number }
-  }>
-}
+type DateSelection = { dateRange: DateRange; presetId: string | null }
 
-function CustomTooltip({ active, payload }: ChartTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null
-  const point = payload[0].payload
-  return (
-    <div className="rounded-lg border border-border bg-popover px-3 py-2">
-      <p className="text-[13px] font-medium text-foreground">
-        {point.label} {formatNumber(point.value)}
-      </p>
-    </div>
-  )
-}
-
-function MetricTab({
-  metric,
-  isActive,
-  onClick,
-}: {
-  metric: ChartMetric
-  isActive: boolean
-  onClick: () => void
-}) {
-  const t = useT()
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'relative flex min-w-[140px] flex-col gap-0.5 px-3 py-2.5 text-start transition-colors',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        isActive
-          ? 'text-foreground'
-          : 'text-muted-foreground hover:text-foreground/80',
-      )}
-    >
-      <span
-        className={cn(
-          'text-[18px] font-semibold tracking-tight tabular-nums',
-          isActive ? 'text-foreground' : 'text-muted-foreground',
-        )}
-      >
-        {formatNumber(metric.value)}
-      </span>
-      <span
-        className={cn(
-          'text-[11px] font-medium',
-          isActive ? 'text-muted-foreground' : 'text-muted-foreground/70',
-        )}
-      >
-        {t(metric.label)}
-      </span>
-      {isActive && (
-        <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
-      )}
-    </button>
-  )
-}
-
-function SummaryTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-muted/30 px-3 py-2">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <span className="text-[14px] font-semibold tabular-nums text-foreground">
-        {value}
-      </span>
-    </div>
-  )
+function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
+  if (!dateRange.from || !dateRange.to) return DEFAULT_ANALYTICS_CHART_INTERVAL
+  return differenceInHours(dateRange.to, dateRange.from) <=
+    HOURLY_DEFAULT_MAX_HOURS
+    ? '1h'
+    : '1d'
 }
 
 export function View({
@@ -189,29 +109,203 @@ export function View({
   propertyId,
   onBack,
   initialData,
+  filterQuery,
+  onFilterQueryChange,
 }: ViewProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
-  const [activeMetric, setActiveMetric] = useState<ChartSeriesKey>('events')
-  const [selectedEvent, setSelectedEvent] = useState<string>(
-    ANALYTICS_PAGEVIEW_EVENT,
+  const isAnalyticsTab = activeTab === 'analytics'
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  // ── Filters ──
+  // Same model as Usage: a FilterMap encoded in the URL. Clicking a row in
+  // any card adds an `equal` filter; the popover edits the rest.
+  const filterMap = useMemo(
+    () => sanitizeAnalyticsFilterMap(queryParamToMap(filterQuery)),
+    [filterQuery],
+  )
+  const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
+
+  const commitFilterMap = useCallback(
+    (next: FilterMap) => {
+      const sanitized = sanitizeAnalyticsFilterMap(next)
+      onFilterQueryChange?.(
+        sanitized.size > 0 ? mapToQueryParam(sanitized) : undefined,
+      )
+    },
+    [onFilterQueryChange],
+  )
+
+  const filtersContext = useMemo((): AnalyticsFiltersContextValue => {
+    const findEqual = (attribute: string, value: string) => {
+      for (const key of filterMap.keys()) {
+        if (key.c === attribute && key.o === 'equal' && key.v === value) {
+          return key
+        }
+      }
+      return undefined
+    }
+    return {
+      filterMap,
+      filters,
+      isFilterActive: (attribute, value) => !!findEqual(attribute, value),
+      addEqualFilter: (attribute, value) => {
+        const next = new Map(filterMap)
+        const existing = findEqual(attribute, value)
+        if (existing) {
+          // Clicking an active value again removes it.
+          next.delete(existing)
+        } else {
+          // One `equal` per attribute: clicking another country switches to
+          // it rather than AND-ing two countries into an empty result.
+          for (const key of next.keys()) {
+            if (key.c === attribute && key.o === 'equal') next.delete(key)
+          }
+          const entry = equalFilterEntry(attribute, value)
+          next.set(entry.key, entry.query)
+        }
+        commitFilterMap(next)
+      },
+      onApplyFilter: (key, queryStr, replaceKey) => {
+        const next = new Map(filterMap)
+        if (replaceKey) next.delete(replaceKey)
+        next.set(key, queryStr)
+        commitFilterMap(next)
+      },
+      onRemoveFilter: (key) => {
+        const next = new Map(filterMap)
+        next.delete(key)
+        commitFilterMap(next)
+      },
+      onClearAllFilters: () => onFilterQueryChange?.(undefined),
+      onApplySavedFilterQuery: (queryParam) =>
+        commitFilterMap(queryParamToMap(queryParam)),
+    }
+  }, [filterMap, filters, commitFilterMap, onFilterQueryChange])
+  const [activeSeries, setActiveSeries] =
+    useState<AnalyticsChartMetric>('visitors')
+
+  // ── Date range + interval ──
+  // The picker speaks react-day-picker's DateRange; the query layer speaks
+  // concrete ISO bounds. The preset id is kept so rolling windows ("Last 24
+  // hours") can be re-anchored to now on refresh.
+  //
+  // Both start from the user's saved analytics prefs (one setting for every
+  // property, separate from the usage range) and are saved back on change.
+  const chartPrefs = useAnalyticsChartPrefs()
+  const [dateSelection, setDateSelection] = useState<DateSelection>(() => ({
+    dateRange: chartPrefs.initial.dateRange,
+    presetId: chartPrefs.initial.presetId,
+  }))
+  const [chartInterval, setChartInterval] = useState<AnalyticsChartInterval>(
+    chartPrefs.initial.interval,
+  )
+  const { dateRange, presetId } = dateSelection
+
+  const savePrefs = chartPrefs.save
+  useEffect(() => {
+    savePrefs({ dateRange, presetId, interval: chartInterval })
+  }, [savePrefs, dateRange, presetId, chartInterval])
+
+  const range = useMemo(
+    () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
+    [dateRange],
+  )
+
+  // Hourly buckets are capped at 31 days, same rule as the Usage charts.
+  const resolvedInterval: AnalyticsChartInterval =
+    chartInterval === '1h' &&
+    !isUsageChartIntervalValidForRange('1h', dateRange)
+      ? '1d'
+      : chartInterval
+
+  const handleDateRangeChange = useCallback(
+    (next: DateRange | undefined) => {
+      const normalized = normalizeUsageDateRangeSelection(next)
+      if (!normalized?.from) return
+      const nextRange: DateRange = {
+        from: normalized.from,
+        to: normalized.to ?? normalized.from,
+      }
+      const nextKey = toAnalyticsRange(nextRange)
+      if (nextKey && analyticsRangeKey(nextKey) === analyticsRangeKey(range)) {
+        return
+      }
+      setDateSelection({
+        dateRange: nextRange,
+        presetId: findMatchingUsageDateRangePreset(nextRange)?.value ?? null,
+      })
+      setChartInterval(defaultIntervalForRange(nextRange))
+    },
+    [range],
+  )
+
+  // ── Comparison ──
+  const [compareMode, setCompareMode] = useState<AnalyticsCompareMode>(
+    DEFAULT_ANALYTICS_COMPARE_MODE,
+  )
+  const [customCompareDateRange, setCustomCompareDateRange] = useState<
+    DateRange | undefined
+  >(undefined)
+  const customCompareRange = useMemo(
+    () => toAnalyticsRange(customCompareDateRange) ?? null,
+    [customCompareDateRange],
+  )
+  const comparisonRange = useMemo(
+    () => getComparisonAnalyticsRange(range, compareMode, customCompareRange),
+    [range, compareMode, customCompareRange],
+  )
+
+  const handleCompareModeChange = useCallback(
+    (mode: AnalyticsCompareMode) => {
+      // Seed a custom comparison with the previous period so the chart has
+      // something to show until the user picks their own window.
+      if (mode === 'custom' && !customCompareDateRange) {
+        const previous = getPreviousAnalyticsRange(range)
+        setCustomCompareDateRange({
+          from: new Date(previous.startAt),
+          to: new Date(previous.endAt),
+        })
+      }
+      setCompareMode(mode)
+    },
+    [customCompareDateRange, range],
+  )
+
+  const handleCustomCompareDateRangeChange = useCallback(
+    (next: DateRange | undefined) => {
+      const normalized = normalizeUsageDateRangeSelection(next)
+      if (!normalized?.from) return
+      setCustomCompareDateRange({
+        from: normalized.from,
+        to: normalized.to ?? normalized.from,
+      })
+    },
+    [],
   )
 
   const { refresh, isRefreshing } = useRefreshAnalyticsProperty(
     projectId,
     propertyId,
   )
-  // The shared picker speaks react-day-picker's DateRange; the query layer
-  // speaks concrete ISO bounds. An incomplete selection keeps the previous
-  // window rather than firing a request for a half-chosen range.
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(
-    getDefaultAnalyticsDateRange,
-  )
-  const range = useMemo(
-    () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
-    [dateRange],
-  )
 
+  const handleRefresh = useCallback(() => {
+    // Re-anchor a preset (e.g. rolling "Last 24 hours") to now. When that
+    // moves the window, the new query keys fetch on their own; refetching the
+    // old keys as well would just be wasted requests.
+    const preset = presetId ? getUsageDateRangePresetByValue(presetId) : null
+    if (preset) {
+      const nextRange = preset.getRange()
+      const nextKey = toAnalyticsRange(nextRange)
+      if (nextKey && analyticsRangeKey(nextKey) !== analyticsRangeKey(range)) {
+        setDateSelection({ dateRange: nextRange, presetId })
+        return
+      }
+    }
+    void refresh()
+  }, [presetId, range, refresh])
+
+  // ── Property + permissions ──
   const { property: propertyFromHook, isLoading: propertyLoading } =
     useAnalyticsProperty(projectId, propertyId)
   const property = propertyFromHook ?? initialData?.property
@@ -221,126 +315,33 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canCreateAnalyticsProperty(access, features)
 
-  // Loader-prefetched data is only valid for the default window.
-  const isDefaultRange = useMemo(
+  // Loader-prefetched data is only valid for the window the page opened with
+  // (the saved prefs range, same as the loader read) and no filters.
+  const initialRangeKey = useMemo(
     () =>
-      analyticsRangeKey(range) ===
-      analyticsRangeKey(getDefaultAnalyticsRange()),
-    [range],
+      analyticsRangeKey(
+        toAnalyticsRange(chartPrefs.initial.dateRange) ??
+          getDefaultAnalyticsRange(),
+      ),
+    [chartPrefs.initial],
   )
+  const isDefaultRange =
+    filters.length === 0 && analyticsRangeKey(range) === initialRangeKey
 
-  const { stats: statsFromHook, error: statsError } = useAnalyticsStats(
-    projectId,
-    propertyId,
-    range,
-  )
-  const stats =
-    statsFromHook ??
-    (isDefaultRange ? initialData?.stats : undefined) ??
-    EMPTY_ANALYTICS_METRIC
-
+  // ── Events ──
   const { events: eventsFromHook, isLoading: eventsLoading } =
-    useAnalyticsEvents(projectId, propertyId, range)
+    useAnalyticsEvents(
+      projectId,
+      propertyId,
+      range,
+      undefined,
+      filters,
+    )
   const events = useMemo(() => {
     if (eventsFromHook.length > 0) return eventsFromHook
     if (isDefaultRange) return initialData?.events?.events ?? []
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
-
-  const { points: pointsFromHook } = useAnalyticsEventMetrics(
-    projectId,
-    propertyId,
-    selectedEvent,
-    range,
-  )
-  // The loader only prefetches the pageview series, so the initialData
-  // fallback is valid for that event and the default range only.
-  const points = useMemo(() => {
-    if (pointsFromHook.length > 0) return pointsFromHook
-    if (isDefaultRange && selectedEvent === ANALYTICS_PAGEVIEW_EVENT) {
-      return initialData?.series?.points ?? []
-    }
-    return []
-  }, [pointsFromHook, isDefaultRange, selectedEvent, initialData])
-
-  // Chart container needs measurable dimensions before recharts renders.
-  const chartContainerRef = useRef<HTMLDivElement>(null)
-  const [chartHasDimensions, setChartHasDimensions] = useState(false)
-
-  useEffect(() => {
-    const element = chartContainerRef.current
-    if (!element) return
-
-    const checkDimensions = () => {
-      const rect = element.getBoundingClientRect()
-      const computedStyle = window.getComputedStyle(element)
-      setChartHasDimensions(
-        computedStyle.display !== 'none' &&
-          computedStyle.visibility !== 'hidden' &&
-          element.offsetParent !== null &&
-          rect.width > 0 &&
-          rect.height > 0,
-      )
-    }
-
-    const timeout = setTimeout(checkDimensions, 50)
-    const observer = new ResizeObserver(checkDimensions)
-    observer.observe(element)
-
-    return () => {
-      clearTimeout(timeout)
-      observer.disconnect()
-    }
-  }, [activeTab])
-
-  // Tab values are totals of the plotted series, so the number on the tab and
-  // the line in the chart are always the same quantity. Sourcing them from the
-  // property-wide aggregate instead would mix every event with a single
-  // event's series, which can never agree.
-  const chartMetrics: ChartMetric[] = useMemo(() => {
-    const totals = points.reduce(
-      (acc, point) => ({
-        events: acc.events + point.events,
-        visitors: acc.visitors + point.visitors,
-        sessions: acc.sessions + point.sessions,
-      }),
-      { events: 0, visitors: 0, sessions: 0 },
-    )
-    return [
-      { id: 'events', label: 'Events', value: totals.events },
-      { id: 'visitors', label: 'Unique visitors', value: totals.visitors },
-      { id: 'sessions', label: 'Sessions', value: totals.sessions },
-    ]
-  }, [points])
-
-  const eventNames = useMemo(() => {
-    const names = events
-      .map((event) => event.value)
-      .filter((name): name is string => name !== null)
-    return names.includes(selectedEvent) ? names : [selectedEvent, ...names]
-  }, [events, selectedEvent])
-
-  const chartData = useMemo(
-    () =>
-      points.map((point) => ({
-        label: formatChartDate(point.date),
-        value: point[activeMetric],
-      })),
-    [points, activeMetric],
-  )
-
-  const yAxisTickFormatter = useMemo(
-    () =>
-      createCompactCountAxisTickFormatter(
-        getChartSeriesMax(chartData.map((point) => ({ value: point.value }))),
-      ),
-    [chartData],
-  )
-
-  const maxEventCount = useMemo(
-    () => events.reduce((max, event) => Math.max(max, event.events), 0),
-    [events],
-  )
 
   const tabs: Tab[] = [
     { id: 'analytics', label: t('Analytics') },
@@ -354,6 +355,7 @@ export function View({
           title={t('Analytics')}
           showFilters={false}
           fullWidthBorder
+          fullWidth
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6">
           <EmptyState
@@ -369,376 +371,198 @@ export function View({
   }
 
   return (
+    // The provider wraps the header too: the toolbar's export reads filters.
+    <AnalyticsFiltersProvider value={filtersContext}>
     <div className="flex flex-col">
       <ServiceHeader
+        // Same title as every other detail view (functions, sites, topics,
+        // users): back, a switcher to jump between properties, and the ID.
         title={
           <div className="flex min-w-0 items-center gap-2">
-            {onBack && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={onBack}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <span className="shrink-0 truncate">
-              {property?.name ?? t('Analytics')}
-            </span>
-            {/* Domain is property metadata, so it belongs beside the name
-                rather than on a caption row of its own. It takes the flexible
-                width and truncates first, so a long domain never pushes the ID
-                or the Disabled badge off a narrow viewport. */}
-            <span className="min-w-0 flex-1 truncate text-[13px] font-normal text-muted-foreground">
-              {property?.domain || t('No domain')}
-            </span>
-            <CopyableId id={propertyId} size="xs" className="shrink-0" />
+            <DetailResourceHeaderTitle
+              kind="analyticsProperty"
+              label={property?.name || t('Property')}
+              resourceId={propertyId}
+              projectId={projectId}
+              back={
+                onBack
+                  ? { onClick: onBack, 'aria-label': t('Back to analytics') }
+                  : undefined
+              }
+            />
             {property && !property.enabled && (
-              <Badge variant="warning" className="text-[10px] shrink-0">
+              <Badge variant="warning" className="shrink-0 text-[10px]">
                 {t('Disabled')}
               </Badge>
             )}
           </div>
         }
+        titleRightContent={
+          <LiveVisitors
+            projectId={projectId}
+            propertyId={propertyId}
+            enabled={property?.enabled !== false}
+          />
+        }
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        showFilters={false}
-        beforeRefreshButtons={
-          activeTab === 'analytics' ? (
-            <DateRangePicker
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              className="h-9"
+        // Analytics tab toolbar, laid out like the other detail views:
+        // Filters on the start side; time controls before Refresh.
+        showFilters={isAnalyticsTab}
+        filterTrigger={
+          isAnalyticsTab ? (
+            <FiltersPopover
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              columns={ANALYTICS_FILTER_COLUMNS}
+              filterMap={filterMap}
+              onRemoveFilter={filtersContext.onRemoveFilter}
+              onClearAll={filtersContext.onClearAllFilters}
+              onApplyFilter={filtersContext.onApplyFilter}
+              resourceLabel="analytics"
+              filterScope="analytics.property"
+              onApplyQuery={filtersContext.onApplySavedFilterQuery}
+              teamId={project?.teamId}
             />
           ) : undefined
         }
-        showRefresh={activeTab === 'analytics'}
-        onRefresh={() => void refresh()}
+        beforeRefreshButtons={
+          isAnalyticsTab ? (
+            <>
+              <UsageChartIntervalToggle
+                value={resolvedInterval}
+                onValueChange={(next) => {
+                  if (next === '1h' || next === '1d') setChartInterval(next)
+                }}
+                dateRange={dateRange}
+                allowedIntervals={ANALYTICS_CHART_INTERVALS}
+                className="h-9"
+              />
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={handleDateRangeChange}
+                presetId={presetId}
+                className="h-9 shrink-0"
+              />
+              <CompareControl
+                mode={compareMode}
+                onModeChange={handleCompareModeChange}
+                customDateRange={customCompareDateRange}
+                onCustomDateRangeChange={handleCustomCompareDateRangeChange}
+                comparisonRange={comparisonRange}
+              />
+            </>
+          ) : undefined
+        }
+        showRefresh={isAnalyticsTab}
+        onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
-        fullWidthBorder
-      />
-
-      <div className="flex-1 flex flex-col">
-        <div className="mx-auto w-full max-w-7xl flex-1">
-          {activeTab === 'analytics' && (
-            <div className="px-4 py-4 sm:px-6">
-              {statsError ? (
-                <EmptyState
-                  icon={BarChart3}
-                  title={t('Could not load analytics data')}
-                  description={
-                    statsError instanceof Error
-                      ? statsError.message
-                      : t('Something went wrong')
-                  }
-                  variant="card"
-                  iconSize="md"
-                />
-              ) : (
-                <>
-                  {/* Metrics and chart */}
-                  <div className="rounded-lg border border-border bg-card">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-                      <div className="min-w-0">
-                        <h3 className="text-[13px] font-semibold text-foreground">
-                          {t('Event over time')}
-                        </h3>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          {t(
-                            'Daily series for a single event. Property totals are in the summary below.',
-                          )}
-                        </p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 shrink-0 gap-1.5 text-[12px] font-medium"
-                          >
-                            {selectedEvent}
-                            <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[200px]">
-                          {eventNames.map((name) => (
-                            <DropdownMenuItem
-                              key={name}
-                              onClick={() => setSelectedEvent(name)}
-                              className={cn(
-                                'cursor-pointer text-[12px]',
-                                name === selectedEvent && 'bg-accent',
-                              )}
-                            >
-                              {name}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="border-b border-border px-2">
-                      <div className="flex overflow-x-auto overflow-y-hidden">
-                        {chartMetrics.map((metric, index) => (
-                          <div key={metric.id} className="flex shrink-0">
-                            {index > 0 && (
-                              <div className="my-2 w-px bg-border" />
-                            )}
-                            <MetricTab
-                              metric={metric}
-                              isActive={activeMetric === metric.id}
-                              onClick={() => setActiveMetric(metric.id)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <div
-                        ref={chartContainerRef}
-                        className="h-[280px] w-full text-muted-foreground"
-                      >
-                        {chartData.length === 0 ? (
-                          <div className="flex h-full flex-col items-center justify-center text-center">
-                            <p className="text-[13px] font-medium text-muted-foreground">
-                              {t('No data yet')}
-                            </p>
-                            <p className="mt-1 text-[12px] text-muted-foreground/70">
-                              {t(
-                                'Data appears once the property receives its first event.',
-                              )}
-                            </p>
-                          </div>
-                        ) : chartHasDimensions &&
-                          typeof window !== 'undefined' ? (
-                          <ResponsiveContainer
-                            width="100%"
-                            height="100%"
-                            minWidth={0}
-                            minHeight={0}
-                          >
-                            <AreaChart
-                              data={chartData}
-                              margin={USAGE_CHART_MARGIN}
-                            >
-                              <defs>
-                                <linearGradient
-                                  id="analyticsVisitorGradient"
-                                  x1="0"
-                                  y1="0"
-                                  x2="0"
-                                  y2="1"
-                                >
-                                  <stop
-                                    offset="0%"
-                                    stopColor="var(--chart-brand)"
-                                    stopOpacity={0.15}
-                                  />
-                                  <stop
-                                    offset="100%"
-                                    stopColor="var(--chart-brand)"
-                                    stopOpacity={0}
-                                  />
-                                </linearGradient>
-                              </defs>
-                              <SeriesChartXAxis
-                                pointCount={chartData.length}
-                                dataKey="label"
-                                tick={{ fill: 'currentColor', fontSize: 12 }}
-                              />
-                              <YAxis
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: 'currentColor', fontSize: 12 }}
-                                tickFormatter={yAxisTickFormatter}
-                                dx={-5}
-                                width={USAGE_CHART_Y_AXIS_WIDTH}
-                              />
-                              <Tooltip
-                                content={<CustomTooltip />}
-                                cursor={false}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="value"
-                                stroke="var(--chart-brand)"
-                                strokeWidth={2}
-                                fill="url(#analyticsVisitorGradient)"
-                                dot={false}
-                                activeDot={{
-                                  r: 5,
-                                  fill: 'var(--chart-brand)',
-                                  stroke: '#fff',
-                                  strokeWidth: 2,
-                                }}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Property-wide summary */}
-                  <div className="mt-4 rounded-lg border border-border bg-card">
-                    <div className="border-b border-border px-4 py-2.5">
-                      <h3 className="text-[13px] font-semibold text-foreground">
-                        {t('Summary')}
-                      </h3>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {t('Totals across every event in the selected range')}
-                      </p>
-                    </div>
-                    <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <SummaryTile
-                        label={t('Unique visitors')}
-                        value={formatNumber(stats.visitors)}
-                      />
-                      <SummaryTile
-                        label={t('Visits')}
-                        value={formatNumber(stats.visits)}
-                      />
-                      <SummaryTile
-                        label={t('Pageviews')}
-                        value={formatNumber(stats.pageviews)}
-                      />
-                      <SummaryTile
-                        label={t('Bounce rate')}
-                        value={formatPercent(stats.bounceRate)}
-                      />
-                      <SummaryTile
-                        label={t('Visit duration')}
-                        value={formatDuration(stats.visitDuration)}
-                      />
-                      <SummaryTile
-                        label={t('Engagement time')}
-                        value={formatDuration(stats.engagementTime)}
-                      />
-                      <SummaryTile
-                        label={t('Views per visit')}
-                        value={formatRatio(stats.viewsPerVisit)}
-                      />
-                      <SummaryTile
-                        label={t('Scroll depth')}
-                        value={formatPercent(stats.scrollDepth)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Dimension breakdowns. Each panel requests only the
-                      dimension of its visible tab. */}
-                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                    <TrafficCompositionPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                    <TrafficSourcesPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                    <PagesPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                    <LocationsPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                    <TechnologyPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                  </div>
-
-                  <div className="mt-4">
-                    <BotsPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                    />
-                  </div>
-
-                  {/* Events */}
-                  <div className="mt-4 rounded-lg border border-border bg-card">
-                    <div className="border-b border-border px-4 py-2.5">
-                      <h3 className="text-[13px] font-semibold text-foreground">
-                        {t('Events')}
-                      </h3>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {t('Distinct events recorded in the selected range')}
-                      </p>
-                    </div>
-                    <div className="p-4">
-                      {events.length === 0 ? (
-                        <p className="py-6 text-center text-[13px] text-muted-foreground">
-                          {eventsLoading
-                            ? ''
-                            : t('No events recorded in this range')}
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            <span>{t('Event')}</span>
-                            <span>{t('Count')}</span>
-                          </div>
-                          {events.map((event) => {
-                            const percentage =
-                              maxEventCount > 0
-                                ? (event.events / maxEventCount) * 100
-                                : 0
-                            return (
-                              <div key={event.value} className="space-y-1.5">
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="truncate text-[12px] font-medium text-foreground">
-                                    {event.value}
-                                  </span>
-                                  <div className="flex shrink-0 items-center gap-3">
-                                    <span className="text-[11px] text-muted-foreground tabular-nums">
-                                      {formatNumber(event.visitors)}{' '}
-                                      {t('visitors')}
-                                    </span>
-                                    <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                                      {formatNumber(event.events)}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                                  <div
-                                    className="h-full transition-all"
-                                    style={{
-                                      width: `${percentage}%`,
-                                      backgroundColor: 'var(--chart-brand)',
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'settings' && property && (
-            <PropertySettings
+        afterRefreshButtons={
+          isAnalyticsTab ? (
+            <ExportMenu
               projectId={projectId}
               property={property}
-              canWrite={canWrite}
+              range={range}
+              interval={resolvedInterval}
+              comparisonRange={comparisonRange}
+              compareLabel={
+                comparisonRange ? t(compareModeLabel(compareMode)) : null
+              }
             />
-          )}
+          ) : undefined
+        }
+        showToolbarBottomBorder={isAnalyticsTab}
+        fullWidthBorder
+        fullWidth
+      />
+
+      {activeTab === 'analytics' && (
+        <div className="flex-1">
+          {/* Full-width traffic overview, same layout as Firewall. */}
+          <AnalyticsOverview
+            projectId={projectId}
+            propertyId={propertyId}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            range={range}
+            interval={resolvedInterval}
+            activeSeries={activeSeries}
+            onActiveSeriesChange={setActiveSeries}
+            fallbackStats={isDefaultRange ? initialData?.stats : undefined}
+            compareMode={compareMode}
+            comparisonRange={comparisonRange}
+            onRefresh={handleRefresh}
+          />
+
+          <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
+            {/* Dimension breakdowns. Each panel requests only the dimension
+                of its visible tab, and every card has a fixed body height
+                so switching tabs never shifts the grid. */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {/* Channels, referrers and UTM campaigns in one card. */}
+              <TrafficSourcesPanel
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+              />
+              {/* Humans vs bots, stretched to the sources card's height. */}
+              <TrafficSplit
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+                comparisonRange={comparisonRange}
+                compareLabel={t(compareModeLabel(compareMode))}
+              />
+              <PagesPanel
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+              />
+              <LocationsPanel
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+              />
+              <TechnologyPanel
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+              />
+              <BotsPanel
+                projectId={projectId}
+                propertyId={propertyId}
+                range={range}
+              />
+              {/* Custom events close the page at full width: it's the card
+                  most specific to the product, and its empty state carries
+                  the how-to CTA. */}
+              <div className="lg:col-span-2">
+                <EventsPanel
+                  projectId={projectId}
+                  propertyId={propertyId}
+                  range={range}
+                  events={events}
+                  isLoading={eventsLoading}
+                  property={property}
+                  onOpenSetup={() => setActiveTab('settings')}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'settings' && property && (
+        <div className="mx-auto w-full max-w-7xl flex-1">
+          <PropertySettings
+            projectId={projectId}
+            property={property}
+            canWrite={canWrite}
+          />
+        </div>
+      )}
     </div>
+    </AnalyticsFiltersProvider>
   )
 }

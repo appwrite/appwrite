@@ -269,8 +269,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.analytics,
           icon: BarChart2,
           path: `/projects/${projectId}/analytics`,
-          // Shipped but unannounced, like Distribution: debug menu only.
-          comingSoon: true,
         },
         {
           id: 'errors',

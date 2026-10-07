@@ -1,7 +1,11 @@
 import { AnalyticsDimension } from '@appwrite.io/console'
-import type { AnalyticsRange } from '@/lib/react-query/hooks'
+import {
+  useCountryLookups,
+  type AnalyticsRange,
+} from '@/lib/react-query/hooks'
+import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import { BreakdownPanel, type BreakdownTab } from './BreakdownPanel'
-import { CountryFlag, RowDot, RowRank } from './BreakdownRow'
+import { BrowserIcon, CountryFlag, RowDot } from './BreakdownRow'
 
 /** Chart palette, reused so categorical panels stay consistent. */
 const SERIES_COLORS = [
@@ -20,6 +24,13 @@ type PanelProps = {
   range: AnalyticsRange
 }
 
+const CAMPAIGNS_GROUP = 'Campaigns'
+const NO_CAMPAIGN_TRAFFIC = 'No tagged campaign traffic in this range'
+
+/**
+ * Channels and referrers, with every UTM parameter behind one "Campaigns"
+ * menu tab. "Sources" is the referrer; "UTM sources" is `utm_source`.
+ */
 const SOURCE_TABS: BreakdownTab[] = [
   { id: 'channels', label: 'Channels', dimension: AnalyticsDimension.Channel },
   {
@@ -27,19 +38,33 @@ const SOURCE_TABS: BreakdownTab[] = [
     label: 'Sources',
     dimension: AnalyticsDimension.ReferrerSource,
   },
-  {
-    id: 'campaigns',
-    label: 'Campaigns',
-    dimension: AnalyticsDimension.UtmCampaign,
-  },
+  ...(
+    [
+      ['utm-campaigns', 'UTM campaigns', AnalyticsDimension.UtmCampaign],
+      ['utm-sources', 'UTM sources', AnalyticsDimension.UtmSource],
+      ['utm-mediums', 'UTM mediums', AnalyticsDimension.UtmMedium],
+      ['utm-contents', 'UTM contents', AnalyticsDimension.UtmContent],
+      ['utm-terms', 'UTM terms', AnalyticsDimension.UtmTerm],
+    ] as const
+  ).map(
+    ([id, label, dimension]): BreakdownTab => ({
+      id,
+      label,
+      dimension,
+      group: CAMPAIGNS_GROUP,
+      emptyLabel: NO_CAMPAIGN_TRAFFIC,
+    }),
+  ),
 ]
 
 export function TrafficSourcesPanel(props: PanelProps) {
   return (
     <BreakdownPanel
       {...props}
+      cardId="sources"
       title="Traffic sources"
-      description="Where visitors came from"
+      description="Where visitors came from, by channel, referrer and campaign"
+      info="channels"
       tabs={SOURCE_TABS}
       renderLeading={(_entry, index, tabId) =>
         tabId === 'channels' ? <RowDot color={colorAt(index)} /> : undefined
@@ -57,22 +82,34 @@ const PAGE_TABS: BreakdownTab[] = [
     dimension: AnalyticsDimension.EntryPage,
   },
   { id: 'exit', label: 'Exit pages', dimension: AnalyticsDimension.ExitPage },
+  // Useful when one property tracks several domains or subdomains.
+  { id: 'hosts', label: 'Hostnames', dimension: AnalyticsDimension.Hostname },
 ]
 
 export function PagesPanel(props: PanelProps) {
   return (
     <BreakdownPanel
       {...props}
+      cardId="pages"
       title="Pages"
       description="Most visited paths"
       tabs={PAGE_TABS}
-      renderLeading={(_entry, index) => <RowRank index={index} />}
+      // Rank numbers come from the panel (and the modal's own rank column),
+      // not renderLeading, so they're never drawn twice.
+      ranked
       mono
     />
   )
 }
 
 const LOCATION_TABS: BreakdownTab[] = [
+  // Same `country` query as the Countries tab, drawn as a choropleth.
+  {
+    id: 'map',
+    label: 'Map',
+    dimension: AnalyticsDimension.Country,
+    display: 'map',
+  },
   {
     id: 'countries',
     label: 'Countries',
@@ -83,15 +120,24 @@ const LOCATION_TABS: BreakdownTab[] = [
 ]
 
 export function LocationsPanel(props: PanelProps) {
+  // Same locale list Usage uses to print country names beside the flags.
+  const { lookups: countryLookups } = useCountryLookups()
+
   return (
     <BreakdownPanel
       {...props}
+      cardId="locations"
       title="Locations"
       description="Where visitors are browsing from"
       tabs={LOCATION_TABS}
       renderLeading={(entry, _index, tabId) =>
         // Only `country` is an ISO-2 code; regions and cities are names.
         tabId === 'countries' ? <CountryFlag code={entry.value} /> : undefined
+      }
+      formatLabel={(value, tabId) =>
+        (tabId === 'countries' || tabId === 'map') && countryLookups
+          ? resolveCountryDisplayName(value, countryLookups)
+          : value
       }
     />
   )
@@ -105,40 +151,30 @@ const TECH_TABS: BreakdownTab[] = [
     dimension: AnalyticsDimension.OperatingSystem,
   },
   { id: 'devices', label: 'Devices', dimension: AnalyticsDimension.Device },
+  {
+    id: 'screens',
+    label: 'Screen sizes',
+    dimension: AnalyticsDimension.ScreenSize,
+  },
 ]
 
 export function TechnologyPanel(props: PanelProps) {
   return (
     <BreakdownPanel
       {...props}
+      cardId="technology"
       title="Technology"
       description="What visitors are browsing with"
       tabs={TECH_TABS}
+      renderLeading={(entry, _index, tabId) =>
+        tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
+      }
       rowColor={(_entry, index) => colorAt(index)}
     />
   )
 }
 
-const COMPOSITION_TABS: BreakdownTab[] = [
-  {
-    id: 'composition',
-    label: 'Traffic composition',
-    dimension: AnalyticsDimension.TrafficType,
-  },
-]
-
-export function TrafficCompositionPanel(props: PanelProps) {
-  return (
-    <BreakdownPanel
-      {...props}
-      title="Traffic composition"
-      description="Human visitors versus bots"
-      tabs={COMPOSITION_TABS}
-      renderLeading={(_entry, index) => <RowDot color={colorAt(index)} />}
-      rowColor={(_entry, index) => colorAt(index)}
-    />
-  )
-}
+// Human vs bot composition lives in the full-width `TrafficSplit` bar.
 
 const BOT_TABS: BreakdownTab[] = [
   { id: 'agents', label: 'Agents', dimension: AnalyticsDimension.BotName },
@@ -153,11 +189,13 @@ export function BotsPanel(props: PanelProps) {
   return (
     <BreakdownPanel
       {...props}
+      cardId="bots"
       title="AI agents and crawlers"
       // botCategory has nine values and distinguishes an AI crawler from an AI
       // assistant, with a bare `crawler` fallback, so the copy does not promise
       // a clean AI-versus-crawler split.
       description="Named bots seen in this range, as classified by the API"
+      info="bots"
       tabs={BOT_TABS}
       emptyLabel="No bot traffic in this range"
     />

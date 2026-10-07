@@ -16,7 +16,7 @@ import {
   type Query as CachedQuery,
 } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
-import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
+import { endOfDay, startOfDay, subDays, subHours, subYears } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import {
@@ -27,6 +27,15 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  analyticsFilterQueries,
+  analyticsFiltersKey,
+  isAnalyticsFilterShapeSupported,
+  type AnalyticsFilter,
+} from '@/lib/analytics/analytics-filters'
+
+/** Shared empty default so callers without filters get stable references. */
+const NO_FILTERS: readonly AnalyticsFilter[] = []
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_STALE_TIME,
@@ -108,6 +117,27 @@ export const ANALYTICS_BREAKDOWN_LIMIT = 30
 export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
 
 /**
+ * Events the trackers send on their own (see the setup wizard's snippet
+ * notes): the web tracker's automatic events plus Flutter's screen and
+ * lifecycle events. Everything else is a custom event the app tracks
+ * explicitly.
+ */
+export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
+  ANALYTICS_PAGEVIEW_EVENT,
+  'outbound_link',
+  'file_download',
+  'scroll_depth',
+  'engagement_time',
+  'screen_view',
+  'app_backgrounded',
+  'app_foregrounded',
+])
+
+export function isCustomAnalyticsEvent(name: string | null | undefined): boolean {
+  return !!name && !ANALYTICS_AUTOMATIC_EVENTS.has(name)
+}
+
+/**
  * Default picker selection: the last 30 calendar days, inclusive of today.
  *
  * Quantised to day boundaries on purpose. Route loaders and views both call
@@ -153,6 +183,69 @@ export function getDefaultAnalyticsRange(): AnalyticsRange {
 /** Stable serialization of a range, used as a query-key segment. */
 export function analyticsRangeKey(range: AnalyticsRange): string {
   return `${range.startAt}..${range.endAt}`
+}
+
+/**
+ * The window of equal length immediately before `range`, used for "vs previous
+ * period" comparisons. For a calendar range (`startOfDay .. endOfDay`) this
+ * lands exactly on the preceding N calendar days.
+ */
+export function getPreviousAnalyticsRange(range: AnalyticsRange): AnalyticsRange {
+  const start = new Date(range.startAt).getTime()
+  const end = new Date(range.endAt).getTime()
+  const span = Math.max(0, end - start) + 1
+  return {
+    startAt: new Date(start - span).toISOString(),
+    endAt: new Date(start - 1).toISOString(),
+  }
+}
+
+/**
+ * What the current window is compared against.
+ * - `previous`: the equal-length window immediately before.
+ * - `year`: the same calendar window one year earlier (seasonality).
+ * - `custom`: any window the user picks; aligned to the current one by bucket.
+ */
+export type AnalyticsCompareMode = 'off' | 'previous' | 'year' | 'custom'
+
+export const DEFAULT_ANALYTICS_COMPARE_MODE: AnalyticsCompareMode = 'previous'
+
+export function getComparisonAnalyticsRange(
+  range: AnalyticsRange,
+  mode: AnalyticsCompareMode,
+  customRange?: AnalyticsRange | null,
+): AnalyticsRange | null {
+  switch (mode) {
+    case 'previous':
+      return getPreviousAnalyticsRange(range)
+    case 'year':
+      return {
+        startAt: subYears(new Date(range.startAt), 1).toISOString(),
+        endAt: subYears(new Date(range.endAt), 1).toISOString(),
+      }
+    case 'custom':
+      return customRange ?? null
+    default:
+      return null
+  }
+}
+
+/**
+ * Chart bucket sizes offered in the console. Values deliberately reuse the
+ * shared usage interval ids (`1h` / `1d`) so the analytics chart can use the
+ * same interval toggle, axis and brush helpers as Usage and Firewall.
+ */
+export type AnalyticsChartInterval = '1h' | '1d'
+
+export const ANALYTICS_CHART_INTERVALS: readonly AnalyticsChartInterval[] = [
+  '1h',
+  '1d',
+]
+
+export const DEFAULT_ANALYTICS_CHART_INTERVAL: AnalyticsChartInterval = '1d'
+
+function toApiInterval(interval: AnalyticsChartInterval): AnalyticsInterval {
+  return interval === '1h' ? AnalyticsInterval.OneHour : AnalyticsInterval.OneDay
 }
 
 /** Zero-filled metric used while loading or when a property has no data yet. */
@@ -293,11 +386,13 @@ export async function fetchAnalyticsStats(
   projectId: string,
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const response = await withReadTimeout(
     'stats',
     sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
+      queries: analyticsFilterQueries(filters),
       startAt: range.startAt,
       endAt: range.endAt,
     }),
@@ -310,6 +405,7 @@ export function analyticsStatsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   return queryOptions({
     queryKey: [
@@ -318,9 +414,14 @@ export function analyticsStatsQueryOptions(
       projectId,
       propertyId,
       analyticsRangeKey(range),
+      ...analyticsFiltersKey(filters),
     ],
-    queryFn: () => fetchAnalyticsStats(projectId!, propertyId!, range),
-    enabled: !!projectId && !!propertyId && isClientQueryEnabled,
+    queryFn: () => fetchAnalyticsStats(projectId!, propertyId!, range, filters),
+    enabled:
+      !!projectId &&
+      !!propertyId &&
+      isClientQueryEnabled &&
+      isAnalyticsFilterShapeSupported(filters, { kind: 'flat' }),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -334,12 +435,21 @@ export function useAnalyticsStats(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsStatsQueryOptions(projectId, propertyId, range),
+    analyticsStatsQueryOptions(projectId, propertyId, range, filters),
   )
 
-  return { stats: data, isLoading, isFetching, error, refetch }
+  return {
+    stats: data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    /** The active filters can't be applied to a flat aggregate. */
+    unsupported: !isAnalyticsFilterShapeSupported(filters, { kind: 'flat' }),
+  }
 }
 
 /**
@@ -378,12 +488,14 @@ export async function fetchAnalyticsEvents(
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const response = await withReadTimeout(
     'events',
     sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
       dimensions: [AnalyticsDimension.EventName],
+      queries: analyticsFilterQueries(filters),
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
@@ -401,6 +513,7 @@ export function analyticsEventsQueryOptions(
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   return queryOptions({
     queryKey: [
@@ -410,8 +523,10 @@ export function analyticsEventsQueryOptions(
       propertyId,
       analyticsRangeKey(range),
       limit,
+      ...analyticsFiltersKey(filters),
     ],
-    queryFn: () => fetchAnalyticsEvents(projectId!, propertyId!, range, limit),
+    queryFn: () =>
+      fetchAnalyticsEvents(projectId!, propertyId!, range, limit, filters),
     enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -546,9 +661,10 @@ export function useAnalyticsEvents(
   propertyId: string | null | undefined,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsEventsQueryOptions(projectId, propertyId, range, limit),
+    analyticsEventsQueryOptions(projectId, propertyId, range, limit, filters),
   )
 
   return {
@@ -561,18 +677,29 @@ export function useAnalyticsEvents(
   }
 }
 
+/**
+ * Time series of visitors / sessions / events. With `eventName` null it
+ * covers every event (the property-wide trend); with a name it is scoped to
+ * that event.
+ */
 export async function fetchAnalyticsEventMetrics(
   projectId: string,
   propertyId: string,
-  eventName: string = ANALYTICS_PAGEVIEW_EVENT,
+  eventName: string | null = null,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  interval: AnalyticsChartInterval = DEFAULT_ANALYTICS_CHART_INTERVAL,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  const queries = [
+    ...(eventName ? [Query.equal('eventName', [eventName])] : []),
+    ...(analyticsFilterQueries(filters) ?? []),
+  ]
   const response = await withReadTimeout(
     'event metrics',
     sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
-      interval: AnalyticsInterval.OneDay,
-      queries: [Query.equal('eventName', [eventName])],
+      interval: toApiInterval(interval),
+      queries: queries.length > 0 ? queries : undefined,
       startAt: range.startAt,
       endAt: range.endAt,
     }),
@@ -587,8 +714,10 @@ export async function fetchAnalyticsEventMetrics(
 export function analyticsEventMetricsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  eventName: string = ANALYTICS_PAGEVIEW_EVENT,
+  eventName: string | null = null,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  interval: AnalyticsChartInterval = DEFAULT_ANALYTICS_CHART_INTERVAL,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   return queryOptions({
     queryKey: [
@@ -596,12 +725,21 @@ export function analyticsEventMetricsQueryOptions(
       'event-metrics',
       projectId,
       propertyId,
-      eventName,
+      eventName ?? '*',
       analyticsRangeKey(range),
+      interval,
+      ...analyticsFiltersKey(filters),
     ],
     queryFn: () =>
-      fetchAnalyticsEventMetrics(projectId!, propertyId!, eventName, range),
-    enabled: !!projectId && !!propertyId && !!eventName && isClientQueryEnabled,
+      fetchAnalyticsEventMetrics(
+        projectId!,
+        propertyId!,
+        eventName,
+        range,
+        interval,
+        filters,
+      ),
+    enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -614,14 +752,24 @@ export function analyticsEventMetricsQueryOptions(
 export function useAnalyticsEventMetrics(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  eventName: string = ANALYTICS_PAGEVIEW_EVENT,
+  eventName: string | null = null,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
+  interval: AnalyticsChartInterval = DEFAULT_ANALYTICS_CHART_INTERVAL,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsEventMetricsQueryOptions(projectId, propertyId, eventName, range),
+    analyticsEventMetricsQueryOptions(
+      projectId,
+      propertyId,
+      eventName,
+      range,
+      interval,
+      filters,
+    ),
   )
 
   return {
+    data,
     points: data?.points ?? [],
     total: data?.total ?? 0,
     isLoading,
@@ -629,6 +777,116 @@ export function useAnalyticsEventMetrics(
     error,
     refetch,
   }
+}
+
+// ─── Live visitors ──────────────────────────────────────────────────────────
+
+/**
+ * "Online now" means a unique visitor with any event in the last five minutes.
+ *
+ * There is no presence channel in the Analytics API, so liveness is inferred
+ * from recent activity. Five minutes is the common convention (Plausible,
+ * GA4 "realtime" cards use 5-30 min): long enough to cover someone reading a
+ * page without firing events, short enough that people who left drop off
+ * quickly. The flat aggregate deduplicates visitors across the window.
+ */
+export const ANALYTICS_LIVE_WINDOW_MINUTES = 5
+
+/** How often the counter re-reads while the tab is visible. */
+export const ANALYTICS_LIVE_POLL_INTERVAL_MS = 30_000
+
+function liveRange(): AnalyticsRange {
+  const now = new Date()
+  return {
+    startAt: new Date(
+      now.getTime() - ANALYTICS_LIVE_WINDOW_MINUTES * 60_000,
+    ).toISOString(),
+    endAt: now.toISOString(),
+  }
+}
+
+export async function fetchAnalyticsLiveVisitors(
+  projectId: string,
+  propertyId: string,
+) {
+  const range = liveRange()
+  const response = await withReadTimeout(
+    'live visitors',
+    sdk.forProject(projectId).analytics.listMetrics({
+      propertyId,
+      startAt: range.startAt,
+      endAt: range.endAt,
+    }),
+  )
+  return {
+    visitors: response.metrics?.[0]?.visitors ?? 0,
+    checkedAt: range.endAt,
+  }
+}
+
+/**
+ * Polls while `enabled` (pass document visibility so a background tab stops
+ * polling). The window is computed per fetch, so the key stays stable and
+ * the previous count stays on screen between polls.
+ */
+export function useAnalyticsLiveVisitors(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  enabled: boolean = true,
+) {
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ['analytics', 'live', projectId, propertyId],
+    queryFn: () => fetchAnalyticsLiveVisitors(projectId!, propertyId!),
+    enabled: !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: 0,
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: enabled ? ANALYTICS_LIVE_POLL_INTERVAL_MS : false,
+    refetchIntervalInBackground: false,
+    placeholderData: keepPreviousData,
+  })
+
+  return {
+    visitors: data?.visitors,
+    checkedAt: data?.checkedAt,
+    isLoading,
+    isFetching,
+    error,
+  }
+}
+
+/** Pages with the most live visitors; only fetched while the popover is open. */
+export function useAnalyticsLivePages(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  enabled: boolean,
+  limit: number = 5,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analytics', 'live-pages', projectId, propertyId, limit],
+    queryFn: async () => {
+      const range = liveRange()
+      const response = await withReadTimeout(
+        'live pages',
+        sdk.forProject(projectId!).analytics.listMetrics({
+          propertyId: propertyId!,
+          dimensions: [AnalyticsDimension.Page],
+          startAt: range.startAt,
+          endAt: range.endAt,
+          limit,
+        }),
+      )
+      return response.metrics || []
+    },
+    enabled: enabled && !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: 0,
+    retry: false,
+    refetchInterval: enabled ? ANALYTICS_LIVE_POLL_INTERVAL_MS : false,
+    refetchIntervalInBackground: false,
+    placeholderData: keepPreviousData,
+  })
+
+  return { pages: data ?? [], isLoading }
 }
 
 // ─── Breakdowns ─────────────────────────────────────────────────────────────
@@ -640,12 +898,14 @@ export async function fetchAnalyticsBreakdown(
   dimension: AnalyticsDimension,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const response = await withReadTimeout(
     'breakdown',
     sdk.forProject(projectId).analytics.listMetrics({
       propertyId,
       dimensions: [dimension],
+      queries: analyticsFilterQueries(filters),
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
@@ -665,6 +925,7 @@ export function analyticsBreakdownQueryOptions(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   return queryOptions({
     queryKey: [
@@ -675,12 +936,25 @@ export function analyticsBreakdownQueryOptions(
       dimension,
       analyticsRangeKey(range),
       limit,
+      ...analyticsFiltersKey(filters),
     ],
     queryFn: () =>
-      fetchAnalyticsBreakdown(projectId!, propertyId!, dimension, range, limit),
+      fetchAnalyticsBreakdown(
+        projectId!,
+        propertyId!,
+        dimension,
+        range,
+        limit,
+        filters,
+      ),
     // Panels only request the dimension of their visible tab, so 21 dimensions
     // never fan out into 21 requests on mount.
-    enabled: enabled && !!projectId && !!propertyId && isClientQueryEnabled,
+    enabled:
+      enabled &&
+      !!projectId &&
+      !!propertyId &&
+      isClientQueryEnabled &&
+      isAnalyticsFilterShapeSupported(filters, { kind: 'breakdown', dimension }),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -697,6 +971,7 @@ export function useAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
+  filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsBreakdownQueryOptions(
@@ -706,6 +981,7 @@ export function useAnalyticsBreakdown(
       range,
       limit,
       enabled,
+      filters,
     ),
   )
 
@@ -716,6 +992,11 @@ export function useAnalyticsBreakdown(
     isFetching,
     error,
     refetch,
+    /** The active filters can't be combined with this dimension. */
+    unsupported: !isAnalyticsFilterShapeSupported(filters, {
+      kind: 'breakdown',
+      dimension,
+    }),
   }
 }
 

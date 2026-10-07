@@ -252,6 +252,57 @@ function restBlocks(input: SnippetInput): SnippetBlock[] {
   ]
 }
 
+/**
+ * Just the custom-event part of each integration, for the "Track custom
+ * events" guide. SDK examples assume tracking is already initialised (the
+ * full setup lives in `buildAnalyticsSnippets`); REST is self-contained.
+ */
+export function buildCustomEventSnippets(
+  platform: AnalyticsPlatform,
+  input: SnippetInput,
+): SnippetBlock[] {
+  const { endpoint, projectId, trackingId, domain } = input
+  if (platform === 'web') {
+    return [
+      {
+        label: 'Track an event',
+        language: 'typescript',
+        code: `// After initialising tracking (see the full setup guide)
+tracking.track('signup_completed', {
+  props: { plan: 'pro', source: 'pricing_page' },
+})`,
+      },
+    ]
+  }
+  if (platform === 'flutter') {
+    return [
+      {
+        label: 'Track an event',
+        language: 'dart',
+        code: `// After initialising tracking (see the full setup guide)
+tracking.event('signup_completed', props: {
+  'plan': 'pro',
+  'source': 'pricing_page',
+});`,
+      },
+    ]
+  }
+  return [
+    {
+      label: 'Track an event',
+      language: 'bash',
+      code: `curl -X POST "${endpoint}/analytics/properties/${trackingId}/events" \\
+  -H "X-Appwrite-Project: ${projectId}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "name": "signup_completed",
+    "url": "${sampleUrl(domain)}",
+    "props": ["plan", "pro", "source", "pricing_page"]
+  }'`,
+    },
+  ]
+}
+
 export function buildAnalyticsSnippets(
   platform: AnalyticsPlatform,
   input: SnippetInput,

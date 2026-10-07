@@ -1,6 +1,12 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Browser } from '@appwrite.io/console'
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  CountryFlagIcon,
+  breakdownLeadingIconFrameClass,
+} from '../../usage/_components/UsageBreakdownRows'
 import { formatNumber } from './format'
 
 /**
@@ -16,9 +22,21 @@ export function BreakdownRow({
   share,
   barPercent,
   leading,
+  badge,
   color,
   mono = false,
+  onClick,
+  active = false,
+  actionTitle,
 }: {
+  /** Small trailing badge after the label (e.g. "Plotted"). */
+  badge?: ReactNode
+  /** Makes the row a button (e.g. apply a page filter for this value). */
+  onClick?: () => void
+  /** Highlight the row, e.g. when its value is an active filter. */
+  active?: boolean
+  /** Hover hint for clickable rows. */
+  actionTitle?: string
   label: string
   value: number
   /** Share of the column total, 0-100. */
@@ -31,8 +49,26 @@ export function BreakdownRow({
   /** Render the label in a monospace face (paths, hostnames). */
   mono?: boolean
 }) {
+  const Root = onClick ? 'button' : 'div'
   return (
-    <div className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50">
+    // Fixed height (BREAKDOWN_ROW_HEIGHT_PX) so panels can reserve an exact
+    // body height and never shift when tabs or data change.
+    <Root
+      {...(onClick
+        ? {
+            type: 'button' as const,
+            onClick,
+            title: actionTitle,
+            'aria-pressed': active,
+          }
+        : {})}
+      className={cn(
+        'group relative flex h-7 w-full items-center gap-2.5 rounded-md px-2 text-start transition-colors hover:bg-accent/50',
+        onClick &&
+          'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        active && 'bg-accent/60 ring-1 ring-border',
+      )}
+    >
       <div
         className={cn(
           'absolute inset-y-0 start-0 rounded-md transition-all',
@@ -56,6 +92,7 @@ export function BreakdownRow({
         >
           {label}
         </span>
+        {badge}
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
             {Math.round(share)}%
@@ -65,7 +102,7 @@ export function BreakdownRow({
           </span>
         </div>
       </div>
-    </div>
+    </Root>
   )
 }
 
@@ -90,53 +127,93 @@ export function RowRank({ index }: { index: number }) {
 }
 
 /**
- * Flag for an ISO-3166-1 alpha-2 country code, derived as a regional-indicator
- * emoji pair. The `country` dimension is the only ISO-2 one, so only that panel
- * passes codes here.
+ * Flag for an ISO-3166-1 alpha-2 country code, from the Avatars service.
  *
- * This deliberately does not fetch `/avatars/flags/...`. That endpoint needs a
- * project in the query string plus `avatars.read` on it, which on a
- * project-scoped page means either the wrong project or a permission the viewer
- * may not have, so the images silently failed and left empty boxes. Deriving
- * the glyph needs no request, no auth and no project coupling.
- *
- * Caveat: regional-indicator pairs do not render as flags on most Windows
- * builds, which show two letter boxes instead. That is a platform font
- * limitation rather than a bug, and the country code is printed beside the
- * glyph anyway. Do not "fix" it by reintroducing an image fetch.
+ * Reuses the Usage breakdown's `CountryFlagIcon`, which requests flags through
+ * the console client (`sdk.forConsole.avatars.getFlag`). That keeps it
+ * independent of the viewed project and of the viewer's `avatars.read` scope
+ * on it, the reason an earlier project-scoped fetch rendered empty boxes. The
+ * shared component already falls back to a globe for unknown codes (`--`,
+ * empty) or when the image fails to load.
  */
 export function CountryFlag({ code }: { code: string | null | undefined }) {
-  const trimmed = code?.trim() ?? ''
-  // The geo stack stores codes lowercased and uses `--` for unknown, which the
-  // enrichment maps to an empty string. Anything that is not exactly two ASCII
-  // letters falls back to the globe rather than emitting garbage glyphs.
-  const isIso2 = /^[a-zA-Z]{2}$/.test(trimmed)
+  return <CountryFlagIcon countryCode={code ?? ''} />
+}
 
-  if (!isIso2) {
+/**
+ * The analytics API reports browsers by name ("Chrome Mobile iOS"); the
+ * Avatars service takes its own two-letter codes (the SDK's `Browser` enum).
+ * Names are matched case-insensitively; browsers the service has no icon for
+ * (Samsung Internet, Brave, ...) get a neutral globe.
+ */
+const BROWSER_CODES: Record<string, Browser> = {
+  chrome: Browser.GoogleChrome,
+  'google chrome': Browser.GoogleChrome,
+  'chrome mobile': Browser.GoogleChromeMobile,
+  'chrome mobile ios': Browser.GoogleChromeIOS,
+  'chrome ios': Browser.GoogleChromeIOS,
+  chromium: Browser.Chromium,
+  firefox: Browser.MozillaFirefox,
+  'mozilla firefox': Browser.MozillaFirefox,
+  'firefox mobile': Browser.MozillaFirefox,
+  'firefox ios': Browser.MozillaFirefox,
+  'firefox focus': Browser.MozillaFirefox,
+  safari: Browser.Safari,
+  'mobile safari': Browser.MobileSafari,
+  'safari mobile': Browser.MobileSafari,
+  'microsoft edge': Browser.MicrosoftEdge,
+  edge: Browser.MicrosoftEdge,
+  'edge mobile': Browser.MicrosoftEdge,
+  'microsoft edge ios': Browser.MicrosoftEdgeIOS,
+  'edge ios': Browser.MicrosoftEdgeIOS,
+  opera: Browser.Opera,
+  'opera mini': Browser.OperaMini,
+  'opera next': Browser.OperaNext,
+  'android webview': Browser.AndroidWebViewBeta,
+  'android webview beta': Browser.AndroidWebViewBeta,
+  'avant browser': Browser.AvantBrowser,
+}
+
+export function browserAvatarCode(name: string | null | undefined): Browser | null {
+  if (!name) return null
+  return BROWSER_CODES[name.trim().toLowerCase()] ?? null
+}
+
+/** Browser icon from the Avatars service, same frame as the country flags. */
+export function BrowserIcon({ name }: { name: string | null | undefined }) {
+  const [failed, setFailed] = useState(false)
+  const code = browserAvatarCode(name)
+
+  if (!code || failed) {
     return (
       <span
-        className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-muted/30"
+        className={cn(breakdownLeadingIconFrameClass, 'border-transparent bg-transparent')}
         aria-hidden
       >
-        <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+        <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </span>
     )
   }
 
-  // Offset each letter from ASCII 'A' into the regional-indicator block.
-  const flag = String.fromCodePoint(
-    ...[...trimmed.toUpperCase()].map(
-      (letter) => 0x1f1e6 + letter.charCodeAt(0) - 65,
-    ),
-  )
+  // Console client, like the flags: independent of the viewed project's scopes.
+  const src = sdk.forConsole.avatars.getBrowser({
+    code,
+    width: 40,
+    height: 40,
+    quality: 100,
+  })
 
   return (
-    // Decorative: the row label prints the same country code beside it.
     <span
-      className="w-4 shrink-0 text-center text-[13px] leading-none"
+      className={cn(breakdownLeadingIconFrameClass, 'border-transparent bg-transparent')}
       aria-hidden
     >
-      {flag}
+      <img
+        src={src}
+        alt=""
+        className="h-full w-full object-contain"
+        onError={() => setFailed(true)}
+      />
     </span>
   )
 }

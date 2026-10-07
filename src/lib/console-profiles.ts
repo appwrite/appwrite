@@ -173,9 +173,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       affiliates: true,
       cookieBanner: true,
       blogDrafts: false,
-      // Product analytics is still in development; keep it off until the
-      // cloud analytics API ships. Toggle via the debug menu to work on it.
-      analytics: false,
+      analytics: true,
     },
   },
   'self-hosted': {
