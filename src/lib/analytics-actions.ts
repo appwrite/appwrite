@@ -295,7 +295,7 @@ export const ANALYTICS_ACTIONS = {
   'restore-pitr': 'Restore PITR Clicked',
   'import-data': 'Import Data Clicked',
   'create-marketplace-app': 'Create Marketplace App Clicked',
-  'add-website': 'Add Website Clicked',
+  'create-analytics-property': 'Create Analytics Property Clicked',
 } as const
 
 export type AnalyticsActionId = keyof typeof ANALYTICS_ACTIONS

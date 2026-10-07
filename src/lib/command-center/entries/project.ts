@@ -254,6 +254,9 @@ const PROJECT_NAV: CommandEntry[] = [
     description: 'Website analytics and traffic insights',
     icon: BarChart2,
     keywords: ['analytics', 'insights', 'tracking', 'website', 'visitors'],
+    available: (ctx) =>
+      Boolean(ctx.features.analytics) &&
+      canSeeProjectNavItem(ctx.access, ctx.features, 'analytics'),
     to: (ctx) => `/projects/${ctx.projectId}/analytics`,
   },
   {
