@@ -243,7 +243,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         // reporting reads this series, so a rollout no longer looks like an outage.
         $workerStartedAt = microtime(true);
         $uptime = $telemetry->createObservableGauge('mqtt.server.uptime', 's', 'Seconds since the broker worker started.');
-        $uptime->observe(fn (callable $observe) => $observe(microtime(true) - $workerStartedAt));
+        $uptime->observe(fn (callable $observe) => $observe(microtime(true) - $workerStartedAt, []));
 
         Timer::tick(60000, fn () => $telemetry->collect());
     }
