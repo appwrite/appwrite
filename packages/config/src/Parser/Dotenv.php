@@ -52,11 +52,18 @@ class Dotenv extends Parser
             return $this->parseQuoted($raw, $raw[0]);
         }
 
-        if (\preg_match('/(^|\s)#/', $raw, $match, PREG_OFFSET_CAPTURE) === 1) {
-            $raw = substr($raw, 0, $match[0][1]);
+        $hash = strpos($raw, '#');
+        while ($hash !== false) {
+            if ($hash === 0) {
+                return '';
+            }
+            if (ctype_space($raw[$hash - 1])) {
+                return trim(substr($raw, 0, $hash - 1));
+            }
+            $hash = strpos($raw, '#', $hash + 1);
         }
 
-        return trim($raw);
+        return $raw;
     }
 
     /**
@@ -137,7 +144,10 @@ class Dotenv extends Parser
             }
 
             // `export KEY=value` is shell syntax for the same variable
-            $name = (string) \preg_replace('/^export\s+/', '', trim($parts[0]));
+            $name = trim($parts[0]);
+            if (str_starts_with($name, 'export') && \strlen($name) > 6 && ctype_space($name[6])) {
+                $name = ltrim(substr($name, 6));
+            }
             $value = $this->parseValue($parts[1]);
 
             // Missing name likely means bad syntax

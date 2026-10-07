@@ -21,7 +21,7 @@ class PHP extends Parser
 
         // Anything before the open tag, including a missing one, would be
         // printed by include rather than parsed.
-        if (\preg_match('/^<\?php(\s|$)/', $contents) !== 1) {
+        if (!str_starts_with($contents, '<?php') || (\strlen($contents) > 5 && !ctype_space($contents[5]))) {
             throw new Parse('PHP config must start with an opening <?php tag.');
         }
 
