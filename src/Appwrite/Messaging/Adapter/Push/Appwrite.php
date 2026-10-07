@@ -7,6 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
@@ -186,7 +187,7 @@ class Appwrite extends PushAdapter
                 }
 
                 $sequence = (int) $this->dbForProject
-                    ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
+                    ->updateDocument('topics', $topic, new Document(['sequence' => Operator::increment(1)]))
                     ->getAttribute('sequence');
 
                 $this->dbForProject->createDocument('pushLedger', new Document([
