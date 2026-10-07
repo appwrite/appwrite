@@ -39,7 +39,7 @@ Version 29.0.0 of the [Android SDK](/docs/quick-starts/android) makes these R8 c
 - **Narrower keep rules** for the bundled MQTT client lift a minimal R8 app's obfuscation score from 67.4% to 89.3% and its optimization score from 65.8% to 87.8%.
 - **R8 coverage in CI**: the SDK's end-to-end test suite now runs against R8-shrunk code.
 
-There's nothing to configure. The SDK ships consumer R8 rules, and the only code you might need to touch is your own model classes, covered later in this post. The [changelog entry](/changelog/entry/2026-10-04) has the short version.
+The SDK ships consumer R8 rules, and the only code you might need to touch is your own model classes, covered later in this post. 
 
 # Google Play's DEX optimization requirement
 
