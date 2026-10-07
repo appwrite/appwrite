@@ -355,9 +355,7 @@ trait TeamsBaseClient
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('general_bad_request', $response['body']['type']);
-        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for UserID

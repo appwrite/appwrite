@@ -137,16 +137,13 @@ class Create extends Action
         if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
             }
             if (! empty($email) && $invitee->getAttribute('email', '') !== $email) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
             }
             if (! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
@@ -154,8 +151,7 @@ class Create extends Action
         } elseif (! empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
             if (! $invitee->isEmpty() && ! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (! empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
@@ -170,6 +166,14 @@ class Create extends Action
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
                 }
+            }
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (! $identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
             $emailMetadata = [
@@ -207,16 +211,6 @@ class Create extends Action
 
             if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
-            }
-
-            // Makes sure this email is not already used in another identity.
-            // Checked after the email policies so their errors do not depend on it.
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (! $identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
@@ -263,8 +257,7 @@ class Create extends Action
             try {
                 $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', $userDocument));
             } catch (Duplicate $th) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
 
