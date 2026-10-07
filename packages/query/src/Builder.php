@@ -900,10 +900,10 @@ abstract class Builder implements
     {
         $orderClauses = [];
 
-        $vectorOrderExpr = $this->compileVectorOrderExpr();
-        if ($vectorOrderExpr !== null) {
-            $orderClauses[] = $vectorOrderExpr->expression;
-            $this->addBindings($vectorOrderExpr->bindings);
+        $vectorOrder = $this->compileVectorOrderExpression();
+        if ($vectorOrder !== null) {
+            $orderClauses[] = $vectorOrder->expression;
+            $this->addBindings($vectorOrder->bindings);
         }
 
         foreach ($this->rawOrders as $rawOrder) {
@@ -1175,7 +1175,7 @@ abstract class Builder implements
     /**
      * Hook for subclasses to inject a vector distance ORDER BY expression.
      */
-    protected function compileVectorOrderExpr(): ?Condition
+    protected function compileVectorOrderExpression(): ?Condition
     {
         return null;
     }
