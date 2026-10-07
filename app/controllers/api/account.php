@@ -478,7 +478,8 @@ Http::post('/v1/account')
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $authorization->removeRole(Role::guests()->toString());

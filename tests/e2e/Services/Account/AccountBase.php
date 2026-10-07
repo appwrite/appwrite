@@ -78,7 +78,7 @@ trait AccountBase
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 409);
+        $this->assertEquals($response['headers']['status-code'], 400);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
