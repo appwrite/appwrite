@@ -37,7 +37,7 @@ trait AttributeTests
      *
      * @return array<array<bool|float|int|string>>
      */
-    public function invalidDefaultValues(): array
+    public static function invalidDefaultValues(): array
     {
         return [
             [Database::VAR_STRING, 1],
