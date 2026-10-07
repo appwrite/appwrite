@@ -3114,6 +3114,56 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testFunctionsDomainLogs(): void
+    {
+        $functionId = '';
+
+        try {
+            $functionId = $this->setupFunction([
+                'functionId' => ID::unique(),
+                'name' => 'Test domain execution logs',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'timeout' => 15,
+                'execute' => ['any'],
+            ]);
+
+            $domain = $this->setupFunctionDomain($functionId);
+
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $response = $proxyClient->call(Client::METHOD_GET, '/', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
+            $this->assertNotEmpty($response['headers']['x-appwrite-execution-id']);
+
+            $executionId = $response['headers']['x-appwrite-execution-id'];
+            $this->assertEventually(function () use ($functionId, $executionId) {
+                $execution = $this->getExecution($functionId, $executionId);
+
+                $this->assertEquals(200, $execution['headers']['status-code']);
+                $this->assertEquals('completed', $execution['body']['status']);
+                $this->assertEquals('http', $execution['body']['trigger']);
+                $this->assertStringContainsString('log-works', (string) $execution['body']['logs']);
+                $this->assertStringContainsString('error-log-works', (string) $execution['body']['errors']);
+            }, 30000, 500);
+        } finally {
+            if ($functionId !== '') {
+                $this->cleanupFunction($functionId);
+            }
+        }
+    }
+
     public function testFunctionsDomainBinaryResponse()
     {
         $functionId = $this->setupFunction([

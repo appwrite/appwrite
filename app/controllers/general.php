@@ -603,6 +603,27 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
             }
 
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
+                $maxContentLength = $maxLogLength - \strlen($warningMessage);
+                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+            }
+
+            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
+            $errors = $executionResponse['errors'] ?? '';
+
+            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
+                $maxContentLength = $maxErrorLength - \strlen($warningMessage);
+                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+            }
+
+            $execution->setAttribute('logs', $logs);
+            $execution->setAttribute('errors', $errors);
+
             $headerOverrides = [];
 
             // Branded 404 override
@@ -680,30 +701,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            // Truncate logs if they exceed the limit
-            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
-            $logs = $executionResponse['logs'] ?? '';
-
-            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
-                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $maxContentLength = $maxLogLength - \strlen($warningMessage);
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
-            }
-
-            // Truncate errors if they exceed the limit
-            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
-            $errors = $executionResponse['errors'] ?? '';
-
-            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
-                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $maxContentLength = $maxErrorLength - \strlen($warningMessage);
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
-            }
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
-            $execution->setAttribute('logs', $logs);
-            $execution->setAttribute('errors', $errors);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', \microtime(true) - $durationStart);
@@ -730,9 +730,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 resource: $resource->getArrayCopy(),
             ));
         }
-
-        $execution->setAttribute('logs', '');
-        $execution->setAttribute('errors', '');
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
