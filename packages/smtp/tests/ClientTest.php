@@ -113,6 +113,51 @@ final class ClientTest extends TestCase
         $this->assertSame(['EHLO relay.example.test', 'HELO relay.example.test'], \array_slice($transport->commands(), 0, 2));
     }
 
+    /**
+     * RFC 5321: a 421 ends the session, so there is nothing to send HELO on. The
+     * refusal surfaces as itself, retryable, instead of a write on a closed socket.
+     */
+    public function testA421ToEhloEndsTheSessionInsteadOfFallingBackToHelo(): void
+    {
+        $transport = new FakeTransport([
+            '220 mail.example.test',
+            '421 4.3.2 Service shutting down, closing transmission channel',
+        ]);
+        $client = new Client($transport, 'relay.example.test', encryption: Encryption::None);
+
+        try {
+            $client->sendRaw($this->envelope(), 'Body');
+            $this->fail('A 421 to EHLO must not be answered with HELO');
+        } catch (TransactionException $exception) {
+            $this->assertTrue($exception->isTransient(), 'a server closing for now may answer the next attempt');
+        }
+
+        $this->assertSame(['EHLO relay.example.test'], $transport->commands());
+        $this->assertTrue($transport->closed, 'a 421 ends the session');
+    }
+
+    /**
+     * A busy server is not one too old for ESMTP: HELO would hide every extension
+     * it has for the rest of the session.
+     */
+    public function testATemporaryRefusalOfEhloIsNotTakenForAServerWithoutEsmtp(): void
+    {
+        $transport = new FakeTransport([
+            '220 mail.example.test',
+            '450 4.7.0 Temporary EHLO failure',
+        ]);
+        $client = new Client($transport, 'relay.example.test', encryption: Encryption::None);
+
+        try {
+            $client->sendRaw($this->envelope(), 'Body');
+            $this->fail('A 4xx to EHLO must not be answered with HELO');
+        } catch (TransactionException $exception) {
+            $this->assertTrue($exception->isTransient());
+        }
+
+        $this->assertSame(['EHLO relay.example.test'], $transport->commands());
+    }
+
     public function testKeepsSendingWhenOnlySomeRecipientsAreRefused(): void
     {
         $transport = $this->transport([
