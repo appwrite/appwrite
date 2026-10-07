@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
+    public const MODEL_TOKEN_SECRET = 'tokenSecret';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
@@ -131,6 +132,11 @@ class Response extends SwooleResponse
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
     public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
+
+    // Passkeys
+    public const MODEL_PASSKEY = 'passkey';
+    public const MODEL_PASSKEY_LIST = 'passkeyList';
+    public const MODEL_PASSKEY_CHALLENGE = 'passkeyChallenge';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -274,6 +280,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
     public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_PASSKEY = 'policyPasskey';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';

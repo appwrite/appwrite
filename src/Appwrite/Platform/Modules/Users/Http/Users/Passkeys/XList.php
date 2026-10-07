@@ -1,0 +1,125 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Users\Http\Users\Passkeys;
+
+use Appwrite\Auth\Passkey\Ceremony;
+use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\Passkeys;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
+
+class XList extends Action
+{
+    use HTTP;
+
+    public static function getName(): string
+    {
+        return 'listUserPasskeys';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+            ->setHttpPath('/v1/users/:userId/passkeys')
+            ->desc('List user passkeys')
+            ->groups(['api', 'users'])
+            ->label('scope', 'users.read')
+            ->label('usage.metric', 'users.{scope}.requests.read')
+            ->label('sdk', new Method(
+                namespace: 'users',
+                group: 'passkeys',
+                name: 'listPasskeys',
+                description: <<<EOT
+                Get the list of verified passkeys registered by a user.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_PASSKEY_LIST,
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('queries', [], new Passkeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter and order on the following attributes: $id, $createdAt, $updatedAt, ' . implode(', ', Passkeys::ALLOWED_ATTRIBUTES), true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('response')
+            ->inject('dbForProject')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $userId,
+        array $queries,
+        bool $includeTotal,
+        Response $response,
+        Database $dbForProject,
+    ): void {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+        $queries[] = Query::equal('type', [Ceremony::TYPE]);
+        $queries[] = Query::equal('verified', [true]);
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $passkeyId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('authenticators', $passkeyId);
+
+            if (
+                $cursorDocument->isEmpty()
+                || $cursorDocument->getAttribute('type') !== Ceremony::TYPE
+                || $cursorDocument->getAttribute('userInternalId') !== $user->getSequence()
+            ) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Passkey '{$passkeyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+        try {
+            $passkeys = $dbForProject->find('authenticators', $queries);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+        $total = $includeTotal ? $dbForProject->count('authenticators', $filterQueries, APP_LIMIT_COUNT) : 0;
+
+        $response->dynamic(new Document([
+            'passkeys' => $passkeys,
+            'total' => $total,
+        ]), Response::MODEL_PASSKEY_LIST);
+    }
+}

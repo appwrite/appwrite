@@ -134,6 +134,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_EMAIL => Type::EMAIL,
         TOKEN_TYPE_PHONE => Type::PHONE,
         TOKEN_TYPE_GENERIC => 'token',
+        TOKEN_TYPE_PASSKEY => Type::PASSKEY,
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
@@ -141,6 +142,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
+        TOKEN_TYPE_PASSKEY => SESSION_PROVIDER_PASSKEY,
         default => SESSION_PROVIDER_TOKEN,
     };
 
@@ -213,16 +215,30 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
     }
 
+    // A user-verified passkey proves possession and a biometric or PIN, so it counts as both factors
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PASSKEY) {
+        $session
+            ->setAttribute('factors', [Type::PASSKEY, Type::USER_VERIFICATION])
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+    }
+
     $authorization->addRole(Role::user($user->getId())->toString());
 
-    $session = $dbForProject->createDocument('sessions', $session
-        ->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
+    // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
+    // gets a session, and a failed insert rolls the claim back so the token can be retried
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user) {
+        if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+        return $dbForProject->createDocument('sessions', $session
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+    });
+
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
