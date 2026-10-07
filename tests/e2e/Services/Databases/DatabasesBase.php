@@ -16,6 +16,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\DSN\DSN;
 use Utopia\System\System;
 
 trait DatabasesBase
@@ -10783,8 +10784,8 @@ trait DatabasesBase
         if ($this->getSupportForSpatialIndexNull()) {
             // The great-circle arc through 60°N bulges north of the straight segment.
             $this->assertGeodesicLineIsWithinMeters($databaseId, $collectionId);
-            $this->assertDistancePlanUsesSpatialIndex('p0', Query::distanceLessThan('loc', [0.0, 0.0], 500, true));
-            $this->assertDistancePlanUsesSpatialIndex('p0', Query::distanceLessThan('loc', [0.0, 0.0], 0.02));
+            $this->assertDistancePlanUsesSpatialIndex($databaseId, $collectionId, Query::distanceLessThan('loc', [0.0, 0.0], 500, true));
+            $this->assertDistancePlanUsesSpatialIndex($databaseId, $collectionId, Query::distanceLessThan('loc', [0.0, 0.0], 0.02));
         }
 
         // Cleanup
@@ -10836,7 +10837,7 @@ trait DatabasesBase
         $this->assertSame(['arc'], array_column($within['body'][$this->getRecordResource()], '$id'));
     }
 
-    private function assertDistancePlanUsesSpatialIndex(string $documentId, Query $query): void
+    private function assertDistancePlanUsesSpatialIndex(string $databaseId, string $collectionId, Query $query): void
     {
         $pdo = new \PDO(
             'pgsql:host=' . System::getEnv('_APP_DB_HOST', 'postgresql')
@@ -10844,29 +10845,13 @@ trait DatabasesBase
                 . ';dbname=' . System::getEnv('_APP_DB_SCHEMA', 'appwrite'),
             System::getEnv('_APP_DB_USER', ''),
             System::getEnv('_APP_DB_PASS', ''),
-            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            ]
         );
 
-        $candidates = $pdo->query(
-            "SELECT n.nspname AS schema, c.relname AS name
-            FROM pg_class c
-            JOIN pg_namespace n ON n.oid = c.relnamespace
-            JOIN pg_attribute loc ON loc.attrelid = c.oid AND loc.attname = 'loc' AND NOT loc.attisdropped
-            JOIN pg_attribute uid ON uid.attrelid = c.oid AND uid.attname = '_uid' AND NOT uid.attisdropped
-            WHERE c.relkind = 'r' AND n.nspname NOT IN ('pg_catalog', 'information_schema')"
-        )->fetchAll();
-
-        $tables = [];
-        foreach ($candidates as $candidate) {
-            $lookup = 'SELECT 1 FROM ' . $this->quoteIdent($candidate['schema']) . '.' . $this->quoteIdent($candidate['name']) . ' WHERE "_uid" = :id';
-            $stmt = $pdo->prepare($lookup);
-            $stmt->execute(['id' => $documentId]);
-            if ($stmt->fetchColumn()) {
-                $tables[] = $candidate;
-            }
-        }
-        $this->assertNotEmpty($tables);
-
+        $table = $this->postgresCollectionTable($pdo, $databaseId, $collectionId);
         $query->setAttributeType(Database::VAR_POINT);
         $adapter = new Postgres(null);
         $binds = [];
@@ -10880,14 +10865,72 @@ trait DatabasesBase
         }
 
         $pdo->exec('SET enable_seqscan = off');
-        foreach ($tables as $table) {
-            $explain = 'EXPLAIN (FORMAT JSON) SELECT "_uid" FROM '
-                . $this->quoteIdent($table['schema']) . '.' . $this->quoteIdent($table['name'])
-                . ' main WHERE ' . $where;
-            $plan = $pdo->query($explain)->fetchColumn();
-            $decoded = json_decode((string) $plan, true);
-            $this->assertTrue($this->planUsesSpatialIndex($decoded), (string) $plan);
+        $explain = 'EXPLAIN (FORMAT JSON) SELECT "_uid" FROM '
+            . $this->quoteIdent($table['schema']) . '.' . $this->quoteIdent($table['name'])
+            . ' main WHERE ' . $where;
+        $plan = $pdo->query($explain)->fetchColumn();
+        $decoded = json_decode((string) $plan, true);
+        $this->assertTrue($this->planUsesSpatialIndex($decoded), (string) $plan);
+    }
+
+    /**
+     * @return array{schema: string, name: string}
+     */
+    private function postgresCollectionTable(\PDO $pdo, string $databaseId, string $collectionId): array
+    {
+        $schema = System::getEnv('_APP_DB_SCHEMA', 'appwrite');
+        $project = $pdo->prepare(
+            'SELECT "_id", "database" FROM ' . $this->quoteIdent($schema) . '."_console_projects" WHERE "_uid" = :id'
+        );
+        $project->execute(['id' => $this->getProject()['$id']]);
+        $projectRow = $project->fetch();
+        $this->assertIsArray($projectRow);
+
+        $projectSequence = (string) $projectRow['_id'];
+        $databaseValue = (string) ($projectRow['database'] ?? '');
+        try {
+            $dsn = new DSN($databaseValue);
+        } catch (\InvalidArgumentException) {
+            $dsn = new DSN('mysql://' . $databaseValue);
         }
+
+        $sharedHosts = array_filter(explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
+        $shared = in_array($dsn->getHost(), $sharedHosts, true);
+        $prefix = ($shared ? $dsn->getParam('namespace') : '_' . $projectSequence) . '_';
+        $tenant = $shared ? $projectSequence : null;
+
+        $databaseSequence = $this->metadataSequence($pdo, $schema, $prefix . 'databases', $databaseId, $tenant);
+        $collectionSequence = $this->metadataSequence(
+            $pdo,
+            $schema,
+            $prefix . 'database_' . $databaseSequence,
+            $collectionId,
+            $tenant,
+        );
+
+        return [
+            'schema' => $schema,
+            'name' => $prefix . 'database_' . $databaseSequence . '_collection_' . $collectionSequence,
+        ];
+    }
+
+    private function metadataSequence(\PDO $pdo, string $schema, string $table, string $id, ?string $tenant): string
+    {
+        $sql = 'SELECT "_id" FROM ' . $this->quoteIdent($schema) . '.' . $this->quoteIdent($table) . ' WHERE "_uid" = :id';
+        if ($tenant !== null) {
+            $sql .= ' AND "_tenant" = :tenant';
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue('id', $id);
+        if ($tenant !== null) {
+            $stmt->bindValue('tenant', $tenant);
+        }
+        $stmt->execute();
+        $sequence = $stmt->fetchColumn();
+        $this->assertNotFalse($sequence, $table);
+
+        return (string) $sequence;
     }
 
     private function planUsesSpatialIndex(mixed $node): bool
