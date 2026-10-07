@@ -1114,6 +1114,49 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('produces', $openApiMethod['x-appwrite']);
     }
 
+    public static function redirectResponseCodes(): \Iterator
+    {
+        yield 'moved permanently' => [301];
+        yield 'found' => [302];
+        yield 'permanent redirect' => [308];
+    }
+
+    #[DataProvider('redirectResponseCodes')]
+    public function testRedirectResponsesDeclareLocationHeader(int $code): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/redirect'))
+            ->desc('Redirect test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getRedirect',
+                description: 'Redirect test.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: $code,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::HTML,
+            ));
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], ['console' => 0], 'console'))->parse();
+
+        $this->assertSame([
+            'description' => 'Redirect',
+            'headers' => [
+                'Location' => [
+                    'description' => 'URL to redirect the client to.',
+                    'schema' => ['type' => 'string', 'format' => 'uri'],
+                ],
+            ],
+        ], $openApi['paths']['/tests/redirect']['get']['responses'][(string) $code]);
+    }
+
     public static function binaryResponseTypes(): \Iterator
     {
         yield 'PNG image' => [ContentType::IMAGE_PNG, 'image/png'];

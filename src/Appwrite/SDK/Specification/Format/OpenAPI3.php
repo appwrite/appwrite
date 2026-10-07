@@ -544,12 +544,24 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if (in_array($response->getCode(), [204, 301, 302, 308], true)) {
+                if ($response->getCode() === 204) {
                     $temp['responses'][(string)$response->getCode()]['description'] = 'No content';
+                    unset($temp['responses'][(string)$response->getCode()]['content']);
                 }
 
-                if ($response->getCode() === 204) {
-                    unset($temp['responses'][(string)$response->getCode()]['content']);
+                if (in_array($response->getCode(), [301, 302, 308], true)) {
+                    $temp['responses'][(string)$response->getCode()] = [
+                        'description' => 'Redirect',
+                        'headers' => [
+                            'Location' => [
+                                'description' => 'URL to redirect the client to.',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uri',
+                                ],
+                            ],
+                        ],
+                    ];
                 }
             }
 
