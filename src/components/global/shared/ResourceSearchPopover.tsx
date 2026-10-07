@@ -13,8 +13,8 @@ import {
 } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { LucideIcon } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
-  BarChart3,
   Database,
   FolderOpen,
   Globe,
@@ -178,7 +178,7 @@ const RESOURCE_ICONS: Record<ResourceSearchKind, LucideIcon> = {
   provider: Mail,
   domain: Globe,
   video: Video,
-  analyticsProperty: BarChart3,
+  analyticsProperty: ANALYTICS_PRODUCT_ICON,
 }
 
 function ResourceSearchListSkeleton({

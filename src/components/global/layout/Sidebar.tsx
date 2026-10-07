@@ -38,6 +38,7 @@ import {
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   LayoutDashboard,
   Database,
@@ -57,7 +58,6 @@ import {
   ScanSearch,
   Package,
   FileText,
-  BarChart2,
   AlertTriangle,
   Radio,
   ListTree,
@@ -242,7 +242,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'analytics',
           label: sidebarCopy.items.analytics,
-          icon: BarChart2,
+          icon: ANALYTICS_PRODUCT_ICON,
           path: `/projects/${projectId}/analytics`,
         },
         {

@@ -7,7 +7,6 @@
 
 import {
   Activity,
-  BarChart2,
   BarChart3,
   Database,
   Folder,
@@ -35,6 +34,7 @@ import {
 } from '@/lib/console-access-checks'
 import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -252,7 +252,7 @@ const PROJECT_NAV: CommandEntry[] = [
     kind: 'navigation',
     label: 'Analytics',
     description: 'Website analytics and traffic insights',
-    icon: BarChart2,
+    icon: ANALYTICS_PRODUCT_ICON,
     keywords: ['analytics', 'insights', 'tracking', 'website', 'visitors'],
     available: (ctx) =>
       Boolean(ctx.features.analytics) &&

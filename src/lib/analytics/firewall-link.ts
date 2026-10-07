@@ -46,6 +46,24 @@ export function firewallConditionForAnalyticsValue(
   }
 }
 
+/**
+ * `?query=` for a deny rule that blocks every country except `value`, the
+ * same shape as the Firewall "allow countries" preset: deny when the country
+ * is not this one and is resolved (so requests with no known location still
+ * get through). Null when `value` isn't an ISO country code.
+ */
+export function firewallAllowOnlyCountryQuery(value: string): string | null {
+  const code = value.trim().toUpperCase()
+  if (!/^[A-Z]{2}$/.test(code)) return null
+  const keys: CompactFilterKey[] = [
+    { c: 'country', o: 'notEqual', v: code },
+    { c: 'country', o: 'notEqual', v: 'UNRESOLVED' },
+  ]
+  return mapToQueryParam(
+    new Map(keys.map((key) => [key, buildFilterQueryString(key.o, String(key.c), key.v as string)])),
+  )
+}
+
 /** `?query=` value for the firewall create page, or null when unmapped. */
 export function firewallCreateQueryForAnalyticsValue(
   dimension: AnalyticsDimension,

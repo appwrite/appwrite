@@ -1,4 +1,5 @@
-import { BarChart2, Globe, KeyRound, Server, Smartphone, type LucideIcon } from 'lucide-react'
+import { Globe, KeyRound, Server, Smartphone, type LucideIcon } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { Badge } from '@/components/ui/badge'
 import {
   ArtChip,
@@ -83,7 +84,7 @@ export function AnalyticsServerSideVisual() {
         delayMs={520}
       >
         <div className="flex items-center gap-2">
-          <ArtIconBadge icon={BarChart2} />
+          <ArtIconBadge icon={ANALYTICS_PRODUCT_ICON} />
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('Property')}</p>
         </div>
         <p className="mt-2.5 text-[13px] font-semibold text-foreground">{t('Marketing site')}</p>

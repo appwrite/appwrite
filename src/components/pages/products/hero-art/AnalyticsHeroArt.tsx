@@ -1,5 +1,5 @@
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
-  BarChart2,
   Bot,
   Check,
   Cookie,
@@ -59,7 +59,7 @@ function PropertyNode() {
       >
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-xl bg-[rgb(var(--tone-rgb)/0.14)] text-[var(--tone-ink)]">
-            <BarChart2 className="size-[18px]" aria-hidden />
+            <ANALYTICS_PRODUCT_ICON className="size-[18px]" aria-hidden />
           </span>
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-foreground">{t('Analytics')}</p>

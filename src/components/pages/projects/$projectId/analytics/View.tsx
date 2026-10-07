@@ -8,8 +8,8 @@ import {
   RESOURCE_CARD_PADDED_CLASSNAME,
   RESOURCE_CARD_SHELL_CLASSNAME,
 } from '../shared/ResourceCard'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
-  BarChart3,
   Clock,
   ExternalLink,
   Eye,
@@ -235,7 +235,7 @@ export function View() {
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <EmptyState
-            icon={BarChart3}
+            icon={ANALYTICS_PRODUCT_ICON}
             title={t('Could not load analytics properties')}
             description={
               error instanceof Error ? error.message : t('Something went wrong')
@@ -385,7 +385,7 @@ export function View() {
                               })
                             }}
                           >
-                            <MenuItemContent icon={BarChart3}>
+                            <MenuItemContent icon={ANALYTICS_PRODUCT_ICON}>
                               {t('Analytics')}
                             </MenuItemContent>
                           </DropdownMenuItem>
@@ -666,7 +666,7 @@ export function View() {
                                   })
                                 }
                               >
-                                <MenuItemContent icon={BarChart3}>
+                                <MenuItemContent icon={ANALYTICS_PRODUCT_ICON}>
                                   {t('Analytics')}
                                 </MenuItemContent>
                               </DropdownMenuItem>

@@ -3,9 +3,9 @@ import { Link } from '@tanstack/react-router'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import {
-  BarChart2,
   Bot,
   Download,
+  Eye,
   Globe,
   MousePointerClick,
   Plus,
@@ -397,7 +397,7 @@ export function SiteAnalyticsCard({
             </div>
             <div className="grid grid-cols-3 gap-2">
               <MiniStat
-                icon={BarChart2}
+                icon={Eye}
                 label={t('Pageviews')}
                 value={resolving ? null : value((s) => formatNumber(s.pageviews))}
                 change={change(stats?.pageviews, previousStats?.pageviews)}

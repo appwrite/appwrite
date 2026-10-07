@@ -1,5 +1,5 @@
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
-  BarChart2,
   BotMessageSquare,
   Database,
   Folder,
@@ -112,7 +112,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     // Next to Sites: web traffic for what you deploy.
     group: 'deploy',
     path: '/products/analytics',
-    icon: BarChart2,
+    icon: ANALYTICS_PRODUCT_ICON,
     tagline: 'Cookieless web and app analytics, bots and AI included.',
     docsPath: '/docs/products/analytics',
   },

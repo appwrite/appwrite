@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import type { AnalyticsDimension } from '@appwrite.io/console'
-import { Copy, ExternalLink, Filter, FilterX, Shield, X } from 'lucide-react'
+import { AnalyticsDimension } from '@appwrite.io/console'
+import { Ban, Copy, ExternalLink, Filter, FilterX, Shield, ShieldCheck, X } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -14,7 +14,10 @@ import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { buildFilterQueryString } from '@/lib/table-filters'
 import { analyticsFilterAttributeForDimension } from '@/lib/analytics/analytics-filters'
-import { firewallCreateQueryForAnalyticsValue } from '@/lib/analytics/firewall-link'
+import {
+  firewallAllowOnlyCountryQuery,
+  firewallCreateQueryForAnalyticsValue,
+} from '@/lib/analytics/firewall-link'
 import { firewallListSearch } from '@/lib/firewall/conditions'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -57,10 +60,30 @@ export function AnalyticsValueMenu({
       )
     : false
 
-  const firewallQuery =
-    projectId && firewallSiteId
-      ? firewallCreateQueryForAnalyticsValue(dimension, value)
-      : null
+  const canCreateRule = Boolean(projectId && firewallSiteId)
+  const firewallQuery = canCreateRule
+    ? firewallCreateQueryForAnalyticsValue(dimension, value)
+    : null
+  const isCountry = dimension === AnalyticsDimension.Country
+  // Countries get both directions: block this one, or allow only this one
+  // (e.g. a Czech-only site denies everything outside CZ).
+  const allowOnlyQuery =
+    canCreateRule && isCountry ? firewallAllowOnlyCountryQuery(value) : null
+
+  const openFirewallCreate = (query: string) => {
+    if (!projectId || !firewallSiteId) return
+    navigate({
+      to: '/projects/$projectId/firewall/create',
+      params: { projectId },
+      search: {
+        ...firewallListSearch({
+          resourceType: 'sites',
+          resourceId: firewallSiteId,
+        }),
+        query,
+      },
+    })
+  }
 
   return (
     <ContextMenu>
@@ -101,27 +124,21 @@ export function AnalyticsValueMenu({
             {t('Open in new tab')}
           </ContextMenuItem>
         ) : null}
-        {firewallQuery && projectId && firewallSiteId ? (
+        {firewallQuery || allowOnlyQuery ? (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem
-              onSelect={() =>
-                navigate({
-                  to: '/projects/$projectId/firewall/create',
-                  params: { projectId },
-                  search: {
-                    ...firewallListSearch({
-                      resourceType: 'sites',
-                      resourceId: firewallSiteId,
-                    }),
-                    query: firewallQuery,
-                  },
-                })
-              }
-            >
-              <ContextMenuIcon icon={Shield} />
-              {t('Create firewall rule')}
-            </ContextMenuItem>
+            {firewallQuery ? (
+              <ContextMenuItem onSelect={() => openFirewallCreate(firewallQuery)}>
+                <ContextMenuIcon icon={isCountry ? Ban : Shield} />
+                {isCountry ? t('Block this country') : t('Create firewall rule')}
+              </ContextMenuItem>
+            ) : null}
+            {allowOnlyQuery ? (
+              <ContextMenuItem onSelect={() => openFirewallCreate(allowOnlyQuery)}>
+                <ContextMenuIcon icon={ShieldCheck} />
+                {t('Allow only this country')}
+              </ContextMenuItem>
+            ) : null}
           </>
         ) : null}
       </ContextMenuContent>

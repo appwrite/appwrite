@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { BarChart2, Code2, Globe, MousePointerClick, Users } from 'lucide-react'
+import { Code2, Globe, MousePointerClick, Users } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   ProductEmptyStateCreateButton,
   ProductEmptyStateHero,
@@ -22,7 +23,7 @@ const STEPS: ProductEmptyStateStep[] = [
       'Drop in the web script, use the Flutter SDK, or send events over REST.',
   },
   {
-    icon: BarChart2,
+    icon: ANALYTICS_PRODUCT_ICON,
     title: 'Watch your traffic',
     description:
       'Visitors, pages, sources, locations, and bots, plus any custom events you track.',
@@ -48,7 +49,7 @@ function AnalyticsVisual() {
     <ProductEmptyStateVisual className="w-[400px] pb-4">
       <div className="overflow-hidden rounded-xl border border-border bg-card text-start shadow-xl">
         <div className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-2">
-          <BarChart2 className="h-3.5 w-3.5 text-muted-foreground" />
+          <ANALYTICS_PRODUCT_ICON className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="h-1.5 w-16 rounded-full bg-muted-foreground/25" />
         </div>
 
@@ -145,7 +146,7 @@ export function AnalyticsEmptyState({
     <div className="mx-auto w-full max-w-4xl py-6 sm:py-10">
       <ProductEmptyStateHero
         visual={<AnalyticsVisual />}
-        icon={BarChart2}
+        icon={ANALYTICS_PRODUCT_ICON}
         title={t('Understand your traffic')}
         description={t(
           'Analytics for your websites and apps. See who visits, where they come from, what they do, and how much of your traffic is bots.',

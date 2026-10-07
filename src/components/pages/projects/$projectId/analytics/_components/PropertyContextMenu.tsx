@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
-  BarChart3,
   Copy,
   ExternalLink,
   FileJson,
@@ -72,7 +72,7 @@ export function PropertyContextMenu({
             })
           }
         >
-          <ContextMenuIcon icon={BarChart3} />
+          <ContextMenuIcon icon={ANALYTICS_PRODUCT_ICON} />
           {t('Analytics')}
         </ContextMenuItem>
         {property.domain ? (

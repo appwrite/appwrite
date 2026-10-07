@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
-import { AlertTriangle, BarChart3, Download } from 'lucide-react'
+import { AlertTriangle, Download } from 'lucide-react'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { Button } from '@/components/ui/button'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import {
@@ -431,7 +432,7 @@ export function View({
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6">
           <EmptyState
-            icon={BarChart3}
+            icon={ANALYTICS_PRODUCT_ICON}
             title={t('Property not found')}
             description={t('This analytics property no longer exists.')}
             variant="card"
