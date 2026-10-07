@@ -1276,7 +1276,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('items')
             ->sortAsc('id')
-            ->cursorAfter(5)
+            ->cursorAfter(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -1291,7 +1291,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('items')
             ->sortAsc('id')
-            ->cursorBefore(5)
+            ->cursorBefore(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -3105,7 +3105,7 @@ class PostgreSQLTest extends TestCase
             ->from('posts')
             ->select(['id', 'title'])
             ->filter([Query::equal('status', ['published'])])
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->limit(10)
             ->build();
 
@@ -5982,7 +5982,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('t')
             ->sortDesc('id')
-            ->cursorBefore(100)
+            ->cursorBefore(['_cursor' => 100])
             ->limit(25)
             ->build();
 

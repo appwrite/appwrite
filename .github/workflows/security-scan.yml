@@ -49,3 +49,55 @@ jobs:
         with:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
+
+  scan-rules:
+    name: Scan Rules
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      SEMGREP_SEND_METRICS: 'off'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Semgrep
+        run: pipx install semgrep==1.179.0
+
+      - name: Validate rule fixtures
+        run: semgrep test .semgrep
+
+      - name: Prove ERROR classes on scratch snippets
+        run: bash .semgrep/prove.sh
+
+      - name: Run security rules
+        run: >-
+          semgrep scan
+          --config .semgrep
+          --metrics=off
+          --exclude .semgrep
+          --json
+          --output semgrep.json
+          src/Appwrite app/controllers app/init
+
+      - name: Fail on new ERROR findings outside the baseline
+        run: node .semgrep/baseline.js check semgrep.json
+
+      - name: Write security rules SARIF
+        if: always()
+        run: >-
+          semgrep scan
+          --config .semgrep
+          --metrics=off
+          --exclude .semgrep
+          --sarif
+          --output semgrep.sarif
+          src/Appwrite app/controllers app/init
+
+      - name: Upload Rule Scan Results
+        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        if: always() && hashFiles('semgrep.sarif') != ''
+        with:
+          sarif_file: semgrep.sarif
+          category: 'semgrep-custom'
