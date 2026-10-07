@@ -349,15 +349,6 @@ Http::post('/v1/account')
             }
         }
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-        ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
@@ -414,6 +405,16 @@ Http::post('/v1/account')
 
         if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+        }
+
+        // Makes sure this email is not already used in another identity.
+        // Checked after the password and email policies so their errors do not depend on it.
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         try {
