@@ -27,6 +27,7 @@ import {
   toAnalyticsRange,
   useAnalyticsEvents,
   useAnalyticsProperty,
+  useAnalyticsLinkedSite,
   useOrganizationScopes,
   useRefreshAnalyticsProperty,
   useProject,
@@ -41,7 +42,11 @@ import {
 } from '@/lib/usage/usage-date-range-presets'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
-import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
+import {
+  canCreateAnalyticsProperty,
+  canWriteRules,
+} from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { PropertySettings } from '../_components/PropertySettings'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import { LiveVisitors } from '../_components/LiveVisitors'
@@ -62,6 +67,7 @@ import {
 } from '../_components/CompareControl'
 import {
   AnalyticsFiltersProvider,
+  AnalyticsValueMenuProvider,
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
 import {
@@ -351,6 +357,23 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canCreateAnalyticsProperty(access, features)
 
+  // "Create firewall rule" on values: only when the property's domain is
+  // served by an Appwrite Site and the viewer can write firewall rules
+  // (Cloud only, like the Firewall product).
+  const canCreateFirewallRule = isCloudProfile() && canWriteRules(access, features)
+  const { siteId: linkedSiteId } = useAnalyticsLinkedSite(
+    projectId,
+    property?.domain,
+    canCreateFirewallRule,
+  )
+  const valueMenuContext = useMemo(
+    () => ({
+      projectId,
+      firewallSiteId: canCreateFirewallRule ? linkedSiteId : null,
+    }),
+    [projectId, canCreateFirewallRule, linkedSiteId],
+  )
+
   // Loader-prefetched data is only valid for the window the page opened with
   // (the saved prefs range, same as the loader read) and no filters.
   const initialRangeKey = useMemo(
@@ -409,6 +432,7 @@ export function View({
   return (
     // The provider wraps the header too: the toolbar's export reads filters.
     <AnalyticsFiltersProvider value={filtersContext}>
+    <AnalyticsValueMenuProvider value={valueMenuContext}>
     <div className="flex flex-col">
       <ServiceHeader
         // Same title as every other detail view (functions, sites, topics,
@@ -622,6 +646,7 @@ export function View({
         />
       ) : null}
     </div>
+    </AnalyticsValueMenuProvider>
     </AnalyticsFiltersProvider>
   )
 }

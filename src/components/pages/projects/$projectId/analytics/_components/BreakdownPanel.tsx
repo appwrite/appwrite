@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { BreakdownTabBar } from './BreakdownTabBar'
 import { CountryMap } from './CountryMap'
+import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
 import {
   useAnalyticsBreakdown,
@@ -354,8 +355,16 @@ export function BreakdownPanel({
         ) : (
           <div className="space-y-0.5">
             {visible.map((entry, index) => (
-              <BreakdownRow
+              <AnalyticsValueMenu
                 key={`${entry.value}-${index}`}
+                dimension={active.dimension}
+                value={entry.value!}
+                label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
+                href={rowHref?.(entry.value!, active.id)}
+              >
+              {/* Wrapper element: the menu trigger needs a DOM node to attach to. */}
+              <div>
+              <BreakdownRow
                 // Rows are known values only (see isKnownBreakdownValue).
                 label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
                 value={entry.visitors}
@@ -375,6 +384,8 @@ export function BreakdownPanel({
                 href={rowHref?.(entry.value!, active.id)}
                 {...filterRowProps(entry.value)}
               />
+              </div>
+              </AnalyticsValueMenu>
             ))}
           </div>
         )}

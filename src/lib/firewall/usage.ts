@@ -128,6 +128,10 @@ function toFirewallConditionAttribute(
       return 'continent'
     case 'region':
       return 'state'
+    // Not a usage filter; lets other pages (e.g. analytics bot names) prefill
+    // a user-agent condition through the same `query` param.
+    case 'userAgent':
+      return 'userAgent'
     default:
       return null
   }

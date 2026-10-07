@@ -58,6 +58,40 @@ export function AnalyticsFiltersProvider({
   )
 }
 
+// ─── Page context for value menus ───────────────────────────────────────────
+
+export type AnalyticsValueMenuContextValue = {
+  projectId: string | null
+  /**
+   * The Appwrite Site serving the property's domain, when the viewer may
+   * create firewall rules for it. Null hides "Create firewall rule".
+   */
+  firewallSiteId: string | null
+}
+
+const AnalyticsValueMenuContext = createContext<AnalyticsValueMenuContextValue>({
+  projectId: null,
+  firewallSiteId: null,
+})
+
+export function AnalyticsValueMenuProvider({
+  value,
+  children,
+}: {
+  value: AnalyticsValueMenuContextValue
+  children: ReactNode
+}) {
+  return (
+    <AnalyticsValueMenuContext.Provider value={value}>
+      {children}
+    </AnalyticsValueMenuContext.Provider>
+  )
+}
+
+export function useAnalyticsValueMenuContext(): AnalyticsValueMenuContextValue {
+  return useContext(AnalyticsValueMenuContext)
+}
+
 /** Falls back to "no filters" outside a provider, so cards stay reusable. */
 export function useAnalyticsFilters(): AnalyticsFiltersContextValue {
   return useContext(AnalyticsFiltersContext)

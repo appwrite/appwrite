@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BreakdownTabBar } from './BreakdownTabBar'
+import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useT } from '@/lib/i18n/translate'
 import {
   analyticsBreakdownQueryOptions,
@@ -311,6 +312,16 @@ export function BreakdownDialog({
                   >
                     {row}
                   </button>
+                ) : entry.value ? (
+                  <AnalyticsValueMenu
+                    key={`${entry.value}-${index}`}
+                    dimension={active.dimension}
+                    value={entry.value}
+                    label={labelFor(entry)}
+                    href={rowHref?.(entry.value, active.id)}
+                  >
+                    <div>{row}</div>
+                  </AnalyticsValueMenu>
                 ) : (
                   <div key={`${entry.value}-${index}`}>{row}</div>
                 )
