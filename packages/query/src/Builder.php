@@ -2604,11 +2604,20 @@ abstract class Builder implements
      */
     private function astJoinConditionToQueries(Expression $condition): array
     {
-        if ($condition instanceof Binary && \strtoupper($condition->operator) === 'AND') {
+        $operator = $condition instanceof Binary ? \strtoupper($condition->operator) : '';
+
+        if ($condition instanceof Binary && $operator === 'AND') {
             return [
                 ...$this->astJoinConditionToQueries($condition->left),
                 ...$this->astJoinConditionToQueries($condition->right),
             ];
+        }
+
+        if ($condition instanceof Binary && $operator === 'OR') {
+            return [Query::or([
+                $this->astJoinConditionToQuery($condition->left),
+                $this->astJoinConditionToQuery($condition->right),
+            ])];
         }
 
         if ($condition instanceof Binary && $condition->left instanceof Column && $condition->right instanceof Column) {
@@ -2625,6 +2634,16 @@ abstract class Builder implements
         }
 
         return [$query];
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function astJoinConditionToQuery(Expression $condition): Query
+    {
+        $queries = $this->astJoinConditionToQueries($condition);
+
+        return \count($queries) === 1 ? $queries[0] : Query::and($queries);
     }
 
     private function applyAstWhere(Select $ast): void

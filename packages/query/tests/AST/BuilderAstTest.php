@@ -316,6 +316,35 @@ class BuilderAstTest extends TestCase
         $this->assertSame(['paid'], $result->bindings);
     }
 
+    public function testFromAstJoinKeepsBothOperandsOfOr(): void
+    {
+        $ast = new Select(
+            columns: [new Star()],
+            from: new Table('users'),
+            joins: [new JoinClause(
+                'JOIN',
+                new Table('orders', 'o'),
+                new Binary(
+                    new Binary(new Column('id', 'users'), '=', new Column('user_id', 'o')),
+                    'OR',
+                    new Binary(
+                        new Binary(new Column('status', 'o'), '=', new Literal('paid')),
+                        'AND',
+                        new Binary(new Column('region', 'users'), '=', new Column('region', 'o')),
+                    ),
+                ),
+            )],
+        );
+
+        $result = MySQL::fromAst($ast)->build();
+
+        $this->assertSame(
+            'SELECT * FROM `users` JOIN `orders` AS `o` ON (`users`.`id` = `o`.`user_id` OR (`o`.`status` IN (?) AND `users`.`region` = `o`.`region`))',
+            $result->query,
+        );
+        $this->assertSame(['paid'], $result->bindings);
+    }
+
     public function testFromAstJoinRejectsConditionItCannotRepresent(): void
     {
         $ast = new Select(
